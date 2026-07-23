@@ -34,6 +34,9 @@ final class SelectionBoundsTest extends TestCase {
     yield 'above open min' => [NULL, 3, 4, FALSE];
     yield 'below open min' => [NULL, 3, 0, TRUE];
     yield 'unbounded' => [NULL, NULL, 0, TRUE];
+    // A count is never negative in practice, but the public method rejects one.
+    yield 'negative count unbounded' => [NULL, NULL, -1, FALSE];
+    yield 'negative count open min' => [NULL, 4, -1, FALSE];
   }
 
   #[DataProvider('dataProviderViolation')]

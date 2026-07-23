@@ -58,6 +58,10 @@ final readonly class SelectionBounds {
    *   TRUE when the count is within both declared bounds.
    */
   public function contains(int $count): bool {
+    if ($count < 0) {
+      return FALSE;
+    }
+
     if ($this->min !== NULL && $count < $this->min) {
       return FALSE;
     }
