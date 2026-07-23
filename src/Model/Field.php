@@ -136,6 +136,10 @@ final readonly class Field {
       throw new FormException(sprintf('Field "%s" of type "%s" does not collect several values; only select, search and file picker fields may be multiple.', $this->id, $this->type->value));
     }
 
+    if ($this->selectionBounds !== NULL && !$this->multiple) {
+      throw new FormException(sprintf('Field "%s" declares selection limits but does not collect several values.', $this->id));
+    }
+
     $this->options = Option::list($options);
   }
 
