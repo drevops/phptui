@@ -154,6 +154,19 @@ final class EngineNonInteractiveTest extends TestCase {
     $engine->collect($inputs, new Context('', [], FALSE));
   }
 
+  public function testMultipleSelectionAboveMaxRejected(): void {
+    $form = $this->boundedTagsForm();
+    $resolver = new InputResolver('APP_');
+    $engine = new Engine($form, new HandlerRegistry());
+
+    $inputs = $resolver->resolve($form->fields(), '{"tags": ["a", "b", "c", "d"]}', []);
+
+    $this->expectException(EngineException::class);
+    $this->expectExceptionMessage('Invalid value for field "tags": must be between 2 and 3 items.');
+
+    $engine->collect($inputs, new Context('', [], FALSE));
+  }
+
   /**
    * A form with a single count-bounded multiple select "tags".
    *
