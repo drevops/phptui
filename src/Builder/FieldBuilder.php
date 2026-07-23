@@ -14,6 +14,7 @@ use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\OptionKind;
 use DrevOps\Tui\Model\RenderMode;
+use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Model\Weekday;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\DiscoverInterface;
@@ -118,6 +119,16 @@ final class FieldBuilder {
    * The number field's Up/Down increment, when declared.
    */
   protected ?int $step = NULL;
+
+  /**
+   * Multiple only: the minimum number of selections, when declared.
+   */
+  protected ?int $minSelections = NULL;
+
+  /**
+   * Multiple only: the maximum number of selections, when declared.
+   */
+  protected ?int $maxSelections = NULL;
 
   /**
    * File picker only: which entries may be selected.
@@ -381,6 +392,36 @@ final class FieldBuilder {
    */
   public function step(int $step): self {
     $this->step = $step;
+
+    return $this;
+  }
+
+  /**
+   * Multiple only: require at least this many selections.
+   *
+   * @param int $min
+   *   The minimum number of selections.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function minSelections(int $min): self {
+    $this->minSelections = $min;
+
+    return $this;
+  }
+
+  /**
+   * Multiple only: allow at most this many selections.
+   *
+   * @param int $max
+   *   The maximum number of selections.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function maxSelections(int $max): self {
+    $this->maxSelections = $max;
 
     return $this;
   }
@@ -744,6 +785,7 @@ final class FieldBuilder {
       $this->render,
       $this->multiple,
       $this->bordered,
+      $this->buildSelectionBounds(),
     );
   }
 
@@ -824,6 +866,32 @@ final class FieldBuilder {
     }
 
     return new NumberBounds($this->min, $this->max, $this->step);
+  }
+
+  /**
+   * Assemble the selection bounds from the declared min/max selections, if any.
+   *
+   * @return \DrevOps\Tui\Model\SelectionBounds|null
+   *   The bounds, or NULL when no selection limit was declared.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When selection limits are declared on a non-multiple field, or the
+   *   minimum exceeds the maximum.
+   */
+  protected function buildSelectionBounds(): ?SelectionBounds {
+    if ($this->minSelections === NULL && $this->maxSelections === NULL) {
+      return NULL;
+    }
+
+    if (!$this->multiple) {
+      throw new FormException(sprintf('Field "%s" declares selection limits but is not multiple; ->minSelections()/->maxSelections() apply to multiple select, search and file picker fields.', $this->id));
+    }
+
+    if ($this->minSelections !== NULL && $this->maxSelections !== NULL && $this->minSelections > $this->maxSelections) {
+      throw new FormException(sprintf('Field "%s" declares min %d selections greater than max %d.', $this->id, $this->minSelections, $this->maxSelections));
+    }
+
+    return new SelectionBounds($this->minSelections, $this->maxSelections);
   }
 
   /**

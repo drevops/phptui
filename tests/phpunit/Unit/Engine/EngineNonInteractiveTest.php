@@ -14,6 +14,7 @@ use DrevOps\Tui\Engine\Engine;
 use DrevOps\Tui\Engine\EngineException;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
+use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Resolver\InputResolver;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -128,6 +129,43 @@ final class EngineNonInteractiveTest extends TestCase {
     $this->expectExceptionMessage('Invalid value for field "ranking": must rank every option exactly once (a, b, c)');
 
     $engine->collect($inputs, new Context('', [], FALSE));
+  }
+
+  public function testMultipleSelectionWithinBoundsAccepted(): void {
+    $form = $this->boundedTagsForm();
+    $resolver = new InputResolver('APP_');
+    $engine = new Engine($form, new HandlerRegistry());
+
+    $inputs = $resolver->resolve($form->fields(), '{"tags": ["a", "b"]}', []);
+
+    $this->assertSame(['a', 'b'], $engine->collect($inputs, new Context('', [], FALSE))->value('tags'));
+  }
+
+  public function testMultipleSelectionBelowMinRejected(): void {
+    $form = $this->boundedTagsForm();
+    $resolver = new InputResolver('APP_');
+    $engine = new Engine($form, new HandlerRegistry());
+
+    $inputs = $resolver->resolve($form->fields(), '{"tags": ["a"]}', []);
+
+    $this->expectException(EngineException::class);
+    $this->expectExceptionMessage('Invalid value for field "tags": must be between 2 and 3 items.');
+
+    $engine->collect($inputs, new Context('', [], FALSE));
+  }
+
+  /**
+   * A form with a single count-bounded multiple select "tags".
+   *
+   * @return \DrevOps\Tui\Model\FormDefinition
+   *   The form.
+   */
+  protected function boundedTagsForm(): FormDefinition {
+    return Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->select('tags')->multiple()->minSelections(2)->maxSelections(3)->option('a')->option('b')->option('c')->option('d');
+      })
+      ->build();
   }
 
 }

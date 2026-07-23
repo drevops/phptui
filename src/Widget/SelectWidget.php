@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Widget;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\OptionKind;
+use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Utils\Strings;
 use DrevOps\Tui\Widget\Capability\FilterCapableInterface;
@@ -15,6 +16,7 @@ use DrevOps\Tui\Widget\Capability\OptionsCapableInterface;
 use DrevOps\Tui\Widget\Capability\OptionsCapableTrait;
 use DrevOps\Tui\Widget\Capability\PagingCapableInterface;
 use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
+use DrevOps\Tui\Widget\Capability\SelectionBoundedTrait;
 use DrevOps\Tui\Widget\Capability\SelectionCapableInterface;
 use DrevOps\Tui\Widget\Capability\SelectionCapableTrait;
 
@@ -30,6 +32,7 @@ class SelectWidget extends AbstractWidget implements OptionsCapableInterface, Se
 
   use OptionsCapableTrait;
   use SelectionCapableTrait;
+  use SelectionBoundedTrait;
   use FilterCapableTrait;
   use PagingCapableTrait;
 
@@ -46,10 +49,14 @@ class SelectWidget extends AbstractWidget implements OptionsCapableInterface, Se
    * @param int|null $page_size
    *   The number of option rows shown at once before the list pages; NULL uses
    *   the default.
+   * @param \DrevOps\Tui\Model\SelectionBounds|null $selection_bounds
+   *   The minimum/maximum selection counts enforced on accept, or NULL for no
+   *   count limit.
    */
-  public function __construct(array $options, string|array $default = '', bool $multiple = FALSE, ?int $page_size = NULL) {
+  public function __construct(array $options, string|array $default = '', bool $multiple = FALSE, ?int $page_size = NULL, ?SelectionBounds $selection_bounds = NULL) {
     $this->initChoice($options, $default, $multiple);
     $this->pageSize = $this->resolvePageSize($page_size);
+    $this->selectionBounds = $selection_bounds;
   }
 
   /**
@@ -94,7 +101,7 @@ class SelectWidget extends AbstractWidget implements OptionsCapableInterface, Se
    * {@inheritdoc}
    */
   protected function renderBody(ThemeInterface $theme): string {
-    return $this->renderChoiceList($theme);
+    return $this->withSelectionHint($theme, $this->renderChoiceList($theme));
   }
 
 }

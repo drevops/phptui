@@ -72,6 +72,24 @@ final class AgentHelpTest extends TestCase {
     $this->assertMatchesRegularExpression('/"items":\s*\{\s*"enum":\s*\[\s*"carrot",\s*"tomato"\s*\]\s*\}/', $help);
   }
 
+  public function testMultipleSelectionBounds(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->select('veg', 'Vegetables')->multiple()->minSelections(2)->maxSelections(4)->options([
+          'carrot' => 'Carrot',
+          'tomato' => 'Tomato',
+          'potato' => 'Potato',
+        ]);
+      })
+      ->build();
+
+    $help = (new AgentHelp($form))->generate();
+
+    $this->assertStringContainsString('"type": "array"', $help);
+    $this->assertStringContainsString('"minItems": 2', $help);
+    $this->assertStringContainsString('"maxItems": 4', $help);
+  }
+
   public function testNumberBounds(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {

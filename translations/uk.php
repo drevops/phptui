@@ -42,6 +42,21 @@ return [
     '@count елементи вибрано',
     '@count елементів вибрано',
   ],
+  'at least @count items' => [
+    'щонайменше @count елемент',
+    'щонайменше @count елементи',
+    'щонайменше @count елементів',
+  ],
+  'at most @count items' => [
+    'щонайбільше @count елемент',
+    'щонайбільше @count елементи',
+    'щонайбільше @count елементів',
+  ],
+  'exactly @count items' => [
+    'рівно @count елемент',
+    'рівно @count елементи',
+    'рівно @count елементів',
+  ],
   // The default button labels: the Buttons model defaults render through t(),
   // so they localize here even though they are not in en.php's scanned key
   // list.
@@ -77,6 +92,7 @@ return [
   'Sa' => 'Сб',
   'Search' => 'Пошук',
   'Select' => 'Вибрати',
+  'Select @constraint.' => 'Виберіть @constraint.',
   'Su' => 'Нд',
   'Suggest' => 'Підказка',
   'Terminal too small.' => 'Термінал замалий.',
@@ -102,6 +118,7 @@ return [
   'at most @max' => 'щонайбільше @max',
   'back' => 'назад',
   'between @min and @max' => 'від @min до @max',
+  'between @min and @max items' => 'від @min до @max елементів',
   'bksp' => 'bksp',
   'cancel' => 'скасувати',
   'close' => 'закрити',

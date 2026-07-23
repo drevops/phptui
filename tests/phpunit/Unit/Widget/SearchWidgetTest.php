@@ -8,6 +8,7 @@ use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Model\Option;
+use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Testing\ArrayKeyStream;
 use DrevOps\Tui\Testing\WidgetRunner;
@@ -18,6 +19,7 @@ use DrevOps\Tui\Widget\Capability\FilterCapableTrait;
 use DrevOps\Tui\Widget\Capability\OptionsCapableTrait;
 use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
 use DrevOps\Tui\Widget\Capability\SearchCapableTrait;
+use DrevOps\Tui\Widget\Capability\SelectionBoundedTrait;
 use DrevOps\Tui\Widget\Capability\SelectionCapableTrait;
 use DrevOps\Tui\Widget\SearchWidget;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -29,6 +31,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(SearchWidget::class)]
 #[CoversClass(SelectionCapableTrait::class)]
+#[CoversClass(SelectionBoundedTrait::class)]
 #[CoversClass(FilterCapableTrait::class)]
 #[CoversClass(SearchCapableTrait::class)]
 #[CoversClass(OptionsCapableTrait::class)]
@@ -372,6 +375,35 @@ final class SearchWidgetTest extends TestCase {
 
   public function testMultiplePagesLongOptionList(): void {
     $this->assertPagesAndFollowsCursor(static fn(int $size): SearchWidget => new SearchWidget(self::pagingOptions(), [], TRUE, page_size: $size));
+  }
+
+  public function testMultipleRejectsBelowMinWithInlineError(): void {
+    $widget = new SearchWidget($this->services, [], TRUE, selection_bounds: new SelectionBounds(2, NULL));
+
+    $widget->handle(Key::named(KeyName::Space));
+    $widget->handle(Key::named(KeyName::Enter));
+
+    $this->assertFalse($widget->isComplete());
+    $this->assertStringContainsString('Select at least 2 items.', Ansi::strip($widget->view(new DefaultTheme())));
+  }
+
+  public function testMultipleAcceptsWithinBounds(): void {
+    $widget = new SearchWidget($this->services, [], TRUE, selection_bounds: new SelectionBounds(1, 2));
+
+    $value = WidgetRunner::run($widget, ArrayKeyStream::of(
+      Key::named(KeyName::Space),
+      Key::named(KeyName::Enter),
+    ));
+
+    $this->assertSame(['clamav'], $value);
+    $this->assertTrue($widget->isComplete());
+  }
+
+  public function testMultipleSelectionHintShownBelowQueryLine(): void {
+    $widget = new SearchWidget($this->services, [], TRUE, selection_bounds: new SelectionBounds(2, 3));
+
+    // The active limit is surfaced before it is reached.
+    $this->assertStringContainsString('between 2 and 3 items', Ansi::strip($widget->view(new DefaultTheme())));
   }
 
 }

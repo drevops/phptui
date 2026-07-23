@@ -99,6 +99,9 @@ final readonly class Field {
    * @param bool $bordered
    *   Note only: whether the card is drawn inside a themed border with minimal
    *   padding; ignored by other types.
+   * @param \DrevOps\Tui\Model\SelectionBounds|null $selectionBounds
+   *   Multiple only: optional minimum/maximum selection counts; NULL for no
+   *   count limit.
    */
   public function __construct(
     public string $id,
@@ -127,6 +130,7 @@ final readonly class Field {
     public RenderMode $render = RenderMode::Inline,
     public bool $multiple = FALSE,
     public bool $bordered = FALSE,
+    public ?SelectionBounds $selectionBounds = NULL,
   ) {
     if ($this->multiple && !$this->type->supportsMultiple()) {
       throw new FormException(sprintf('Field "%s" of type "%s" does not collect several values; only select, search and file picker fields may be multiple.', $this->id, $this->type->value));
@@ -223,17 +227,17 @@ final readonly class Field {
   }
 
   /**
-   * The first violated number or date bound, as an error fragment.
+   * The first violated number, date or selection-count bound, as a fragment.
    *
    * @param mixed $value
    *   The candidate value.
    *
    * @return string|null
-   *   The violation fragment (e.g. "between 1 and 10"), or NULL when the
-   *   value is in range or the field declares no bounds.
+   *   The violation fragment (e.g. "between 1 and 10", "at least 2 items"), or
+   *   NULL when the value is in range or the field declares no bounds.
    */
   public function boundsViolation(mixed $value): ?string {
-    return $this->bounds?->violation($value) ?? $this->dateBounds?->violation($value);
+    return $this->bounds?->violation($value) ?? $this->dateBounds?->violation($value) ?? $this->selectionBounds?->violation($value);
   }
 
   /**

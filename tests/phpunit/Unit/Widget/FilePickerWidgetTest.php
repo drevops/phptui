@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Tests\Unit\Widget;
 
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FilePickerMode;
+use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Input\KeyName;
@@ -16,6 +17,7 @@ use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Widget\AbstractWidget;
 use DrevOps\Tui\Widget\FilePickerWidget;
 use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
+use DrevOps\Tui\Widget\Capability\SelectionBoundedTrait;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -27,6 +29,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(FilePickerWidget::class)]
 #[CoversClass(AbstractWidget::class)]
 #[CoversClass(PagingCapableTrait::class)]
+#[CoversClass(SelectionBoundedTrait::class)]
 #[Group('widget')]
 final class FilePickerWidgetTest extends TestCase {
 
@@ -440,6 +443,34 @@ final class FilePickerWidgetTest extends TestCase {
     $view = $this->render($widget);
     $this->assertStringContainsString('docs', $view);
     $this->assertStringContainsString('guide.md', $view);
+  }
+
+  public function testMultipleRejectsBelowMinWithInlineError(): void {
+    $widget = new FilePickerWidget($this->root, multiple: TRUE, selection_bounds: new SelectionBounds(2, NULL));
+
+    // Selecting one entry is below the minimum of two.
+    $widget->handle(Key::named(KeyName::Space));
+    $widget->handle(Key::named(KeyName::Enter));
+
+    $this->assertFalse($widget->isComplete());
+    $this->assertStringContainsString('Select at least 2 items.', $this->render($widget));
+  }
+
+  public function testMultipleAcceptsWithinBounds(): void {
+    $widget = new FilePickerWidget($this->root, multiple: TRUE, selection_bounds: new SelectionBounds(1, 2));
+
+    $widget->handle(Key::named(KeyName::Space));
+    $widget->handle(Key::named(KeyName::Enter));
+
+    $this->assertTrue($widget->isComplete());
+    $this->assertSame([$this->root . '/docs'], $widget->value());
+  }
+
+  public function testMultipleSelectionHintShownInHeader(): void {
+    $widget = new FilePickerWidget($this->root, multiple: TRUE, selection_bounds: new SelectionBounds(2, 3));
+
+    // The active limit is surfaced before it is reached.
+    $this->assertStringContainsString('between 2 and 3 items', $this->render($widget));
   }
 
   /**

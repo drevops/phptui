@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Tests\Unit\Widget;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\OptionKind;
+use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
@@ -22,6 +23,7 @@ use DrevOps\Tui\Widget\AbstractWidget;
 use DrevOps\Tui\Widget\Capability\FilterCapableTrait;
 use DrevOps\Tui\Widget\Capability\OptionsCapableTrait;
 use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
+use DrevOps\Tui\Widget\Capability\SelectionBoundedTrait;
 use DrevOps\Tui\Widget\Capability\SelectionCapableTrait;
 use DrevOps\Tui\Widget\SelectWidget;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -35,6 +37,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(AbstractWidget::class)]
 #[CoversClass(OptionsCapableTrait::class)]
 #[CoversClass(SelectionCapableTrait::class)]
+#[CoversClass(SelectionBoundedTrait::class)]
 #[CoversClass(FilterCapableTrait::class)]
 #[CoversClass(PagingCapableTrait::class)]
 #[Group('widget')]
@@ -435,6 +438,49 @@ final class SelectWidgetTest extends TestCase {
 
   public function testMultiplePagesLongOptionList(): void {
     $this->assertPagesAndFollowsCursor(static fn(int $size): SelectWidget => new SelectWidget(self::pagingOptions(), [], TRUE, page_size: $size));
+  }
+
+  public function testMultipleRejectsBelowMinWithInlineError(): void {
+    $widget = new SelectWidget(['a' => 'A', 'b' => 'B', 'c' => 'C'], [], TRUE, selection_bounds: new SelectionBounds(2, NULL));
+
+    // One selection is below the minimum of two, so the accept is rejected.
+    $widget->handle(Key::named(KeyName::Space));
+    $widget->handle(Key::named(KeyName::Enter));
+
+    $this->assertFalse($widget->isComplete());
+    $this->assertStringContainsString('Select at least 2 items.', Ansi::strip($widget->view(new DefaultTheme())));
+  }
+
+  public function testMultipleRejectsAboveMaxWithInlineError(): void {
+    $widget = new SelectWidget(['a' => 'A', 'b' => 'B'], [], TRUE, selection_bounds: new SelectionBounds(NULL, 1));
+
+    // Two selections exceed the maximum of one.
+    $widget->handle(Key::named(KeyName::Space));
+    $widget->handle(Key::named(KeyName::Down));
+    $widget->handle(Key::named(KeyName::Space));
+    $widget->handle(Key::named(KeyName::Enter));
+
+    $this->assertFalse($widget->isComplete());
+    $this->assertStringContainsString('Select at most 1 item.', Ansi::strip($widget->view(new DefaultTheme())));
+  }
+
+  public function testMultipleAcceptsWithinBounds(): void {
+    $widget = new SelectWidget(['a' => 'A', 'b' => 'B', 'c' => 'C'], [], TRUE, selection_bounds: new SelectionBounds(1, 2));
+
+    $value = WidgetRunner::run($widget, ArrayKeyStream::of(
+      Key::named(KeyName::Space),
+      Key::named(KeyName::Enter),
+    ));
+
+    $this->assertSame(['a'], $value);
+    $this->assertTrue($widget->isComplete());
+  }
+
+  public function testMultipleSelectionHintShownInView(): void {
+    $widget = new SelectWidget(['a' => 'A', 'b' => 'B'], [], TRUE, selection_bounds: new SelectionBounds(1, 2));
+
+    // The active limit is surfaced in the view before it is reached.
+    $this->assertStringContainsString('between 1 and 2 items', Ansi::strip($widget->view(new DefaultTheme())));
   }
 
 }

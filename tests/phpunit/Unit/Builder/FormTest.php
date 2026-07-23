@@ -19,6 +19,7 @@ use DrevOps\Tui\Model\Modal;
 use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Model\OptionKind;
 use DrevOps\Tui\Model\RenderMode;
+use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Model\Weekday;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\Dotenv;
@@ -404,6 +405,66 @@ final class FormTest extends TestCase {
 
     Form::create('T')
       ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->text('t')->multiple())
+      ->build();
+  }
+
+  public function testSelectionBoundsAssembled(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $panel): void {
+        $panel->select('tags', 'Tags')->multiple()->minSelections(2)->maxSelections(4)->option('a')->option('b');
+        $panel->search('svc', 'Services')->multiple()->minSelections(1)->option('x');
+        $panel->filePicker('files', 'Files')->multiple()->maxSelections(3);
+        $panel->select('plain', 'Plain')->multiple()->option('a');
+      })
+      ->build();
+
+    $tags = $form->field('tags');
+    $this->assertInstanceOf(Field::class, $tags);
+    $this->assertInstanceOf(SelectionBounds::class, $tags->selectionBounds);
+    $this->assertSame(2, $tags->selectionBounds->min);
+    $this->assertSame(4, $tags->selectionBounds->max);
+
+    // A min-only bound leaves the ceiling open.
+    $svc = $form->field('svc');
+    $this->assertInstanceOf(SelectionBounds::class, $svc?->selectionBounds);
+    $this->assertSame(1, $svc->selectionBounds->min);
+    $this->assertNull($svc->selectionBounds->max);
+
+    // A file picker also takes selection bounds; a max-only bound leaves the
+    // floor open.
+    $files = $form->field('files');
+    $this->assertInstanceOf(SelectionBounds::class, $files?->selectionBounds);
+    $this->assertNull($files->selectionBounds->min);
+    $this->assertSame(3, $files->selectionBounds->max);
+
+    // A multiple field with no selection limits carries none.
+    $this->assertNotInstanceOf(SelectionBounds::class, $form->field('plain')?->selectionBounds);
+  }
+
+  public function testSelectionLimitOnNonMultipleThrows(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Field "s" declares selection limits but is not multiple');
+
+    Form::create('T')
+      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->select('s')->minSelections(2)->option('a'))
+      ->build();
+  }
+
+  public function testSelectionMinGreaterThanMaxThrows(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Field "s" declares min 5 selections greater than max 2.');
+
+    Form::create('T')
+      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->select('s')->multiple()->minSelections(5)->maxSelections(2))
+      ->build();
+  }
+
+  public function testSelectionMinBelowOneThrows(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Selection bounds declare a minimum of 0 below one.');
+
+    Form::create('T')
+      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->select('s')->multiple()->minSelections(0))
       ->build();
   }
 
