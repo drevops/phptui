@@ -441,7 +441,7 @@ final class SelectWidgetTest extends TestCase {
   }
 
   public function testMultipleRejectsBelowMinWithInlineError(): void {
-    $widget = new SelectWidget(['a' => 'A', 'b' => 'B', 'c' => 'C'], [], TRUE, selection_bounds: new SelectionBounds(2, NULL));
+    $widget = new SelectWidget(['a' => 'A', 'b' => 'B', 'c' => 'C'], [], TRUE, selection_bounds: new SelectionBounds(2));
 
     // One selection is below the minimum of two, so the accept is rejected.
     $widget->handle(Key::named(KeyName::Space));

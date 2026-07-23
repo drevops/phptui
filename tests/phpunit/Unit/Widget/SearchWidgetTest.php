@@ -378,7 +378,7 @@ final class SearchWidgetTest extends TestCase {
   }
 
   public function testMultipleRejectsBelowMinWithInlineError(): void {
-    $widget = new SearchWidget($this->services, [], TRUE, selection_bounds: new SelectionBounds(2, NULL));
+    $widget = new SearchWidget($this->services, [], TRUE, selection_bounds: new SelectionBounds(2));
 
     $widget->handle(Key::named(KeyName::Space));
     $widget->handle(Key::named(KeyName::Enter));

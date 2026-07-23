@@ -72,7 +72,7 @@ final class SelectionBoundsTest extends TestCase {
     yield 'neither' => [NULL, NULL, ''];
   }
 
-  #[DataProvider('dataProviderInvalid')]
+  #[DataProvider('dataProviderConstructRejectsInvalidBounds')]
   public function testConstructRejectsInvalidBounds(?int $min, ?int $max, string $message): void {
     $this->expectException(FormException::class);
     $this->expectExceptionMessage($message);
@@ -80,7 +80,7 @@ final class SelectionBoundsTest extends TestCase {
     new SelectionBounds($min, $max);
   }
 
-  public static function dataProviderInvalid(): \Iterator {
+  public static function dataProviderConstructRejectsInvalidBounds(): \Iterator {
     yield 'min below one' => [0, NULL, 'Selection bounds declare a minimum of 0 below one.'];
     yield 'negative min' => [-2, NULL, 'Selection bounds declare a minimum of -2 below one.'];
     yield 'max below one' => [NULL, 0, 'Selection bounds declare a maximum of 0 below one.'];

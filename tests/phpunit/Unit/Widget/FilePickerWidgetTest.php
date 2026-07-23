@@ -446,7 +446,7 @@ final class FilePickerWidgetTest extends TestCase {
   }
 
   public function testMultipleRejectsBelowMinWithInlineError(): void {
-    $widget = new FilePickerWidget($this->root, multiple: TRUE, selection_bounds: new SelectionBounds(2, NULL));
+    $widget = new FilePickerWidget($this->root, multiple: TRUE, selection_bounds: new SelectionBounds(2));
 
     // Selecting one entry is below the minimum of two.
     $widget->handle(Key::named(KeyName::Space));
