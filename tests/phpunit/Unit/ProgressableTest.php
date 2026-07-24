@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Tests\Unit;
 use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\Model\Panel;
 use DrevOps\Tui\Engine\Engine;
 use DrevOps\Tui\Engine\EngineException;
 use DrevOps\Tui\Input\Key;
@@ -24,7 +25,9 @@ use PHPUnit\Framework\TestCase;
  * Tests progressable option loaders: options from a callback, loaded lazily.
  */
 #[CoversClass(FieldBuilder::class)]
+#[CoversClass(PanelBuilder::class)]
 #[CoversClass(Field::class)]
+#[CoversClass(Panel::class)]
 #[CoversClass(Engine::class)]
 #[CoversClass(PanelController::class)]
 #[CoversClass(DefaultTheme::class)]
@@ -65,6 +68,45 @@ final class ProgressableTest extends TestCase {
     $this->assertStringContainsString('…', $display);
     $this->assertStringContainsString('Apple', $display);
     $this->assertStringContainsString('Pear', $display);
+  }
+
+  public function testPanelPreloadRunsOnceBeforeItsFieldLoaders(): void {
+    $calls = 0;
+    $prepared = [];
+
+    // The preload prepares data that the field loader then reads - proving the
+    // preload runs first.
+    $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p) use (&$calls, &$prepared): void {
+      $p->preload(function () use (&$calls, &$prepared): void {
+        $calls++;
+        $prepared = ['apple' => 'Apple', 'pear' => 'Pear'];
+      });
+      $p->select('fruit', 'Fruit')->options(function () use (&$prepared): array {
+        return $prepared;
+      });
+    });
+
+    $tester = (new TuiTester($form))->rows(12);
+    $tester->run(Key::named(KeyName::Enter), Key::named(KeyName::Enter));
+
+    $this->assertSame(1, $calls);
+    $this->assertStringContainsString('Apple', $tester->display());
+  }
+
+  public function testPanelPreloadRunsWithoutAnyFieldLoaders(): void {
+    $calls = 0;
+
+    $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p) use (&$calls): void {
+      $p->preload(function () use (&$calls): void {
+        $calls++;
+      });
+      $p->text('note', 'Note');
+    });
+
+    $tester = (new TuiTester($form))->rows(12);
+    $tester->run(Key::named(KeyName::Enter));
+
+    $this->assertSame(1, $calls);
   }
 
   /**

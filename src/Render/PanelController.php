@@ -1109,24 +1109,31 @@ class PanelController {
   }
 
   /**
-   * Resolve a just-entered panel's option loaders, showing them loading.
+   * Resolve a just-entered panel's preload and option loaders, showing loading.
    *
    * Paints the panel once - the loading fields read as "Loading…" through the
-   * theme - then runs each loader (blocking) and settles, so drilling into a
-   * panel loads its data on entry rather than up front.
+   * theme - then runs the panel's preload and each field loader (blocking) and
+   * settles, so drilling into a panel loads its data on entry rather than up
+   * front. The preload runs first, so a field loader can read what it prepared.
    *
    * @param \DrevOps\Tui\Model\Panel $panel
    *   The entered panel.
    */
   protected function resolveLoaders(Panel $panel): void {
     $loading = array_values(array_filter($panel->fields, static fn(Field $field): bool => $field->optionsLoader instanceof \Closure));
+    $preload = $panel->preload instanceof \Closure;
 
-    if ($loading === []) {
+    if ($loading === [] && !$preload) {
       return;
     }
 
     if (isset($this->terminal)) {
       $this->terminal->render($this->positioned($this->frame($this->rows($this->terminal)), $this->terminal));
+    }
+
+    if ($preload) {
+      ($panel->preload)();
+      $panel->preload = NULL;
     }
 
     $this->engine->loadOptions($loading);
