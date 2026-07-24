@@ -30,6 +30,7 @@ Every interactive script also runs unattended: pipe stdin (or run it from CI) an
 | `13-testing` | The scripted-keystroke harness: drive the real TUI without a terminal, read back answers and rendered frames. | [`13-testing.php`](13-testing.php) |
 | `14-produce-box` | The capstone: panels, widgets, derivation, conditions and behaviour composed into one real form. | [`14-produce-box.php`](14-produce-box.php) |
 | `15-progress-*` | The progress primitive - a spinner when the length is unknown, a determinate bar when it is - theme-drawn, animating on a TTY and degrading to a plain line when piped or headless. | [`15-progress-spinner.php`](15-progress-spinner.php), [`15-progress-bar.php`](15-progress-bar.php) |
+| `16-loading-data` | Loading a panel's data on demand: a field's `->options()` and a panel's `->preload()` taking a callback, resolved the first time the panel opens with a themed `Loading…` on the field. | [`16-loading-data.php`](16-loading-data.php) |
 
 ## Running the examples
 

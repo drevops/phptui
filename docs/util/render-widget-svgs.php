@@ -30,6 +30,7 @@ use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Theme\Mode;
@@ -80,6 +81,13 @@ function widgetSpecs(string $tree): array {
   // animation then ends inside the editor on the changed value, so the frame
   // stays as narrow as the widget itself rather than the full-width panel row.
   $open = [$enter, $enter];
+  // A short packing job whose every advance() repaints the row, so the capture
+  // holds one frame per filled step as the bar grows.
+  $pack = static function (ProgressReporter $reporter): void {
+    for ($step = 0; $step < 6; $step++) {
+      $reporter->advance();
+    }
+  };
 
   return [
     'text' => [
@@ -150,6 +158,11 @@ function widgetSpecs(string $tree): array {
     'pause' => [
       'form' => Form::create('Pause widget')->panel('main', 'Pause', function (PanelBuilder $p): void { $p->pause('review', 'Review your basket'); }),
       'keys' => [$enter],
+      'rows' => 6,
+    ],
+    'progress' => [
+      'form' => Form::create('Progress widget')->panel('main', 'Progress', function (PanelBuilder $p) use ($pack): void { $p->progress('pack', 'Packing the box')->steps(6)->run($pack); }),
+      'keys' => [$enter, $enter],
       'rows' => 6,
     ],
     'filepicker' => [

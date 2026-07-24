@@ -35,6 +35,7 @@ const sidebars = {
         'widgets/option-groups',
         'widgets/password',
         'widgets/pause',
+        'widgets/progress',
         'widgets/reorder',
         'widgets/search',
         'widgets/select',
