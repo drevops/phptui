@@ -2016,11 +2016,36 @@ class DefaultTheme implements ThemeInterface {
       return $this->renderLoading('');
     }
 
+    if ($field->type === FieldType::Progress) {
+      return $this->renderProgress($field);
+    }
+
     if ($field->type === FieldType::Password) {
       return is_string($value) && $value !== '' ? ValueFormatter::mask($this->mask()) : '';
     }
 
     return ValueFormatter::format($value);
+  }
+
+  /**
+   * Render a progress row's indicator from its live state.
+   *
+   * A determinate row draws a bar that reads empty before the work runs and
+   * fills as it advances; an indeterminate row draws a spinner that sits on its
+   * first frame until the work ticks it.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The progress field.
+   *
+   * @return string
+   *   The rendered indicator.
+   */
+  protected function renderProgress(Field $field): string {
+    if ($field->progressSteps === NULL) {
+      return $this->renderSpinner($field->progressCurrent ?? 0, '');
+    }
+
+    return $this->renderProgressBar($field->progressCurrent ?? 0, $field->progressSteps, '', '');
   }
 
 }

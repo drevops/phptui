@@ -300,6 +300,25 @@ final class PanelBuilder {
   }
 
   /**
+   * Add a progress row that runs work when activated, showing an indicator.
+   *
+   * Chain `->steps(int)` for a determinate bar (omit it for a spinner) and
+   * `->run(callable)` for the work; the callback drives the indicator through
+   * the {@see \DrevOps\Tui\Primitive\ProgressReporter} it receives.
+   *
+   * @param string $id
+   *   The field id.
+   * @param string $label
+   *   The caption shown beside the indicator (defaults to the id).
+   *
+   * @return \DrevOps\Tui\Builder\FieldBuilder
+   *   The field builder.
+   */
+  public function progress(string $id, string $label = ''): FieldBuilder {
+    return $this->field($id, $label, FieldType::Progress);
+  }
+
+  /**
    * Add a nested sub-panel.
    *
    * @param string $id

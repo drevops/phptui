@@ -10,9 +10,11 @@ use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Engine\Engine;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\Panel;
 use DrevOps\Tui\Model\RenderMode;
+use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
@@ -439,6 +441,10 @@ class PanelController {
     $provenance = [];
 
     foreach ($this->form->fields() as $field) {
+      if ($field->type->isDisplayOnly()) {
+        continue;
+      }
+
       if (!($this->active[$field->id] ?? TRUE)) {
         continue;
       }
@@ -1073,7 +1079,15 @@ class PanelController {
     $field_count = count($fields);
 
     if ($this->cursor < $field_count) {
-      $this->openEditor($fields[$this->cursor]);
+      $field = $fields[$this->cursor];
+
+      if ($field->type === FieldType::Progress) {
+        $this->runProgress($field);
+
+        return;
+      }
+
+      $this->openEditor($field);
 
       return;
     }
@@ -1127,9 +1141,7 @@ class PanelController {
       return;
     }
 
-    if (isset($this->terminal)) {
-      $this->terminal->render($this->positioned($this->frame($this->rows($this->terminal)), $this->terminal));
-    }
+    $this->repaint();
 
     if ($preload) {
       ($panel->preload)();
@@ -1138,6 +1150,18 @@ class PanelController {
 
     $this->engine->loadOptions($loading);
     $this->resettle();
+  }
+
+  /**
+   * Repaint the current frame in place, if a terminal is attached.
+   *
+   * The cooperative animation seam: a blocking loader or a progress step calls
+   * this to show its latest state before it hands control back to the loop.
+   */
+  protected function repaint(): void {
+    if (isset($this->terminal)) {
+      $this->terminal->render($this->positioned($this->frame($this->rows($this->terminal)), $this->terminal));
+    }
   }
 
   /**
@@ -1306,6 +1330,35 @@ class PanelController {
   protected function openEditor(Field $field): void {
     $this->editing = $field;
     $this->editor = $this->widgets->create($field, $this->values[$field->id] ?? $field->default, $this->values);
+  }
+
+  /**
+   * Run a progress row's work, animating its indicator as it advances.
+   *
+   * Starts the indicator at zero, then runs the work with a reporter whose
+   * every advance moves the field's live count and repaints the row - so the
+   * bar fills (or the spinner ticks) in place while the blocking work proceeds.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The progress field.
+   */
+  protected function runProgress(Field $field): void {
+    $work = $field->progressWork;
+
+    if (!$work instanceof \Closure) {
+      return;
+    }
+
+    $field->progressCurrent = 0;
+    $this->repaint();
+
+    $reporter = new ProgressReporter(function () use ($field): void {
+      $next = ($field->progressCurrent ?? 0) + 1;
+      $field->progressCurrent = $field->progressSteps === NULL ? $next : min($next, $field->progressSteps);
+      $this->repaint();
+    });
+
+    $work($reporter);
   }
 
   /**

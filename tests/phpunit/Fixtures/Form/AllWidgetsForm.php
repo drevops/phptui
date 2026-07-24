@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Tests\Fixtures\Form;
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\Primitive\ProgressReporter;
 
 /**
  * Test fixture: a form exercising one field of every widget type.
@@ -47,6 +48,11 @@ final class AllWidgetsForm {
         $p->filePicker('filepicker', 'FilePicker')->startIn($picker_start);
         $p->filePicker('multifilepicker', 'MultiFilePicker')->multiple()->startIn($picker_start);
         $p->pause('pause', 'Pause');
+        $p->progress('progress', 'Progress')->steps(3)->run(static function (ProgressReporter $reporter): void {
+          for ($step = 0; $step < 3; $step++) {
+            $reporter->advance();
+          }
+        });
       });
   }
 

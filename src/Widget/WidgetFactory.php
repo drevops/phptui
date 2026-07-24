@@ -72,6 +72,9 @@ class WidgetFactory {
       FieldType::Password => new PasswordWidget($this->text($current), $field->revealable, $field->confirm),
       FieldType::Pause => new PauseWidget(),
       FieldType::Text => new TextWidget($this->text($current), $this->completionsFor($field, $answers)),
+      // A progress row runs its work on activation and draws itself in its panel
+      // row; it has no editor to open.
+      FieldType::Progress => throw new \LogicException('A progress row is not edited.'),
     };
 
     // The field declaration always wins over the registry's convention-resolved

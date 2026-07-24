@@ -53,6 +53,16 @@ final class FieldBuilder {
   protected ?\Closure $optionsLoader = NULL;
 
   /**
+   * The step count for a progress bar, or NULL for an indeterminate spinner.
+   */
+  protected ?int $progressSteps = NULL;
+
+  /**
+   * The work a progress row runs when activated, or NULL for none.
+   */
+  protected ?\Closure $progressWork = NULL;
+
+  /**
    * Whether a value is required.
    */
   protected bool $required = FALSE;
@@ -704,6 +714,40 @@ final class FieldBuilder {
   }
 
   /**
+   * Set the step count of a progress row, making its indicator a bar.
+   *
+   * Without a step count a progress row shows an indeterminate spinner; with
+   * one it shows a bar that fills as the work advances through the steps.
+   *
+   * @param int $steps
+   *   The number of steps.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function steps(int $steps): self {
+    $this->progressSteps = $steps;
+
+    return $this;
+  }
+
+  /**
+   * Set the work a progress row runs when activated.
+   *
+   * @param \Closure $work
+   *   An `fn(\DrevOps\Tui\Primitive\ProgressReporter): void` that does the work,
+   *   calling `advance()` on the reporter once per step to move the indicator.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function run(\Closure $work): self {
+    $this->progressWork = $work;
+
+    return $this;
+  }
+
+  /**
    * Build the immutable Field.
    *
    * @return \DrevOps\Tui\Model\Field
@@ -737,6 +781,8 @@ final class FieldBuilder {
       $this->render,
       $this->multiple,
       $this->optionsLoader,
+      $this->progressSteps,
+      $this->progressWork,
     );
   }
 

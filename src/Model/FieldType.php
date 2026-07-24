@@ -26,6 +26,7 @@ enum FieldType: string {
   case Reorder = 'reorder';
   case FilePicker = 'filepicker';
   case Pause = 'pause';
+  case Progress = 'progress';
 
   /**
    * The human label in the active language.
@@ -51,7 +52,22 @@ enum FieldType: string {
       self::Reorder => Translator::t('Reorder'),
       self::FilePicker => Translator::t('File picker'),
       self::Pause => Translator::t('Pause'),
+      self::Progress => Translator::t('Progress'),
     };
+  }
+
+  /**
+   * Whether the type is a display element that collects no answer.
+   *
+   * A gate shows chrome and drives a side effect - a pause waits, a progress
+   * row runs work - so it carries no value into the answers or the machine
+   * schema.
+   *
+   * @return bool
+   *   TRUE for the display-only types.
+   */
+  public function isDisplayOnly(): bool {
+    return $this === self::Progress;
   }
 
   /**

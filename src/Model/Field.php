@@ -104,6 +104,15 @@ final class Field {
    *   An `fn(): array<string,string>` that loads the options on demand, or NULL
    *   for static options. Resolved lazily when the field's panel opens (headless
    *   collection resolves it up front); until then the field reads as loading.
+   * @param int|null $progressSteps
+   *   Progress only: the number of steps for a determinate bar, or NULL for an
+   *   indeterminate spinner.
+   * @param \Closure|null $progressWork
+   *   Progress only: an `fn(\DrevOps\Tui\Primitive\ProgressReporter): void` run
+   *   when the row is activated, driving the indicator through `advance()`.
+   * @param int|null $progressCurrent
+   *   Progress only: the live step count while the work runs - the bar fill, or
+   *   the spinner tick - or NULL before it has run. Mutated as the work advances.
    */
   public function __construct(
     public readonly string $id,
@@ -132,6 +141,9 @@ final class Field {
     public readonly RenderMode $render = RenderMode::Inline,
     public readonly bool $multiple = FALSE,
     public ?\Closure $optionsLoader = NULL,
+    public readonly ?int $progressSteps = NULL,
+    public readonly ?\Closure $progressWork = NULL,
+    public ?int $progressCurrent = NULL,
   ) {
     if ($this->multiple && !$this->type->supportsMultiple()) {
       throw new FormException(sprintf('Field "%s" of type "%s" does not collect several values; only select, search and file picker fields may be multiple.', $this->id, $this->type->value));

@@ -151,6 +151,15 @@ final class WidgetFactoryTest extends TestCase {
     $this->assertSame('Acme', $widget->value());
   }
 
+  public function testCreatingAProgressWidgetThrows(): void {
+    // A progress row runs its work on activation; it has no editor to build.
+    $field = new Field('p', 'P', '', FieldType::Progress, NULL);
+
+    $this->expectException(\LogicException::class);
+
+    (new WidgetFactory())->create($field, NULL);
+  }
+
   public function testMultipleWithNonArrayValueHasNoDefaults(): void {
     $widget = (new WidgetFactory())->create($this->multiFieldWithOptions(FieldType::Select), 'notalist');
 

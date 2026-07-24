@@ -47,8 +47,9 @@ class AgentHelp {
     $required = [];
 
     foreach ($this->form->fields() as $field) {
-      // A pause is a gate, not a question, so it carries no answer.
-      if ($field->type === FieldType::Pause) {
+      // A pause or a progress row is chrome, not a question, so it has no
+      // answer.
+      if ($field->type === FieldType::Pause || $field->type->isDisplayOnly()) {
         continue;
       }
 

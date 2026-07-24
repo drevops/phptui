@@ -511,6 +511,10 @@ class Engine {
   protected function activeAnswers(array $fields, array $values, array $active): array {
     $answers = [];
     foreach ($fields as $field) {
+      if ($field->type->isDisplayOnly()) {
+        continue;
+      }
+
       if ($active[$field->id] ?? FALSE) {
         $answers[$field->id] = $values[$field->id] ?? NULL;
       }
