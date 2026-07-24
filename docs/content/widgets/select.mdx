@@ -141,3 +141,43 @@ $p->select('basket', 'Basket')
     <td><ThemedImage sources={{light: useBaseUrl('/widget-select-multiple-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-select-multiple-dark-static-ascii-no-ansi.svg')}} alt="Select (multiple): ASCII + No ANSI" /></td>
   </tr>
 </table>
+
+## Selection limits
+
+Bound how many values a multiple field collects with `->minSelections()` and `->maxSelections()`. The active limit shows as a hint below the list, an out-of-range selection is rejected inline when you accept, and the same bounds are enforced in [headless collection](/headless-collection).
+
+```php
+$p->select('basket', 'Basket')
+  ->multiple()
+  ->minSelections(2) // Reject fewer than two checked.
+  ->maxSelections(3) // Reject more than three checked.
+  ->options([
+    'apple' => 'Apple',
+    'carrot' => 'Carrot',
+    'tomato' => 'Tomato',
+  ]);
+```
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/widget-select-multiple-limited-light-animated.svg'), dark: useBaseUrl('/widget-select-multiple-limited-dark-animated.svg')}} alt="Select in multiple mode with selection limits" />
+</p>
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-select-multiple-limited-light-static.svg'), dark: useBaseUrl('/widget-select-multiple-limited-dark-static.svg')}} alt="Selection limits: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-select-multiple-limited-light-static-no-ansi.svg'), dark: useBaseUrl('/widget-select-multiple-limited-dark-static-no-ansi.svg')}} alt="Selection limits: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-select-multiple-limited-light-static-ascii.svg'), dark: useBaseUrl('/widget-select-multiple-limited-dark-static-ascii.svg')}} alt="Selection limits: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-select-multiple-limited-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-select-multiple-limited-dark-static-ascii-no-ansi.svg')}} alt="Selection limits: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+Runnable script: [`playground/02-widgets-select-multiple-limited.php`](https://github.com/drevops/tui/blob/main/playground/02-widgets-select-multiple-limited.php).

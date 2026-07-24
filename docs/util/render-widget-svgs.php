@@ -123,6 +123,11 @@ function widgetSpecs(string $tree): array {
       'keys' => [...$open, $down, $space],
       'rows' => 8,
     ],
+    'select-multiple-limited' => [
+      'form' => Form::create('Bounded MultiSelect')->panel('main', 'MultiSelect', function (PanelBuilder $p): void { $p->select('basket', 'Basket')->multiple()->minSelections(2)->maxSelections(3)->options(['apple' => 'Apple', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
+      'keys' => [...$open, $space, $down, $space],
+      'rows' => 11,
+    ],
     'reorder' => [
       'form' => Form::create('Reorder widget')->panel('main', 'Reorder', function (PanelBuilder $p): void { $p->reorder('basket', 'Basket')->options(['apple' => 'Apple', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
       'keys' => [...$open, $space, $down, $space],
@@ -159,6 +164,11 @@ function widgetSpecs(string $tree): array {
       'keys' => [...$open, 't', 'o', $space],
       'rows' => 10,
     ],
+    'search-multiple-limited' => [
+      'form' => Form::create('Bounded MultiSearch')->panel('main', 'MultiSearch', function (PanelBuilder $p): void { $p->search('basket', 'Basket')->multiple()->minSelections(2)->maxSelections(3)->options(['apple' => 'Apple', 'banana' => 'Banana', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
+      'keys' => [...$open, $space, $down, $space],
+      'rows' => 13,
+    ],
     'confirm' => [
       'form' => Form::create('Confirm widget')->panel('main', 'Confirm', function (PanelBuilder $p): void { $p->confirm('organic', 'Organic only?')->default(TRUE); }),
       'keys' => [...$open, 'n'],
@@ -191,6 +201,11 @@ function widgetSpecs(string $tree): array {
       'form' => Form::create('File picker widget')->panel('main', 'File picker', function (PanelBuilder $p) use ($tree): void { $p->filePicker('price_lists', 'Price lists')->multiple()->startIn($tree); }),
       'keys' => [...$open, $space, $down, $space],
       'rows' => 10,
+    ],
+    'filepicker-multiple-limited' => [
+      'form' => Form::create('File picker widget')->panel('main', 'File picker', function (PanelBuilder $p) use ($tree): void { $p->filePicker('price_lists', 'Price lists')->multiple()->minSelections(2)->maxSelections(3)->startIn($tree); }),
+      'keys' => [...$open, $space, $down, $space],
+      'rows' => 14,
     ],
   ];
 }
