@@ -403,7 +403,7 @@ final class SearchWidgetTest extends TestCase {
     $widget = new SearchWidget($this->services, [], TRUE, selection_bounds: new SelectionBounds(2, 3));
 
     // The active limit is surfaced before it is reached.
-    $this->assertStringContainsString('between 2 and 3 items', Ansi::strip($widget->view(new DefaultTheme())));
+    $this->assertStringContainsString('Select between 2 and 3 items.', Ansi::strip($widget->view(new DefaultTheme())));
   }
 
 }

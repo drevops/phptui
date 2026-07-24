@@ -205,7 +205,7 @@ function widgetSpecs(string $tree): array {
     'filepicker-multiple-limited' => [
       'form' => Form::create('File picker widget')->panel('main', 'File picker', function (PanelBuilder $p) use ($tree): void { $p->filePicker('price_lists', 'Price lists')->multiple()->minSelections(2)->maxSelections(3)->startIn($tree); }),
       'keys' => [...$open, $space, $down, $space],
-      'rows' => 12,
+      'rows' => 14,
     ],
   ];
 }

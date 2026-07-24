@@ -45,24 +45,29 @@ trait SelectionBoundedTrait {
   }
 
   /**
-   * The themed selection-count hint line, or an empty string when unbounded.
+   * The themed selection-count hint line, or an empty string when not shown.
+   *
+   * Reuses the accept-time wording so the persistent guidance and the inline
+   * error read the same; the hint gives way to the error line while a
+   * violation is showing, so the two never stack.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string
-   *   The dim bound line (e.g. "at least 2 items"), or '' when no bounds.
+   *   The dim bound line (e.g. "Select at least 2 items."), or '' when there
+   *   are no bounds or an error is already showing.
    */
   protected function selectionHint(ThemeInterface $theme): string {
-    if (!$this->selectionBounds instanceof SelectionBounds) {
+    if (!$this->selectionBounds instanceof SelectionBounds || $this->error !== NULL) {
       return '';
     }
 
-    return $theme->description($this->selectionBounds->describe());
+    return $theme->description(Translator::t('Select @constraint.', ['@constraint' => $this->selectionBounds->describe()]));
   }
 
   /**
-   * Prepend the selection-count hint line to a view, when bounds are declared.
+   * Append the selection-count hint line beneath a view, when it is shown.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -70,12 +75,12 @@ trait SelectionBoundedTrait {
    *   The rendered view.
    *
    * @return string
-   *   The view, with the hint line above it when bounds are present.
+   *   The view, with the hint line below it when bounds are present.
    */
   protected function withSelectionHint(ThemeInterface $theme, string $view): string {
     $hint = $this->selectionHint($theme);
 
-    return $hint === '' ? $view : $hint . "\n" . $view;
+    return $hint === '' ? $view : $view . "\n" . $hint;
   }
 
 }

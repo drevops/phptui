@@ -466,11 +466,11 @@ final class FilePickerWidgetTest extends TestCase {
     $this->assertSame([$this->root . '/docs'], $widget->value());
   }
 
-  public function testMultipleSelectionHintShownInHeader(): void {
+  public function testMultipleSelectionHintShownBelowEntries(): void {
     $widget = new FilePickerWidget($this->root, multiple: TRUE, selection_bounds: new SelectionBounds(2, 3));
 
-    // The active limit is surfaced before it is reached.
-    $this->assertStringContainsString('between 2 and 3 items', $this->render($widget));
+    // The active limit is surfaced, capitalized, below the entries.
+    $this->assertStringContainsString('Select between 2 and 3 items.', $this->render($widget));
   }
 
   /**

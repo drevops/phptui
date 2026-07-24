@@ -478,9 +478,11 @@ final class SelectWidgetTest extends TestCase {
 
   public function testMultipleSelectionHintShownInView(): void {
     $widget = new SelectWidget(['a' => 'A', 'b' => 'B'], [], TRUE, selection_bounds: new SelectionBounds(1, 2));
+    $view = Ansi::strip($widget->view(new DefaultTheme()));
 
-    // The active limit is surfaced in the view before it is reached.
-    $this->assertStringContainsString('between 1 and 2 items', Ansi::strip($widget->view(new DefaultTheme())));
+    // The active limit is surfaced, capitalized, below the option list.
+    $this->assertStringContainsString('Select between 1 and 2 items.', $view);
+    $this->assertGreaterThan(strpos($view, 'B'), strpos($view, 'Select between 1 and 2 items.'));
   }
 
 }

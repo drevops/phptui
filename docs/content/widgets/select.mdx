@@ -144,7 +144,7 @@ $p->select('basket', 'Basket')
 
 ## Selection limits
 
-Bound how many values a multiple field collects with `->minSelections()` and `->maxSelections()`. The active limit shows as a hint above the list, an out-of-range selection is rejected inline when you accept, and the same bounds are enforced in [headless collection](/headless-collection).
+Bound how many values a multiple field collects with `->minSelections()` and `->maxSelections()`. The active limit shows as a hint below the list, an out-of-range selection is rejected inline when you accept, and the same bounds are enforced in [headless collection](/headless-collection).
 
 ```php
 $p->select('basket', 'Basket')
