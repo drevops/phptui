@@ -83,8 +83,8 @@ class Engine {
   /**
    * Resolve each field's option loader to its options, in place.
    *
-   * A loader runs once; the resolved options replace it, so a later pass and the
-   * interactive panel both see settled options.
+   * A loader runs once; the resolved options replace it, so a later pass and
+   * the interactive panel both see settled options.
    *
    * @param \DrevOps\Tui\Model\Field[] $fields
    *   The fields.

@@ -101,9 +101,9 @@ final class Field {
    *   Whether the field collects several values as a list rather than one;
    *   honoured by the select, search and file picker types.
    * @param \Closure|null $optionsLoader
-   *   An `fn(): array<string,string>` that loads the options on demand, or NULL
-   *   for static options. Resolved lazily when the field's panel opens (headless
-   *   collection resolves it up front); until then the field reads as loading.
+   *   An `fn(): array<string,string>` loading the options on demand, or NULL for
+   *   static options. Resolved lazily when the panel opens (headless collection
+   *   resolves it up front); until then the field reads as loading.
    * @param int|null $progressSteps
    *   Progress only: the number of steps for a determinate bar, or NULL for an
    *   indeterminate spinner.
@@ -112,7 +112,7 @@ final class Field {
    *   when the row is activated, driving the indicator through `advance()`.
    * @param int|null $progressCurrent
    *   Progress only: the live step count while the work runs - the bar fill, or
-   *   the spinner tick - or NULL before it has run. Mutated as the work advances.
+   *   the spinner tick, or NULL before it runs; mutated as the work advances.
    */
   public function __construct(
     public readonly string $id,

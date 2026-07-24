@@ -692,9 +692,10 @@ final class FieldBuilder {
    * Add several options from a value => label map, or a loader for them.
    *
    * @param array<array-key,string>|\Closure $options
-   *   The options keyed by value with a label, or an `fn(): array<string,string>`
-   *   that loads them on demand. A loader resolves lazily when the field's panel
-   *   opens - showing a themed "Loading…" beside the field until it returns.
+   *   The options keyed by value with a label, or an
+   *   `fn(): array<string,string>` that loads them on demand. A loader resolves
+   *   lazily when the field's panel opens - showing a themed "Loading…" beside
+   *   the field until it returns.
    *
    * @return $this
    *   The builder.
@@ -735,8 +736,8 @@ final class FieldBuilder {
    * Set the work a progress row runs when activated.
    *
    * @param \Closure $work
-   *   An `fn(\DrevOps\Tui\Primitive\ProgressReporter): void` that does the work,
-   *   calling `advance()` on the reporter once per step to move the indicator.
+   *   An `fn(\DrevOps\Tui\Primitive\ProgressReporter): void` that does the
+   *   work, calling `advance()` on the reporter once per step to move the bar.
    *
    * @return $this
    *   The builder.

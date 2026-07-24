@@ -38,7 +38,7 @@ use PHPUnit\Framework\TestCase;
 final class ProgressWidgetTest extends TestCase {
 
   public function testBuilderStoresTheStepsAndWork(): void {
-    $field = $this->form(static fn(ProgressReporter $reporter): mixed => $reporter->advance(), 3)->build()->fields()[0];
+    $field = $this->form($this->work(), 3)->build()->fields()[0];
 
     $this->assertSame(FieldType::Progress, $field->type);
     $this->assertSame(3, $field->progressSteps);
@@ -89,7 +89,7 @@ final class ProgressWidgetTest extends TestCase {
   }
 
   public function testHeadlessCollectionOmitsAProgressRow(): void {
-    $answers = (new Tui($this->form(static fn(ProgressReporter $reporter): mixed => $reporter->advance(), 3)))->collect('{}');
+    $answers = (new Tui($this->form($this->work(), 3)))->collect('{}');
 
     $this->assertFalse($answers->has('apply'));
   }
@@ -97,7 +97,7 @@ final class ProgressWidgetTest extends TestCase {
   public function testTheAnswerSchemaOmitsAProgressRow(): void {
     $form = Form::create('Apply')->panel('prep', 'Prep', function (PanelBuilder $p): void {
       $p->text('name', 'Name');
-      $p->progress('apply', 'Apply')->steps(1)->run(static fn(ProgressReporter $reporter): mixed => $reporter->advance());
+      $p->progress('apply', 'Apply')->steps(1)->run($this->work());
     })->build();
 
     $schema = (new AgentHelp($form))->generate();
@@ -126,6 +126,18 @@ final class ProgressWidgetTest extends TestCase {
         $builder->steps($steps);
       }
     });
+  }
+
+  /**
+   * A single-step work closure, for cases that never actually run it.
+   *
+   * @return \Closure
+   *   The work.
+   */
+  protected function work(): \Closure {
+    return static function (ProgressReporter $reporter): void {
+      $reporter->advance();
+    };
   }
 
 }

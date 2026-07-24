@@ -39,7 +39,7 @@ final class ProgressableTest extends TestCase {
 
     $answers = (new Tui($this->form($calls)))->collect('{"fruit":"pear"}');
 
-    // The loader ran once, and the supplied value validates against its options.
+    // The loader ran once, and the value validates against its options.
     $this->assertSame('pear', $answers->value('fruit'));
     $this->assertSame(1, $calls);
   }
