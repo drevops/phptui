@@ -322,6 +322,7 @@ class PanelController {
     $parser = new KeyParser();
     $this->terminal = $terminal;
     $terminal->setup($this->theme->background());
+    $this->resolveLoaders($this->navigator->current());
 
     try {
       if ($this->banner !== '') {
@@ -1104,6 +1105,32 @@ class PanelController {
 
     $this->navigator->enter($panel);
     $this->cursor = 0;
+    $this->resolveLoaders($panel);
+  }
+
+  /**
+   * Resolve a just-entered panel's option loaders, showing them loading.
+   *
+   * Paints the panel once - the loading fields read as "Loading…" through the
+   * theme - then runs each loader (blocking) and settles, so drilling into a
+   * panel loads its data on entry rather than up front.
+   *
+   * @param \DrevOps\Tui\Model\Panel $panel
+   *   The entered panel.
+   */
+  protected function resolveLoaders(Panel $panel): void {
+    $loading = array_values(array_filter($panel->fields, static fn(Field $field): bool => $field->optionsLoader instanceof \Closure));
+
+    if ($loading === []) {
+      return;
+    }
+
+    if (isset($this->terminal)) {
+      $this->terminal->render($this->positioned($this->frame($this->rows($this->terminal)), $this->terminal));
+    }
+
+    $this->engine->loadOptions($loading);
+    $this->resettle();
   }
 
   /**
@@ -1120,6 +1147,7 @@ class PanelController {
     $this->navigator->enter($panel);
     $this->cursor = 0;
     $this->offset = 0;
+    $this->resolveLoaders($panel);
   }
 
   /**

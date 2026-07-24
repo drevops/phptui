@@ -12,9 +12,13 @@ use DrevOps\Tui\Translation\Translator;
 /**
  * A single question in the configuration model.
  *
+ * The definition is immutable except for its option set: a field may declare
+ * an options loader that is resolved once, on demand, and cached back onto the
+ * field - so `$options` and `$optionsLoader` are the only mutable state.
+ *
  * @package DrevOps\Tui\Model
  */
-final readonly class Field {
+final class Field {
 
   /**
    * The option rows for choice-based fields, in display order.
@@ -96,33 +100,38 @@ final readonly class Field {
    * @param bool $multiple
    *   Whether the field collects several values as a list rather than one;
    *   honoured by the select, search and file picker types.
+   * @param \Closure|null $optionsLoader
+   *   An `fn(): array<string,string>` that loads the options on demand, or NULL
+   *   for static options. Resolved lazily when the field's panel opens (headless
+   *   collection resolves it up front); until then the field reads as loading.
    */
   public function __construct(
-    public string $id,
-    public string $label,
-    public string $description,
-    public FieldType $type,
-    public mixed $default,
+    public readonly string $id,
+    public readonly string $label,
+    public readonly string $description,
+    public readonly FieldType $type,
+    public readonly mixed $default,
     array $options = [],
-    public bool $required = FALSE,
-    public ?ConditionInterface $when = NULL,
-    public ?Derive $derive = NULL,
-    public DiscoverInterface|\Closure|null $discover = NULL,
-    public ?\Closure $validate = NULL,
-    public ?\Closure $transform = NULL,
-    public bool $revealable = FALSE,
-    public bool $confirm = FALSE,
-    public bool $externalEditor = FALSE,
-    public ?NumberBounds $bounds = NULL,
-    public FilePickerMode $pickerMode = FilePickerMode::Any,
-    public string $pickerStart = '',
-    public array $pickerExtensions = [],
-    public bool $pickerShowHidden = FALSE,
-    public ?int $pageSize = NULL,
-    public array|\Closure $completion = [],
-    public ?DateBounds $dateBounds = NULL,
-    public RenderMode $render = RenderMode::Inline,
-    public bool $multiple = FALSE,
+    public readonly bool $required = FALSE,
+    public readonly ?ConditionInterface $when = NULL,
+    public readonly ?Derive $derive = NULL,
+    public readonly DiscoverInterface|\Closure|null $discover = NULL,
+    public readonly ?\Closure $validate = NULL,
+    public readonly ?\Closure $transform = NULL,
+    public readonly bool $revealable = FALSE,
+    public readonly bool $confirm = FALSE,
+    public readonly bool $externalEditor = FALSE,
+    public readonly ?NumberBounds $bounds = NULL,
+    public readonly FilePickerMode $pickerMode = FilePickerMode::Any,
+    public readonly string $pickerStart = '',
+    public readonly array $pickerExtensions = [],
+    public readonly bool $pickerShowHidden = FALSE,
+    public readonly ?int $pageSize = NULL,
+    public readonly array|\Closure $completion = [],
+    public readonly ?DateBounds $dateBounds = NULL,
+    public readonly RenderMode $render = RenderMode::Inline,
+    public readonly bool $multiple = FALSE,
+    public ?\Closure $optionsLoader = NULL,
   ) {
     if ($this->multiple && !$this->type->supportsMultiple()) {
       throw new FormException(sprintf('Field "%s" of type "%s" does not collect several values; only select, search and file picker fields may be multiple.', $this->id, $this->type->value));

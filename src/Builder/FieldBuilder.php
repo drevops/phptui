@@ -48,6 +48,11 @@ final class FieldBuilder {
   protected array $options = [];
 
   /**
+   * A loader for the options, or NULL for static options.
+   */
+  protected ?\Closure $optionsLoader = NULL;
+
+  /**
    * Whether a value is required.
    */
   protected bool $required = FALSE;
@@ -674,15 +679,23 @@ final class FieldBuilder {
   }
 
   /**
-   * Add several options from a value => label map.
+   * Add several options from a value => label map, or a loader for them.
    *
-   * @param array<array-key,string> $options
-   *   The options, keyed by value with a label.
+   * @param array<array-key,string>|\Closure $options
+   *   The options keyed by value with a label, or an `fn(): array<string,string>`
+   *   that loads them on demand. A loader resolves lazily when the field's panel
+   *   opens - showing a themed "Loading…" beside the field until it returns.
    *
    * @return $this
    *   The builder.
    */
-  public function options(array $options): self {
+  public function options(array|\Closure $options): self {
+    if ($options instanceof \Closure) {
+      $this->optionsLoader = $options;
+
+      return $this;
+    }
+
     foreach ($options as $value => $label) {
       $this->option((string) $value, $label);
     }
@@ -723,6 +736,7 @@ final class FieldBuilder {
       $this->buildDateBounds(),
       $this->render,
       $this->multiple,
+      $this->optionsLoader,
     );
   }
 

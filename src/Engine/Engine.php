@@ -9,6 +9,7 @@ use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Condition\ConditionInterface;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Derive\Deriver;
 use DrevOps\Tui\Discovery\DiscoverInterface;
 use DrevOps\Tui\Handler\Context;
@@ -66,6 +67,10 @@ class Engine {
   public function collect(array $inputs, Context $context): Answers {
     $fields = $this->form->fields();
 
+    // Headless collection has no panel to resolve option loaders lazily, so
+    // resolve them up front - the values need their options to validate.
+    $this->loadOptions($fields);
+
     [$values, $sources] = $this->resolveAll($fields, $inputs, $context);
     $values = $this->transformInputs($fields, $values, $sources);
     [$rules, $pinned] = $this->deriveRules($fields, $sources);
@@ -73,6 +78,27 @@ class Engine {
     $this->guardInputs($fields, $values, $sources, $active);
 
     return Answers::forForm($this->form, $this->activeAnswers($fields, $values, $active), $this->provenanceFor($fields, $sources, $active));
+  }
+
+  /**
+   * Resolve each field's option loader to its options, in place.
+   *
+   * A loader runs once; the resolved options replace it, so a later pass and the
+   * interactive panel both see settled options.
+   *
+   * @param \DrevOps\Tui\Model\Field[] $fields
+   *   The fields.
+   */
+  public function loadOptions(array $fields): void {
+    foreach ($fields as $field) {
+      if (!$field->optionsLoader instanceof \Closure) {
+        continue;
+      }
+
+      $loaded = ($field->optionsLoader)();
+      $field->options = Option::list(is_array($loaded) ? $loaded : []);
+      $field->optionsLoader = NULL;
+    }
   }
 
   /**

@@ -2011,6 +2011,11 @@ class DefaultTheme implements ThemeInterface {
    *   The rendered value.
    */
   protected function renderFieldValue(Field $field, mixed $value): string {
+    // A field whose options have not yet loaded reads as loading, not empty.
+    if ($field->optionsLoader instanceof \Closure) {
+      return $this->renderLoading('');
+    }
+
     if ($field->type === FieldType::Password) {
       return is_string($value) && $value !== '' ? ValueFormatter::mask($this->mask()) : '';
     }
