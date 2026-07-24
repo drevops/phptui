@@ -252,6 +252,20 @@ interface ThemeInterface {
   public function renderProgressBar(int $current, int $total, string $caption, string $label): string;
 
   /**
+   * Render a static loading indicator: a caption and a themed ellipsis.
+   *
+   * The resting state of a progressable load - shown while a callable resolves
+   * but before (or without) any advance.
+   *
+   * @param string $caption
+   *   The caption shown before the ellipsis.
+   *
+   * @return string
+   *   The composed loading line.
+   */
+  public function renderLoading(string $caption): string;
+
+  /**
    * The masked-character symbol for secret values.
    */
   public function mask(): string;

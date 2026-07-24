@@ -838,6 +838,17 @@ class DefaultTheme implements ThemeInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function renderLoading(string $caption): string {
+    // The ellipsis carries the theme's accent through highlight(), matching the
+    // spinner and bar; the caption stays plain.
+    $dots = $this->highlight($this->unicode ? '…' : '...');
+
+    return $caption === '' ? $dots : $caption . ' ' . $dots;
+  }
+
+  /**
    * Build the body lines and the line index of the selected item.
    *
    * @param \DrevOps\Tui\Model\Panel $panel
