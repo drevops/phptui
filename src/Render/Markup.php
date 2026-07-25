@@ -237,7 +237,10 @@ final class Markup {
 
     if ($char === '[' && preg_match('/\G\[([^\]]*)\]\(([^)]+)\)/', $text, $matches, 0, $index) === 1 && self::looksLikeUrl($matches[2])) {
       // Control bytes in a link would break the escape wrapper it renders to.
-      return [new MarkupSegment(MarkupKind::Link, Ansi::stripControl($matches[1]), Ansi::stripControl($matches[2])), strlen($matches[0])];
+      $label = Ansi::stripControl($matches[1]);
+      $url = Ansi::stripControl($matches[2]);
+
+      return [new MarkupSegment(MarkupKind::Link, $label, $url), strlen($matches[0])];
     }
 
     if ($markdown && $char === '*' && preg_match('/\G\*\*(\S(?:.*?\S)?)\*\*/', $text, $matches, 0, $index) === 1) {

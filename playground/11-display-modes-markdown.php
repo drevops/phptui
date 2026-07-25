@@ -14,7 +14,8 @@
  *
  * Usage:
  *   php playground/11-display-modes-markdown.php
- *   NO_COLOR=1 php playground/11-display-modes-markdown.php  # plain-text degrade
+ *   # Force the plain-text degrade with the NO_COLOR convention:
+ *   NO_COLOR=1 php playground/11-display-modes-markdown.php
  */
 
 declare(strict_types=1);
@@ -39,8 +40,8 @@ $form = Form::create('Produce order')
   });
 
 try {
-  // ->markdown() turns on the bold/emphasis/code/bullet subset; links render
-  // either way. NULL colour auto-detects, so NO_COLOR degrades it to plain text.
+  // ->markdown() enables the bold/emphasis/code/bullet subset; links render
+  // either way, and NO_COLOR degrades the whole lot to clean plain text.
   $answers = (new Tui($form))->markdown()->run();
 }
 catch (InterruptException) {

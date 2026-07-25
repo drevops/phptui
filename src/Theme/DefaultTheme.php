@@ -144,7 +144,7 @@ class DefaultTheme implements ThemeInterface {
 
     $this->color = is_bool($this->options['color'] ?? NULL) ? $this->options['color'] : TRUE;
     $this->unicode = is_bool($this->options['unicode'] ?? NULL) ? $this->options['unicode'] : TRUE;
-    $this->markdown = is_bool($this->options['markdown'] ?? NULL) ? $this->options['markdown'] : FALSE;
+    $this->markdown = is_bool($this->options['markdown'] ?? NULL) && $this->options['markdown'];
     $this->isDark = $this->mode() === Mode::Dark;
 
     // In fullscreen the given width is the whole terminal's; a max-width cap

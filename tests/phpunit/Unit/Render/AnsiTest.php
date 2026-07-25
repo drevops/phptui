@@ -80,7 +80,7 @@ final class AnsiTest extends TestCase {
     $this->assertSame('Apple', Ansi::strip($esc . ']8;;https://example.com/apple' . "\007" . 'Apple' . $esc . ']8;;' . "\007"));
 
     // An ST-terminated (ESC-backslash) hyperlink.
-    $this->assertSame('Pear', Ansi::strip($esc . ']8;;https://example.com/pear' . $esc . '\\' . 'Pear' . $esc . ']8;;' . $esc . '\\'));
+    $this->assertSame('Pear', Ansi::strip($esc . ']8;;https://example.com/pear' . $esc . '\\Pear' . $esc . ']8;;' . $esc . '\\'));
   }
 
   public function testBlockWidth(): void {

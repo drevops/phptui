@@ -60,7 +60,7 @@ final class MarkupTest extends TestCase {
     $this->assertSame('pack it [see step 3](later)', $lines[0]->segments[0]->text);
   }
 
-  #[DataProvider('dataProviderMarkdownOnlyMarkers')]
+  #[DataProvider('dataProviderParseMarkdownMarkersAreLiteralWhenOff')]
   public function testParseMarkdownMarkersAreLiteralWhenOff(string $source): void {
     $lines = Markup::parse($source, FALSE);
 
@@ -69,13 +69,11 @@ final class MarkupTest extends TestCase {
     $this->assertSame($source, $lines[0]->segments[0]->text);
   }
 
-  public static function dataProviderMarkdownOnlyMarkers(): array {
-    return [
-      ['**bold**'],
-      ['*emphasis*'],
-      ['`code`'],
-      ['- bullet'],
-    ];
+  public static function dataProviderParseMarkdownMarkersAreLiteralWhenOff(): \Iterator {
+    yield ['**bold**'];
+    yield ['*emphasis*'];
+    yield ['`code`'];
+    yield ['- bullet'];
   }
 
   public function testParseBold(): void {
@@ -152,14 +150,12 @@ final class MarkupTest extends TestCase {
     $this->assertSame($expected, Markup::hyperlink($text, $url, $color));
   }
 
-  public static function dataProviderHyperlink(): array {
-    return [
-      'colour on' => ['Grapes', 'https://example.com/grapes', TRUE, "\033]8;;https://example.com/grapes\007Grapes\033]8;;\007"],
-      'colour off' => ['Grapes', 'https://example.com/grapes', FALSE, 'Grapes (https://example.com/grapes)'],
-      'empty label uses url' => ['', 'https://example.com/grapes', TRUE, "\033]8;;https://example.com/grapes\007https://example.com/grapes\033]8;;\007"],
-      'label equal to url is not doubled' => ['https://example.com', 'https://example.com', FALSE, 'https://example.com'],
-      'empty url is plain text' => ['Grapes', '', FALSE, 'Grapes'],
-    ];
+  public static function dataProviderHyperlink(): \Iterator {
+    yield 'colour on' => ['Grapes', 'https://example.com/grapes', TRUE, "\033]8;;https://example.com/grapes\007Grapes\033]8;;\007"];
+    yield 'colour off' => ['Grapes', 'https://example.com/grapes', FALSE, 'Grapes (https://example.com/grapes)'];
+    yield 'empty label uses url' => ['', 'https://example.com/grapes', TRUE, "\033]8;;https://example.com/grapes\007https://example.com/grapes\033]8;;\007"];
+    yield 'label equal to url is not doubled' => ['https://example.com', 'https://example.com', FALSE, 'https://example.com'];
+    yield 'empty url is plain text' => ['Grapes', '', FALSE, 'Grapes'];
   }
 
   #[DataProvider('dataProviderWidth')]
@@ -167,15 +163,13 @@ final class MarkupTest extends TestCase {
     $this->assertSame($expected, Markup::width($source, $markdown, $color));
   }
 
-  public static function dataProviderWidth(): array {
-    return [
-      'plain' => ['carrot', FALSE, TRUE, 6],
-      'link colour on measures label' => ['[Kale](https://example.com/kale)', FALSE, TRUE, 4],
-      'link colour off measures degrade' => ['[Kale](https://example.com/k)', FALSE, FALSE, strlen('Kale (https://example.com/k)')],
-      'bold measures inner text' => ['**Fresh**', TRUE, TRUE, 5],
-      'bullet adds marker width' => ['- pears', TRUE, TRUE, 7],
-      'widest of several lines' => ["a\nlonger line", FALSE, TRUE, 11],
-    ];
+  public static function dataProviderWidth(): \Iterator {
+    yield 'plain' => ['carrot', FALSE, TRUE, 6];
+    yield 'link colour on measures label' => ['[Kale](https://example.com/kale)', FALSE, TRUE, 4];
+    yield 'link colour off measures degrade' => ['[Kale](https://example.com/k)', FALSE, FALSE, strlen('Kale (https://example.com/k)')];
+    yield 'bold measures inner text' => ['**Fresh**', TRUE, TRUE, 5];
+    yield 'bullet adds marker width' => ['- pears', TRUE, TRUE, 7];
+    yield 'widest of several lines' => ["a\nlonger line", FALSE, TRUE, 11];
   }
 
 }
