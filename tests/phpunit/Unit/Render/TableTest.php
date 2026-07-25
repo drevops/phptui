@@ -151,6 +151,21 @@ final class TableTest extends TestCase {
     $this->assertStringNotContainsString('…', $joined);
   }
 
+  public function testFoldsCellLineBreaks(): void {
+    // A cell that carries a line break stays one physical row, so the grid's
+    // borders never desync - CRLF, CR and LF each fold to a space.
+    $lines = Table::render(['H'], [["a\nb"], ["c\r\nd"], ["e\rf"]], Border::Line, TRUE);
+
+    $this->assertCount(7, $lines);
+    $this->assertStringContainsString('a b', $lines[3]);
+    $this->assertStringContainsString('c d', $lines[4]);
+    $this->assertStringContainsString('e f', $lines[5]);
+
+    foreach ($lines as $line) {
+      $this->assertStringNotContainsString("\n", $line);
+    }
+  }
+
   public function testOverflowFloorsColumnsAtOneColumn(): void {
     // Too many columns for the cap: every column shrinks to a single column and
     // the table is left as narrow as it can be, each cell an ellipsis.

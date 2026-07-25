@@ -113,10 +113,27 @@ final class Table {
     $out = [];
 
     for ($index = 0; $index < $columns; $index++) {
-      $out[] = $row[$index] ?? '';
+      $out[] = self::oneLine($row[$index] ?? '');
     }
 
     return $out;
+  }
+
+  /**
+   * Fold a cell's line breaks to spaces so it stays a single physical row.
+   *
+   * A cell spans exactly one row; an embedded newline would split it and
+   * desync the grid's borders and width maths, so CRLF, CR and LF each fold
+   * to a single space.
+   *
+   * @param string $cell
+   *   The cell text.
+   *
+   * @return string
+   *   The cell on one line.
+   */
+  protected static function oneLine(string $cell): string {
+    return str_replace(["\r\n", "\r", "\n"], ' ', $cell);
   }
 
   /**

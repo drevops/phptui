@@ -378,6 +378,19 @@ final class ThemeRenderTest extends TestCase {
     $this->assertStringNotContainsString('{{fruit}}', $joined);
   }
 
+  public function testNoteTableFoldsInterpolatedNewlines(): void {
+    // An answer carrying newlines - a textarea value - interpolated into a cell
+    // folds to one row so it never splits the grid.
+    $field = new Field('memo', '', '', FieldType::Note, '', table: new TableSpec(['Memo'], [['{{memo}}']]));
+    $lines = $this->theme()->renderNoteLines($field, new Answers(['memo' => "first\nsecond"], []));
+
+    foreach ($lines as $line) {
+      $this->assertStringNotContainsString("\n", $line);
+    }
+
+    $this->assertStringContainsString('first second', Ansi::strip(implode(' ', $lines)));
+  }
+
   public function testBorderedNoteBoxesItsTable(): void {
     $field = new Field('stock', 'Stock', '', FieldType::Note, '', bordered: TRUE, table: new TableSpec(['Fruit'], [['Apple']]));
     $joined = Ansi::strip(implode("\n", $this->theme()->renderNoteLines($field, new Answers())));
