@@ -163,10 +163,10 @@ class CalendarWidget extends AbstractWidget implements StepCapableInterface {
   /**
    * {@inheritdoc}
    */
-  public function view(ThemeInterface $theme): string {
+  protected function renderBody(ThemeInterface $theme): string {
     $rows = array_merge([$this->heading($theme), $this->weekdayRow($theme)], $this->weekRows($theme));
 
-    return $this->withError($theme, implode("\n", $rows));
+    return implode("\n", $rows);
   }
 
   /**

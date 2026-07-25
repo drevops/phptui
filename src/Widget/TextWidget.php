@@ -79,8 +79,8 @@ class TextWidget extends AbstractWidget implements TextEditCapableInterface, Com
   /**
    * {@inheritdoc}
    */
-  public function view(ThemeInterface $theme): string {
-    return $this->withError($theme, $this->caretLine($theme));
+  protected function renderBody(ThemeInterface $theme): string {
+    return $this->caretLine($theme);
   }
 
   /**

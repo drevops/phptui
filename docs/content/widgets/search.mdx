@@ -37,21 +37,21 @@ Runnable scripts: [`playground/02-widgets-search.php`](https://github.com/drevop
 | `default()`  | Which option starts highlighted, by value.                                       | No       | First option |
 | `pageSize()` | Matches shown before the list pages around the cursor.                           | No       | `10`         |
 
-For headings, separators and disabled options, see [Option groups](/widgets/option-groups).
+For headings, separators and disabled options, see [Option groups](/widgets/option-groups). For a per-option [description line](/widgets/select#option-descriptions) shown beneath the highlighted match, declare it with `->option(..., description: ...)`.
 
 ## Keyboard
 
-| Key            | Action                                    |
-| -------------- | ----------------------------------------- |
-| printable keys | Type to fuzzy-filter and rank the options |
-| `↑` / `↓`      | Move over the matches                     |
-| `Backspace`    | Delete a filter character                 |
-| `Enter`        | Accept the highlighted option             |
-| `Esc`          | Cancel                                    |
+| Key                         | Action                                    |
+| --------------------------- | ----------------------------------------- |
+| printable keys              | Type to fuzzy-filter and rank the options |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Move over the matches                     |
+| <kbd>Backspace</kbd>        | Delete a filter character                 |
+| <kbd>Enter</kbd>            | Accept the highlighted option             |
+| <kbd>Esc</kbd>              | Cancel                                    |
 
 ## Display modes
 
-In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off:
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
 <table>
   <tr>
@@ -73,7 +73,7 @@ In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off
 
 ## Multiple selection
 
-Add `->multiple()` to collect a **`list<string>`** of checked values under the filter line. Typing fuzzy-matches and ranks with the matched characters highlighted, `Space` toggles, `→` / `←` select or deselect all visible, and `Enter` accepts the checked set.
+Add `->multiple()` to collect a **`list<string>`** of checked values under the filter line. Typing fuzzy-matches and ranks with the matched characters highlighted, <kbd>Space</kbd> toggles, <kbd>→</kbd> / <kbd>←</kbd> select or deselect all visible, and <kbd>Enter</kbd> accepts the checked set.
 
 ```php
 $p->search('basket', 'Basket')
@@ -106,5 +106,68 @@ $p->search('basket', 'Basket')
     <td align="right"><strong>ASCII</strong></td>
     <td><ThemedImage sources={{light: useBaseUrl('/widget-search-multiple-light-static-ascii.svg'), dark: useBaseUrl('/widget-search-multiple-dark-static-ascii.svg')}} alt="Search (multiple): ASCII + ANSI" /></td>
     <td><ThemedImage sources={{light: useBaseUrl('/widget-search-multiple-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-search-multiple-dark-static-ascii-no-ansi.svg')}} alt="Search (multiple): ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+## Selection limits
+
+Bound how many values a multiple field collects with `->minSelections()` and `->maxSelections()`. The active limit shows as a hint below the list, an out-of-range selection is rejected inline when you accept, and the same bounds are enforced in [headless collection](/headless-collection).
+
+```php
+$p->search('basket', 'Basket')
+  ->multiple()
+  ->minSelections(2) // Reject fewer than two checked.
+  ->maxSelections(3) // Reject more than three checked.
+  ->options([
+    'apple' => 'Apple',
+    'banana' => 'Banana',
+    'carrot' => 'Carrot',
+    'tomato' => 'Tomato',
+  ]);
+```
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/widget-search-multiple-limited-light-animated.svg'), dark: useBaseUrl('/widget-search-multiple-limited-dark-animated.svg')}} alt="Search in multiple mode with selection limits" />
+</p>
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-search-multiple-limited-light-static.svg'), dark: useBaseUrl('/widget-search-multiple-limited-dark-static.svg')}} alt="Selection limits: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-search-multiple-limited-light-static-no-ansi.svg'), dark: useBaseUrl('/widget-search-multiple-limited-dark-static-no-ansi.svg')}} alt="Selection limits: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-search-multiple-limited-light-static-ascii.svg'), dark: useBaseUrl('/widget-search-multiple-limited-dark-static-ascii.svg')}} alt="Selection limits: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-search-multiple-limited-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-search-multiple-limited-dark-static-ascii-no-ansi.svg')}} alt="Selection limits: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+Runnable script: [`playground/02-widgets-search-multiple-limited.php`](https://github.com/drevops/tui/blob/main/playground/02-widgets-search-multiple-limited.php).
+
+## Option descriptions
+
+The highlighted match's [description](/widgets/select#option-descriptions), in every display mode:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-search-descriptions-light-static.svg'), dark: useBaseUrl('/widget-search-descriptions-dark-static.svg')}} alt="Search option descriptions: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-search-descriptions-light-static-no-ansi.svg'), dark: useBaseUrl('/widget-search-descriptions-dark-static-no-ansi.svg')}} alt="Search option descriptions: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-search-descriptions-light-static-ascii.svg'), dark: useBaseUrl('/widget-search-descriptions-dark-static-ascii.svg')}} alt="Search option descriptions: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-search-descriptions-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-search-descriptions-dark-static-ascii-no-ansi.svg')}} alt="Search option descriptions: ASCII + No ANSI" /></td>
   </tr>
 </table>

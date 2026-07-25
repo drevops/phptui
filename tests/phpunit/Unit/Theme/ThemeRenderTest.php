@@ -204,6 +204,78 @@ final class ThemeRenderTest extends TestCase {
     $this->assertStringContainsString('❯ B', Ansi::strip($lines[2]));
   }
 
+  public function testBodyRendersNoteCardAndSkipsItInTheCursorCount(): void {
+    $panel = new Panel('p', 'P', '', [
+      new Field('name', 'Name', '', FieldType::Text, ''),
+      new Field('intro', 'Getting started', "First line.\nSecond line.", FieldType::Note, ''),
+      new Field('agree', 'Agree', '', FieldType::Confirm, FALSE),
+    ]);
+
+    // Cursor index 1 is the second navigable field; the note is not counted.
+    [$lines, $cursor_line] = $this->theme()->renderBody($panel, new Answers(['name' => 'Acme', 'agree' => FALSE], []), 1);
+
+    $body = Ansi::strip(implode("\n", $lines));
+    $this->assertStringContainsString('Getting started', $body);
+    $this->assertStringContainsString('First line.', $body);
+    $this->assertStringContainsString('Second line.', $body);
+    // The cursor lands on the field after the note, never the note itself.
+    $this->assertStringContainsString('❯ Agree', Ansi::strip($lines[$cursor_line]));
+    $this->assertStringNotContainsString('❯ Getting started', $body);
+  }
+
+  public function testBodySkipsEmptyNote(): void {
+    $panel = new Panel('p', 'P', '', [
+      new Field('name', 'Name', '', FieldType::Text, ''),
+      new Field('blank', '', '', FieldType::Note, ''),
+    ]);
+
+    [$lines] = $this->theme()->renderBody($panel, new Answers(['name' => 'Acme'], []), 0);
+
+    // A note with neither title nor body contributes no lines.
+    $this->assertStringContainsString('Name', Ansi::strip(implode("\n", $lines)));
+    $this->assertSame([], $this->theme()->renderNoteLines(new Field('blank', '', '', FieldType::Note, ''), new Answers()));
+  }
+
+  public function testNoteInterpolatesAnswersInTitleAndBody(): void {
+    $note = new Field('echo', 'Hello {{name}}', 'You picked {{fruit}}.', FieldType::Note, '');
+
+    $lines = Ansi::strip(implode("\n", $this->theme()->renderNoteLines($note, new Answers(['name' => 'Ada', 'fruit' => 'pear'], []))));
+
+    $this->assertStringContainsString('Hello Ada', $lines);
+    $this->assertStringContainsString('You picked pear.', $lines);
+  }
+
+  public function testPaddedSpacingSeparatesNoteFromTheFieldAbove(): void {
+    $theme = new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Padded]);
+    $panel = new Panel('p', 'P', '', [
+      new Field('name', 'Name', '', FieldType::Text, ''),
+      new Field('intro', 'Intro', 'Body.', FieldType::Note, ''),
+    ]);
+
+    [$lines] = $theme->renderBody($panel, new Answers(['name' => 'Acme'], []), 0);
+    $stripped = array_map(Ansi::strip(...), $lines);
+
+    // Padded spacing inserts a blank line before the note card.
+    $index = array_search('  Intro', $stripped, TRUE);
+    $this->assertIsInt($index);
+    $this->assertGreaterThan(0, $index);
+    $this->assertSame('', $stripped[$index - 1]);
+  }
+
+  public function testRenderNoteLinesBoxesBorderedNote(): void {
+    // The theme frame is borderless, so an opt-in note border falls back to the
+    // single-line box; its glyphs come only from the note.
+    $lines = $this->theme()->renderNoteLines(new Field('boxed', 'Boxed', 'In a box.', FieldType::Note, '', bordered: TRUE), new Answers());
+    $joined = Ansi::strip(implode("\n", $lines));
+
+    $this->assertStringContainsString('Boxed', $joined);
+    $this->assertStringContainsString('In a box.', $joined);
+    $this->assertStringContainsString('┌', $joined);
+    $this->assertStringContainsString('┐', $joined);
+    $this->assertStringContainsString('└', $joined);
+    $this->assertStringContainsString('┘', $joined);
+  }
+
   public function testBodyIncludesSubPanels(): void {
     $panel = new Panel('p', 'P', '', [new Field('a', 'A', '', FieldType::Text, '')], [
       new Panel('sub', 'Sub', 'sub desc'),

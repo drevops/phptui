@@ -145,6 +145,18 @@ trait OptionsCapableTrait {
   }
 
   /**
+   * The description of the highlighted option, empty when none is highlighted.
+   *
+   * @return string
+   *   The highlighted option's description.
+   */
+  protected function highlightedDescription(): string {
+    $option = $this->visible()[$this->cursor] ?? NULL;
+
+    return $option instanceof Option && $option->selectable() ? $option->description : '';
+  }
+
+  /**
    * Render the visible option rows, dispatching structure rows centrally.
    *
    * Headings and separators render identically in every choice widget; the

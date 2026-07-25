@@ -52,11 +52,11 @@ class PauseWidget extends AbstractWidget {
   /**
    * {@inheritdoc}
    */
-  public function view(ThemeInterface $theme): string {
+  protected function renderBody(ThemeInterface $theme): string {
     $key = $this->keys()->primary(Action::Accept);
     $glyph = $key instanceof Key ? $theme->keyHint($key) : $theme->enter();
 
-    return $this->withError($theme, Translator::t('Press @key to continue', ['@key' => $theme->highlight($glyph)]));
+    return Translator::t('Press @key to continue', ['@key' => $theme->highlight($glyph)]);
   }
 
   /**

@@ -39,6 +39,12 @@ class SchemaGenerator {
     $prompts = [];
 
     foreach ($this->form->fields() as $field) {
+      // A display-only field (a note or a progress row) collects no answer, so
+      // it is not a prompt external tooling drives or validates.
+      if ($field->type->isDisplayOnly()) {
+        continue;
+      }
+
       $prompts[] = [
         'id' => $field->id,
         'type' => $field->type->value,
@@ -50,6 +56,8 @@ class SchemaGenerator {
         'min' => $field->bounds?->min,
         'max' => $field->bounds?->max,
         'step' => $field->bounds?->step,
+        'min_selections' => $field->selectionBounds?->min,
+        'max_selections' => $field->selectionBounds?->max,
         'min_date' => $field->dateBounds?->min?->format('Y-m-d'),
         'max_date' => $field->dateBounds?->max?->format('Y-m-d'),
         'week_start' => $field->dateBounds?->weekStart->value,

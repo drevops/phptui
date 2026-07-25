@@ -142,8 +142,8 @@ class NumberWidget extends AbstractWidget implements TextEditCapableInterface, S
   /**
    * {@inheritdoc}
    */
-  public function view(ThemeInterface $theme): string {
-    return $this->withError($theme, $this->renderInputLine($theme));
+  protected function renderBody(ThemeInterface $theme): string {
+    return $this->renderInputLine($theme);
   }
 
   /**

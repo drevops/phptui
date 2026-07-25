@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Derive;
 
 use DrevOps\Tui\Model\FormException;
+use DrevOps\Tui\Utils\Strings;
 
 /**
  * A derive rule: a `{{field}}` template and an optional named transform.
@@ -43,7 +44,7 @@ final readonly class Derive {
    *   The derived value.
    */
   public function compute(array $values): string {
-    $interpolated = trim($this->interpolate($values));
+    $interpolated = trim(Strings::interpolate($this->template, $values));
 
     return $this->transform === '' ? $interpolated : Transform::apply($interpolated, $this->transform);
   }
@@ -63,23 +64,6 @@ final readonly class Derive {
       'template' => $this->template,
       'transform' => $this->transform,
     ];
-  }
-
-  /**
-   * Replace `{{field}}` tokens in the template with the current values.
-   *
-   * @param array<string,mixed> $values
-   *   The current values.
-   *
-   * @return string
-   *   The interpolated string.
-   */
-  protected function interpolate(array $values): string {
-    return (string) preg_replace_callback('/\{\{\s*(\w+)\s*\}\}/', static function (array $matches) use ($values): string {
-      $value = $values[$matches[1]] ?? '';
-
-      return is_scalar($value) ? (string) $value : '';
-    }, $this->template);
   }
 
 }

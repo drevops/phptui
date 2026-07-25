@@ -1,0 +1,69 @@
+---
+title: Note
+description: 'A non-interactive informational card that shows a title and body inline without collecting a value.'
+keywords: ['note', 'card', 'informational', 'read-only', 'widget']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Note
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/widget-note-light-animated.svg'), dark: useBaseUrl('/widget-note-dark-animated.svg')}} alt="Note widget" />
+</p>
+
+A non-interactive informational card. It renders a **title and body inline** in the form flow and collects **nothing** - the selection cursor skips it, it never appears in the answers, and it is absent from headless collection. Its title and body take the same `{{field}}` templating derived values use, so a note can reflect earlier answers, and it honours `->when()` like any other field.
+
+```php
+$p->note('intro', 'Fresh produce order')
+  ->description('A read-only card - the cursor skips it.');
+
+$p->text('item', 'Produce name')->default('Pear');
+
+// ->border() frames the card; the body reflects the earlier answer.
+$p->note('summary', 'Ready to pack')
+  ->description('Packing {{item}} into the basket.')
+  ->border();
+```
+
+Runnable script: [`playground/02-widgets-note.php`](https://github.com/drevops/tui/blob/main/playground/02-widgets-note.php).
+
+## Options
+
+| Method                | Effect                                                   |
+| --------------------- | -------------------------------------------------------- |
+| `->description(body)` | The card's body text, shown beneath the title.           |
+| `->border()`          | Frames the card in the theme's box with minimal padding. |
+
+The title is the second `note()` argument and is optional - an empty title renders the body alone. The shared field options `->when()` (conditional visibility) and `{{field}}` templating in both the title and body still apply.
+
+## Keyboard
+
+A note is non-interactive: the selection cursor skips over it, so it has no keys of its own.
+
+## Headless behavior
+
+A note carries no value. It is absent from headless collection, from the answers payload, and from the machine-readable schemas (`schema()` and `agentHelp()`), so an agent is never asked to provide one.
+
+## Display modes
+
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-note-light-static.svg'), dark: useBaseUrl('/widget-note-dark-static.svg')}} alt="Note: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-note-light-static-no-ansi.svg'), dark: useBaseUrl('/widget-note-dark-static-no-ansi.svg')}} alt="Note: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-note-light-static-ascii.svg'), dark: useBaseUrl('/widget-note-dark-static-ascii.svg')}} alt="Note: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-note-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-note-dark-static-ascii-no-ansi.svg')}} alt="Note: ASCII + No ANSI" /></td>
+  </tr>
+</table>

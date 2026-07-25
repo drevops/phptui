@@ -40,20 +40,20 @@ Runnable scripts: [`playground/02-widgets-filepicker.php`](https://github.com/dr
 
 ## Keyboard
 
-| Key            | Action                                                                           |
-| -------------- | -------------------------------------------------------------------------------- |
-| `↑` / `↓`      | Move the highlight                                                               |
-| `→`            | Descend into the highlighted directory                                           |
-| `←`            | Ascend to the parent (never above the start directory)                           |
-| printable keys | Filter the current directory                                                     |
-| `Tab`          | Toggle hidden entries                                                            |
-| `Backspace`    | Delete a filter character, or ascend when the filter is empty                    |
-| `Enter`        | Select the highlighted entry if selectable, otherwise descend into the directory |
-| `Esc`          | Cancel                                                                           |
+| Key                         | Action                                                                           |
+| --------------------------- | -------------------------------------------------------------------------------- |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Move the highlight                                                               |
+| <kbd>→</kbd>                | Descend into the highlighted directory                                           |
+| <kbd>←</kbd>                | Ascend to the parent (never above the start directory)                           |
+| printable keys              | Filter the current directory                                                     |
+| <kbd>Tab</kbd>              | Toggle hidden entries                                                            |
+| <kbd>Backspace</kbd>        | Delete a filter character, or ascend when the filter is empty                    |
+| <kbd>Enter</kbd>            | Select the highlighted entry if selectable, otherwise descend into the directory |
+| <kbd>Esc</kbd>              | Cancel                                                                           |
 
 ## Display modes
 
-In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off:
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
 <table>
   <tr>
@@ -75,7 +75,7 @@ In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off
 
 ## Multiple selection
 
-Add `->multiple()` to accumulate **several paths** (a `list<string>`) instead of one: `Space` toggles the highlighted entry and selections accumulate as you browse between directories, and `Enter` accepts them all.
+Add `->multiple()` to accumulate **several paths** (a `list<string>`) instead of one: <kbd>Space</kbd> toggles the highlighted entry, selections stick as you browse between directories, and <kbd>Enter</kbd> accepts them all.
 
 ```php
 $p->filePicker('lists', 'Price lists')
@@ -105,3 +105,38 @@ $p->filePicker('lists', 'Price lists')
     <td><ThemedImage sources={{light: useBaseUrl('/widget-filepicker-multiple-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-filepicker-multiple-dark-static-ascii-no-ansi.svg')}} alt="File picker (multiple): ASCII + No ANSI" /></td>
   </tr>
 </table>
+
+## Selection limits
+
+Bound how many paths a multiple file picker collects with `->minSelections()` and `->maxSelections()`. The active limit shows as a hint below the browser, an out-of-range selection is rejected inline when you accept, and the same bounds are enforced in [headless collection](/headless-collection).
+
+```php
+$p->filePicker('price_lists', 'Price lists')
+  ->multiple()
+  ->minSelections(2) // Reject fewer than two paths.
+  ->maxSelections(3); // Reject more than three paths.
+```
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/widget-filepicker-multiple-limited-light-animated.svg'), dark: useBaseUrl('/widget-filepicker-multiple-limited-dark-animated.svg')}} alt="File picker in multiple mode with selection limits" />
+</p>
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-filepicker-multiple-limited-light-static.svg'), dark: useBaseUrl('/widget-filepicker-multiple-limited-dark-static.svg')}} alt="Selection limits: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-filepicker-multiple-limited-light-static-no-ansi.svg'), dark: useBaseUrl('/widget-filepicker-multiple-limited-dark-static-no-ansi.svg')}} alt="Selection limits: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-filepicker-multiple-limited-light-static-ascii.svg'), dark: useBaseUrl('/widget-filepicker-multiple-limited-dark-static-ascii.svg')}} alt="Selection limits: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-filepicker-multiple-limited-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-filepicker-multiple-limited-dark-static-ascii-no-ansi.svg')}} alt="Selection limits: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+Runnable script: [`playground/02-widgets-filepicker-multiple-limited.php`](https://github.com/drevops/tui/blob/main/playground/02-widgets-filepicker-multiple-limited.php).

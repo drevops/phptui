@@ -6,7 +6,7 @@ keywords: ['form builder', 'derived values', 'conditional fields', 'fix-up', 'ph
 
 # Configuration
 
-A form is a tree of panels, each holding fields, built fluently. Rules are named-argument spec objects, so the IDE completes them and a typo fails at declaration time:
+A form is a tree of panels, each holding fields, and you build it fluently. Rules are named-argument spec objects, so your IDE completes them and a typo fails at declaration time - not half-way through a session:
 
 ```php
 use DrevOps\Tui\Builder\Form;
@@ -35,11 +35,11 @@ $form = Form::create('My form')
 
 Each field builder chains `->description()`, `->default()`, `->required()`, `->options()` / `->option()` (with per-option descriptions and optional `disabled` state), `->heading()` / `->separator()` (non-selectable option-list structure), `->when(new Condition(...))`, `->derive(new Derive(...))`, `->discover(...)`, `->validate(...)` and `->transform(...)`.
 
-The form declares its own chrome: `->banner()` sets a start banner and `->buttons()` controls the submit/cancel buttons. The global TUI runtime - describing the terminal, not the questionnaire - is configured on the `Tui` facade instead: `->theme()` names a theme, auto-detected from the terminal background when unset (see [Themes](/themes)), `->keys()` sets the key bindings (see [Key bindings](/key-bindings)), `->footer()` toggles the key-hint footer, `->clearOnExit()` keeps or clears the final frame, `->color()` / `->unicode()` force a [display mode](/display-modes), `->fullscreen()` expands the frame to the whole terminal (see [Fullscreen](/panels#fullscreen)), and `->translator()` presents chrome and questions in another language (see [Translations](/translations)).
+The form declares its own chrome: `->banner()` sets a start banner and `->buttons()` controls the submit/cancel buttons. Everything that describes the terminal rather than the questionnaire - the global TUI runtime - is configured on the `Tui` facade instead: `->theme()` names a theme, auto-detected from the terminal background when unset (see [Themes](/themes)); `->keys()` sets the key bindings (see [Key bindings](/key-bindings)); `->footer()` toggles the key-hint footer; `->clearOnExit()` keeps or clears the final frame; `->color()` / `->unicode()` force a [display mode](/display-modes); `->fullscreen()` expands the frame to the whole terminal (see [Fullscreen](/panels#fullscreen)); and `->translator()` presents chrome and questions in another language (see [Translations](/translations)).
 
 ## Derived values
 
-A `Derive` computes a field from other answers: a template with `{{field}}` placeholders plus a transform. A transform is any [str2name](https://github.com/AlexSkrypnyk/str2name) conversion (`machine`, `kebab`, `pascal`, ...) plus `host`, `lower`, `upper` and `initials` - an unknown name throws when the form is declared. Chains of derives settle to a fixpoint:
+A `Derive` computes one field from others: a template with `{{field}}` placeholders plus a transform. A transform is any [str2name](https://github.com/AlexSkrypnyk/str2name) conversion (`machine`, `kebab`, `pascal`, ...) plus `host`, `lower`, `upper` and `initials` - and an unknown name throws when the form is declared, so a typo can't sit unnoticed. Derives can feed other derives; chains settle to a fixpoint:
 
 ```php
 $p->text('slug', 'Slug')->derive(new Derive('{{name}}', 'machine'));
@@ -49,13 +49,13 @@ $p->text('code', 'Code')->derive(new Derive('{{name}}', 'constant'));
 
 ## Conditional fields
 
-A `->when()` rule shows or hides a field based on other answers, with operators `eq` / `ne` / `in` / `contains`, composable with `Condition::all()`, `Condition::any()` and `Condition::not()`:
+A `->when()` rule shows or hides a field based on other answers, with operators `eq` / `ne` / `in` / `contains`. Compose them with `Condition::all()`, `Condition::any()` and `Condition::not()`:
 
 ```php
 $p->text('heat_level', 'Heat level')->default('mild')->when(new Condition('category', eq: 'vegetable'));
 $p->confirm('warning_label', 'Add a heat warning?')->when(Condition::all(new Condition('category', eq: 'vegetable'), new Condition('heat_level', ne: 'mild')));
 ```
 
-A form-level `->fixup(new Fixup(set: ..., to: ..., when: ...))` reconciles dependent answers on every settle pass, so an answer that no longer makes sense after another change is corrected instead of leaking through.
+A form-level `->fixup(new Fixup(set: ..., to: ..., when: ...))` reconciles dependent answers on every settle pass - so an answer that stops making sense after another change is corrected instead of leaking through.
 
 Derived values, conditional fields and fix-ups each have a runnable script in [`playground/05-form-logic-*`](https://github.com/drevops/tui/tree/main/playground).

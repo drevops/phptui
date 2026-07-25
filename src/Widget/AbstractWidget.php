@@ -303,18 +303,80 @@ abstract class AbstractWidget implements WidgetInterface {
   }
 
   /**
-   * Append the themed validation error line to a view, when an error is set.
+   * {@inheritdoc}
+   *
+   * The frame every widget shares: the widget's own body, then the highlighted
+   * option's description beneath it (choice widgets only), then the validation
+   * error line. A widget renders only its body via {@see renderBody()}.
+   */
+  public function view(ThemeInterface $theme): string {
+    $lines = [$this->renderBody($theme)];
+
+    $description = $this->renderOptionDescription($theme, $this->highlightedDescription());
+    if ($description !== '') {
+      $lines[] = $description;
+    }
+
+    if ($this->error !== NULL) {
+      $lines[] = $theme->error($this->error);
+    }
+
+    return implode("\n", $lines);
+  }
+
+  /**
+   * The widget's own rendered body, before the shared description and error.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param string $view
-   *   The rendered view.
    *
    * @return string
-   *   The view, with the error line appended when an error is present.
+   *   The rendered body lines.
    */
-  protected function withError(ThemeInterface $theme, string $view): string {
-    return $this->error === NULL ? $view : $view . "\n" . $theme->error($this->error);
+  abstract protected function renderBody(ThemeInterface $theme): string;
+
+  /**
+   * The highlighted option's description; empty for widgets without one.
+   *
+   * The choice widgets override this (directly or via a capability trait) to
+   * surface the highlighted option's description; every other widget inherits
+   * the empty default, so the shared frame adds no description line for it.
+   *
+   * @return string
+   *   The description shown beneath the body, or an empty string.
+   */
+  protected function highlightedDescription(): string {
+    return '';
+  }
+
+  /**
+   * The narrowest content width at which an option description is still shown.
+   *
+   * Below this the panel is too narrow to render a readable description, so it
+   * is dropped rather than wrapped into unreadable fragments.
+   */
+  protected const int MIN_DESCRIPTION_WIDTH = 8;
+
+  /**
+   * Render an option description, wrapped to the panel width and dimmed.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   * @param string $description
+   *   The description text.
+   *
+   * @return string
+   *   The wrapped, dimmed line(s), or an empty string when there is no
+   *   description or the panel is too narrow to show one.
+   */
+  protected function renderOptionDescription(ThemeInterface $theme, string $description): string {
+    $width = $theme->contentWidth();
+
+    if ($description === '' || $width < self::MIN_DESCRIPTION_WIDTH) {
+      return '';
+    }
+
+    return implode("\n", array_map(static fn(string $line): string => $theme->description($line), Strings::wrap($description, $width)));
   }
 
   /**

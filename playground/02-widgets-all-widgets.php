@@ -26,6 +26,7 @@ require __DIR__ . '/../vendor/autoload.php';
 // single-widget scripts show the same widgets with real-world labels.
 $form = Form::create('Widgets')
   ->panel('widgets', 'Widgets', function (PanelBuilder $p): void {
+    $p->note('note', 'Note')->description('A read-only card - the cursor skips it and it collects nothing.');
     $p->text('text', 'Text')->default('Pear');
     $p->number('number', 'Number')->default(1200);
     // The month grid wants the whole screen, so it opts out of inline

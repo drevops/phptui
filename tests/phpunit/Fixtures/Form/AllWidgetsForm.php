@@ -32,6 +32,7 @@ final class AllWidgetsForm {
   public static function create(string $picker_start = ''): Form {
     return Form::create('All widgets')
       ->panel('widgets', 'Widgets', function (PanelBuilder $p) use ($picker_start): void {
+        $p->note('note', 'Note')->description('A read-only note field.');
         $p->text('text', 'Text')->default('txt');
         $p->number('number', 'Number')->default(7);
         $p->calendar('date', 'Calendar')->default('2026-07-15');

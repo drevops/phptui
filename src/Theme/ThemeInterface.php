@@ -69,6 +69,14 @@ interface ThemeInterface {
   public function footer(string $text): string;
 
   /**
+   * The width, in columns, available for a widget's rendered content.
+   *
+   * The frame's inner width, already less any border and gutter. A widget wraps
+   * or omits its own secondary lines against this so they fit the panel.
+   */
+  public function contentWidth(): int;
+
+  /**
    * The navigator breadcrumb.
    */
   public function breadcrumb(string $text): string;

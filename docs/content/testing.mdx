@@ -6,9 +6,9 @@ keywords: ['testing', 'test harness', 'scripted keystrokes', 'phpunit', 'asserti
 
 # Testing
 
-The `TuiTester` harness drives a form's interactive panel TUI from scripted keystrokes - pushing them onto the terminal's input pipe and running the real panel loop - so a consumer can assert on the collected answers and on what was rendered, without a real terminal. It is the form-level companion to the widget-level `WidgetRunner`.
+The `TuiTester` harness drives a form's interactive panel TUI from scripted keystrokes - it pushes them onto the terminal's input pipe and runs the real panel loop - so you can assert on the collected answers and on what was rendered, without a terminal anywhere in sight. It's the form-level companion to the widget-level `WidgetRunner`.
 
-Keystrokes are supplied as `Key` objects and/or raw byte strings (the bytes a terminal emits for a key press), so an existing keystroke helper drops straight in.
+Keystrokes are `Key` objects and/or raw byte strings (the bytes a terminal emits for a key press), so an existing keystroke helper drops straight in.
 
 ```php
 use DrevOps\Tui\Input\Key;
@@ -36,6 +36,6 @@ $this->assertFalse($tester->isCancelled());
 
 `run()` returns the collected `Answers`. `display()` is the ANSI-stripped output for substring assertions, `output()` the raw frames, and `isCancelled()` reports whether the run ended on the cancel button. `theme()`, `options()`, `rows()`, `cols()`, `version()` and `directory()` tune the run.
 
-For a single widget in isolation, `WidgetRunner::run($widget, ArrayKeyStream::of(...))` remains the lighter tool.
+For a single widget in isolation, `WidgetRunner::run($widget, ArrayKeyStream::of(...))` stays the lighter tool.
 
 The harness outside PHPUnit is shown in [`playground/13-testing.php`](https://github.com/drevops/tui/blob/main/playground/13-testing.php).

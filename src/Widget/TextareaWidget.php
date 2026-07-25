@@ -162,8 +162,8 @@ class TextareaWidget extends AbstractWidget implements TextEditCapableInterface,
   /**
    * {@inheritdoc}
    */
-  public function view(ThemeInterface $theme): string {
-    return $this->withError($theme, $this->renderCaretLine($theme));
+  protected function renderBody(ThemeInterface $theme): string {
+    return $this->renderCaretLine($theme);
   }
 
   /**

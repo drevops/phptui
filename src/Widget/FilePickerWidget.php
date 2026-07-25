@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Widget;
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FilePickerMode;
+use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
@@ -19,6 +20,7 @@ use DrevOps\Tui\Widget\Capability\FilterCapableInterface;
 use DrevOps\Tui\Widget\Capability\PagingCapableInterface;
 use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
 use DrevOps\Tui\Widget\Capability\RevealCapableInterface;
+use DrevOps\Tui\Widget\Capability\SelectionBoundedTrait;
 
 /**
  * A filesystem browser that selects a path, or several in multiple mode.
@@ -37,6 +39,7 @@ use DrevOps\Tui\Widget\Capability\RevealCapableInterface;
 class FilePickerWidget extends AbstractWidget implements FilterCapableInterface, RevealCapableInterface, PagingCapableInterface {
 
   use PagingCapableTrait;
+  use SelectionBoundedTrait;
 
   /**
    * The start directory: where the browser opens and the floor it cannot pass.
@@ -94,6 +97,9 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
    * @param int|null $page_size
    *   The number of entry rows shown at once before the list pages; NULL uses
    *   the default.
+   * @param \DrevOps\Tui\Model\SelectionBounds|null $selection_bounds
+   *   The minimum/maximum selection counts enforced on accept, or NULL for no
+   *   count limit.
    */
   public function __construct(
     string $start = '',
@@ -103,10 +109,12 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
     protected bool $showHidden = FALSE,
     protected bool $multiple = FALSE,
     ?int $page_size = NULL,
+    ?SelectionBounds $selection_bounds = NULL,
   ) {
     $this->root = $this->trimTrailingSlash($start !== '' ? $start : $this->currentDirectory());
     $this->cwd = $this->root;
     $this->pageSize = $this->resolvePageSize($page_size);
+    $this->selectionBounds = $selection_bounds;
 
     $this->extensions = array_values(array_filter(array_map(
       static fn(string $extension): string => strtolower(ltrim($extension, '.')),
@@ -220,7 +228,7 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
   /**
    * {@inheritdoc}
    */
-  public function view(ThemeInterface $theme): string {
+  protected function renderBody(ThemeInterface $theme): string {
     $lines = [$theme->breadcrumb($this->crumb())];
 
     if ($this->filter !== '') {
@@ -241,7 +249,7 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
       $rows[] = $this->renderRow($theme, $name, $viewport->offset + $slot === $this->cursor);
     }
 
-    return $this->withError($theme, implode("\n", array_merge($lines, $this->wrapScrolled($theme, $rows, $viewport))));
+    return $this->withSelectionHint($theme, implode("\n", array_merge($lines, $this->wrapScrolled($theme, $rows, $viewport))));
   }
 
   /**

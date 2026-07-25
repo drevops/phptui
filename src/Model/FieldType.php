@@ -26,6 +26,7 @@ enum FieldType: string {
   case Reorder = 'reorder';
   case FilePicker = 'filepicker';
   case Pause = 'pause';
+  case Note = 'note';
   case Progress = 'progress';
 
   /**
@@ -52,22 +53,38 @@ enum FieldType: string {
       self::Reorder => Translator::t('Reorder'),
       self::FilePicker => Translator::t('File picker'),
       self::Pause => Translator::t('Pause'),
+      self::Note => Translator::t('Note'),
       self::Progress => Translator::t('Progress'),
     };
   }
 
   /**
-   * Whether the type is a display element that collects no answer.
+   * Whether the field only presents content and collects no answer.
    *
-   * A gate shows chrome and drives a side effect - a pause waits, a progress
-   * row runs work - so it carries no value into the answers or the machine
-   * schema.
+   * A presentational field renders inline but is display-only: the selection
+   * cursor skips it, it carries no value in the answers payload, and it is
+   * absent from the machine schemas.
    *
    * @return bool
-   *   TRUE for the display-only types.
+   *   TRUE for the note field.
+   */
+  public function isPresentational(): bool {
+    return $this === self::Note;
+  }
+
+  /**
+   * Whether the field carries no answer into the payload or machine schema.
+   *
+   * Wider than {@see isPresentational()}: a note and a progress row each
+   * collect no value, so the engine, the answers and the schema skip them - but
+   * a progress row still takes the cursor (it runs work on activation), so it
+   * is not presentational.
+   *
+   * @return bool
+   *   TRUE for the display-only field types.
    */
   public function isDisplayOnly(): bool {
-    return $this === self::Progress;
+    return $this === self::Note || $this === self::Progress;
   }
 
   /**

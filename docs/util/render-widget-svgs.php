@@ -69,8 +69,9 @@ const DISPLAY_MODES = [
  * @param string $tree
  *   The fixture directory the file-picker widgets browse.
  *
- * @return array<string, array{form: \DrevOps\Tui\Builder\Form, keys: list<string|\DrevOps\Tui\Input\Key>, rows: int}>
- *   The widget specs keyed by asset name.
+ * @return array<string, array{form: \DrevOps\Tui\Builder\Form, keys: list<string|\DrevOps\Tui\Input\Key>, rows: int, static_keys?: list<string|\DrevOps\Tui\Input\Key>}>
+ *   The widget specs keyed by asset name. A spec may add "static_keys" when the
+ *   opened editor needs a keystroke before its static frame is worth capturing.
  */
 function widgetSpecs(string $tree): array {
   $enter = Key::named(KeyName::Enter);
@@ -120,14 +121,29 @@ function widgetSpecs(string $tree): array {
       'keys' => [...$open, $down],
       'rows' => 8,
     ],
+    'select-descriptions' => [
+      'form' => Form::create('Option descriptions')->panel('main', 'Select', function (PanelBuilder $p): void { $p->select('fruit', 'Fruit')->default('apple')->option('apple', 'Apple', description: 'Crisp and sweet, the everyday choice.')->option('banana', 'Banana', description: 'Rich in potassium; ripens off the tree.')->option('cherry', 'Cherry', description: 'Short season; best eaten fresh.'); }),
+      'keys' => [...$open, $down],
+      'rows' => 12,
+    ],
     'select-multiple' => [
       'form' => Form::create('MultiSelect widget')->panel('main', 'MultiSelect', function (PanelBuilder $p): void { $p->select('basket', 'Basket')->multiple()->default(['apple'])->options(['apple' => 'Apple', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
       'keys' => [...$open, $down, $space],
       'rows' => 8,
     ],
+    'select-multiple-limited' => [
+      'form' => Form::create('Bounded MultiSelect')->panel('main', 'MultiSelect', function (PanelBuilder $p): void { $p->select('basket', 'Basket')->multiple()->minSelections(2)->maxSelections(3)->options(['apple' => 'Apple', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
+      'keys' => [...$open, $space, $down, $space],
+      'rows' => 11,
+    ],
     'reorder' => [
       'form' => Form::create('Reorder widget')->panel('main', 'Reorder', function (PanelBuilder $p): void { $p->reorder('basket', 'Basket')->options(['apple' => 'Apple', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
       'keys' => [...$open, $space, $down, $space],
+      'rows' => 12,
+    ],
+    'reorder-descriptions' => [
+      'form' => Form::create('Option descriptions')->panel('main', 'Reorder', function (PanelBuilder $p): void { $p->reorder('basket', 'Basket')->option('apple', 'Apple', description: 'Crisp and sweet, the everyday choice.')->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')->option('tomato', 'Tomato', description: 'Best ripened on the vine, never chilled.'); }),
+      'keys' => [...$open, $down],
       'rows' => 12,
     ],
     'suggest' => [
@@ -135,15 +151,31 @@ function widgetSpecs(string $tree): array {
       'keys' => [...$open, 'C', 'h', $down],
       'rows' => 10,
     ],
+    'suggest-descriptions' => [
+      'form' => Form::create('Option descriptions')->panel('main', 'Suggest', function (PanelBuilder $p): void { $p->suggest('fruit', 'Fruit')->option('Apple', 'Apple', description: 'Crisp and sweet, the everyday choice.')->option('Apricot', 'Apricot', description: 'Small and tart; best when soft.')->option('Banana', 'Banana', description: 'Rich in potassium; ripens off the tree.')->option('Cherry', 'Cherry', description: 'Short season; best eaten fresh.')->option('Mango', 'Mango', description: 'Fragrant and juicy when it yields to a squeeze.'); }),
+      'keys' => [...$open, $down],
+      'static_keys' => [...$open, $down],
+      'rows' => 13,
+    ],
     'search' => [
       'form' => Form::create('Search widget')->panel('main', 'Search', function (PanelBuilder $p): void { $p->search('vegetable', 'Vegetable')->default('carrot')->options(['carrot' => 'Carrot', 'potato' => 'Potato', 'onion' => 'Onion', 'pepper' => 'Pepper']); }),
       'keys' => [...$open, 'o', 'n'],
       'rows' => 10,
     ],
+    'search-descriptions' => [
+      'form' => Form::create('Option descriptions')->panel('main', 'Search', function (PanelBuilder $p): void { $p->search('vegetable', 'Vegetable')->default('carrot')->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')->option('potato', 'Potato', description: 'Stores best somewhere cool and dark.')->option('onion', 'Onion', description: 'Sharp raw, sweet once cooked.')->option('pepper', 'Pepper', description: 'Crunchy and bright; sweetest when red.'); }),
+      'keys' => [...$open, $down],
+      'rows' => 12,
+    ],
     'search-multiple' => [
       'form' => Form::create('MultiSearch widget')->panel('main', 'MultiSearch', function (PanelBuilder $p): void { $p->search('basket', 'Basket')->multiple()->default(['apple'])->options(['apple' => 'Apple', 'banana' => 'Banana', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
       'keys' => [...$open, 't', 'o', $space],
       'rows' => 10,
+    ],
+    'search-multiple-limited' => [
+      'form' => Form::create('Bounded MultiSearch')->panel('main', 'MultiSearch', function (PanelBuilder $p): void { $p->search('basket', 'Basket')->multiple()->minSelections(2)->maxSelections(3)->options(['apple' => 'Apple', 'banana' => 'Banana', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
+      'keys' => [...$open, $space, $down, $space],
+      'rows' => 13,
     ],
     'confirm' => [
       'form' => Form::create('Confirm widget')->panel('main', 'Confirm', function (PanelBuilder $p): void { $p->confirm('organic', 'Organic only?')->default(TRUE); }),
@@ -160,6 +192,14 @@ function widgetSpecs(string $tree): array {
       'keys' => [$enter],
       'rows' => 6,
     ],
+    'note' => [
+      'form' => Form::create('Note widget')->panel('main', 'Note', function (PanelBuilder $p): void {
+        $p->note('intro', 'Fresh produce order')->description('A read-only card - the cursor skips it.');
+        $p->note('packing', 'Ready to pack')->description('Framed with a border.')->border();
+      }),
+      'keys' => [$enter],
+      'rows' => 14,
+    ],
     'progress' => [
       'form' => Form::create('Progress widget')->panel('main', 'Progress', function (PanelBuilder $p) use ($pack): void { $p->progress('pack', 'Packing the box')->steps(6)->run($pack); }),
       'keys' => [$enter, $enter],
@@ -174,6 +214,11 @@ function widgetSpecs(string $tree): array {
       'form' => Form::create('File picker widget')->panel('main', 'File picker', function (PanelBuilder $p) use ($tree): void { $p->filePicker('price_lists', 'Price lists')->multiple()->startIn($tree); }),
       'keys' => [...$open, $space, $down, $space],
       'rows' => 10,
+    ],
+    'filepicker-multiple-limited' => [
+      'form' => Form::create('File picker widget')->panel('main', 'File picker', function (PanelBuilder $p) use ($tree): void { $p->filePicker('price_lists', 'Price lists')->multiple()->minSelections(2)->maxSelections(3)->startIn($tree); }),
+      'keys' => [...$open, $space, $down, $space],
+      'rows' => 14,
     ],
   ];
 }
@@ -242,10 +287,15 @@ function renderWidget(string $name, array $spec, string $assets_dir, string $uti
  *   A scratch directory for the intermediate cast.
  */
 function renderStaticVariants(string $name, array $spec, string $assets_dir, string $util_dir, string $tmp_dir): void {
-  // A gate settles one Enter in; every other widget opens its editor with the
-  // hub-into-panel-into-field drill.
+  // A gate settles one Enter in and a note is non-interactive, so both open
+  // with a single drill into the panel; every other widget opens its editor
+  // with the hub-into-panel-into-field drill.
   $enter = Key::named(KeyName::Enter);
-  $open = $name === 'pause' ? [$enter] : [$enter, $enter];
+  $open = in_array($name, ['pause', 'note'], TRUE) ? [$enter] : [$enter, $enter];
+  // A widget whose opened editor shows nothing worth a screenshot until a key
+  // is pressed (suggest highlights no row until you arrow into the list)
+  // declares the keystrokes its static frame settles on.
+  $keys = $spec['static_keys'] ?? $open;
   $clear = Ansi::ESC . '[2J' . Ansi::ESC . '[H';
 
   foreach (DISPLAY_MODES as $suffix => $mode) {
@@ -254,7 +304,7 @@ function renderStaticVariants(string $name, array $spec, string $assets_dir, str
     $tester = (new TuiTester($spec['form']))
       ->options(['color' => $mode['color'], 'unicode' => $mode['unicode'], 'mode' => Mode::Dark])
       ->rows($spec['rows'] + 4);
-    $tester->run(...$open);
+    $tester->run(...$keys);
 
     $frames = splitFrames($tester->output());
     if ($frames === []) {

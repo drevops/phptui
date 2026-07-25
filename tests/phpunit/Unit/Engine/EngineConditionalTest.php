@@ -59,6 +59,41 @@ final class EngineConditionalTest extends TestCase {
     $this->assertSame('none', $engine->collect(['provision' => 'profile'], new Context())->value('database_source'));
   }
 
+  public function testFixupTargetingNoteDoesNotReintroduceIt(): void {
+    $engine = $this->engine(
+      Form::create('T')
+        ->panel('p', 'p', function (PanelBuilder $p): void {
+          $p->text('provision')->default('database');
+          $p->note('intro', 'Intro')->description('Welcome.');
+        })
+        // A fix-up that mistakenly targets a note is ignored, so the note never
+        // gains a value in the settled state.
+        ->fixup(new Fixup(set: 'intro', to: 'forced'))
+        ->build()
+    );
+
+    [$values] = $engine->resolveState([], new Context());
+
+    $this->assertArrayNotHasKey('intro', $values);
+    $this->assertArrayHasKey('provision', $values);
+  }
+
+  public function testFixupReadingFromNoteKeepsTargetSettled(): void {
+    $engine = $this->engine(
+      Form::create('T')
+        ->panel('p', 'p', function (PanelBuilder $p): void {
+          $p->text('target')->default('kept');
+          $p->note('intro', 'Intro')->description('Welcome.');
+        })
+        // Copying from a note would read its absent value and write NULL over
+        // the target; the rule is ignored, so the target keeps its value.
+        ->fixup(new Fixup(set: 'target', from: 'intro'))
+        ->build()
+    );
+
+    $this->assertSame('kept', $engine->collect([], new Context())->value('target'));
+  }
+
   public function testMultiFieldConditional(): void {
     // A when can depend on any number of fields via all / any / not.
     $engine = $this->engine(

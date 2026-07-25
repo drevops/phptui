@@ -53,7 +53,14 @@ final class SchemaValidatorTest extends TestCase {
     yield 'invalid multiselect option' => [['name' => 'Acme', 'mods' => ['a', 'z']], 'Question "mods": value "z" is not one of: a, b.'];
     yield 'disabled multiselect option' => [['name' => 'Acme', 'mods' => ['a', 'c']], 'Question "mods": option "c" is disabled.'];
     yield 'multiselect wrong type' => [['name' => 'Acme', 'mods' => 'notalist'], 'Question "mods" must be a list.'];
+    yield 'multiselect count within bounds' => [['name' => 'Acme', 'picks' => ['a', 'b']], NULL];
+    yield 'multiselect count below min' => [['name' => 'Acme', 'picks' => ['a']], 'Question "picks" must be between 2 and 3 items.'];
+    yield 'multiselect count above max' => [['name' => 'Acme', 'picks' => ['a', 'b', 'c', 'd']], 'Question "picks" must be between 2 and 3 items.'];
+    yield 'multiselect count empty violates min' => [['name' => 'Acme', 'picks' => []], 'Question "picks" must be between 2 and 3 items.'];
     yield 'unknown question' => [['name' => 'Acme', 'bogus' => 'x'], 'Unknown question "bogus".'];
+    // A note is a known field but carries no answer: a stray value for it is
+    // neither flagged unknown nor validated (a list would fail a string field).
+    yield 'note value ignored' => [['name' => 'Acme', 'intro' => ['not', 'a', 'string']], NULL];
     // 'custom' is required but only appears when profile == custom.
     yield 'inactive required field skipped' => [['name' => 'Acme', 'profile' => 'standard'], NULL];
     yield 'number int accepted' => [['name' => 'Acme', 'port' => 8080], NULL];
@@ -103,10 +110,12 @@ final class SchemaValidatorTest extends TestCase {
   protected function form(): FormDefinition {
     return Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->note('intro', 'Intro')->description('Welcome.');
         $p->text('name')->required();
         $p->select('profile')->option('standard')->option('minimal')->option('demo', 'Demo', disabled: TRUE, disabled_reason: 'unavailable');
         $p->confirm('agree');
         $p->select('mods')->multiple()->option('a')->option('b')->option('c', 'C', disabled: TRUE);
+        $p->select('picks')->multiple()->minSelections(2)->maxSelections(3)->option('a')->option('b')->option('c')->option('d');
         $p->text('custom')->required()->when(new Condition('profile', eq: 'custom'));
         $p->number('port')->min(1)->max(65535);
         $p->calendar('due')->minDate('2026-01-01')->maxDate('2026-12-31');

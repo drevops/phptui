@@ -1,6 +1,6 @@
 ---
 title: Toggle
-description: 'An inline switch cycling between labelled values; always in one of its states, so it always returns a value.'
+description: 'An inline switch cycling between labeled values; always in one of its states, so it always returns a value.'
 keywords: ['toggle', 'switch', 'inline', 'widget']
 ---
 
@@ -13,7 +13,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   <ThemedImage sources={{light: useBaseUrl('/widget-toggle-light-animated.svg'), dark: useBaseUrl('/widget-toggle-dark-animated.svg')}} alt="Toggle widget" />
 </p>
 
-An inline switch that cycles between a fixed set of labelled values. It collects the **selected option value** (a `string`), and is always in one of its states, so it always returns a value.
+An inline switch that cycles between a fixed set of labeled values. It collects the **selected option value** (a `string`). It's always in one of its states, so it always returns a value.
 
 ```php
 $p->toggle('ripeness', 'Ripeness')
@@ -35,16 +35,16 @@ Runnable script: [`playground/02-widgets-toggle.php`](https://github.com/drevops
 
 ## Keyboard
 
-| Key                             | Action                                             |
-| ------------------------------- | -------------------------------------------------- |
-| `←` / `→` / `Space` / `↑` / `↓` | Cycle to the adjacent value                        |
-| a letter                        | Jump to the first value whose label starts with it |
-| `Enter`                         | Accept the current value                           |
-| `Esc`                           | Cancel                                             |
+| Key                                                                          | Action                                             |
+| ---------------------------------------------------------------------------- | -------------------------------------------------- |
+| <kbd>←</kbd> / <kbd>→</kbd> / <kbd>Space</kbd> / <kbd>↑</kbd> / <kbd>↓</kbd> | Cycle to the adjacent value                        |
+| a letter                                                                     | Jump to the first value whose label starts with it |
+| <kbd>Enter</kbd>                                                             | Accept the current value                           |
+| <kbd>Esc</kbd>                                                               | Cancel                                             |
 
 ## Display modes
 
-In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off:
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
 <table>
   <tr>

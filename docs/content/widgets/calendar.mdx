@@ -13,7 +13,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   <ThemedImage sources={{light: useBaseUrl('/widget-calendar-light-animated.svg'), dark: useBaseUrl('/widget-calendar-dark-animated.svg')}} alt="Calendar widget" />
 </p>
 
-A month-grid date picker. It collects a single **normalized ISO `YYYY-MM-DD` string** and, with no default, opens on today.
+A month-grid date picker. It collects a single **normalized ISO `YYYY-MM-DD` string**; give it no default and it opens on today.
 
 ```php
 use DrevOps\Tui\Model\Weekday;
@@ -36,28 +36,28 @@ Runnable script: [`playground/02-widgets-calendar.php`](https://github.com/drevo
 | `maxDate()`   | Latest selectable date, inclusive, as `YYYY-MM-DD`.   | No       | Unbounded         |
 | `weekStart()` | Day the week grid starts on, a `Weekday` enum case.   | No       | `Weekday::Monday` |
 
-Navigation is clamped to the `minDate()`/`maxDate()` range: the cursor never leaves it, days outside it render dimmed, and an opening date outside the range snaps to the nearest bound. These are the widget's own options; the shared field options (`required()`, `when()`, `validate()`, ...) are covered in [Field behaviour](/field-behaviour).
+Navigation is clamped to the `minDate()`/`maxDate()` range: the cursor never leaves it, days outside it render dimmed, and an opening date outside the range snaps to the nearest bound. These are the widget's own options; the shared field options (`required()`, `when()`, `validate()`, ...) are covered in [Field behavior](/field-behaviour).
 
 ## Keyboard
 
-| Key                   | Action                                |
-| --------------------- | ------------------------------------- |
-| `←` / `→`             | Move one day (vim: `h` / `l`)         |
-| `↑` / `↓`             | Move one week (vim: `k` / `j`)        |
-| `PageUp` / `PageDown` | Previous / next month                 |
-| `Home` / `End`        | First / last day of the visible month |
-| `Enter`               | Accept the highlighted date           |
-| `Esc`                 | Cancel                                |
+| Key                                     | Action                                           |
+| --------------------------------------- | ------------------------------------------------ |
+| <kbd>←</kbd> / <kbd>→</kbd>             | Move one day (vim: <kbd>h</kbd> / <kbd>l</kbd>)  |
+| <kbd>↑</kbd> / <kbd>↓</kbd>             | Move one week (vim: <kbd>k</kbd> / <kbd>j</kbd>) |
+| <kbd>PageUp</kbd> / <kbd>PageDown</kbd> | Previous / next month                            |
+| <kbd>Home</kbd> / <kbd>End</kbd>        | First / last day of the visible month            |
+| <kbd>Enter</kbd>                        | Accept the highlighted date                      |
+| <kbd>Esc</kbd>                          | Cancel                                           |
 
-Every move key can be remapped through the [key map](/key-bindings).
+The day and week moves resolve through the [key map](/key-bindings), so the arrows and the vim letters can be remapped; the month and edge jumps (<kbd>PageUp</kbd>/<kbd>PageDown</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>) are fixed keys with no action behind them.
 
-## Headless behaviour
+## Headless behavior
 
-The bounds are enforced when the form runs [headlessly](/headless-collection) too - a value outside the range is rejected - and surface in the JSON schema as `min_date`, `max_date` and `week_start` on the prompt.
+The bounds are enforced when the form runs [headlessly](/headless-collection) too - a value outside the range is rejected - and they surface in the JSON schema as `min_date`, `max_date` and `week_start` on the prompt.
 
 ## Display modes
 
-In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off:
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
 <table>
   <tr>

@@ -329,6 +329,141 @@ final class PanelControllerTest extends TestCase {
     $this->assertStringContainsString('Acme', $frame);
   }
 
+  public function testNoteRendersAsCardTheCursorSkips(): void {
+    $builder = Form::create('Demo')
+      ->buttons(FALSE)
+      ->panel('general', 'General', function (PanelBuilder $p): void {
+        $p->text('name', 'Name');
+        $p->note('mid', 'Middle')->description('Between fields.');
+        $p->confirm('agree', 'Agree');
+      });
+    $theme = new DefaultTheme(60, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Normal]);
+    $controller = new PanelController($builder->build(), $theme, ['name' => 'Acme', 'agree' => FALSE]);
+
+    // Drill in: the cursor lands on the first navigable field.
+    $controller->handle(Key::named(KeyName::Enter));
+    $this->assertSame(0, $controller->cursor());
+
+    $frame = Ansi::strip($controller->frame(16));
+    // The note card renders its title and body inline...
+    $this->assertStringContainsString('Middle', $frame);
+    $this->assertStringContainsString('Between fields.', $frame);
+    // ...but the selection marker is on the field, never the note.
+    $this->assertStringContainsString('❯ Name', $frame);
+
+    // Down moves from the first field straight to the field after the note.
+    $controller->handle(Key::named(KeyName::Down));
+    $this->assertSame(1, $controller->cursor());
+
+    $frame = Ansi::strip($controller->frame(16));
+    $this->assertStringContainsString('❯ Agree', $frame);
+    $this->assertStringNotContainsString('❯ Middle', $frame);
+  }
+
+  public function testNoteInterpolatesCurrentAnswersAndUpdates(): void {
+    $builder = Form::create('Demo')
+      ->buttons(FALSE)
+      ->panel('general', 'General', function (PanelBuilder $p): void {
+        $p->text('name', 'Name');
+        $p->note('echo', 'Echo')->description('Hello {{name}}.');
+      });
+    $theme = new DefaultTheme(60, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Normal]);
+    $controller = new PanelController($builder->build(), $theme, ['name' => '']);
+
+    $controller->handle(Key::named(KeyName::Enter));
+
+    // Edit the name; the note re-interpolates the new answer once it settles.
+    $controller->handle(Key::named(KeyName::Enter));
+    foreach (str_split('Plum') as $char) {
+      $controller->handle(Key::char($char));
+    }
+    $controller->handle(Key::named(KeyName::Enter));
+
+    $this->assertStringContainsString('Hello Plum.', Ansi::strip($controller->frame(16)));
+  }
+
+  public function testBorderedNoteRendersBox(): void {
+    $builder = Form::create('Demo')
+      ->buttons(FALSE)
+      ->panel('general', 'General', function (PanelBuilder $p): void {
+        $p->note('boxed', 'Boxed')->description('In a box.')->border();
+        $p->text('name', 'Name');
+      });
+    // The frame itself is borderless, so any box glyphs come from the note; an
+    // opt-in note border falls back to the single-line box here.
+    $theme = new DefaultTheme(60, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Normal]);
+    $controller = new PanelController($builder->build(), $theme, ['name' => 'Acme']);
+
+    $controller->handle(Key::named(KeyName::Enter));
+    $frame = Ansi::strip($controller->frame(16));
+
+    $this->assertStringContainsString('Boxed', $frame);
+    $this->assertStringContainsString('┌', $frame);
+    $this->assertStringContainsString('┐', $frame);
+    $this->assertStringContainsString('└', $frame);
+    $this->assertStringContainsString('┘', $frame);
+  }
+
+  public function testNotesOnlySubPanelNavigatesSafely(): void {
+    $builder = Form::create('Demo')
+      ->buttons(FALSE)
+      ->panel('general', 'General', function (PanelBuilder $p): void {
+        $p->text('name', 'Name');
+        $p->panel('info', 'Info', function (PanelBuilder $sp): void {
+          $sp->note('a', 'First note')->description('Alpha.');
+          $sp->note('b', 'Second note')->description('Beta.');
+        });
+      });
+    $theme = new DefaultTheme(60, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Normal]);
+    $controller = new PanelController($builder->build(), $theme, ['name' => 'Acme']);
+
+    // Drill into General, move to the Info sub-panel, then drill into it.
+    $controller->handle(Key::named(KeyName::Enter));
+    $controller->handle(Key::named(KeyName::Down));
+    $controller->handle(Key::named(KeyName::Enter));
+    $this->assertSame('Info', $controller->currentPanel()->title);
+
+    // The sub-panel has no navigable items: the cursor stays put and pressing
+    // Enter is inert rather than opening an editor for a note.
+    $this->assertSame(0, $controller->cursor());
+    $controller->handle(Key::named(KeyName::Down));
+    $this->assertSame(0, $controller->cursor());
+    $controller->handle(Key::named(KeyName::Enter));
+    $this->assertFalse($controller->isEditing());
+
+    $frame = Ansi::strip($controller->frame(16));
+    $this->assertStringContainsString('First note', $frame);
+    $this->assertStringContainsString('Second note', $frame);
+
+    // Back out returns to the parent panel.
+    $controller->handle(Key::named(KeyName::Escape));
+    $this->assertSame('General', $controller->currentPanel()->title);
+  }
+
+  public function testModalButtonSelectionSkipsNoteInTheOffset(): void {
+    $form = Form::create('Demo')
+      ->panel('main', 'Main', function (PanelBuilder $p): void {
+        $p->text('name', 'Name');
+      })
+      ->panel('edit', 'Quick edit', function (PanelBuilder $m): void {
+        $m->modal('Apply', 'Discard');
+        $m->note('hint', 'Heads up')->description('Pick a nickname.');
+        $m->text('nick', 'Nickname');
+      })
+      ->build();
+    // Colour on so the selected button carries the cursor styling.
+    $theme = new DefaultTheme(50, ['color' => TRUE, 'border' => Border::None, 'spacing' => Spacing::Normal]);
+    $controller = new PanelController($form, $theme, ['name' => 'Acme', 'nick' => '']);
+
+    // Open the modal, then move onto the Apply button. The note before the
+    // field must not count toward the button offset, or Apply stays unlit.
+    $controller->handle(Key::named(KeyName::Down));
+    $controller->handle(Key::named(KeyName::Enter));
+    $controller->handle(Key::named(KeyName::Down));
+
+    $this->assertStringContainsString($theme->cursor('[ Apply ]'), $controller->frame(20));
+  }
+
   public function testQuit(): void {
     $controller = $this->controller();
     $this->assertFalse($controller->isDone());

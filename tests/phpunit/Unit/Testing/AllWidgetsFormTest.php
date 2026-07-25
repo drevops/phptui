@@ -91,7 +91,7 @@ final class AllWidgetsFormTest extends TestCase {
 
     // Every widget's label was rendered somewhere in the session.
     $display = $tester->display();
-    foreach (['Text', 'Number', 'Calendar', 'Textarea', 'Password', 'Select', 'MultiSelect', 'Suggest', 'Search', 'MultiSearch', 'Reorder', 'Confirm', 'Toggle', 'FilePicker', 'MultiFilePicker', 'Pause', 'Progress'] as $label) {
+    foreach (['Note', 'Text', 'Number', 'Calendar', 'Textarea', 'Password', 'Select', 'MultiSelect', 'Suggest', 'Search', 'MultiSearch', 'Reorder', 'Confirm', 'Toggle', 'FilePicker', 'MultiFilePicker', 'Pause', 'Progress'] as $label) {
       $this->assertStringContainsString($label, $display, sprintf('The "%s" label was not rendered.', $label));
     }
   }

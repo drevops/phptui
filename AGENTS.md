@@ -180,10 +180,22 @@ modes (Unicode/ASCII, colour on/off) - embedded in the README and the docs
 pages. They render deterministically (no pty) from the scripts in `docs/util/`:
 `render-widget-svgs.php` for widgets, `render-progress-svgs.php` for the
 progress primitive, and `render-theme-svgs.php` for theme previews, all run by
-`update-assets.php`. Whenever you add a widget or a primitive, give it a spec
-in the matching generator, regenerate the set, and keep `audit-svgs.php` green
-- every dark asset needs its light twin. The naming convention lives in
-`docs/assets/README.md`.
+`update-assets.php`. The naming convention lives in `docs/assets/README.md`.
+
+Whenever you add a widget or a primitive, do all of the following before
+opening a PR:
+
+- Add a spec (form, keystrokes, rows) to `widgetSpecs()` in
+  `render-widget-svgs.php` (or `progressSpecs()` in `render-progress-svgs.php`
+  for a primitive), then generate its 16 SVG variants:
+  `php docs/util/render-widget-svgs.php <name>`.
+- Regenerate the all-widgets montage so the gallery includes it:
+  `php docs/util/update-assets.php --record widgets`.
+- Add a `docs/content/widgets/<name>.mdx` page (mirror `pause.mdx`) and a
+  `docs/sidebars.js` entry, then run `php docs/util/audit-svgs.php` - it must
+  stay green, and every dark asset needs its light twin.
+- Visually confirm at least the `-dark-static` render (open the SVG in a
+  browser and screenshot it) - a render that completes is not proof it fits.
 
 ## Updating from the template
 

@@ -48,6 +48,8 @@ final class SchemaGeneratorTest extends TestCase {
           'min' => NULL,
           'max' => NULL,
           'step' => NULL,
+          'min_selections' => NULL,
+          'max_selections' => NULL,
           'min_date' => NULL,
           'max_date' => NULL,
           'week_start' => NULL,
@@ -67,6 +69,8 @@ final class SchemaGeneratorTest extends TestCase {
           'min' => NULL,
           'max' => NULL,
           'step' => NULL,
+          'min_selections' => NULL,
+          'max_selections' => NULL,
           'min_date' => NULL,
           'max_date' => NULL,
           'week_start' => NULL,
@@ -86,6 +90,8 @@ final class SchemaGeneratorTest extends TestCase {
           'min' => 1,
           'max' => 65535,
           'step' => 5,
+          'min_selections' => NULL,
+          'max_selections' => NULL,
           'min_date' => NULL,
           'max_date' => NULL,
           'week_start' => NULL,
@@ -105,6 +111,8 @@ final class SchemaGeneratorTest extends TestCase {
           'min' => NULL,
           'max' => NULL,
           'step' => NULL,
+          'min_selections' => NULL,
+          'max_selections' => NULL,
           'min_date' => '2000-01-01',
           'max_date' => '2030-12-31',
           'week_start' => Weekday::Sunday->value,
@@ -145,6 +153,8 @@ final class SchemaGeneratorTest extends TestCase {
           'min' => NULL,
           'max' => NULL,
           'step' => NULL,
+          'min_selections' => NULL,
+          'max_selections' => NULL,
           'min_date' => NULL,
           'max_date' => NULL,
           'week_start' => NULL,
@@ -157,6 +167,19 @@ final class SchemaGeneratorTest extends TestCase {
     ];
 
     $this->assertSame($expected, (new SchemaGenerator($form))->generate());
+  }
+
+  public function testSelectionBounds(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->select('tags', 'Tags')->multiple()->minSelections(2)->maxSelections(5)->option('a')->option('b');
+      })
+      ->build();
+
+    $json = (string) json_encode((new SchemaGenerator($form))->generate());
+
+    $this->assertStringContainsString('"min_selections":2', $json);
+    $this->assertStringContainsString('"max_selections":5', $json);
   }
 
   public function testDependsOnCollectsNestedFieldRefs(): void {
@@ -200,6 +223,23 @@ final class SchemaGeneratorTest extends TestCase {
     // The partial default is completed to a full ranking in the schema.
     $this->assertStringContainsString('"default":["c","a","b"]', $json);
     $this->assertStringContainsString('"value":"a"', $json);
+  }
+
+  public function testExcludesPresentationalNote(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->note('intro', 'Intro')->description('Welcome.');
+        $p->text('name', 'Name');
+      })
+      ->build();
+
+    $schema = (new SchemaGenerator($form))->generate();
+
+    // A note collects no answer, so it is not a prompt in the machine schema.
+    $prompts = $schema['prompts'];
+    $this->assertIsArray($prompts);
+    $ids = array_column($prompts, 'id');
+    $this->assertSame(['name'], $ids);
   }
 
   public function testRoundTripsThroughJson(): void {

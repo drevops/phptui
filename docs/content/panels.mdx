@@ -9,17 +9,17 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Panels and navigation
 
-The interactive TUI is a full-screen panel browser: the root hub lists the form's panels with live value summaries, and each panel lists its fields with their current values and provenance badges. Up/Down move the cursor, Enter edits a field in place (or drills into a sub-panel), Esc goes back, `q` quits, and the mouse wheel scrolls long panels without moving the cursor - all of these keys are configurable (see [Key bindings](/key-bindings)). **Submit** and **Cancel** buttons live on the root panel - `->buttons(FALSE)` hides them, `->buttons(TRUE, 'Save', 'Discard')` relabels them.
+The interactive TUI is a full-screen panel browser. The root hub lists the form's panels with live value summaries, and each panel lists its fields with their current values and provenance badges. <kbd>Up</kbd>/<kbd>Down</kbd> move the cursor, <kbd>Enter</kbd> edits a field in place (or drills into a sub-panel), <kbd>Esc</kbd> goes back, <kbd>q</kbd> quits, and the mouse wheel scrolls long panels without moving the cursor. All of these keys are configurable (see [Key bindings](/key-bindings)). **Submit** and **Cancel** buttons live on the root panel - `->buttons(FALSE)` hides them, `->buttons(TRUE, 'Save', 'Discard')` relabels them.
 
-A **contextual help footer** runs along the foot of every screen, listing exactly the keys valid right now and updating as focus moves between the hub and each editor. The hub shows move, select, back, quit and `?`; each widget contributes its own bindings on top of accept/cancel - a select adds move, a multiple select adds toggle and select-all/none, a bounded number adds the step keys, a textarea adds newline and the external-editor handoff, a revealable password adds the reveal toggle. Pressing `?` at the hub opens a fuller overlay that lists the hub and every widget type the form uses, so the form teaches its own less-common widgets. The footer follows the active theme and key map - it degrades to ASCII glyphs and always reflects remapped keys - and the facade's `->footer(FALSE)` turns it off.
+A **contextual help footer** runs along the bottom of every screen, listing exactly the keys that work right now and updating as focus moves between the hub and each editor. The hub shows move, select, back, quit and <kbd>?</kbd>. Each widget adds its own bindings on top of accept/cancel: a select adds move, a multiple select adds toggle and select-all/none, a bounded number adds the step keys, a textarea adds newline and the external-editor handoff, a revealable password adds the reveal toggle. Press <kbd>?</kbd> at the hub and a fuller overlay lists the hub keys and every widget type the form uses - so the form teaches its own less-common widgets. The footer follows the active theme and key map (it degrades to ASCII glyphs and always reflects remapped keys), and the facade's `->footer(FALSE)` turns it off.
 
-A form-level `->banner()` shows a start screen (with an optional version) before the panels; the facade's `->clearOnExit(FALSE)` keeps the final frame on screen after the TUI exits.
+A form-level `->banner()` shows a start screen (with an optional version) before the panels, and the facade's `->clearOnExit(FALSE)` keeps the final frame on screen after the TUI exits.
 
 ## Inline editing
 
-Editing happens **in place**. Pressing Enter on a field opens its editor right where the value sits - the widget's own view, driven by its own keys - while the rest of the panel stays around it; the widget's accept key commits and collapses the row back to its summary, Esc cancels. A confirm shows its `● Yes ○ No` in the row, a select drops its option list under the label, a text field becomes a caret input - each the same editor the widget always uses, just drawn in the panel instead of on its own screen. A change costs a single Enter with no context switch.
+Editing happens **in place**. Press <kbd>Enter</kbd> on a field and its editor opens right where the value sits - the widget's own view, driven by its own keys - while the rest of the panel stays around it. The widget's accept key commits and collapses the row back to its summary; <kbd>Esc</kbd> cancels. A confirm shows its `● Yes ○ No` in the row, a select drops its option list under the label, a text field becomes a caret input. Each is the same editor the widget always uses, just drawn in the panel instead of on its own screen - so changing a value costs a single <kbd>Enter</kbd> and no context switch.
 
-Inline is the default for every field. A field opts out with `->standalone()`, which opens that same editor full-screen instead - the better fit for a widget that wants the whole viewport, such as a month calendar, a long option list or a multi-line textarea:
+Inline is the default for every field. A field opts out with `->standalone()`, which opens that same editor full-screen instead - the better fit for a widget that wants the whole viewport, like a month calendar, a long option list or a multi-line textarea:
 
 ```php
 $form = Form::create('Order')
@@ -35,7 +35,7 @@ $form = Form::create('Order')
 
 ## Nested panels
 
-Panels nest to any depth: a sub-panel renders as a drillable row with a one-line summary of its values, and the breadcrumb header tracks where you are. A `->fixup()` rule reconciles dependent answers on every settle pass - here, organic sourcing is forced off outside the premium grade, whatever was answered:
+Panels nest to any depth: a sub-panel renders as a drillable row with a one-line summary of its values, and the breadcrumb header keeps track of where you are. A `->fixup()` rule reconciles dependent answers on every settle pass - here, organic sourcing is forced off outside the premium grade, whatever was answered:
 
 ```php
 $form = Form::create('Basket settings')
@@ -61,7 +61,7 @@ $form = Form::create('Basket settings')
 
 ## Modal panels
 
-A sub-panel usually drills in, replacing the view. A panel marked `->modal()` instead opens as a **centered dialog over the dimmed parent** - the better fit for a focused aside or a decision that should not lose the reader's place. The dialog carries its own **configurable submit/cancel buttons** (mandatory chrome, so a modal always shows them), collects whatever fields it declares - or just shows a message - and blocks the rest of the form while open. **Save** keeps the edits made inside the dialog; **Discard**, Escape or `q` restores every answer exactly as it was when the dialog opened. A modal cannot itself hold sub-panels:
+A sub-panel usually drills in and replaces the view. Mark a panel `->modal()` and it opens as a **centered dialog over the dimmed parent** instead - the better fit for a focused aside or a decision that shouldn't lose the reader's place. The dialog carries its own **configurable submit/cancel buttons** (mandatory chrome - a modal always shows them), collects whatever fields it declares - or just shows a message - and blocks the rest of the form while it's open. **Save** keeps the edits made inside the dialog; **Discard**, <kbd>Escape</kbd> or <kbd>q</kbd> puts every answer back exactly as it was when the dialog opened. One rule: a modal can't hold sub-panels of its own.
 
 ```php
 $form = Form::create('Produce order')
@@ -92,7 +92,7 @@ $form = Form::create('Produce order')
 
 ## Bordered panels
 
-The whole panel browser is wrapped in a border by default. The border is a theme option - `rounded` (the default), `line`, `double` or `none` - passed as a plain string alongside the spacing (`padded` by default); the hub, breadcrumb header, fields and the key-hint footer all sit inside it, and every drill-in sub-panel keeps it:
+The whole panel browser sits inside a border by default. The border is a theme option - `rounded` (the default), `line`, `double` or `none` - passed as a plain string alongside the spacing (`padded` by default). The hub, breadcrumb header, fields and key-hint footer all sit inside the frame, and every drill-in sub-panel keeps it:
 
 ```php
 $form = Form::create('New order')
@@ -120,7 +120,7 @@ $bare = (new Tui($form))->theme('default', ['border' => 'none', 'spacing' => 'no
 
 ## Panel layouts
 
-A panel's sub-panels list vertically by default; `->layout()` arranges them as a grid of side-by-side columns instead. Each argument declares one visual row and names how many panels sit beside each other in it, filled in declaration order: `layout(2)` puts two panels side by side, `layout(2, 2)` makes four windows, `layout(1, 2)` one full-width panel above two columns - and `layout(2, 1)` the other way around. Every level of the panel tree declares its own, so a drilled-in panel arranges its children independently. `Form::layout()` arranges the top-level panels; `PanelBuilder::layout()` arranges a panel's children:
+A panel's sub-panels list vertically by default; `->layout()` arranges them as a grid of side-by-side columns instead. Each argument declares one visual row and says how many panels sit beside each other in it, filled in declaration order: `layout(2)` puts two panels side by side, `layout(2, 2)` makes four windows, `layout(1, 2)` one full-width panel above two columns - and `layout(2, 1)` the other way around. Every level of the panel tree declares its own layout, so a drilled-in panel arranges its children independently: `Form::layout()` arranges the top-level panels, `PanelBuilder::layout()` a panel's children:
 
 ```php
 $form = Form::create('Market stall')
@@ -149,11 +149,11 @@ $form = Form::create('Market stall')
   <ThemedImage sources={{light: useBaseUrl('/panel-layout-light-animated.svg'), dark: useBaseUrl('/panel-layout-dark-animated.svg')}} alt="Panels arranged as a grid: one full-width panel above two side-by-side columns" width="100%" />
 </p>
 
-Each column previews its panel - the title, the description and one row per field value, plus a drill-in row per nested panel - so the grid reads as windows into the form. The arrows move spatially (Left/Right along a row, Up/Down between rows, out to the fields above or the buttons below), Enter drills into the focused panel exactly as in the row list, and fields declared on the same panel keep their normal rows above the grid. The declaration is validated when the form is built: every row must hold at least one panel and the slots must exactly cover the sub-panels, so a mismatch throws at declaration time, never mid-session.
+Each column previews its panel - the title, the description and one row per field value, plus a drill-in row per nested panel - so the grid reads as windows into the form. The arrows move spatially: <kbd>Left</kbd>/<kbd>Right</kbd> along a row, <kbd>Up</kbd>/<kbd>Down</kbd> between rows, and out to the fields above or the buttons below. <kbd>Enter</kbd> drills into the focused panel exactly as in the row list, and fields declared on the same panel keep their normal rows above the grid. The declaration is validated when the form is built - every row must hold at least one panel and the slots must exactly cover the sub-panels - so a mismatch throws at declaration time, never mid-session.
 
 ## Fullscreen
 
-The facade's `->fullscreen()` expands the frame to the whole terminal: the border hugs the screen edges, the key-hint footer pins to the bottom row, and the body stretches between them. Where the fields sit inside the stretched frame is a pair of theme options - `halign` (`left`, `center` or `right`) and `valign` (`top`, `middle` or `bottom`) - passed as plain strings like the border, and the fields move as one block so their left edges stay aligned:
+The facade's `->fullscreen()` stretches the frame to the whole terminal: the border hugs the screen edges, the key-hint footer pins to the bottom row, and the body stretches between them. Where the fields sit inside the stretched frame is a pair of theme options - `halign` (`left`, `center` or `right`) and `valign` (`top`, `middle` or `bottom`) - passed as plain strings like the border. The fields move as one block, so their left edges stay aligned:
 
 ```php
 // The market-stall grid from above, stretched to the terminal and centered.
@@ -170,7 +170,7 @@ $tui = (new Tui($form))
 Four sizing options bound the stretch, each a non-negative integer:
 
 - `max_width` / `max_height` (default `0`, uncapped) stop the frame short of a very wide or tall terminal; the capped frame then floats at the `halign` / `valign` anchor, like a dialog.
-- `min_width` / `min_height` guard against a terminal too small for the layout: below either, the TUI shows a centered resize notice (only quit works there) until the terminal grows. `min_height` defaults to `10`; `min_width` defaults to `0`, which measures the form's own content - the widest label, value, badge and description row across every panel - so the guard adapts to the questionnaire without configuration.
+- `min_width` / `min_height` guard against a terminal too small for the layout: below either, the TUI shows a centered resize notice (only quit works there) until the terminal grows. `min_height` defaults to `10`. `min_width` defaults to `0`, which measures the form's own content - the widest label, value, badge and description row across every panel - so the guard adapts to your questionnaire without any configuration.
 
 Fullscreen affects only the interactive TUI; headless collection ignores it. The frame's layout width is resolved once at start-up, while the live terminal size is still sampled every frame for the minimum-size guard and frame positioning - so a window resized mid-session reflows on height but keeps its layout width until the next run.
 

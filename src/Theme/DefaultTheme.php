@@ -341,6 +341,13 @@ class DefaultTheme implements ThemeInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function contentWidth(): int {
+    return $this->width;
+  }
+
+  /**
    * The vertical spacing option.
    *
    * @return \DrevOps\Tui\Theme\Spacing
@@ -871,13 +878,36 @@ class DefaultTheme implements ThemeInterface {
     $lines = [];
     $cursor_line = 0;
     $index = 0;
+    $rendered = 0;
 
     $spacing = $this->spacing();
     $gap = $spacing === Spacing::Padded ? 1 : 0;
     $verbose = $spacing !== Spacing::Compact;
 
     foreach ($panel->fields as $field) {
-      if ($index > 0 && $gap > 0) {
+      // A presentational field renders as a card but is not navigable: it
+      // takes no cursor slot, and a leading gap only when it has output.
+      if ($field->type->isPresentational()) {
+        $note = $this->renderNoteLines($field, $answers);
+
+        if ($note === []) {
+          continue;
+        }
+
+        if ($rendered > 0 && $gap > 0) {
+          $lines[] = '';
+        }
+
+        foreach ($note as $line) {
+          $lines[] = $line;
+        }
+
+        $rendered++;
+
+        continue;
+      }
+
+      if ($rendered > 0 && $gap > 0) {
         $lines[] = '';
       }
 
@@ -895,6 +925,7 @@ class DefaultTheme implements ThemeInterface {
         }
 
         $index++;
+        $rendered++;
 
         continue;
       }
@@ -908,10 +939,11 @@ class DefaultTheme implements ThemeInterface {
       }
 
       $index++;
+      $rendered++;
     }
 
     if ($panel->layout !== []) {
-      if ($index > 0) {
+      if ($rendered > 0) {
         $lines[] = '';
       }
 
@@ -925,7 +957,7 @@ class DefaultTheme implements ThemeInterface {
     }
 
     foreach ($panel->panels as $subpanel) {
-      if ($index > 0 && $gap > 0) {
+      if ($rendered > 0 && $gap > 0) {
         $lines[] = '';
       }
 
@@ -945,6 +977,7 @@ class DefaultTheme implements ThemeInterface {
       }
 
       $index++;
+      $rendered++;
     }
 
     return [$lines, $cursor_line];
@@ -1037,6 +1070,16 @@ class DefaultTheme implements ThemeInterface {
     }
 
     foreach ($panel->fields as $field) {
+      // A presentational field carries no value; it previews as its title.
+      if ($field->type->isPresentational()) {
+        $title = $this->noteTitleFirstLine($field, $answers);
+        if ($title !== '') {
+          $lines[] = '  ' . $this->heading($title);
+        }
+
+        continue;
+      }
+
       // A grid cell is one physical row, so a multi-line value previews as
       // its first line - an embedded newline would desync the column zip.
       $value_lines = explode("\n", $this->normalizeLines($this->renderFieldValue($field, $answers->value($field->id))));
@@ -1120,6 +1163,128 @@ class DefaultTheme implements ThemeInterface {
     }
 
     return $lines;
+  }
+
+  /**
+   * Render a note card: its interpolated title and body, boxed when bordered.
+   *
+   * The title and body carry the same `{{field}}` templating derived values
+   * use, interpolated here against the current answers so a note reflects prior
+   * answers. A plain card is a heading title over grey body lines; a bordered
+   * note wraps them in the theme's box with a one-column gutter each side.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The note field.
+   * @param \DrevOps\Tui\Answers\Answers $answers
+   *   The current answers, interpolated into the title and body.
+   *
+   * @return list<string>
+   *   The card's physical lines; empty when it has neither title nor body.
+   */
+  public function renderNoteLines(Field $field, Answers $answers): array {
+    $title = $this->noteText($field->label, $answers);
+    $body = $this->noteText($field->description, $answers);
+
+    $content = [];
+
+    // Split the title and body on their own newlines so no returned line ever
+    // carries an embedded newline that would desync the box and scroll maths.
+    if ($title !== '') {
+      foreach (explode("\n", $this->normalizeLines($title)) as $line) {
+        $content[] = $this->heading($line);
+      }
+    }
+
+    if ($body !== '') {
+      foreach (explode("\n", $this->normalizeLines($body)) as $line) {
+        $content[] = $this->description($line);
+      }
+    }
+
+    if ($content === []) {
+      return [];
+    }
+
+    if (!$field->bordered) {
+      return array_map(static fn(string $line): string => '  ' . $line, $content);
+    }
+
+    return $this->boxedNote($content);
+  }
+
+  /**
+   * Wrap a note's content lines in the theme's border box.
+   *
+   * The box is sized to its widest content line and capped at the frame width;
+   * an explicit note border shows even when the frame itself is borderless, so
+   * a None frame style falls back to the single-line box.
+   *
+   * @param list<string> $content
+   *   The styled content lines (title and body).
+   *
+   * @return list<string>
+   *   The boxed lines.
+   */
+  protected function boxedNote(array $content): array {
+    $style = $this->borderStyle();
+    if ($style === Border::None) {
+      $style = Border::Line;
+    }
+
+    $chars = Box::chars($style, $this->unicode);
+
+    $inner = 0;
+    foreach ($content as $line) {
+      $inner = max($inner, Ansi::width($line));
+    }
+
+    // boxLine adds a one-column gutter and a border column each side, so the
+    // outer width is the content width plus four columns of chrome.
+    $outer = min($this->width, $inner + 4);
+
+    $lines = [$this->borderRule($chars['tl'], $chars['tr'], $chars['h'], $outer)];
+
+    foreach ($content as $line) {
+      $lines[] = $this->boxLine($line, $chars['v'], $outer);
+    }
+
+    $lines[] = $this->borderRule($chars['bl'], $chars['br'], $chars['h'], $outer);
+
+    return $lines;
+  }
+
+  /**
+   * Interpolate a translated note source string against the current answers.
+   *
+   * @param string $source
+   *   The note's title or body source text.
+   * @param \DrevOps\Tui\Answers\Answers $answers
+   *   The current answers, interpolated into its `{{field}}` tokens.
+   *
+   * @return string
+   *   The translated, interpolated text.
+   */
+  protected function noteText(string $source, Answers $answers): string {
+    return Strings::interpolate(Translator::t($source), $answers->values);
+  }
+
+  /**
+   * The first physical line of a note's interpolated title.
+   *
+   * A grid cell is one row, so a multi-line title collapses to its first line.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The note field.
+   * @param \DrevOps\Tui\Answers\Answers $answers
+   *   The current answers.
+   *
+   * @return string
+   *   The interpolated first line, empty when the title is empty.
+   */
+  protected function noteTitleFirstLine(Field $field, Answers $answers): string {
+    $title = $this->noteText($field->label, $answers);
+
+    return $title === '' ? '' : explode("\n", $this->normalizeLines($title))[0];
   }
 
   /**
@@ -1273,6 +1438,16 @@ class DefaultTheme implements ThemeInterface {
     $verbose = $this->spacing() !== Spacing::Compact;
 
     foreach ($panel->fields as $field) {
+      // A note renders as a card, not a label/value row; measure its actual
+      // lines so the frame fits its title and body (and box, when bordered).
+      if ($field->type->isPresentational()) {
+        foreach ($this->renderNoteLines($field, $answers) as $line) {
+          $width = max($width, Ansi::width($line));
+        }
+
+        continue;
+      }
+
       // A multi-line value renders one physical row per line, all under the
       // value column, so the widest single line is what the row needs.
       $row = 4 + Strings::length(Translator::t($field->label)) + $this->measureValueWidth($field, $answers);
@@ -1351,6 +1526,15 @@ class DefaultTheme implements ThemeInterface {
     }
 
     foreach ($panel->fields as $field) {
+      if ($field->type->isPresentational()) {
+        $title = $this->noteTitleFirstLine($field, $answers);
+        if ($title !== '') {
+          $width = max($width, 2 + Strings::length($title));
+        }
+
+        continue;
+      }
+
       $width = max($width, 4 + Strings::length(Translator::t($field->label)) + $this->measureValueWidth($field, $answers));
     }
 

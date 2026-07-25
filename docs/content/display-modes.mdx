@@ -1,6 +1,6 @@
 ---
 title: Display modes
-description: 'Glyphs follow the terminal locale (Unicode or ASCII) and colour honours NO_COLOR; force either on the Tui facade.'
+description: 'Glyphs follow the terminal locale (Unicode or ASCII) and color honors NO_COLOR; force either on the Tui facade.'
 keywords: ['display modes', 'unicode', 'ascii', 'no_color', 'terminal']
 ---
 
@@ -9,7 +9,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Display modes
 
-The TUI adapts to the terminal: glyphs follow the locale (a `UTF` locale in `LC_ALL`, `LC_CTYPE` or `LANG` enables Unicode, anything else falls back to ASCII) and colour honours [`NO_COLOR`](https://no-color.org/) and `TERM=dumb`. Force either on the `Tui` facade with `->unicode(TRUE|FALSE)` and `->color(TRUE|FALSE)`. Here is the same produce-box form in each combination:
+The TUI adapts to the terminal it lands on: glyphs follow the locale (a `UTF` locale in `LC_ALL`, `LC_CTYPE` or `LANG` enables Unicode; anything else falls back to ASCII) and color honors [`NO_COLOR`](https://no-color.org/) and `TERM=dumb`. You can force either on the `Tui` facade with `->unicode(TRUE|FALSE)` and `->color(TRUE|FALSE)`. Here's the same produce-box form in each combination:
 
 <table align="center">
   <tr>

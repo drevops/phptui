@@ -31,6 +31,7 @@ const sidebars = {
         'widgets/calendar',
         'widgets/confirm',
         'widgets/filepicker',
+        'widgets/note',
         'widgets/number',
         'widgets/option-groups',
         'widgets/password',

@@ -9,8 +9,10 @@ use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormDefinition;
+use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\Panel;
+use DrevOps\Tui\Model\SelectionBounds;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -88,6 +90,13 @@ final class BuiltModelTest extends TestCase {
     $this->assertSame([], $form->field('ms')?->default);
     $this->assertFalse($form->field('cb')?->default);
     $this->assertSame('', $form->field('tx')?->default);
+  }
+
+  public function testSelectionBoundsOnNonMultipleFieldThrows(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Field "s" declares selection limits but does not collect several values.');
+
+    new Field('s', 'S', '', FieldType::Text, '', selectionBounds: new SelectionBounds(2, 3));
   }
 
   public function testFormDefaults(): void {

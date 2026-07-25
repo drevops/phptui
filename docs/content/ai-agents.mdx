@@ -6,11 +6,11 @@ keywords: ['ai agents', 'json schema', 'automation', 'agent help', 'validation']
 
 # AI agents
 
-A form built with this engine is self-describing: it hands an AI agent (or any automation) the questions, their allowed values and the precedence rules, so answers arrive unattended without the agent ever reading the form's source. The facade exposes three calls for this - `agentHelp()`, `schema()` and `validate()` - which a consumer surfaces in its own tool so an agent can discover the form the moment it meets it.
+A form built with this engine is self-describing: it hands an AI agent (or any automation) the questions, their allowed values and the precedence rules, so answers can arrive unattended - without the agent ever reading your form's source. The facade exposes three calls for this - `agentHelp()`, `schema()` and `validate()` - and you surface them in your own tool, so an agent can discover the form the moment it meets it.
 
 ## The answer schema
 
-`agentHelp()` returns a JSON Schema (draft 2020-12) of the answers - the object an agent supplies, keyed by question id. Each property carries its `type` and allowed values (a `select`'s `enum`, a number's `minimum`/`maximum`), its `title` and `description`, its `default`, and the `env` variable that sets it. It names no CLI flags: the flags an agent ultimately calls are the consumer's to define. A consumer retrieves the schema and folds it into its own help - an "AI agents" section of `--help`, a dedicated flag it adds, a generated README:
+`agentHelp()` returns a JSON Schema (draft 2020-12) of the answers - the object an agent supplies, keyed by question id. Each property carries its `type` and allowed values (a `select`'s `enum`, a number's `minimum`/`maximum`), its `title` and `description`, its `default`, and the `env` variable that sets it. What it deliberately doesn't name is CLI flags: the flags an agent ultimately calls are yours to define. You retrieve the schema and fold it into your own help - an "AI agents" section of `--help`, a dedicated flag, a generated README:
 
 ```php
 use DrevOps\Tui\Tui;
@@ -62,7 +62,7 @@ Each `env` is the variable that sets its answer - the uppercased id under the ac
 
 ## Full metadata and validation
 
-`schema()` is the fuller, raw description: the same questions with every declared attribute - options, bounds, and the internal `when`, `derive` and `discover` rules - under a `prompts` key, for tooling that wants the complete picture rather than the answer contract:
+`schema()` is the fuller, raw description: the same questions with every declared attribute - options, bounds, and the internal `when`, `derive` and `discover` rules - under a `prompts` key. Reach for it when your tooling wants the complete picture rather than the answer contract:
 
 ```json
 {
@@ -102,9 +102,9 @@ $errors = $tui->validate(['name' => 'Weekly Box', 'fruit' => 'grape', 'quantity'
 
 ## Precedence and environment variables
 
-The schema's `x-precedence` spells out how every field resolves - from the first source that provides a value:
+The schema's `x-precedence` spells out how every field resolves - the first source that provides a value wins:
 
-1. **Provided** - an explicit value the consumer passes in, however its interface accepts one. Highest precedence.
+1. **Provided** - an explicit value you pass in, however your interface accepts one. Highest precedence.
 2. **Environment** - the per-question variable named in `env` (e.g. `TUI_NAME`), the uppercased id under the active prefix.
 3. **Discovered** - a value detected from the target directory (see [Discovery](/field-behaviour#discovery)).
 4. **Derived** - a value computed from other fields.

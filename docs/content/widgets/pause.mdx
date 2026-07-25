@@ -1,7 +1,7 @@
 ---
 title: Pause
-description: 'An acknowledgement gate that shows its label and waits for the reader before continuing.'
-keywords: ['pause', 'gate', 'acknowledgement', 'widget']
+description: 'An acknowledgment gate that shows its label and waits for the reader before continuing.'
+keywords: ['pause', 'gate', 'acknowledgment', 'widget']
 ---
 
 import ThemedImage from '@theme/ThemedImage';
@@ -13,7 +13,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   <ThemedImage sources={{light: useBaseUrl('/widget-pause-light-animated.svg'), dark: useBaseUrl('/widget-pause-dark-animated.svg')}} alt="Pause widget" />
 </p>
 
-An acknowledgement gate: it shows its label and waits for the reader to continue. It collects a **`bool`** - always `TRUE` once acknowledged - and holds no other value.
+An acknowledgment gate: it shows its label and waits for the reader to continue. It collects a **`bool`** - always `TRUE` once acknowledged - and holds no other value.
 
 ```php
 $p->pause('ready', 'Review your basket'); // A gate; it takes no options.
@@ -27,18 +27,18 @@ Pause has no options of its own - it only renders its label as a gate. The share
 
 ## Keyboard
 
-| Key               | Action                   |
-| ----------------- | ------------------------ |
-| `Enter` / `Space` | Acknowledge and continue |
-| `Esc`             | Cancel                   |
+| Key                                 | Action                   |
+| ----------------------------------- | ------------------------ |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | Acknowledge and continue |
+| <kbd>Esc</kbd>                      | Cancel                   |
 
-## Headless behaviour
+## Headless behavior
 
 An unattended run has nothing to wait for, so a pause auto-acknowledges (`TRUE`) and never blocks automation.
 
 ## Display modes
 
-In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off:
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
 <table>
   <tr>

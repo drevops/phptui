@@ -134,6 +134,33 @@ final class SuggestWidgetTest extends TestCase {
     $this->assertStringContainsString('Palace', Ansi::strip($view));
   }
 
+  public function testShowsHighlightedSuggestionDescription(): void {
+    $widget = new SuggestWidget(['apple', 'apricot'], '', NULL, ['apple' => 'Crisp and sweet.', 'apricot' => 'Small and tart.']);
+
+    // With nothing highlighted yet (cursor detached), no description shows.
+    $this->assertStringNotContainsString('Crisp and sweet.', Ansi::strip($widget->view(new DefaultTheme())));
+
+    $widget->handle(Key::named(KeyName::Down));
+    $view = Ansi::strip($widget->view(new DefaultTheme()));
+    $this->assertStringContainsString('Crisp and sweet.', $view);
+    $this->assertStringNotContainsString('Small and tart.', $view);
+
+    $widget->handle(Key::named(KeyName::Down));
+    $view = Ansi::strip($widget->view(new DefaultTheme()));
+    $this->assertStringContainsString('Small and tart.', $view);
+    $this->assertStringNotContainsString('Crisp and sweet.', $view);
+  }
+
+  public function testOmitsDescriptionForSuggestionWithoutEntry(): void {
+    $widget = new SuggestWidget(['apple', 'pear'], '', NULL, ['apple' => 'Crisp and sweet.']);
+
+    $widget->handle(Key::named(KeyName::Down));
+    $widget->handle(Key::named(KeyName::Down));
+
+    // The highlighted Pear has no description entry, so nothing is appended.
+    $this->assertStringNotContainsString('Crisp', Ansi::strip($widget->view(new DefaultTheme())));
+  }
+
   public function testRejectsNonPositivePageSize(): void {
     $this->assertRejectsNonPositivePageSize(static fn(int $size): SuggestWidget => new SuggestWidget(['x'], page_size: $size), 0);
   }

@@ -6,11 +6,11 @@ keywords: ['translations', 'localization', 'i18n', 'catalogs', 'language']
 
 # Translations
 
-Every string the TUI shows can be presented in another language: the framework's own **chrome** (key hints, the help overlay, buttons, validation and error messages) and the **questions** you declare (field and panel labels, descriptions and option labels). A missing translation always falls back to the English source, so a partial catalog is safe.
+Every string the TUI shows can be presented in another language - both the framework's own **chrome** (key hints, the help overlay, buttons, validation and error messages) and the **questions** you declare (field and panel labels, descriptions and option labels). A missing translation always falls back to the English source, so a partial catalog is safe to ship.
 
 ## Setting a translator
 
-Translation is off by default. Turn it on by giving the `Tui` facade a `Translator` - the active language, and optionally the sources your own catalogs come from - the same way you set a theme or key map:
+Translation is off by default. Turn it on by giving the `Tui` facade a `Translator` - the active language, and optionally the sources your own catalogs come from - the same way you'd set a theme or key map:
 
 ```php
 use DrevOps\Tui\Builder\Form;
@@ -39,7 +39,7 @@ The first argument selects the language:
 
 ## Adding and overriding strings
 
-The package's bundled catalogs are always the implicit first source; every source you pass merges on top of them, and a later source overrides an earlier one per key. Chrome strings and your form's strings share one key namespace, so a single source covers any mix: only your own strings, your own plus a few chrome overrides, or a complete chrome replacement.
+The package's bundled catalogs are always the implicit first source. Every source you pass merges on top of them, and a later source overrides an earlier one per key. Chrome strings and your form's strings share one key namespace, so a single source can cover any mix: only your own strings, your own plus a few chrome overrides, or a complete chrome replacement.
 
 A source is one of three shapes:
 
@@ -67,7 +67,7 @@ new Translator('auto', [
 ]);
 ```
 
-A file or map section for a language other than the active one contributes nothing - the same per-locale semantics as a directory. A listed path that exists as neither a directory nor a file throws, so a typo surfaces instead of silently rendering English.
+A file or map section for a language other than the active one contributes nothing - the same per-locale semantics as a directory. A listed path that's neither a directory nor a file throws, so a typo surfaces instead of silently rendering English.
 
 ## Writing a catalog
 
@@ -90,13 +90,13 @@ return [
 ];
 ```
 
-Your form keeps its English source strings; the catalog maps them to the target language, so one form definition serves every language.
+Your form keeps its English source strings; the catalog maps them to the target language. One form definition serves every language.
 
 Some strings carry `@name` placeholders (for example `Enter a number @constraint.` or `@count items selected`). Keep each placeholder verbatim in the translation - the library substitutes the value at render time.
 
 ## Plural messages
 
-A message whose wording depends on a count - "1 apple" versus "5 apples" - is rendered with `Translator::formatPlural($count, $singular, $plural)`. The count picks the form and `@count` is bound to it:
+A message whose wording depends on a count - "1 apple" versus "5 apples" - is rendered with `Translator::formatPlural($count, $singular, $plural)`. The count picks the form, and `@count` is bound to it:
 
 ```php
 use DrevOps\Tui\Translation\Translator;
@@ -111,7 +111,7 @@ A translation supplies its forms as a **list** keyed by the plural source, and t
 '@count apples' => ['1 manzana', '@count manzanas'],
 ```
 
-A language with more forms supplies its own rule under the reserved `Translator::PLURAL_RULE` key - a `fn(int $count): int` returning the zero-based index of the form to use. Ukrainian has three forms (one/few/many):
+A language with more forms supplies its own rule under the reserved `Translator::PLURAL_RULE` key - a `fn(int $count): int` returning the zero-based index of the form to use. Ukrainian, for example, has three forms (one/few/many):
 
 ```php
 <?php
@@ -144,11 +144,11 @@ return [
 ];
 ```
 
-Without a rule the default applies (the first form when the count is one, the second otherwise), and an index a translation does not cover falls back to the English plural, so a rendering is always defined. Plural-form lists and the rule work in every source shape, so an inline map carries them exactly like a catalog file - a consumer rule overrides the bundled one.
+Without a rule the default applies: the first form when the count is one, the second otherwise. An index a translation doesn't cover falls back to the English plural, so a rendering is always defined. Plural-form lists and the rule work in every source shape - an inline map carries them exactly like a catalog file, and a consumer rule overrides the bundled one.
 
 ## The chrome catalog template
 
-The package ships `translations/en.php` - the canonical list of every chrome string the library emits, as an English `key => key` map. Copy it to a locale file and translate the values to get a complete chrome catalog to start from:
+The package ships `translations/en.php` - the canonical list of every chrome string the library emits, as an English `key => key` map. Copy it to a locale file and translate the values, and you have a complete chrome catalog to start from:
 
 ```bash
 cp vendor/drevops/tui/translations/en.php translations/de.php
@@ -158,6 +158,6 @@ A ready-to-use Ukrainian catalog, `translations/uk.php`, ships alongside it and 
 
 ## Packaging
 
-The bundled catalogs load from inside the package, and your own catalogs are ordinary files loaded with `require`, so both bundle into a consumer-built PHAR with no extra configuration - reference yours by a path relative to your application (for example `__DIR__ . '/translations'`), which resolves inside the archive.
+The bundled catalogs load from inside the package, and your own catalogs are ordinary files loaded with `require` - so both bundle into a consumer-built PHAR with no extra configuration. Reference yours by a path relative to your application (for example `__DIR__ . '/translations'`), which resolves inside the archive.
 
-A runnable demo in [`playground/12-translations.php`](https://github.com/drevops/tui/blob/main/playground/12-translations.php) localizes chrome and questions into Ukrainian - the bundled `uk.php` supplies the chrome automatically and a small local catalog adds the form's own labels - and exercises pluralized rendering in its multi-select summary.
+A runnable demo in [`playground/12-translations.php`](https://github.com/drevops/tui/blob/main/playground/12-translations.php) localizes chrome and questions into Ukrainian - the bundled `uk.php` supplies the chrome automatically, a small local catalog adds the form's own labels - and exercises pluralized rendering in its multi-select summary.

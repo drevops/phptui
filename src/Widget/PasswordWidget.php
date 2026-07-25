@@ -146,14 +146,14 @@ class PasswordWidget extends AbstractWidget implements TextEditCapableInterface,
   /**
    * {@inheritdoc}
    */
-  public function view(ThemeInterface $theme): string {
+  protected function renderBody(ThemeInterface $theme): string {
     $rows = [$this->renderLine($theme)];
 
     if ($this->firstEntry !== NULL) {
       $rows[] = $theme->footer(Translator::t('re-enter to confirm'));
     }
 
-    return $this->withError($theme, implode("\n", $rows));
+    return implode("\n", $rows);
   }
 
   /**

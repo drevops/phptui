@@ -8,6 +8,8 @@ use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\Model\Option;
+use DrevOps\Tui\Model\OptionKind;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Testing\ArrayKeyStream;
 use DrevOps\Tui\Testing\WidgetRunner;
@@ -30,6 +32,38 @@ use PHPUnit\Framework\TestCase;
 final class ReorderWidgetTest extends TestCase {
 
   use AssertsPagingTrait;
+
+  public function testShowsHighlightedItemDescription(): void {
+    $widget = new ReorderWidget([
+      new Option('apple', 'Apple', 'Crisp and sweet.'),
+      new Option('carrot', 'Carrot', 'Stays crisp when kept cold.'),
+    ]);
+
+    $this->assertStringContainsString('Crisp and sweet.', Ansi::strip($widget->view(new DefaultTheme())));
+
+    $widget->handle(Key::named(KeyName::Down));
+    $view = Ansi::strip($widget->view(new DefaultTheme()));
+    $this->assertStringContainsString('Stays crisp when kept cold.', $view);
+    $this->assertStringNotContainsString('Crisp and sweet.', $view);
+  }
+
+  public function testNonSelectableItemShowsNoDescription(): void {
+    // The cursor starts on the non-selectable heading, so its description
+    // never renders beneath the list.
+    $widget = new ReorderWidget([
+      new Option('', 'Group', 'group note', OptionKind::Heading),
+      new Option('a', 'Apple', 'Crisp and sweet.'),
+    ]);
+
+    $this->assertStringNotContainsString('group note', Ansi::strip($widget->view(new DefaultTheme())));
+  }
+
+  public function testEmptyReorderRendersNoDescription(): void {
+    // A reorder with no items must render without touching a highlighted row.
+    $widget = new ReorderWidget([]);
+
+    $this->assertSame('', Ansi::strip($widget->view(new DefaultTheme())));
+  }
 
   public function testGrabAndMoveDownAccepts(): void {
     $widget = new ReorderWidget(self::options());

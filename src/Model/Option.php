@@ -25,7 +25,8 @@ final readonly class Option {
    * @param string $label
    *   The displayed label.
    * @param string $description
-   *   The machine-schema description (not rendered in the interactive widgets).
+   *   The option's description. Shown for the highlighted option as a secondary
+   *   line beneath the choice list, and carried into the machine schema.
    * @param \DrevOps\Tui\Model\OptionKind $kind
    *   The row kind.
    * @param bool $disabled

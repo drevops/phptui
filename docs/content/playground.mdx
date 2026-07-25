@@ -15,21 +15,21 @@ Runnable examples live in [`playground/`](https://github.com/drevops/tui/tree/ma
 | `03-panels-*`          | [Nested panels](/panels), [modal dialogs](/panels#modal-panels) and the border frame                              |
 | `04-inline-editing`    | [Inline editing](/panels#inline-editing) and `->standalone()`                                                     |
 | `05-form-logic-*`      | [Derived values](/configuration#derived-values), [conditional fields](/configuration#conditional-fields), fix-ups |
-| `06-field-behaviour-*` | [Declared behaviour](/field-behaviour): closures and handler classes                                              |
+| `06-field-behaviour-*` | [Declared behavior](/field-behaviour): closures and handler classes                                               |
 | `07-discovery`         | [Discovery](/field-behaviour#discovery) against a bundled sample project                                          |
 | `08-headless-*`        | [Unattended collection](/headless-collection), the JSON schema, validation, [agent help](/ai-agents)              |
 | `09-themes-*`          | The [built-in themes](/themes), a custom theme class, theme options, field styles                                 |
 | `10-key-bindings-*`    | [Key bindings](/key-bindings): the vim preset and per-binding overrides                                           |
-| `11-display-modes-*`   | [Display modes](/display-modes): dark/light, ASCII, no colour                                                     |
+| `11-display-modes-*`   | [Display modes](/display-modes): dark/light, ASCII, no color                                                      |
 | `12-translations`      | [Translations](/translations) through a consumer catalog                                                          |
 | `13-testing`           | The [test harness](/testing) driving the TUI from scripted keystrokes                                             |
-| `14-produce-box`       | The capstone: panels, widgets, logic and behaviour in one real form                                               |
+| `14-produce-box`       | The capstone: panels, widgets, logic and behavior in one real form                                                |
 
-Every script is self-contained - it requires the Composer autoloader directly and declares its whole form inline, so any single file can be copied out as a starting point. Most take no CLI options: each demonstrates exactly one thing, variants are separate scripts, and unattended runs are driven by piping stdin and setting `TUI_<ID>` environment variables. The exception is `03-panels-fullscreen.php`, which takes `--halign`/`--valign` and `--max-width` to pick one alignment from its grid.
+Every script is self-contained: it requires the Composer autoloader directly and declares its whole form inline, so you can copy any single file out as a starting point. Most take no CLI options - each demonstrates exactly one thing, variants are separate scripts, and unattended runs are driven by piping stdin and setting `TUI_<ID>` environment variables. The exception is `03-panels-fullscreen.php`, which takes `--halign`/`--valign` and `--max-width` to pick one alignment from its grid.
 
 ```bash
 composer install
 php playground/01-quickstart.php
 ```
 
-The SVG demos throughout this documentation are generated from the playground scripts and forms: `php docs/util/update-assets.php` records the panel walkthroughs through a scripted terminal session (requires `asciinema`, `expect`, `node` and `npm`), while `php docs/util/render-widget-svgs.php` and `php docs/util/render-theme-svgs.php` render the widget cards and theme previews deterministically through the library's own [test harness](/testing) - no terminal involved.
+The SVG demos throughout this documentation are generated from the playground scripts and forms: `php docs/util/update-assets.php` records the panel walkthroughs through a scripted terminal session (it needs `asciinema`, `expect`, `node` and `npm`), while `php docs/util/render-widget-svgs.php` and `php docs/util/render-theme-svgs.php` render the widget cards and theme previews deterministically through the library's own [test harness](/testing) - no terminal involved.

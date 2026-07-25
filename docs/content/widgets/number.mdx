@@ -27,33 +27,33 @@ Runnable script: [`playground/02-widgets-number.php`](https://github.com/drevops
 
 ## Options
 
-| Name        | Description                                          | Required | Default   |
-| ----------- | ---------------------------------------------------- | -------- | --------- |
-| `min()`     | Lowest accepted value, inclusive.                    | No       | Unbounded |
-| `max()`     | Highest accepted value, inclusive.                   | No       | Unbounded |
-| `step()`    | Amount the Up/Down keys adjust by; must be positive. | No       | `1`       |
-| `default()` | Initial value.                                       | No       | `0`       |
+| Name        | Description                                                                | Required | Default   |
+| ----------- | -------------------------------------------------------------------------- | -------- | --------- |
+| `min()`     | Lowest accepted value, inclusive.                                          | No       | Unbounded |
+| `max()`     | Highest accepted value, inclusive.                                         | No       | Unbounded |
+| `step()`    | Amount the <kbd>Up</kbd>/<kbd>Down</kbd> keys adjust by; must be positive. | No       | `1`       |
+| `default()` | Initial value.                                                             | No       | `0`       |
 
-With no bounds declared the field is a plain integer entry and the arrow keys are inert. Declaring `min()`, `max()` or `step()` turns on Up/Down adjustment; the value is clamped only when a range (`min()` / `max()`) is set.
+With no bounds declared, the field is a plain integer entry and the arrow keys are inert. Declare `min()`, `max()` or `step()` and <kbd>Up</kbd>/<kbd>Down</kbd> adjustment turns on; the value is clamped only when a range (`min()` / `max()`) is set.
 
 ## Keyboard
 
-| Key       | Action                                                     |
-| --------- | ---------------------------------------------------------- |
-| digits    | Insert a digit                                             |
-| `-`       | Leading minus (once, at the start)                         |
-| `←` / `→` | Move the caret                                             |
-| `↑` / `↓` | Increment / decrement by `step` (only when bounds are set) |
-| `Enter`   | Accept (an out-of-range value is rejected inline)          |
-| `Esc`     | Cancel                                                     |
+| Key                         | Action                                                     |
+| --------------------------- | ---------------------------------------------------------- |
+| digits                      | Insert a digit                                             |
+| <kbd>-</kbd>                | Leading minus (once, at the start)                         |
+| <kbd>←</kbd> / <kbd>→</kbd> | Move the caret                                             |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Increment / decrement by `step` (only when bounds are set) |
+| <kbd>Enter</kbd>            | Accept (an out-of-range value is rejected inline)          |
+| <kbd>Esc</kbd>              | Cancel                                                     |
 
-## Headless behaviour
+## Headless behavior
 
-The bounds are enforced when the form runs [headlessly](/headless-collection) too - a value outside the range is rejected - and surface in the JSON schema as `min`, `max` and `step` on the prompt.
+The bounds are enforced when the form runs [headlessly](/headless-collection) too - a value outside the range is rejected - and they surface in the JSON schema as `min`, `max` and `step` on the prompt.
 
 ## Display modes
 
-In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off:
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
 <table>
   <tr>

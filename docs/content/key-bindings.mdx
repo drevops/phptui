@@ -6,17 +6,80 @@ keywords: ['key bindings', 'keyboard', 'vim', 'shortcuts', 'remap']
 
 # Key bindings
 
-Navigation, edit, accept and cancel keys are configurable. A widget asks for a semantic **action** - `MoveUp`, `Accept`, `Toggle`, `NewLine` and so on - rather than a fixed key, and a **key map** binds each action to one or more keys. Key bindings are a global TUI runtime setting, so you set them on the `Tui` facade with `->keys(...)`, mirroring `->theme(...)`:
+Navigation, edit, accept and cancel keys are all configurable. A widget never asks for a fixed key - it asks for a semantic **action** (`MoveUp`, `Accept`, `Toggle` - the full set is listed below), and a **key map** binds each action to one or more keys. Key bindings describe the terminal, not the questionnaire, so you set them on the `Tui` facade with `->keys(...)`, mirroring `->theme(...)`:
 
 ```php
 $tui = (new Tui($form))->keys('vim');   // built-in vim navigation (h/j/k/l)
 ```
 
-Two presets ship: `default` (the bindings described in [Panels and navigation](/panels)) and `vim`, which adds `h`/`j`/`k`/`l` alongside the arrow keys - only where a letter is not typed input, so text and filter fields keep the arrows.
+Two presets ship: `default` (every binding it declares is listed below) and `vim`, which adds <kbd>h</kbd>/<kbd>j</kbd>/<kbd>k</kbd>/<kbd>l</kbd> alongside the arrow keys - but only where a letter isn't typed input, so text and filter fields keep the arrows.
+
+## Actions
+
+The actions are the fixed set of intents the widgets understand - the bindings behind them are configurable, the intents are not. Every `Action` case:
+
+| Action                                           | Meaning                                                        |
+| ------------------------------------------------ | -------------------------------------------------------------- |
+| `MoveUp` / `MoveDown` / `MoveLeft` / `MoveRight` | Move the cursor or caret                                       |
+| `Accept`                                         | Commit the editor's value                                      |
+| `Cancel`                                         | Close the editor without committing                            |
+| `Activate`                                       | Open the focused field or panel (panel browser)                |
+| `Back`                                           | Go up one panel level                                          |
+| `Quit`                                           | Leave the TUI                                                  |
+| `ScrollUp` / `ScrollDown`                        | Scroll the panel without moving the cursor                     |
+| `Help`                                           | Open the help overlay                                          |
+| `DeleteBack`                                     | Delete the character before the caret                          |
+| `InsertSpace`                                    | Type a space                                                   |
+| `NewLine`                                        | Insert a newline (textarea)                                    |
+| `ExternalEdit`                                   | Hand off to the external editor (textarea)                     |
+| `Complete`                                       | Accept the ghost-text completion (text)                        |
+| `Increment` / `Decrement`                        | Step a bounded number                                          |
+| `Toggle`                                         | Check an option, or flip a two-state switch                    |
+| `SelectAll` / `SelectNone`                       | Check or clear every visible option                            |
+| `Grab`                                           | Pick up or drop the held item (reorder)                        |
+| `Yes` / `No`                                     | Set a confirm directly                                         |
+| `Reveal`                                         | Cycle the password display, or show hidden file-picker entries |
+
+The named keys a binding can use - every `KeyName` case: `Up`, `Down`, `Left`, `Right`, `Enter`, `Escape`, `Interrupt` (<kbd>Ctrl-C</kbd>), `Space`, `Backspace`, `Delete`, `Tab`, `Home`, `End`, `PageUp`, `PageDown`, `MouseWheelUp`, `MouseWheelDown`. Anything printable is bound as the character itself (`'q'`, `'?'`).
+
+## The default bindings
+
+What `default` actually declares, scope by scope. Every widget inherits the base layer and overrides only what differs:
+
+| Scope                                | Keys                                                                         | Action                                           |
+| ------------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------ |
+| base (every widget)                  | <kbd>↑</kbd> / <kbd>↓</kbd> / <kbd>←</kbd> / <kbd>→</kbd>                    | `MoveUp` / `MoveDown` / `MoveLeft` / `MoveRight` |
+| base                                 | <kbd>Enter</kbd>                                                             | `Accept`                                         |
+| base                                 | <kbd>Esc</kbd>                                                               | `Cancel`                                         |
+| base                                 | <kbd>Backspace</kbd>                                                         | `DeleteBack`                                     |
+| base                                 | <kbd>Space</kbd>                                                             | `InsertSpace`                                    |
+| navigation                           | <kbd>Enter</kbd>                                                             | `Activate`                                       |
+| navigation                           | <kbd>Esc</kbd>                                                               | `Back`                                           |
+| navigation                           | <kbd>q</kbd>                                                                 | `Quit`                                           |
+| navigation                           | <kbd>?</kbd>                                                                 | `Help`                                           |
+| navigation                           | mouse wheel                                                                  | `ScrollUp` / `ScrollDown`                        |
+| number                               | <kbd>↑</kbd> / <kbd>↓</kbd>                                                  | `Increment` / `Decrement`                        |
+| text                                 | <kbd>Tab</kbd>                                                               | `Complete`                                       |
+| textarea                             | <kbd>Enter</kbd>                                                             | `NewLine`                                        |
+| textarea                             | <kbd>Tab</kbd>                                                               | `Accept`                                         |
+| textarea                             | <kbd>Ctrl-E</kbd>                                                            | `ExternalEdit`                                   |
+| confirm                              | <kbd>y</kbd>/<kbd>Y</kbd> and <kbd>n</kbd>/<kbd>N</kbd>                      | `Yes` and `No`                                   |
+| confirm, toggle                      | <kbd>←</kbd> / <kbd>→</kbd> / <kbd>Space</kbd> / <kbd>↑</kbd> / <kbd>↓</kbd> | `Toggle`                                         |
+| password                             | <kbd>Tab</kbd>                                                               | `Reveal`                                         |
+| pause                                | <kbd>Enter</kbd> / <kbd>Space</kbd>                                          | `Accept`                                         |
+| select (multiple), search (multiple) | <kbd>Space</kbd>                                                             | `Toggle`                                         |
+| select (multiple), search (multiple) | <kbd>→</kbd> / <kbd>←</kbd>                                                  | `SelectAll` / `SelectNone`                       |
+| file picker (single and multiple)    | <kbd>Tab</kbd>                                                               | `Reveal`                                         |
+| file picker (multiple)               | <kbd>Space</kbd>                                                             | `Toggle`                                         |
+| reorder                              | <kbd>Space</kbd>                                                             | `Grab`                                           |
+
+`vim` inherits all of it and adds letters where typing can't swallow them: the panel browser and the single-choice select gain <kbd>k</kbd>/<kbd>j</kbd> for up/down, and the calendar gains <kbd>k</kbd>/<kbd>j</kbd>/<kbd>h</kbd>/<kbd>l</kbd> for week and day movement - each alongside the arrow keys, never replacing them.
+
+Not everything on the keyboard routes through the map: a few widget keys are fixed. The calendar's month and edge jumps (<kbd>PageUp</kbd>/<kbd>PageDown</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>) have no action behind them and always keep their keys.
 
 ## Per-widget-type overrides
 
-Bindings are layered by **scope**: a base layer shared by every widget, a navigation layer for the panel browser, and one layer per widget type that overrides the base only where it differs (Enter inserts a newline in a textarea, Space toggles a checkbox option). Retune individual bindings by passing overrides on top of a preset - each names a scope, an action and its keys:
+Bindings are layered by **scope**: a base layer shared by every widget, a navigation layer for the panel browser, and one layer per widget type that overrides the base only where it differs (<kbd>Enter</kbd> inserts a newline in a textarea, <kbd>Space</kbd> toggles a checkbox option). To retune individual bindings, pass overrides on top of a preset - each names a scope, an action and its keys. Later bindings win, so re-declaring a scope-and-action pair replaces the preset's keys for it:
 
 ```php
 use DrevOps\Tui\Model\FieldType;
@@ -33,16 +96,18 @@ $tui = (new Tui($form))->keys('default', [
 ]);
 ```
 
-A binding's keys accept a `KeyName` for a named key or a single-character string for a printable one. The panel and editor hints are drawn from the live bindings, so they always reflect the active keys.
+A binding's keys take three forms: a `KeyName` case for a named key, a single-character string for a printable one, or a `Key` for anything else - `Key::char("\x05")` is how the default preset binds <kbd>Ctrl-E</kbd>. A scope takes three forms too: `Scope::base()` (shared by every widget), `Scope::navigation()` (the panel browser), and `Scope::field(FieldType::X)` - with `Scope::field(FieldType::X, multiple: TRUE)` targeting the multiple-collecting variant of a choice or file-picker widget, which carries its own binding set (that's where <kbd>Space</kbd>-to-toggle lives).
+
+The panel and editor hints are drawn from the live bindings, so they always reflect the active keys - remap quit to <kbd>x</kbd> and the footer says so.
 
 ## Presets and validation
 
 A preset is a class listing its bindings. Subclass `DefaultKeyMap` to ship your own, name it directly with `->keys('\App\MyKeyMap')`, or register a short alias with `KeyMapManager::register('mine', MyKeyMap::class)` and then `->keys('mine')`.
 
-Bindings are validated the moment they are set, so a bad key map is caught at configuration time, not mid-session:
+Bindings are validated the moment they're set, so a bad key map is caught at configuration time, not mid-session:
 
 - a key bound to two different actions in the same scope is a conflict;
-- a printable character bound in the base scope, or in a scope whose widget consumes typed input (text, search, checkbox), would be un-typeable and is rejected;
+- a printable character bound in the base scope, or in a scope whose widget consumes typed input (text, number, password, textarea, search, suggest, toggle, file picker, and the multiple select), would be un-typeable and is rejected - control characters like <kbd>Ctrl-E</kbd> are exempt, since they're command keys, never typed content;
 - an unknown preset name, or a character binding that is not exactly one character, is rejected.
 
 See [`playground/10-key-bindings-*`](https://github.com/drevops/tui/tree/main/playground) for the default map, the vim preset and a custom override side by side.

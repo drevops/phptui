@@ -12,14 +12,14 @@ Install the package with [Composer](https://getcomposer.org/):
 composer require drevops/tui
 ```
 
-The package is a library consumed programmatically - it has no CLI entry point of its own. The public surface is:
+The package is a library you consume programmatically - it has no CLI entry point of its own. You'll work with two classes:
 
-- **`DrevOps\Tui\Tui`** - the facade: collect a form's answers, headlessly or through the interactive panel TUI.
+- **`DrevOps\Tui\Tui`** - the facade: collects a form's answers, headlessly or through the interactive panel TUI.
 - **`DrevOps\Tui\Builder\Form`** - the fluent builder for declaring a form's panels and fields.
 
 ## Usage
 
-Declare a form with the fluent `Form` builder, then drive it with the `Tui` facade - one class that wires the engine, resolver, schema tools and TUI for you:
+Declare a form with the fluent `Form` builder, then hand it to the `Tui` facade - one class that wires up the engine, resolver, schema tools and TUI so you don't have to:
 
 ```php
 use DrevOps\Tui\Builder\Form;
@@ -62,11 +62,11 @@ echo $tui->collect('{"name":"Weekly Box"}')->toJson(); // headless: JSON + envir
 $answers = $tui->interact();                    // interactive panel TUI
 ```
 
-`run()` picks the mode automatically: it drives the interactive panel TUI on a terminal and collects headlessly otherwise (or whenever prompts are supplied). The facade also exposes `schema()`, `agentHelp()` and `validate()`, and - when you want finer control - the internals via `form()`, `engine()` and `registry()`.
+`run()` picks the mode for you: on a terminal it drives the interactive panel TUI, and anywhere else - or whenever prompts are supplied - it collects headlessly. The facade also exposes `schema()`, `agentHelp()` and `validate()`, and - when you want finer control - the internals via `form()`, `engine()` and `registry()`.
 
 ## Aborting with Ctrl-C or Cancel
 
-On a terminal, pressing `Ctrl-C` part-way through the interactive session aborts it: the panel TUI restores the terminal and clears the screen, and the facade raises a `DrevOps\Tui\InterruptException` instead of returning the partial answers - so an abort is never mistaken for a completed submission. Activating the **Cancel** button aborts the same way, raising `DrevOps\Tui\CancelException` - a subclass of `InterruptException`, so one catch covers both:
+Pressing <kbd>Ctrl-C</kbd> part-way through an interactive session aborts it: the panel TUI restores the terminal, clears the screen, and the facade raises a `DrevOps\Tui\InterruptException` instead of returning the partial answers - so an abort can never be mistaken for a completed submission. The **Cancel** button aborts the same way, raising `DrevOps\Tui\CancelException`. That's a subclass of `InterruptException`, so one catch covers both:
 
 ```php
 use DrevOps\Tui\InterruptException;
@@ -82,7 +82,7 @@ catch (InterruptException) {
 echo $answers->toSummary();
 ```
 
-Catch `CancelException` first when an explicit cancel should react differently from a `Ctrl-C`. Only the interactive session raises these. Headless collection - `collect()`, or `run()` when prompts are supplied or the input is piped - never interacts, so it never aborts this way.
+Catch `CancelException` first when an explicit cancel should react differently from a <kbd>Ctrl-C</kbd>. Only the interactive session raises these: headless collection - `collect()`, or `run()` when prompts are supplied or the input is piped - never interacts, so it never aborts this way.
 
 ## Next steps
 

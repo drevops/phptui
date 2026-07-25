@@ -31,6 +31,10 @@ const BASE_SVG = 'quickstart-dark-static.svg';
 
 const OUTPUT_PNG = 'social-card.png';
 
+// The brand mark shared with the navbar and favicon, inlined into the card so
+// the logo has a single source across the site and the social image.
+const LOGO_SVG = 'static/img/logo.svg';
+
 /**
  * Print a progress message.
  *
@@ -84,15 +88,36 @@ function dataUri(string $path, string $mime): string {
 }
 
 /**
+ * Read an SVG file for inlining directly into the document.
+ *
+ * @param string $path
+ *   The file path.
+ *
+ * @return string
+ *   The raw SVG markup.
+ */
+function inlineSvg(string $path): string {
+  $content = file_get_contents($path);
+
+  if ($content === FALSE) {
+    throw new \RuntimeException('Cannot read: ' . $path);
+  }
+
+  return $content;
+}
+
+/**
  * Build the card's HTML document.
  *
  * @param string $terminal_uri
  *   The terminal SVG as a data URI.
+ * @param string $logo_svg
+ *   The brand logo as inline SVG markup.
  *
  * @return string
  *   The HTML.
  */
-function cardHtml(string $terminal_uri): string {
+function cardHtml(string $terminal_uri, string $logo_svg): string {
   $width = CARD_WIDTH;
   $height = CARD_HEIGHT;
 
@@ -116,8 +141,9 @@ function cardHtml(string $terminal_uri): string {
     background: linear-gradient(90deg, #2dd4bf, #06b6ad 55%, transparent);
   }
   .brand { width: 400px; flex: none; }
-  .brand h1 { font-size: 88px; font-weight: 800; color: #f4f1e8; letter-spacing: -.02em; }
-  .brand p { margin-top: 18px; font-size: 30px; line-height: 1.35; color: #eae4d4; }
+  .brand .logo svg { display: block; width: 320px; height: auto; }
+  .brand .logo svg .tui-letter { fill: #E6E2D6 !important; }
+  .brand p { margin-top: 26px; font-size: 30px; line-height: 1.35; color: #eae4d4; }
   .brand .url { margin-top: 30px; font-size: 24px; font-weight: 700; color: #2dd4bf; }
   .term {
     flex: none; border: 1px solid rgba(72, 79, 93, .55); border-radius: 12px;
@@ -137,7 +163,7 @@ function cardHtml(string $terminal_uri): string {
 </head>
 <body>
   <div class="brand">
-    <h1>TUI</h1>
+    <div class="logo">{$logo_svg}</div>
     <p>Terminal user interfaces for&nbsp;PHP</p>
     <div class="url">phptui.dev</div>
   </div>
@@ -155,9 +181,14 @@ $project_dir = dirname($script_dir, 2);
 $assets_dir = dirname($script_dir) . '/assets';
 $svg_path = $assets_dir . '/' . BASE_SVG;
 $png_path = $assets_dir . '/' . OUTPUT_PNG;
+$logo_path = dirname($script_dir) . '/' . LOGO_SVG;
 
 if (!file_exists($svg_path)) {
   throw new \RuntimeException('Base asset missing: ' . $svg_path . ' - run the asset pipeline first.');
+}
+
+if (!file_exists($logo_path)) {
+  throw new \RuntimeException('Logo asset missing: ' . $logo_path);
 }
 
 info('TUI - Social card');
@@ -170,7 +201,7 @@ if (!is_dir($tmp_dir)) {
 }
 
 $html_path = $tmp_dir . '/social-card.html';
-$html = cardHtml(dataUri($svg_path, 'image/svg+xml'));
+$html = cardHtml(dataUri($svg_path, 'image/svg+xml'), inlineSvg($logo_path));
 
 // A failed write must not let the browser screenshot a stale wrapper file.
 if (file_put_contents($html_path, $html) === FALSE) {

@@ -118,7 +118,7 @@ const config = {
         {name: 'keywords', content: 'php, tui, terminal user interface, terminal forms, cli, console, prompts, interactive forms'},
       ],
       navbar: {
-        title: 'TUI',
+        title: '',
         logo: {
           alt: 'TUI Logo',
           src: 'img/logo.svg',

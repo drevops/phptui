@@ -61,17 +61,20 @@ class WidgetFactory {
     $widget = match ($field->type) {
       FieldType::Confirm => new ConfirmWidget((bool) $current),
       FieldType::Toggle => new ToggleWidget($this->labels($field), $this->text($current)),
-      FieldType::Select => new SelectWidget($this->options($field), $this->seed($field, $current), $field->multiple, $field->pageSize),
+      FieldType::Select => new SelectWidget($this->options($field), $this->seed($field, $current), $field->multiple, $field->pageSize, $field->selectionBounds),
       FieldType::Reorder => new ReorderWidget($this->options($field), Field::stringList($current), $field->pageSize),
-      FieldType::Suggest => new SuggestWidget($field->selectableValues(), $this->text($current), $field->pageSize),
-      FieldType::Search => new SearchWidget($this->options($field), $this->seed($field, $current), $field->multiple, $field->pageSize),
-      FieldType::FilePicker => new FilePickerWidget($field->pickerStart, $this->seed($field, $current), $field->pickerMode, $field->pickerExtensions, $field->pickerShowHidden, $field->multiple, $field->pageSize),
+      FieldType::Suggest => new SuggestWidget($field->selectableValues(), $this->text($current), $field->pageSize, $this->suggestDescriptions($field)),
+      FieldType::Search => new SearchWidget($this->options($field), $this->seed($field, $current), $field->multiple, $field->pageSize, $field->selectionBounds),
+      FieldType::FilePicker => new FilePickerWidget($field->pickerStart, $this->seed($field, $current), $field->pickerMode, $field->pickerExtensions, $field->pickerShowHidden, $field->multiple, $field->pageSize, $field->selectionBounds),
       FieldType::Number => new NumberWidget($this->number($current), $field->bounds),
       FieldType::Calendar => new CalendarWidget($this->text($current), $field->dateBounds),
       FieldType::Textarea => new TextareaWidget($this->text($current), $field->externalEditor && $this->externalEditorAvailable),
       FieldType::Password => new PasswordWidget($this->text($current), $field->revealable, $field->confirm),
       FieldType::Pause => new PauseWidget(),
       FieldType::Text => new TextWidget($this->text($current), $this->completionsFor($field, $answers)),
+      // A note is presentational: the theme renders it and the cursor skips it,
+      // so it is never edited and needs no widget.
+      FieldType::Note => throw new \LogicException('Note fields are presentational and have no editor widget.'),
       // A progress row runs its work on activation and draws itself in its
       // panel row; it has no editor to open.
       FieldType::Progress => throw new \LogicException('A progress row is not edited.'),
@@ -186,11 +189,37 @@ class WidgetFactory {
     return array_map(static fn(Option $option): Option => new Option(
       $option->value,
       Translator::t($option->label),
-      $option->description,
+      $option->description !== '' ? Translator::t($option->description) : '',
       $option->kind,
       $option->disabled,
       $option->disabledReason !== '' ? Translator::t($option->disabledReason) : '',
     ), $field->options);
+  }
+
+  /**
+   * The description shown for each selectable option value, keyed by value.
+   *
+   * For the value-based suggest widget, which carries no option rows: the
+   * localized per-option description keyed by its value.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field.
+   *
+   * @return array<string,string>
+   *   The description for each selectable option value.
+   */
+  protected function suggestDescriptions(Field $field): array {
+    $out = [];
+
+    foreach ($this->options($field) as $option) {
+      if (!$option->selectable()) {
+        continue;
+      }
+
+      $out[$option->value] = $option->description;
+    }
+
+    return $out;
   }
 
 }

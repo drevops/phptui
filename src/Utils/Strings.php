@@ -107,4 +107,83 @@ final class Strings {
     return self::mbstring() ? mb_strtolower($text, 'UTF-8') : strtolower($text);
   }
 
+  /**
+   * Replace `{{token}}` placeholders in a template with values.
+   *
+   * A token is `{{name}}` with optional inner whitespace; one missing from the
+   * values, or holding a non-scalar value, resolves to an empty string.
+   *
+   * @param string $template
+   *   The template carrying `{{token}}` placeholders.
+   * @param array<string,mixed> $values
+   *   The replacement values keyed by token name.
+   *
+   * @return string
+   *   The interpolated string.
+   */
+  public static function interpolate(string $template, array $values): string {
+    return (string) preg_replace_callback('/\{\{\s*(\w+)\s*\}\}/', static function (array $matches) use ($values): string {
+      $value = $values[$matches[1]] ?? '';
+
+      return is_scalar($value) ? (string) $value : '';
+    }, $template);
+  }
+
+  /**
+   * Word-wrap text to a column width, breaking on whitespace.
+   *
+   * Runs of whitespace collapse to a single space and a word longer than the
+   * width is hard-split across lines, so every returned line fits the width.
+   *
+   * @param string $text
+   *   The text.
+   * @param int $width
+   *   The maximum line width in characters.
+   *
+   * @return list<string>
+   *   The wrapped lines; empty when the text has no visible characters.
+   */
+  public static function wrap(string $text, int $width): array {
+    $words = preg_split('/\s+/u', trim($text), -1, PREG_SPLIT_NO_EMPTY);
+    if ($words === FALSE || $words === []) {
+      return [];
+    }
+
+    if ($width < 1) {
+      return [implode(' ', $words)];
+    }
+
+    $lines = [];
+    $current = '';
+
+    foreach ($words as $word) {
+      while (self::length($word) > $width) {
+        if ($current !== '') {
+          $lines[] = $current;
+          $current = '';
+        }
+
+        $lines[] = self::substr($word, 0, $width);
+        $word = self::substr($word, $width);
+      }
+
+      if ($current === '') {
+        $current = $word;
+      }
+      elseif (self::length($current) + 1 + self::length($word) <= $width) {
+        $current .= ' ' . $word;
+      }
+      else {
+        $lines[] = $current;
+        $current = $word;
+      }
+    }
+
+    if ($current !== '') {
+      $lines[] = $current;
+    }
+
+    return $lines;
+  }
+
 }

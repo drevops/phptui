@@ -9,7 +9,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Widgets
 
-The widgets cover text entry, choices, filesystem browsing and gates. Every field of the form opens its widget in an editor; the same widgets also run standalone (see [`playground/02-widgets-*`](https://github.com/drevops/tui/tree/main/playground)). Widgets pull their glyphs and colours from the theme, so each one is shown in all four display modes.
+The widgets cover text entry, choices, filesystem browsing and gates. Every field of the form opens its widget in an editor, and the same widgets also run standalone (see [`playground/02-widgets-*`](https://github.com/drevops/tui/tree/main/playground)). Widgets pull their glyphs and colors from the theme, so each one is shown in all four display modes.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/widgets-light-animated.svg'), dark: useBaseUrl('/widgets-dark-animated.svg')}} alt="All widgets, one after another" width="100%" />
@@ -35,9 +35,10 @@ The widgets cover text entry, choices, filesystem browsing and gates. Every fiel
 
 - [FilePicker](/widgets/filepicker) - browse for one path, or several with `->multiple()`.
 
-## Toggles and gates
+## Toggles, gates and cards
 
 - [Confirm](/widgets/confirm) - a Yes/No toggle.
-- [Pause](/widgets/pause) - an acknowledgement gate.
+- [Note](/widgets/note) - a read-only informational card that collects nothing.
+- [Pause](/widgets/pause) - an acknowledgment gate.
 - [Progress](/widgets/progress) - a row that runs work, showing a bar or spinner.
-- [Toggle](/widgets/toggle) - an inline switch between two labelled values.
+- [Toggle](/widgets/toggle) - an inline switch between two labeled values.

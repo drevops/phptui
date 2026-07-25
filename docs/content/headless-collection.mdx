@@ -6,14 +6,14 @@ keywords: ['headless', 'json', 'environment variables', 'automation', 'answers']
 
 # Headless collection
 
-Without a TTY - or when prompts are supplied - the same form collects non-interactively: answers come from a JSON payload (a string or a path to a file), per-question environment overrides and the declared defaults, with derives, conditions and fix-ups settled exactly as in the TUI.
+No TTY - or prompts supplied up front? The same form collects non-interactively: answers come from a JSON payload (a string, or a path to a file), per-question environment overrides and the declared defaults, with derives, conditions and fix-ups settled exactly as they would be in the TUI. Nothing about your form changes; only where the answers come from does.
 
 ```php
 $answers = $tui->collect('{"name":"Weekly Box"}');
 $answers = $tui->run($prompts, '1.0.0'); // Headless when prompts are supplied; otherwise the TUI on a TTY.
 ```
 
-Environment overrides are named `<PREFIX><FIELD_ID>` (the uppercased field id). `->envPrefix('MYAPP_')` declares that namespace on the form, a `new Tui($form, env_prefix: 'MYAPP_')` constructor argument overrides it, and without either the prefix is `TUI_`:
+Environment overrides are named `<PREFIX><FIELD_ID>` - the uppercased field id under a prefix. `->envPrefix('MYAPP_')` declares that namespace on the form, a `new Tui($form, env_prefix: 'MYAPP_')` constructor argument overrides it, and if you set neither, the prefix is `TUI_`:
 
 ```bash
 MYAPP_TIMEZONE=UTC php my-installer.php
@@ -21,6 +21,6 @@ MYAPP_TIMEZONE=UTC php my-installer.php
 
 ## Self-describing answers
 
-The returned `Answers` set needs no form configuration to present or process: each answer carries a snapshot of its question (label, kind, panel trail) taken at collection time, plus its provenance - default, detected, edited, derived, or override (a user value pinning a derived one). `$answers->toSummary()` prints the provenance-badged, panel-grouped summary, `$answers->toJson()` the raw values, and `$answers->items` exposes the per-answer snapshots.
+The `Answers` set that comes back needs no form configuration to present or process: each answer carries a snapshot of its question (label, kind, panel trail) taken at collection time, plus its provenance - default, detected, edited, derived, or override (a user value pinning a derived one). `$answers->toSummary()` prints the provenance-badged, panel-grouped summary, `$answers->toJson()` the raw values, and `$answers->items` exposes the per-answer snapshots.
 
-For automation and AI agents, the form describes itself - `schema()`, `agentHelp()` and `validate()` let a tool discover and drive it without prompting. See [AI agents](/ai-agents) for the full surface, with the runnable scripts in [`playground/08-headless-*`](https://github.com/drevops/tui/tree/main/playground).
+For automation and AI agents, the form describes itself: `schema()`, `agentHelp()` and `validate()` let a tool discover and drive it without prompting. See [AI agents](/ai-agents) for the full surface, with the runnable scripts in [`playground/08-headless-*`](https://github.com/drevops/tui/tree/main/playground).

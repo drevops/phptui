@@ -38,8 +38,11 @@ class SuggestWidget extends AbstractWidget implements SearchCapableInterface, Te
    * @param int|null $page_size
    *   The number of suggestions shown at once before the list pages; NULL uses
    *   the default.
+   * @param array<string,string> $descriptions
+   *   The description shown for a highlighted suggestion, keyed by value; a
+   *   value with no entry shows none.
    */
-  public function __construct(protected array $values, protected string $buffer = '', ?int $page_size = NULL) {
+  public function __construct(protected array $values, protected string $buffer = '', ?int $page_size = NULL, protected array $descriptions = []) {
     $this->pageSize = $this->resolvePageSize($page_size);
   }
 
@@ -150,7 +153,7 @@ class SuggestWidget extends AbstractWidget implements SearchCapableInterface, Te
   /**
    * {@inheritdoc}
    */
-  public function view(ThemeInterface $theme): string {
+  protected function renderBody(ThemeInterface $theme): string {
     $visible = $this->visible();
     $viewport = $this->pageViewport(count($visible), $this->cursor);
 
@@ -161,9 +164,24 @@ class SuggestWidget extends AbstractWidget implements SearchCapableInterface, Te
       $rows[] = $theme->marker($current) . ' ' . $this->renderMatchedLabel($theme, $value, $this->matchPositions($value), $current);
     }
 
-    $lines = [$this->queryLine($theme), ...$this->wrapScrolled($theme, $rows, $viewport)];
+    return implode("\n", [$this->queryLine($theme), ...$this->wrapScrolled($theme, $rows, $viewport)]);
+  }
 
-    return $this->withError($theme, implode("\n", $lines));
+  /**
+   * The description of the highlighted suggestion, empty when none is active.
+   *
+   * @return string
+   *   The highlighted suggestion's description.
+   */
+  #[\Override]
+  protected function highlightedDescription(): string {
+    if ($this->cursor < 0) {
+      return '';
+    }
+
+    $visible = $this->visible();
+
+    return $this->descriptions[$visible[$this->cursor] ?? ''] ?? '';
   }
 
   /**

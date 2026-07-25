@@ -8,6 +8,7 @@ use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\NumberBounds;
+use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Translation\Translator;
 
 /**
@@ -47,8 +48,8 @@ class AgentHelp {
     $required = [];
 
     foreach ($this->form->fields() as $field) {
-      // A pause or a progress row is chrome, not a question, so it has no
-      // answer.
+      // A pause is a gate, and a note or a progress row is display-only: none
+      // is a question, so none carries an answer.
       if ($field->type === FieldType::Pause) {
         continue;
       }
@@ -121,6 +122,15 @@ class AgentHelp {
       }
       if ($field->bounds->max !== NULL) {
         $property['maximum'] = $field->bounds->max;
+      }
+    }
+
+    if ($field->selectionBounds instanceof SelectionBounds) {
+      if ($field->selectionBounds->min !== NULL) {
+        $property['minItems'] = $field->selectionBounds->min;
+      }
+      if ($field->selectionBounds->max !== NULL) {
+        $property['maxItems'] = $field->selectionBounds->max;
       }
     }
 

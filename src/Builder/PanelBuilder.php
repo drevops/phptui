@@ -300,6 +300,27 @@ final class PanelBuilder {
   }
 
   /**
+   * Add a note: a non-interactive informational card.
+   *
+   * The note renders its title and body inline but collects no value - the
+   * selection cursor skips it and it never appears in the answers. The body is
+   * set with ->description(); ->border() draws the card inside a box.
+   *
+   * @param string $id
+   *   The field id.
+   * @param string $title
+   *   The card title (optional; an empty title renders the body alone).
+   *
+   * @return \DrevOps\Tui\Builder\FieldBuilder
+   *   The field builder.
+   */
+  public function note(string $id, string $title = ''): FieldBuilder {
+    // A note's title is genuinely optional, so unlike other fields it is not
+    // filled from the id when omitted.
+    return $this->field($id, $title, FieldType::Note, FALSE);
+  }
+
+  /**
    * Add a progress row that runs work when activated, showing an indicator.
    *
    * Chain `->steps(int)` for a determinate bar (omit it for a spinner) and
@@ -413,12 +434,15 @@ final class PanelBuilder {
    *   The label (defaults to the id).
    * @param \DrevOps\Tui\Model\FieldType $type
    *   The widget type.
+   * @param bool $label_fallback
+   *   Whether an empty label falls back to the id (the default); FALSE keeps an
+   *   empty label empty, for a note whose title is optional.
    *
    * @return \DrevOps\Tui\Builder\FieldBuilder
    *   The field builder.
    */
-  protected function field(string $id, string $label, FieldType $type): FieldBuilder {
-    $field = new FieldBuilder($id, $label === '' ? $id : $label, $type);
+  protected function field(string $id, string $label, FieldType $type, bool $label_fallback = TRUE): FieldBuilder {
+    $field = new FieldBuilder($id, $label === '' && $label_fallback ? $id : $label, $type);
     $this->fields[] = $field;
 
     return $field;

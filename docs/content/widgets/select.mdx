@@ -38,17 +38,54 @@ Runnable scripts: [`playground/02-widgets-select.php`](https://github.com/drevop
 
 For headings, separators and disabled options, see [Option groups](/widgets/option-groups).
 
+## Option descriptions
+
+Give an option a description to explain what the choice implies. It shows as a secondary line beneath the list for the **highlighted** option and updates as the highlight moves. It is presentational only - the field still collects the selected value, never the description - it wraps to the available width, is dropped when the panel is too narrow to show it, and is absent from [headless collection](/headless-collection).
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/widget-select-descriptions-light-animated.svg'), dark: useBaseUrl('/widget-select-descriptions-dark-animated.svg')}} alt="Option descriptions tracking the highlighted option" />
+</p>
+
+```php
+$p->select('fruit', 'Fruit')
+  ->option('apple', 'Apple', description: 'Crisp and sweet, the everyday choice.')
+  ->option('banana', 'Banana', description: 'Rich in potassium; ripens off the tree.')
+  ->option('cherry', 'Cherry', description: 'Short season; best eaten fresh.');
+```
+
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-select-descriptions-light-static.svg'), dark: useBaseUrl('/widget-select-descriptions-dark-static.svg')}} alt="Option descriptions: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-select-descriptions-light-static-no-ansi.svg'), dark: useBaseUrl('/widget-select-descriptions-dark-static-no-ansi.svg')}} alt="Option descriptions: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-select-descriptions-light-static-ascii.svg'), dark: useBaseUrl('/widget-select-descriptions-dark-static-ascii.svg')}} alt="Option descriptions: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-select-descriptions-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-select-descriptions-dark-static-ascii-no-ansi.svg')}} alt="Option descriptions: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+Descriptions work the same on [`search`](/widgets/search), [`suggest`](/widgets/suggest) and [`reorder`](/widgets/reorder). Runnable script: [`playground/02-widgets-select-descriptions.php`](https://github.com/drevops/tui/blob/main/playground/02-widgets-select-descriptions.php).
+
 ## Keyboard
 
-| Key       | Action                                                               |
-| --------- | -------------------------------------------------------------------- |
-| `↑` / `↓` | Move the highlight (skips headings, separators and disabled options) |
-| `Enter`   | Accept the highlighted option                                        |
-| `Esc`     | Cancel                                                               |
+| Key                         | Action                                                               |
+| --------------------------- | -------------------------------------------------------------------- |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Move the highlight (skips headings, separators and disabled options) |
+| <kbd>Enter</kbd>            | Accept the highlighted option                                        |
+| <kbd>Esc</kbd>              | Cancel                                                               |
 
 ## Display modes
 
-In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off:
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
 <table>
   <tr>
@@ -70,7 +107,7 @@ In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off
 
 ## Multiple selection
 
-Add `->multiple()` to collect a **`list<string>`** of checked values instead of one. `Space` toggles the highlighted option, typing narrows the list by substring, `→` / `←` select or deselect all visible, and `Enter` accepts the checked set.
+Add `->multiple()` to collect a **`list<string>`** of checked values instead of one. <kbd>Space</kbd> toggles the highlighted option, typing narrows the list by substring, <kbd>→</kbd> / <kbd>←</kbd> select or deselect all visible, and <kbd>Enter</kbd> accepts the checked set.
 
 ```php
 $p->select('basket', 'Basket')
@@ -104,3 +141,43 @@ $p->select('basket', 'Basket')
     <td><ThemedImage sources={{light: useBaseUrl('/widget-select-multiple-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-select-multiple-dark-static-ascii-no-ansi.svg')}} alt="Select (multiple): ASCII + No ANSI" /></td>
   </tr>
 </table>
+
+## Selection limits
+
+Bound how many values a multiple field collects with `->minSelections()` and `->maxSelections()`. The active limit shows as a hint below the list, an out-of-range selection is rejected inline when you accept, and the same bounds are enforced in [headless collection](/headless-collection).
+
+```php
+$p->select('basket', 'Basket')
+  ->multiple()
+  ->minSelections(2) // Reject fewer than two checked.
+  ->maxSelections(3) // Reject more than three checked.
+  ->options([
+    'apple' => 'Apple',
+    'carrot' => 'Carrot',
+    'tomato' => 'Tomato',
+  ]);
+```
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/widget-select-multiple-limited-light-animated.svg'), dark: useBaseUrl('/widget-select-multiple-limited-dark-animated.svg')}} alt="Select in multiple mode with selection limits" />
+</p>
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-select-multiple-limited-light-static.svg'), dark: useBaseUrl('/widget-select-multiple-limited-dark-static.svg')}} alt="Selection limits: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-select-multiple-limited-light-static-no-ansi.svg'), dark: useBaseUrl('/widget-select-multiple-limited-dark-static-no-ansi.svg')}} alt="Selection limits: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-select-multiple-limited-light-static-ascii.svg'), dark: useBaseUrl('/widget-select-multiple-limited-dark-static-ascii.svg')}} alt="Selection limits: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-select-multiple-limited-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-select-multiple-limited-dark-static-ascii-no-ansi.svg')}} alt="Selection limits: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+Runnable script: [`playground/02-widgets-select-multiple-limited.php`](https://github.com/drevops/tui/blob/main/playground/02-widgets-select-multiple-limited.php).

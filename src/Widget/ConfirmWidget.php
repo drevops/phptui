@@ -89,11 +89,11 @@ class ConfirmWidget extends AbstractWidget implements StepCapableInterface {
   /**
    * {@inheritdoc}
    */
-  public function view(ThemeInterface $theme): string {
+  protected function renderBody(ThemeInterface $theme): string {
     $yes_label = $this->highlightLabel($theme, Translator::t('Yes'), $this->current);
     $no_label = $this->highlightLabel($theme, Translator::t('No'), !$this->current);
 
-    return $this->withError($theme, $theme->radio($this->current) . ' ' . $yes_label . '  ' . $theme->radio(!$this->current) . ' ' . $no_label);
+    return $theme->radio($this->current) . ' ' . $yes_label . '  ' . $theme->radio(!$this->current) . ' ' . $no_label;
   }
 
   /**

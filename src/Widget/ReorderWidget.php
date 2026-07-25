@@ -162,7 +162,7 @@ class ReorderWidget extends AbstractWidget implements OptionsCapableInterface, P
   /**
    * {@inheritdoc}
    */
-  public function view(ThemeInterface $theme): string {
+  protected function renderBody(ThemeInterface $theme): string {
     $visible = $this->visible();
     $viewport = $this->pageViewport(count($visible), $this->cursor);
 
@@ -172,7 +172,24 @@ class ReorderWidget extends AbstractWidget implements OptionsCapableInterface, P
       $rows[] = $this->renderOptionRow($theme, $option, $viewport->offset + $slot === $this->cursor);
     }
 
-    return $this->withError($theme, implode("\n", $this->wrapScrolled($theme, $rows, $viewport)));
+    return implode("\n", $this->wrapScrolled($theme, $rows, $viewport));
+  }
+
+  /**
+   * The description of the highlighted item, empty for a non-selectable row.
+   *
+   * @return string
+   *   The highlighted item's description.
+   */
+  #[\Override]
+  protected function highlightedDescription(): string {
+    if ($this->items === []) {
+      return '';
+    }
+
+    $current = $this->items[$this->cursor];
+
+    return $current->selectable() ? $current->description : '';
   }
 
   /**

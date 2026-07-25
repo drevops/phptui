@@ -100,6 +100,12 @@ final class Field {
    * @param bool $multiple
    *   Whether the field collects several values as a list rather than one;
    *   honoured by the select, search and file picker types.
+   * @param bool $bordered
+   *   Note only: whether the card is drawn inside a themed border with minimal
+   *   padding; ignored by other types.
+   * @param \DrevOps\Tui\Model\SelectionBounds|null $selectionBounds
+   *   Multiple only: optional minimum/maximum selection counts; NULL for no
+   *   count limit.
    * @param \Closure|null $optionsLoader
    *   An `fn(): array<string,string>` loading the options on demand, or NULL
    *   for static options. Resolved lazily when the panel opens (headless
@@ -140,6 +146,8 @@ final class Field {
     public readonly ?DateBounds $dateBounds = NULL,
     public readonly RenderMode $render = RenderMode::Inline,
     public readonly bool $multiple = FALSE,
+    public readonly bool $bordered = FALSE,
+    public readonly ?SelectionBounds $selectionBounds = NULL,
     public ?\Closure $optionsLoader = NULL,
     public readonly ?int $progressSteps = NULL,
     public readonly ?\Closure $progressWork = NULL,
@@ -147,6 +155,10 @@ final class Field {
   ) {
     if ($this->multiple && !$this->type->supportsMultiple()) {
       throw new FormException(sprintf('Field "%s" of type "%s" does not collect several values; only select, search and file picker fields may be multiple.', $this->id, $this->type->value));
+    }
+
+    if ($this->selectionBounds instanceof SelectionBounds && !$this->multiple) {
+      throw new FormException(sprintf('Field "%s" declares selection limits but does not collect several values.', $this->id));
     }
 
     $this->options = Option::list($options);
@@ -240,17 +252,17 @@ final class Field {
   }
 
   /**
-   * The first violated number or date bound, as an error fragment.
+   * The first violated number, date or selection-count bound, as a fragment.
    *
    * @param mixed $value
    *   The candidate value.
    *
    * @return string|null
-   *   The violation fragment (e.g. "between 1 and 10"), or NULL when the
-   *   value is in range or the field declares no bounds.
+   *   The violation fragment (e.g. "between 1 and 10", "at least 2 items"), or
+   *   NULL when the value is in range or the field declares no bounds.
    */
   public function boundsViolation(mixed $value): ?string {
-    return $this->bounds?->violation($value) ?? $this->dateBounds?->violation($value);
+    return $this->bounds?->violation($value) ?? $this->dateBounds?->violation($value) ?? $this->selectionBounds?->violation($value);
   }
 
   /**

@@ -30,24 +30,24 @@ Runnable script: [`playground/02-widgets-textarea.php`](https://github.com/drevo
 | `default()`        | Initial value; may contain newlines.                   | No       | `''` (empty) |
 | `externalEditor()` | Allow a handoff to the reader's `$EDITOR` / `$VISUAL`. | No       | Off          |
 
-With `externalEditor()` on, `Ctrl-E` suspends the TUI, opens the editor seeded with the current value, and captures the saved buffer on return: saving commits it, while an aborted edit (a non-zero editor exit) keeps the inline value. When no editor is available the option is silently ignored and the field stays a plain inline textarea.
+With `externalEditor()` on, <kbd>Ctrl-E</kbd> suspends the TUI, opens the editor seeded with the current value, and captures the saved buffer on return: saving commits it, and an aborted edit (a non-zero editor exit) keeps the inline value. With no editor available, the option is silently ignored and the field stays a plain inline textarea.
 
 ## Keyboard
 
-| Key            | Action                                                 |
-| -------------- | ------------------------------------------------------ |
-| printable keys | Insert at the caret                                    |
-| `Enter`        | Insert a newline                                       |
-| `Tab`          | Accept (note: `Enter` adds a line, it does not accept) |
-| `↑` / `↓`      | Move between lines, keeping the column                 |
-| `←` / `→`      | Move the caret                                         |
-| `Backspace`    | Delete the character before the caret                  |
-| `Ctrl-E`       | Open the external editor (when enabled)                |
-| `Esc`          | Cancel                                                 |
+| Key                         | Action                                                          |
+| --------------------------- | --------------------------------------------------------------- |
+| printable keys              | Insert at the caret                                             |
+| <kbd>Enter</kbd>            | Insert a newline                                                |
+| <kbd>Tab</kbd>              | Accept (note: <kbd>Enter</kbd> adds a line, it does not accept) |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Move between lines, keeping the column                          |
+| <kbd>←</kbd> / <kbd>→</kbd> | Move the caret                                                  |
+| <kbd>Backspace</kbd>        | Delete the character before the caret                           |
+| <kbd>Ctrl-E</kbd>           | Open the external editor (when enabled)                         |
+| <kbd>Esc</kbd>              | Cancel                                                          |
 
 ## Display modes
 
-In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off:
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
 <table>
   <tr>

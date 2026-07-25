@@ -531,7 +531,10 @@ class PanelController {
     [$body, $cursor_line] = $this->theme->renderBody($panel, $this->answers(), $this->cursor, $editing, $view);
 
     if ($this->buttonsVisible()) {
-      $base = $panel->itemCount();
+      // The buttons follow the navigable items, which exclude presentational
+      // notes - so the offset must match the cursor's item count, not the raw
+      // field count, or a note would shift the button selection.
+      $base = $this->itemCountFor($this->navigator->current());
       $selected = $this->cursor >= $base ? $this->cursor - $base : -1;
 
       // The action row always detaches from the items above it.
@@ -610,7 +613,10 @@ class PanelController {
       $view = $this->editor->view($this->theme);
     }
 
-    $base = $modal->itemCount();
+    // The buttons follow the navigable items, which exclude presentational
+    // notes, so the offset uses the cursor's item count rather than the raw
+    // field count.
+    $base = $this->itemCountFor($this->navigator->current());
     $selected = $this->cursor >= $base ? $this->cursor - $base : -1;
 
     // The dialog floats over the whole backdrop frame, so the screen rows -
@@ -880,7 +886,23 @@ class PanelController {
   }
 
   /**
-   * The number of navigable items on a panel: active fields plus sub-panels.
+   * A panel's navigable fields: the active fields the cursor can land on.
+   *
+   * Presentational fields (notes) render but are display-only, so they are
+   * excluded from navigation while staying in visibleFields() for rendering.
+   *
+   * @param \DrevOps\Tui\Model\Panel $panel
+   *   The panel.
+   *
+   * @return list<\DrevOps\Tui\Model\Field>
+   *   The navigable fields, in declaration order.
+   */
+  protected function navigableFields(Panel $panel): array {
+    return array_values(array_filter($this->visibleFields($panel), static fn(Field $field): bool => !$field->type->isPresentational()));
+  }
+
+  /**
+   * The number of navigable items on a panel: navigable fields plus sub-panels.
    *
    * @param \DrevOps\Tui\Model\Panel $panel
    *   The panel.
@@ -889,7 +911,7 @@ class PanelController {
    *   The item count.
    */
   protected function itemCountFor(Panel $panel): int {
-    return count($this->visibleFields($panel)) + count($panel->panels);
+    return count($this->navigableFields($panel)) + count($panel->panels);
   }
 
   /**
@@ -983,7 +1005,7 @@ class PanelController {
     $panel = $this->navigator->current();
     $items = $this->itemCountFor($panel);
     $count = $items + ($this->buttonsVisible() ? self::BUTTON_COUNT : 0);
-    $fields = count($this->visibleFields($panel));
+    $fields = count($this->navigableFields($panel));
     $up = $this->nav->matches($key, Action::MoveUp);
     $down = $this->nav->matches($key, Action::MoveDown);
 
@@ -1075,7 +1097,7 @@ class PanelController {
    */
   protected function activate(): void {
     $panel = $this->navigator->current();
-    $fields = $this->visibleFields($panel);
+    $fields = $this->navigableFields($panel);
     $field_count = count($fields);
 
     if ($this->cursor < $field_count) {
@@ -1271,10 +1293,13 @@ class PanelController {
 
     $seen = [];
     foreach ($this->form->fields() as $field) {
+      // A display-only field has no editor, so no key hints to teach.
+      if ($field->type->isDisplayOnly()) {
+        continue;
+      }
       if (in_array($field->type, $seen, TRUE)) {
         continue;
       }
-
       $seen[] = $field->type;
       $widget = $this->widgets->create($field, $this->values[$field->id] ?? $field->default);
       $sections[] = new HelpSection($field->type->label(), $this->keymap->forField($field->type), ...$widget->hints());
