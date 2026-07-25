@@ -94,6 +94,8 @@ final class EngineNonInteractiveTest extends TestCase {
         $p->text('name')->default('pear');
         // A note may be gated like any field, but still carries no answer.
         $p->note('gated', 'Gated')->when(new Condition('name', eq: 'pear'));
+        // A table is presentational too, so a note carrying one collects nothing.
+        $p->note('summary', 'Summary')->table(['Fruit', 'Qty'], [['Apple', '3']]);
       })
       ->build();
     $resolver = new InputResolver('APP_');
@@ -106,9 +108,11 @@ final class EngineNonInteractiveTest extends TestCase {
     // Neither note contributes a value, provenance or self-describing item.
     $this->assertArrayNotHasKey('intro', $answers->values);
     $this->assertArrayNotHasKey('gated', $answers->values);
+    $this->assertArrayNotHasKey('summary', $answers->values);
     $this->assertArrayNotHasKey('intro', $answers->provenance);
     $this->assertNotInstanceOf(Answer::class, $answers->item('intro'));
     $this->assertFalse($answers->has('gated'));
+    $this->assertFalse($answers->has('summary'));
 
     // The real field between the notes still collects normally.
     $this->assertSame('pear', $answers->value('name'));

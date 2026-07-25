@@ -20,6 +20,7 @@ use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Model\OptionKind;
 use DrevOps\Tui\Model\RenderMode;
 use DrevOps\Tui\Model\SelectionBounds;
+use DrevOps\Tui\Model\TableSpec;
 use DrevOps\Tui\Model\Weekday;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\Dotenv;
@@ -235,6 +236,7 @@ final class FormTest extends TestCase {
         $panel->note('intro', 'Getting started')->description('Fill in each field.');
         $panel->note('bare');
         $panel->note('boxed', 'Boxed')->border();
+        $panel->note('stock', 'Stock')->table(['Fruit', 'Qty'], [['Apple', '3'], ['Pear', '5']]);
       })
       ->build();
 
@@ -246,12 +248,20 @@ final class FormTest extends TestCase {
     $this->assertSame('Fill in each field.', $intro->description);
     // A note is not bordered unless it opts in.
     $this->assertFalse($intro->bordered);
+    // A note carries no table unless it opts in.
+    $this->assertNull($intro->table);
 
     // An omitted title stays empty rather than falling back to the id.
     $this->assertSame('', $form->field('bare')?->label);
 
     // ->border() draws the card inside a box.
     $this->assertTrue($form->field('boxed')?->bordered);
+
+    // ->table() stores the header cells and body rows on the field.
+    $stock = $form->field('stock');
+    $this->assertInstanceOf(TableSpec::class, $stock?->table);
+    $this->assertSame(['Fruit', 'Qty'], $stock->table->headers);
+    $this->assertSame([['Apple', '3'], ['Pear', '5']], $stock->table->rows);
   }
 
   public function testValidateAndTransformStored(): void {

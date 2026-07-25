@@ -135,6 +135,9 @@ final class Field {
    * @param bool $hasSchemaDefault
    *   Whether a {@see $schemaDefault} was declared, so a declared NULL is
    *   distinguishable from an absent one.
+   * @param \DrevOps\Tui\Model\TableSpec|null $table
+   *   Note only: a presentational table rendered beneath the card's title and
+   *   body; NULL when the note carries no table. Ignored by other types.
    */
   public function __construct(
     public readonly string $id,
@@ -170,6 +173,7 @@ final class Field {
     public string $progressLabel = '',
     public readonly mixed $schemaDefault = NULL,
     public readonly bool $hasSchemaDefault = FALSE,
+    public readonly ?TableSpec $table = NULL,
   ) {
     if ($this->multiple && !$this->type->supportsMultiple()) {
       throw new FormException(sprintf('Field "%s" of type "%s" does not collect several values; only select, search and file picker fields may be multiple.', $this->id, $this->type->value));

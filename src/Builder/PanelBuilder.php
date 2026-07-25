@@ -304,7 +304,8 @@ final class PanelBuilder {
    *
    * The note renders its title and body inline but collects no value - the
    * selection cursor skips it and it never appears in the answers. The body is
-   * set with ->description(); ->border() draws the card inside a box.
+   * set with ->description(); ->border() draws the card inside a box; ->table()
+   * renders an aligned grid beneath it.
    *
    * @param string $id
    *   The field id.

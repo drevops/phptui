@@ -16,6 +16,7 @@ use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\OptionKind;
 use DrevOps\Tui\Model\RenderMode;
 use DrevOps\Tui\Model\SelectionBounds;
+use DrevOps\Tui\Model\TableSpec;
 use DrevOps\Tui\Model\Weekday;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\DiscoverInterface;
@@ -214,6 +215,11 @@ final class FieldBuilder {
   protected bool $bordered = FALSE;
 
   /**
+   * Note only: a presentational table rendered beneath the card, when declared.
+   */
+  protected ?TableSpec $table = NULL;
+
+  /**
    * Construct a field builder.
    *
    * @param string $id
@@ -400,6 +406,27 @@ final class FieldBuilder {
    */
   public function border(bool $bordered = TRUE): self {
     $this->bordered = $bordered;
+
+    return $this;
+  }
+
+  /**
+   * Note only: render a presentational table beneath the card's title and body.
+   *
+   * The cells carry the same `{{field}}` templating the title and body do, so a
+   * table can reflect earlier answers. An empty header list renders the grid
+   * with no header row, and ragged rows pad to the widest row's column count.
+   *
+   * @param list<string> $headers
+   *   The header cells.
+   * @param list<list<string>> $rows
+   *   The body rows, each a list of cell strings.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function table(array $headers, array $rows): self {
+    $this->table = new TableSpec($headers, $rows);
 
     return $this;
   }
@@ -919,6 +946,7 @@ final class FieldBuilder {
       $this->progressWork,
       schemaDefault: $this->schemaDefault,
       hasSchemaDefault: $this->hasSchemaDefault,
+      table: $this->table,
     );
   }
 
