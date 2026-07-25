@@ -11,6 +11,7 @@ use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Derive\Derive;
+use DrevOps\Tui\Render\Ansi;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -95,6 +96,25 @@ final class SummaryFormatterTest extends TestCase {
   public function testBareAnswersFormatEmpty(): void {
     // An answer set assembled without a configuration carries no snapshots.
     $this->assertSame('', (new SummaryFormatter())->format(new Answers(['name' => 'Acme'], ['name' => Provenance::Edited])));
+  }
+
+  public function testResolvesLinkedLabels(): void {
+    $form = Form::create('T')
+      ->panel('p', 'See [Orchard](https://example.com/orchard)', function (PanelBuilder $p): void {
+        $p->text('name', 'Order at [Basket](https://example.com/basket)');
+      })
+      ->build();
+    $answers = Answers::forForm($form, ['name' => 'Weekly'], ['name' => Provenance::Edited]);
+
+    // Without hyperlink support the label and heading degrade to text (url).
+    $plain = (new SummaryFormatter())->format($answers);
+    $this->assertStringContainsString('See Orchard (https://example.com/orchard)', $plain);
+    $this->assertStringContainsString('Order at Basket (https://example.com/basket): Weekly', $plain);
+
+    // With it on, the same labels carry the OSC 8 escape.
+    $linked = (new SummaryFormatter(TRUE))->format($answers);
+    $this->assertStringContainsString(Ansi::link('https://example.com/orchard', 'Orchard'), $linked);
+    $this->assertStringContainsString(Ansi::link('https://example.com/basket', 'Basket'), $linked);
   }
 
 }

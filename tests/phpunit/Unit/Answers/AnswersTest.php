@@ -93,4 +93,19 @@ final class AnswersTest extends TestCase {
     $this->assertStringContainsString('Name: Acme (edited)', $summary);
   }
 
+  public function testToSummaryHyperlinksAreOptedInExplicitly(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $p): void {
+        $p->text('name', 'Order at [Basket](https://example.com/basket)');
+      })
+      ->build();
+    $answers = Answers::forForm($form, ['name' => 'Weekly'], ['name' => Provenance::Edited]);
+
+    // Forced off degrades the linked label to plain text.
+    $this->assertStringContainsString('Order at Basket (https://example.com/basket)', $answers->toSummary(FALSE));
+
+    // Forced on emits the hyperlink escape regardless of the environment.
+    $this->assertStringContainsString("\033]8;;https://example.com/basket\007", $answers->toSummary(TRUE));
+  }
+
 }

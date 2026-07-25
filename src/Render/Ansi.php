@@ -34,7 +34,30 @@ final class Ansi {
   }
 
   /**
+   * Wrap text in an OSC 8 hyperlink, so a capable terminal makes it clickable.
+   *
+   * The sequence is BEL-terminated, matching the OSC the terminal query uses;
+   * an incapable terminal shows the text and ignores the escape. The visible
+   * width is the text alone, which {@see strip()} accounts for.
+   *
+   * @param string $url
+   *   The target URL.
+   * @param string $text
+   *   The visible link text.
+   *
+   * @return string
+   *   The hyperlinked text.
+   */
+  public static function link(string $url, string $text): string {
+    return self::ESC . ']8;;' . $url . "\007" . $text . self::ESC . ']8;;' . "\007";
+  }
+
+  /**
    * Strip ANSI escape sequences from text.
+   *
+   * Removes both the CSI styling sequences and the OSC 8 hyperlink wrappers
+   * (BEL- or ST-terminated), leaving only the visible characters - so the
+   * width and alignment maths see a linked label as its text alone.
    *
    * @param string $text
    *   The text.
@@ -43,6 +66,8 @@ final class Ansi {
    *   The text without escape sequences.
    */
   public static function strip(string $text): string {
+    $text = (string) preg_replace('/\033\]8;[^\007\033]*(?:\007|\033\\\\)/', '', $text);
+
     return (string) preg_replace('/\033\[[0-9;?<>=]*[A-Za-z]/', '', $text);
   }
 

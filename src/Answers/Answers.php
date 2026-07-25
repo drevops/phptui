@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Answers;
 
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\Panel;
+use DrevOps\Tui\Render\Terminal;
 
 /**
  * The collected answer set: values plus provenance, keyed by question id.
@@ -166,11 +167,18 @@ final readonly class Answers {
   /**
    * The answers as a human summary grouped by panel.
    *
+   * A linked label in a question or panel resolves to a clickable hyperlink on
+   * a capable terminal, and to `text (url)` otherwise.
+   *
+   * @param bool|null $hyperlinks
+   *   Whether to emit clickable hyperlinks; NULL honours the terminal's colour
+   *   capability (the NO_COLOR convention and a "dumb" terminal turn it off).
+   *
    * @return string
    *   The formatted summary (empty when the set carries no snapshots).
    */
-  public function toSummary(): string {
-    return (new SummaryFormatter())->format($this);
+  public function toSummary(?bool $hyperlinks = NULL): string {
+    return (new SummaryFormatter($hyperlinks ?? Terminal::detectColor()))->format($this);
   }
 
 }

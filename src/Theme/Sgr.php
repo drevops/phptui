@@ -21,6 +21,7 @@ enum Sgr: string {
   // Attributes.
   case Bold = '1';
   case Dim = '2';
+  case Italic = '3';
   case Underline = '4';
   case Reverse = '7';
 

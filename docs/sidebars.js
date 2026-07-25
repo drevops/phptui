@@ -56,7 +56,7 @@ const sidebars = {
       type: 'category',
       label: 'Customization',
       collapsible: false,
-      items: ['themes', 'display-modes', 'key-bindings', 'translations'],
+      items: ['themes', 'display-modes', 'markdown', 'key-bindings', 'translations'],
     },
     {
       type: 'category',

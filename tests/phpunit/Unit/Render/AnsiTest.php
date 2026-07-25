@@ -42,6 +42,37 @@ final class AnsiTest extends TestCase {
     $this->assertSame(3, Ansi::width('❯ x'));
   }
 
+  public function testLink(): void {
+    $link = Ansi::link('https://example.com/orchard', 'Orchard');
+
+    $this->assertSame("\033]8;;https://example.com/orchard\007Orchard\033]8;;\007", $link);
+
+    // The escape adds no visible width: a linked label measures as its text.
+    $this->assertSame('Orchard', Ansi::strip($link));
+    $this->assertSame(7, Ansi::width($link));
+
+    // A hyperlink still styled with colour strips and measures cleanly.
+    $styled = Ansi::style($link, '1;36');
+    $this->assertSame('Orchard', Ansi::strip($styled));
+    $this->assertSame(7, Ansi::width($styled));
+  }
+
+  public function testStripHyperlinkTerminators(): void {
+    $esc = "\033";
+
+    // A BEL-terminated hyperlink.
+    $this->assertSame('Apple', Ansi::strip($esc . ']8;;https://example.com/apple' . "\007" . 'Apple' . $esc . ']8;;' . "\007"));
+
+    // An ST-terminated (ESC-backslash) hyperlink.
+    $this->assertSame('Pear', Ansi::strip($esc . ']8;;https://example.com/pear' . $esc . '\\' . 'Pear' . $esc . ']8;;' . $esc . '\\'));
+  }
+
+  public function testBlockWidth(): void {
+    $this->assertSame(0, Ansi::blockWidth([]));
+    $this->assertSame(5, Ansi::blockWidth(['ab', Ansi::style('hello', '32'), 'x']));
+    $this->assertSame(7, Ansi::blockWidth([Ansi::link('https://example.com/a', 'Orchard')]));
+  }
+
   public function testAlignRight(): void {
     $this->assertSame('ab   Z', Ansi::alignRight('ab', 'Z', 6));
 

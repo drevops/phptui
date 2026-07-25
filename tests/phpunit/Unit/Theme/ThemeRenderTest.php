@@ -128,6 +128,18 @@ final class ThemeRenderTest extends TestCase {
     $this->assertMatchesRegularExpression('/^ +Hint of citrus$/', $stripped[1]);
   }
 
+  public function testBodyRendersInlineEditorDescriptionAsMarkdown(): void {
+    $theme = new DefaultTheme(76, ['color' => FALSE, 'border' => Border::None, 'markdown' => TRUE]);
+    $field = new Field('name', 'Name', 'Use a **short** name', FieldType::Text, '');
+    $panel = new Panel('p', 'P', '', [$field]);
+
+    [$lines] = $theme->renderBody($panel, new Answers(), 0, $field, 'Acme');
+    $stripped = array_map(Ansi::strip(...), $lines);
+
+    // The description under the inline editor expands its markdown.
+    $this->assertContains('    Use a short name', $stripped);
+  }
+
   public function testPanelSummaryCollapsesMultiLineValue(): void {
     $panel = new Panel('sub', 'Sub', '', [new Field('notes', 'Notes', '', FieldType::Textarea, '')]);
     $answers = new Answers(['notes' => "Crisp and sweet\nHint of citrus"], []);
@@ -243,6 +255,33 @@ final class ThemeRenderTest extends TestCase {
 
     $this->assertStringContainsString('Hello Ada', $lines);
     $this->assertStringContainsString('You picked pear.', $lines);
+  }
+
+  public function testNoteBodyRendersMarkdownWhenEnabled(): void {
+    $theme = new DefaultTheme(76, ['markdown' => TRUE]);
+    $note = new Field('md', 'Order', "Pick **ripe** fruit:\n- apples\n- pears", FieldType::Note, '');
+
+    $lines = $theme->renderNoteLines($note, new Answers());
+    $joined = implode("\n", $lines);
+
+    $this->assertStringContainsString('Pick ripe fruit:', Ansi::strip($joined));
+    $this->assertStringContainsString('• apples', Ansi::strip($joined));
+    $this->assertStringContainsString('• pears', Ansi::strip($joined));
+    // The bold word carries the bold SGR.
+    $this->assertStringContainsString("\033[1mripe\033[0m", $joined);
+  }
+
+  public function testNoteResolvesLinksInTitleAndBody(): void {
+    $theme = new DefaultTheme(76, ['border' => Border::None]);
+    $note = new Field('linked', 'See [Orchard](https://example.com/orchard)', 'Order from [Basket](https://example.com/basket).', FieldType::Note, '');
+
+    $lines = $theme->renderNoteLines($note, new Answers());
+    $joined = implode("\n", $lines);
+
+    $this->assertStringContainsString('See Orchard', Ansi::strip($joined));
+    $this->assertStringContainsString('Order from Basket.', Ansi::strip($joined));
+    $this->assertStringContainsString(Ansi::link('https://example.com/orchard', 'Orchard'), $joined);
+    $this->assertStringContainsString(Ansi::link('https://example.com/basket', 'Basket'), $joined);
   }
 
   public function testPaddedSpacingSeparatesNoteFromTheFieldAbove(): void {

@@ -20,6 +20,9 @@ use DrevOps\Tui\Input\ScopedKeyMap;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\Box;
 use DrevOps\Tui\Render\HelpSection;
+use DrevOps\Tui\Render\Markup;
+use DrevOps\Tui\Render\MarkupKind;
+use DrevOps\Tui\Render\MarkupSegment;
 use DrevOps\Tui\Render\Navigator;
 use DrevOps\Tui\Render\Overlay;
 use DrevOps\Tui\Render\Scroller;
@@ -111,6 +114,11 @@ class DefaultTheme implements ThemeInterface {
   protected bool $unicode;
 
   /**
+   * Whether markdown in descriptions and notes is rendered, from "markdown".
+   */
+  protected bool $markdown;
+
+  /**
    * Whether the dark palette is used, resolved from the "mode" option.
    */
   protected bool $isDark;
@@ -136,6 +144,7 @@ class DefaultTheme implements ThemeInterface {
 
     $this->color = is_bool($this->options['color'] ?? NULL) ? $this->options['color'] : TRUE;
     $this->unicode = is_bool($this->options['unicode'] ?? NULL) ? $this->options['unicode'] : TRUE;
+    $this->markdown = is_bool($this->options['markdown'] ?? NULL) ? $this->options['markdown'] : FALSE;
     $this->isDark = $this->mode() === Mode::Dark;
 
     // In fullscreen the given width is the whole terminal's; a max-width cap
@@ -221,6 +230,7 @@ class DefaultTheme implements ThemeInterface {
       'mode' => array_column(Mode::cases(), 'value'),
       'color' => [TRUE, FALSE],
       'unicode' => [TRUE, FALSE],
+      'markdown' => [TRUE, FALSE],
       'spacing' => array_column(Spacing::cases(), 'value'),
       'border' => array_column(Border::cases(), 'value'),
       'field' => array_column(FieldStyle::cases(), 'value'),
@@ -541,14 +551,14 @@ class DefaultTheme implements ThemeInterface {
    * {@inheritdoc}
    */
   public function title(string $text): string {
-    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Cyan) : Sgr::of(Sgr::Bold, Sgr::Blue), $text);
+    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Cyan) : Sgr::of(Sgr::Bold, Sgr::Blue), $this->linkify($text));
   }
 
   /**
    * {@inheritdoc}
    */
   public function label(string $text, bool $selected = FALSE): string {
-    return $this->paint($this->emphasize('', $selected), $text);
+    return $this->paint($this->emphasize('', $selected), $this->linkify($text));
   }
 
   /**
@@ -562,7 +572,7 @@ class DefaultTheme implements ThemeInterface {
    * {@inheritdoc}
    */
   public function description(string $text, bool $selected = FALSE): string {
-    return $this->paint($this->emphasize(Sgr::of(Sgr::Grey), $selected), $text);
+    return $this->paint($this->emphasize(Sgr::of(Sgr::Grey), $selected), $this->linkify($text));
   }
 
   /**
@@ -631,7 +641,111 @@ class DefaultTheme implements ThemeInterface {
    * {@inheritdoc}
    */
   public function heading(string $text): string {
-    return $this->paint(Sgr::of(Sgr::Bold, Sgr::Grey), $text);
+    return $this->paint(Sgr::of(Sgr::Bold, Sgr::Grey), $this->linkify($text));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function strong(string $text): string {
+    return $this->paint(Sgr::of(Sgr::Bold), $text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function emphasis(string $text): string {
+    return $this->paint(Sgr::of(Sgr::Italic), $text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function code(string $text): string {
+    return $this->paint($this->isDark ? Sgr::of(Sgr::BrightYellow) : Sgr::of(Sgr::Magenta), $text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function link(string $text, string $url): string {
+    return Markup::hyperlink($text, $url, $this->color);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function bullet(): string {
+    return $this->unicode ? '•' : '-';
+  }
+
+  /**
+   * Resolve any `[text](url)` links in a single line of chrome text.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The text with links resolved to the terminal's capability.
+   */
+  protected function linkify(string $text): string {
+    return Markup::links($text, $this->color);
+  }
+
+  /**
+   * Render description or note-body text as themed physical lines.
+   *
+   * Links resolve on every terminal; the rest of the markdown subset - bold,
+   * emphasis, inline code and bullet lists - is rendered only when the
+   * "markdown" option is on, and otherwise left as literal text. Each span is
+   * styled by its own atom, so a custom theme restyles markup by overriding
+   * those atoms.
+   *
+   * @param string $source
+   *   The source text; newlines separate physical lines.
+   * @param bool $selected
+   *   Whether the owning row is selected, for the base emphasis.
+   *
+   * @return list<string>
+   *   The rendered lines.
+   */
+  protected function markupBody(string $source, bool $selected): array {
+    $base = $this->emphasize(Sgr::of(Sgr::Grey), $selected);
+
+    $lines = [];
+
+    foreach (Markup::parse($source, $this->markdown) as $line) {
+      $rendered = $line->bullet ? $this->paint($base, $this->bullet() . ' ') : '';
+
+      foreach ($line->segments as $segment) {
+        $rendered .= $this->markupSegment($segment, $base);
+      }
+
+      $lines[] = $rendered;
+    }
+
+    return $lines;
+  }
+
+  /**
+   * Style one parsed markup span with its atom.
+   *
+   * @param \DrevOps\Tui\Render\MarkupSegment $segment
+   *   The span.
+   * @param string $base
+   *   The base SGR for plain text.
+   *
+   * @return string
+   *   The styled span.
+   */
+  protected function markupSegment(MarkupSegment $segment, string $base): string {
+    return match ($segment->kind) {
+      MarkupKind::Bold => $this->strong($segment->text),
+      MarkupKind::Emphasis => $this->emphasis($segment->text),
+      MarkupKind::Code => $this->code($segment->text),
+      MarkupKind::Link => $this->link($segment->text, $segment->url),
+      MarkupKind::Text => $this->paint($base, $segment->text),
+    };
   }
 
   /**
@@ -943,7 +1057,9 @@ class DefaultTheme implements ThemeInterface {
         }
 
         if ($verbose && $field->description !== '') {
-          $lines[] = $this->renderDescriptionLine(Translator::t($field->description), $index === $cursor);
+          foreach ($this->renderDescriptionBlock(Translator::t($field->description), $index === $cursor) as $description_line) {
+            $lines[] = $description_line;
+          }
         }
 
         $index++;
@@ -957,7 +1073,9 @@ class DefaultTheme implements ThemeInterface {
       }
 
       if ($verbose && $field->description !== '') {
-        $lines[] = $this->renderDescriptionLine(Translator::t($field->description), $index === $cursor);
+        foreach ($this->renderDescriptionBlock(Translator::t($field->description), $index === $cursor) as $description_line) {
+          $lines[] = $description_line;
+        }
       }
 
       $index++;
@@ -990,7 +1108,9 @@ class DefaultTheme implements ThemeInterface {
       $lines[] = $this->renderPanelLine($subpanel, $index === $cursor);
 
       if ($verbose && $subpanel->description !== '') {
-        $lines[] = $this->renderDescriptionLine(Translator::t($subpanel->description), $index === $cursor);
+        foreach ($this->renderDescriptionBlock(Translator::t($subpanel->description), $index === $cursor) as $description_line) {
+          $lines[] = $description_line;
+        }
       }
 
       $summary = $verbose ? $this->summarizePanel($subpanel, $answers) : '';
@@ -1218,8 +1338,8 @@ class DefaultTheme implements ThemeInterface {
     }
 
     if ($body !== '') {
-      foreach (explode("\n", $this->normalizeLines($body)) as $line) {
-        $content[] = $this->description($line);
+      foreach ($this->markupBody($this->normalizeLines($body), FALSE) as $line) {
+        $content[] = $line;
       }
     }
 
@@ -1337,6 +1457,25 @@ class DefaultTheme implements ThemeInterface {
    */
   public function renderDescriptionLine(string $description, bool $selected): string {
     return '    ' . $this->description($description, $selected);
+  }
+
+  /**
+   * Render a description as indented, markup-rendered physical lines.
+   *
+   * Unlike {@see renderDescriptionLine()}, this expands the markdown subset -
+   * so a description carries bold, emphasis, inline code, links and bullet
+   * lists - and returns one entry per physical line rather than a single row.
+   *
+   * @param string $description
+   *   The description source.
+   * @param bool $selected
+   *   Whether the owning row is selected.
+   *
+   * @return list<string>
+   *   The indented description lines.
+   */
+  public function renderDescriptionBlock(string $description, bool $selected): array {
+    return array_map(static fn(string $line): string => '    ' . $line, $this->markupBody($description, $selected));
   }
 
   /**
@@ -1472,7 +1611,7 @@ class DefaultTheme implements ThemeInterface {
 
       // A multi-line value renders one physical row per line, all under the
       // value column, so the widest single line is what the row needs.
-      $row = 4 + Strings::length(Translator::t($field->label)) + $this->measureValueWidth($field, $answers);
+      $row = 4 + Markup::width(Translator::t($field->label), FALSE, $this->color) + $this->measureValueWidth($field, $answers);
 
       $provenance = $answers->provenanceOf($field->id);
       if ($provenance !== Provenance::Default) {
@@ -1482,7 +1621,7 @@ class DefaultTheme implements ThemeInterface {
       $width = max($width, $row);
 
       if ($verbose && $field->description !== '') {
-        $width = max($width, 4 + Strings::length(Translator::t($field->description)));
+        $width = max($width, 4 + Markup::width(Translator::t($field->description), $this->markdown, $this->color));
       }
     }
 
@@ -1506,14 +1645,14 @@ class DefaultTheme implements ThemeInterface {
     }
 
     foreach ($panel->panels as $subpanel) {
-      $width = max($width, 4 + Strings::length(Translator::t($subpanel->title)));
+      $width = max($width, 4 + Markup::width(Translator::t($subpanel->title), FALSE, $this->color));
 
       if (!$verbose) {
         continue;
       }
 
       if ($subpanel->description !== '') {
-        $width = max($width, 4 + Strings::length(Translator::t($subpanel->description)));
+        $width = max($width, 4 + Markup::width(Translator::t($subpanel->description), $this->markdown, $this->color));
       }
 
       $summary = $this->summarizePanel($subpanel, $answers);
@@ -1541,27 +1680,27 @@ class DefaultTheme implements ThemeInterface {
    *   The widest block row's visible width, in columns.
    */
   protected function measureColumnBlock(Panel $panel, Answers $answers): int {
-    $width = 4 + Strings::length(Translator::t($panel->title));
+    $width = 4 + Markup::width(Translator::t($panel->title), FALSE, $this->color);
 
     if ($this->spacing() !== Spacing::Compact && $panel->description !== '') {
-      $width = max($width, 4 + Strings::length(Translator::t($panel->description)));
+      $width = max($width, 4 + Markup::width(Translator::t($panel->description), $this->markdown, $this->color));
     }
 
     foreach ($panel->fields as $field) {
       if ($field->type->isPresentational()) {
         $title = $this->noteTitleFirstLine($field, $answers);
         if ($title !== '') {
-          $width = max($width, 2 + Strings::length($title));
+          $width = max($width, 2 + Markup::width($title, FALSE, $this->color));
         }
 
         continue;
       }
 
-      $width = max($width, 4 + Strings::length(Translator::t($field->label)) + $this->measureValueWidth($field, $answers));
+      $width = max($width, 4 + Markup::width(Translator::t($field->label), FALSE, $this->color) + $this->measureValueWidth($field, $answers));
     }
 
     foreach ($panel->panels as $subpanel) {
-      $width = max($width, 4 + Strings::length(Translator::t($subpanel->title)));
+      $width = max($width, 4 + Markup::width(Translator::t($subpanel->title), FALSE, $this->color));
     }
 
     return $width;
@@ -1981,7 +2120,7 @@ class DefaultTheme implements ThemeInterface {
    *   The two-line themed header.
    */
   public function renderEditorHeader(string $label): string {
-    $underline = str_repeat($this->unicode ? '─' : '-', max(1, Strings::length($label)));
+    $underline = str_repeat($this->unicode ? '─' : '-', max(1, Markup::width($label, FALSE, $this->color)));
 
     return $this->title($label) . "\n" . $this->rule($underline);
   }
