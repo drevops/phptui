@@ -138,6 +138,15 @@ final class MarkupTest extends TestCase {
     $this->assertSame('open Basket (https://example.com/basket)', Markup::links('open [Basket](https://example.com/basket)', FALSE));
   }
 
+  public function testLinksStripsControlBytesFromTarget(): void {
+    // A control byte in the target must not survive into the plain degrade,
+    // where it would inject a raw escape into the printed output.
+    $out = Markup::links("open [Basket](https://example.com/b\033[31m)", FALSE);
+
+    $this->assertSame('open Basket (https://example.com/b[31m)', $out);
+    $this->assertStringNotContainsString("\033", $out);
+  }
+
   #[DataProvider('dataProviderHyperlink')]
   public function testHyperlink(string $text, string $url, bool $color, string $expected): void {
     $this->assertSame($expected, Markup::hyperlink($text, $url, $color));

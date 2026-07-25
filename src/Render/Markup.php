@@ -99,6 +99,10 @@ final class Markup {
    *   The rendered link.
    */
   public static function hyperlink(string $text, string $url, bool $color): string {
+    // Drop control bytes so the plain degrade cannot inject escapes and the
+    // hyperlink cannot break its wrapper (Ansi::link() strips them too).
+    $text = Ansi::stripControl($text);
+    $url = Ansi::stripControl($url);
     $label = $text === '' ? $url : $text;
 
     if ($url === '') {
@@ -179,59 +183,72 @@ final class Markup {
    */
   protected static function parseInline(string $text, bool $markdown): array {
     $segments = [];
-    $buffer = '';
     $length = strlen($text);
     $index = 0;
-
-    $flush = function () use (&$segments, &$buffer): void {
-      if ($buffer !== '') {
-        $segments[] = new MarkupSegment(MarkupKind::Text, $buffer);
-        $buffer = '';
-      }
-    };
+    $start = 0;
 
     while ($index < $length) {
-      $char = $text[$index];
+      $span = self::matchSpan($text, $index, $markdown);
 
-      if ($markdown && $char === '`' && preg_match('/\G`([^`]+)`/', $text, $matches, 0, $index) === 1) {
-        $flush();
-        $segments[] = new MarkupSegment(MarkupKind::Code, $matches[1]);
-        $index += strlen($matches[0]);
+      if ($span === NULL) {
+        $index++;
 
         continue;
       }
 
-      if ($char === '[' && preg_match('/\G\[([^\]]*)\]\(([^)]+)\)/', $text, $matches, 0, $index) === 1 && self::looksLikeUrl($matches[2])) {
-        $flush();
-        $segments[] = new MarkupSegment(MarkupKind::Link, $matches[1], $matches[2]);
-        $index += strlen($matches[0]);
-
-        continue;
+      // Close the run of plain text that led up to this span before it.
+      if ($index > $start) {
+        $segments[] = new MarkupSegment(MarkupKind::Text, substr($text, $start, $index - $start));
       }
 
-      if ($markdown && $char === '*' && preg_match('/\G\*\*(\S(?:.*?\S)?)\*\*/', $text, $matches, 0, $index) === 1) {
-        $flush();
-        $segments[] = new MarkupSegment(MarkupKind::Bold, $matches[1]);
-        $index += strlen($matches[0]);
-
-        continue;
-      }
-
-      if ($markdown && $char === '*' && preg_match('/\G\*([^\s*](?:[^*]*[^\s*])?)\*/', $text, $matches, 0, $index) === 1) {
-        $flush();
-        $segments[] = new MarkupSegment(MarkupKind::Emphasis, $matches[1]);
-        $index += strlen($matches[0]);
-
-        continue;
-      }
-
-      $buffer .= $char;
-      $index++;
+      [$segment, $consumed] = $span;
+      $segments[] = $segment;
+      $index += $consumed;
+      $start = $index;
     }
 
-    $flush();
+    if ($index > $start) {
+      $segments[] = new MarkupSegment(MarkupKind::Text, substr($text, $start));
+    }
 
     return $segments;
+  }
+
+  /**
+   * Match one inline span starting at a byte offset.
+   *
+   * @param string $text
+   *   The line text.
+   * @param int $index
+   *   The byte offset to anchor the match at.
+   * @param bool $markdown
+   *   Whether the full markdown subset is recognised.
+   *
+   * @return array{\DrevOps\Tui\Render\MarkupSegment, int}|null
+   *   The span and the byte length it consumes, or NULL when no span starts at
+   *   the offset.
+   */
+  protected static function matchSpan(string $text, int $index, bool $markdown): ?array {
+    $char = $text[$index];
+
+    if ($markdown && $char === '`' && preg_match('/\G`([^`]+)`/', $text, $matches, 0, $index) === 1) {
+      return [new MarkupSegment(MarkupKind::Code, $matches[1]), strlen($matches[0])];
+    }
+
+    if ($char === '[' && preg_match('/\G\[([^\]]*)\]\(([^)]+)\)/', $text, $matches, 0, $index) === 1 && self::looksLikeUrl($matches[2])) {
+      // Control bytes in a link would break the escape wrapper it renders to.
+      return [new MarkupSegment(MarkupKind::Link, Ansi::stripControl($matches[1]), Ansi::stripControl($matches[2])), strlen($matches[0])];
+    }
+
+    if ($markdown && $char === '*' && preg_match('/\G\*\*(\S(?:.*?\S)?)\*\*/', $text, $matches, 0, $index) === 1) {
+      return [new MarkupSegment(MarkupKind::Bold, $matches[1]), strlen($matches[0])];
+    }
+
+    if ($markdown && $char === '*' && preg_match('/\G\*([^\s*](?:[^*]*[^\s*])?)\*/', $text, $matches, 0, $index) === 1) {
+      return [new MarkupSegment(MarkupKind::Emphasis, $matches[1]), strlen($matches[0])];
+    }
+
+    return NULL;
   }
 
   /**

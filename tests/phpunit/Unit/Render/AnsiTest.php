@@ -57,6 +57,22 @@ final class AnsiTest extends TestCase {
     $this->assertSame(7, Ansi::width($styled));
   }
 
+  public function testLinkStripsControlBytes(): void {
+    // A BEL or ESC smuggled into the URL or text would break out of the OSC 8
+    // wrapper; both are dropped before the sequence is built.
+    $link = Ansi::link("https://example.com/a\007\033[31m", "Buy\033]8;;evil\007now");
+
+    $this->assertSame("\033]8;;https://example.com/a[31m\007Buy]8;;evilnow\033]8;;\007", $link);
+    // The wrapper survives intact, so the whole thing strips to its text alone.
+    $this->assertSame('Buy]8;;evilnow', Ansi::strip($link));
+  }
+
+  public function testStripControl(): void {
+    $this->assertSame('clean', Ansi::stripControl("cl\033ea\007n"));
+    $this->assertSame('abc', Ansi::stripControl("a\x00b\x7fc"));
+    $this->assertSame('keeps spaces', Ansi::stripControl('keeps spaces'));
+  }
+
   public function testStripHyperlinkTerminators(): void {
     $esc = "\033";
 

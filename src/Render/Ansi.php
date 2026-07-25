@@ -49,7 +49,26 @@ final class Ansi {
    *   The hyperlinked text.
    */
   public static function link(string $url, string $text): string {
+    // A raw ESC or BEL in either part would break out of the escape wrapper -
+    // truncating the sequence or injecting arbitrary control codes downstream -
+    // so every control byte is dropped before the URL and text are embedded.
+    $url = self::stripControl($url);
+    $text = self::stripControl($text);
+
     return self::ESC . ']8;;' . $url . "\007" . $text . self::ESC . ']8;;' . "\007";
+  }
+
+  /**
+   * Drop the C0 control bytes (and DEL) that could break an escape wrapper.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The text with its control bytes removed.
+   */
+  public static function stripControl(string $text): string {
+    return (string) preg_replace('/[\x00-\x1F\x7F]/', '', $text);
   }
 
   /**

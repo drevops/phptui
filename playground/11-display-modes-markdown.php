@@ -33,7 +33,7 @@ $form = Form::create('Produce order')
       ->description("Pick what is **ripe** today:\n- crisp apples\n- sweet pears\nSee the [seasonal guide](https://example.com/seasonal-guide).")
       ->border();
     $p->text('item', 'Item')->default('Pear')
-      ->description('Type any fruit. Machine name is derived as `snake_case`. Full list in the [orchard index](https://example.com/orchard).');
+      ->description('Type any fruit - `Pear` and `Plum` keep well. Full list in the [orchard index](https://example.com/orchard).');
     $p->number('quantity', 'Quantity')->min(1)->max(99)->default(6)
       ->description('Baskets hold up to **99**; order more in a *second* basket.');
   });

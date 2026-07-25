@@ -128,6 +128,15 @@ final class ThemeTest extends TestCase {
     $this->assertStringContainsString('    • bosc', $joined);
   }
 
+  public function testDescriptionBlockNormalizesLineEndings(): void {
+    $theme = new DefaultTheme(76, ['color' => FALSE, 'markdown' => TRUE]);
+    $lines = $theme->renderDescriptionBlock("- apples\r\n- pears\r- plums", FALSE);
+
+    // CRLF and lone CR both split into their own physical lines, with no stray
+    // carriage return left to overprint the row.
+    $this->assertSame(['    • apples', '    • pears', '    • plums'], $lines);
+  }
+
   public function testDescriptionBlockResolvesLinksWithoutMarkdown(): void {
     $theme = new DefaultTheme();
     $lines = $theme->renderDescriptionBlock('see [Guide](https://example.com/guide)', FALSE);
