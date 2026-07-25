@@ -138,6 +138,20 @@ final class EngineTest extends TestCase {
     $this->assertSame($root . '/ok.yml', $answers->value('cfg'));
   }
 
+  public function testCollectRejectsDetectedFilePickerConstraintViolation(): void {
+    vfsStream::setup('root', NULL, ['ok.yml' => str_repeat('a', 10), 'big.yml' => str_repeat('a', 500)]);
+    $root = vfsStream::url('root');
+    $engine = $this->engine(function (PanelBuilder $p) use ($root): void {
+      $p->filePicker('cfg')->maxSize(100)->default($root . '/ok.yml')->discover(fn(Context $context): string => $root . '/big.yml');
+    });
+
+    // In update mode a detected path over the size limit is not adopted: the
+    // field falls back to its declared default instead.
+    $answers = $engine->collect([], new Context('project', [], TRUE));
+
+    $this->assertSame($root . '/ok.yml', $answers->value('cfg'));
+  }
+
   /**
    * Add a shared standard/minimal/disabled option set to a choice builder.
    *
