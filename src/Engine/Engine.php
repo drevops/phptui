@@ -96,7 +96,9 @@ class Engine {
       }
 
       $loaded = ($field->optionsLoader)();
-      $field->options = Option::list(is_array($loaded) ? $loaded : []);
+      // A loader is documented to return a value => label map; coerce
+      // defensively so a mistyped one degrades to no options, not an error.
+      $field->options = Option::list(array_filter(is_array($loaded) ? $loaded : [], is_string(...)));
       $field->optionsLoader = NULL;
     }
   }

@@ -49,10 +49,12 @@ class AgentHelp {
     foreach ($this->form->fields() as $field) {
       // A pause or a progress row is chrome, not a question, so it has no
       // answer.
-      if ($field->type === FieldType::Pause || $field->type->isDisplayOnly()) {
+      if ($field->type === FieldType::Pause) {
         continue;
       }
-
+      if ($field->type->isDisplayOnly()) {
+        continue;
+      }
       $properties[$field->id] = $this->property($field);
 
       if ($field->required) {

@@ -44,7 +44,7 @@ final class ProgressableTest extends TestCase {
     $this->assertSame(1, $calls);
   }
 
-  public function testHeadlessRejectsAValueOutsideTheLoadedOptions(): void {
+  public function testHeadlessRejectsValueOutsideTheLoadedOptions(): void {
     $calls = 0;
 
     $this->expectException(EngineException::class);

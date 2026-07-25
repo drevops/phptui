@@ -1159,7 +1159,7 @@ class PanelController {
    * this to show its latest state before it hands control back to the loop.
    */
   protected function repaint(): void {
-    if (isset($this->terminal)) {
+    if ($this->terminal instanceof Terminal) {
       $this->terminal->render($this->positioned($this->frame($this->rows($this->terminal)), $this->terminal));
     }
   }

@@ -151,7 +151,7 @@ final class WidgetFactoryTest extends TestCase {
     $this->assertSame('Acme', $widget->value());
   }
 
-  public function testCreatingAProgressWidgetThrows(): void {
+  public function testCreatingProgressWidgetThrows(): void {
     // A progress row runs its work on activation; it has no editor to build.
     $field = new Field('p', 'P', '', FieldType::Progress, NULL);
 

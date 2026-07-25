@@ -46,7 +46,7 @@ final class ProgressWidgetTest extends TestCase {
     $this->assertNull($field->progressCurrent);
   }
 
-  public function testActivatingADeterminateRowRunsTheWorkAndCollectsNoAnswer(): void {
+  public function testActivatingDeterminateRowRunsTheWorkAndCollectsNoAnswer(): void {
     $steps = 0;
     $work = function (ProgressReporter $reporter) use (&$steps): void {
       for ($index = 0; $index < 3; $index++) {
@@ -62,7 +62,7 @@ final class ProgressWidgetTest extends TestCase {
     $this->assertFalse($answers->has('apply'));
   }
 
-  public function testActivatingAnIndeterminateRowTicksLikeASpinner(): void {
+  public function testActivatingIndeterminateRowTicksLikeSpinner(): void {
     $ticks = 0;
     $work = function (ProgressReporter $reporter) use (&$ticks): void {
       for ($index = 0; $index < 4; $index++) {
@@ -78,7 +78,7 @@ final class ProgressWidgetTest extends TestCase {
     $this->assertFalse($answers->has('apply'));
   }
 
-  public function testActivatingARowWithoutWorkIsANoOp(): void {
+  public function testActivatingRowWithoutWorkIsNoOp(): void {
     $form = Form::create('Apply')->panel('prep', 'Prep', function (PanelBuilder $p): void {
       $p->progress('apply', 'Apply')->steps(3);
     });
@@ -88,13 +88,13 @@ final class ProgressWidgetTest extends TestCase {
     $this->assertFalse($answers->has('apply'));
   }
 
-  public function testHeadlessCollectionOmitsAProgressRow(): void {
+  public function testHeadlessCollectionOmitsProgressRow(): void {
     $answers = (new Tui($this->form($this->work(), 3)))->collect('{}');
 
     $this->assertFalse($answers->has('apply'));
   }
 
-  public function testTheAnswerSchemaOmitsAProgressRow(): void {
+  public function testTheAnswerSchemaOmitsProgressRow(): void {
     $form = Form::create('Apply')->panel('prep', 'Prep', function (PanelBuilder $p): void {
       $p->text('name', 'Name');
       $p->progress('apply', 'Apply')->steps(1)->run($this->work());
