@@ -187,8 +187,9 @@ opening a PR:
 
 - Add a spec (form, keystrokes, rows) to `widgetSpecs()` in
   `render-widget-svgs.php` (or `progressSpecs()` in `render-progress-svgs.php`
-  for a primitive), then generate its 16 SVG variants:
-  `php docs/util/render-widget-svgs.php <name>`.
+  for a primitive), then generate its 16 SVG variants with the matching
+  renderer: `php docs/util/render-widget-svgs.php <name>` for a widget, or
+  `php docs/util/render-progress-svgs.php <name>` for a primitive.
 - Regenerate the all-widgets montage so the gallery includes it:
   `php docs/util/update-assets.php --record widgets`.
 - Add a `docs/content/widgets/<name>.mdx` page (mirror `pause.mdx`) and a

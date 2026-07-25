@@ -756,7 +756,10 @@ final class FieldBuilder {
    *   The options keyed by value with a label, or an
    *   `fn(): array<string,string>` that loads them on demand. A loader resolves
    *   lazily when the field's panel opens - showing a themed "Loading…" beside
-   *   the field until it returns.
+   *   the field until it returns. A loader suits a field whose default is empty
+   *   or explicit (select, search, suggest); a toggle or reorder derives its
+   *   default from the options, so with a loader it should declare an explicit
+   *   `->default()`.
    *
    * @return $this
    *   The builder.
@@ -788,6 +791,10 @@ final class FieldBuilder {
    *   The builder.
    */
   public function steps(int $steps): self {
+    if ($steps < 1) {
+      throw new FormException(sprintf('Field "%s" declares %d progress steps; a determinate bar needs at least one step (omit steps() for a spinner).', $this->id, $steps));
+    }
+
     $this->progressSteps = $steps;
 
     return $this;
@@ -798,7 +805,8 @@ final class FieldBuilder {
    *
    * @param \Closure $work
    *   An `fn(\DrevOps\Tui\Primitive\ProgressReporter): void` that does the
-   *   work, calling `advance()` on the reporter once per step to move the bar.
+   *   work, calling `advance(?string $label)` on the reporter once per step to
+   *   move the bar and optionally set the trailing label.
    *
    * @return $this
    *   The builder.

@@ -50,8 +50,8 @@ final class AllWidgetsForm {
         $p->filePicker('multifilepicker', 'MultiFilePicker')->multiple()->startIn($picker_start);
         $p->pause('pause', 'Pause');
         $p->progress('progress', 'Progress')->steps(3)->run(static function (ProgressReporter $reporter): void {
-          for ($step = 0; $step < 3; $step++) {
-            $reporter->advance();
+          for ($step = 1; $step <= 3; $step++) {
+            $reporter->advance('step ' . $step);
           }
         });
       });

@@ -12,9 +12,11 @@ use DrevOps\Tui\Translation\Translator;
 /**
  * A single question in the configuration model.
  *
- * The definition is immutable except for its option set: a field may declare
- * an options loader that is resolved once, on demand, and cached back onto the
- * field - so `$options` and `$optionsLoader` are the only mutable state.
+ * The definition is immutable except for two runtime concerns: a field may
+ * declare an options loader that is resolved once and cached back
+ * (`$options`, `$optionsLoader`), and a progress row tracks its live indicator
+ * (`$progressCurrent`, `$progressLabel`) as its work advances. Those four
+ * properties are the only mutable state.
  *
  * @package DrevOps\Tui\Model
  */
@@ -119,6 +121,9 @@ final class Field {
    * @param int|null $progressCurrent
    *   Progress only: the live step count while the work runs - the bar fill, or
    *   the spinner tick, or NULL before it runs; mutated as the work advances.
+   * @param string $progressLabel
+   *   Progress only: the trailing label the work sets through `advance()`,
+   *   shown after the bar or spinner glyph. Mutated as the work advances.
    */
   public function __construct(
     public readonly string $id,
@@ -152,6 +157,7 @@ final class Field {
     public readonly ?int $progressSteps = NULL,
     public readonly ?\Closure $progressWork = NULL,
     public ?int $progressCurrent = NULL,
+    public string $progressLabel = '',
   ) {
     if ($this->multiple && !$this->type->supportsMultiple()) {
       throw new FormException(sprintf('Field "%s" of type "%s" does not collect several values; only select, search and file picker fields may be multiple.', $this->id, $this->type->value));

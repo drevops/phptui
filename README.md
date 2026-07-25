@@ -127,6 +127,7 @@ The facade's surface:
 | `run($prompts, $version, $directory, $interactive)` | Collect answers; interactive on a TTY, headless otherwise (or forced via `$interactive`) |
 | `collect($prompts, $directory, $update, $version)` | Headless collection from JSON + environment; `$update` enables discovery |
 | `interact()` | The interactive panel TUI, explicitly |
+| `progress($total, $caption, $work)` | Show slow work running around the form: a spinner with no total, a determinate bar with one - a theme-drawn primitive |
 | `schema()` / `validate($answers)` / `agentHelp()` | Describe the questions as structured metadata, validate an answer payload, emit the agent-facing answer schema |
 | `theme($theme, $options)` / `keys($preset, $overrides)` | Select the theme and key bindings |
 | `color($bool)` / `unicode($bool)` / `fullscreen($bool)` / `footer($bool)` / `clearOnExit($bool)` / `translator($t)` | Display and runtime switches |
@@ -162,6 +163,10 @@ There's a widget for most things you'd want to ask: text entry, numbers and date
 <tr>
 <td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-pause-dark-animated.svg"><img src="docs/assets/widget-pause-light-animated.svg" width="100%" alt="Pause widget"></picture></td>
 <td><strong><a href="https://phptui.dev/widgets/pause">Pause</a></strong><br>An acknowledgment gate; <kbd>Enter</kbd> or <kbd>Space</kbd> accepts. Unattended runs auto-acknowledge it, so it never blocks automation.</td>
+</tr>
+<tr>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-progress-dark-animated.svg"><img src="docs/assets/widget-progress-light-animated.svg" width="100%" alt="Progress widget"></picture></td>
+<td><strong><a href="https://phptui.dev/widgets/progress">Progress</a></strong><br>A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself; it collects no value.</td>
 </tr>
 <tr>
 <td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-reorder-dark-animated.svg"><img src="docs/assets/widget-reorder-light-animated.svg" width="100%" alt="Reorder widget"></picture></td>

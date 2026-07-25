@@ -20,16 +20,20 @@ final class ProgressReporter {
    * Construct a reporter.
    *
    * @param \Closure $onAdvance
-   *   An `fn(): void` moving the indicator one step and repainting the panel.
+   *   An `fn(?string $label): void` moving the indicator one step, storing the
+   *   label when given, and repainting the panel.
    */
   public function __construct(protected \Closure $onAdvance) {
   }
 
   /**
-   * Advance the indicator by one step.
+   * Advance the indicator by one step, optionally replacing its label.
+   *
+   * @param string|null $label
+   *   The trailing label to show, or NULL to keep the current one.
    */
-  public function advance(): void {
-    ($this->onAdvance)();
+  public function advance(?string $label = NULL): void {
+    ($this->onAdvance)($label);
   }
 
 }

@@ -12,6 +12,7 @@ use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Render\PanelController;
 use DrevOps\Tui\Schema\AgentHelp;
@@ -46,20 +47,29 @@ final class ProgressWidgetTest extends TestCase {
     $this->assertNull($field->progressCurrent);
   }
 
+  public function testNonPositiveStepsAreRejected(): void {
+    $this->expectException(FormException::class);
+
+    (new FieldBuilder('apply', 'Apply', FieldType::Progress))->steps(-1);
+  }
+
   public function testActivatingDeterminateRowRunsTheWorkAndCollectsNoAnswer(): void {
     $steps = 0;
     $work = function (ProgressReporter $reporter) use (&$steps): void {
-      for ($index = 0; $index < 3; $index++) {
+      for ($index = 1; $index <= 3; $index++) {
         $steps++;
-        $reporter->advance();
+        $reporter->advance('packed ' . $index);
       }
     };
 
     // Drill into the panel, then activate the progress row.
-    $answers = (new TuiTester($this->form($work, 3)))->rows(12)->run(Key::named(KeyName::Enter), Key::named(KeyName::Enter));
+    $tester = (new TuiTester($this->form($work, 3)))->rows(12);
+    $answers = $tester->run(Key::named(KeyName::Enter), Key::named(KeyName::Enter));
 
     $this->assertSame(3, $steps);
     $this->assertFalse($answers->has('apply'));
+    // The label the work set through advance() shows beside the bar.
+    $this->assertStringContainsString('packed 3', $tester->display());
   }
 
   public function testActivatingIndeterminateRowTicksLikeSpinner(): void {

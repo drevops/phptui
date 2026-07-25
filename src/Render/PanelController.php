@@ -1375,11 +1375,17 @@ class PanelController {
     }
 
     $field->progressCurrent = 0;
+    $field->progressLabel = '';
     $this->repaint();
 
-    $reporter = new ProgressReporter(function () use ($field): void {
+    $reporter = new ProgressReporter(function (?string $label) use ($field): void {
       $next = ($field->progressCurrent ?? 0) + 1;
       $field->progressCurrent = $field->progressSteps === NULL ? $next : min($next, $field->progressSteps);
+
+      if ($label !== NULL) {
+        $field->progressLabel = $label;
+      }
+
       $this->repaint();
     });
 

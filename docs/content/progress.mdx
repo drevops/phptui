@@ -17,11 +17,14 @@ Collection sometimes triggers slow work: a discovery scan of a target directory,
 use DrevOps\Tui\Primitive\Progress;
 
 // No total: an indeterminate spinner. Each advance() ticks a frame.
-$baskets = $tui->progress(null, 'Counting the baskets', function (Progress $progress): array {
-  $counted = count_the_baskets(); // slow
-  $progress->advance();
+$total = $tui->progress(null, 'Counting the baskets', function (Progress $progress): int {
+  $count = 0;
+  foreach (shelves() as $shelf) {
+    $count += count_baskets($shelf); // slow, one shelf at a time
+    $progress->advance();            // tick the spinner between shelves
+  }
 
-  return $counted;
+  return $count;
 });
 
 // A known total: a determinate bar. Each advance() fills one step.
@@ -109,7 +112,7 @@ php playground/15-progress-bar.php 2>&1 | cat
 `progress()` runs _around_ the form. Three counterparts show feedback _inside_ the interactive panel, drawn by the same theme and resolved the first time a panel opens - so a drill-in fetches only what that panel needs, once.
 
 - **Loading a field's options.** `->options()` takes a callback instead of a fixed list; it resolves when the field's panel opens, the field showing a themed `Loading…` until it returns. Headless collection resolves it up front.
-- **Preloading a panel.** `->preload(callable)` on a panel runs once, before the panel's fields first draw - prep the panel needs, fetched on entry rather than up front, so one fetch can feed several fields.
+- **Preloading a panel.** `->preload(closure)` on a panel runs once, before the panel's fields first draw - prep the panel needs, fetched on entry rather than up front, so one fetch can feed several fields.
 - **The [progress widget](/widgets/progress).** A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself. Unlike `progress()`, it lives among the fields and collects no value.
 
 ```php

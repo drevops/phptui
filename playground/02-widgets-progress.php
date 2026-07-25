@@ -31,7 +31,7 @@ $form = Form::create('Progress widget')
     $p->progress('pack', 'Packing the box')->steps(count($items))->run(function (ProgressReporter $reporter) use ($items): void {
       foreach ($items as $item) {
         usleep(220000);
-        $reporter->advance();
+        $reporter->advance('packed ' . $item);
       }
     });
   });
