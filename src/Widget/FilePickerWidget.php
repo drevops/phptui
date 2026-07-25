@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Widget;
 
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\FilePickerConstraints;
 use DrevOps\Tui\Model\FilePickerMode;
 use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Input\Action;
@@ -26,13 +27,15 @@ use DrevOps\Tui\Widget\Capability\SelectionBoundedTrait;
  * A filesystem browser that selects a path, or several in multiple mode.
  *
  * Navigation walks directories from a start directory that also bounds the
- * browse - it is a floor the browser cannot ascend above. The mode governs
- * which entries may be selected (any, files or directories); directories stay
- * navigable regardless, so files beneath them remain reachable. Printable
- * characters filter the current directory; Tab reveals or hides dot-entries. In
- * multiple mode Space toggles the highlighted selectable entry and selections
- * accumulate across directories, so the value is the chosen path (single) or
- * the list of chosen paths (multiple).
+ * browse - it is a floor the browser cannot ascend above. The constraints
+ * govern which entries may be selected (any, files or directories) and which
+ * files pass the extension filter; directories stay navigable regardless, so
+ * files beneath them remain reachable. Printable characters filter the current
+ * directory; Tab reveals or hides dot-entries. In multiple mode Space toggles
+ * the highlighted selectable entry and selections accumulate across
+ * directories, so the value is the chosen path (single) or the list of chosen
+ * paths (multiple). An accepted pick that breaks a size limit (or, headlessly,
+ * any limit) is rejected inline.
  *
  * @package DrevOps\Tui\Widget
  */
@@ -59,11 +62,9 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
   protected array $selected = [];
 
   /**
-   * The normalized allowed extensions (dot-less, lowercase); empty allows all.
-   *
-   * @var list<string>
+   * The type, extension and size limits on a valid pick.
    */
-  protected array $extensions;
+  protected FilePickerConstraints $constraints;
 
   /**
    * The current type-to-filter text applied to the browsed directory.
@@ -85,11 +86,9 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
    *   The pre-selected path (single) or paths (multiple). A single path opens
    *   the browser at its directory with the entry highlighted; in multiple mode
    *   every path seeds the selection.
-   * @param \DrevOps\Tui\Model\FilePickerMode $mode
-   *   Which entries may be selected (any, files or directories).
-   * @param list<string> $extensions
-   *   The extensions selectable files are limited to (dot-less,
-   *   case-insensitive); empty allows every extension.
+   * @param \DrevOps\Tui\Model\FilePickerConstraints|null $constraints
+   *   The type, extension and size limits on a valid pick; NULL leaves the
+   *   picker unconstrained.
    * @param bool $showHidden
    *   Whether dot-entries are shown when the browser opens.
    * @param bool $multiple
@@ -104,22 +103,17 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
   public function __construct(
     string $start = '',
     string|array $default = '',
-    protected FilePickerMode $mode = FilePickerMode::Any,
-    array $extensions = [],
+    ?FilePickerConstraints $constraints = NULL,
     protected bool $showHidden = FALSE,
     protected bool $multiple = FALSE,
     ?int $page_size = NULL,
     ?SelectionBounds $selection_bounds = NULL,
   ) {
+    $this->constraints = $constraints ?? new FilePickerConstraints();
     $this->root = $this->trimTrailingSlash($start !== '' ? $start : $this->currentDirectory());
     $this->cwd = $this->root;
     $this->pageSize = $this->resolvePageSize($page_size);
     $this->selectionBounds = $selection_bounds;
-
-    $this->extensions = array_values(array_filter(array_map(
-      static fn(string $extension): string => strtolower(ltrim($extension, '.')),
-      $extensions,
-    ), static fn(string $extension): bool => $extension !== ''));
 
     $this->seed($default);
   }
@@ -249,7 +243,50 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
       $rows[] = $this->renderRow($theme, $name, $viewport->offset + $slot === $this->cursor);
     }
 
-    return $this->withSelectionHint($theme, implode("\n", array_merge($lines, $this->wrapScrolled($theme, $rows, $viewport))));
+    $body = implode("\n", array_merge($lines, $this->wrapScrolled($theme, $rows, $viewport)));
+
+    return $this->withSelectionHint($theme, $this->withConstraintHint($theme, $body));
+  }
+
+  /**
+   * The themed constraint hint line, or an empty string when not shown.
+   *
+   * Mirrors the selection-count hint: the active type, extension and size
+   * limits are surfaced as a persistent line so they are visible before a pick
+   * breaks one, giving way to the inline error while a violation is showing so
+   * the two never stack.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   *
+   * @return string
+   *   The dim constraint line (e.g. "Files only. Max 2 MB."), or '' when the
+   *   picker is unconstrained or an error is already showing.
+   */
+  protected function constraintHint(ThemeInterface $theme): string {
+    $describe = $this->constraints->describe();
+    if ($describe === '' || $this->error !== NULL) {
+      return '';
+    }
+
+    return $theme->description($describe);
+  }
+
+  /**
+   * Append the constraint hint line beneath a view, when it is shown.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   * @param string $view
+   *   The rendered view.
+   *
+   * @return string
+   *   The view, with the hint line below it when constraints are present.
+   */
+  protected function withConstraintHint(ThemeInterface $theme, string $view): string {
+    $hint = $this->constraintHint($theme);
+
+    return $hint === '' ? $view : $view . "\n" . $hint;
   }
 
   /**
@@ -295,6 +332,32 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
 
     $this->cwd = $this->parentOf($primary);
     $this->highlight($this->baseName($primary));
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Reject a pick that breaks a type, extension or size limit before the value
+   * is accepted, then defer to the selection-count check and the base accept so
+   * the three inline errors never stack.
+   */
+  #[\Override]
+  protected function accept(mixed $value): bool {
+    $violation = $this->constraints->violation($value);
+    if ($violation !== NULL) {
+      $this->error = Translator::t('Choose @constraint.', ['@constraint' => $violation]);
+
+      return FALSE;
+    }
+
+    $selection_error = $this->selectionBoundsError($value);
+    if ($selection_error !== NULL) {
+      $this->error = $selection_error;
+
+      return FALSE;
+    }
+
+    return parent::accept($value);
   }
 
   /**
@@ -482,10 +545,10 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
 
         continue;
       }
-      if ($this->mode === FilePickerMode::Directory) {
+      if ($this->constraints->mode === FilePickerMode::Directory) {
         continue;
       }
-      if (!$this->extensionAllowed($name)) {
+      if (!$this->constraints->extensionAllowed($name)) {
         continue;
       }
 
@@ -537,28 +600,7 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
    *   TRUE when the entry is selectable.
    */
   protected function isSelectable(string $name): bool {
-    return match ($this->mode) {
-      FilePickerMode::Any => TRUE,
-      FilePickerMode::File => !$this->isDir($name),
-      FilePickerMode::Directory => $this->isDir($name),
-    };
-  }
-
-  /**
-   * Whether a filename's extension is allowed.
-   *
-   * @param string $name
-   *   The entry name.
-   *
-   * @return bool
-   *   TRUE when the extension is allowed (or no restriction applies).
-   */
-  protected function extensionAllowed(string $name): bool {
-    if ($this->extensions === []) {
-      return TRUE;
-    }
-
-    return in_array(strtolower(pathinfo($name, PATHINFO_EXTENSION)), $this->extensions, TRUE);
+    return $this->constraints->allowsType($this->isDir($name));
   }
 
   /**

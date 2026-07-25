@@ -9,6 +9,7 @@ use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\DateBounds;
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\FilePickerConstraints;
 use DrevOps\Tui\Model\FilePickerMode;
 use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Model\Option;
@@ -166,6 +167,11 @@ final class FieldBuilder {
    * File picker only: whether dot-entries are shown when the browser opens.
    */
   protected bool $pickerShowHidden = FALSE;
+
+  /**
+   * File picker only: the maximum selectable file size in bytes, when declared.
+   */
+  protected ?int $pickerMaxSize = NULL;
 
   /**
    * Choice widgets only: the visible page size, when declared.
@@ -518,6 +524,31 @@ final class FieldBuilder {
   }
 
   /**
+   * File picker only: reject any selected file larger than this many bytes.
+   *
+   * Applies to files, not directories, and is enforced identically on an
+   * interactive accept and a headless path.
+   *
+   * @param int $bytes
+   *   The inclusive maximum file size in bytes; must be positive.
+   *
+   * @return $this
+   *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the size is not positive.
+   */
+  public function maxSize(int $bytes): self {
+    if ($bytes < 1) {
+      throw new FormException(sprintf('Field "%s" declares a maximum file size of %d below one byte.', $this->id, $bytes));
+    }
+
+    $this->pickerMaxSize = $bytes;
+
+    return $this;
+  }
+
+  /**
    * List widgets only: bound the visible option list to a page size.
    *
    * Longer lists page around the cursor rather than overflowing the viewport.
@@ -841,9 +872,8 @@ final class FieldBuilder {
       $this->confirm,
       $this->externalEditor,
       $this->buildBounds(),
-      $this->pickerMode,
+      $this->buildPickerConstraints(),
       $this->pickerStart,
-      $this->pickerExtensions,
       $this->pickerShowHidden,
       $this->pageSize,
       $this->completion,
@@ -961,6 +991,16 @@ final class FieldBuilder {
     }
 
     return new SelectionBounds($this->minSelections, $this->maxSelections);
+  }
+
+  /**
+   * Assemble the file picker constraints from the declared type/extension/size.
+   *
+   * @return \DrevOps\Tui\Model\FilePickerConstraints
+   *   The constraints; unconstrained when nothing was declared.
+   */
+  protected function buildPickerConstraints(): FilePickerConstraints {
+    return new FilePickerConstraints($this->pickerMode, $this->pickerExtensions, $this->pickerMaxSize);
   }
 
   /**

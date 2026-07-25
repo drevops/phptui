@@ -12,6 +12,7 @@ use DrevOps\Tui\Engine\EngineException;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Tests\Fixtures\Handler\Spy;
+use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -111,6 +112,30 @@ final class EngineTest extends TestCase {
     $this->expectException(EngineException::class);
     $this->expectExceptionMessage('Invalid value for field "mods": must be a list');
     $engine->collect(['mods' => 'notalist'], new Context('project'));
+  }
+
+  public function testCollectRejectsFilePickerConstraintViolation(): void {
+    vfsStream::setup('root', NULL, ['big.yml' => str_repeat('a', 500)]);
+    $root = vfsStream::url('root');
+    $engine = $this->engine(function (PanelBuilder $p): void {
+      $p->filePicker('cfg')->filesOnly()->extensions(['yml'])->maxSize(100);
+    });
+
+    $this->expectException(EngineException::class);
+    $this->expectExceptionMessage('Invalid value for field "cfg": must be a file no larger than 100 B');
+    $engine->collect(['cfg' => $root . '/big.yml'], new Context('project'));
+  }
+
+  public function testCollectAcceptsFilePickerWithinConstraints(): void {
+    vfsStream::setup('root', NULL, ['ok.yml' => str_repeat('a', 10)]);
+    $root = vfsStream::url('root');
+    $engine = $this->engine(function (PanelBuilder $p): void {
+      $p->filePicker('cfg')->filesOnly()->extensions(['yml'])->maxSize(100);
+    });
+
+    $answers = $engine->collect(['cfg' => $root . '/ok.yml'], new Context('project'));
+
+    $this->assertSame($root . '/ok.yml', $answers->value('cfg'));
   }
 
   /**

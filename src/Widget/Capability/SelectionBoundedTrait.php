@@ -34,14 +34,33 @@ trait SelectionBoundedTrait {
    */
   #[\Override]
   protected function accept(mixed $value): bool {
-    $violation = $this->selectionBounds?->violation($value);
-    if ($violation !== NULL) {
-      $this->error = Translator::t('Select @constraint.', ['@constraint' => $violation]);
+    $error = $this->selectionBoundsError($value);
+    if ($error !== NULL) {
+      $this->error = $error;
 
       return FALSE;
     }
 
     return parent::accept($value);
+  }
+
+  /**
+   * The inline error for a selection count outside the declared range, if any.
+   *
+   * The wording lives here once so a widget that layers its own accept checks
+   * on top (the file picker's type/size limits) can reuse the count check
+   * without restating it.
+   *
+   * @param mixed $value
+   *   The candidate value.
+   *
+   * @return string|null
+   *   The error message when the count is out of range, else NULL.
+   */
+  protected function selectionBoundsError(mixed $value): ?string {
+    $violation = $this->selectionBounds?->violation($value);
+
+    return $violation === NULL ? NULL : Translator::t('Select @constraint.', ['@constraint' => $violation]);
   }
 
   /**

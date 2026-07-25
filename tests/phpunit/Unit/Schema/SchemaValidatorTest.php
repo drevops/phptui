@@ -10,6 +10,7 @@ use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Schema\SchemaValidator;
+use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -102,6 +103,29 @@ final class SchemaValidatorTest extends TestCase {
     // A numeric-string value stays valid: values are compared as strings.
     $this->assertSame([], $validator->validate(['flag' => '1']));
     $this->assertSame(['Question "flag": value "2" is not one of: 0, 1.'], $validator->validate(['flag' => '2']));
+  }
+
+  public function testValidatesFilePickerConstraints(): void {
+    vfsStream::setup('root', NULL, ['ok.yml' => str_repeat('a', 10), 'big.yml' => str_repeat('a', 500)]);
+    $root = vfsStream::url('root');
+    $form = Form::create('T')
+      ->panel('p', 'p', fn(PanelBuilder $p): FieldBuilder => $p->filePicker('cfg')->filesOnly()->extensions(['yml'])->maxSize(100))
+      ->build();
+    $validator = new SchemaValidator($form);
+
+    $this->assertSame([], $validator->validate(['cfg' => $root . '/ok.yml']));
+    $this->assertSame(['Question "cfg" must be an existing file.'], $validator->validate(['cfg' => $root . '/missing.yml']));
+    $this->assertSame(['Question "cfg" must be a file no larger than 100 B.'], $validator->validate(['cfg' => $root . '/big.yml']));
+  }
+
+  public function testFilePickerConstraintsIgnoredOnNonPickerField(): void {
+    // A picker limit mistakenly set on a non-picker field never applies: the
+    // field's plain string value is not weighed as a filesystem path.
+    $form = Form::create('T')
+      ->panel('p', 'p', fn(PanelBuilder $p): FieldBuilder => $p->text('name')->maxSize(100))
+      ->build();
+
+    $this->assertSame([], (new SchemaValidator($form))->validate(['name' => 'not-a-real-path']));
   }
 
   /**

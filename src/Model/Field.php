@@ -30,6 +30,11 @@ final class Field {
   public array $options;
 
   /**
+   * File picker only: the type, extension and size limits on a valid pick.
+   */
+  public readonly FilePickerConstraints $pickerConstraints;
+
+  /**
    * Construct a field.
    *
    * @param string $id
@@ -73,15 +78,13 @@ final class Field {
    * @param \DrevOps\Tui\Model\NumberBounds|null $bounds
    *   Number only: optional min/max/step bounds; NULL for a plain integer
    *   entry with no range or keyboard stepping.
-   * @param \DrevOps\Tui\Model\FilePickerMode $pickerMode
-   *   File picker only: which entries may be selected (any, files or
-   *   directories); ignored by other types.
+   * @param \DrevOps\Tui\Model\FilePickerConstraints|null $picker_constraints
+   *   File picker only: the type, extension and size limits enforced on a pick;
+   *   NULL (or the default) leaves the picker unconstrained. Ignored by other
+   *   types.
    * @param string $pickerStart
    *   File picker only: the directory the browser opens at and cannot ascend
    *   above; empty falls back to the current working directory.
-   * @param list<string> $pickerExtensions
-   *   File picker only: the file extensions selectable files are limited to
-   *   (dot-less, case-insensitive); empty allows every extension.
    * @param bool $pickerShowHidden
    *   File picker only: whether dot-entries are shown when the browser opens.
    * @param int|null $pageSize
@@ -142,9 +145,8 @@ final class Field {
     public readonly bool $confirm = FALSE,
     public readonly bool $externalEditor = FALSE,
     public readonly ?NumberBounds $bounds = NULL,
-    public readonly FilePickerMode $pickerMode = FilePickerMode::Any,
+    ?FilePickerConstraints $picker_constraints = NULL,
     public readonly string $pickerStart = '',
-    public readonly array $pickerExtensions = [],
     public readonly bool $pickerShowHidden = FALSE,
     public readonly ?int $pageSize = NULL,
     public readonly array|\Closure $completion = [],
@@ -168,6 +170,7 @@ final class Field {
     }
 
     $this->options = Option::list($options);
+    $this->pickerConstraints = $picker_constraints ?? new FilePickerConstraints();
   }
 
   /**
@@ -269,6 +272,24 @@ final class Field {
    */
   public function boundsViolation(mixed $value): ?string {
     return $this->bounds?->violation($value) ?? $this->dateBounds?->violation($value) ?? $this->selectionBounds?->violation($value);
+  }
+
+  /**
+   * The file picker limit a supplied path violates, as a fragment, else NULL.
+   *
+   * @param mixed $value
+   *   The candidate value - a path, or a list of paths in multiple mode.
+   *
+   * @return string|null
+   *   The violation fragment (e.g. "an existing file"), or NULL when the path
+   *   meets every limit or the field declares no picker constraints.
+   */
+  public function pickerViolation(mixed $value): ?string {
+    if ($this->type !== FieldType::FilePicker) {
+      return NULL;
+    }
+
+    return $this->pickerConstraints->violation($value);
   }
 
   /**

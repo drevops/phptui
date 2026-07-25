@@ -180,9 +180,9 @@ final class FormTest extends TestCase {
     // A reorder with no declared default ranks every option in declared order.
     $this->assertSame(['a', 'b', 'c'], $form->field('rk')?->default);
     // The picker options are opt-in, so they default off.
-    $this->assertSame(FilePickerMode::Any, $form->field('fp')->pickerMode);
+    $this->assertSame(FilePickerMode::Any, $form->field('fp')->pickerConstraints->mode);
     $this->assertSame('', $form->field('fp')->pickerStart);
-    $this->assertSame([], $form->field('fp')->pickerExtensions);
+    $this->assertSame([], $form->field('fp')->pickerConstraints->extensions);
     $this->assertFalse($form->field('fp')->pickerShowHidden);
     // A pause defaults to acknowledged so headless runs never block on it.
     $this->assertTrue($form->field('pa')?->default);
@@ -376,6 +376,15 @@ final class FormTest extends TestCase {
       ->build();
   }
 
+  public function testFilePickerNonPositiveMaxSizeThrows(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Field "f" declares a maximum file size of 0 below one byte.');
+
+    Form::create('T')
+      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->filePicker('f')->maxSize(0))
+      ->build();
+  }
+
   public function testPageSizeAssembled(): void {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $panel): void {
@@ -471,7 +480,7 @@ final class FormTest extends TestCase {
   public function testFilePickerOptions(): void {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->filePicker('config', 'Config')->startIn('/opt')->filesOnly()->extensions(['yml', 'yaml'])->showHidden();
+        $panel->filePicker('config', 'Config')->startIn('/opt')->filesOnly()->extensions(['yml', 'yaml'])->showHidden()->maxSize(1048576);
         $panel->filePicker('assets', 'Assets')->multiple()->directoriesOnly();
       })
       ->build();
@@ -479,16 +488,17 @@ final class FormTest extends TestCase {
     $form_field = $form->field('config');
     $this->assertInstanceOf(Field::class, $form_field);
     $this->assertSame(FieldType::FilePicker, $form_field->type);
-    $this->assertSame(FilePickerMode::File, $form_field->pickerMode);
+    $this->assertSame(FilePickerMode::File, $form_field->pickerConstraints->mode);
     $this->assertSame('/opt', $form_field->pickerStart);
-    $this->assertSame(['yml', 'yaml'], $form_field->pickerExtensions);
+    $this->assertSame(['yml', 'yaml'], $form_field->pickerConstraints->extensions);
+    $this->assertSame(1048576, $form_field->pickerConstraints->maxSize);
     $this->assertTrue($form_field->pickerShowHidden);
 
     $assets = $form->field('assets');
     $this->assertInstanceOf(Field::class, $assets);
     $this->assertSame(FieldType::FilePicker, $assets->type);
     $this->assertTrue($assets->multiple);
-    $this->assertSame(FilePickerMode::Directory, $assets->pickerMode);
+    $this->assertSame(FilePickerMode::Directory, $assets->pickerConstraints->mode);
   }
 
   public function testOptionKindsAndDisabled(): void {
