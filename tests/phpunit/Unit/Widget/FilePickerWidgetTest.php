@@ -501,7 +501,7 @@ final class FilePickerWidgetTest extends TestCase {
   public function testConstraintHintShownBelowEntries(): void {
     $widget = new FilePickerWidget($this->root, constraints: new FilePickerConstraints(FilePickerMode::File, ['md'], 2097152));
 
-    // The active type, extension and size limits are surfaced below the entries.
+    // The active limits are surfaced below the entries as a hint.
     $this->assertStringContainsString('Files only. Extensions: md. Max 2 MB.', $this->render($widget));
   }
 

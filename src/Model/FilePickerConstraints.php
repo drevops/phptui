@@ -126,10 +126,12 @@ final readonly class FilePickerConstraints {
     $paths = is_array($value) ? $value : [$value];
 
     foreach ($paths as $path) {
-      if (!is_string($path) || $path === '') {
+      if (!is_string($path)) {
         continue;
       }
-
+      if ($path === '') {
+        continue;
+      }
       $phrase = $this->pathViolation($path);
       if ($phrase !== NULL) {
         return $phrase;

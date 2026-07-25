@@ -36,6 +36,14 @@ final class FilePickerConstraintsTest extends TestCase {
     $this->root = vfsStream::url('root');
   }
 
+  /**
+   * Tests that declared extensions are normalized to dot-less lowercase.
+   *
+   * @param list<string> $given
+   *   The declared extensions.
+   * @param list<string> $expected
+   *   The normalized extensions.
+   */
   #[DataProvider('dataProviderNormalizesExtensions')]
   public function testNormalizesExtensions(array $given, array $expected): void {
     $this->assertSame($expected, (new FilePickerConstraints(extensions: $given))->extensions);
@@ -61,6 +69,18 @@ final class FilePickerConstraintsTest extends TestCase {
     yield 'negative' => [-100];
   }
 
+  /**
+   * Tests whether the constraints report themselves as unconstrained.
+   *
+   * @param \DrevOps\Tui\Model\FilePickerMode $mode
+   *   The selection mode.
+   * @param list<string> $extensions
+   *   The allowed extensions.
+   * @param int|null $max_size
+   *   The maximum file size in bytes, or NULL for no size limit.
+   * @param bool $expected
+   *   Whether the constraints enforce nothing.
+   */
   #[DataProvider('dataProviderIsUnconstrained')]
   public function testIsUnconstrained(FilePickerMode $mode, array $extensions, ?int $max_size, bool $expected): void {
     $this->assertSame($expected, (new FilePickerConstraints($mode, $extensions, $max_size))->isUnconstrained());
@@ -87,6 +107,16 @@ final class FilePickerConstraintsTest extends TestCase {
     yield 'directory rejects file' => [FilePickerMode::Directory, FALSE, FALSE];
   }
 
+  /**
+   * Tests whether a filename's extension passes the allowed set.
+   *
+   * @param list<string> $extensions
+   *   The allowed extensions.
+   * @param string $name
+   *   The entry name or path.
+   * @param bool $expected
+   *   Whether the extension is allowed.
+   */
   #[DataProvider('dataProviderExtensionAllowed')]
   public function testExtensionAllowed(array $extensions, string $name, bool $expected): void {
     $this->assertSame($expected, (new FilePickerConstraints(extensions: $extensions))->extensionAllowed($name));
@@ -153,13 +183,13 @@ final class FilePickerConstraintsTest extends TestCase {
     $this->assertSame('a file no larger than 5 B', $constraints->violation($this->root . '/small.txt'));
   }
 
-  #[DataProvider('dataProviderViolationEmptyPasses')]
+  #[DataProvider('dataProviderViolationEmptyValuePasses')]
   public function testViolationEmptyValuePasses(mixed $value): void {
     // An empty value is the required check's concern, not this object's.
     $this->assertNull((new FilePickerConstraints(FilePickerMode::File))->violation($value));
   }
 
-  public static function dataProviderViolationEmptyPasses(): \Iterator {
+  public static function dataProviderViolationEmptyValuePasses(): \Iterator {
     yield 'empty string' => [''];
     yield 'empty list' => [[]];
   }
@@ -178,6 +208,18 @@ final class FilePickerConstraintsTest extends TestCase {
     $this->assertNull($constraints->violation([$this->root . '/small.txt', '', 42]));
   }
 
+  /**
+   * Tests the human phrase describing the active limits.
+   *
+   * @param \DrevOps\Tui\Model\FilePickerMode $mode
+   *   The selection mode.
+   * @param list<string> $extensions
+   *   The allowed extensions.
+   * @param int|null $max_size
+   *   The maximum file size in bytes, or NULL for no size limit.
+   * @param string $expected
+   *   The expected phrase.
+   */
   #[DataProvider('dataProviderDescribe')]
   public function testDescribe(FilePickerMode $mode, array $extensions, ?int $max_size, string $expected): void {
     $this->assertSame($expected, (new FilePickerConstraints($mode, $extensions, $max_size))->describe());
