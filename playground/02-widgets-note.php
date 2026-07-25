@@ -29,7 +29,10 @@ $form = Form::create('Note field')
     $p->note('intro', 'Fresh produce order')->description('This card is read-only - the cursor skips it and it collects nothing.');
     $p->text('item', 'Item')->default('Pear');
     $p->note('summary', 'Ready to pack')->description('Packing {{item}} into the basket.')->border();
-    $p->note('basket', 'Basket contents')->description('Everything picked so far:')->table(['Fruit', 'Colour', 'In stock'], [['Apple', 'Red', '12'], ['Pear', 'Green', '5']]);
+    $p->note('basket', 'Basket contents')->description('Everything picked so far:')->table(
+      ['Fruit', 'Colour', 'In stock'],
+      [['Apple', 'Red', '12'], ['Pear', 'Green', '5']],
+    );
   });
 
 try {

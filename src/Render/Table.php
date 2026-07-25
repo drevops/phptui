@@ -33,9 +33,10 @@ final class Table {
    * @param bool $unicode
    *   Whether Unicode glyphs are used; FALSE draws the ASCII fallback.
    * @param int $max_width
-   *   The widest the whole table may be, in columns; 0 leaves it uncapped. When
-   *   the natural width exceeds it, the widest columns shrink (down to a single
-   *   column each) and over-long cells are ellipsized so the borders stay whole.
+   *   The widest the whole table may be, in columns; 0 leaves it uncapped.
+   *   When the natural width exceeds it, the widest columns shrink (down to a
+   *   single column each) and over-long cells are ellipsized so the borders
+   *   stay whole.
    * @param (callable(string): string)|null $style_header
    *   A styler for header cells, or NULL for none.
    * @param (callable(string): string)|null $style_cell
@@ -67,8 +68,8 @@ final class Table {
       $lines[] = self::rule($chars['ml'], $chars['cx'], $chars['mr'], $chars['h'], $widths, $border_styler);
     }
 
-    foreach ($norm_rows as $row) {
-      $lines[] = self::row($row, $widths, $chars['v'], $unicode, $style_cell, $border_styler);
+    foreach ($norm_rows as $norm_row) {
+      $lines[] = self::row($norm_row, $widths, $chars['v'], $unicode, $style_cell, $border_styler);
     }
 
     $lines[] = self::rule($chars['bl'], $chars['bt'], $chars['br'], $chars['h'], $widths, $border_styler);
@@ -109,7 +110,6 @@ final class Table {
    *   The row, exactly the target length.
    */
   protected static function pad(array $row, int $columns): array {
-    $row = array_values($row);
     $out = [];
 
     for ($index = 0; $index < $columns; $index++) {

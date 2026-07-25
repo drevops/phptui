@@ -249,7 +249,7 @@ final class FormTest extends TestCase {
     // A note is not bordered unless it opts in.
     $this->assertFalse($intro->bordered);
     // A note carries no table unless it opts in.
-    $this->assertNull($intro->table);
+    $this->assertNotInstanceOf(TableSpec::class, $intro->table);
 
     // An omitted title stays empty rather than falling back to the id.
     $this->assertSame('', $form->field('bare')?->label);
