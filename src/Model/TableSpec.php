@@ -5,25 +5,71 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Model;
 
 /**
- * A presentational table: header cells and body rows.
+ * A presentational table: header cells and body rows, coerced to strings.
  *
  * A note carries one to render an aligned grid beneath its title and body. The
- * data is plain strings; how it is styled and interpolated is the renderer's
- * concern, not this value object's.
+ * cells are stored as plain strings; how they are styled and interpolated is
+ * the renderer's concern, not this value object's.
  *
  * @package DrevOps\Tui\Model
  */
 final readonly class TableSpec {
 
   /**
-   * Construct a table spec.
+   * The header cells.
    *
-   * @param list<string> $headers
-   *   The header cells; an empty list renders the grid with no header row.
-   * @param list<list<string>> $rows
-   *   The body rows, each a list of cell strings.
+   * @var list<string>
    */
-  public function __construct(public array $headers, public array $rows) {
+  public array $headers;
+
+  /**
+   * The body rows.
+   *
+   * @var list<list<string>>
+   */
+  public array $rows;
+
+  /**
+   * Construct a table spec, coercing every cell to a string.
+   *
+   * A scalar cell (a number, a bool) is stringified so tabular data need not be
+   * pre-formatted, and a non-scalar cell becomes an empty string, so the
+   * renderer only ever handles strings. An empty header list renders the grid
+   * with no header row.
+   *
+   * @param list<mixed> $headers
+   *   The header cells.
+   * @param list<list<mixed>> $rows
+   *   The body rows, each a list of cells.
+   */
+  public function __construct(array $headers, array $rows) {
+    $this->headers = self::cells($headers);
+
+    $normalized = [];
+    foreach ($rows as $row) {
+      $normalized[] = self::cells($row);
+    }
+
+    $this->rows = $normalized;
+  }
+
+  /**
+   * Coerce a row of cells to a list of strings.
+   *
+   * @param list<mixed> $cells
+   *   The cells.
+   *
+   * @return list<string>
+   *   The cells as strings; a non-scalar cell becomes an empty string.
+   */
+  protected static function cells(array $cells): array {
+    $out = [];
+
+    foreach ($cells as $cell) {
+      $out[] = is_scalar($cell) ? (string) $cell : '';
+    }
+
+    return $out;
   }
 
 }
