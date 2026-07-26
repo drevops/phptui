@@ -99,6 +99,29 @@ class Terminal {
   }
 
   /**
+   * Flush any buffered output so it reaches the terminal immediately.
+   *
+   * A frame written without a trailing newline can sit in the stream buffer;
+   * flushing makes each animation frame appear the moment it is written.
+   */
+  public function flush(): void {
+    fflush($this->output);
+  }
+
+  /**
+   * Whether the output stream is an interactive terminal.
+   *
+   * A redirected or piped stream is not a TTY, where cursor and colour control
+   * sequences have no effect.
+   *
+   * @return bool
+   *   TRUE when the output is a TTY.
+   */
+  public function isOutputTty(): bool {
+    return stream_isatty($this->output);
+  }
+
+  /**
    * Clear the screen and write a frame.
    *
    * @param string $frame

@@ -1,0 +1,128 @@
+---
+title: Progress
+description: 'Show a spinner or a determinate progress bar while slow work runs - theme-drawn, and degrading to a plain line off a TTY.'
+keywords: ['progress', 'spinner', 'progress bar', 'primitive', 'feedback']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Progress
+
+Collection sometimes triggers slow work: a discovery scan of a target directory, a computed option set, a value resolved against external state. Left silent, the form looks frozen. The `progress()` primitive wraps that work and shows it running - a spinner when the length is unknown, a determinate bar when it is - and passes the callback's result straight back.
+
+`progress()` is one of the facade's **primitives**: it collects no answer and never runs inside the interactive panel. It is for slow work that happens _around_ the form - before it opens, after it closes, or wrapping a slow `->default` / `->discover`. The active theme draws it, so it matches the panel's look and honours the colour and Unicode switches. Off a TTY, or in headless collection, it degrades to a single plain caption line with no control sequences. The callback receives the primitive and drives it with `advance()`.
+
+```php
+use DrevOps\Tui\Primitive\Progress;
+
+// No total: an indeterminate spinner. Each advance() ticks a frame.
+$total = $tui->progress(null, 'Counting the baskets', function (Progress $progress): int {
+  $count = 0;
+  foreach (shelves() as $shelf) {
+    $count += count_baskets($shelf); // slow, one shelf at a time
+    $progress->advance();            // tick the spinner between shelves
+  }
+
+  return $count;
+});
+
+// A known total: a determinate bar. Each advance() fills one step.
+$tui->progress(count($items), 'Packing the order', function (Progress $progress) use ($items): void {
+  foreach ($items as $item) {
+    pack($item);
+    $progress->advance('packed ' . $item);
+  }
+});
+```
+
+## Spinner
+
+With a `null` total the indicator is an animated spinner: an accent glyph beside the caption, cycled one frame per `advance()`, until the callback returns.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/progress-spinner-light-animated.svg'), dark: useBaseUrl('/progress-spinner-dark-animated.svg')}} alt="Progress spinner" />
+</p>
+
+Runnable in [`playground/15-progress-spinner.php`](https://github.com/drevops/tui/blob/main/playground/15-progress-spinner.php).
+
+In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/progress-spinner-light-static.svg'), dark: useBaseUrl('/progress-spinner-dark-static.svg')}} alt="Spinner: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/progress-spinner-light-static-no-ansi.svg'), dark: useBaseUrl('/progress-spinner-dark-static-no-ansi.svg')}} alt="Spinner: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/progress-spinner-light-static-ascii.svg'), dark: useBaseUrl('/progress-spinner-dark-static-ascii.svg')}} alt="Spinner: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/progress-spinner-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/progress-spinner-dark-static-ascii-no-ansi.svg')}} alt="Spinner: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+## Progress bar
+
+With a known total the indicator is a determinate bar: it fills as it advances, showing a step count and a trailing label. Each `advance()` fills one step and can replace the label.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/progress-bar-light-animated.svg'), dark: useBaseUrl('/progress-bar-dark-animated.svg')}} alt="Progress bar" />
+</p>
+
+Runnable in [`playground/15-progress-bar.php`](https://github.com/drevops/tui/blob/main/playground/15-progress-bar.php).
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/progress-bar-light-static.svg'), dark: useBaseUrl('/progress-bar-dark-static.svg')}} alt="Bar: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/progress-bar-light-static-no-ansi.svg'), dark: useBaseUrl('/progress-bar-dark-static-no-ansi.svg')}} alt="Bar: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/progress-bar-light-static-ascii.svg'), dark: useBaseUrl('/progress-bar-dark-static-ascii.svg')}} alt="Bar: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/progress-bar-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/progress-bar-dark-static-ascii-no-ansi.svg')}} alt="Bar: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+## Theme-drawn
+
+The glyphs and the accent come from the active [theme](/themes), the same way every widget does - the spinner glyph and the bar fill carry the theme's accent, and the theme picks Unicode or ASCII. So `->theme('ember')` spins and fills in ember's orange, `->theme('frost')` in frost's blue, with no extra configuration.
+
+## Degrading off a TTY
+
+Feedback is chrome, not data, so it is drawn on standard error and animates only when standard error is an interactive terminal. Piped, redirected or collected headlessly, `progress()` prints the caption once as a plain line and emits no cursor, colour or carriage-return sequences, so a captured log stays clean:
+
+```bash
+php playground/15-progress-bar.php 2>&1 | cat
+# Packing the order
+```
+
+## Inside the form
+
+`progress()` runs _around_ the form. Three counterparts show feedback _inside_ the interactive panel, drawn by the same theme and resolved the first time a panel opens - so a drill-in fetches only what that panel needs, once.
+
+- **Loading a field's options.** `->options()` takes a callback instead of a fixed list; it resolves when the field's panel opens, the field showing a themed `Loading…` until it returns. Headless collection resolves it up front.
+- **Preloading a panel.** `->preload(closure)` on a panel runs once, before the panel's fields first draw - prep the panel needs, fetched on entry rather than up front, so one fetch can feed several fields.
+- **The [progress widget](/widgets/progress).** A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself. Unlike `progress()`, it lives among the fields and collects no value.
+
+```php
+$form->panel('order', 'New order', function (PanelBuilder $p) use ($pack): void {
+  // Resolved when the panel opens; the field shows "Loading…" until it returns.
+  $p->select('fruit', 'Fruit')->options(fn(): array => load_fruit());
+
+  // A row that runs its work in place when activated.
+  $p->progress('pack', 'Packing the box')->steps(6)->run($pack);
+});
+```
+
+Runnable in [`playground/16-loading-data.php`](https://github.com/drevops/tui/blob/main/playground/16-loading-data.php) and [`playground/02-widgets-progress.php`](https://github.com/drevops/tui/blob/main/playground/02-widgets-progress.php).

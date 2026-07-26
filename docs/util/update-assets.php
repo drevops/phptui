@@ -10,9 +10,10 @@
  * SVGs; it also renders the option-group, password-reveal and discovery static
  * frames. Every per-widget card - both its animations and its static
  * display-mode screenshots - is rendered deterministically by
- * render-widget-svgs.php, and the built-in theme previews by
- * render-theme-svgs.php; a no-argument run spawns both alongside the
- * recording workers, so one command regenerates the whole set. Each dark SVG
+ * render-widget-svgs.php, the built-in theme previews by render-theme-svgs.php,
+ * and the progress primitive by render-progress-svgs.php; a no-argument run
+ * spawns all three alongside the recording workers, so one command regenerates
+ * the whole set. Each dark SVG
  * derives its light twin the moment it lands (svg-light-twin.php), so the
  * pairs can never drift apart.
  * Static frames are anchored to the moment the demo's gate text first appears in
@@ -1184,6 +1185,7 @@ function main(): void {
 
   $workers['widget-svgs'] = sprintf('php %s', escapeshellarg($script_dir . '/render-widget-svgs.php'));
   $workers['theme-svgs'] = sprintf('php %s', escapeshellarg($script_dir . '/render-theme-svgs.php'));
+  $workers['progress-svgs'] = sprintf('php %s', escapeshellarg($script_dir . '/render-progress-svgs.php'));
 
   info('Launching ' . count($workers) . ' workers in parallel...');
   info('');

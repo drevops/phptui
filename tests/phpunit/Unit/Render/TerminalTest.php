@@ -45,6 +45,30 @@ final class TerminalTest extends TestCase {
     $this->assertStringContainsString("\033[2J", $contents);
   }
 
+  public function testFlushDoesNotDisturbTheStream(): void {
+    $stream = fopen('php://memory', 'rw');
+    $this->assertIsResource($stream);
+
+    $terminal = new Terminal($stream);
+    $terminal->write('frame');
+    $terminal->flush();
+
+    rewind($stream);
+    $contents = (string) stream_get_contents($stream);
+    fclose($stream);
+
+    $this->assertSame('frame', $contents);
+  }
+
+  public function testIsOutputTtyIsFalseForNonTtyStream(): void {
+    $stream = fopen('php://memory', 'rw');
+    $this->assertIsResource($stream);
+
+    $this->assertFalse((new Terminal($stream))->isOutputTty());
+
+    fclose($stream);
+  }
+
   public function testRenderWashesTheBackground(): void {
     $terminal = new BufferedTerminal();
     $terminal->setup('44');

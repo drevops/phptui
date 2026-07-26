@@ -15,7 +15,7 @@ alone:
 
 | Segment     | Values                 | Meaning                                            |
 |-------------|------------------------|----------------------------------------------------|
-| `subject`   | e.g. `widget-text`, `theme-midnight` | What is shown (a widget, a panel demo, a theme preview) |
+| `subject`   | e.g. `widget-text`, `theme-midnight`, `progress-bar` | What is shown (a widget, a panel demo, a theme preview, a primitive) |
 | `mode`      | `dark` \| `light`      | Colour scheme                                      |
 | `motion`    | `animated` \| `static` | An animation, or a single frame                    |
 | `-bordered` | present when set       | Inside the rounded border frame (theme previews)   |
@@ -33,7 +33,7 @@ from their borderless twins.
 
 ## What generates what
 
-`update-assets.php` is the single entry point: run without arguments it records every live-terminal job in parallel and spawns the two deterministic sibling generators alongside them, so one command regenerates the whole set.
+`update-assets.php` is the single entry point: run without arguments it records every live-terminal job in parallel and spawns the three deterministic sibling generators alongside them, so one command regenerates the whole set.
 
 - **`update-assets.php`** - the full panel demos, the widget montage and the
   option-group / password-reveal / discovery frames, recorded from a live
@@ -47,6 +47,13 @@ from their borderless twins.
   keystroke harness: `theme-<name>-<dark|light>-static[-bordered].svg` for the
   adaptive themes, and the dark/light pair for `dos` (which draws its own window
   on its own surface, so it has no bordered twin).
+- **`render-progress-svgs.php`** - the progress primitive's spinner and bar
+  assets (`progress-spinner-*`, `progress-bar-*`). The primitive is not a
+  keystroke widget: it is a single line the theme redraws in place, so this
+  drives the real primitive against an in-memory terminal, splits the output
+  into frames on the carriage return, and renders both the animation and a
+  single mid-run static frame in all four display modes, borderless like the
+  widget statics.
 - **`render-social-card.php`** - the one non-SVG asset: `social-card.png`, the
   1200x630 Open Graph image composed from `quickstart-dark-static.svg` and the
   site branding, screenshotted through agent-browser. It runs after the workers

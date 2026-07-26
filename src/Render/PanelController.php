@@ -10,9 +10,11 @@ use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Engine\Engine;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\Panel;
 use DrevOps\Tui\Model\RenderMode;
+use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
@@ -322,6 +324,7 @@ class PanelController {
     $parser = new KeyParser();
     $this->terminal = $terminal;
     $terminal->setup($this->theme->background());
+    $this->resolveLoaders($this->navigator->current());
 
     try {
       if ($this->banner !== '') {
@@ -438,7 +441,7 @@ class PanelController {
     $provenance = [];
 
     foreach ($this->form->fields() as $field) {
-      if ($field->type->isPresentational()) {
+      if ($field->type->isDisplayOnly()) {
         continue;
       }
 
@@ -1098,7 +1101,15 @@ class PanelController {
     $field_count = count($fields);
 
     if ($this->cursor < $field_count) {
-      $this->openEditor($fields[$this->cursor]);
+      $field = $fields[$this->cursor];
+
+      if ($field->type === FieldType::Progress) {
+        $this->runProgress($field);
+
+        return;
+      }
+
+      $this->openEditor($field);
 
       return;
     }
@@ -1130,6 +1141,49 @@ class PanelController {
 
     $this->navigator->enter($panel);
     $this->cursor = 0;
+    $this->resolveLoaders($panel);
+  }
+
+  /**
+   * Resolve a just-entered panel's preload and option loaders, showing loading.
+   *
+   * Paints the panel once - the loading fields read as "Loading…" through the
+   * theme - then runs the panel's preload and each field loader (blocking) and
+   * settles, so drilling into a panel loads its data on entry rather than up
+   * front. The preload runs first, so a field loader can read what it prepared.
+   *
+   * @param \DrevOps\Tui\Model\Panel $panel
+   *   The entered panel.
+   */
+  protected function resolveLoaders(Panel $panel): void {
+    $loading = array_values(array_filter($panel->fields, static fn(Field $field): bool => $field->optionsLoader instanceof \Closure));
+    $preload = $panel->preload instanceof \Closure;
+
+    if ($loading === [] && !$preload) {
+      return;
+    }
+
+    $this->repaint();
+
+    if ($preload) {
+      ($panel->preload)();
+      $panel->preload = NULL;
+    }
+
+    $this->engine->loadOptions($loading);
+    $this->resettle();
+  }
+
+  /**
+   * Repaint the current frame in place, if a terminal is attached.
+   *
+   * The cooperative animation seam: a blocking loader or a progress step calls
+   * this to show its latest state before it hands control back to the loop.
+   */
+  protected function repaint(): void {
+    if ($this->terminal instanceof Terminal) {
+      $this->terminal->render($this->positioned($this->frame($this->rows($this->terminal)), $this->terminal));
+    }
   }
 
   /**
@@ -1146,6 +1200,7 @@ class PanelController {
     $this->navigator->enter($panel);
     $this->cursor = 0;
     $this->offset = 0;
+    $this->resolveLoaders($panel);
   }
 
   /**
@@ -1238,8 +1293,8 @@ class PanelController {
 
     $seen = [];
     foreach ($this->form->fields() as $field) {
-      // A presentational field has no editor, so no key hints to teach.
-      if ($field->type->isPresentational()) {
+      // A display-only field has no editor, so no key hints to teach.
+      if ($field->type->isDisplayOnly()) {
         continue;
       }
       if (in_array($field->type, $seen, TRUE)) {
@@ -1300,6 +1355,41 @@ class PanelController {
   protected function openEditor(Field $field): void {
     $this->editing = $field;
     $this->editor = $this->widgets->create($field, $this->values[$field->id] ?? $field->default, $this->values);
+  }
+
+  /**
+   * Run a progress row's work, animating its indicator as it advances.
+   *
+   * Starts the indicator at zero, then runs the work with a reporter whose
+   * every advance moves the field's live count and repaints the row - so the
+   * bar fills (or the spinner ticks) in place while the blocking work proceeds.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The progress field.
+   */
+  protected function runProgress(Field $field): void {
+    $work = $field->progressWork;
+
+    if (!$work instanceof \Closure) {
+      return;
+    }
+
+    $field->progressCurrent = 0;
+    $field->progressLabel = '';
+    $this->repaint();
+
+    $reporter = new ProgressReporter(function (?string $label) use ($field): void {
+      $next = ($field->progressCurrent ?? 0) + 1;
+      $field->progressCurrent = $field->progressSteps === NULL ? $next : min($next, $field->progressSteps);
+
+      if ($label !== NULL) {
+        $field->progressLabel = $label;
+      }
+
+      $this->repaint();
+    });
+
+    $work($reporter);
   }
 
   /**

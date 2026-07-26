@@ -12,6 +12,7 @@ use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Input\KeyMap;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Model\FormDefinition;
+use DrevOps\Tui\Primitive\Progress;
 use DrevOps\Tui\Resolver\InputResolver;
 use DrevOps\Tui\Schema\AgentHelp;
 use DrevOps\Tui\Schema\SchemaGenerator;
@@ -325,6 +326,45 @@ final class Tui {
   }
 
   /**
+   * Show a progress indicator while a slow callback runs.
+   *
+   * The callback receives the {@see \DrevOps\Tui\Primitive\Progress} and drives
+   * it with `advance()`; its return value is passed straight back. With no
+   * total the indicator is an animated spinner - each advance ticks a frame;
+   * with a total it is a bar that fills as it advances, with a step count and
+   * label. The active theme draws it, so it matches the panel's look and
+   * honours the colour and Unicode switches. On an interactive terminal it
+   * animates and settles when the callback returns; off a TTY it prints the
+   * caption once as a plain line and emits no control sequences.
+   *
+   * @param int|null $total
+   *   The number of steps for a determinate bar, or NULL for an indeterminate
+   *   spinner.
+   * @param string $caption
+   *   The caption shown beside the indicator.
+   * @param callable(\DrevOps\Tui\Primitive\Progress): TReturn $work
+   *   The work to run; it receives the progress primitive and its result is
+   *   returned.
+   * @param \DrevOps\Tui\Render\Terminal|null $terminal
+   *   The terminal to draw on (defaults to a real one on standard error).
+   *
+   * @return TReturn
+   *   The callback's return value.
+   *
+   * @template TReturn
+   */
+  public function progress(?int $total, string $caption, callable $work, ?Terminal $terminal = NULL): mixed {
+    // Restore this facade's language at the operation boundary (see collect()).
+    Translator::setShared($this->translator);
+
+    $terminal ??= self::primitiveTerminal();
+
+    $theme = ThemeManager::create($this->resolveTheme(''), DefaultTheme::DEFAULT_WIDTH, $this->primitiveThemeOptions());
+
+    return (new Progress($terminal, $theme, $terminal->isOutputTty(), $total, $caption))->run($work);
+  }
+
+  /**
    * Collect answers interactively through the panel TUI.
    *
    * @param string $theme
@@ -559,11 +599,11 @@ final class Tui {
     $options = $this->themeOptions;
 
     if (!isset($options['color'])) {
-      $options['color'] = $this->color ?? Terminal::detectColor();
+      $options['color'] = $this->resolvedColor();
     }
 
     if (!isset($options['unicode'])) {
-      $options['unicode'] = $this->unicode ?? Terminal::detectUnicode();
+      $options['unicode'] = $this->resolvedUnicode();
     }
 
     if (!isset($options['mode'])) {
@@ -573,6 +613,67 @@ final class Tui {
     if (!isset($options['fullscreen']) && $this->fullscreen !== NULL) {
       $options['fullscreen'] = $this->fullscreen;
     }
+
+    return $options;
+  }
+
+  /**
+   * The resolved colour switch: the forced value, else auto-detection.
+   *
+   * @return bool
+   *   Whether colour is on.
+   */
+  protected function resolvedColor(): bool {
+    return $this->color ?? Terminal::detectColor();
+  }
+
+  /**
+   * The resolved Unicode switch: the forced value, else auto-detection.
+   *
+   * @return bool
+   *   Whether Unicode glyphs are on.
+   */
+  protected function resolvedUnicode(): bool {
+    return $this->unicode ?? Terminal::detectUnicode();
+  }
+
+  /**
+   * A real terminal that draws a primitive's output on standard error.
+   *
+   * A primitive is chrome, not data, so it stays off standard output where a
+   * consumer's own results are written.
+   *
+   * @return \DrevOps\Tui\Render\Terminal
+   *   The terminal.
+   */
+  protected static function primitiveTerminal(): Terminal {
+    // @codeCoverageIgnoreStart
+    return new Terminal(defined('STDERR') ? STDERR : NULL);
+    // @codeCoverageIgnoreEnd
+  }
+
+  /**
+   * The theme display options for a primitive, filling what the consumer omits.
+   *
+   * Mirrors resolveThemeOptions() for colour and Unicode, but a primitive draws
+   * a single line rather than a framed panel, so it skips the background query
+   * and leaves the dark/light mode at dark unless the consumer set one.
+   *
+   * @return array<string,mixed>
+   *   The resolved options.
+   */
+  protected function primitiveThemeOptions(): array {
+    $options = $this->themeOptions;
+
+    if (!isset($options['color'])) {
+      $options['color'] = $this->resolvedColor();
+    }
+
+    if (!isset($options['unicode'])) {
+      $options['unicode'] = $this->resolvedUnicode();
+    }
+
+    $options['mode'] ??= Mode::Dark;
 
     return $options;
   }

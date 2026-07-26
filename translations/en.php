@@ -39,6 +39,7 @@ return [
   'Pause' => 'Pause',
   'Press @key to continue' => 'Press @key to continue',
   'Press any key to continue...' => 'Press any key to continue...',
+  'Progress' => 'Progress',
   'Question "@id" is required.' => 'Question "@id" is required.',
   'Question "@id" must be @constraint.' => 'Question "@id" must be @constraint.',
   'Question "@id": @error.' => 'Question "@id": @error.',

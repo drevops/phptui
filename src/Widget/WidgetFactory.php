@@ -75,6 +75,9 @@ class WidgetFactory {
       // A note is presentational: the theme renders it and the cursor skips it,
       // so it is never edited and needs no widget.
       FieldType::Note => throw new \LogicException('Note fields are presentational and have no editor widget.'),
+      // A progress row runs its work on activation and draws itself in its
+      // panel row; it has no editor to open.
+      FieldType::Progress => throw new \LogicException('A progress row is not edited.'),
     };
 
     // The field declaration always wins over the registry's convention-resolved

@@ -85,6 +85,26 @@ final class TerminalControl {
   }
 
   /**
+   * Erase the whole current line, leaving the cursor where it is.
+   *
+   * @return string
+   *   The control sequence.
+   */
+  public static function eraseLine(): string {
+    return Ansi::ESC . '[2K';
+  }
+
+  /**
+   * Erase from the cursor to the end of the current line.
+   *
+   * @return string
+   *   The control sequence.
+   */
+  public static function eraseToLineEnd(): string {
+    return Ansi::ESC . '[K';
+  }
+
+  /**
    * Query the terminal's background colour (OSC 11).
    *
    * @return string

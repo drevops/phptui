@@ -230,6 +230,50 @@ interface ThemeInterface {
   public function renderInput(string $before, string $after, string $ghost = ''): string;
 
   /**
+   * Render an indeterminate spinner: an accent glyph before the caption.
+   *
+   * @param int $frame
+   *   The animation frame counter; the glyph cycles through the frame set.
+   * @param string $caption
+   *   The caption shown beside the spinner.
+   *
+   * @return string
+   *   The composed spinner line.
+   */
+  public function renderSpinner(int $frame, string $caption): string;
+
+  /**
+   * Render a determinate progress bar: a filling bar, a step count and a label.
+   *
+   * @param int $current
+   *   The number of completed steps.
+   * @param int $total
+   *   The total number of steps; a zero total renders a full bar.
+   * @param string $caption
+   *   The caption shown before the bar.
+   * @param string $label
+   *   The trailing label, or an empty string for none.
+   *
+   * @return string
+   *   The composed bar line.
+   */
+  public function renderProgressBar(int $current, int $total, string $caption, string $label): string;
+
+  /**
+   * Render a static loading indicator: a caption and a themed ellipsis.
+   *
+   * The resting state of a progressable load - shown while a callable resolves
+   * but before (or without) any advance.
+   *
+   * @param string $caption
+   *   The caption shown before the ellipsis.
+   *
+   * @return string
+   *   The composed loading line.
+   */
+  public function renderLoading(string $caption): string;
+
+  /**
    * The masked-character symbol for secret values.
    */
   public function mask(): string;

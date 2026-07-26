@@ -20,7 +20,7 @@ const sidebars = {
       type: 'category',
       label: 'Forms',
       collapsible: false,
-      items: ['panels', 'configuration', 'field-behaviour', 'testing'],
+      items: ['panels', 'configuration', 'field-behaviour', 'progress', 'testing'],
     },
     {
       type: 'category',
@@ -36,6 +36,7 @@ const sidebars = {
         'widgets/option-groups',
         'widgets/password',
         'widgets/pause',
+        'widgets/progress',
         'widgets/reorder',
         'widgets/search',
         'widgets/select',

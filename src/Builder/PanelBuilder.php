@@ -49,6 +49,11 @@ final class PanelBuilder {
   protected array $layout = [];
 
   /**
+   * A hook run once before the panel first opens, or NULL for none.
+   */
+  protected ?\Closure $preload = NULL;
+
+  /**
    * Construct a panel builder.
    *
    * @param string $id
@@ -316,6 +321,25 @@ final class PanelBuilder {
   }
 
   /**
+   * Add a progress row that runs work when activated, showing an indicator.
+   *
+   * Chain `->steps(int)` for a determinate bar (omit it for a spinner) and
+   * `->run(callable)` for the work; the callback drives the indicator through
+   * the {@see \DrevOps\Tui\Primitive\ProgressReporter} it receives.
+   *
+   * @param string $id
+   *   The field id.
+   * @param string $label
+   *   The caption shown beside the indicator (defaults to the id).
+   *
+   * @return \DrevOps\Tui\Builder\FieldBuilder
+   *   The field builder.
+   */
+  public function progress(string $id, string $label = ''): FieldBuilder {
+    return $this->field($id, $label, FieldType::Progress);
+  }
+
+  /**
    * Add a nested sub-panel.
    *
    * @param string $id
@@ -359,6 +383,25 @@ final class PanelBuilder {
   }
 
   /**
+   * Run a hook once before the panel first opens.
+   *
+   * The panel reads as loading while the hook runs, so a drill-in that has to
+   * prepare shared data - one fetch feeding several of the panel's fields -
+   * shows feedback instead of freezing. Runs once, then never again.
+   *
+   * @param \Closure $work
+   *   An `fn(): void` doing the preparation.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function preload(\Closure $work): self {
+    $this->preload = $work;
+
+    return $this;
+  }
+
+  /**
    * Build the immutable Panel.
    *
    * @return \DrevOps\Tui\Model\Panel
@@ -378,6 +421,7 @@ final class PanelBuilder {
       array_map(static fn(PanelBuilder $panel): Panel => $panel->build(), $this->panels),
       $this->modal,
       $this->layout,
+      $this->preload,
     );
   }
 

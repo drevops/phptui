@@ -27,6 +27,12 @@ of its own. The public surface is:
 A consumer declares a form with `Form::create(...)->panel(...)` and drives it
 through the `Tui` facade.
 
+The facade also exposes **primitives** - standalone, theme-drawn interactive
+elements that collect no answer and never run inside the panel. The first is
+`Tui::progress()` (`DrevOps\Tui\Primitive\Progress`), which wraps a slow
+callback with a spinner (unknown length) or a determinate bar (known total)
+for work that runs around the form.
+
 
 ### Namespace Structure
 
@@ -166,21 +172,31 @@ Key workflows:
 Architecture diagrams and a narrative walkthrough live in `docs/architecture/`.
 After a structural change, update them with the `render-tui-diagrams` skill.
 
-Every widget must ship its full SVG set - the docs pages embed them and they
-are not optional. When you add a widget, do all of the following before opening
-a PR:
+### Terminal SVG assets
 
-- Add a `note`-style entry (form, keystrokes, rows) to `widgetSpecs()` in
-  `docs/util/render-widget-svgs.php`, then generate its 16 SVG variants:
-  `php docs/util/render-widget-svgs.php <name>`.
-- Regenerate the all-widgets montage so the gallery includes the new widget:
-  `php docs/util/update-assets.php --record widgets` (and the `-ascii`,
-  `-no-ansi`, `-ascii-no-ansi` variants).
+Every widget and every primitive carries a full set of terminal SVGs under
+`docs/assets/` - light and dark, animated and static, in all four display
+modes (Unicode/ASCII, colour on/off) - embedded in the README and the docs
+pages. They render deterministically (no pty) from the scripts in `docs/util/`:
+`render-widget-svgs.php` for widgets, `render-progress-svgs.php` for the
+progress primitive, and `render-theme-svgs.php` for theme previews, all run by
+`update-assets.php`. The naming convention lives in `docs/assets/README.md`.
+
+Whenever you add a widget or a primitive, do all of the following before
+opening a PR:
+
+- Add a spec (form, keystrokes, rows) to `widgetSpecs()` in
+  `render-widget-svgs.php` (or `progressSpecs()` in `render-progress-svgs.php`
+  for a primitive), then generate its 16 SVG variants with the matching
+  renderer: `php docs/util/render-widget-svgs.php <name>` for a widget, or
+  `php docs/util/render-progress-svgs.php <name>` for a primitive.
+- Regenerate the all-widgets montage so the gallery includes it:
+  `php docs/util/update-assets.php --record widgets`.
 - Add a `docs/content/widgets/<name>.mdx` page (mirror `pause.mdx`) and a
-  `docs/sidebars.js` entry, then run `php docs/util/audit-svgs.php` to verify.
-
-Visually confirm at least the `-dark-static` render (open the SVG in a browser
-and screenshot it) - a render that completes is not proof the card fits.
+  `docs/sidebars.js` entry, then run `php docs/util/audit-svgs.php` - it must
+  stay green, and every dark asset needs its light twin.
+- Visually confirm at least the `-dark-static` render (open the SVG in a
+  browser and screenshot it) - a render that completes is not proof it fits.
 
 ## Updating from the template
 

@@ -86,6 +86,21 @@ class DefaultTheme implements ThemeInterface {
   protected const int INDICATOR_LINES = 2;
 
   /**
+   * The Unicode spinner animation frames, one glyph per tick.
+   */
+  protected const array SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+
+  /**
+   * The ASCII spinner animation frames used when Unicode is off.
+   */
+  protected const array SPINNER_ASCII = ['|', '/', '-', '\\'];
+
+  /**
+   * The determinate progress bar's width in cells.
+   */
+  protected const int PROGRESS_WIDTH = 24;
+
+  /**
    * Whether colour (ANSI) is enabled, resolved from the "color" option.
    */
   protected bool $color;
@@ -795,6 +810,71 @@ class DefaultTheme implements ThemeInterface {
    */
   public function mask(): string {
     return $this->unicode ? '•' : '*';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderSpinner(int $frame, string $caption): string {
+    // The glyph carries the theme's accent through highlight(), so every theme
+    // spins in its own palette with no per-theme override. This method is
+    // public, so a direct call may pass a negative frame; fold it into range.
+    $frames = $this->unicode ? self::SPINNER_FRAMES : self::SPINNER_ASCII;
+    $glyph = $this->highlight($frames[abs($frame) % count($frames)]);
+    $caption = $this->oneLine($caption);
+
+    return $caption === '' ? $glyph : $glyph . ' ' . $caption;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderProgressBar(int $current, int $total, string $caption, string $label): string {
+    // The filled run carries the theme's accent through highlight(); the empty
+    // track and the count stay plain, so the bar reads with colour off and in
+    // ASCII alike.
+    [$fill, $track] = $this->unicode ? ['█', '░'] : ['#', '-'];
+    $caption = $this->oneLine($caption);
+    $label = $this->oneLine($label);
+
+    // Clamp to the bar width: this method is public, so a direct call with
+    // current past total must not hand str_repeat() a negative track length.
+    $ratio = $total > 0 ? $current / $total : 1.0;
+    $filled = max(0, min(self::PROGRESS_WIDTH, (int) round($ratio * self::PROGRESS_WIDTH)));
+
+    $bar = ($filled > 0 ? $this->highlight(str_repeat($fill, $filled)) : '') . str_repeat($track, self::PROGRESS_WIDTH - $filled);
+    $line = ($caption === '' ? '' : $caption . ' ') . '[' . $bar . '] ' . $current . '/' . $total;
+
+    return $label === '' ? $line : $line . ' ' . $label;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderLoading(string $caption): string {
+    // The ellipsis carries the theme's accent through highlight(), matching the
+    // spinner and bar; the caption stays plain.
+    $dots = $this->highlight($this->unicode ? '…' : '...');
+    $caption = $this->oneLine($caption);
+
+    return $caption === '' ? $dots : $caption . ' ' . $dots;
+  }
+
+  /**
+   * Fold a caption or label to a single physical line for the indicators.
+   *
+   * The spinner and bar redraw in place with carriage returns, so a CR or LF
+   * would reposition the cursor or leave a stale row behind; newlines collapse
+   * to a space.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The text with its line breaks folded to spaces.
+   */
+  protected function oneLine(string $text): string {
+    return str_replace(["\r\n", "\r", "\n"], ' ', $text);
   }
 
   /**
@@ -2137,11 +2217,41 @@ class DefaultTheme implements ThemeInterface {
    *   The rendered value.
    */
   protected function renderFieldValue(Field $field, mixed $value): string {
+    // A field whose options have not yet loaded reads as loading, not empty.
+    if ($field->optionsLoader instanceof \Closure) {
+      return $this->renderLoading('');
+    }
+
+    if ($field->type === FieldType::Progress) {
+      return $this->renderProgress($field);
+    }
+
     if ($field->type === FieldType::Password) {
       return is_string($value) && $value !== '' ? ValueFormatter::mask($this->mask()) : '';
     }
 
     return ValueFormatter::format($value);
+  }
+
+  /**
+   * Render a progress row's indicator from its live state.
+   *
+   * A determinate row draws a bar that reads empty before the work runs and
+   * fills as it advances; an indeterminate row draws a spinner that sits on its
+   * first frame until the work ticks it.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The progress field.
+   *
+   * @return string
+   *   The rendered indicator.
+   */
+  protected function renderProgress(Field $field): string {
+    if ($field->progressSteps === NULL) {
+      return $this->renderSpinner($field->progressCurrent ?? 0, $field->progressLabel);
+    }
+
+    return $this->renderProgressBar($field->progressCurrent ?? 0, $field->progressSteps, '', $field->progressLabel);
   }
 
 }

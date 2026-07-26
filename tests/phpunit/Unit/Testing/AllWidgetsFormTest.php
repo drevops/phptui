@@ -91,7 +91,7 @@ final class AllWidgetsFormTest extends TestCase {
 
     // Every widget's label was rendered somewhere in the session.
     $display = $tester->display();
-    foreach (['Note', 'Text', 'Number', 'Calendar', 'Textarea', 'Password', 'Select', 'MultiSelect', 'Suggest', 'Search', 'MultiSearch', 'Reorder', 'Confirm', 'Toggle', 'FilePicker', 'MultiFilePicker', 'Pause'] as $label) {
+    foreach (['Note', 'Text', 'Number', 'Calendar', 'Textarea', 'Password', 'Select', 'MultiSelect', 'Suggest', 'Search', 'MultiSearch', 'Reorder', 'Confirm', 'Toggle', 'FilePicker', 'MultiFilePicker', 'Pause', 'Progress'] as $label) {
       $this->assertStringContainsString($label, $display, sprintf('The "%s" label was not rendered.', $label));
     }
   }
@@ -146,8 +146,10 @@ final class AllWidgetsFormTest extends TestCase {
       $enter, $enter, $down,
       // Multi file picker: open, toggle the highlighted entry, accept.
       $enter, $space, $enter, $down,
-      // Pause: open and acknowledge.
-      $enter, $enter,
+      // Pause: open and acknowledge, then move to the progress row.
+      $enter, $enter, $down,
+      // Progress: activate to run its work (it collects no value).
+      $enter,
       // Back to the root, then activate Submit.
       $escape, $down, $enter,
     ];

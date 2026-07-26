@@ -9,6 +9,7 @@ use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Condition\ConditionInterface;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Derive\Deriver;
 use DrevOps\Tui\Discovery\DiscoverInterface;
 use DrevOps\Tui\Handler\Context;
@@ -66,6 +67,10 @@ class Engine {
   public function collect(array $inputs, Context $context): Answers {
     $fields = $this->form->fields();
 
+    // Headless collection has no panel to resolve option loaders lazily, so
+    // resolve them up front - the values need their options to validate.
+    $this->loadOptions($fields);
+
     [$values, $sources] = $this->resolveAll($fields, $inputs, $context);
     $values = $this->transformInputs($fields, $values, $sources);
     [$rules, $pinned] = $this->deriveRules($fields, $sources);
@@ -76,14 +81,38 @@ class Engine {
   }
 
   /**
+   * Resolve each field's option loader to its options, in place.
+   *
+   * A loader runs once; the resolved options replace it, so a later pass and
+   * the interactive panel both see settled options.
+   *
+   * @param \DrevOps\Tui\Model\Field[] $fields
+   *   The fields.
+   */
+  public function loadOptions(array $fields): void {
+    foreach ($fields as $field) {
+      if (!$field->optionsLoader instanceof \Closure) {
+        continue;
+      }
+
+      $loaded = ($field->optionsLoader)();
+      // A loader is documented to return a value => label map; coerce
+      // defensively so a mistyped one degrades to no options, not an error.
+      $field->options = Option::list(array_filter(is_array($loaded) ? $loaded : [], is_string(...)));
+      $field->optionsLoader = NULL;
+    }
+  }
+
+  /**
    * Resolve and settle every field's value, provenance and activation.
    *
    * The full-map twin of collect(): the same resolution and settling over the
    * whole form, but keeping every value-carrying field - an inactive one
    * retains its settled value and provenance, so a later activation change can
    * surface it without re-resolving - and skipping the input guard, which
-   * belongs to the collection boundary. A presentational field (a note) carries
-   * no answer, so it appears only in the active map, never the values.
+   * belongs to the collection boundary. A display-only field (a note or a
+   * progress row) carries no answer, so it appears only in the active map,
+   * never the values.
    *
    * @param array<string,mixed> $inputs
    *   Pre-supplied values keyed by field id.
@@ -93,7 +122,7 @@ class Engine {
    * @return array{array<string,mixed>,array<string,\DrevOps\Tui\Answers\Provenance>,array<string,bool>}
    *   The settled values, the provenance and the active map, keyed by field id;
    *   the values and provenance cover every value-carrying field, active or
-   *   not, while the active map also carries the presentational fields.
+   *   not, while the active map also carries the display-only fields.
    */
   public function resolveState(array $inputs, Context $context): array {
     $fields = $this->form->fields();
@@ -148,10 +177,10 @@ class Engine {
     $sources = [];
 
     foreach ($fields as $field) {
-      // A presentational field carries no answer, so it never enters the value
+      // A display-only field carries no answer, so it never enters the value
       // and source maps: it is neither resolved nor allowed to influence a
       // later field's context.
-      if ($field->type->isPresentational()) {
+      if ($field->type->isDisplayOnly()) {
         continue;
       }
 
@@ -200,9 +229,9 @@ class Engine {
     $rules = [];
 
     foreach ($fields as $field) {
-      // A presentational field is absent from the value map, so it never
+      // A display-only field is absent from the value map, so it never
       // carries a derive rule that would resolve against a missing source.
-      if ($field->type->isPresentational()) {
+      if ($field->type->isDisplayOnly()) {
         continue;
       }
       if ($field->derive !== NULL) {
@@ -234,7 +263,7 @@ class Engine {
    */
   protected function transformInputs(array $fields, array $values, array $sources): array {
     foreach ($fields as $field) {
-      if ($field->type->isPresentational()) {
+      if ($field->type->isDisplayOnly()) {
         continue;
       }
       if ($sources[$field->id] === Source::Input) {
@@ -266,7 +295,7 @@ class Engine {
    */
   protected function guardInputs(array $fields, array $values, array $sources, array $active): void {
     foreach ($fields as $field) {
-      if ($field->type->isPresentational()) {
+      if ($field->type->isDisplayOnly()) {
         continue;
       }
       if (!($active[$field->id] ?? FALSE)) {
@@ -472,7 +501,7 @@ class Engine {
   protected function provenanceFor(array $fields, array $sources, array $active): array {
     $provenance = [];
     foreach ($fields as $field) {
-      if ($field->type->isPresentational()) {
+      if ($field->type->isDisplayOnly()) {
         continue;
       }
       if (!($active[$field->id] ?? FALSE)) {
@@ -508,9 +537,10 @@ class Engine {
   protected function activeAnswers(array $fields, array $values, array $active): array {
     $answers = [];
     foreach ($fields as $field) {
-      if ($field->type->isPresentational()) {
+      if ($field->type->isDisplayOnly()) {
         continue;
       }
+
       if ($active[$field->id] ?? FALSE) {
         $answers[$field->id] = $values[$field->id] ?? NULL;
       }
@@ -539,13 +569,13 @@ class Engine {
         continue;
       }
 
-      // A presentational field carries no value, so a fix-up can neither write
+      // A display-only field carries no value, so a fix-up can neither write
       // to one nor copy from one - reading a note's absent value would write
       // NULL over the target's settled value. A mistargeted rule is ignored.
-      if ($this->form->field($fixup->set)?->type->isPresentational()) {
+      if ($this->form->field($fixup->set)?->type->isDisplayOnly()) {
         continue;
       }
-      if ($this->form->field($fixup->from)?->type->isPresentational()) {
+      if ($this->form->field($fixup->from)?->type->isDisplayOnly()) {
         continue;
       }
 

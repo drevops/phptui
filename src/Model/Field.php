@@ -12,9 +12,15 @@ use DrevOps\Tui\Translation\Translator;
 /**
  * A single question in the configuration model.
  *
+ * The definition is immutable except for two runtime concerns: a field may
+ * declare an options loader that is resolved once and cached back
+ * (`$options`, `$optionsLoader`), and a progress row tracks its live indicator
+ * (`$progressCurrent`, `$progressLabel`) as its work advances. Those four
+ * properties are the only mutable state.
+ *
  * @package DrevOps\Tui\Model
  */
-final readonly class Field {
+final class Field {
 
   /**
    * The option rows for choice-based fields, in display order.
@@ -102,35 +108,56 @@ final readonly class Field {
    * @param \DrevOps\Tui\Model\SelectionBounds|null $selectionBounds
    *   Multiple only: optional minimum/maximum selection counts; NULL for no
    *   count limit.
+   * @param \Closure|null $optionsLoader
+   *   An `fn(): array<string,string>` loading the options on demand, or NULL
+   *   for static options. Resolved lazily when the panel opens (headless
+   *   collection resolves it up front); until then the field reads as loading.
+   * @param int|null $progressSteps
+   *   Progress only: the number of steps for a determinate bar, or NULL for an
+   *   indeterminate spinner.
+   * @param \Closure|null $progressWork
+   *   Progress only: an `fn(\DrevOps\Tui\Primitive\ProgressReporter): void` run
+   *   when the row is activated, driving the indicator through `advance()`.
+   * @param int|null $progressCurrent
+   *   Progress only: the live step count while the work runs - the bar fill, or
+   *   the spinner tick, or NULL before it runs; mutated as the work advances.
+   * @param string $progressLabel
+   *   Progress only: the trailing label the work sets through `advance()`,
+   *   shown after the bar or spinner glyph. Mutated as the work advances.
    */
   public function __construct(
-    public string $id,
-    public string $label,
-    public string $description,
-    public FieldType $type,
-    public mixed $default,
+    public readonly string $id,
+    public readonly string $label,
+    public readonly string $description,
+    public readonly FieldType $type,
+    public readonly mixed $default,
     array $options = [],
-    public bool $required = FALSE,
-    public ?ConditionInterface $when = NULL,
-    public ?Derive $derive = NULL,
-    public DiscoverInterface|\Closure|null $discover = NULL,
-    public ?\Closure $validate = NULL,
-    public ?\Closure $transform = NULL,
-    public bool $revealable = FALSE,
-    public bool $confirm = FALSE,
-    public bool $externalEditor = FALSE,
-    public ?NumberBounds $bounds = NULL,
-    public FilePickerMode $pickerMode = FilePickerMode::Any,
-    public string $pickerStart = '',
-    public array $pickerExtensions = [],
-    public bool $pickerShowHidden = FALSE,
-    public ?int $pageSize = NULL,
-    public array|\Closure $completion = [],
-    public ?DateBounds $dateBounds = NULL,
-    public RenderMode $render = RenderMode::Inline,
-    public bool $multiple = FALSE,
-    public bool $bordered = FALSE,
-    public ?SelectionBounds $selectionBounds = NULL,
+    public readonly bool $required = FALSE,
+    public readonly ?ConditionInterface $when = NULL,
+    public readonly ?Derive $derive = NULL,
+    public readonly DiscoverInterface|\Closure|null $discover = NULL,
+    public readonly ?\Closure $validate = NULL,
+    public readonly ?\Closure $transform = NULL,
+    public readonly bool $revealable = FALSE,
+    public readonly bool $confirm = FALSE,
+    public readonly bool $externalEditor = FALSE,
+    public readonly ?NumberBounds $bounds = NULL,
+    public readonly FilePickerMode $pickerMode = FilePickerMode::Any,
+    public readonly string $pickerStart = '',
+    public readonly array $pickerExtensions = [],
+    public readonly bool $pickerShowHidden = FALSE,
+    public readonly ?int $pageSize = NULL,
+    public readonly array|\Closure $completion = [],
+    public readonly ?DateBounds $dateBounds = NULL,
+    public readonly RenderMode $render = RenderMode::Inline,
+    public readonly bool $multiple = FALSE,
+    public readonly bool $bordered = FALSE,
+    public readonly ?SelectionBounds $selectionBounds = NULL,
+    public ?\Closure $optionsLoader = NULL,
+    public readonly ?int $progressSteps = NULL,
+    public readonly ?\Closure $progressWork = NULL,
+    public ?int $progressCurrent = NULL,
+    public string $progressLabel = '',
   ) {
     if ($this->multiple && !$this->type->supportsMultiple()) {
       throw new FormException(sprintf('Field "%s" of type "%s" does not collect several values; only select, search and file picker fields may be multiple.', $this->id, $this->type->value));

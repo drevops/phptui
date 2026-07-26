@@ -49,6 +49,21 @@ final class FieldBuilder {
   protected array $options = [];
 
   /**
+   * A loader for the options, or NULL for static options.
+   */
+  protected ?\Closure $optionsLoader = NULL;
+
+  /**
+   * The step count for a progress bar, or NULL for an indeterminate spinner.
+   */
+  protected ?int $progressSteps = NULL;
+
+  /**
+   * The work a progress row runs when activated, or NULL for none.
+   */
+  protected ?\Closure $progressWork = NULL;
+
+  /**
    * Whether a value is required.
    */
   protected bool $required = FALSE;
@@ -735,18 +750,69 @@ final class FieldBuilder {
   }
 
   /**
-   * Add several options from a value => label map.
+   * Add several options from a value => label map, or a loader for them.
    *
-   * @param array<array-key,string> $options
-   *   The options, keyed by value with a label.
+   * @param array<array-key,string>|\Closure $options
+   *   The options keyed by value with a label, or an
+   *   `fn(): array<string,string>` that loads them on demand. A loader resolves
+   *   lazily when the field's panel opens - showing a themed "Loading…" beside
+   *   the field until it returns. A loader suits a field whose default is empty
+   *   or explicit (select, search, suggest); a toggle or reorder derives its
+   *   default from the options, so with a loader it should declare an explicit
+   *   `->default()`.
    *
    * @return $this
    *   The builder.
    */
-  public function options(array $options): self {
+  public function options(array|\Closure $options): self {
+    if ($options instanceof \Closure) {
+      $this->optionsLoader = $options;
+
+      return $this;
+    }
+
     foreach ($options as $value => $label) {
       $this->option((string) $value, $label);
     }
+
+    return $this;
+  }
+
+  /**
+   * Set the step count of a progress row, making its indicator a bar.
+   *
+   * Without a step count a progress row shows an indeterminate spinner; with
+   * one it shows a bar that fills as the work advances through the steps.
+   *
+   * @param int $steps
+   *   The number of steps.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function steps(int $steps): self {
+    if ($steps < 1) {
+      throw new FormException(sprintf('Field "%s" declares %d progress steps; a determinate bar needs at least one step (omit steps() for a spinner).', $this->id, $steps));
+    }
+
+    $this->progressSteps = $steps;
+
+    return $this;
+  }
+
+  /**
+   * Set the work a progress row runs when activated.
+   *
+   * @param \Closure $work
+   *   An `fn(\DrevOps\Tui\Primitive\ProgressReporter): void` that does the
+   *   work, calling `advance(?string $label)` on the reporter once per step to
+   *   move the bar and optionally set the trailing label.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function run(\Closure $work): self {
+    $this->progressWork = $work;
 
     return $this;
   }
@@ -786,6 +852,9 @@ final class FieldBuilder {
       $this->multiple,
       $this->bordered,
       $this->buildSelectionBounds(),
+      $this->optionsLoader,
+      $this->progressSteps,
+      $this->progressWork,
     );
   }
 

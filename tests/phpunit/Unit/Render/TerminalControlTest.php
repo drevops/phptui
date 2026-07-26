@@ -24,6 +24,8 @@ final class TerminalControlTest extends TestCase {
     $this->assertSame("\033[?1000h\033[?1006h", TerminalControl::mouseOn());
     $this->assertSame("\033[?1000l\033[?1006l", TerminalControl::mouseOff());
     $this->assertSame("\033[2J\033[H", TerminalControl::clear());
+    $this->assertSame("\033[2K", TerminalControl::eraseLine());
+    $this->assertSame("\033[K", TerminalControl::eraseToLineEnd());
     $this->assertSame("\033]11;?\007", TerminalControl::queryBackground());
   }
 

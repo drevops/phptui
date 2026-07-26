@@ -66,6 +66,7 @@ Every feature has a reference page and a runnable, self-contained example in [`p
 | 🔀 Conditional fields | `->when()` conditions (eq/ne/in/contains, composable with all/any/not) drive visibility; form-level fix-ups reconcile answers | [configuration](https://phptui.dev/configuration#conditional-fields) | [`05-form-logic-*`](playground) |
 | ⚙️ Declared behavior | Dynamic defaults, validation and transforms as field closures, or as per-field handler classes resolved by naming convention | [field behavior](https://phptui.dev/field-behaviour) | [`06-field-behaviour-*`](playground) |
 | 🔍 Discovery | Update mode detects defaults from an existing directory: dotenv keys, JSON dot-paths, path checks, directory scans | [discovery](https://phptui.dev/field-behaviour#discovery) | [`07-discovery`](playground/07-discovery.php) |
+| ⏳ Progress | A `progress()` primitive wraps slow work: a spinner when the length is unknown, a determinate bar when known - theme-drawn, animating on a TTY, degrading to a plain line when piped or headless | [progress](https://phptui.dev/progress) | [`15-progress-*`](playground) |
 | 📦 Self-describing answers | Answers carry provenance; `toSummary()` renders a badged, panel-grouped report and `toJson()` the machine result; `schema()`, `validate()` and `agentHelp()` describe the form itself | [self-describing answers](https://phptui.dev/headless-collection#self-describing-answers) | [`08-headless-*`](playground) |
 | 🎨 Themes | Six built-ins selected by name; a custom theme is a `DefaultTheme` subclass overriding palette atoms and render methods | [themes](https://phptui.dev/themes) | [`09-themes-*`](playground) |
 | ⌨️ Key bindings | Presets (`default`, `vim`, or a class) plus per-binding overrides scoped to navigation or a widget type; conflicts throw at setup | [key bindings](https://phptui.dev/key-bindings) | [`10-key-bindings-*`](playground) |
@@ -126,6 +127,7 @@ The facade's surface:
 | `run($prompts, $version, $directory, $interactive)` | Collect answers; interactive on a TTY, headless otherwise (or forced via `$interactive`) |
 | `collect($prompts, $directory, $update, $version)` | Headless collection from JSON + environment; `$update` enables discovery |
 | `interact()` | The interactive panel TUI, explicitly |
+| `progress($total, $caption, $work)` | Show slow work running around the form: a spinner with no total, a determinate bar with one - a theme-drawn primitive |
 | `schema()` / `validate($answers)` / `agentHelp()` | Describe the questions as structured metadata, validate an answer payload, emit the agent-facing answer schema |
 | `theme($theme, $options)` / `keys($preset, $overrides)` | Select the theme and key bindings |
 | `color($bool)` / `unicode($bool)` / `fullscreen($bool)` / `footer($bool)` / `clearOnExit($bool)` / `translator($t)` | Display and runtime switches |
@@ -161,6 +163,10 @@ There's a widget for most things you'd want to ask: text entry, numbers and date
 <tr>
 <td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-pause-dark-animated.svg"><img src="docs/assets/widget-pause-light-animated.svg" width="100%" alt="Pause widget"></picture></td>
 <td><strong><a href="https://phptui.dev/widgets/pause">Pause</a></strong><br>An acknowledgment gate; <kbd>Enter</kbd> or <kbd>Space</kbd> accepts. Unattended runs auto-acknowledge it, so it never blocks automation.</td>
+</tr>
+<tr>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-progress-dark-animated.svg"><img src="docs/assets/widget-progress-light-animated.svg" width="100%" alt="Progress widget"></picture></td>
+<td><strong><a href="https://phptui.dev/widgets/progress">Progress</a></strong><br>A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself; it collects no value.</td>
 </tr>
 <tr>
 <td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-reorder-dark-animated.svg"><img src="docs/assets/widget-reorder-light-animated.svg" width="100%" alt="Reorder widget"></picture></td>

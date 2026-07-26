@@ -7,9 +7,13 @@ namespace DrevOps\Tui\Model;
 /**
  * A panel: an ordered group of fields and nested sub-panels.
  *
+ * The definition is immutable except for its preload hook, which is resolved
+ * once, on first open, and then cleared - so `$preload` is the only mutable
+ * state.
+ *
  * @package DrevOps\Tui\Model
  */
-final readonly class Panel {
+final class Panel {
 
   /**
    * Construct a panel.
@@ -31,15 +35,20 @@ final readonly class Panel {
    *   The sub-panel grid: one entry per visual row naming how many sub-panels
    *   sit side by side in it, consumed in declaration order. Empty renders the
    *   sub-panels as today's row list.
+   * @param \Closure|null $preload
+   *   An `fn(): void` run once before the panel first opens, or NULL for none.
+   *   Resolved in the same pass as the fields' option loaders - the panel reads
+   *   as loading until it returns - then cleared so it runs only once.
    */
   public function __construct(
-    public string $id,
-    public string $title,
-    public string $description,
-    public array $fields = [],
-    public array $panels = [],
-    public ?Modal $modal = NULL,
-    public array $layout = [],
+    public readonly string $id,
+    public readonly string $title,
+    public readonly string $description,
+    public readonly array $fields = [],
+    public readonly array $panels = [],
+    public readonly ?Modal $modal = NULL,
+    public readonly array $layout = [],
+    public ?\Closure $preload = NULL,
   ) {
   }
 

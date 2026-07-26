@@ -10,6 +10,7 @@ use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\CancelException;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Engine\Engine;
+use DrevOps\Tui\Primitive\Progress;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Binding;
@@ -293,6 +294,36 @@ final class TuiTest extends TestCase {
     $this->assertSame('light', $options['mode']);
     $this->assertFalse($options['color']);
     $this->assertFalse($options['unicode']);
+  }
+
+  public function testProgressAsSpinnerRunsTheWorkAndReturnsItsResult(): void {
+    $terminal = new BufferedTerminal();
+
+    // A NULL total is an indeterminate spinner. Off a TTY it stays plain, but
+    // the callback still runs - advancing the forwarded primitive - and its
+    // result is passed straight back.
+    $result = (new Tui($this->demoForm()))->progress(NULL, 'Scanning', static function (Progress $progress): string {
+      $progress->advance();
+
+      return 'scanned';
+    }, $terminal);
+
+    $this->assertSame('scanned', $result);
+    $this->assertSame("Scanning\n", $terminal->output());
+  }
+
+  public function testProgressAsBarRunsTheWorkAndReturnsItsResult(): void {
+    $terminal = new BufferedTerminal();
+
+    // A known total is a determinate bar.
+    $result = (new Tui($this->demoForm()))->progress(3, 'Packing', static function (Progress $progress): string {
+      $progress->advance('apples');
+
+      return 'packed';
+    }, $terminal);
+
+    $this->assertSame('packed', $result);
+    $this->assertSame("Packing\n", $terminal->output());
   }
 
   /**
