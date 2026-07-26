@@ -60,6 +60,8 @@ The schema the produce-order form emits:
 
 Each `env` is the variable that sets its answer - the uppercased id under the active prefix, which defaults to `TUI_` and changes with `->envPrefix('MYAPP_')` on the form or `new Tui($form, env_prefix: 'MYAPP_')`. The root `x-precedence` is the resolution order described below.
 
+Dynamic defaults - the `fn (Context $c): mixed` closures from [field behavior](/field-behaviour) - are resolved for both `agentHelp()` and `schema()`, so a computed default shows a concrete value rather than null. Pass a context to seed the `directory` or `version` those closures read - `agentHelp(new Context(version: '2.0'))` - while the answers stay empty, since none are collected yet. A default that can only be computed from earlier answers has nothing to resolve from and reads as null unless the field declares a `->schemaDefault(...)` stand-in.
+
 ## Full metadata and validation
 
 `schema()` is the fuller, raw description: the same questions with every declared attribute - options, bounds, and the internal `when`, `derive` and `discover` rules - under a `prompts` key. Reach for it when your tooling wants the complete picture rather than the answer contract:

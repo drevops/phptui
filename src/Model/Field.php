@@ -124,6 +124,14 @@ final class Field {
    * @param string $progressLabel
    *   Progress only: the trailing label the work sets through `advance()`,
    *   shown after the bar or spinner glyph. Mutated as the work advances.
+   * @param mixed $schemaDefault
+   *   A static value standing in for {@see $default} in machine-readable output
+   *   when the declared default is a closure that cannot be resolved without
+   *   answers; consulted only for a closure default and only when
+   *   {@see $hasSchemaDefault} is TRUE.
+   * @param bool $hasSchemaDefault
+   *   Whether a {@see $schemaDefault} was declared, so a declared NULL is
+   *   distinguishable from an absent one.
    */
   public function __construct(
     public readonly string $id,
@@ -158,6 +166,8 @@ final class Field {
     public readonly ?\Closure $progressWork = NULL,
     public ?int $progressCurrent = NULL,
     public string $progressLabel = '',
+    public readonly mixed $schemaDefault = NULL,
+    public readonly bool $hasSchemaDefault = FALSE,
   ) {
     if ($this->multiple && !$this->type->supportsMultiple()) {
       throw new FormException(sprintf('Field "%s" of type "%s" does not collect several values; only select, search and file picker fields may be multiple.', $this->id, $this->type->value));

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Schema;
 
+use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Discovery\DiscoverInterface;
@@ -14,7 +15,8 @@ use DrevOps\Tui\Discovery\DiscoverInterface;
  * Each prompt entry carries `{id, type, label, description, options, default,
  * required}` plus the declared bounds and the `when`, `derive` and `discover`
  * rules, so external tooling can drive or validate the form without loading
- * the PHP declaration.
+ * the PHP declaration. A closure default is resolved against the context (see
+ * {@see DefaultResolver}) so a computed default advertises a real value.
  *
  * @package DrevOps\Tui\Schema
  */
@@ -25,8 +27,11 @@ class SchemaGenerator {
    *
    * @param \DrevOps\Tui\Model\FormDefinition $form
    *   The configuration to describe.
+   * @param \DrevOps\Tui\Handler\Context $context
+   *   The context a closure default is evaluated against; defaults to an empty
+   *   context carrying no prior answers.
    */
-  public function __construct(protected FormDefinition $form) {
+  public function __construct(protected FormDefinition $form, protected Context $context = new Context()) {
   }
 
   /**
@@ -51,7 +56,7 @@ class SchemaGenerator {
         'label' => $field->label,
         'description' => $field->description,
         'options' => $this->options($field),
-        'default' => $field->default instanceof \Closure ? NULL : $field->default,
+        'default' => DefaultResolver::resolve($field, $this->context),
         'required' => $field->required,
         'min' => $field->bounds?->min,
         'max' => $field->bounds?->max,

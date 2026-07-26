@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Schema;
 
+use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormDefinition;
@@ -19,7 +20,9 @@ use DrevOps\Tui\Translation\Translator;
  * bounds), its `title`/`description`, whether it is `required`, its `default`,
  * and the `env` variable that sets it. Only what the library controls appears
  * here - the CLI flags an agent ultimately calls are the consumer's to define,
- * so they are absent. The resolution order is the root `x-precedence`.
+ * so they are absent. The resolution order is the root `x-precedence`. A
+ * closure default is resolved against the context (see {@see DefaultResolver})
+ * rather than omitted.
  *
  * @package DrevOps\Tui\Schema
  */
@@ -33,8 +36,11 @@ class AgentHelp {
    * @param string $envPrefix
    *   The prefix for per-question env variable names (e.g. "APP_"); an empty
    *   prefix omits the `env` annotation.
+   * @param \DrevOps\Tui\Handler\Context $context
+   *   The context a closure default is evaluated against; defaults to an empty
+   *   context carrying no prior answers.
    */
-  public function __construct(protected FormDefinition $form, protected string $envPrefix = '') {
+  public function __construct(protected FormDefinition $form, protected string $envPrefix = '', protected Context $context = new Context()) {
   }
 
   /**
@@ -142,8 +148,9 @@ class AgentHelp {
       $property['description'] = Translator::t($field->description);
     }
 
-    if (!$field->default instanceof \Closure && $field->default !== NULL && $field->default !== '' && $field->default !== []) {
-      $property['default'] = $field->default;
+    $default = DefaultResolver::resolve($field, $this->context);
+    if ($default !== NULL && $default !== '' && $default !== []) {
+      $property['default'] = $default;
     }
 
     if ($this->envPrefix !== '') {

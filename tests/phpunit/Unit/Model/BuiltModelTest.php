@@ -92,6 +92,25 @@ final class BuiltModelTest extends TestCase {
     $this->assertSame('', $form->field('tx')?->default);
   }
 
+  public function testSchemaDefault(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('with')->schemaDefault('static');
+        $p->text('without');
+      })
+      ->build();
+
+    $with = $form->field('with');
+    $this->assertInstanceOf(Field::class, $with);
+    $this->assertTrue($with->hasSchemaDefault);
+    $this->assertSame('static', $with->schemaDefault);
+
+    $without = $form->field('without');
+    $this->assertInstanceOf(Field::class, $without);
+    $this->assertFalse($without->hasSchemaDefault);
+    $this->assertNull($without->schemaDefault);
+  }
+
   public function testSelectionBoundsOnNonMultipleFieldThrows(): void {
     $this->expectException(FormException::class);
     $this->expectExceptionMessage('Field "s" declares selection limits but does not collect several values.');
