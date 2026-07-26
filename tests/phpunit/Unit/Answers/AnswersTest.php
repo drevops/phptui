@@ -93,7 +93,7 @@ final class AnswersTest extends TestCase {
     $this->assertStringContainsString('Name: Acme (edited)', $summary);
   }
 
-  public function testToSummaryHyperlinksAreOptedInExplicitly(): void {
+  public function testToSummaryFollowsColorCapability(): void {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $p): void {
         $p->text('name', 'Order at [Basket](https://example.com/basket)');
@@ -101,11 +101,23 @@ final class AnswersTest extends TestCase {
       ->build();
     $answers = Answers::forForm($form, ['name' => 'Weekly'], ['name' => Provenance::Edited]);
 
-    // Forced off degrades the linked label to plain text.
-    $this->assertStringContainsString('Order at Basket (https://example.com/basket)', $answers->toSummary(FALSE));
+    $no_color = getenv('NO_COLOR');
+    $term = getenv('TERM');
 
-    // Forced on emits the hyperlink escape regardless of the environment.
-    $this->assertStringContainsString("\033]8;;https://example.com/basket\007", $answers->toSummary(TRUE));
+    try {
+      // NO_COLOR degrades the linked label to plain text.
+      putenv('NO_COLOR=1');
+      $this->assertStringContainsString('Order at Basket (https://example.com/basket)', $answers->toSummary());
+
+      // A colour-capable terminal emits the hyperlink escape.
+      putenv('NO_COLOR');
+      putenv('TERM=xterm-256color');
+      $this->assertStringContainsString("\033]8;;https://example.com/basket\007", $answers->toSummary());
+    }
+    finally {
+      putenv($no_color === FALSE ? 'NO_COLOR' : 'NO_COLOR=' . $no_color);
+      putenv($term === FALSE ? 'TERM' : 'TERM=' . $term);
+    }
   }
 
 }
