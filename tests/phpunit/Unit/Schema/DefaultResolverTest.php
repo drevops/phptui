@@ -60,6 +60,16 @@ final class DefaultResolverTest extends TestCase {
     $this->assertSame('static', DefaultResolver::resolve($field, new Context()));
   }
 
+  public function testDeclaredSchemaDefaultWinsEvenWhenClosureCouldResolve(): void {
+    $field = self::field(function (PanelBuilder $p): void {
+      $p->text('x')->default(fn (Context $context): string => $context->version)->schemaDefault('static');
+    });
+
+    // The declared stand-in is advertised even when the closure could resolve
+    // cleanly against the given context: the declaration wins, deliberately.
+    $this->assertSame('static', DefaultResolver::resolve($field, new Context(version: '1.0')));
+  }
+
   public function testDeclaredSchemaDefaultMayBeNull(): void {
     $field = self::field(function (PanelBuilder $p): void {
       $p->text('x')->default(fn (Context $context): string => 'live')->schemaDefault(NULL);
