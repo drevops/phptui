@@ -45,6 +45,104 @@ final class ThemeTest extends TestCase {
     yield 'disabled' => [static fn(): string => (new DefaultTheme())->disabled('X'), '90'];
     // Inline ghost-text is dimmed gray, the same as the other dimmed chrome.
     yield 'ghost' => [static fn(): string => (new DefaultTheme())->ghost('X'), '90'];
+    // Markdown spans map to bold, italic and a mode-specific code colour.
+    yield 'strong' => [static fn(): string => (new DefaultTheme())->strong('X'), '1'];
+    yield 'emphasis' => [static fn(): string => (new DefaultTheme())->emphasis('X'), '3'];
+    yield 'dark code' => [static fn(): string => (new DefaultTheme())->code('X'), '93'];
+    yield 'light code' => [static fn(): string => self::light()->code('X'), '35'];
+  }
+
+  public function testBulletGlyph(): void {
+    $this->assertSame('•', (new DefaultTheme())->bullet());
+    $this->assertSame('-', (new DefaultTheme(76, ['unicode' => FALSE]))->bullet());
+  }
+
+  public function testLinkAtomEmitsHyperlinkWithColour(): void {
+    $link = (new DefaultTheme())->link('Orchard', 'https://example.com/orchard');
+
+    $this->assertSame(Ansi::link('Orchard', 'https://example.com/orchard'), $link);
+    $this->assertSame('Orchard', Ansi::strip($link));
+  }
+
+  public function testLinkAtomDegradesWithoutColour(): void {
+    $theme = new DefaultTheme(76, ['color' => FALSE]);
+
+    $this->assertSame('Orchard (https://example.com/orchard)', $theme->link('Orchard', 'https://example.com/orchard'));
+  }
+
+  public function testLabelResolvesLinks(): void {
+    $theme = new DefaultTheme();
+    $label = $theme->label('open [Basket](https://example.com/basket)');
+
+    // The label keeps its styling and the link is clickable inside it.
+    $this->assertStringContainsString(Ansi::link('Basket', 'https://example.com/basket'), $label);
+    $this->assertSame('open Basket', Ansi::strip($label));
+  }
+
+  public function testLabelLinkDegradesWithoutColour(): void {
+    $theme = new DefaultTheme(76, ['color' => FALSE]);
+
+    $this->assertSame('open Basket (https://example.com/basket)', $theme->label('open [Basket](https://example.com/basket)'));
+  }
+
+  public function testDescriptionBlockRendersMarkdownWhenEnabled(): void {
+    $theme = new DefaultTheme(76, ['markdown' => TRUE]);
+    $lines = $theme->renderDescriptionBlock('pack **ripe** *sweet* `pears`', FALSE);
+
+    $this->assertCount(1, $lines);
+    $this->assertSame('    pack ripe sweet pears', Ansi::strip($lines[0]));
+    // Bold, italic and the code colour each carry their own SGR.
+    $this->assertStringContainsString("\033[1mripe\033[0m", $lines[0]);
+    $this->assertStringContainsString("\033[3msweet\033[0m", $lines[0]);
+    $this->assertStringContainsString("\033[93mpears\033[0m", $lines[0]);
+  }
+
+  public function testDescriptionBlockRendersBulletList(): void {
+    $theme = new DefaultTheme(76, ['markdown' => TRUE]);
+    $lines = $theme->renderDescriptionBlock("- apples\n- pears", FALSE);
+
+    $this->assertCount(2, $lines);
+    $this->assertSame('    • apples', Ansi::strip($lines[0]));
+    $this->assertSame('    • pears', Ansi::strip($lines[1]));
+  }
+
+  public function testDescriptionBlockLeavesMarkdownLiteralWhenDisabled(): void {
+    $theme = new DefaultTheme();
+    $lines = $theme->renderDescriptionBlock('pack **ripe** pears', FALSE);
+
+    // With markdown off the markers stay literal, but links still resolve.
+    $this->assertCount(1, $lines);
+    $this->assertSame('    pack **ripe** pears', Ansi::strip($lines[0]));
+  }
+
+  public function testDescriptionBlockStripsToCleanTextWithoutColour(): void {
+    $theme = new DefaultTheme(76, ['markdown' => TRUE, 'color' => FALSE]);
+    $lines = $theme->renderDescriptionBlock("Pick **ripe** `pears` [here](https://example.com/here):\n- gala\n- bosc", FALSE);
+
+    // Markdown enabled but no colour: markers drop, links degrade, bullets show
+    // as plain glyphs, and not a single escape sequence survives.
+    $joined = implode("\n", $lines);
+    $this->assertSame($joined, Ansi::strip($joined));
+    $this->assertStringContainsString('Pick ripe pears here (https://example.com/here):', $joined);
+    $this->assertStringContainsString('    • gala', $joined);
+    $this->assertStringContainsString('    • bosc', $joined);
+  }
+
+  public function testDescriptionBlockNormalizesLineEndings(): void {
+    $theme = new DefaultTheme(76, ['color' => FALSE, 'markdown' => TRUE]);
+    $lines = $theme->renderDescriptionBlock("- apples\r\n- pears\r- plums", FALSE);
+
+    // CRLF and lone CR both split into their own physical lines, with no stray
+    // carriage return left to overprint the row.
+    $this->assertSame(['    • apples', '    • pears', '    • plums'], $lines);
+  }
+
+  public function testDescriptionBlockResolvesLinksWithoutMarkdown(): void {
+    $theme = new DefaultTheme();
+    $lines = $theme->renderDescriptionBlock('see [Guide](https://example.com/guide)', FALSE);
+
+    $this->assertSame('    see Guide', Ansi::strip($lines[0]));
+    $this->assertStringContainsString(Ansi::link('Guide', 'https://example.com/guide'), $lines[0]);
   }
 
   public function testGhostSuppressedWithoutColour(): void {

@@ -200,6 +200,14 @@ function widgetSpecs(string $tree): array {
       'keys' => [$enter],
       'rows' => 14,
     ],
+    'note-markdown' => [
+      'form' => Form::create('Markdown note')->panel('main', 'Note', function (PanelBuilder $p): void {
+        $p->note('order', 'Fresh produce order')->description('Pick what is **ripe** today:' . chr(10) . '- crisp `apples`' . chr(10) . '- sweet *pears*' . chr(10) . 'See the [seasonal guide](https://example.com/guide).')->border();
+      }),
+      'keys' => [$enter],
+      'rows' => 14,
+      'options' => ['markdown' => TRUE],
+    ],
     'progress' => [
       'form' => Form::create('Progress widget')->panel('main', 'Progress', function (PanelBuilder $p) use ($pack): void { $p->progress('pack', 'Packing the box')->steps(6)->run($pack); }),
       'keys' => [$enter, $enter],
@@ -243,7 +251,7 @@ function renderWidget(string $name, array $spec, string $assets_dir, string $uti
     // rounded border every panel demo shares. The border adds a row above
     // and below the content and the padding another one each side.
     $tester = (new TuiTester($spec['form']))
-      ->options(['color' => $mode['color'], 'unicode' => $mode['unicode'], 'mode' => Mode::Dark])
+      ->options(['color' => $mode['color'], 'unicode' => $mode['unicode'], 'mode' => Mode::Dark] + ($spec['options'] ?? []))
       ->rows($spec['rows'] + 4);
     $tester->run(...$spec['keys']);
 
@@ -291,7 +299,7 @@ function renderStaticVariants(string $name, array $spec, string $assets_dir, str
   // with a single drill into the panel; every other widget opens its editor
   // with the hub-into-panel-into-field drill.
   $enter = Key::named(KeyName::Enter);
-  $open = in_array($name, ['pause', 'note'], TRUE) ? [$enter] : [$enter, $enter];
+  $open = in_array($name, ['pause', 'note', 'note-markdown'], TRUE) ? [$enter] : [$enter, $enter];
   // A widget whose opened editor shows nothing worth a screenshot until a key
   // is pressed (suggest highlights no row until you arrow into the list)
   // declares the keystrokes its static frame settles on.
@@ -302,7 +310,7 @@ function renderStaticVariants(string $name, array $spec, string $assets_dir, str
     // The static screenshots share the default padded rounded border, so
     // the four extra chrome rows join the content budget here too.
     $tester = (new TuiTester($spec['form']))
-      ->options(['color' => $mode['color'], 'unicode' => $mode['unicode'], 'mode' => Mode::Dark])
+      ->options(['color' => $mode['color'], 'unicode' => $mode['unicode'], 'mode' => Mode::Dark] + ($spec['options'] ?? []))
       ->rows($spec['rows'] + 4);
     $tester->run(...$keys);
 

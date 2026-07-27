@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Answers;
 
 use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Render\Markup;
 use DrevOps\Tui\Translation\Translator;
 
 /**
@@ -17,6 +18,16 @@ use DrevOps\Tui\Translation\Translator;
  * @package DrevOps\Tui\Answers
  */
 class SummaryFormatter {
+
+  /**
+   * Construct a summary formatter.
+   *
+   * @param bool $hyperlinks
+   *   Whether a linked label emits a clickable hyperlink; FALSE degrades each
+   *   to `text (url)`.
+   */
+  public function __construct(protected bool $hyperlinks = FALSE) {
+  }
 
   /**
    * Format the answers grouped by their panel trails.
@@ -36,7 +47,7 @@ class SummaryFormatter {
       $trail = $item->panels;
 
       $indent = str_repeat('  ', count($item->panels));
-      $lines[] = $indent . Translator::t($item->label) . ': ' . $this->renderValue($item) . $this->badge($item->provenance);
+      $lines[] = $indent . $this->label($item->label) . ': ' . $this->renderValue($item) . $this->badge($item->provenance);
     }
 
     return implode("\n", $lines);
@@ -62,10 +73,23 @@ class SummaryFormatter {
     $lines = [];
 
     foreach (array_slice($panels, $common) as $offset => $title) {
-      $lines[] = str_repeat('  ', $common + $offset) . Translator::t($title);
+      $lines[] = str_repeat('  ', $common + $offset) . $this->label($title);
     }
 
     return $lines;
+  }
+
+  /**
+   * Translate a label or panel heading and resolve any links it carries.
+   *
+   * @param string $source
+   *   The label or heading source.
+   *
+   * @return string
+   *   The translated text with links resolved.
+   */
+  protected function label(string $source): string {
+    return Markup::links(Translator::t($source), $this->hyperlinks);
   }
 
   /**

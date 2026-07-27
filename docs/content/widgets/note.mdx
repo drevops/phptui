@@ -27,6 +27,8 @@ $p->note('summary', 'Ready to pack')
   ->border();
 ```
 
+A note body can carry a `[text](url)` link, and when the enclosing TUI is configured with [`->markdown()`](/markdown) it also renders bold, emphasis, inline code and bullet lists - all degrading to clean plain text where the terminal cannot show them.
+
 Runnable script: [`playground/02-widgets-note.php`](https://github.com/drevops/tui/blob/main/playground/02-widgets-note.php).
 
 ## Options

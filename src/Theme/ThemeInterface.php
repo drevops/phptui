@@ -102,6 +102,39 @@ interface ThemeInterface {
   public function heading(string $text): string;
 
   /**
+   * Bold markup (`**text**`) inside a description or note.
+   */
+  public function strong(string $text): string;
+
+  /**
+   * Emphasis markup (`*text*`) inside a description or note.
+   */
+  public function emphasis(string $text): string;
+
+  /**
+   * Inline-code markup (`` `text` ``) inside a description or note.
+   */
+  public function code(string $text): string;
+
+  /**
+   * A hyperlink: a clickable label on capable terminals, else `text (url)`.
+   *
+   * @param string $text
+   *   The visible link label.
+   * @param string $url
+   *   The link target.
+   *
+   * @return string
+   *   The rendered link.
+   */
+  public function link(string $text, string $url): string;
+
+  /**
+   * The bullet glyph that leads an unordered-list item in markup.
+   */
+  public function bullet(): string;
+
+  /**
    * A non-selectable separator line between options in an option list.
    */
   public function divider(): string;

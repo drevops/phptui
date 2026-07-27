@@ -86,6 +86,11 @@ final class Tui {
   protected ?bool $unicode = NULL;
 
   /**
+   * Whether descriptions and notes render their markdown; off by default.
+   */
+  protected bool $markdown = FALSE;
+
+  /**
    * Expand the TUI to the whole terminal; NULL defers to the theme options.
    */
   protected ?bool $fullscreen = NULL;
@@ -193,6 +198,27 @@ final class Tui {
    */
   public function unicode(?bool $unicode): self {
     $this->unicode = $unicode;
+
+    return $this;
+  }
+
+  /**
+   * Render a lightweight markdown subset in field descriptions and notes.
+   *
+   * With this on, description and note text carries `**bold**`, `*emphasis*`,
+   * `` `code` ``, `[text](url)` links and `- ` bullet lists, mapped to the
+   * theme's style atoms. Links resolve either way; this only enables the rest
+   * of the subset. Headless collection and incapable terminals fall back to
+   * clean plain text.
+   *
+   * @param bool $markdown
+   *   Whether markdown is rendered.
+   *
+   * @return $this
+   *   The facade.
+   */
+  public function markdown(bool $markdown = TRUE): self {
+    $this->markdown = $markdown;
 
     return $this;
   }
@@ -604,6 +630,10 @@ final class Tui {
 
     if (!isset($options['unicode'])) {
       $options['unicode'] = $this->resolvedUnicode();
+    }
+
+    if (!isset($options['markdown'])) {
+      $options['markdown'] = $this->markdown;
     }
 
     if (!isset($options['mode'])) {

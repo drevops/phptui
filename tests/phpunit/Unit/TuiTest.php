@@ -227,6 +227,28 @@ final class TuiTest extends TestCase {
     $this->assertArrayNotHasKey('fullscreen', $options);
   }
 
+  public function testMarkdownFlowsToThemeOptions(): void {
+    $terminal = new BufferedTerminal();
+
+    // Off by default: the theme sees markdown disabled.
+    $tui = $this->tui();
+    $options = (new \ReflectionMethod($tui, 'resolveThemeOptions'))->invoke($tui, $terminal);
+    $this->assertIsArray($options);
+    $this->assertFalse($options['markdown']);
+
+    // The setter turns it on.
+    $tui = $this->tui()->markdown();
+    $options = (new \ReflectionMethod($tui, 'resolveThemeOptions'))->invoke($tui, $terminal);
+    $this->assertIsArray($options);
+    $this->assertTrue($options['markdown']);
+
+    // An explicit theme option wins over the setter.
+    $tui = $this->tui()->theme('', ['markdown' => FALSE])->markdown();
+    $options = (new \ReflectionMethod($tui, 'resolveThemeOptions'))->invoke($tui, $terminal);
+    $this->assertIsArray($options);
+    $this->assertFalse($options['markdown']);
+  }
+
   public function testInteractFullscreenFillsTheScriptedTerminal(): void {
     // No input: the loop renders one frame and stops on exhaustion. The frame
     // stretches to the scripted terminal's exact rows and lays out to its
