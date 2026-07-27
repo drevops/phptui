@@ -39,7 +39,10 @@ final class Markup {
   public static function parse(string $source, bool $markdown): array {
     $lines = [];
 
-    foreach (explode("\n", $source) as $line) {
+    // Fold CRLF and lone-CR endings (a Windows-authored catalog can carry them)
+    // here, so every caller - links() and width() included - splits cleanly and
+    // no stray carriage return reaches a Text segment.
+    foreach (explode("\n", str_replace(["\r\n", "\r"], "\n", $source)) as $line) {
       $bullet = FALSE;
 
       if ($markdown && preg_match('/^[ \t]*[-*][ \t]+(.*)$/', $line, $matches) === 1) {
@@ -103,17 +106,17 @@ final class Markup {
     // hyperlink cannot break its wrapper (Ansi::link() strips them too).
     $text = Ansi::stripControl($text);
     $url = Ansi::stripControl($url);
-    $label = $text === '' ? $url : $text;
+    $label = self::resolveLabel($text, $url);
 
     if ($url === '') {
       return $label;
     }
 
     if ($color) {
-      return Ansi::link($url, $label);
+      return Ansi::link($label, $url);
     }
 
-    return $label === $url ? $label : $label . ' (' . $url . ')';
+    return self::degrade($label, $url);
   }
 
   /**
@@ -161,13 +164,42 @@ final class Markup {
       return $segment->text;
     }
 
-    $label = $segment->text === '' ? $segment->url : $segment->text;
+    $label = self::resolveLabel($segment->text, $segment->url);
 
-    if ($color || $segment->url === '' || $label === $segment->url) {
-      return $label;
-    }
+    return $color ? $label : self::degrade($label, $segment->url);
+  }
 
-    return $label . ' (' . $segment->url . ')';
+  /**
+   * The label a link shows: its text, or the URL when the text is empty.
+   *
+   * @param string $text
+   *   The link text.
+   * @param string $url
+   *   The link target.
+   *
+   * @return string
+   *   The visible label.
+   */
+  protected static function resolveLabel(string $text, string $url): string {
+    return $text === '' ? $url : $text;
+  }
+
+  /**
+   * The plain-text degrade of a link: `label (url)`, or the label alone.
+   *
+   * Shared by {@see hyperlink()} and {@see visible()} so the rendered degrade
+   * and the width measurement can never drift apart.
+   *
+   * @param string $label
+   *   The resolved link label.
+   * @param string $url
+   *   The link target.
+   *
+   * @return string
+   *   The degraded text.
+   */
+  protected static function degrade(string $label, string $url): string {
+    return $label === $url || $url === '' ? $label : $label . ' (' . $url . ')';
   }
 
   /**

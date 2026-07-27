@@ -714,9 +714,7 @@ class DefaultTheme implements ThemeInterface {
 
     $lines = [];
 
-    // Fold CRLF/CR endings (an external editor's save can carry them) to the
-    // newline the parser splits physical lines on.
-    foreach (Markup::parse($this->normalizeLines($source), $this->markdown) as $line) {
+    foreach (Markup::parse($source, $this->markdown) as $line) {
       $rendered = $line->bullet ? $this->paint($base, $this->bullet() . ' ') : '';
 
       foreach ($line->segments as $segment) {

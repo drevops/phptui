@@ -113,8 +113,8 @@ final class SummaryFormatterTest extends TestCase {
 
     // With it on, the same labels carry the OSC 8 escape.
     $linked = (new SummaryFormatter(TRUE))->format($answers);
-    $this->assertStringContainsString(Ansi::link('https://example.com/orchard', 'Orchard'), $linked);
-    $this->assertStringContainsString(Ansi::link('https://example.com/basket', 'Basket'), $linked);
+    $this->assertStringContainsString(Ansi::link('Orchard', 'https://example.com/orchard'), $linked);
+    $this->assertStringContainsString(Ansi::link('Basket', 'https://example.com/basket'), $linked);
   }
 
 }

@@ -43,7 +43,7 @@ final class AnsiTest extends TestCase {
   }
 
   public function testLink(): void {
-    $link = Ansi::link('https://example.com/orchard', 'Orchard');
+    $link = Ansi::link('Orchard', 'https://example.com/orchard');
 
     $this->assertSame("\033]8;;https://example.com/orchard\007Orchard\033]8;;\007", $link);
 
@@ -60,7 +60,7 @@ final class AnsiTest extends TestCase {
   public function testLinkStripsControlBytes(): void {
     // A BEL or ESC smuggled into the URL or text would break out of the OSC 8
     // wrapper; both are dropped before the sequence is built.
-    $link = Ansi::link("https://example.com/a\007\033[31m", "Buy\033]8;;evil\007now");
+    $link = Ansi::link("Buy\033]8;;evil\007now", "https://example.com/a\007\033[31m");
 
     $this->assertSame("\033]8;;https://example.com/a[31m\007Buy]8;;evilnow\033]8;;\007", $link);
     // The wrapper survives intact, so the whole thing strips to its text alone.
@@ -86,7 +86,7 @@ final class AnsiTest extends TestCase {
   public function testBlockWidth(): void {
     $this->assertSame(0, Ansi::blockWidth([]));
     $this->assertSame(5, Ansi::blockWidth(['ab', Ansi::style('hello', '32'), 'x']));
-    $this->assertSame(7, Ansi::blockWidth([Ansi::link('https://example.com/a', 'Orchard')]));
+    $this->assertSame(7, Ansi::blockWidth([Ansi::link('Orchard', 'https://example.com/a')]));
   }
 
   public function testAlignRight(): void {

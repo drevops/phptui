@@ -40,20 +40,20 @@ final class Ansi {
    * an incapable terminal shows the text and ignores the escape. The visible
    * width is the text alone, which {@see strip()} accounts for.
    *
-   * @param string $url
-   *   The target URL.
    * @param string $text
    *   The visible link text.
+   * @param string $url
+   *   The target URL.
    *
    * @return string
    *   The hyperlinked text.
    */
-  public static function link(string $url, string $text): string {
+  public static function link(string $text, string $url): string {
     // A raw ESC or BEL in either part would break out of the escape wrapper -
     // truncating the sequence or injecting arbitrary control codes downstream -
     // so every control byte is dropped before the URL and text are embedded.
-    $url = self::stripControl($url);
     $text = self::stripControl($text);
+    $url = self::stripControl($url);
 
     return self::ESC . ']8;;' . $url . "\007" . $text . self::ESC . ']8;;' . "\007";
   }

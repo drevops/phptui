@@ -60,7 +60,7 @@ final class ThemeTest extends TestCase {
   public function testLinkAtomEmitsHyperlinkWithColour(): void {
     $link = (new DefaultTheme())->link('Orchard', 'https://example.com/orchard');
 
-    $this->assertSame(Ansi::link('https://example.com/orchard', 'Orchard'), $link);
+    $this->assertSame(Ansi::link('Orchard', 'https://example.com/orchard'), $link);
     $this->assertSame('Orchard', Ansi::strip($link));
   }
 
@@ -75,7 +75,7 @@ final class ThemeTest extends TestCase {
     $label = $theme->label('open [Basket](https://example.com/basket)');
 
     // The label keeps its styling and the link is clickable inside it.
-    $this->assertStringContainsString(Ansi::link('https://example.com/basket', 'Basket'), $label);
+    $this->assertStringContainsString(Ansi::link('Basket', 'https://example.com/basket'), $label);
     $this->assertSame('open Basket', Ansi::strip($label));
   }
 
@@ -142,7 +142,7 @@ final class ThemeTest extends TestCase {
     $lines = $theme->renderDescriptionBlock('see [Guide](https://example.com/guide)', FALSE);
 
     $this->assertSame('    see Guide', Ansi::strip($lines[0]));
-    $this->assertStringContainsString(Ansi::link('https://example.com/guide', 'Guide'), $lines[0]);
+    $this->assertStringContainsString(Ansi::link('Guide', 'https://example.com/guide'), $lines[0]);
   }
 
   public function testGhostSuppressedWithoutColour(): void {

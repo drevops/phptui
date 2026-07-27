@@ -129,7 +129,7 @@ final class MarkupTest extends TestCase {
   public function testLinksResolvesToHyperlinkWithColor(): void {
     $out = Markup::links('open [Basket](https://example.com/basket)', TRUE);
 
-    $this->assertSame('open ' . Ansi::link('https://example.com/basket', 'Basket'), $out);
+    $this->assertSame('open ' . Ansi::link('Basket', 'https://example.com/basket'), $out);
   }
 
   public function testLinksDegradesWithoutColor(): void {

@@ -280,8 +280,8 @@ final class ThemeRenderTest extends TestCase {
 
     $this->assertStringContainsString('See Orchard', Ansi::strip($joined));
     $this->assertStringContainsString('Order from Basket.', Ansi::strip($joined));
-    $this->assertStringContainsString(Ansi::link('https://example.com/orchard', 'Orchard'), $joined);
-    $this->assertStringContainsString(Ansi::link('https://example.com/basket', 'Basket'), $joined);
+    $this->assertStringContainsString(Ansi::link('Orchard', 'https://example.com/orchard'), $joined);
+    $this->assertStringContainsString(Ansi::link('Basket', 'https://example.com/basket'), $joined);
   }
 
   public function testPaddedSpacingSeparatesNoteFromTheFieldAbove(): void {
