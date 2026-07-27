@@ -77,7 +77,7 @@ In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
 ## Type and size constraints
 
-Constrain what counts as a valid pick with `->filesOnly()` / `->directoriesOnly()`, `->extensions()` and `->maxSize()`. The active limits show as a hint below the browser, a pick that breaks one is rejected inline when you accept, and the same limits are enforced in [headless collection](/headless-collection) - a path arriving through a JSON payload or an environment variable is held to exactly what the interactive picker enforces.
+Constrain what counts as a valid pick with `->filesOnly()` / `->directoriesOnly()`, `->extensions()` and `->maxSize()`. The active limits show as a hint below the browser, a pick that breaks one is rejected inline when you accept, and the same limits are enforced in [headless collection](/headless-collection).
 
 ```php
 $p->filePicker('list', 'Price list')

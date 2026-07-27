@@ -201,11 +201,13 @@ final class FilePickerConstraintsTest extends TestCase {
     $this->assertSame('a file no larger than 100 B', $constraints->violation([$this->root . '/small.txt', $this->root . '/big.txt']));
   }
 
-  public function testViolationListSkipsNonStringAndEmptyItems(): void {
+  public function testViolationListRejectsNonStringAndEmptyItems(): void {
     $constraints = new FilePickerConstraints(FilePickerMode::File);
 
-    // A non-string or empty item carries no path to weigh and is skipped.
-    $this->assertNull($constraints->violation([$this->root . '/small.txt', '', 42]));
+    // A non-string or empty entry is not an existing file, so it is rejected
+    // rather than silently skipped.
+    $this->assertSame('an existing file', $constraints->violation([$this->root . '/small.txt', '']));
+    $this->assertSame('an existing file', $constraints->violation([$this->root . '/small.txt', 42]));
   }
 
   /**

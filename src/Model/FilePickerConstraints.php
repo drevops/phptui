@@ -126,13 +126,9 @@ final readonly class FilePickerConstraints {
     $paths = is_array($value) ? $value : [$value];
 
     foreach ($paths as $path) {
-      if (!is_string($path)) {
-        continue;
-      }
-      if ($path === '') {
-        continue;
-      }
-      $phrase = $this->pathViolation($path);
+      // A non-string or empty entry is not an existing path, so it fails the
+      // same existence check a bogus path would rather than being skipped.
+      $phrase = $this->pathViolation(is_string($path) ? $path : '');
       if ($phrase !== NULL) {
         return $phrase;
       }
@@ -212,7 +208,7 @@ final readonly class FilePickerConstraints {
    *   The formatted size, scaled to the largest unit that keeps it above one.
    */
   public static function formatBytes(int $bytes): string {
-    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    $units = FileSizeUnit::cases();
 
     $value = (float) $bytes;
     $unit = 0;
@@ -224,7 +220,7 @@ final readonly class FilePickerConstraints {
     $rounded = round($value, 1);
     $formatted = $rounded === (float) (int) $rounded ? (string) (int) $rounded : (string) $rounded;
 
-    return $formatted . ' ' . $units[$unit];
+    return $formatted . ' ' . $units[$unit]->value;
   }
 
 }
