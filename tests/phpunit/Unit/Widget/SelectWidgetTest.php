@@ -27,6 +27,7 @@ use DrevOps\Tui\Widget\Capability\SelectionBoundedTrait;
 use DrevOps\Tui\Widget\Capability\SelectionCapableTrait;
 use DrevOps\Tui\Widget\SelectWidget;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -35,11 +36,11 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(SelectWidget::class)]
 #[CoversClass(AbstractWidget::class)]
-#[CoversClass(OptionsCapableTrait::class)]
-#[CoversClass(SelectionCapableTrait::class)]
-#[CoversClass(SelectionBoundedTrait::class)]
-#[CoversClass(FilterCapableTrait::class)]
-#[CoversClass(PagingCapableTrait::class)]
+#[CoversTrait(OptionsCapableTrait::class)]
+#[CoversTrait(SelectionCapableTrait::class)]
+#[CoversTrait(SelectionBoundedTrait::class)]
+#[CoversTrait(FilterCapableTrait::class)]
+#[CoversTrait(PagingCapableTrait::class)]
 #[Group('widget')]
 final class SelectWidgetTest extends TestCase {
 

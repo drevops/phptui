@@ -15,6 +15,7 @@ use DrevOps\Tui\Widget\Capability\CompletionCapableTrait;
 use DrevOps\Tui\Widget\Capability\TextEditCapableTrait;
 use DrevOps\Tui\Widget\TextWidget;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -23,8 +24,8 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(TextWidget::class)]
 #[CoversClass(AbstractWidget::class)]
-#[CoversClass(TextEditCapableTrait::class)]
-#[CoversClass(CompletionCapableTrait::class)]
+#[CoversTrait(TextEditCapableTrait::class)]
+#[CoversTrait(CompletionCapableTrait::class)]
 #[CoversClass(WidgetRunner::class)]
 #[Group('widget')]
 final class TextWidgetTest extends TestCase {

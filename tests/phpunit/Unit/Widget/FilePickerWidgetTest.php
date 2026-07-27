@@ -20,6 +20,7 @@ use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
 use DrevOps\Tui\Widget\Capability\SelectionBoundedTrait;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -28,8 +29,8 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(FilePickerWidget::class)]
 #[CoversClass(AbstractWidget::class)]
-#[CoversClass(PagingCapableTrait::class)]
-#[CoversClass(SelectionBoundedTrait::class)]
+#[CoversTrait(PagingCapableTrait::class)]
+#[CoversTrait(SelectionBoundedTrait::class)]
 #[Group('widget')]
 final class FilePickerWidgetTest extends TestCase {
 

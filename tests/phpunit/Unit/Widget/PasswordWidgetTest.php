@@ -13,6 +13,7 @@ use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Widget\PasswordWidget;
 use DrevOps\Tui\Widget\Capability\TextEditCapableTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -20,7 +21,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the password widget.
  */
 #[CoversClass(PasswordWidget::class)]
-#[CoversClass(TextEditCapableTrait::class)]
+#[CoversTrait(TextEditCapableTrait::class)]
 #[Group('widget')]
 final class PasswordWidgetTest extends TestCase {
 
