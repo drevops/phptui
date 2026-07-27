@@ -16,6 +16,7 @@ use DrevOps\Tui\Widget\AbstractWidget;
 use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
 use DrevOps\Tui\Widget\SuggestWidget;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -24,7 +25,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(SuggestWidget::class)]
 #[CoversClass(AbstractWidget::class)]
-#[CoversClass(PagingCapableTrait::class)]
+#[CoversTrait(PagingCapableTrait::class)]
 #[Group('widget')]
 final class SuggestWidgetTest extends TestCase {
 

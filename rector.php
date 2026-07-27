@@ -46,7 +46,7 @@ return RectorConfig::configure()
     phpunitCodeQuality: TRUE,
   )
   ->withSets([
-    PHPUnitSetList::PHPUNIT_110,
+    PHPUnitSetList::PHPUNIT_120,
   ])
   ->withRules([
     DeclareStrictTypesRector::class,

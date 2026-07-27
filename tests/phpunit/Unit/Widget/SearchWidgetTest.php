@@ -23,6 +23,7 @@ use DrevOps\Tui\Widget\Capability\SelectionBoundedTrait;
 use DrevOps\Tui\Widget\Capability\SelectionCapableTrait;
 use DrevOps\Tui\Widget\SearchWidget;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -30,12 +31,12 @@ use PHPUnit\Framework\TestCase;
  * Tests the search widget, single-choice and multiple-choice.
  */
 #[CoversClass(SearchWidget::class)]
-#[CoversClass(SelectionCapableTrait::class)]
-#[CoversClass(SelectionBoundedTrait::class)]
-#[CoversClass(FilterCapableTrait::class)]
-#[CoversClass(SearchCapableTrait::class)]
-#[CoversClass(OptionsCapableTrait::class)]
-#[CoversClass(PagingCapableTrait::class)]
+#[CoversTrait(SelectionCapableTrait::class)]
+#[CoversTrait(SelectionBoundedTrait::class)]
+#[CoversTrait(FilterCapableTrait::class)]
+#[CoversTrait(SearchCapableTrait::class)]
+#[CoversTrait(OptionsCapableTrait::class)]
+#[CoversTrait(PagingCapableTrait::class)]
 #[Group('widget')]
 final class SearchWidgetTest extends TestCase {
 

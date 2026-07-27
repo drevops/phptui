@@ -23,14 +23,14 @@
     "require-dev": {
         "alexskrypnyk/phpunit-helpers": "^0.16.0",
         "dealerdirect/phpcodesniffer-composer-installer": "^1.2.1",
-        "drevops/phpcs-standard": "^0.7",
+        "drevops/phpcs-standard": "^1.0.0",
         "drupal/coder": "^9.0.1",
         "ergebnis/composer-normalize": "^2.52.0",
         "mikey179/vfsstream": "^1.6.12",
         "opis/closure": "^4.5.0",
-        "phpstan/phpstan": "^2.2.4",
-        "phpunit/phpunit": "^11.5.55",
-        "rector/rector": "^2.5.2"
+        "phpstan/phpstan": ">=2.2.4 <2.2.6",
+        "phpunit/phpunit": "^12.5.32",
+        "rector/rector": "^2.5.7"
     },
     "suggest": {
         "ext-mbstring": "Provides full Unicode case folding and native multibyte string handling; PCRE-based fallbacks with ASCII-only case folding are used when it is absent."
