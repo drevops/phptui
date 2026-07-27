@@ -86,7 +86,7 @@ final class DefaultResolverTest extends TestCase {
     $this->assertNull(DefaultResolver::resolve($field, new Context()));
   }
 
-  public function testDeclaredSchemaDefaultSkipsAThrowingClosure(): void {
+  public function testDeclaredSchemaDefaultSkipsThrowingClosure(): void {
     $field = self::field(function (PanelBuilder $p): void {
       $p->text('x')->default(fn (Context $context): string => throw new \RuntimeException('boom'))->schemaDefault('safe');
     });

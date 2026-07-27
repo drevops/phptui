@@ -149,7 +149,7 @@ class AgentHelp {
     }
 
     $default = DefaultResolver::resolve($field, $this->context);
-    if ($default !== NULL && $default !== '' && $default !== []) {
+    if (!in_array($default, [NULL, '', []], TRUE)) {
       $property['default'] = $default;
     }
 
