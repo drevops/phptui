@@ -41,6 +41,7 @@ const sidebars = {
         'widgets/search',
         'widgets/select',
         'widgets/suggest',
+        'widgets/table',
         'widgets/text',
         'widgets/textarea',
         'widgets/toggle',

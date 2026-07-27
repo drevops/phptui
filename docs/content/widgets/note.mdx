@@ -29,16 +29,7 @@ $p->note('summary', 'Ready to pack')
 
 A note body can carry a `[text](url)` link, and when the enclosing TUI is configured with [`->markdown()`](/markdown) it also renders bold, emphasis, inline code and bullet lists - all degrading to clean plain text where the terminal cannot show them.
 
-A note can also present tabular context. `->table(headers, rows)` renders an aligned, bordered grid beneath the title and body. It honours the active theme - its border style, colour and Unicode switches - and its cells take the same `{{field}}` templating, so the grid can reflect earlier answers. An empty header list draws the grid with no header row, and a short row pads to the widest row's column count.
-
-```php
-$p->note('basket', 'Basket contents')
-  ->description('Everything picked so far:')
-  ->table(['Fruit', 'Colour', 'In stock'], [
-    ['Apple', 'Red', '12'],
-    ['Pear', 'Green', '5'],
-  ]);
-```
+A note can also present tabular context: `->table(headers, rows)` renders an aligned, bordered grid beneath the title and body. See [Table](/widgets/table) for the full reference.
 
 Runnable script: [`playground/02-widgets-note.php`](https://github.com/drevops/tui/blob/main/playground/02-widgets-note.php).
 
@@ -48,7 +39,7 @@ Runnable script: [`playground/02-widgets-note.php`](https://github.com/drevops/t
 | ------------------------ | ------------------------------------------------------------- |
 | `->description(body)`    | The card's body text, shown beneath the title.                |
 | `->border()`             | Frames the card in the theme's box with minimal padding.      |
-| `->table(headers, rows)` | Renders an aligned, bordered grid beneath the title and body. |
+| `->table(headers, rows)` | Renders an aligned, bordered grid beneath the body (see [Table](/widgets/table)). |
 
 The title is the second `note()` argument and is optional - an empty title renders the body alone. The shared field options `->when()` (conditional visibility) and `{{field}}` templating in both the title and body still apply.
 

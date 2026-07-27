@@ -1,0 +1,67 @@
+---
+title: Table
+description: 'A presentational, aligned and bordered grid a note renders beneath its title and body to show tabular context.'
+keywords: ['table', 'grid', 'tabular', 'note', 'presentational', 'widget']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Table
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/widget-table-light-animated.svg'), dark: useBaseUrl('/widget-table-dark-animated.svg')}} alt="Table widget" />
+</p>
+
+A table is presentational context, not a field of its own: a [note](/widgets/note) renders one with `->table(headers, rows)`, drawing an aligned, bordered grid beneath its title and body. It honours the active theme - the border style, colour and Unicode switches - and its cells take the same `{{field}}` templating the note's title and body do, so the grid can reflect earlier answers. Like every note it collects **nothing**: the cursor skips it and it is absent from headless collection.
+
+```php
+$p->note('stock', 'Basket contents')
+  ->description('Everything picked so far:')
+  ->table(['Fruit', 'Colour', 'In stock'], [
+    ['Apple', 'Red', '12'],
+    ['Pear', 'Green', '5'],
+    ['Blackberry', 'Purple', '120'],
+  ]);
+```
+
+Runnable script: [`playground/02-widgets-table.php`](https://github.com/drevops/tui/blob/main/playground/02-widgets-table.php).
+
+## Arguments
+
+| Argument  | Effect                                                                                             |
+| --------- | ------------------------------------------------------------------------------------------------- |
+| `headers` | The header cells. An empty list (`[]`) draws the grid with no header row.                          |
+| `rows`    | The body rows, each a list of cells. A short row pads with empty cells; a long one widens the grid. |
+
+Each column sizes to its widest cell, and the whole grid is capped at the frame width - an over-wide table shrinks its widest columns and ellipsizes the clipped cells so its borders always stay whole. Cells are coerced to strings, so numbers and booleans need no pre-formatting, and any line breaks in a cell fold to a space so it stays a single row.
+
+## Keyboard
+
+A table is non-interactive: it renders inside a note the selection cursor skips over, so it has no keys of its own.
+
+## Headless behavior
+
+A table is presentational - it carries no value. The note that holds it is absent from headless collection, from the answers payload, and from the machine-readable schemas (`schema()` and `agentHelp()`), so an agent is never asked to provide one.
+
+## Display modes
+
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-table-light-static.svg'), dark: useBaseUrl('/widget-table-dark-static.svg')}} alt="Table: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-table-light-static-no-ansi.svg'), dark: useBaseUrl('/widget-table-dark-static-no-ansi.svg')}} alt="Table: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-table-light-static-ascii.svg'), dark: useBaseUrl('/widget-table-dark-static-ascii.svg')}} alt="Table: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-table-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-table-dark-static-ascii-no-ansi.svg')}} alt="Table: ASCII + No ANSI" /></td>
+  </tr>
+</table>
