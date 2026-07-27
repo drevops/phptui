@@ -206,9 +206,9 @@ function widgetSpecs(string $tree): array {
       'rows' => 6,
     ],
     'filepicker' => [
-      'form' => Form::create('File picker widget')->panel('main', 'File picker', function (PanelBuilder $p) use ($tree): void { $p->filePicker('price_list', 'Price list')->startIn($tree)->filesOnly()->extensions(['csv']); }),
+      'form' => Form::create('File picker widget')->panel('main', 'File picker', function (PanelBuilder $p) use ($tree): void { $p->filePicker('price_list', 'Price list')->startIn($tree)->filesOnly()->extensions(['csv'])->maxSize(2097152); }),
       'keys' => [...$open, $down],
-      'rows' => 8,
+      'rows' => 12,
     ],
     'filepicker-multiple' => [
       'form' => Form::create('File picker widget')->panel('main', 'File picker', function (PanelBuilder $p) use ($tree): void { $p->filePicker('price_lists', 'Price lists')->multiple()->startIn($tree); }),
