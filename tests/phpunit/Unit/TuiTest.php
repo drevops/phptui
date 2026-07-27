@@ -11,6 +11,7 @@ use DrevOps\Tui\CancelException;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Engine\Engine;
 use DrevOps\Tui\Primitive\Progress;
+use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Binding;
@@ -128,6 +129,32 @@ final class TuiTest extends TestCase {
 
   public function testAgentHelp(): void {
     $this->assertStringContainsString('name', $this->tui()->agentHelp());
+  }
+
+  public function testSchemaResolvesClosureDefaultWithContext(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $panel): void {
+        $panel->text('version', 'Version')->default(fn (Context $context): string => $context->version);
+      })
+      ->build();
+
+    $prompts = (new Tui($form))->schema(new Context(version: '4.5.6'))['prompts'];
+    $this->assertIsArray($prompts);
+    $first = $prompts[0];
+    $this->assertIsArray($first);
+    $this->assertSame('4.5.6', $first['default']);
+  }
+
+  public function testAgentHelpResolvesClosureDefaultWithContext(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $panel): void {
+        $panel->text('version', 'Version')->default(fn (Context $context): string => $context->version);
+      })
+      ->build();
+
+    $help = (new Tui($form))->agentHelp(new Context(version: '4.5.6'));
+
+    $this->assertStringContainsString('"default": "4.5.6"', $help);
   }
 
   public function testEnvPrefix(): void {

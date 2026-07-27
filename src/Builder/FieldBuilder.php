@@ -42,6 +42,16 @@ final class FieldBuilder {
   protected mixed $default = NULL;
 
   /**
+   * Whether a representative default for machine-readable output was set.
+   */
+  protected bool $hasSchemaDefault = FALSE;
+
+  /**
+   * The representative default shown in machine-readable output, when set.
+   */
+  protected mixed $schemaDefault = NULL;
+
+  /**
    * The option rows, in display order.
    *
    * @var list<\DrevOps\Tui\Model\Option>
@@ -230,7 +240,9 @@ final class FieldBuilder {
    *
    * @param mixed $default
    *   The default value, or a `fn (Context): mixed` closure computing a
-   *   dynamic default from the run context.
+   *   dynamic default from the run context. A closure that cannot be evaluated
+   *   without answers reads as null in machine-readable output unless a
+   *   {@see schemaDefault()} stands in for it.
    *
    * @return $this
    *   The builder.
@@ -238,6 +250,26 @@ final class FieldBuilder {
   public function default(mixed $default): self {
     $this->hasDefault = TRUE;
     $this->default = $default;
+
+    return $this;
+  }
+
+  /**
+   * Set a representative default for machine-readable output.
+   *
+   * When {@see default()} is a closure that cannot be resolved without answers,
+   * the schema and agent-help generators advertise this static value instead of
+   * evaluating the closure. Consulted only for a closure default.
+   *
+   * @param mixed $default
+   *   The static value to advertise as the default.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function schemaDefault(mixed $default): self {
+    $this->hasSchemaDefault = TRUE;
+    $this->schemaDefault = $default;
 
     return $this;
   }
@@ -855,6 +887,8 @@ final class FieldBuilder {
       $this->optionsLoader,
       $this->progressSteps,
       $this->progressWork,
+      schemaDefault: $this->schemaDefault,
+      hasSchemaDefault: $this->hasSchemaDefault,
     );
   }
 

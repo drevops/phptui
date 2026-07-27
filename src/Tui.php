@@ -528,21 +528,29 @@ final class Tui {
   /**
    * The JSON schema describing the questions.
    *
+   * @param \DrevOps\Tui\Handler\Context|null $context
+   *   The context a closure default is evaluated against; NULL uses an empty
+   *   context carrying no prior answers.
+   *
    * @return array<string,mixed>
    *   The schema.
    */
-  public function schema(): array {
-    return (new SchemaGenerator($this->form))->generate();
+  public function schema(?Context $context = NULL): array {
+    return (new SchemaGenerator($this->form, $context ?? new Context()))->generate();
   }
 
   /**
    * Agent-facing help for driving the form non-interactively.
    *
+   * @param \DrevOps\Tui\Handler\Context|null $context
+   *   The context a closure default is evaluated against; NULL uses an empty
+   *   context carrying no prior answers.
+   *
    * @return string
    *   The help text.
    */
-  public function agentHelp(): string {
-    return (new AgentHelp($this->form, $this->envPrefix))->generate();
+  public function agentHelp(?Context $context = NULL): string {
+    return (new AgentHelp($this->form, $this->envPrefix, $context ?? new Context()))->generate();
   }
 
   /**

@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Tests\Unit\Schema;
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Schema\AgentHelp;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -141,6 +142,58 @@ final class AgentHelpTest extends TestCase {
     $help = (new AgentHelp($form))->generate();
 
     $this->assertStringNotContainsString('"env"', $help);
+  }
+
+  public function testResolvesClosureDefault(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('name', 'Name')->default(fn (Context $context): string => 'computed');
+      })
+      ->build();
+
+    $help = (new AgentHelp($form))->generate();
+
+    $this->assertStringContainsString('"default": "computed"', $help);
+  }
+
+  public function testClosureDefaultUsesProvidedContext(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('version', 'Version')->default(fn (Context $context): string => $context->version);
+      })
+      ->build();
+
+    $help = (new AgentHelp($form, '', new Context(version: '7.7.7')))->generate();
+
+    $this->assertStringContainsString('"default": "7.7.7"', $help);
+  }
+
+  public function testDeclaredSchemaDefaultStandsInForClosure(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('name', 'Name')->default(fn (Context $context): string => 'live')->schemaDefault('static');
+      })
+      ->build();
+
+    $help = (new AgentHelp($form))->generate();
+
+    $this->assertStringContainsString('"default": "static"', $help);
+    $this->assertStringNotContainsString('live', $help);
+  }
+
+  public function testUnresolvableClosureDefaultOmitsDefault(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('name', 'Name')->default(fn (Context $context): string => throw new \RuntimeException('needs answers'));
+      })
+      ->build();
+
+    $help = (new AgentHelp($form))->generate();
+
+    // The unresolvable closure emits no `default` key; `"default"` still occurs
+    // in the x-precedence list, so match the key form with its colon.
+    $this->assertStringContainsString('"name"', $help);
+    $this->assertStringNotContainsString('"default":', $help);
   }
 
   public function testPauseIsSkipped(): void {
