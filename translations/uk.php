@@ -64,7 +64,7 @@ return [
   'Cancel' => 'Скасувати',
   '"@min" must not exceed "@max".' => '"@min" не може перевищувати "@max".',
   '(empty)' => '(порожньо)',
-  '@label is required.' => 'Поле "@label" є обов\'язковим.',
+  '@label is required.' => "@label є обов'язковим полем.",
   '@value is not a valid "@key". Allowed: @allowed.' => '@value не є припустимим "@key". Дозволено: @allowed.',
   '@value is not a valid "@key". Use a non-negative integer.' => '@value не є припустимим "@key". Використайте ціле число не менше нуля.',
   'Calendar' => 'Календар',
