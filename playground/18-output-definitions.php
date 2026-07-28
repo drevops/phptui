@@ -11,10 +11,10 @@
  * same palette they were entered in.
  *
  * Usage:
- *   php playground/17-output-definitions.php
+ *   php playground/18-output-definitions.php
  *
  *   # Off a TTY the alignment stays, the colour goes:
- *   php playground/17-output-definitions.php 2>&1 | cat
+ *   php playground/18-output-definitions.php 2>&1 | cat
  */
 
 declare(strict_types=1);

@@ -55,7 +55,7 @@ const DISPLAY_MODES = [
 /**
  * The output subjects and the calls that draw them.
  *
- * Each mirrors a playground/17-output-* script - same content and calls - so
+ * Each mirrors a playground/18-output-* script - same content and calls - so
  * the rendered cards match the code a reader runs.
  *
  * @return array<string, callable(\DrevOps\Tui\Primitive\Output): void>

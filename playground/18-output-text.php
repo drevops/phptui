@@ -10,13 +10,13 @@
  * sections and banner() opens the program with a logo and version.
  *
  * Usage:
- *   php playground/17-output-text.php
+ *   php playground/18-output-text.php
  *
  *   # Off a TTY the wrapping stays, the colour goes:
- *   php playground/17-output-text.php 2>&1 | cat
+ *   php playground/18-output-text.php 2>&1 | cat
  *
  *   # ASCII rules when the locale is not UTF-8:
- *   LC_ALL=C php playground/17-output-text.php
+ *   LC_ALL=C php playground/18-output-text.php
  */
 
 declare(strict_types=1);

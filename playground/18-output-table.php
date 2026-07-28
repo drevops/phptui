@@ -11,13 +11,13 @@
  * belong together.
  *
  * Usage:
- *   php playground/17-output-table.php
+ *   php playground/18-output-table.php
  *
  *   # Off a TTY the grid stays, the colour goes:
- *   php playground/17-output-table.php 2>&1 | cat
+ *   php playground/18-output-table.php 2>&1 | cat
  *
  *   # ASCII corners when the locale is not UTF-8:
- *   LC_ALL=C php playground/17-output-table.php
+ *   LC_ALL=C php playground/18-output-table.php
  */
 
 declare(strict_types=1);

@@ -43,7 +43,7 @@ $out->box([
 
 Long lines wrap inside the border rather than being clipped by it, so you can hand `box()` a paragraph and let it fit itself to the terminal.
 
-Runnable in [`playground/17-output-box.php`](https://github.com/drevops/tui/blob/main/playground/17-output-box.php).
+Runnable in [`playground/18-output-box.php`](https://github.com/drevops/tui/blob/main/playground/18-output-box.php).
 
 In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off:
 
@@ -83,7 +83,7 @@ $out->table(['Item', 'Crates', 'Picked'], [
 
 Pass an empty header list to draw the rows with no header row. When the natural width exceeds the terminal, the widest columns shrink and over-long cells are cut short with an ellipsis, so the borders always stay whole.
 
-Runnable in [`playground/17-output-table.php`](https://github.com/drevops/tui/blob/main/playground/17-output-table.php).
+Runnable in [`playground/18-output-table.php`](https://github.com/drevops/tui/blob/main/playground/18-output-table.php).
 
 <table>
   <tr>
@@ -146,7 +146,7 @@ use DrevOps\Tui\Primitive\Status;
 $out->status($ok ? Status::Success : Status::Error, 'Packed the box');
 ```
 
-Runnable in [`playground/17-output-status.php`](https://github.com/drevops/tui/blob/main/playground/17-output-status.php).
+Runnable in [`playground/18-output-status.php`](https://github.com/drevops/tui/blob/main/playground/18-output-status.php).
 
 <table>
   <tr>
@@ -184,7 +184,7 @@ $out->definitions([
 ]);
 ```
 
-Runnable in [`playground/17-output-definitions.php`](https://github.com/drevops/tui/blob/main/playground/17-output-definitions.php).
+Runnable in [`playground/18-output-definitions.php`](https://github.com/drevops/tui/blob/main/playground/18-output-definitions.php).
 
 <table>
   <tr>
@@ -226,7 +226,7 @@ $out = $tui->markdown()->output();
 $out->text("**Before you order:**\n\n- Pick a *delivery day* between Monday and Saturday\n- Leave a note if the gate code is not `1234`");
 ```
 
-Runnable in [`playground/17-output-text.php`](https://github.com/drevops/tui/blob/main/playground/17-output-text.php).
+Runnable in [`playground/18-output-text.php`](https://github.com/drevops/tui/blob/main/playground/18-output-text.php).
 
 ## Theme-drawn
 
@@ -241,7 +241,7 @@ To go further and restyle one piece outright, override its `render*()` method on
 Output is chrome, not data, so it is written to standard error and leaves standard output for your program's own results. Piped, redirected or captured, the escape codes would land in the text rather than on a terminal, so the colour is dropped and the plain lines remain:
 
 ```bash
-php playground/17-output-status.php 2>&1 | cat
+php playground/18-output-status.php 2>&1 | cat
 # › Checking the morning harvest
 # ✓ Apricots picked and weighed
 # ! Only two crates of pears left
