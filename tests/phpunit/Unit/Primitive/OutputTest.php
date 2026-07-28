@@ -35,7 +35,7 @@ final class OutputTest extends TestCase {
     $this->assertStringEndsWith("\n", $output);
   }
 
-  public function testBoxAcceptsALineList(): void {
+  public function testBoxAcceptsLineList(): void {
     $terminal = new BufferedTerminal();
 
     (new Output($terminal, $this->theme()))->box(['Apples', 'Pears']);
@@ -67,17 +67,15 @@ final class OutputTest extends TestCase {
   /**
    * Data provider.
    *
-   * @return array<string, array{string, string}>
+   * @return \Iterator<string, array{string, string}>
    *   The method name and the glyph it leads with.
    */
-  public static function dataProviderEachStatusMethodWritesItsOwnLine(): array {
-    return [
-      'note' => ['note', '•'],
-      'info' => ['info', '›'],
-      'success' => ['success', '✓'],
-      'warning' => ['warning', '!'],
-      'error' => ['error', '✗'],
-    ];
+  public static function dataProviderEachStatusMethodWritesItsOwnLine(): \Iterator {
+    yield 'note' => ['note', '•'];
+    yield 'info' => ['info', '›'];
+    yield 'success' => ['success', '✓'];
+    yield 'warning' => ['warning', '!'];
+    yield 'error' => ['error', '✗'];
   }
 
   public function testStatusTakesTheKindDirectly(): void {

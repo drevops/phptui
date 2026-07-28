@@ -14,29 +14,19 @@ namespace DrevOps\Tui\Primitive;
  */
 enum Status: string {
 
-  /**
-   * An aside, quieter than the output around it.
-   */
+  // An aside, quieter than the output around it.
   case Note = 'note';
 
-  /**
-   * A neutral statement of what is happening.
-   */
+  // A neutral statement of what is happening.
   case Info = 'info';
 
-  /**
-   * Something finished as intended.
-   */
+  // Something finished as intended.
   case Success = 'success';
 
-  /**
-   * Something needs attention but did not stop the run.
-   */
+  // Something needs attention but did not stop the run.
   case Warning = 'warning';
 
-  /**
-   * Something failed.
-   */
+  // Something failed.
   case Error = 'error';
 
 }

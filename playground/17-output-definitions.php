@@ -4,11 +4,11 @@
  * @file
  * Output as a definition list: label and value pairs, aligned.
  *
- * definitions() lays label/value pairs into two columns - the labels sized to
- * the widest of them, the values wrapped underneath their own column - and
- * styles each with the active theme's atoms. It is the summary a consumer
- * prints once a form is collected, so the answers read back in the same
- * palette they were entered in.
+ * The definitions() call lays label/value pairs into two columns - the labels
+ * sized to the widest of them, the values wrapped underneath their own column
+ * - and styles each with the active theme's atoms. It is the summary a
+ * consumer prints once a form is collected, so the answers read back in the
+ * same palette they were entered in.
  *
  * Usage:
  *   php playground/17-output-definitions.php

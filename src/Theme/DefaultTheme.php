@@ -1113,7 +1113,7 @@ class DefaultTheme implements ThemeInterface {
    */
   public function renderStatus(Status $status, string $text): string {
     // The glyph and the message share one colour so the line reads as a single
-    // statement, and the glyph alone still tells the five apart with colour off.
+    // statement, and the glyph alone still tells the five apart without it.
     $line = rtrim($this->statusSymbol($status) . ' ' . $this->linkify($this->oneLine($text)));
 
     return match ($status) {

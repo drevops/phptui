@@ -4,12 +4,12 @@
  * @file
  * Output as a box: framed chrome before and after a form run.
  *
- * output() returns the standalone output primitives - the chrome a consumer
- * writes around a form rather than inside it. box() frames a body under an
- * optional title, sized to its content, wrapped to the terminal and drawn by
- * the active theme (set one with ->theme(...)), so a welcome box before the
- * form and a summary box after it match the panel between them. Off a TTY,
- * piped or redirected, the colour drops and the plain text remains.
+ * The output() call returns the standalone output primitives - the chrome a
+ * consumer writes around a form rather than inside it. box() frames a body
+ * under an optional title, sized to its content, wrapped to the terminal and
+ * drawn by the active theme (set one with ->theme(...)), so a welcome box
+ * before the form and a summary box after it match the panel between them.
+ * Off a TTY, piped or redirected, the colour drops and the plain text remains.
  *
  * Usage:
  *   php playground/17-output-box.php

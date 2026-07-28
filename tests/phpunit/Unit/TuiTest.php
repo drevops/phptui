@@ -435,7 +435,7 @@ final class TuiTest extends TestCase {
     $this->assertStringContainsString('Jars', $output);
   }
 
-  public function testOutputDropsAutoDetectedColourOffATty(): void {
+  public function testOutputDropsAutoDetectedColourOffTerminal(): void {
     $terminal = new BufferedTerminal();
 
     // The in-memory stream is not a TTY, so escape codes would land in the
@@ -445,7 +445,7 @@ final class TuiTest extends TestCase {
     $this->assertStringNotContainsString("\033", $terminal->output());
   }
 
-  public function testOutputKeepsForcedColourOffATty(): void {
+  public function testOutputKeepsForcedColourOffTerminal(): void {
     $terminal = new BufferedTerminal();
 
     (new Tui($this->demoForm()))->color(TRUE)->output($terminal)->success('Preserves are ready');
@@ -465,7 +465,7 @@ final class TuiTest extends TestCase {
     $this->assertStringNotContainsString('╭', $output);
   }
 
-  public function testOutputWrapsToANarrowTerminal(): void {
+  public function testOutputWrapsToNarrowTerminal(): void {
     // A frame sized past the terminal hard-wraps and corrupts the layout, so
     // the box follows the narrower of the terminal and the default width.
     $terminal = new BufferedTerminal(cols: 30);

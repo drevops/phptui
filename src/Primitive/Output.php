@@ -58,7 +58,7 @@ final class Output {
   public function box(string|array $body, string $title = ''): self {
     // A single empty string is an absent body, not a blank line: a caller
     // spacing content out passes a list, and box('') must draw nothing.
-    $lines = is_array($body) ? array_values($body) : ($body === '' ? [] : [$body]);
+    $lines = is_array($body) ? $body : ($body === '' ? [] : [$body]);
 
     return $this->writeLines($this->theme->renderBox($title, $lines));
   }

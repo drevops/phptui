@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
 #[Group('tui')]
 final class OutputRenderTest extends TestCase {
 
-  public function testBoxDrawsATitledFrameSizedToItsContent(): void {
+  public function testBoxDrawsTitledFrameSizedToItsContent(): void {
     $lines = $this->theme(color: FALSE)->renderBox('Welcome', ['Pick your fruit.']);
 
     $this->assertCount(4, $lines);
@@ -33,11 +33,11 @@ final class OutputRenderTest extends TestCase {
     $this->assertStringStartsWith('╰', $lines[3]);
 
     // Every row is the same width, so the frame closes cleanly.
-    $widths = array_map(static fn(string $line): int => Ansi::width($line), $lines);
+    $widths = array_map(Ansi::width(...), $lines);
     $this->assertSame([$widths[0]], array_unique($widths));
   }
 
-  public function testBoxWithoutATitleDrawsTheBodyAlone(): void {
+  public function testBoxWithoutTitleDrawsTheBodyAlone(): void {
     $lines = $this->theme(color: FALSE)->renderBox('', ['Pick your fruit.']);
 
     $this->assertCount(3, $lines);
@@ -101,17 +101,15 @@ final class OutputRenderTest extends TestCase {
   /**
    * Data provider.
    *
-   * @return array<string, array{Status, string, string}>
+   * @return \Iterator<string, array{Status, string, string}>
    *   The status, its Unicode glyph and its ASCII glyph.
    */
-  public static function dataProviderStatusLeadsWithItsOwnGlyph(): array {
-    return [
-      'note' => [Status::Note, '•', '-'],
-      'info' => [Status::Info, '›', '>'],
-      'success' => [Status::Success, '✓', '+'],
-      'warning' => [Status::Warning, '!', '!'],
-      'error' => [Status::Error, '✗', 'x'],
-    ];
+  public static function dataProviderStatusLeadsWithItsOwnGlyph(): \Iterator {
+    yield 'note' => [Status::Note, '•', '-'];
+    yield 'info' => [Status::Info, '›', '>'];
+    yield 'success' => [Status::Success, '✓', '+'];
+    yield 'warning' => [Status::Warning, '!', '!'];
+    yield 'error' => [Status::Error, '✗', 'x'];
   }
 
   public function testEveryStatusGlyphIsOneColumnWide(): void {
@@ -132,17 +130,15 @@ final class OutputRenderTest extends TestCase {
   /**
    * Data provider.
    *
-   * @return array<string, array{Status, string}>
+   * @return \Iterator<string, array{Status, string}>
    *   The status and the SGR the default dark theme paints it with.
    */
-  public static function dataProviderStatusCarriesItsOwnColour(): array {
-    return [
-      'note is grey' => [Status::Note, "\033[90m"],
-      'info is the accent' => [Status::Info, "\033[1;36m"],
-      'success is green' => [Status::Success, "\033[32m"],
-      'warning is the indicator' => [Status::Warning, "\033[1;33m"],
-      'error is red' => [Status::Error, "\033[31m"],
-    ];
+  public static function dataProviderStatusCarriesItsOwnColour(): \Iterator {
+    yield 'note is grey' => [Status::Note, "\033[90m"];
+    yield 'info is the accent' => [Status::Info, "\033[1;36m"];
+    yield 'success is green' => [Status::Success, "\033[32m"];
+    yield 'warning is the indicator' => [Status::Warning, "\033[1;33m"];
+    yield 'error is red' => [Status::Error, "\033[31m"];
   }
 
   public function testStatusFoldsLineBreaksAndTrimsAnEmptyMessage(): void {
@@ -180,11 +176,11 @@ final class OutputRenderTest extends TestCase {
     $this->assertSame([], $this->theme()->renderDefinitions([]));
   }
 
-  public function testDefinitionsKeepALabelWhoseValueIsEmpty(): void {
+  public function testDefinitionsKeepLabelWhoseValueIsEmpty(): void {
     $this->assertSame(['  Jars  '], $this->theme(color: FALSE)->renderDefinitions(['Jars' => '']));
   }
 
-  public function testDefinitionsAcceptANumericLabel(): void {
+  public function testDefinitionsAcceptNumericLabel(): void {
     // A numeric-string key arrives as an integer; it still renders as a label.
     $this->assertSame(['  2024  Apricot'], $this->theme(color: FALSE)->renderDefinitions(['2024' => 'Apricot']));
   }
@@ -193,12 +189,12 @@ final class OutputRenderTest extends TestCase {
     $this->assertSame(['  Jars  12 sealed'], $this->theme(color: FALSE)->renderDefinitions(["Jars" => "12\nsealed"]));
   }
 
-  public function testDefinitionsWrapALongValueUnderTheValueColumn(): void {
+  public function testDefinitionsWrapLongValueUnderTheValueColumn(): void {
     $value = 'Apricot, plum, greengage, damson, mirabelle, quince, medlar, pear, apple and a handful of blackcurrants.';
     $lines = $this->theme(color: FALSE)->renderDefinitions(['Fruit' => $value]);
 
     $this->assertGreaterThan(1, count($lines));
-    // The continuation aligns under the first line's value, not under the label.
+    // The continuation aligns under the value, not under the label.
     $this->assertSame(strpos($lines[0], 'Apricot'), strspn($lines[1], ' '));
 
     foreach ($lines as $line) {
@@ -206,7 +202,7 @@ final class OutputRenderTest extends TestCase {
     }
   }
 
-  public function testDefinitionsCapARunawayLabelAtHalfTheFrame(): void {
+  public function testDefinitionsCapRunawayLabelAtHalfTheFrame(): void {
     $label = str_repeat('long', 40);
     $lines = $this->theme(color: FALSE)->renderDefinitions([$label => 'Apricot']);
 
