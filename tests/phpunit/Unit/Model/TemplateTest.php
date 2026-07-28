@@ -98,6 +98,28 @@ final class TemplateTest extends TestCase {
     yield 'not matching' => ['{{a}}-{{b}}', 'nope', FALSE];
     // A newline is part of a slot's value, not a reason to stop matching.
     yield 'newline inside a slot' => ['{{a}}-{{b}}', "one\nx-two", TRUE];
+    yield 'trailing newline' => ['{{a}}-{{b}}', "one-two\n", TRUE];
+  }
+
+  #[DataProvider('dataProviderRoundTrip')]
+  public function testAssembleAndExtractAreInverses(string $pattern, string $value): void {
+    $template = new Template($pattern);
+
+    // Whatever a matching string decomposes into must assemble back to it, so
+    // the answer and the parts read off it can never disagree.
+    $this->assertSame($value, $template->assemble($template->extract($value)));
+  }
+
+  public static function dataProviderRoundTrip(): \Iterator {
+    yield 'plain' => ['{{a}}-{{b}}', 'one-two'];
+    yield 'empty parts' => ['{{a}}-{{b}}', '-'];
+    yield 'repeated separator' => ['{{a}}-{{b}}', 'one-two-three'];
+    yield 'fixed text' => ['crate {{id}} ready', 'crate 42 ready'];
+    yield 'multibyte' => ['{{a}}-{{b}}', 'ééé-ü'];
+    // The end anchor is absolute, so a trailing newline stays in the last slot
+    // instead of being silently dropped.
+    yield 'trailing newline' => ['{{a}}-{{b}}', "one-two\n"];
+    yield 'newline inside a slot' => ['{{a}}-{{b}}', "one\nx-two"];
   }
 
   public function testLabelFallsBackToTheSlotName(): void {
@@ -166,7 +188,7 @@ final class TemplateTest extends TestCase {
   public function testRegexAnchorsAndEscapesTheFixedText(): void {
     $template = new Template('a.b{{slot}}');
 
-    $this->assertSame('/^a\.b(.*?)$/us', $template->regex());
+    $this->assertSame('/^a\.b(.*?)$/usD', $template->regex());
     $this->assertFalse($template->matches('aXbvalue'));
     $this->assertTrue($template->matches('a.bvalue'));
   }

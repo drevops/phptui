@@ -184,13 +184,16 @@ final class Template {
    * The anchored expression an assembled string must match.
    *
    * The slots are captured positionally rather than by name: a slot name is any
-   * word, and one starting with a digit is not a legal capture-group name.
+   * word, and one starting with a digit is not a legal capture-group name. The
+   * end anchor is absolute (`D`): left to its default it would also match
+   * before a trailing newline, which would drop that newline from the last
+   * slot and stop the assembled string round-tripping.
    *
    * @return string
    *   The expression.
    */
   public function regex(): string {
-    return '/^' . $this->expression(static fn(string $literal): string => preg_quote($literal, '/')) . '$/us';
+    return '/^' . $this->expression(static fn(string $literal): string => preg_quote($literal, '/')) . '$/usD';
   }
 
   /**
