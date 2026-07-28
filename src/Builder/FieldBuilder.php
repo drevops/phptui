@@ -81,6 +81,11 @@ final class FieldBuilder {
   protected bool $required = FALSE;
 
   /**
+   * The message shown when a required value is missing, empty to derive one.
+   */
+  protected string $requiredMessage = '';
+
+  /**
    * Whether the field collects several values as a list rather than one.
    */
   protected bool $multiple = FALSE;
@@ -287,16 +292,20 @@ final class FieldBuilder {
   }
 
   /**
-   * Mark the field required.
+   * Mark the field required, rejecting an empty value.
    *
    * @param bool $required
    *   Whether a value is required.
+   * @param string $message
+   *   The message shown when the value is empty; empty derives one from the
+   *   label.
    *
    * @return $this
    *   The builder.
    */
-  public function required(bool $required = TRUE): self {
+  public function required(bool $required = TRUE, string $message = ''): self {
     $this->required = $required;
+    $this->requiredMessage = $message;
 
     return $this;
   }
@@ -922,6 +931,7 @@ final class FieldBuilder {
       $this->resolveDefault(),
       $this->options,
       $this->required,
+      $this->requiredMessage,
       $this->when,
       $this->derive,
       $this->discover,

@@ -14,6 +14,7 @@ use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Tests\Fixtures\Handler\Spy;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -58,6 +59,87 @@ final class EngineDeclaredBehaviourTest extends TestCase {
     $this->expectException(EngineException::class);
     $this->expectExceptionMessage('Invalid value for field "name": Must be "ok".');
     $engine->collect(['name' => 'nope'], new Context());
+  }
+
+  /**
+   * A required field rejects every empty supplied input, whatever its shape.
+   *
+   * @param string $id
+   *   The id of the field the value is supplied for.
+   * @param mixed $value
+   *   The supplied input.
+   * @param string $expected
+   *   The expected exception message.
+   */
+  #[DataProvider('dataProviderRequiredRejectsEmpty')]
+  public function testRequiredRejectsEmpty(string $id, mixed $value, string $expected): void {
+    $engine = $this->engine(function (PanelBuilder $p): void {
+      $p->text('name', 'Produce name')->required();
+      $p->select('crates', 'Crates')->multiple()->required()->option('a')->option('b');
+    });
+
+    $this->expectException(EngineException::class);
+    $this->expectExceptionMessage($expected);
+    $engine->collect([$id => $value], new Context());
+  }
+
+  /**
+   * Data provider for testRequiredRejectsEmpty().
+   *
+   * @return \Iterator<string,array{string,mixed,string}>
+   *   The field id, the empty value supplied for it and the expected message.
+   */
+  public static function dataProviderRequiredRejectsEmpty(): \Iterator {
+    yield 'empty string' => ['name', '', 'Invalid value for field "name": Produce name is required.'];
+    yield 'null' => ['name', NULL, 'Invalid value for field "name": Produce name is required.'];
+    yield 'empty list' => ['crates', [], 'Invalid value for field "crates": Crates is required.'];
+  }
+
+  public function testRequiredAcceptsValue(): void {
+    $engine = $this->engine(function (PanelBuilder $p): void {
+      $p->text('name', 'Produce name')->required();
+    });
+
+    $this->assertSame(['name' => 'Pear'], $engine->collect(['name' => 'Pear'], new Context())->values);
+  }
+
+  public function testRequiredMessageOverridesTheDerivedOne(): void {
+    $engine = $this->engine(function (PanelBuilder $p): void {
+      $p->text('plot', 'Garden plot name')->required(message: 'The garden plot name is required.');
+    });
+
+    $this->expectException(EngineException::class);
+    $this->expectExceptionMessage('Invalid value for field "plot": The garden plot name is required.');
+    $engine->collect(['plot' => ''], new Context());
+  }
+
+  public function testRequiredRunsBeforeTheDeclaredValidator(): void {
+    $engine = $this->engine(function (PanelBuilder $p): void {
+      $p->text('name', 'Produce name')->required()->validate(fn (mixed $v): ?string => $v === 'Pear' ? NULL : 'Only pears keep.');
+    });
+
+    $this->expectException(EngineException::class);
+    $this->expectExceptionMessage('Invalid value for field "name": Produce name is required.');
+    $engine->collect(['name' => ''], new Context());
+  }
+
+  public function testRequiredLeavesAnUnsuppliedFieldAlone(): void {
+    $engine = $this->engine(function (PanelBuilder $p): void {
+      $p->text('name', 'Produce name')->required();
+    });
+
+    // The guard weighs supplied inputs only, so an empty default is
+    // collected as it stands - reporting it is the schema validator's job.
+    $this->assertSame(['name' => ''], $engine->collect([], new Context())->values);
+  }
+
+  public function testRequiredIgnoresAnInactiveField(): void {
+    $engine = $this->engine(function (PanelBuilder $p): void {
+      $p->text('mode', 'Mode');
+      $p->text('plot', 'Garden plot name')->required()->when(new Condition('mode', eq: 'custom'));
+    });
+
+    $this->assertSame(['mode' => 'standard'], $engine->collect(['mode' => 'standard', 'plot' => ''], new Context())->values);
   }
 
   public function testNumberBoundsRejectOutOfRange(): void {

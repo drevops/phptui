@@ -2,13 +2,15 @@
 
 /**
  * @file
- * Declared behaviour: default, validation and transform as field closures.
+ * Declared behaviour: required, default, validation and transform on a field.
  *
- * Three seams on any field, no classes needed: ->default() accepts a closure
- * receiving the run Context (directory, update flag, version) for values
- * computed at run time; ->validate() returns an error string to reject a
- * value or NULL to accept it, and blocks accepting until it passes;
- * ->transform() rewrites the accepted value before it is stored.
+ * Four seams on any field, no classes needed: ->required() rejects an empty
+ * value with a message derived from the label, or one declared through its
+ * "message" argument; ->default() accepts a closure receiving the run Context
+ * (directory, update flag, version) for values computed at run time;
+ * ->validate() returns an error string to reject a value or NULL to accept it,
+ * and blocks accepting until it passes; ->transform() rewrites the accepted
+ * value before it is stored.
  *
  * Usage:
  *   php playground/06-field-behaviour-closures.php
@@ -28,9 +30,15 @@ require __DIR__ . '/../vendor/autoload.php';
 $form = Form::create('Field behaviour')
   ->panel('stall', 'Stall', function (PanelBuilder $p): void {
     // A dynamic default: computed when the run starts, here from the target
-    // directory's name ("my-stall" becomes "My Stall").
+    // directory's name ("my-stall" becomes "My Stall"). Required, so clearing
+    // it is rejected with a message derived from the label. Try emptying it.
     $p->text('name', 'Stall name')->required()
       ->default(fn (Context $c): string => ucwords(str_replace(['-', '_'], ' ', basename($c->directory))));
+
+    // A required field with its own message, shown instead of the derived one.
+    // Nothing is picked to start with, so Submit refuses until one is.
+    $p->select('basket', 'Basket')->multiple()->required(message: 'Add at least one item to the basket.')
+      ->option('apple', 'Apple')->option('carrot', 'Carrot')->option('tomato', 'Tomato');
 
     // Validation: NULL accepts, any string rejects with that message. Try
     // accepting a weight below 100.

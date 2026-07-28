@@ -89,12 +89,15 @@ class SchemaValidator {
    *   The first error, or NULL when valid.
    */
   protected function validateValue(Field $field, mixed $value): ?string {
-    if (!$field->acceptsValue($value)) {
-      return $this->constraintMessage($field, $field->valueKind());
+    // Emptiness is answered first, so a required field says so rather than
+    // letting NULL read as a type error or an empty list as a count violation.
+    $missing = $field->requiredViolation($value);
+    if ($missing !== NULL) {
+      return Translator::t('Question "@id": @error', ['@id' => $field->id, '@error' => $missing]);
     }
 
-    if ($field->required && $this->isEmpty($value)) {
-      return Translator::t('Question "@id" is required.', ['@id' => $field->id]);
+    if (!$field->acceptsValue($value)) {
+      return $this->constraintMessage($field, $field->valueKind());
     }
 
     $bounds_error = $this->checkBounds($field, $value);
@@ -158,19 +161,6 @@ class SchemaValidator {
    */
   protected function constraintMessage(Field $field, string $constraint): string {
     return Translator::t('Question "@id" must be @constraint.', ['@id' => $field->id, '@constraint' => $constraint]);
-  }
-
-  /**
-   * Whether a value is empty.
-   *
-   * @param mixed $value
-   *   The value.
-   *
-   * @return bool
-   *   TRUE when empty.
-   */
-  protected function isEmpty(mixed $value): bool {
-    return in_array($value, ['', [], NULL], TRUE);
   }
 
   /**

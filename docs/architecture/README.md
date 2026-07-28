@@ -36,10 +36,10 @@ Most fields need no code. When one does - a dynamic default, discovery, validati
 
 Walking the sequence:
 
-1. **Resolve each field's starting value**, in priority order: an explicit input (from `--prompts` or the environment, via `InputResolver`) beats a discovered value (in update mode, adopted only when it passes the field's type, bounds and options), which beats a handler's dynamic `default()`, which beats the static default in the config.
+1. **Resolve each field's starting value**, in priority order: an explicit input (from `--prompts` or the environment, via `InputResolver`) beats a discovered value (in update mode, adopted only when it passes the field's emptiness, type, bounds and options), which beats a handler's dynamic `default()`, which beats the static default in the config.
 2. **Transform each supplied input** through its declared or handler behaviour, so derivation, activation and fix-ups all evaluate the normalized value. Defaults and derived values are the configuration's own and skip the transformers.
 3. **Settle the derived and conditional fields.** `Deriver` recomputes `derive` values (with `Transform`) until they stop changing, the `Condition` rules decide which fields are active from their `when` declarations, and fix-ups reconcile dependents - repeated until the whole set is stable.
-4. **Validate each active supplied input** - the type and bounds are checked first, and the first error throws.
+4. **Validate each active supplied input** - an empty value on a required field is rejected first, then the type and bounds, and the first error throws.
 5. **Emit `Answers`** - the values plus their provenance (default, detected, edited, derived, override).
 
 The same lifecycle runs whether the caller is a human at the TUI or a script passing JSON, which is why the engine is testable without a terminal.

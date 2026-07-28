@@ -351,8 +351,8 @@ class Engine {
    * Whether a discovered value is safe to adopt for a field.
    *
    * Discovered values come from arbitrary project files, not the declaration,
-   * so one that fails the field's type, bounds or options falls back to the
-   * default instead of poisoning the answers.
+   * so one that fails the field's type, emptiness, bounds or options falls back
+   * to the default instead of poisoning the answers.
    *
    * @param \DrevOps\Tui\Model\Field $field
    *   The field.
@@ -363,11 +363,11 @@ class Engine {
    *   TRUE when the value passes the field's shape and constraints.
    */
   protected function acceptsDetected(Field $field, mixed $value): bool {
-    return $field->acceptsValue($value) && $field->boundsViolation($value) === NULL && $field->pickerViolation($value) === NULL && $field->optionError($value) === NULL;
+    return $field->acceptsValue($value) && $field->requiredViolation($value) === NULL && $field->boundsViolation($value) === NULL && $field->pickerViolation($value) === NULL && $field->optionError($value) === NULL;
   }
 
   /**
-   * Validate a supplied value: type, bounds, validator, then options.
+   * Validate a supplied value: required, type, bounds, validator, then options.
    *
    * @param \DrevOps\Tui\Model\Field $field
    *   The field.
@@ -378,6 +378,13 @@ class Engine {
    *   An error message, or NULL when the value is valid.
    */
   protected function validateValue(Field $field, mixed $value): ?string {
+    // Emptiness is answered first, so a required field says so rather than
+    // letting NULL read as a type error or an empty list as a count violation.
+    $missing = $field->requiredViolation($value);
+    if ($missing !== NULL) {
+      return $missing;
+    }
+
     if (!$field->acceptsValue($value)) {
       return Translator::t('must be @constraint.', ['@constraint' => $field->valueKind()]);
     }

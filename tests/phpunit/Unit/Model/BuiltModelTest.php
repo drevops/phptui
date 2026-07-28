@@ -14,6 +14,7 @@ use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\Panel;
 use DrevOps\Tui\Model\SelectionBounds;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -69,6 +70,50 @@ final class BuiltModelTest extends TestCase {
     $this->assertSame('theme_debug', $form->field('theme_debug')?->id);
     $this->assertNotInstanceOf(Field::class, $form->field('nope'));
     $this->assertCount(4, $form->fields());
+  }
+
+  /**
+   * Only an empty value on a required field yields a violation message.
+   *
+   * @param bool $required
+   *   Whether the field is required.
+   * @param string $message
+   *   The declared message, empty to derive one from the label.
+   * @param mixed $value
+   *   The candidate value.
+   * @param string|null $expected
+   *   The expected message, or NULL when the value is accepted.
+   */
+  #[DataProvider('dataProviderRequiredViolation')]
+  public function testRequiredViolation(bool $required, string $message, mixed $value, ?string $expected): void {
+    $field = new Field('plot', 'Garden plot name', '', FieldType::Text, '', required: $required, requiredMessage: $message);
+
+    $this->assertSame($expected, $field->requiredViolation($value));
+  }
+
+  /**
+   * Data provider for testRequiredViolation().
+   *
+   * @return \Iterator<string,array{bool,string,mixed,string|null}>
+   *   The required flag, the declared message, the value and the expectation.
+   */
+  public static function dataProviderRequiredViolation(): \Iterator {
+    $derived = 'Garden plot name is required.';
+    $declared = 'The garden plot name is required.';
+
+    yield 'empty string' => [TRUE, '', '', $derived];
+    yield 'empty list' => [TRUE, '', [], $derived];
+    yield 'null' => [TRUE, '', NULL, $derived];
+    yield 'declared message wins over the label' => [TRUE, $declared, '', $declared];
+    yield 'non-empty string' => [TRUE, '', 'North bed', NULL];
+    yield 'non-empty list' => [TRUE, '', ['a'], NULL];
+    // Only the three empty shapes count: a falsy scalar is an answer, not an
+    // omission, so a FALSE confirm and a 0 number both pass.
+    yield 'false' => [TRUE, '', FALSE, NULL];
+    yield 'zero' => [TRUE, '', 0, NULL];
+    yield 'zero string' => [TRUE, '', '0', NULL];
+    yield 'optional field ignores an empty value' => [FALSE, '', '', NULL];
+    yield 'optional field ignores a declared message' => [FALSE, $declared, '', NULL];
   }
 
   public function testPanelItemCount(): void {

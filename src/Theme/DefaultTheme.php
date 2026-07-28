@@ -2401,6 +2401,19 @@ class DefaultTheme implements ThemeInterface {
   }
 
   /**
+   * Render a panel-level error row, aligned with the rows above it.
+   *
+   * @param string $message
+   *   The message.
+   *
+   * @return string
+   *   The themed error row.
+   */
+  public function renderPanelError(string $message): string {
+    return '  ' . $this->error($message);
+  }
+
+  /**
    * Render a row of inline submit/cancel buttons.
    *
    * @param list<string> $labels

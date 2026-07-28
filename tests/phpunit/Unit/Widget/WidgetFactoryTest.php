@@ -309,6 +309,61 @@ final class WidgetFactoryTest extends TestCase {
     $this->assertNull($widget->error());
   }
 
+  public function testRequiredBlocksAcceptWithNoDeclaredValidator(): void {
+    $field = new Field('name', 'Produce name', '', FieldType::Text, '', required: TRUE);
+
+    $widget = (new WidgetFactory())->create($field, '');
+
+    $widget->handle(Key::named(KeyName::Enter));
+    $this->assertFalse($widget->isComplete());
+    $this->assertSame('Produce name is required.', $widget->error());
+
+    $widget->handle(Key::char('P'));
+    $widget->handle(Key::named(KeyName::Enter));
+    $this->assertTrue($widget->isComplete());
+    $this->assertNull($widget->error());
+  }
+
+  public function testRequiredMessageOverrideReachesWidget(): void {
+    $field = new Field('plot', 'Garden plot name', '', FieldType::Text, '', required: TRUE, requiredMessage: 'The garden plot name is required.');
+
+    $widget = (new WidgetFactory())->create($field, '');
+    $widget->handle(Key::named(KeyName::Enter));
+
+    $this->assertSame('The garden plot name is required.', $widget->error());
+  }
+
+  public function testRequiredRunsBeforeTheDeclaredValidator(): void {
+    $field = new Field('name', 'Produce name', '', FieldType::Text, '', required: TRUE, validate: static fn (mixed $value): ?string => $value === 'Pear' ? NULL : 'Only pears keep.');
+
+    $widget = (new WidgetFactory())->create($field, '');
+
+    // The empty value never reaches the declared validator...
+    $widget->handle(Key::named(KeyName::Enter));
+    $this->assertSame('Produce name is required.', $widget->error());
+
+    // ...which still governs a non-empty one.
+    $widget->handle(Key::char('F'));
+    $widget->handle(Key::named(KeyName::Enter));
+    $this->assertFalse($widget->isComplete());
+    $this->assertSame('Only pears keep.', $widget->error());
+  }
+
+  public function testRequiredGuardsMultipleSelection(): void {
+    $field = new Field('crates', 'Crates', '', FieldType::Select, [], ['a' => 'Apples', 'b' => 'Beans'], required: TRUE, multiple: TRUE);
+
+    $widget = (new WidgetFactory())->create($field, []);
+
+    $widget->handle(Key::named(KeyName::Enter));
+    $this->assertFalse($widget->isComplete());
+    $this->assertSame('Crates is required.', $widget->error());
+
+    $widget->handle(Key::named(KeyName::Space));
+    $widget->handle(Key::named(KeyName::Enter));
+    $this->assertTrue($widget->isComplete());
+    $this->assertSame(['a'], $widget->value());
+  }
+
   public function testDeclaredTransformAppliesOnAccept(): void {
     $field = new Field('variety', 'Variety', '', FieldType::Text, '', transform: static fn (mixed $value): mixed => is_string($value) ? strtolower(trim($value)) : $value);
 
