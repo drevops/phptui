@@ -116,4 +116,20 @@ enum FieldType: string {
     return in_array($this, [self::Select, self::Search, self::FilePicker], TRUE);
   }
 
+  /**
+   * Whether a field of this type may source its options from a live query.
+   *
+   * Only the types whose interaction *is* a query qualify, because a source
+   * that follows the query has to show the query it followed: a select filters
+   * a known set without displaying the filter, a reorder and a toggle need the
+   * whole set at once, and a text field's ghost completion has no list to
+   * resolve into.
+   *
+   * @return bool
+   *   TRUE for the query-driven choice types.
+   */
+  public function supportsQuerySource(): bool {
+    return in_array($this, [self::Search, self::Suggest], TRUE);
+  }
+
 }

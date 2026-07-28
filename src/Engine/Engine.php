@@ -75,6 +75,7 @@ class Engine {
     $values = $this->transformInputs($fields, $values, $sources);
     [$rules, $pinned] = $this->deriveRules($fields, $sources);
     [$active, $values] = $this->stabilize($fields, $values, $rules, $pinned);
+    $this->loadQueryOptions($fields, $values, $active);
     $this->guardInputs($fields, $values, $sources, $active);
 
     return Answers::forForm($this->form, $this->activeAnswers($fields, $values, $active), $this->provenanceFor($fields, $sources, $active));
@@ -95,12 +96,67 @@ class Engine {
         continue;
       }
 
-      $loaded = ($field->optionsLoader)();
-      // A loader is documented to return a value => label map; coerce
-      // defensively so a mistyped one degrades to no options, not an error.
-      $field->options = Option::list(array_filter(is_array($loaded) ? $loaded : [], is_string(...)));
+      $field->options = Option::resolved(($field->optionsLoader)());
       $field->optionsLoader = NULL;
     }
+  }
+
+  /**
+   * Resolve each active query source against the value supplied to its field.
+   *
+   * A query source describes a candidate set too large or too remote to hold,
+   * so there is nothing to check a headless value against until something is
+   * queried - and headlessly nothing is typed. The supplied value is therefore
+   * the query, and the field is checked against what that query answers, so a
+   * value that no query can produce is caught here rather than passed through
+   * unchecked.
+   *
+   * Only the option-constrained types are worth a call: a suggest field's
+   * candidates are hints, never a closed set, so its value is not checked
+   * against them in either mode. A field with no value is left alone - there is
+   * nothing to look up - and the field's minimum query length does not apply,
+   * because it throttles typing, not a single lookup.
+   *
+   * @param \DrevOps\Tui\Model\Field[] $fields
+   *   The fields.
+   * @param array<string,mixed> $values
+   *   The settled values keyed by field id.
+   * @param array<string,bool> $active
+   *   Which fields are active, keyed by field id.
+   */
+  protected function loadQueryOptions(array $fields, array $values, array $active): void {
+    foreach ($fields as $field) {
+      if (!$field->optionsSource instanceof \Closure || !$field->type->constrainsToOptions() || !($active[$field->id] ?? FALSE)) {
+        continue;
+      }
+
+      $rows = [];
+
+      foreach ($this->queriesFor($field, $values[$field->id] ?? NULL) as $query) {
+        foreach (Option::resolved(($field->optionsSource)($query, $values)) as $row) {
+          $rows[$row->value] = $row;
+        }
+      }
+
+      $field->options = array_values($rows);
+    }
+  }
+
+  /**
+   * The queries that look up a field's supplied value, one per item.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field.
+   * @param mixed $value
+   *   The settled value.
+   *
+   * @return list<string>
+   *   The non-empty queries; empty when there is no value to look up.
+   */
+  protected function queriesFor(Field $field, mixed $value): array {
+    $items = $field->collectsList() ? Field::stringList($value) : [is_scalar($value) ? (string) $value : ''];
+
+    return array_values(array_unique(array_filter($items, static fn(string $query): bool => $query !== '')));
   }
 
   /**

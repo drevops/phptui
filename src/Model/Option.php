@@ -86,6 +86,25 @@ final readonly class Option {
   }
 
   /**
+   * Normalize what a callable returning options handed back.
+   *
+   * An option loader and a query source are each declared to return a
+   * value => label map, but both are consumer code running mid-session, so a
+   * mistyped one degrades to no options rather than erroring where there is no
+   * good way to report it.
+   *
+   * @param mixed $result
+   *   The callable's return value.
+   *
+   * @return list<\DrevOps\Tui\Model\Option>
+   *   The normalized option list; empty when the result was not a map of
+   *   strings.
+   */
+  public static function resolved(mixed $result): array {
+    return self::list(array_filter(is_array($result) ? $result : [], static fn(mixed $label): bool => is_string($label)));
+  }
+
+  /**
    * The values of the selectable rows, in display order.
    *
    * The one filtering every collection surface shares, so the field model, the

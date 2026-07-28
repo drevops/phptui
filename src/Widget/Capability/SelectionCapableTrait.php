@@ -288,6 +288,16 @@ trait SelectionCapableTrait {
       }
     }
 
+    // The rows are only the display order, and a list that changes under the
+    // selection - one resolved from a query - no longer holds everything that
+    // was selected from an earlier one. Those selections are still the user's,
+    // so they follow the ordered ones rather than being dropped.
+    foreach (array_keys($this->selected) as $value) {
+      if (!in_array($value, $out, TRUE)) {
+        $out[] = $value;
+      }
+    }
+
     return $out;
   }
 

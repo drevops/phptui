@@ -15,6 +15,8 @@ use DrevOps\Tui\Widget\Capability\OptionsCapableInterface;
 use DrevOps\Tui\Widget\Capability\OptionsCapableTrait;
 use DrevOps\Tui\Widget\Capability\PagingCapableInterface;
 use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
+use DrevOps\Tui\Widget\Capability\QueryOptionsCapableInterface;
+use DrevOps\Tui\Widget\Capability\QueryOptionsCapableTrait;
 use DrevOps\Tui\Widget\Capability\SearchCapableInterface;
 use DrevOps\Tui\Widget\Capability\SearchCapableTrait;
 use DrevOps\Tui\Widget\Capability\SelectionBoundedTrait;
@@ -35,6 +37,7 @@ class SearchWidget extends AbstractWidget implements
   SelectionCapableInterface,
   FilterCapableInterface,
   SearchCapableInterface,
+  QueryOptionsCapableInterface,
   PagingCapableInterface {
 
   use OptionsCapableTrait;
@@ -42,6 +45,7 @@ class SearchWidget extends AbstractWidget implements
   use SelectionBoundedTrait;
   use FilterCapableTrait;
   use SearchCapableTrait;
+  use QueryOptionsCapableTrait;
   use PagingCapableTrait;
 
   /**
@@ -101,8 +105,23 @@ class SearchWidget extends AbstractWidget implements
   /**
    * {@inheritdoc}
    */
+  public function query(): string {
+    return $this->filter;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function adoptQueryRows(array $rows): void {
+    $this->options = $rows;
+    $this->resetFilterCursor();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function renderBody(ThemeInterface $theme): string {
-    return $this->queryLine($theme) . "\n" . $this->withSelectionHint($theme, $this->renderChoiceList($theme));
+    return $this->queryLine($theme) . "\n" . ($this->queryStateLine($theme) ?? $this->withSelectionHint($theme, $this->renderChoiceList($theme)));
   }
 
 }

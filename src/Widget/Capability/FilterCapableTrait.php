@@ -85,13 +85,15 @@ trait FilterCapableTrait {
    *
    * With no filter every row shows in declared order; once filtering, only
    * matching options show - structural headings and separators drop away so
-   * the result reads as a flat list.
+   * the result reads as a flat list. Rows that came from a query source are
+   * already the answer to the query, so filtering them again locally would drop
+   * the ones whose labels do not literally match it.
    *
    * @return list<\DrevOps\Tui\Model\Option>
    *   The visible rows.
    */
   public function visible(): array {
-    if ($this->filter === '') {
+    if ($this->filter === '' || ($this instanceof QueryOptionsCapableInterface && $this->isQueryDriven())) {
       return $this->options;
     }
 
