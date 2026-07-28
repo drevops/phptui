@@ -20,6 +20,7 @@ return [
   '@count items selected' => '@count items selected',
   '@label is required.' => '@label is required.',
   '@label: @error' => '@label: @error',
+  '@label: must not contain "@text".' => '@label: must not contain "@text".',
   '@value is not a valid "@key". Allowed: @allowed.' => '@value is not a valid "@key". Allowed: @allowed.',
   '@value is not a valid "@key". Use a non-negative integer.' => '@value is not a valid "@key". Use a non-negative integer.',
   'Calendar' => 'Calendar',

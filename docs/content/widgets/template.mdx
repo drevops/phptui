@@ -69,6 +69,8 @@ $answers->parts('crate'); // ['orchard' => 'valley', 'fruit' => 'pear', 'grade' 
 
 Moving off a slot validates it. A rejected slot shows its error but does not hold the caret, so slots can be filled in any order; accepting validates every slot and puts the caret back on the first one that fails.
 
+Because a slot ends where the next fixed chunk begins, a slot's value cannot contain that chunk: `valley-west` in the first slot of `{{orchard}}-{{fruit}}` would move the boundary, and the answer would read back as `orchard: valley, fruit: west`. Accepting rejects it. The last slot runs to the end of the string, so it has no such limit.
+
 ## Headless behavior
 
 An unattended run asks for the assembled value directly - there are no slots to tab between - and holds it to the same rules the editor does: it must have the shape, and every slot must pass its own validator.

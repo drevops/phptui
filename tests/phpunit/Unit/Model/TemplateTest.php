@@ -87,6 +87,25 @@ final class TemplateTest extends TestCase {
     yield 'empty value' => ['{{a}}-{{b}}', '', []];
   }
 
+  #[DataProvider('dataProviderAmbiguousSlot')]
+  public function testAmbiguousSlot(string $pattern, array $parts, ?string $expected): void {
+    $this->assertSame($expected, (new Template($pattern))->ambiguousSlot($parts));
+  }
+
+  public static function dataProviderAmbiguousSlot(): \Iterator {
+    yield 'clean values' => ['{{a}}-{{b}}', ['a' => 'one', 'b' => 'two'], NULL];
+    yield 'empty values' => ['{{a}}-{{b}}', ['a' => '', 'b' => ''], NULL];
+    yield 'missing values' => ['{{a}}-{{b}}', [], NULL];
+    // The separator inside a slot moves the boundary: "one-x-two" reads back
+    // as a="one", b="x-two", so the first slot is the one that broke.
+    yield 'separator in the first slot' => ['{{a}}-{{b}}', ['a' => 'one-x', 'b' => 'two'], 'a'];
+    yield 'separator in a middle slot' => ['{{a}}-{{b}}-{{c}}', ['a' => 'one', 'b' => 'two-x', 'c' => 'three'], 'b'];
+    // The last slot runs to the end of the string, so nothing it holds can
+    // move a boundary.
+    yield 'separator in the last slot' => ['{{a}}-{{b}}', ['a' => 'one', 'b' => 'two-x'], NULL];
+    yield 'trailing fixed text absorbs its own repeat' => ['{{id}} ready', ['id' => 'x ready'], NULL];
+  }
+
   #[DataProvider('dataProviderMatches')]
   public function testMatches(string $pattern, string $value, bool $expected): void {
     $this->assertSame($expected, (new Template($pattern))->matches($value));
@@ -101,7 +120,7 @@ final class TemplateTest extends TestCase {
     yield 'trailing newline' => ['{{a}}-{{b}}', "one-two\n", TRUE];
   }
 
-  #[DataProvider('dataProviderRoundTrip')]
+  #[DataProvider('dataProviderAssembleAndExtractAreInverses')]
   public function testAssembleAndExtractAreInverses(string $pattern, string $value): void {
     $template = new Template($pattern);
 
@@ -110,7 +129,7 @@ final class TemplateTest extends TestCase {
     $this->assertSame($value, $template->assemble($template->extract($value)));
   }
 
-  public static function dataProviderRoundTrip(): \Iterator {
+  public static function dataProviderAssembleAndExtractAreInverses(): \Iterator {
     yield 'plain' => ['{{a}}-{{b}}', 'one-two'];
     yield 'empty parts' => ['{{a}}-{{b}}', '-'];
     yield 'repeated separator' => ['{{a}}-{{b}}', 'one-two-three'];

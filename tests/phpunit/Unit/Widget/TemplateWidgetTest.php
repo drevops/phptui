@@ -138,6 +138,29 @@ final class TemplateWidgetTest extends TestCase {
     $this->assertSame('a-9', $value);
   }
 
+  public function testAcceptRejectsSlotHoldingTheSeparator(): void {
+    $widget = new TemplateWidget(new Template('{{a}}-{{b}}', ['a' => 'Head']));
+    $theme = new DefaultTheme();
+
+    // "one-x" would move the boundary, so the answer would read back as
+    // a="one", b="x-two" - nothing like what was typed.
+    WidgetRunner::run($widget, ArrayKeyStream::of('one-x', Key::named(KeyName::Tab), 'two', Key::named(KeyName::Enter)));
+
+    $this->assertFalse($widget->isComplete());
+    $this->assertStringContainsString('Head: must not contain "-".', $widget->view($theme));
+    $this->assertStringContainsString('filling in Head', $widget->view($theme));
+  }
+
+  public function testAcceptAllowsTheSeparatorInTheLastSlot(): void {
+    $widget = new TemplateWidget(new Template('{{a}}-{{b}}'));
+
+    // The last slot runs to the end of the string, so it can hold the
+    // separator without moving any boundary.
+    $value = WidgetRunner::run($widget, ArrayKeyStream::of('one', Key::named(KeyName::Tab), 'two-x', Key::named(KeyName::Enter)));
+
+    $this->assertSame('one-two-x', $value);
+  }
+
   public function testFieldValidatorRunsAgainstTheAssembledValue(): void {
     $widget = (new TemplateWidget(new Template('{{a}}-{{b}}')))
       ->setHandlers(validate: static fn(mixed $value): ?string => $value === 'one-two' ? NULL : 'Unknown crate.');

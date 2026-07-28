@@ -168,6 +168,34 @@ final class Template {
   }
 
   /**
+   * The first slot whose value would not survive assembly, if any.
+   *
+   * A slot ends at the first following fixed chunk, so a value carrying that
+   * chunk inside it moves the boundary: the assembled string still has the
+   * shape, but decomposes into different parts than it was built from. Only
+   * assembly can hit this - a string that already matches always decomposes
+   * back to itself.
+   *
+   * @param array<string,string> $parts
+   *   The value of each slot, keyed by slot name.
+   *
+   * @return string|null
+   *   The name of the first slot that would be misread, or NULL when the
+   *   values assemble and decompose as the same set.
+   */
+  public function ambiguousSlot(array $parts): ?string {
+    $roundtrip = $this->extract($this->assemble($parts));
+
+    foreach ($this->placeholders as $placeholder) {
+      if (($roundtrip[$placeholder] ?? '') !== ($parts[$placeholder] ?? '')) {
+        return $placeholder;
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
    * Whether a string has the template's shape.
    *
    * @param string $value

@@ -67,6 +67,7 @@ return [
   '(empty)' => '(порожньо)',
   '@label is required.' => "@label є обов'язковим полем.",
   '@label: @error' => '@label: @error',
+  '@label: must not contain "@text".' => '@label: не може містити "@text".',
   '@value is not a valid "@key". Allowed: @allowed.' => '@value не є припустимим "@key". Дозволено: @allowed.',
   '@value is not a valid "@key". Use a non-negative integer.' => '@value не є припустимим "@key". Використайте ціле число не менше нуля.',
   'Calendar' => 'Календар',

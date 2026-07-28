@@ -200,7 +200,37 @@ class TemplateWidget extends AbstractWidget implements TextEditCapableInterface 
       }
     }
 
+    if (!$this->rejectAmbiguous($values)) {
+      return;
+    }
+
     $this->accept($this->template->assemble($values));
+  }
+
+  /**
+   * Refuse a slot whose value would be misread once the shape is assembled.
+   *
+   * @param array<string,string> $values
+   *   The value of each slot, keyed by slot name.
+   *
+   * @return bool
+   *   TRUE when every slot survives assembly; FALSE when one was rejected, the
+   *   caret moved to it and the error set.
+   */
+  protected function rejectAmbiguous(array $values): bool {
+    $name = $this->template->ambiguousSlot($values);
+    if ($name === NULL) {
+      return TRUE;
+    }
+
+    $index = (int) array_search($name, $this->names, TRUE);
+    $this->focus($index);
+    $this->error = Translator::t('@label: must not contain "@text".', [
+      '@label' => $this->template->labelOf($name),
+      '@text' => $this->template->literalAt($index + 1),
+    ]);
+
+    return FALSE;
   }
 
   /**
