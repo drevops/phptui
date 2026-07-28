@@ -16,7 +16,7 @@ use DrevOps\Tui\Handler\Context;
 
 $p->text('name', 'Produce name')
   ->default(fn(Context $c): string => basename($c->directory))
-  ->validate(fn(mixed $v): ?string => is_string($v) && str_contains($v, ' ') ? 'Use a single word.' : NULL)
+  ->validate(fn(mixed $v): ?string => is_string($v) && preg_match('/\s/u', $v) === 1 ? 'Use a single word.' : NULL)
   ->transform(fn(mixed $v): mixed => is_string($v) ? trim($v) : $v);
 ```
 
