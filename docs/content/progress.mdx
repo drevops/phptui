@@ -111,9 +111,10 @@ php playground/15-progress-bar.php 2>&1 | cat
 
 `progress()` runs _around_ the form. Four counterparts show feedback _inside_ the interactive panel, drawn by the same theme.
 
-- **Loading a field's options.** `->options()` takes a callback instead of a fixed list; it resolves when the field's panel opens, the field showing a themed `Loading…` until it returns. Headless collection resolves it up front.
+- **Loading a field's options.** `->options()` takes a callback instead of a fixed list; one that asks for no arguments resolves when the field's panel opens, the field showing a themed `Loading…` until it returns. Headless collection resolves it up front.
 - **Preloading a panel.** `->preload(closure)` on a panel runs once, before the panel's fields first draw - prep the panel needs, fetched on entry rather than up front, so one fetch can feed several fields.
 - **[Options that follow the query](#options-from-a-query).** `->optionsFrom()` is called again on every query change rather than once, for candidates that live behind a search API.
+- **[Options that follow the answers](/field-behaviour#options-from-the-answers).** The same `->options()` callback, but asking for the run context: it is called again whenever the answers change, so one field's choices narrow by another's answer. It resolves during the form settling rather than on entry, so it shows no indicator - keep it cheap.
 - **The [progress widget](/widgets/progress).** A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself. Unlike `progress()`, it lives among the fields and collects no value.
 
 ```php
@@ -130,7 +131,7 @@ Runnable in [`playground/16-loading-data.php`](https://github.com/drevops/tui/bl
 
 ## Options from a query
 
-A loader resolves one list, once. When the candidates are too many to hold - a catalog behind a search API, a database lookup, an index - a [search](/widgets/search) or [suggest](/widgets/suggest) field can source them from the query instead, with `->optionsFrom()`:
+A loader resolves one list, once. When the candidates are too many to hold - a catalog behind a search API, a database lookup, an index - a [search](/widgets/search) or [suggest](/widgets/suggest) field can source them from the query instead, with `->optionsFrom()`. (For a list that follows the _answers_ rather than the query, see [options from the answers](/field-behaviour#options-from-the-answers).)
 
 ```php
 $form->panel('order', 'New order', function (PanelBuilder $p) use ($pantry): void {

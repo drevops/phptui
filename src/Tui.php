@@ -517,10 +517,12 @@ final class Tui {
     // Restore this facade's language before rendering (see collect()).
     Translator::setShared($this->translator);
 
+    $context = $this->context($directory, $update, $version);
+
     // The full state, not collect()'s active-only answers: an inactive field
     // keeps its settled value, so a condition satisfied mid-session surfaces
     // the field with its default rather than an empty value.
-    [$values, $provenance] = $this->engine->resolveState([], $this->context($directory, $update, $version));
+    [$values, $provenance] = $this->engine->resolveState([], $context);
 
     $banner_text = $banner !== '' ? $banner : $this->form->banner;
 
@@ -535,6 +537,8 @@ final class Tui {
       clearOnExit: $this->clearOnExit,
       banner: $banner_text,
       version: $version,
+      context: $context,
+      engine: $this->engine,
     );
   }
 
@@ -596,12 +600,15 @@ final class Tui {
    *
    * @param array<string,mixed> $answers
    *   The answers to validate.
+   * @param \DrevOps\Tui\Handler\Context|null $context
+   *   The context an options resolver is evaluated against, its answers
+   *   replaced by the ones under validation; NULL uses an empty context.
    *
    * @return list<string>
    *   The validation errors (empty when valid).
    */
-  public function validate(array $answers): array {
-    return (new SchemaValidator($this->form))->validate($answers);
+  public function validate(array $answers, ?Context $context = NULL): array {
+    return (new SchemaValidator($this->form, $context ?? new Context()))->validate($answers);
   }
 
   /**

@@ -1,7 +1,7 @@
 ---
 title: Field behavior
-description: 'Guide an answer with a description, a hint and a placeholder; mark fields required, and declare dynamic defaults, validation and transforms as closures on the field - or in handler classes - and detect defaults with discovery rules.'
-keywords: ['description', 'hint', 'placeholder', 'required', 'validation', 'transform', 'dynamic default', 'discovery', 'handler']
+description: 'Guide an answer with a description, a hint and a placeholder; mark fields required, narrow one field options by another answer, and declare dynamic defaults, validation and transforms as closures on the field - or in handler classes - and detect defaults with discovery rules.'
+keywords: ['description', 'hint', 'placeholder', 'required', 'validation', 'transform', 'dynamic default', 'dynamic options', 'discovery', 'handler']
 ---
 
 import ThemedImage from '@theme/ThemedImage';
@@ -78,6 +78,45 @@ Emptying the name shows the label-derived message in the editor; leaving the bas
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/field-behaviour-light-animated.svg'), dark: useBaseUrl('/field-behaviour-dark-animated.svg')}} alt="Declared field behavior: an emptied required field refused in its editor, then the submit withheld for an untouched required basket" width="100%" />
 </p>
+
+## Options from the answers
+
+A choice field's list does not have to be fixed. Hand `->options()` a callback that asks for the run context, and one field's choices narrow by another's answer:
+
+```php
+use DrevOps\Tui\Handler\Context;
+
+$catalog = [
+  'fruit' => ['apple' => 'Apple', 'banana' => 'Banana', 'cherry' => 'Cherry'],
+  'vegetable' => ['carrot' => 'Carrot', 'potato' => 'Potato', 'tomato' => 'Tomato'],
+];
+
+$p->select('category', 'Category')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable']);
+
+$p->select('item', 'Item')->options(function (Context $c) use ($catalog): array {
+  // An answer is whatever was supplied until it is validated, so read it
+  // defensively before it indexes anything.
+  $category = $c->answers['category'] ?? '';
+
+  return is_string($category) ? ($catalog[$category] ?? []) : [];
+});
+```
+
+**The callback's own signature says when it runs.** One that asks for the context follows the answers, as above; one that asks for nothing is the [loader](/progress#inside-the-form) it has always been - resolved once when the panel opens, showing a themed `Loading…` until it returns, and resolved up front when collection is headless and there is no panel to open. Either way it returns the same `value => label` map the fixed form takes, and the context carries the answers collected so far alongside the target directory, the update flag and the version.
+
+Options are for the types that have a list - `select`, `search`, `suggest`, `toggle` and `reorder`. Declaring them on any other type raises a `FormException` when the form is built, as does declaring a resolver beside a fixed list, a loader or a [query source](/progress#options-from-a-query), since the resolved set replaces them.
+
+A resolver runs as part of the form settling - the same pass that computes derived values, evaluates `when` conditions and applies fix-ups - so every surface sees one narrowed list:
+
+- **Interactively**, changing the category re-resolves the item list before the next frame, so the editor offers exactly what the new category holds.
+- **Headlessly**, a supplied value is checked against the list the payload's own answers resolve to. A value outside it throws an `EngineException` naming the value and what was allowed.
+- **[`Tui::validate()`](/ai-agents)** checks membership against the set the answers under validation resolve to, and the [schema](/ai-agents) resolves the list against whatever context you pass it, flagging the field as `options_dynamic` so tooling can tell an empty list from one that is not fixed.
+
+A choice the narrowed list no longer holds does not survive in the answers: it is dropped, a `reorder` ranking is completed back to a full permutation, and a `toggle` returns to its first state. Only a value supplied headlessly is left standing, so it is reported rather than disappearing without a word. A `suggest` field's options are hints rather than a closed set, so its value is never narrowed away.
+
+Keep the resolver cheap. It runs for the whole form on every settle, not once per panel, and it is called again whenever the answers change - though a settle that changes nothing costs nothing, since the list already answers those answers. For a list that is expensive to build, drop the context parameter and it loads [once, on panel entry](/progress#inside-the-form); for one that lives behind a search API, [`->optionsFrom()`](/progress#options-from-a-query) follows the query instead.
+
+Runnable in [`playground/19-dynamic-options.php`](https://github.com/drevops/tui/blob/main/playground/19-dynamic-options.php).
 
 ## Discovery
 

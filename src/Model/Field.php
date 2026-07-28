@@ -12,11 +12,13 @@ use DrevOps\Tui\Translation\Translator;
 /**
  * A single question in the configuration model.
  *
- * The definition is immutable except for three concerns resolved once and
- * written back: a field may declare an options loader whose result is cached
- * (`$options`, `$optionsLoader`), a progress row tracks its live indicator
- * (`$progressCurrent`, `$progressLabel`) as its work advances, and the owning
- * form definition stamps the field's place in the condition graph
+ * The definition is immutable except for three resolved concerns written back:
+ * options a field declares indirectly - through a loader resolved once
+ * (`$optionsLoader`), a resolver re-run as the answers change
+ * (`$optionsResolver`) or a query source re-run as the query changes
+ * (`$optionsSource`) - land in `$options`, a progress row tracks its live
+ * indicator (`$progressCurrent`, `$progressLabel`) as its work advances, and
+ * the owning form definition stamps the field's place in the condition graph
  * (`$conditionalDepth`). Those five properties are the only mutable state.
  *
  * @package DrevOps\Tui\Model
@@ -203,6 +205,11 @@ final class Field {
    *   Rating only: the caption of a point on the scale, keyed by the point. The
    *   scale is the range in {@see $bounds}; a caption is decoration over it, so
    *   points may be captioned sparsely and an uncaptioned point still answers.
+   * @param \Closure|null $optionsResolver
+   *   An `fn(Context $context): array<string,string>` resolving the options
+   *   from the answers collected so far, or NULL for options that do not follow
+   *   them. Unlike a loader it is called again whenever the answers change, so
+   *   one field's choices can narrow by another's answer.
    */
   public function __construct(
     public readonly string $id,
@@ -249,6 +256,7 @@ final class Field {
     public readonly array $envAliases = [],
     public readonly bool $ghost = FALSE,
     public readonly array $ratingCaptions = [],
+    public readonly ?\Closure $optionsResolver = NULL,
   ) {
     $this->assertEnvNames();
     $this->assertRatingCaptions();
@@ -269,6 +277,14 @@ final class Field {
 
     if ($this->queryMinLength > 0 && !$this->optionsSource instanceof \Closure) {
       throw new FormException(sprintf('Field "%s" declares a minimum query length but no query source to apply it to.', $this->id));
+    }
+
+    if (($options !== [] || $optionsLoader instanceof \Closure || $this->optionsResolver instanceof \Closure) && !$this->type->supportsOptions()) {
+      throw new FormException(sprintf('Field "%s" of type "%s" shows no options; only select, search, suggest, toggle and reorder fields have a list.', $this->id, $this->type->value));
+    }
+
+    if ($this->optionsResolver instanceof \Closure && ($options !== [] || $optionsLoader instanceof \Closure || $this->optionsSource instanceof \Closure)) {
+      throw new FormException(sprintf('Field "%s" resolves its options from the answers and declares another set of options as well; the resolved set replaces them, so declare only one.', $this->id));
     }
 
     if ($this->placeholder !== '' && !$this->type->supportsPlaceholder()) {
@@ -433,6 +449,73 @@ final class Field {
   }
 
   /**
+   * Whether the field's option rows stand as declared.
+   *
+   * @return bool
+   *   FALSE while a loader, a resolver or a query source still owes the field
+   *   its rows, so there is nothing yet to count or to check a default against.
+   */
+  public function hasSettledOptions(): bool {
+    return !$this->optionsLoader instanceof \Closure && !$this->optionsResolver instanceof \Closure && !$this->optionsSource instanceof \Closure;
+  }
+
+  /**
+   * Whether the field's option set follows the answers rather than standing.
+   *
+   * @return bool
+   *   TRUE when the options are resolved from the collected answers or from a
+   *   live query, so no one list describes the field.
+   */
+  public function hasDynamicOptions(): bool {
+    return $this->optionsResolver instanceof \Closure || $this->optionsSource instanceof \Closure;
+  }
+
+  /**
+   * A value restated against the option set as it now stands.
+   *
+   * A choice value outlives the options it was picked from: a set resolved
+   * from the answers narrows as they change, leaving a value that is no longer
+   * offered, a ranking that no longer covers the set, or a toggle sitting on a
+   * state that is gone. This drops what the set no longer holds, completes a
+   * ranking back to a full permutation and returns a toggle to its first
+   * state, so a value always describes the options in front of it.
+   *
+   * A suggest field's options are hints rather than a closed set, so its value
+   * is never reconciled against them.
+   *
+   * @param mixed $value
+   *   The current value.
+   *
+   * @return mixed
+   *   The value the current options can carry.
+   */
+  public function reconcileValue(mixed $value): mixed {
+    if (!$this->type->supportsOptions() || $this->type === FieldType::Suggest) {
+      return $value;
+    }
+
+    $selectable = $this->selectableValues();
+
+    if ($this->type === FieldType::Reorder) {
+      return self::canonicalOrder($selectable, self::stringList($value));
+    }
+
+    if ($this->isMultiChoice()) {
+      return array_values(array_filter(self::stringList($value), static fn(string $item): bool => in_array($item, $selectable, TRUE)));
+    }
+
+    $current = is_scalar($value) ? (string) $value : '';
+
+    if (in_array($current, $selectable, TRUE)) {
+      return $current;
+    }
+
+    // A toggle is always in one of its states, so a value the set no longer
+    // offers falls back to the first option rather than to nothing.
+    return $this->type === FieldType::Toggle ? ($selectable[0] ?? '') : '';
+  }
+
+  /**
    * The whole message for an empty value on a required field, else NULL.
    *
    * Unlike the neighbouring checks this returns a complete sentence rather than
@@ -547,9 +630,9 @@ final class Field {
    */
   public function optionError(mixed $value): ?string {
     // A field that declares no options constrains nothing - but one whose
-    // options come from a query is constrained by whatever the query answered,
-    // and answering with nothing means the value does not exist.
-    if (!$this->type->constrainsToOptions() || ($this->options === [] && !$this->optionsSource instanceof \Closure)) {
+    // options follow a query or the answers is constrained by whatever they
+    // resolved to, and resolving to nothing means the value does not exist.
+    if (!$this->type->constrainsToOptions() || ($this->options === [] && !$this->hasDynamicOptions())) {
       return NULL;
     }
 

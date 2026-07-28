@@ -40,6 +40,12 @@ loop each field with a supplied input
   note right of Eng: inputs normalize first, so derivation,\nactivation and fix-ups see the final value
 end
 
+loop each field whose options follow the answers
+  Eng -> B: options callback(context)
+  B --> Eng: value => label map
+  note right of Eng: resolved before conditions evaluate; a value the\nset no longer holds is dropped unless it was supplied
+end
+
 Eng -> Der: derive(rules, values, pinned)
 activate Der
 Der --> Eng: derived values (fixpoint)

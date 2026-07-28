@@ -92,6 +92,11 @@ final class FieldBuilder {
   protected ?\Closure $optionsSource = NULL;
 
   /**
+   * A resolver for the options, or NULL when they do not follow the answers.
+   */
+  protected ?\Closure $optionsResolver = NULL;
+
+  /**
    * The query length below which the query source is not called.
    */
   protected int $queryMinLength = 0;
@@ -1087,23 +1092,45 @@ final class FieldBuilder {
   }
 
   /**
-   * Add several options from a value => label map, or a loader for them.
+   * Add several options from a value => label map, or a callback for them.
+   *
+   * A callback's own signature says when it runs. One that asks for the run
+   * context follows the collected answers: it is called again whenever they
+   * change, so one field's choices can narrow by another's answer - a basket
+   * that stops offering what the chosen category does not hold. It runs as
+   * part of the form settling, before anything is drawn or validated, so the
+   * narrowed set is the one every surface sees: the panel, headless
+   * collection, the schema and the validator. A value the narrowed set no
+   * longer offers is dropped from the answers - a ranking is completed back to
+   * a full permutation and a toggle falls back to its first state - unless it
+   * was supplied headlessly, which is reported instead. Keep such a callback
+   * cheap: it runs for the whole form, not once per panel.
+   *
+   * A callback that asks for nothing loads one list, once, lazily when the
+   * field's panel opens - showing a themed "Loading…" beside the field until
+   * it returns, and running after the panel's `->preload()` so it can read
+   * what preload prepared.
    *
    * @param array<array-key,string>|\Closure $options
-   *   The options keyed by value with a label, or an
-   *   `fn(): array<string,string>` that loads them on demand. A loader resolves
-   *   lazily when the field's panel opens - showing a themed "Loading…" beside
-   *   the field until it returns. A loader suits a field whose default is empty
-   *   or explicit (select, search, suggest); a toggle or reorder derives its
-   *   default from the options, so with a loader it should declare an explicit
-   *   `->default()`.
+   *   The options keyed by value with a label, or a callback returning that
+   *   same map: `fn (Context $context): array<string,string>` to follow the
+   *   answers, or `fn (): array<string,string>` to load them once. Either way
+   *   a toggle or reorder derives its default from the options, so one whose
+   *   options arrive later should declare an explicit `->default()`.
    *
    * @return $this
    *   The builder.
    */
   public function options(array|\Closure $options): self {
     if ($options instanceof \Closure) {
-      $this->optionsLoader = $options;
+      // Reading the signature here, rather than at every call, keeps the two
+      // lifecycles apart without a reflection call mid-session.
+      if ((new \ReflectionFunction($options))->getNumberOfParameters() > 0) {
+        $this->optionsResolver = $options;
+      }
+      else {
+        $this->optionsLoader = $options;
+      }
 
       return $this;
     }
@@ -1255,6 +1282,7 @@ final class FieldBuilder {
       envAliases: $this->envAliases,
       ghost: $this->ghost,
       ratingCaptions: $this->captions,
+      optionsResolver: $this->optionsResolver,
     );
   }
 

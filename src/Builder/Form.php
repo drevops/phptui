@@ -263,6 +263,12 @@ final class Form {
         continue;
       }
 
+      // Rows that arrive later cannot be counted here, and the default they
+      // would be checked against is the one they will settle on.
+      if (!$field->hasSettledOptions()) {
+        continue;
+      }
+
       if (count($field->options) !== 2) {
         throw new FormException(sprintf('Toggle field "%s" must have exactly two options, %d given.', $field->id, count($field->options)));
       }
@@ -294,6 +300,11 @@ final class Form {
   protected function assertReorderOptions(FormDefinition $form): void {
     foreach ($form->fields() as $field) {
       if ($field->type !== FieldType::Reorder) {
+        continue;
+      }
+
+      // Rows that arrive later are not there to be counted or vetted here.
+      if (!$field->hasSettledOptions()) {
         continue;
       }
 

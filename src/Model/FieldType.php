@@ -124,6 +124,26 @@ enum FieldType: string {
   }
 
   /**
+   * Whether a field of this type shows a list of options at all.
+   *
+   * Wider than {@see constrainsToOptions()}: a suggest field's options are
+   * autocomplete hints rather than a closed set, but it still has a list to
+   * declare.
+   *
+   * @return bool
+   *   TRUE for every type that draws an option list.
+   */
+  public function supportsOptions(): bool {
+    return in_array($this, [
+      self::Select,
+      self::Search,
+      self::Suggest,
+      self::Toggle,
+      self::Reorder,
+    ], TRUE);
+  }
+
+  /**
    * Whether a field of this type may collect several values via `->multiple()`.
    *
    * @return bool
