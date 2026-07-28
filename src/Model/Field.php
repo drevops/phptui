@@ -199,6 +199,10 @@ final class Field {
    *   placeholder uses while nothing is typed. A purely visual aid over the
    *   same option set, so it is absent from the machine schema and leaves a
    *   headless collection untouched.
+   * @param array<int,string> $ratingCaptions
+   *   Rating only: the caption of a point on the scale, keyed by the point. The
+   *   scale is the range in {@see $bounds}; a caption is decoration over it, so
+   *   points may be captioned sparsely and an uncaptioned point still answers.
    */
   public function __construct(
     public readonly string $id,
@@ -244,8 +248,10 @@ final class Field {
     public readonly string $envName = '',
     public readonly array $envAliases = [],
     public readonly bool $ghost = FALSE,
+    public readonly array $ratingCaptions = [],
   ) {
     $this->assertEnvNames();
+    $this->assertRatingCaptions();
 
     if ($this->type === FieldType::Template && !$this->template instanceof Template) {
       throw new FormException(sprintf('Field "%s" is a template field but declares no pattern; add ->pattern() with the shape to fill in.', $this->id));
@@ -313,6 +319,29 @@ final class Field {
   }
 
   /**
+   * Reject captions that no point on the scale would ever show.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When captions are declared on a field that draws no scale, or a caption
+   *   is keyed outside the scale's range.
+   */
+  protected function assertRatingCaptions(): void {
+    if ($this->ratingCaptions === []) {
+      return;
+    }
+
+    if ($this->type !== FieldType::Rating) {
+      throw new FormException(sprintf('Field "%s" of type "%s" draws no scale to caption; ->captions() applies to rating fields.', $this->id, $this->type->value));
+    }
+
+    foreach (array_keys($this->ratingCaptions) as $point) {
+      if ($this->bounds instanceof NumberBounds && !$this->bounds->contains($point)) {
+        throw new FormException(sprintf('Field "%s" captions the point %d, which is outside its scale of %s.', $this->id, $point, $this->bounds->describe()));
+      }
+    }
+  }
+
+  /**
    * Whether the field collects a list of values rather than a single value.
    *
    * @return bool
@@ -348,7 +377,10 @@ final class Field {
     return match (TRUE) {
       $this->type === FieldType::Confirm, $this->type === FieldType::Pause => is_bool($value),
       $this->collectsList() => is_array($value),
-      $this->type === FieldType::Number => is_int($value) || is_float($value),
+      // A scale has no point between its points, so only a whole number names
+      // one - where a number field takes any numeric entry and rounds it.
+      $this->type === FieldType::Rating => is_int($value),
+      $this->type->collectsInteger() => is_int($value) || is_float($value),
       // An empty string is an unset date, left to the required check; any
       // other value must be a strict `Y-m-d` calendar date.
       $this->type === FieldType::Calendar => is_string($value) && ($value === '' || DateBounds::parse($value) instanceof \DateTimeImmutable),
@@ -366,7 +398,8 @@ final class Field {
     return match (TRUE) {
       $this->type === FieldType::Confirm, $this->type === FieldType::Pause => Translator::t('a boolean'),
       $this->collectsList() => Translator::t('a list'),
-      $this->type === FieldType::Number => Translator::t('a number'),
+      $this->type === FieldType::Rating => Translator::t('a whole number'),
+      $this->type->collectsInteger() => Translator::t('a number'),
       $this->type === FieldType::Calendar => Translator::t('a date (YYYY-MM-DD)'),
       default => Translator::t('a string'),
     };

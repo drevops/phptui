@@ -303,6 +303,27 @@ interface ThemeInterface {
   public function renderProgressBar(int $current, int $total, string $caption, string $label): string;
 
   /**
+   * Render a rating scale: a run of points filled up to the chosen one.
+   *
+   * The one scale renderer behind both a rating's editor and its collapsed
+   * panel row, so overriding it restyles the two together.
+   *
+   * @param int $current
+   *   The chosen point.
+   * @param int $min
+   *   The lowest point of the scale.
+   * @param int $max
+   *   The highest point of the scale.
+   * @param string $caption
+   *   The chosen point's caption, or an empty string when it has none; its line
+   *   breaks fold to spaces so the scale stays one line.
+   *
+   * @return string
+   *   The composed scale line.
+   */
+  public function renderScale(int $current, int $min, int $max, string $caption): string;
+
+  /**
    * Render a static loading indicator: a caption and a themed ellipsis.
    *
    * The resting state of a progressable load - shown while a callable resolves

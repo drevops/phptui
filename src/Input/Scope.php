@@ -42,6 +42,7 @@ final readonly class Scope {
     FieldType::Search,
     FieldType::Suggest,
     FieldType::Toggle,
+    FieldType::Rating,
     FieldType::FilePicker,
   ];
 

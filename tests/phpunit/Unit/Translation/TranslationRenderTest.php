@@ -49,6 +49,7 @@ final class TranslationRenderTest extends TestCase {
       ->panel('general', 'General', function (PanelBuilder $panel): void {
         $panel->text('name', 'Site name')->description('The name.');
         $panel->select('plan', 'Plan')->options(['basic' => 'Basic tier']);
+        $panel->rating('grade', 'Grade')->default(5)->captions([5 => 'Excellent']);
         $panel->confirm('agree', 'Agree');
       })
       ->build();
@@ -80,6 +81,20 @@ final class TranslationRenderTest extends TestCase {
     $widget = (new WidgetFactory())->create($field, 'basic');
 
     $this->assertStringContainsString('Nivel basico', Ansi::strip($widget->view(new DefaultTheme(60, ['color' => FALSE]))));
+  }
+
+  public function testRatingCaptionsTranslated(): void {
+    $field = $this->form()->field('grade');
+    $this->assertInstanceOf(Field::class, $field);
+    $theme = new DefaultTheme(60, ['color' => FALSE]);
+
+    // The caption localizes in the editor and in the collapsed panel row alike.
+    $widget = (new WidgetFactory())->create($field, 5);
+    $this->assertStringContainsString('Excelente', Ansi::strip($widget->view($theme)));
+
+    $controller = new PanelController($this->form(), $theme, ['grade' => 5]);
+    $controller->handle(Key::named(KeyName::Enter));
+    $this->assertStringContainsString('Excelente', Ansi::strip($controller->frame(16)));
   }
 
   public function testSummaryTranslated(): void {

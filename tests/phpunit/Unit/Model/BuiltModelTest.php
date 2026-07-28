@@ -10,6 +10,7 @@ use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\FormException;
+use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\Panel;
 use DrevOps\Tui\Model\SelectionBounds;
@@ -264,6 +265,34 @@ final class BuiltModelTest extends TestCase {
     $this->expectExceptionMessage('Field "s" declares selection limits but does not collect several values.');
 
     new Field('s', 'S', '', FieldType::Text, '', selectionBounds: new SelectionBounds(2, 3));
+  }
+
+  public function testCaptionsOnFieldWithNoScaleThrows(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Field "f" of type "text" draws no scale to caption; ->captions() applies to rating fields.');
+
+    new Field('f', 'F', '', FieldType::Text, '', ratingCaptions: [1 => 'Poor']);
+  }
+
+  public function testCaptionOutsideTheScaleThrows(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Field "f" captions the point 9, which is outside its scale of between 1 and 5.');
+
+    new Field('f', 'F', '', FieldType::Rating, 1, bounds: new NumberBounds(1, 5), ratingCaptions: [9 => 'Nope']);
+  }
+
+  public function testCaptionsWithinTheScaleAreKept(): void {
+    $field = new Field('f', 'F', '', FieldType::Rating, 1, bounds: new NumberBounds(1, 5), ratingCaptions: [1 => 'Poor', 5 => 'Excellent']);
+
+    $this->assertSame([1 => 'Poor', 5 => 'Excellent'], $field->ratingCaptions);
+  }
+
+  public function testCaptionsOnAnUnboundedRatingAreKept(): void {
+    // The builder always closes a rating's scale; a hand-built field without
+    // one has no range to check a caption against, so every point passes.
+    $field = new Field('f', 'F', '', FieldType::Rating, 1, ratingCaptions: [99 => 'Far out']);
+
+    $this->assertSame([99 => 'Far out'], $field->ratingCaptions);
   }
 
   #[DataProvider('dataProviderPlaceholderIsRejectedWhenTypeHasNoInput')]

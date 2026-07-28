@@ -20,6 +20,7 @@ enum FieldType: string {
   case Toggle = 'toggle';
   case Suggest = 'suggest';
   case Number = 'number';
+  case Rating = 'rating';
   case Calendar = 'calendar';
   case Textarea = 'textarea';
   case Password = 'password';
@@ -48,6 +49,7 @@ enum FieldType: string {
       self::Toggle => Translator::t('Toggle'),
       self::Suggest => Translator::t('Suggest'),
       self::Number => Translator::t('Number'),
+      self::Rating => Translator::t('Rating'),
       self::Calendar => Translator::t('Calendar'),
       self::Textarea => Translator::t('Textarea'),
       self::Password => Translator::t('Password'),
@@ -87,6 +89,21 @@ enum FieldType: string {
    */
   public function isDisplayOnly(): bool {
     return $this === self::Note || $this === self::Progress;
+  }
+
+  /**
+   * Whether the field's answer is a whole number rather than text.
+   *
+   * The two integer types reach the same shape from opposite directions: a
+   * number is typed digit by digit, a rating is stepped along a scale - but
+   * both answer with an int, so the type check, the environment coercion and
+   * the machine schemas treat them alike.
+   *
+   * @return bool
+   *   TRUE for the integer-valued types.
+   */
+  public function collectsInteger(): bool {
+    return $this === self::Number || $this === self::Rating;
   }
 
   /**

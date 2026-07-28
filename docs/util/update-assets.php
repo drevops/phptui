@@ -126,6 +126,14 @@ type_text "4200"
 wait_and_enter
 arrow_down
 
+# Rating: step down the scale onto a captioned point, accept.
+pause 800
+safe_send "\r"
+pause 1000
+arrow_left
+wait_and_enter
+arrow_down
+
 # Calendar (standalone): the full-screen grid, down a week, accept.
 pause 800
 safe_send "\r"

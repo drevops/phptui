@@ -79,6 +79,8 @@ function widgetSpecs(string $tree): array {
   $space = Key::named(KeyName::Space);
   $bs = Key::named(KeyName::Backspace);
   $tab = Key::named(KeyName::Tab);
+  $left = Key::named(KeyName::Left);
+  $right = Key::named(KeyName::Right);
   // Two Enters walk the hub into the panel and open the field editor; the
   // animation then ends inside the editor on the changed value, so the frame
   // stays as narrow as the widget itself rather than the full-width panel row.
@@ -105,6 +107,15 @@ function widgetSpecs(string $tree): array {
     'number' => [
       'form' => Form::create('Number widget')->panel('main', 'Number', function (PanelBuilder $p): void { $p->number('weight', 'Basket weight (g)')->default(1200)->min(200)->max(9000)->step(100); }),
       'keys' => [...$open, $bs, $bs, $bs, $bs, '4', '2', '0', '0'],
+      'rows' => 6,
+    ],
+    'rating' => [
+      'form' => Form::create('Rating widget')->panel('main', 'Rating', function (PanelBuilder $p): void { $p->rating('freshness', 'Freshness')->default(4)->captions([1 => 'Poor', 3 => 'Fair', 5 => 'Excellent']); }),
+      // Walk down the scale and back, so the animation passes through a
+      // captioned point; the static frame rests on that point, since a caption
+      // is half of what the widget shows.
+      'keys' => [...$open, $left, $left, $right, $right],
+      'static_keys' => [...$open, $left],
       'rows' => 6,
     ],
     'calendar' => [

@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Widget;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Input\KeyMap;
@@ -70,6 +71,7 @@ class WidgetFactory {
       FieldType::Search => new SearchWidget($this->options($field), $this->seed($field, $current), $field->multiple, $field->pageSize, $field->selectionBounds),
       FieldType::FilePicker => new FilePickerWidget($field->pickerStart, $this->seed($field, $current), $field->pickerConstraints, $field->pickerShowHidden, $field->multiple, $field->pageSize, $field->selectionBounds),
       FieldType::Number => new NumberWidget($this->number($current), $field->bounds),
+      FieldType::Rating => $this->rating($field, $current),
       FieldType::Calendar => new CalendarWidget($this->text($current), $field->dateBounds),
       FieldType::Textarea => new TextareaWidget($this->text($current), $field->externalEditor && $this->externalEditorAvailable),
       FieldType::Password => new PasswordWidget($this->text($current), $field->revealable, $field->confirm),
@@ -147,6 +149,45 @@ class WidgetFactory {
    */
   protected function number(mixed $current): string {
     return is_int($current) || is_float($current) ? (string) (int) $current : '';
+  }
+
+  /**
+   * Build a rating widget over the field's scale, seeded with its value.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field.
+   * @param mixed $current
+   *   The current value to seed the widget with.
+   *
+   * @return \DrevOps\Tui\Widget\RatingWidget
+   *   The widget.
+   */
+  protected function rating(Field $field, mixed $current): RatingWidget {
+    $scale = $field->bounds;
+
+    if (!$scale instanceof NumberBounds || $scale->min === NULL || $scale->max === NULL) {
+      // @codeCoverageIgnoreStart
+      throw new \LogicException(sprintf('Field "%s" is a rating field carrying no closed scale.', $field->id));
+      // @codeCoverageIgnoreEnd
+    }
+
+    return new RatingWidget(is_int($current) || is_float($current) ? (int) $current : $scale->min, $scale->min, $scale->max, $this->captions($field));
+  }
+
+  /**
+   * A rating's captions, localized to the active language.
+   *
+   * Translated once here rather than at each draw, the way the option labels
+   * are, so the caption a widget shows is the caption the panel row shows.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field.
+   *
+   * @return array<int,string>
+   *   The localized caption of each point, keyed by the point.
+   */
+  protected function captions(Field $field): array {
+    return array_map(static fn(string $caption): string => $caption === '' ? '' : Translator::t($caption), $field->ratingCaptions);
   }
 
   /**

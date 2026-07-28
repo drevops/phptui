@@ -1041,6 +1041,29 @@ class DefaultTheme implements ThemeInterface {
   /**
    * {@inheritdoc}
    */
+  public function renderScale(int $current, int $min, int $max, string $caption): string {
+    // The filled run carries the theme's accent through highlight(); the empty
+    // remainder and the readout stay plain, so the scale reads with colour off
+    // and in ASCII alike.
+    [$on, $off] = $this->unicode ? ['●', '○'] : ['*', '-'];
+    $caption = $this->oneLine($caption);
+
+    // Clamp onto the scale: this method is public, so a direct call with a
+    // point outside the range must not hand str_repeat() a negative count. The
+    // lowest point still fills one, because it is a point like any other. The
+    // frame bounds the run because nothing wider than it can be drawn anyway,
+    // so an absurd range costs a truncated line rather than the whole heap.
+    $points = max(1, min($this->width, $max - $min + 1));
+    $filled = max(1, min($points, $current - $min + 1));
+
+    $line = $this->highlight(str_repeat($on, $filled)) . str_repeat($off, $points - $filled) . ' ' . $current . '/' . $max;
+
+    return $caption === '' ? $line : $line . ' ' . $caption;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function renderLoading(string $caption): string {
     // The ellipsis carries the theme's accent through highlight(), matching the
     // spinner and bar; the caption stays plain.
@@ -2828,7 +2851,36 @@ class DefaultTheme implements ThemeInterface {
       return is_string($value) && $value !== '' ? ValueFormatter::mask($this->mask()) : '';
     }
 
+    if ($field->type === FieldType::Rating) {
+      return $this->renderRating($field, $value);
+    }
+
     return ValueFormatter::format($value);
+  }
+
+  /**
+   * Render a rating row's scale from the field's declared points.
+   *
+   * A collapsed row shows the scale rather than the bare number, so the grade
+   * reads the same whether or not the editor is open.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The rating field.
+   * @param mixed $value
+   *   The chosen point.
+   *
+   * @return string
+   *   The rendered scale.
+   */
+  protected function renderRating(Field $field, mixed $value): string {
+    // The builder always closes a rating's scale, so the fallbacks only catch a
+    // hand-built field: a row degrades to a single point rather than crashing
+    // the frame it is drawn in.
+    $min = $field->bounds->min ?? 0;
+    $point = is_int($value) || is_float($value) ? (int) $value : $min;
+    $caption = $field->ratingCaptions[$point] ?? '';
+
+    return $this->renderScale($point, $min, $field->bounds->max ?? 0, $caption === '' ? '' : Translator::t($caption));
   }
 
   /**

@@ -37,6 +37,7 @@ const sidebars = {
         'widgets/password',
         'widgets/pause',
         'widgets/progress',
+        'widgets/rating',
         'widgets/reorder',
         'widgets/search',
         'widgets/select',

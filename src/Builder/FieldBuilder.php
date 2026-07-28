@@ -30,6 +30,16 @@ use DrevOps\Tui\Discovery\DiscoverInterface;
 final class FieldBuilder {
 
   /**
+   * The lowest point of a rating scale that declares no minimum.
+   */
+  protected const int RATING_MIN = 1;
+
+  /**
+   * The highest point of a rating scale that declares no maximum.
+   */
+  protected const int RATING_MAX = 5;
+
+  /**
    * The help text.
    */
   protected string $description = '';
@@ -177,6 +187,13 @@ final class FieldBuilder {
    * The number field's Up/Down increment, when declared.
    */
   protected ?int $step = NULL;
+
+  /**
+   * Rating only: the caption of a point on the scale, keyed by the point.
+   *
+   * @var array<int,string>
+   */
+  protected array $captions = [];
 
   /**
    * Multiple only: the minimum number of selections, when declared.
@@ -614,6 +631,27 @@ final class FieldBuilder {
    */
   public function step(int $step): self {
     $this->step = $step;
+
+    return $this;
+  }
+
+  /**
+   * Rating only: caption points on the scale.
+   *
+   * A caption names what a point means ("Poor", "Excellent") and is shown
+   * while that point is chosen. Points may be captioned sparsely - captioning
+   * only the two ends labels the scale without claiming a reading for every
+   * step in between - and an uncaptioned point still answers with its number.
+   *
+   * @param array<int,string> $captions
+   *   The caption of each point, keyed by the point; every key must be within
+   *   the scale.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function captions(array $captions): self {
+    $this->captions = $captions;
 
     return $this;
   }
@@ -1216,6 +1254,7 @@ final class FieldBuilder {
       envName: $this->envName,
       envAliases: $this->envAliases,
       ghost: $this->ghost,
+      ratingCaptions: $this->captions,
     );
   }
 
@@ -1259,6 +1298,12 @@ final class FieldBuilder {
       return [];
     }
 
+    // A rating always sits on a point of its scale, so it starts at the lowest
+    // one rather than at a zero that may not even be on the scale.
+    if ($this->fieldType === FieldType::Rating) {
+      return $this->min ?? self::RATING_MIN;
+    }
+
     // A toggle is always in one of its two states, so it defaults to the first
     // option's value rather than an empty value that would not match either.
     // The value is read off the option, not its array key, so a numeric-string
@@ -1300,6 +1345,10 @@ final class FieldBuilder {
    *   When min exceeds max, or the step is not positive.
    */
   protected function buildBounds(): ?NumberBounds {
+    if ($this->fieldType === FieldType::Rating) {
+      return $this->buildScale();
+    }
+
     if ($this->min === NULL && $this->max === NULL && $this->step === NULL) {
       return NULL;
     }
@@ -1313,6 +1362,34 @@ final class FieldBuilder {
     }
 
     return new NumberBounds($this->min, $this->max, $this->step);
+  }
+
+  /**
+   * Assemble a rating's scale: a closed range, defaulting to one through five.
+   *
+   * Unlike a number, a rating is never open-ended - the points are what it
+   * draws - so both ends always resolve, and the arrows walk the range one
+   * point at a time rather than by a declared increment.
+   *
+   * @return \DrevOps\Tui\Model\NumberBounds
+   *   The scale.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When a step is declared, or the range holds fewer than two points.
+   */
+  protected function buildScale(): NumberBounds {
+    if ($this->step !== NULL) {
+      throw new FormException(sprintf('Field "%s" declares a step of %d on a scale whose points are its steps; remove ->step() and set the ends with ->min() and ->max().', $this->id, $this->step));
+    }
+
+    $min = $this->min ?? self::RATING_MIN;
+    $max = $this->max ?? self::RATING_MAX;
+
+    if ($min >= $max) {
+      throw new FormException(sprintf('Field "%s" declares a scale from %d to %d; a scale needs at least two points, so its maximum must be above its minimum.', $this->id, $min, $max));
+    }
+
+    return new NumberBounds($min, $max);
   }
 
   /**

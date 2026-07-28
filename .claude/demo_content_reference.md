@@ -36,6 +36,7 @@ always match.
 | text | `Item` | `Pear` | complete: `Pear`, `Peach`, `Plum` |
 | template | `Crate label` | `valley-pear-a` | pattern `{{orchard}}-{{fruit}}-{{grade}}`; slots Orchard, Fruit, Grade (a single letter a-c) |
 | number | `Basket weight (g)` | `1200` | min `200`, max `9000`, step `100` |
+| rating | `Freshness` | `4` | min `1`, max `5`; captions `1` Poor, `3` Fair, `5` Excellent |
 | calendar | `Harvest date` | `2026-07-15` | - |
 | textarea | `Tasting notes` | `Crisp and sweet\nHint of citrus` | - |
 | password | `Order code` | `melon7` | revealable, confirmation |

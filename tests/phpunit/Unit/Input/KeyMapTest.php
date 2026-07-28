@@ -63,6 +63,14 @@ final class KeyMapTest extends TestCase {
     yield 'number down decrements' => [Scope::field(FieldType::Number), Key::named(KeyName::Down), Action::Decrement, TRUE];
     yield 'number up is no longer move up' => [Scope::field(FieldType::Number), Key::named(KeyName::Up), Action::MoveUp, FALSE];
     yield 'number left still moves the caret' => [Scope::field(FieldType::Number), Key::named(KeyName::Left), Action::MoveLeft, TRUE];
+    // A rating is walked along its scale, so both axes step it and neither
+    // keeps its base movement meaning.
+    yield 'rating right increments' => [Scope::field(FieldType::Rating), Key::named(KeyName::Right), Action::Increment, TRUE];
+    yield 'rating up increments' => [Scope::field(FieldType::Rating), Key::named(KeyName::Up), Action::Increment, TRUE];
+    yield 'rating left decrements' => [Scope::field(FieldType::Rating), Key::named(KeyName::Left), Action::Decrement, TRUE];
+    yield 'rating down decrements' => [Scope::field(FieldType::Rating), Key::named(KeyName::Down), Action::Decrement, TRUE];
+    yield 'rating right is no longer move right' => [Scope::field(FieldType::Rating), Key::named(KeyName::Right), Action::MoveRight, FALSE];
+    yield 'rating enter accepts' => [Scope::field(FieldType::Rating), Key::named(KeyName::Enter), Action::Accept, TRUE];
     // Text.
     yield 'text enter accepts' => [Scope::field(FieldType::Text), Key::named(KeyName::Enter), Action::Accept, TRUE];
     yield 'text space inserts' => [Scope::field(FieldType::Text), Key::named(KeyName::Space), Action::InsertSpace, TRUE];
@@ -198,6 +206,11 @@ final class KeyMapTest extends TestCase {
       new Binding(Scope::field(FieldType::Search), Action::MoveDown, 'j'),
       'search scope consumes typed characters',
     ];
+    // Claiming a digit in the rating scope would make that point un-typeable.
+    yield 'digit in the rating scope' => [
+      new Binding(Scope::field(FieldType::Rating), Action::Accept, '3'),
+      'rating scope consumes typed characters',
+    ];
     yield 'multi-character binding' => [
       new Binding(Scope::field(FieldType::Select), Action::Accept, 'ab'),
       'must be a single character',
@@ -252,6 +265,8 @@ final class KeyMapTest extends TestCase {
     yield 'text is a text-entry scope' => [Scope::field(FieldType::Text), 'field:Text', 'text', TRUE];
     yield 'template is a text-entry scope' => [Scope::field(FieldType::Template), 'field:Template', 'template', TRUE];
     yield 'select is not a text-entry scope' => [Scope::field(FieldType::Select), 'field:Select', 'select', FALSE];
+    // A rating selects a point by typed digit, so it reserves the digits.
+    yield 'rating is a text-entry scope' => [Scope::field(FieldType::Rating), 'field:Rating', 'rating', TRUE];
     // The file picker filters by typing, so it is a text-entry scope.
     yield 'filepicker is a text-entry scope' => [Scope::field(FieldType::FilePicker), 'field:FilePicker', 'filepicker', TRUE];
     // A multiple select filters by typing, so it becomes a text-entry scope

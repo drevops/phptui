@@ -59,6 +59,7 @@ What `default` actually declares, scope by scope. Every widget inherits the base
 | navigation                           | <kbd>?</kbd>                                                                 | `Help`                                           |
 | navigation                           | mouse wheel                                                                  | `ScrollUp` / `ScrollDown`                        |
 | number                               | <kbd>↑</kbd> / <kbd>↓</kbd>                                                  | `Increment` / `Decrement`                        |
+| rating                               | <kbd>→</kbd> / <kbd>↑</kbd> and <kbd>←</kbd> / <kbd>↓</kbd>                  | `Increment` and `Decrement`                      |
 | text, suggest                        | <kbd>Tab</kbd>                                                               | `Complete`                                       |
 | template                             | <kbd>Tab</kbd> / <kbd>↓</kbd> and <kbd>↑</kbd>                               | `MoveDown` and `MoveUp` (between slots)          |
 | textarea                             | <kbd>Enter</kbd>                                                             | `NewLine`                                        |
@@ -108,7 +109,7 @@ A preset is a class listing its bindings. Subclass `DefaultKeyMap` to ship your 
 Bindings are validated the moment they're set, so a bad key map is caught at configuration time, not mid-session:
 
 - a key bound to two different actions in the same scope is a conflict;
-- a printable character bound in the base scope, or in a scope whose widget consumes typed input (text, template, number, password, textarea, search, suggest, toggle, file picker, and the multiple select), would be un-typeable and is rejected - control characters like <kbd>Ctrl-E</kbd> are exempt, since they're command keys, never typed content;
+- a printable character bound in the base scope, or in a scope whose widget consumes typed input (text, template, number, rating, password, textarea, search, suggest, toggle, file picker, and the multiple select), would be un-typeable and is rejected - control characters like <kbd>Ctrl-E</kbd> are exempt, since they're command keys, never typed content;
 - an unknown preset name, or a character binding that is not exactly one character, is rejected.
 
 See [`playground/10-key-bindings-*`](https://github.com/drevops/tui/tree/main/playground) for the default map, the vim preset and a custom override side by side.

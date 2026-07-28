@@ -90,7 +90,7 @@ class InputResolver {
       $field->collectsList() => $this->splitList($value),
       // Only an integral value coerces; anything else stays a string so the
       // engine's type check rejects it instead of it silently becoming 0.
-      $field->type === FieldType::Number => preg_match('/^-?\d+$/', $trimmed) === 1 ? (int) $trimmed : $value,
+      $field->type->collectsInteger() => preg_match('/^-?\d+$/', $trimmed) === 1 ? (int) $trimmed : $value,
       default => $value,
     };
   }

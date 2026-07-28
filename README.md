@@ -59,7 +59,7 @@ Every feature has a reference page and a runnable, self-contained example in [`p
 | 🧱 Panel layouts | `->layout(1, 2)` arranges panels as a grid of side-by-side preview columns - rows of any width, recursively per level, with spatial arrow navigation | [panels](https://phptui.dev/panels#panel-layouts) | [`03-panels-*`](playground) |
 | 🖥️ Fullscreen mode | `->fullscreen()` stretches the frame to the whole terminal; `halign`/`valign` anchor the content and min/max size options guard small or very wide terminals | [panels](https://phptui.dev/panels#fullscreen) | [`03-panels-*`](playground) |
 | ⚡ Inline editing | A field's editor opens in place on the panel row; `->standalone()` opts a field out to full-screen | [panels](https://phptui.dev/panels#inline-editing) | [`04-inline-editing`](playground/04-inline-editing.php) |
-| 🧩 Widgets | 14 field types: text, template, number, calendar, textarea, password, select, reorder, suggest, search, file picker, confirm, toggle, pause | [widgets](https://phptui.dev/widgets) | [`02-widgets-*`](playground) |
+| 🧩 Widgets | 15 field types: text, template, number, rating, calendar, textarea, password, select, reorder, suggest, search, file picker, confirm, toggle, pause | [widgets](https://phptui.dev/widgets) | [`02-widgets-*`](playground) |
 | 🏗️ Builder-driven | The form is declared in PHP with a fluent builder; the common cases need no code | [configuration](https://phptui.dev/configuration) | [`01-quickstart`](playground/01-quickstart.php) |
 | 🎛️ Interactive or unattended | `run()` picks the mode: keyboard on a terminal, otherwise JSON payload + `TUI_<ID>` environment variables | [headless collection](https://phptui.dev/headless-collection) | [`08-headless-*`](playground) |
 | 🔗 Derived values | Fields computed from other answers via `{{field}}` templates and str2name transforms, settling to a fixpoint | [configuration](https://phptui.dev/configuration#derived-values) | [`05-form-logic-*`](playground) |
@@ -170,6 +170,10 @@ There's a widget for most things you'd want to ask: text entry, numbers and date
 <tr>
 <td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-progress-dark-animated.svg"><img src="docs/assets/widget-progress-light-animated.svg" width="100%" alt="Progress widget"></picture></td>
 <td><strong><a href="https://phptui.dev/widgets/progress">Progress</a></strong><br>A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself; it collects no value.</td>
+</tr>
+<tr>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-rating-dark-animated.svg"><img src="docs/assets/widget-rating-light-animated.svg" width="100%" alt="Rating widget"></picture></td>
+<td><strong><a href="https://phptui.dev/widgets/rating">Rating</a></strong><br>A graded answer picked from a scale of points, accepted as an <code>int</code>; arrows walk the scale, a digit jumps to its point, and each point can carry a caption.</td>
 </tr>
 <tr>
 <td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-reorder-dark-animated.svg"><img src="docs/assets/widget-reorder-light-animated.svg" width="100%" alt="Reorder widget"></picture></td>

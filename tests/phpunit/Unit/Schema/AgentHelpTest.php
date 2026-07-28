@@ -108,6 +108,24 @@ final class AgentHelpTest extends TestCase {
     $this->assertStringNotContainsString('multipleOf', $help);
   }
 
+  public function testRatingScale(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->rating('taste', 'Taste')->min(1)->max(5)->captions([1 => 'Poor', 5 => 'Excellent']);
+      })
+      ->build();
+
+    $help = (new AgentHelp($form))->generate();
+
+    // The scale travels as an integer range, so an agent answers with a point.
+    $this->assertStringContainsString('"type": "integer"', $help);
+    $this->assertStringContainsString('"minimum": 1', $help);
+    $this->assertStringContainsString('"maximum": 5', $help);
+    // Captions name what the points mean; they are not a closed value set, so
+    // they never narrow the answer to an enum.
+    $this->assertStringNotContainsString('enum', $help);
+  }
+
   public function testCalendarFormat(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {

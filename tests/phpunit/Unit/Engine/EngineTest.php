@@ -150,6 +150,45 @@ final class EngineTest extends TestCase {
     $engine->collect(['mods' => 'notalist'], new Context('project'));
   }
 
+  public function testCollectAcceptsRatingPoint(): void {
+    $engine = $this->engine(function (PanelBuilder $p): void {
+      $p->rating('taste')->min(1)->max(5);
+      $p->rating('untouched')->min(1)->max(5);
+    });
+
+    $answers = $engine->collect(['taste' => 4], new Context('project'));
+
+    $this->assertSame(4, $answers->value('taste'));
+    // With nothing supplied a rating settles on the lowest point of its scale.
+    $this->assertSame(1, $answers->value('untouched'));
+  }
+
+  #[DataProvider('dataProviderCollectRejectsRatingValue')]
+  public function testCollectRejectsRatingValue(mixed $value, string $message): void {
+    $engine = $this->engine(function (PanelBuilder $p): void {
+      $p->rating('taste')->min(1)->max(5);
+    });
+
+    $this->expectException(EngineException::class);
+    $this->expectExceptionMessage($message);
+    $engine->collect(['taste' => $value], new Context('project'));
+  }
+
+  /**
+   * Data provider for testCollectRejectsRatingValue().
+   *
+   * @return \Iterator<string, array{mixed, string}>
+   *   A value no scale point could be, and the reported reason.
+   */
+  public static function dataProviderCollectRejectsRatingValue(): \Iterator {
+    yield 'above the scale' => [9, 'Invalid value for field "taste": must be between 1 and 5.'];
+    yield 'below the scale' => [0, 'Invalid value for field "taste": must be between 1 and 5.'];
+    yield 'not a number' => ['great', 'Invalid value for field "taste": must be a whole number.'];
+    // A scale has no point between its points, so a fraction names none of them
+    // even when it falls inside the range.
+    yield 'between two points' => [3.5, 'Invalid value for field "taste": must be a whole number.'];
+  }
+
   public function testCollectRejectsFilePickerConstraintViolation(): void {
     vfsStream::setup('root', NULL, ['big.yml' => str_repeat('a', 500)]);
     $root = vfsStream::url('root');
