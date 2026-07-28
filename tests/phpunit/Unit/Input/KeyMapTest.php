@@ -68,6 +68,10 @@ final class KeyMapTest extends TestCase {
     yield 'text space inserts' => [Scope::field(FieldType::Text), Key::named(KeyName::Space), Action::InsertSpace, TRUE];
     yield 'text backspace deletes' => [Scope::field(FieldType::Text), Key::named(KeyName::Backspace), Action::DeleteBack, TRUE];
     yield 'text tab completes' => [Scope::field(FieldType::Text), Key::named(KeyName::Tab), Action::Complete, TRUE];
+    // Suggest takes the same completion key while keeping the base movement
+    // that arrows through its ranked list.
+    yield 'suggest tab completes' => [Scope::field(FieldType::Suggest), Key::named(KeyName::Tab), Action::Complete, TRUE];
+    yield 'suggest down still moves down' => [Scope::field(FieldType::Suggest), Key::named(KeyName::Down), Action::MoveDown, TRUE];
     // Template: Tab joins Down to step between slots, while Left and Right stay
     // on the base bindings so they move the caret inside the live slot.
     yield 'template tab steps forward' => [Scope::field(FieldType::Template), Key::named(KeyName::Tab), Action::MoveDown, TRUE];

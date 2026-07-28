@@ -7,12 +7,14 @@ namespace DrevOps\Tui\Tests\Unit\Widget;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Testing\ArrayKeyStream;
 use DrevOps\Tui\Testing\WidgetRunner;
 use DrevOps\Tui\Tests\Traits\AssertsPagingTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Widget\AbstractWidget;
+use DrevOps\Tui\Widget\Capability\CompletionCapableTrait;
 use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
 use DrevOps\Tui\Widget\Capability\PlaceholderCapableTrait;
 use DrevOps\Tui\Widget\SuggestWidget;
@@ -28,6 +30,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(AbstractWidget::class)]
 #[CoversTrait(PagingCapableTrait::class)]
 #[CoversTrait(PlaceholderCapableTrait::class)]
+#[CoversTrait(CompletionCapableTrait::class)]
 #[Group('widget')]
 final class SuggestWidgetTest extends TestCase {
 
@@ -188,6 +191,207 @@ final class SuggestWidgetTest extends TestCase {
     $widget->handle(Key::char('P'));
 
     $this->assertStringNotContainsString('Type to filter', Ansi::strip($widget->view($theme)));
+  }
+
+  public function testPlaceholderNeverCompetesWithGhostText(): void {
+    $widget = (new SuggestWidget(['Apple'], '', NULL, [], TRUE))->setPlaceholder('Type to filter');
+    $theme = new DefaultTheme();
+
+    // Both occupy the one slot after the caret, but a completion needs a typed
+    // query and a placeholder an empty one, so the slot is never contested.
+    $this->assertStringContainsString('Type to filter', Ansi::strip($widget->queryLine($theme)));
+
+    $widget->handle(Key::char('a'));
+    $line = Ansi::strip($widget->queryLine($theme));
+    $this->assertStringContainsString('pple', $line);
+    $this->assertStringNotContainsString('Type to filter', $line);
+  }
+
+  public function testGhostTextIsOptIn(): void {
+    $widget = new SuggestWidget(['Apple', 'Apricot']);
+
+    $widget->handle(Key::char('a'));
+
+    // Without the opt-in the query line carries no dimmed suffix, and the keys
+    // that would accept one are inert.
+    $view = $widget->view(new DefaultTheme());
+    $this->assertStringNotContainsString("\033[90m", $view);
+
+    $widget->handle(Key::named(KeyName::Tab));
+    $widget->handle(Key::named(KeyName::Right));
+    $this->assertSame('a', $widget->value());
+  }
+
+  public function testGhostTextRendersDimmedSuffix(): void {
+    $widget = new SuggestWidget(['Apple', 'Apricot'], '', NULL, [], TRUE);
+
+    $widget->handle(Key::char('a'));
+    $widget->handle(Key::char('p'));
+
+    // The leading candidate's remainder is previewed dimmed (SGR 90) after the
+    // caret, while the value stays the typed query until it is accepted.
+    $view = $widget->view(new DefaultTheme());
+    $this->assertStringContainsString('ple', $view);
+    $this->assertStringContainsString("\033[90m", $view);
+    $this->assertSame('ap', $widget->value());
+  }
+
+  public function testTabAcceptsGhostText(): void {
+    $widget = new SuggestWidget(['Apple', 'Apricot'], '', NULL, [], TRUE);
+
+    $value = WidgetRunner::run($widget, ArrayKeyStream::of('ap', Key::named(KeyName::Tab), Key::named(KeyName::Enter)));
+
+    // Accepting adopts the candidate's own casing.
+    $this->assertSame('Apple', $value);
+  }
+
+  public function testRightAcceptsGhostText(): void {
+    $widget = new SuggestWidget(['Apple', 'Apricot'], '', NULL, [], TRUE);
+
+    $value = WidgetRunner::run($widget, ArrayKeyStream::of('ap', Key::named(KeyName::Right), Key::named(KeyName::Enter)));
+
+    $this->assertSame('Apple', $value);
+  }
+
+  public function testAcceptingGhostTextKeepsTheListAvailable(): void {
+    $widget = new SuggestWidget(['Apple', 'Apple pie', 'Apricot'], '', NULL, [], TRUE);
+
+    $widget->handle(Key::char('a'));
+    $widget->handle(Key::named(KeyName::Tab));
+    $this->assertSame('Apple', $widget->value());
+
+    // The completion re-queries rather than selecting: the narrowed list is
+    // still open and still arrows into.
+    $view = Ansi::strip($widget->view(new DefaultTheme()));
+    $this->assertStringContainsString('Apple pie', $view);
+    $this->assertStringNotContainsString('Apricot', $view);
+
+    $widget->handle(Key::named(KeyName::Down));
+    $widget->handle(Key::named(KeyName::Down));
+    $this->assertSame('Apple pie', $widget->value());
+  }
+
+  public function testGhostTextSuppressedWhileSuggestionHighlighted(): void {
+    $widget = new SuggestWidget(['Apple', 'Apricot'], '', NULL, [], TRUE);
+
+    $widget->handle(Key::char('a'));
+    $this->assertStringContainsString("\033[90m", $widget->view(new DefaultTheme()));
+
+    // Arrowing into the list makes the highlighted row the live value, so a
+    // preview of the typed query would contradict it.
+    $widget->handle(Key::named(KeyName::Down));
+    $this->assertStringNotContainsString("\033[90m", $widget->view(new DefaultTheme()));
+
+    // Tab and Right stay inert while a row is highlighted.
+    $widget->handle(Key::named(KeyName::Tab));
+    $widget->handle(Key::named(KeyName::Right));
+    $this->assertSame('Apple', $widget->value());
+  }
+
+  public function testGhostTextSuppressedWithoutColour(): void {
+    $theme = new DefaultTheme(76, ['color' => FALSE]);
+    $widget = new SuggestWidget(['Apricot'], '', NULL, [], TRUE);
+
+    $widget->handle(Key::char('a'));
+
+    // Without colour the preview cannot be dimmed, so it is dropped rather than
+    // rendered as plain text indistinguishable from the typed query. The
+    // suggestion itself still lists below, and no escapes leak into the line.
+    $this->assertSame('a' . $theme->caret(), $widget->queryLine($theme));
+    $this->assertStringNotContainsString("\033", $widget->view($theme));
+  }
+
+  public function testGhostTextCompletesPrefixesNotFuzzyMatches(): void {
+    $widget = new SuggestWidget(['Green apple'], '', NULL, [], TRUE);
+
+    $widget->handle(Key::char('g'));
+    $widget->handle(Key::char('a'));
+
+    // "ga" is a scattered subsequence, so the row is listed but there is no
+    // suffix to draw after the caret.
+    $view = $widget->view(new DefaultTheme());
+    $this->assertStringContainsString('Green apple', Ansi::strip($view));
+    $this->assertStringNotContainsString("\033[90m", $view);
+  }
+
+  public function testFullyTypedSuggestionHasNoGhostText(): void {
+    $widget = new SuggestWidget(['Fig'], '', NULL, [], TRUE);
+
+    $widget->handle(Key::char('f'));
+    $widget->handle(Key::char('i'));
+    $widget->handle(Key::char('g'));
+
+    // The query already equals the only candidate; nothing is left to preview.
+    $this->assertStringNotContainsString("\033[90m", $widget->view(new DefaultTheme()));
+  }
+
+  public function testEmptyQueryShowsNoGhostText(): void {
+    // With nothing typed there is no prefix to complete.
+    $widget = new SuggestWidget(['Apple'], '', NULL, [], TRUE);
+
+    $this->assertStringNotContainsString("\033[90m", $widget->view(new DefaultTheme()));
+  }
+
+  public function testGhostTextIsUnicodeAware(): void {
+    // Folding is per code point, so a non-ASCII prefix matches and the suffix
+    // renders whole rather than splitting mid-character.
+    $widget = new SuggestWidget(['Éclair'], '', NULL, [], TRUE);
+
+    $widget->handle(Key::char('é'));
+    $this->assertStringContainsString('clair', $widget->view(new DefaultTheme()));
+
+    $widget->handle(Key::named(KeyName::Tab));
+    $this->assertSame('Éclair', $widget->value());
+  }
+
+  public function testGhostTextCompletesQuerySourcedRows(): void {
+    $widget = new SuggestWidget([], '', NULL, [], TRUE);
+    $widget->driveByQuery();
+
+    $widget->handle(Key::char('p'));
+    $widget->applyQuery('p', Option::list(['Pepper' => 'Pepper', 'Potato' => 'Potato']));
+
+    // A query source's rows are already the answer and are never ranked again
+    // locally, so the preview is simply their first prefix match.
+    $this->assertStringContainsString('epper', $widget->view(new DefaultTheme()));
+
+    $widget->handle(Key::named(KeyName::Tab));
+    $this->assertSame('Pepper', $widget->value());
+  }
+
+  public function testGhostTextSuppressedWhileQueryIsInFlight(): void {
+    $theme = new DefaultTheme();
+    $widget = new SuggestWidget([], '', NULL, [], TRUE);
+    $widget->driveByQuery();
+    $widget->applyQuery('', Option::list(['Apricot' => 'Apricot']));
+
+    $widget->handle(Key::char('a'));
+    $this->assertStringContainsString("\033[90m", $widget->queryLine($theme));
+
+    // The rows still held answer the previous query, and the list showing them
+    // has already given way to the loading indicator; previewing one of them
+    // would put back the answer being withdrawn.
+    $widget->beginQuery();
+    $this->assertSame('a' . $theme->caret(), $widget->queryLine($theme));
+
+    // Once the new rows settle the preview returns, drawn from them.
+    $widget->applyQuery('a', Option::list(['Apple' => 'Apple']));
+    $this->assertStringContainsString('pple', $widget->queryLine($theme));
+  }
+
+  public function testGhostTextBacksOffWhenTheQueryStopsMatching(): void {
+    $widget = new SuggestWidget(['Apple'], '', NULL, [], TRUE);
+
+    $widget->handle(Key::char('a'));
+    $this->assertStringContainsString("\033[90m", $widget->view(new DefaultTheme()));
+
+    // A typo drops every prefix candidate, so the preview disappears and Tab
+    // leaves the query untouched.
+    $widget->handle(Key::char('z'));
+    $this->assertStringNotContainsString("\033[90m", $widget->view(new DefaultTheme()));
+
+    $widget->handle(Key::named(KeyName::Tab));
+    $this->assertSame('az', $widget->value());
   }
 
 }

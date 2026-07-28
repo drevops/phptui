@@ -51,8 +51,10 @@ class DefaultKeyMap {
       new Binding(Scope::field(FieldType::Number), Action::Increment, KeyName::Up),
       new Binding(Scope::field(FieldType::Number), Action::Decrement, KeyName::Down),
 
-      // The text field accepts its inline ghost-text completion on Tab.
+      // The text and suggest fields accept their inline ghost-text completion
+      // on Tab.
       new Binding(Scope::field(FieldType::Text), Action::Complete, KeyName::Tab),
+      new Binding(Scope::field(FieldType::Suggest), Action::Complete, KeyName::Tab),
 
       // Up and Down step between a template's slots, Tab joining Down as the
       // key a reader reaches for first; Left and Right stay on the base

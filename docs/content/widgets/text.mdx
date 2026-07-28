@@ -38,7 +38,7 @@ Runnable script: [`playground/02-widgets-text.php`](https://github.com/drevops/t
 | `default()`  | Initial value.                                                                           | No       | `''` (empty) |
 | `complete()` | Ghost-text completion source: a `list<string>`, or a `fn(array $answers): list<string>`. | No       | None         |
 
-As you type, the first candidate that starts with your input (case-insensitively) appears dimmed after the caret; accept it with <kbd>Tab</kbd> or <kbd>→</kbd> at the end of the line. It's distinct from the [Suggest](/widgets/suggest) dropdown - ghost text keeps your eye on the input line - and it's suppressed when color is off.
+As you type, the first candidate that starts with your input (case-insensitively) appears dimmed after the caret; accept it with <kbd>Tab</kbd> or <kbd>→</kbd> at the end of the line. Ghost text keeps your eye on the input line rather than a dropdown, and it's suppressed when color is off. The [Suggest](/widgets/suggest) widget can [show the same preview](/widgets/suggest#ghost-text) above its ranked list.
 
 A completion and a [`placeholder()`](/field-behaviour#guidance-texts) share that dimmed slot and never contend for it: a completion needs a typed prefix, a placeholder needs an empty input.
 

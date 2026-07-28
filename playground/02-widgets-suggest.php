@@ -8,6 +8,9 @@
  * highlight one and Enter takes it. Unlike select, any typed text is a valid
  * answer - the options only assist.
  *
+ * ->ghost() adds an inline preview of the leading match after the caret,
+ * accepted with Tab or the right arrow; the ranked list stays available.
+ *
  * Usage:
  *   php playground/02-widgets-suggest.php
  */
@@ -30,7 +33,7 @@ $form = Form::create('Suggest widget')
       'Banana' => 'Banana',
       'Cherry' => 'Cherry',
       'Mango' => 'Mango',
-    ]);
+    ])->ghost();
   });
 
 try {

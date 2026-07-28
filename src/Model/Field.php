@@ -193,6 +193,12 @@ final class Field {
    *   Further environment variables the field also answers to, absolute and in
    *   precedence order, so a naming scheme can change without a breaking
    *   cut-over. Consulted only when none of the names before them is set.
+   * @param bool $ghost
+   *   Suggest only: whether the leading prefix match among the field's options
+   *   is previewed as inline ghost-text after the caret, in the same slot the
+   *   placeholder uses while nothing is typed. A purely visual aid over the
+   *   same option set, so it is absent from the machine schema and leaves a
+   *   headless collection untouched.
    */
   public function __construct(
     public readonly string $id,
@@ -237,6 +243,7 @@ final class Field {
     public readonly string $placeholder = '',
     public readonly string $envName = '',
     public readonly array $envAliases = [],
+    public readonly bool $ghost = FALSE,
   ) {
     $this->assertEnvNames();
 

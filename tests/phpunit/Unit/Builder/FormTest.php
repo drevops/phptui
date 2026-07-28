@@ -359,6 +359,21 @@ final class FormTest extends TestCase {
     $this->assertSame(['OLD_CRATE', 'OLDER_CRATE'], $form->field('crate_size')?->envAliases);
   }
 
+  public function testGhostTextOptInStored(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $panel): void {
+        $panel->suggest('fruit', 'Fruit')->options(['Apple' => 'Apple'])->ghost();
+        $panel->suggest('berry', 'Berry')->options(['Fig' => 'Fig'])->ghost(FALSE);
+        $panel->suggest('plain', 'Plain')->options(['Pear' => 'Pear']);
+      })
+      ->build();
+
+    $this->assertTrue($form->field('fruit')?->ghost);
+    $this->assertFalse($form->field('berry')?->ghost);
+    // Ghost-text is opt-in, so a field that never asks for it stays without.
+    $this->assertFalse($form->field('plain')?->ghost);
+  }
+
   public function testTemplateAssembled(): void {
     $grade = fn (string $value): ?string => $value === 'a' ? NULL : 'nope';
 

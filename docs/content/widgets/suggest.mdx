@@ -25,7 +25,8 @@ $p->suggest('fruit', 'Fruit')
     'Mango' => 'Mango',
   ])
   ->default('Apple') // Initial text.
-  ->pageSize(8);     // Suggestions visible before the list pages.
+  ->pageSize(8)      // Suggestions visible before the list pages.
+  ->ghost();         // Preview the leading match inline as you type.
 ```
 
 Runnable script: [`playground/02-widgets-suggest.php`](https://github.com/drevops/tui/blob/main/playground/02-widgets-suggest.php).
@@ -37,18 +38,20 @@ Runnable script: [`playground/02-widgets-suggest.php`](https://github.com/drevop
 | `options()`  | The candidate set to autocomplete against; only the values are used. | No       | None         |
 | `default()`  | Initial text.                                                        | No       | `''` (empty) |
 | `pageSize()` | Suggestions shown before the list pages around the cursor.           | No       | `10`         |
+| `ghost()`    | Preview the leading prefix match as inline ghost-text.               | No       | `false`      |
 
 Because the set is open, <kbd>Enter</kbd> accepts the highlighted suggestion, or your typed text as-is when none is highlighted. A [description line](/widgets/select#option-descriptions) can accompany the highlighted suggestion, keyed by value with `->option(..., description: ...)`.
 
 ## Keyboard
 
-| Key                         | Action                                                       |
-| --------------------------- | ------------------------------------------------------------ |
-| printable keys              | Type to filter the candidates                                |
-| <kbd>↑</kbd> / <kbd>↓</kbd> | Highlight a suggestion                                       |
-| <kbd>Backspace</kbd>        | Delete the character before the caret                        |
-| <kbd>Enter</kbd>            | Accept the highlighted suggestion, or the typed text if none |
-| <kbd>Esc</kbd>              | Cancel                                                       |
+| Key                           | Action                                                       |
+| ----------------------------- | ------------------------------------------------------------ |
+| printable keys                | Type to filter the candidates                                |
+| <kbd>↑</kbd> / <kbd>↓</kbd>   | Highlight a suggestion                                       |
+| <kbd>Backspace</kbd>          | Delete the character before the caret                        |
+| <kbd>Tab</kbd> / <kbd>→</kbd> | Accept the ghost-text preview, when `ghost()` is on          |
+| <kbd>Enter</kbd>              | Accept the highlighted suggestion, or the typed text if none |
+| <kbd>Esc</kbd>                | Cancel                                                       |
 
 ## Display modes
 
@@ -69,6 +72,32 @@ In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
     <td align="right"><strong>ASCII</strong></td>
     <td><ThemedImage sources={{light: useBaseUrl('/widget-suggest-light-static-ascii.svg'), dark: useBaseUrl('/widget-suggest-dark-static-ascii.svg')}} alt="Suggest: ASCII + ANSI" /></td>
     <td><ThemedImage sources={{light: useBaseUrl('/widget-suggest-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-suggest-dark-static-ascii-no-ansi.svg')}} alt="Suggest: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+## Ghost text
+
+With `->ghost()`, the highest-ranked candidate your input is a prefix of is previewed dimmed after the caret, and <kbd>Tab</kbd> or <kbd>→</kbd> accepts it. The completion becomes the new query rather than a selection, so the ranked list stays open and narrows around it.
+
+It complements the list rather than replacing it, and it steps aside where it would mislead: the preview is suppressed once you arrow into the list (the highlighted suggestion is the value then, not your typed text), while a [query source](#suggestions-from-a-query) is still resolving (those candidates answer the previous query), and it only ever completes a _prefix_ - a fuzzy hit like `ga` → `Green apple` has no inline suffix to draw. Like the [Text](/widgets/text) widget's ghost text, it is suppressed when color is off.
+
+A completion and a [`placeholder()`](/field-behaviour#guidance-texts) share that dimmed slot and never contend for it: a completion needs a typed query, a placeholder needs an empty one.
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-suggest-ghost-light-static.svg'), dark: useBaseUrl('/widget-suggest-ghost-dark-static.svg')}} alt="Suggest ghost text: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-suggest-ghost-light-static-no-ansi.svg'), dark: useBaseUrl('/widget-suggest-ghost-dark-static-no-ansi.svg')}} alt="Suggest ghost text: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-suggest-ghost-light-static-ascii.svg'), dark: useBaseUrl('/widget-suggest-ghost-dark-static-ascii.svg')}} alt="Suggest ghost text: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-suggest-ghost-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-suggest-ghost-dark-static-ascii-no-ansi.svg')}} alt="Suggest ghost text: ASCII + No ANSI" /></td>
   </tr>
 </table>
 
