@@ -1098,13 +1098,13 @@ final class FieldBuilder {
    * context follows the collected answers: it is called again whenever they
    * change, so one field's choices can narrow by another's answer - a basket
    * that stops offering what the chosen category does not hold. It runs as
-   * part of the form settling, before conditions evaluate and before anything
-   * is drawn or validated, so the narrowed set is the one every surface sees:
-   * the panel, headless collection, the schema and the validator. A value the
-   * narrowed set no longer offers is dropped from the answers - a ranking is
-   * completed back to a full permutation and a toggle falls back to its first
-   * state - unless it was supplied headlessly, which is reported instead. Keep
-   * such a callback cheap: it runs for the whole form, not once per panel.
+   * part of the form settling, before anything is drawn or validated, so the
+   * narrowed set is the one every surface sees: the panel, headless
+   * collection, the schema and the validator. A value the narrowed set no
+   * longer offers is dropped from the answers - a ranking is completed back to
+   * a full permutation and a toggle falls back to its first state - unless it
+   * was supplied headlessly, which is reported instead. Keep such a callback
+   * cheap: it runs for the whole form, not once per panel.
    *
    * A callback that asks for nothing loads one list, once, lazily when the
    * field's panel opens - showing a themed "Loading…" beside the field until

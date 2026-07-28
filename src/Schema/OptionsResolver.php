@@ -16,7 +16,7 @@ use DrevOps\Tui\Model\Option;
  * real one exists. This settles them against a caller-provided context - the
  * answers known so far, none for a plain schema - so the description carries
  * what those answers actually allow. A resolver that cannot answer this
- * context leaves the list empty rather than failing the description, the way a
+ * context empties the list rather than failing the description, the way a
  * closure default that cannot resolve stands down to NULL.
  *
  * @package DrevOps\Tui\Schema
@@ -40,7 +40,11 @@ final class OptionsResolver {
       $field->options = Option::resolved(($field->optionsResolver)($context));
     }
     catch (\Throwable) {
-      // Nothing this context can be told; the empty list stands.
+      // A field's options are settled state that outlives one call, so a set
+      // resolved for some earlier context is still sitting there. Nothing can
+      // be said about this one, and saying the last one instead would be a
+      // description of the wrong form.
+      $field->options = [];
     }
   }
 

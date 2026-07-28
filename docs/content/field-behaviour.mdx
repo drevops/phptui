@@ -92,7 +92,14 @@ $catalog = [
 ];
 
 $p->select('category', 'Category')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable']);
-$p->select('item', 'Item')->options(fn(Context $c): array => $catalog[$c->answers['category']] ?? []);
+
+$p->select('item', 'Item')->options(function (Context $c) use ($catalog): array {
+  // An answer is whatever was supplied until it is validated, so read it
+  // defensively before it indexes anything.
+  $category = $c->answers['category'] ?? '';
+
+  return is_string($category) ? ($catalog[$category] ?? []) : [];
+});
 ```
 
 **The callback's own signature says when it runs.** One that asks for the context follows the answers, as above; one that asks for nothing is the [loader](/progress#inside-the-form) it has always been - resolved once when the panel opens, showing a themed `Loading…` until it returns. Either way it returns the same `value => label` map the fixed form takes, and the context carries the answers collected so far alongside the target directory, the update flag and the version.

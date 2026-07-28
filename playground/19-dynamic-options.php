@@ -36,13 +36,21 @@ $form = Form::create('Quick start')
 
     $p->select('category', 'Category')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable'])->default('fruit');
 
+    // An answer is whatever was supplied until it is validated, so the category
+    // is read defensively before it indexes anything.
+    $stock = static function (Context $context) use ($catalog): array {
+      $category = $context->answers['category'] ?? '';
+
+      return is_string($category) ? ($catalog[$category] ?? []) : [];
+    };
+
     // Called again whenever the answers change: pick another category and the
     // item list follows, dropping an item the new category does not stock.
-    $p->select('item', 'Item')->options(static fn(Context $context): array => $catalog[$context->answers['category']] ?? []);
+    $p->select('item', 'Item')->options($stock);
 
     // The same narrowing over several picks - the basket keeps only what the
     // chosen category still offers.
-    $p->select('basket', 'Basket')->multiple()->options(static fn(Context $context): array => $catalog[$context->answers['category']] ?? []);
+    $p->select('basket', 'Basket')->multiple()->options($stock);
   });
 
 try {

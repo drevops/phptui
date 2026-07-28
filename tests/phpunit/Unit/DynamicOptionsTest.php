@@ -261,13 +261,52 @@ final class DynamicOptionsTest extends TestCase {
     $this->assertSame(['Question "item": value "apple" is not one of: carrot, potato, tomato.'], $tui->validate(['category' => 'vegetable', 'item' => 'apple']));
   }
 
+  public function testValidatorCarriesTheRunContextToTheResolver(): void {
+    // The resolver sees what it would see during collection, so one reading the
+    // directory or the update flag does not judge a value against a set that
+    // only a bare context produces.
+    (new Tui($this->form()))->validate(['category' => 'vegetable', 'item' => 'carrot'], new Context('orchard', [], TRUE, '2.0'));
+
+    $context = $this->lastContext();
+    $this->assertSame('orchard', $context->directory);
+    $this->assertTrue($context->update);
+    $this->assertSame('2.0', $context->version);
+    $this->assertSame('vegetable', $context->answers['category']);
+  }
+
+  public function testResolverIsCalledAgainForAnotherRunContext(): void {
+    $tui = new Tui($this->form());
+
+    // Same answers, another directory: a resolver reading the context has a
+    // different question to answer, so the first run's options are not reused.
+    $tui->collect('{"category":"fruit"}', 'orchard');
+    $tui->collect('{"category":"fruit"}', 'market');
+
+    $this->assertSame(['orchard', 'market'], array_map(static fn(Context $context): string => $context->directory, $this->contexts));
+  }
+
+  public function testFailedResolutionLeavesNoOptionsForSchemaSurfaces(): void {
+    // The first context resolves; the second cannot. Its description must not
+    // fall back to the set the first one produced.
+    $form = $this->form(static function (Context $context): array {
+      if (($context->answers['category'] ?? '') === 'vegetable') {
+        throw new \RuntimeException('The pantry is unreachable.');
+      }
+
+      return self::CATALOG['fruit'];
+    });
+
+    $tui = new Tui($form);
+    $this->assertSame(['apple', 'banana', 'cherry'], $this->schemaOptions($tui->schema(new Context(answers: ['category' => 'fruit'])), 'item'));
+    $this->assertSame([], $this->schemaOptions($tui->schema(new Context(answers: ['category' => 'vegetable'])), 'item'));
+  }
+
   public function testSchemaResolvesTheOptionsOfTheGivenContext(): void {
     $schema = (new Tui($this->form()))->schema(new Context(answers: ['category' => 'vegetable']));
 
-    $item = $schema['prompts'][1];
-    $this->assertSame(['carrot', 'potato', 'tomato'], array_column($item['options'], 'value'));
-    $this->assertTrue($item['options_dynamic']);
-    $this->assertFalse($schema['prompts'][0]['options_dynamic']);
+    $this->assertSame(['carrot', 'potato', 'tomato'], $this->schemaOptions($schema, 'item'));
+    $this->assertTrue($this->schemaFlag($schema, 'item', 'options_dynamic'));
+    $this->assertFalse($this->schemaFlag($schema, 'category', 'options_dynamic'));
   }
 
   public function testSchemaFlagsOptionsThatFollowTheQuery(): void {
@@ -275,7 +314,7 @@ final class DynamicOptionsTest extends TestCase {
       $p->search('veg', 'Vegetable')->optionsFrom(static fn(string $query): array => []);
     });
 
-    $this->assertTrue((new Tui($form))->schema()['prompts'][0]['options_dynamic']);
+    $this->assertTrue($this->schemaFlag((new Tui($form))->schema(), 'veg', 'options_dynamic'));
   }
 
   public function testAgentHelpEnumeratesTheResolvedValues(): void {
@@ -396,6 +435,79 @@ final class DynamicOptionsTest extends TestCase {
 
       return is_string($category) ? (self::CATALOG[$category] ?? []) : [];
     };
+  }
+
+  /**
+   * The option values a generated schema advertises for a prompt.
+   *
+   * @param array<string,mixed> $schema
+   *   The generated schema.
+   * @param string $id
+   *   The prompt id.
+   *
+   * @return list<string>
+   *   The advertised option values, in order.
+   */
+  protected function schemaOptions(array $schema, string $id): array {
+    $options = $this->schemaFor($schema, $id)['options'] ?? NULL;
+    $this->assertIsArray($options);
+
+    $values = [];
+
+    foreach ($options as $option) {
+      $this->assertIsArray($option);
+      $value = $option['value'] ?? NULL;
+      $this->assertIsString($value);
+      $values[] = $value;
+    }
+
+    return $values;
+  }
+
+  /**
+   * A boolean a generated schema carries for a prompt.
+   *
+   * @param array<string,mixed> $schema
+   *   The generated schema.
+   * @param string $id
+   *   The prompt id.
+   * @param string $key
+   *   The key of the boolean.
+   *
+   * @return bool
+   *   The advertised value.
+   */
+  protected function schemaFlag(array $schema, string $id, string $key): bool {
+    $flag = $this->schemaFor($schema, $id)[$key] ?? NULL;
+    $this->assertIsBool($flag);
+
+    return $flag;
+  }
+
+  /**
+   * The prompt entry a generated schema carries for a field.
+   *
+   * @param array<string,mixed> $schema
+   *   The generated schema.
+   * @param string $id
+   *   The prompt id.
+   *
+   * @return array<array-key,mixed>
+   *   The prompt entry.
+   */
+  protected function schemaFor(array $schema, string $id): array {
+    $prompts = $schema['prompts'] ?? NULL;
+    $this->assertIsArray($prompts);
+
+    foreach ($prompts as $prompt) {
+      $this->assertIsArray($prompt);
+
+      if (($prompt['id'] ?? NULL) === $id) {
+        return $prompt;
+      }
+    }
+
+    $this->fail(sprintf('The schema carries no prompt "%s".', $id));
   }
 
   /**

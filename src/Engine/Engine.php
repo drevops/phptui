@@ -41,14 +41,15 @@ class Engine {
   /**
    * What each field's dynamic option set was last resolved from, and to.
    *
-   * A settling pass that leaves the answers as they were leaves the options
-   * they produced valid, so the resolver is called again only when what it
-   * reads has actually changed. The rows are remembered alongside them because
-   * a field's options are settled state anyone may write: a schema surface
-   * resolving them against a context of its own retires this memo rather than
-   * leaving the engine convinced they are still its own.
+   * A settling pass that leaves the resolver's whole input as it was - the
+   * answers and the rest of the run context - leaves the options it produced
+   * valid, so it is called again only when what it reads has actually changed.
+   * The rows are remembered alongside that input because a field's options are
+   * settled state anyone may write: a schema surface resolving them against a
+   * context of its own retires this memo rather than leaving the engine
+   * convinced they are still its own.
    *
-   * @var array<string,array{answers:array<string,mixed>,rows:list<\DrevOps\Tui\Model\Option>}>
+   * @var array<string,array{answers:array<string,mixed>,run:array{string,bool,string},rows:list<\DrevOps\Tui\Model\Option>}>
    */
   protected array $optionMemo = [];
 
@@ -203,6 +204,11 @@ class Engine {
    */
   protected function resolveDynamicOptions(array $fields, array $values, array $active, Context $context, array $supplied): array {
     $answers = $this->activeAnswers($fields, $values, $active);
+    $resolved = new Context($context->directory, $answers, $context->update, $context->version);
+
+    // Everything the resolver is handed, so a second run against another
+    // directory - or in update mode - is not answered from the first one's memo.
+    $run = [$context->directory, $context->update, $context->version];
 
     foreach ($fields as $field) {
       if (!$field->optionsResolver instanceof \Closure) {
@@ -210,18 +216,18 @@ class Engine {
       }
 
       $memo = $this->optionMemo[$field->id] ?? NULL;
-      if ($memo !== NULL && $memo['answers'] === $answers && $memo['rows'] === $field->options) {
+      if ($memo !== NULL && $memo['answers'] === $answers && $memo['run'] === $run && $memo['rows'] === $field->options) {
         continue;
       }
 
       try {
-        $field->options = Option::resolved(($field->optionsResolver)(new Context($context->directory, $answers, $context->update, $context->version)));
+        $field->options = Option::resolved(($field->optionsResolver)($resolved));
       }
       catch (\Throwable $throwable) {
         throw $this->optionsError($field, $throwable);
       }
 
-      $this->optionMemo[$field->id] = ['answers' => $answers, 'rows' => $field->options];
+      $this->optionMemo[$field->id] = ['answers' => $answers, 'run' => $run, 'rows' => $field->options];
 
       if ($supplied[$field->id] ?? FALSE) {
         continue;
@@ -258,10 +264,13 @@ class Engine {
    *   The engine error naming the field.
    */
   protected function optionsError(Field $field, \Throwable $throwable): EngineException {
+    // Not every code is an integer - a database driver's SQLSTATE is a string -
+    // and consumer code decides which exception arrives here, so it is coerced
+    // rather than allowed to fail the conversion instead of reporting.
     return new EngineException(Translator::t('Could not load options for field "@id": @error', [
       '@id' => $field->id,
       '@error' => $throwable->getMessage(),
-    ]), $throwable->getCode(), $throwable);
+    ]), (int) $throwable->getCode(), $throwable);
   }
 
   /**

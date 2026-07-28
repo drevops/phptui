@@ -14,8 +14,9 @@ use DrevOps\Tui\Translation\Translator;
  *
  * The definition is immutable except for three resolved concerns written back:
  * options a field declares indirectly - through a loader resolved once
- * (`$optionsLoader`) or a resolver re-run as the answers change
- * (`$optionsResolver`) - land in `$options`, a progress row tracks its live
+ * (`$optionsLoader`), a resolver re-run as the answers change
+ * (`$optionsResolver`) or a query source re-run as the query changes
+ * (`$optionsSource`) - land in `$options`, a progress row tracks its live
  * indicator (`$progressCurrent`, `$progressLabel`) as its work advances, and
  * the owning form definition stamps the field's place in the condition graph
  * (`$conditionalDepth`). Those five properties are the only mutable state.

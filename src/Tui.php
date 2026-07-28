@@ -600,12 +600,15 @@ final class Tui {
    *
    * @param array<string,mixed> $answers
    *   The answers to validate.
+   * @param \DrevOps\Tui\Handler\Context|null $context
+   *   The context an options resolver is evaluated against, its answers
+   *   replaced by the ones under validation; NULL uses an empty context.
    *
    * @return list<string>
    *   The validation errors (empty when valid).
    */
-  public function validate(array $answers): array {
-    return (new SchemaValidator($this->form))->validate($answers);
+  public function validate(array $answers, ?Context $context = NULL): array {
+    return (new SchemaValidator($this->form, $context ?? new Context()))->validate($answers);
   }
 
   /**
