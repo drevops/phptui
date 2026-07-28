@@ -13,6 +13,7 @@ use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\Panel;
 use DrevOps\Tui\Model\SelectionBounds;
+use DrevOps\Tui\Model\Template;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -114,6 +115,53 @@ final class BuiltModelTest extends TestCase {
     yield 'zero string' => [TRUE, '', '0', NULL];
     yield 'optional field ignores an empty value' => [FALSE, '', '', NULL];
     yield 'optional field ignores a declared message' => [FALSE, $declared, '', NULL];
+  }
+
+  public function testTemplateFieldWithoutTemplateThrows(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Field "crate" is a template field but declares no pattern');
+
+    new Field('crate', 'Crate', '', FieldType::Template, '');
+  }
+
+  #[DataProvider('dataProviderTemplateError')]
+  public function testTemplateError(mixed $value, ?string $expected): void {
+    $field = new Field('crate', 'Crate', '', FieldType::Template, '', template: new Template('{{a}}-{{b}}', ['b' => 'Beta'], [
+      'b' => static fn(string $part): ?string => $part === 'ok' ? NULL : 'must be ok',
+    ]));
+
+    $this->assertSame($expected, $field->templateError($value));
+  }
+
+  public static function dataProviderTemplateError(): \Iterator {
+    yield 'fits the shape' => ['one-ok', NULL];
+    yield 'slot rejected' => ['one-bad', 'Beta: must be ok'];
+    yield 'shape mismatch' => ['nope', '"nope" does not match the template "{{a}}-{{b}}".'];
+    // An unfilled template is left to the required check, and a non-string is
+    // left to the type check, so neither is reported here.
+    yield 'empty' => ['', NULL];
+    yield 'not a string' => [42, NULL];
+  }
+
+  public function testTemplateErrorIsNullWithoutTemplate(): void {
+    $this->assertNull((new Field('name', 'Name', '', FieldType::Text, ''))->templateError('anything'));
+  }
+
+  #[DataProvider('dataProviderTemplateParts')]
+  public function testTemplateParts(mixed $value, array $expected): void {
+    $field = new Field('crate', 'Crate', '', FieldType::Template, '', template: new Template('{{a}}-{{b}}'));
+
+    $this->assertSame($expected, $field->templateParts($value));
+  }
+
+  public static function dataProviderTemplateParts(): \Iterator {
+    yield 'fits the shape' => ['one-two', ['a' => 'one', 'b' => 'two']];
+    yield 'shape mismatch' => ['nope', []];
+    yield 'not a string' => [42, []];
+  }
+
+  public function testTemplatePartsAreEmptyWithoutTemplate(): void {
+    $this->assertSame([], (new Field('name', 'Name', '', FieldType::Text, ''))->templateParts('one-two'));
   }
 
   public function testPanelItemCount(): void {
