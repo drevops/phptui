@@ -49,6 +49,10 @@ final class EnvNameResolverTest extends TestCase {
   }
 
   /**
+   * Tests that every answering name is reported in precedence order.
+   *
+   * @param string $env_name
+   *   The declared name, or empty to keep the mechanical one.
    * @param list<string> $aliases
    *   The declared aliases.
    * @param list<string> $expected

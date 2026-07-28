@@ -337,11 +337,16 @@ final class FormTest extends TestCase {
       })
       ->build();
 
-    $this->assertSame('LEGACY_CRATE', $form->field('crate_size')?->envName);
-    $this->assertSame(['OLD_CRATE', 'OLDER_CRATE'], $form->field('crate_size')?->envAliases);
+    $crate = $form->field('crate_size');
+    $this->assertInstanceOf(Field::class, $crate);
+    $this->assertSame('LEGACY_CRATE', $crate->envName);
+    $this->assertSame(['OLD_CRATE', 'OLDER_CRATE'], $crate->envAliases);
+
     // A field that names nothing keeps the mechanical name and no aliases.
-    $this->assertSame('', $form->field('grade')?->envName);
-    $this->assertSame([], $form->field('grade')?->envAliases);
+    $grade = $form->field('grade');
+    $this->assertInstanceOf(Field::class, $grade);
+    $this->assertSame('', $grade->envName);
+    $this->assertSame([], $grade->envAliases);
   }
 
   public function testEnvAliasesAreReindexed(): void {

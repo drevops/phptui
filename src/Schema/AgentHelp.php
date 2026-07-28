@@ -187,7 +187,8 @@ class AgentHelp {
     }
 
     // Independent of the canonical name: a declared alias is absolute, so it
-    // answers the field even where the mechanical name is too bare to advertise.
+    // answers the field even where the mechanical name is too bare to
+    // advertise.
     $aliases = $this->names->aliases($field);
     if ($aliases !== []) {
       $property['x-env-aliases'] = $aliases;

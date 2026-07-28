@@ -29,7 +29,7 @@ final class Field {
    * Anything outside it cannot be set portably from a shell, so a name that
    * does not match would be declared but unreachable.
    */
-  protected const string ENV_NAME_PATTERN = '/^[A-Za-z_][A-Za-z0-9_]*$/';
+  protected const string ENV_NAME_PATTERN = '/^[A-Za-z_]\w*$/';
 
   /**
    * The option rows for choice-based fields, in display order.
@@ -288,20 +288,20 @@ final class Field {
 
     $seen = [];
 
-    foreach ($this->envAliases as $alias) {
-      if (preg_match(self::ENV_NAME_PATTERN, $alias) !== 1) {
-        throw new FormException(sprintf('Field "%s" declares the environment variable alias "%s", which is not a portable name; use letters, digits and underscores, starting with a letter or underscore.', $this->id, $alias));
+    foreach ($this->envAliases as $env_alias) {
+      if (preg_match(self::ENV_NAME_PATTERN, $env_alias) !== 1) {
+        throw new FormException(sprintf('Field "%s" declares the environment variable alias "%s", which is not a portable name; use letters, digits and underscores, starting with a letter or underscore.', $this->id, $env_alias));
       }
 
-      if ($alias === $this->envName) {
-        throw new FormException(sprintf('Field "%s" declares "%s" as both its environment variable name and an alias of it; the alias would never be reached, so declare it once.', $this->id, $alias));
+      if ($env_alias === $this->envName) {
+        throw new FormException(sprintf('Field "%s" declares "%s" as both its environment variable name and an alias of it; the alias would never be reached, so declare it once.', $this->id, $env_alias));
       }
 
-      if (isset($seen[$alias])) {
-        throw new FormException(sprintf('Field "%s" declares the environment variable alias "%s" more than once; only the first would ever be reached.', $this->id, $alias));
+      if (isset($seen[$env_alias])) {
+        throw new FormException(sprintf('Field "%s" declares the environment variable alias "%s" more than once; only the first would ever be reached.', $this->id, $env_alias));
       }
 
-      $seen[$alias] = TRUE;
+      $seen[$env_alias] = TRUE;
     }
   }
 

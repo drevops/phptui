@@ -119,10 +119,16 @@ final class BuiltModelTest extends TestCase {
   }
 
   /**
+   * Tests that a name that cannot be honoured is rejected at construction.
+   *
+   * @param string $env_name
+   *   The declared name, or empty to keep the mechanical one.
    * @param list<string> $aliases
    *   The declared aliases.
+   * @param string $expected
+   *   The expected exception message.
    */
-  #[DataProvider('dataProviderEnvNameViolation')]
+  #[DataProvider('dataProviderEnvNameViolationThrows')]
   public function testEnvNameViolationThrows(string $env_name, array $aliases, string $expected): void {
     $this->expectException(FormException::class);
     $this->expectExceptionMessage($expected);
@@ -130,7 +136,7 @@ final class BuiltModelTest extends TestCase {
     new Field('crate_size', 'Crate size', '', FieldType::Text, '', envName: $env_name, envAliases: $aliases);
   }
 
-  public static function dataProviderEnvNameViolation(): \Iterator {
+  public static function dataProviderEnvNameViolationThrows(): \Iterator {
     yield 'name starting with a digit' => ['1CRATE', [], 'Field "crate_size" declares the environment variable name "1CRATE", which is not a portable name'];
     yield 'name with a hyphen' => ['OLD-CRATE', [], 'Field "crate_size" declares the environment variable name "OLD-CRATE", which is not a portable name'];
     yield 'name with a space' => ['OLD CRATE', [], 'Field "crate_size" declares the environment variable name "OLD CRATE", which is not a portable name'];
@@ -141,6 +147,10 @@ final class BuiltModelTest extends TestCase {
   }
 
   /**
+   * Tests that a name that can be honoured is kept as declared.
+   *
+   * @param string $env_name
+   *   The declared name, or empty to keep the mechanical one.
    * @param list<string> $aliases
    *   The declared aliases.
    */

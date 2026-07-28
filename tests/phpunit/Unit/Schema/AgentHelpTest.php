@@ -205,7 +205,7 @@ final class AgentHelpTest extends TestCase {
     $this->assertStringNotContainsString('APP_CRATE_SIZE', $help);
   }
 
-  public function testDeclaredEnvNameIsAdvertisedWithoutAPrefix(): void {
+  public function testDeclaredEnvNameIsAdvertisedWithoutPrefix(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
         $p->text('crate_size', 'Crate size')->env('LEGACY_CRATE');

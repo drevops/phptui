@@ -128,7 +128,7 @@ final class InputResolverTest extends TestCase {
     $this->assertSame(['crate_size' => 'small'], $inputs);
   }
 
-  public function testEarlierAliasWinsOverALaterOne(): void {
+  public function testEarlierAliasWinsOverLaterOne(): void {
     $fields = [new Field('crate_size', 'Crate size', '', FieldType::Text, '', envAliases: ['OLD_CRATE', 'OLDER_CRATE'])];
 
     $inputs = (new InputResolver('APP_'))->resolve($fields, '', [

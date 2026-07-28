@@ -317,7 +317,7 @@ final class SchemaGeneratorTest extends TestCase {
     $this->assertSame(['name'], $ids);
   }
 
-  public function testDescribesTheEnvironmentVariablesAnsweringAField(): void {
+  public function testDescribesTheEnvironmentVariablesAnsweringField(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
         $p->text('crate_size', 'Crate size');
@@ -339,7 +339,7 @@ final class SchemaGeneratorTest extends TestCase {
     $this->assertSame(['OLD_GRADE'], $declared['env_aliases']);
   }
 
-  public function testDescribesNoVariableForABareMechanicalName(): void {
+  public function testDescribesNoVariableForBareMechanicalName(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
         $p->text('crate_size', 'Crate size');

@@ -22,6 +22,7 @@ use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\If_\RemoveAlwaysTrueIfConditionRector;
 use Rector\Naming\Rector\Assign\RenameVariableToMatchMethodCallReturnTypeRector;
 use Rector\Naming\Rector\ClassMethod\RenameVariableToMatchNewTypeRector;
+use Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchExprVariableRector;
 use Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchMethodCallReturnTypeRector;
 use Rector\Naming\Rector\ClassMethod\RenameParamToMatchTypeRector;
 use Rector\Php80\Rector\Switch_\ChangeSwitchToMatchRector;
@@ -63,6 +64,10 @@ return RectorConfig::configure()
     NewlineBeforeNewAssignSetRector::class,
     NewlineBetweenClassLikeStmtsRector::class,
     RemoveAlwaysTrueIfConditionRector::class,
+    // Conflicts with Drupal's snake_case variable naming (enforced by PHPCS):
+    // a multi-word property yields a camelCase singular that PHPCBF rewrites
+    // straight back, leaving the two fixers undoing each other.
+    RenameForeachValueVariableToMatchExprVariableRector::class,
     RenameForeachValueVariableToMatchMethodCallReturnTypeRector::class,
     // Conflicts with Drupal's snake_case parameter naming (enforced by PHPCS).
     RenameParamToMatchTypeRector::class,
