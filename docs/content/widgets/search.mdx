@@ -174,7 +174,7 @@ The highlighted match's [description](/widgets/select#option-descriptions), in e
 
 ## Options from a query
 
-The options can come from the query itself rather than a fixed list, for a catalogue too large to hold - see [options from a query](/progress#options-from-a-query):
+The options can come from the query itself rather than a fixed list, for a catalog too large to hold - see [options from a query](/progress#options-from-a-query):
 
 ```php
 $p->search('veg', 'Vegetable')->optionsFrom(fn(string $query): array => $pantry->search($query));

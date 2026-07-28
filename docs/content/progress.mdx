@@ -130,7 +130,7 @@ Runnable in [`playground/16-loading-data.php`](https://github.com/drevops/tui/bl
 
 ## Options from a query
 
-A loader resolves one list, once. When the candidates are too many to hold - a catalogue behind a search API, a database lookup, an index - a [search](/widgets/search) or [suggest](/widgets/suggest) field can source them from the query instead, with `->optionsFrom()`:
+A loader resolves one list, once. When the candidates are too many to hold - a catalog behind a search API, a database lookup, an index - a [search](/widgets/search) or [suggest](/widgets/suggest) field can source them from the query instead, with `->optionsFrom()`:
 
 ```php
 $form->panel('order', 'New order', function (PanelBuilder $p) use ($pantry): void {
@@ -144,7 +144,7 @@ $form->panel('order', 'New order', function (PanelBuilder $p) use ($pantry): voi
 
 The source returns the same `value => label` map `->options()` takes, and also receives the answers collected so far, so one field's query can narrow by another's answer. Its result replaces the list wholesale and **is not filtered again locally** - the backend already did the matching, so a row whose label does not literally contain the query still shows.
 
-The panel loop is synchronous, so the call blocks: the field paints a themed `Loading…` in place of its list, then repaints with the result. Three behaviours keep that from becoming a call per keystroke:
+The panel loop is synchronous, so the call blocks: the field paints a themed `Loading…` in place of its list, then repaints with the result. Three behaviors keep that from becoming a call per keystroke:
 
 - **A burst settles once.** Keys that arrive together - fast typing, a paste - resolve to a single query rather than one per character.
 - **Repeats are cached.** A query already answered in this editor session is served from the cache, so backspacing costs nothing.
