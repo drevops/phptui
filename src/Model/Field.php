@@ -14,10 +14,10 @@ use DrevOps\Tui\Translation\Translator;
  *
  * The definition is immutable except for three resolved concerns written back:
  * options a field declares indirectly - through a loader resolved once
- * (`$optionsLoader`) or a resolver re-run as the answers change (`$optionsFor`)
- * - land in `$options`, a progress row tracks its live indicator
- * (`$progressCurrent`, `$progressLabel`) as its work advances, and the owning
- * form definition stamps the field's place in the condition graph
+ * (`$optionsLoader`) or a resolver re-run as the answers change
+ * (`$optionsResolver`) - land in `$options`, a progress row tracks its live
+ * indicator (`$progressCurrent`, `$progressLabel`) as its work advances, and
+ * the owning form definition stamps the field's place in the condition graph
  * (`$conditionalDepth`). Those five properties are the only mutable state.
  *
  * @package DrevOps\Tui\Model
@@ -204,7 +204,7 @@ final class Field {
    *   Rating only: the caption of a point on the scale, keyed by the point. The
    *   scale is the range in {@see $bounds}; a caption is decoration over it, so
    *   points may be captioned sparsely and an uncaptioned point still answers.
-   * @param \Closure|null $optionsFor
+   * @param \Closure|null $optionsResolver
    *   An `fn(Context $context): array<string,string>` resolving the options
    *   from the answers collected so far, or NULL for options that do not follow
    *   them. Unlike a loader it is called again whenever the answers change, so
@@ -255,7 +255,7 @@ final class Field {
     public readonly array $envAliases = [],
     public readonly bool $ghost = FALSE,
     public readonly array $ratingCaptions = [],
-    public readonly ?\Closure $optionsFor = NULL,
+    public readonly ?\Closure $optionsResolver = NULL,
   ) {
     $this->assertEnvNames();
     $this->assertRatingCaptions();
@@ -278,13 +278,13 @@ final class Field {
       throw new FormException(sprintf('Field "%s" declares a minimum query length but no query source to apply it to.', $this->id));
     }
 
-    if ($this->optionsFor instanceof \Closure) {
-      if (!$this->type->supportsOptions()) {
-        throw new FormException(sprintf('Field "%s" of type "%s" shows no options to resolve; only select, search, suggest, toggle and reorder fields have a list.', $this->id, $this->type->value));
-      }
+    if (($options !== [] || $optionsLoader instanceof \Closure || $this->optionsResolver instanceof \Closure) && !$this->type->supportsOptions()) {
+      throw new FormException(sprintf('Field "%s" of type "%s" shows no options; only select, search, suggest, toggle and reorder fields have a list.', $this->id, $this->type->value));
+    }
 
+    if ($this->optionsResolver instanceof \Closure) {
       if ($options !== [] || $optionsLoader instanceof \Closure || $this->optionsSource instanceof \Closure) {
-        throw new FormException(sprintf('Field "%s" resolves its options from the answers and declares its own options as well; a resolver replaces them, so declare only one.', $this->id));
+        throw new FormException(sprintf('Field "%s" resolves its options from the answers and declares another set of options as well; the resolved set replaces them, so declare only one.', $this->id));
       }
     }
 
@@ -457,7 +457,7 @@ final class Field {
    *   its rows, so there is nothing yet to count or to check a default against.
    */
   public function hasSettledOptions(): bool {
-    return !$this->optionsLoader instanceof \Closure && !$this->optionsFor instanceof \Closure && !$this->optionsSource instanceof \Closure;
+    return !$this->optionsLoader instanceof \Closure && !$this->optionsResolver instanceof \Closure && !$this->optionsSource instanceof \Closure;
   }
 
   /**
@@ -468,7 +468,7 @@ final class Field {
    *   live query, so no one list describes the field.
    */
   public function hasDynamicOptions(): bool {
-    return $this->optionsFor instanceof \Closure || $this->optionsSource instanceof \Closure;
+    return $this->optionsResolver instanceof \Closure || $this->optionsSource instanceof \Closure;
   }
 
   /**

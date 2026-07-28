@@ -3,7 +3,8 @@
 ' Traced from src/Render/PanelController.php (run -> frame/handle), src/Theme/
 ' (frame, and renderModal composited via src/Render/Overlay), src/Input/
 ' (KeyMap resolves a key press to a semantic action) and src/Engine/Engine.php
-' (settle re-runs derives, conditions and fix-ups after an accepted edit).
+' (settle re-resolves answer-driven options and re-runs derives, conditions and
+' fix-ups after an accepted edit).
 ' Regenerate every SVG with:  plantuml -tsvg docs/architecture/*.puml
 !theme plain
 skinparam backgroundColor white
@@ -57,8 +58,8 @@ loop until done
     KM --> W: bound action (accept, move, toggle...)
     W --> PC: value, complete or cancel
     opt edit accepted
-      PC -> Eng: settle(values, pinned)
-      Eng --> PC: settled values + active map\n(derives recompute, conditions\nshow/hide fields, fix-ups apply)
+      PC -> Eng: settle(values, pinned, context)
+      Eng --> PC: settled values + active map\n(options resolve from the answers,\nderives recompute, conditions\nshow/hide fields, fix-ups apply)
     end
   else navigating
     PC -> KM: matches(key, action)?

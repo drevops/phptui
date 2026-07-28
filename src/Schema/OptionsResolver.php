@@ -32,12 +32,12 @@ final class OptionsResolver {
    *   The context the resolver is called with.
    */
   public static function resolve(Field $field, Context $context): void {
-    if (!$field->optionsFor instanceof \Closure) {
+    if (!$field->optionsResolver instanceof \Closure) {
       return;
     }
 
     try {
-      $field->options = Option::resolved(($field->optionsFor)($context));
+      $field->options = Option::resolved(($field->optionsResolver)($context));
     }
     catch (\Throwable) {
       // Nothing this context can be told; the empty list stands.

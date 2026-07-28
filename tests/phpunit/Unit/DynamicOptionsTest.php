@@ -99,7 +99,7 @@ final class DynamicOptionsTest extends TestCase {
     $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p): void {
       $p->text('label', 'Order label')->default('Vegetable');
       $p->text('category', 'Category')->derive(new Derive('{{label}}', transform: 'lower'));
-      $p->select('item', 'Item')->optionsFor($this->resolver());
+      $p->select('item', 'Item')->options($this->resolver());
     });
 
     // The derived category settles before the options resolve, so the resolver
@@ -128,7 +128,7 @@ final class DynamicOptionsTest extends TestCase {
   public function testMultipleKeepsOnlyTheValuesTheSetStillHolds(): void {
     $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p): void {
       $p->select('category', 'Category')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable'])->default('fruit');
-      $p->select('basket', 'Basket')->multiple()->default(['apple', 'carrot', 'cherry'])->optionsFor($this->resolver());
+      $p->select('basket', 'Basket')->multiple()->default(['apple', 'carrot', 'cherry'])->options($this->resolver());
     });
 
     $answers = (new Tui($form))->collect('{"category":"fruit"}');
@@ -139,7 +139,7 @@ final class DynamicOptionsTest extends TestCase {
   public function testRankingIsCompletedToTheResolvedOptions(): void {
     $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p): void {
       $p->select('category', 'Category')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable'])->default('vegetable');
-      $p->reorder('ranking', 'Ranking')->optionsFor($this->resolver());
+      $p->reorder('ranking', 'Ranking')->options($this->resolver());
     });
 
     // A reorder is always a full permutation, so the resolved set becomes the
@@ -152,7 +152,7 @@ final class DynamicOptionsTest extends TestCase {
   public function testToggleFallsBackToTheFirstResolvedOption(): void {
     $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p): void {
       $p->select('category', 'Category')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable'])->default('vegetable');
-      $p->toggle('item', 'Item')->optionsFor($this->resolver());
+      $p->toggle('item', 'Item')->options($this->resolver());
     });
 
     // A toggle is always in one of its states, and it has none until the
@@ -165,7 +165,7 @@ final class DynamicOptionsTest extends TestCase {
   public function testSuggestKeepsAValueTheResolvedHintsDoNotHold(): void {
     $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p): void {
       $p->select('category', 'Category')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable'])->default('fruit');
-      $p->suggest('item', 'Item')->optionsFor($this->resolver());
+      $p->suggest('item', 'Item')->options($this->resolver());
     });
 
     // A suggest field's options are hints, never a closed set, so a value
@@ -222,6 +222,27 @@ final class DynamicOptionsTest extends TestCase {
 
     $this->assertSame('vegetable', $answers->value('category'));
     $this->assertSame('', $answers->value('item'));
+  }
+
+  public function testCallbackAskingForNothingStillLoadsOnce(): void {
+    $calls = 0;
+    $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p) use (&$calls): void {
+      $p->select('category', 'Category')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable'])->default('fruit');
+      $p->select('item', 'Item')->options(function () use (&$calls): array {
+        $calls++;
+
+        return ['apple' => 'Apple'];
+      });
+    });
+
+    // The callback asks for no context, so it is the loader it has always been:
+    // resolved once when the panel opens, and left alone when an answer it
+    // cannot read changes under it.
+    $tester = $this->tester($form);
+    $tester->run($this->enter(), $this->enter(), $this->down(), $this->enter(), $this->down(), $this->enter());
+
+    $this->assertSame(1, $calls);
+    $this->assertStringContainsString('Apple', $tester->display());
   }
 
   public function testResolverIsNotCalledAgainWhileTheAnswersStand(): void {
@@ -287,30 +308,44 @@ final class DynamicOptionsTest extends TestCase {
   public static function dataProviderRejectedDeclarationFailsWhenTheFormIsBuilt(): \Iterator {
     $resolver = static fn(Context $context): array => [];
 
-    yield 'a type with no option list' => [
+    yield 'a resolver on a type with no option list' => [
       static function (PanelBuilder $p) use ($resolver): void {
-        $p->text('item', 'Item')->optionsFor($resolver);
+        $p->text('item', 'Item')->options($resolver);
       },
-      '/shows no options to resolve/',
+      '/of type "text" shows no options/',
+    ];
+
+    yield 'a fixed list on a type with no option list' => [
+      static function (PanelBuilder $p): void {
+        $p->number('quantity', 'Quantity')->options(['1' => 'One']);
+      },
+      '/of type "number" shows no options/',
+    ];
+
+    yield 'a loader on a type with no option list' => [
+      static function (PanelBuilder $p): void {
+        $p->text('item', 'Item')->options(static fn(): array => ['apple' => 'Apple']);
+      },
+      '/of type "text" shows no options/',
     ];
 
     yield 'alongside static options' => [
       static function (PanelBuilder $p) use ($resolver): void {
-        $p->select('item', 'Item')->options(['apple' => 'Apple'])->optionsFor($resolver);
+        $p->select('item', 'Item')->options(['apple' => 'Apple'])->options($resolver);
       },
       '/declare only one/',
     ];
 
     yield 'alongside an option loader' => [
       static function (PanelBuilder $p) use ($resolver): void {
-        $p->select('item', 'Item')->options(static fn(): array => ['apple' => 'Apple'])->optionsFor($resolver);
+        $p->select('item', 'Item')->options(static fn(): array => ['apple' => 'Apple'])->options($resolver);
       },
       '/declare only one/',
     ];
 
     yield 'alongside a query source' => [
       static function (PanelBuilder $p) use ($resolver): void {
-        $p->search('item', 'Item')->optionsFrom(static fn(string $query): array => [])->optionsFor($resolver);
+        $p->search('item', 'Item')->optionsFrom(static fn(string $query): array => [])->options($resolver);
       },
       '/declare only one/',
     ];
@@ -331,7 +366,7 @@ final class DynamicOptionsTest extends TestCase {
   protected function form(?\Closure $answer = NULL, ?\Closure $declare = NULL): Form {
     return Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p) use ($answer, $declare): void {
       $p->select('category', 'Category')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable'])->default('fruit');
-      $field = $p->select('item', 'Item')->optionsFor($this->resolver($answer));
+      $field = $p->select('item', 'Item')->options($this->resolver($answer));
 
       if ($declare instanceof \Closure) {
         $declare($field);

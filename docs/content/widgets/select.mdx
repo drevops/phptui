@@ -32,11 +32,11 @@ Runnable scripts: [`playground/02-widgets-select.php`](https://github.com/drevop
 
 | Name         | Description                                                                      | Required | Default      |
 | ------------ | -------------------------------------------------------------------------------- | -------- | ------------ |
-| `options()`  | The choices, as a `value => label` map (or added one at a time with `option()`). | Yes      | -            |
-| `default()`  | Which option starts highlighted, by value.                                       | No       | First option |
-| `pageSize()` | Options shown before the list pages around the cursor.                           | No       | `10`         |
+| `options()`  | The choices, as a `value => label` map (or added one at a time with `option()`). Also takes a callback returning that map. | Yes      | -            |
+| `default()`  | Which option starts highlighted, by value.                                      | No       | First option |
+| `pageSize()` | Options shown before the list pages around the cursor.                          | No       | `10`         |
 
-For headings, separators and disabled options, see [Option groups](/widgets/option-groups).
+For headings, separators and disabled options, see [Option groups](/widgets/option-groups). To narrow the choices by an earlier answer, see [options from the answers](/field-behaviour#options-from-the-answers).
 
 ## Option descriptions
 

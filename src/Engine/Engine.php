@@ -205,7 +205,7 @@ class Engine {
     $answers = $this->activeAnswers($fields, $values, $active);
 
     foreach ($fields as $field) {
-      if (!$field->optionsFor instanceof \Closure) {
+      if (!$field->optionsResolver instanceof \Closure) {
         continue;
       }
 
@@ -215,7 +215,7 @@ class Engine {
       }
 
       try {
-        $field->options = Option::resolved(($field->optionsFor)(new Context($context->directory, $answers, $context->update, $context->version)));
+        $field->options = Option::resolved(($field->optionsResolver)(new Context($context->directory, $answers, $context->update, $context->version)));
       }
       catch (\Throwable $throwable) {
         throw $this->optionsError($field, $throwable);
