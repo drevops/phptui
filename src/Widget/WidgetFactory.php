@@ -66,7 +66,7 @@ class WidgetFactory {
       FieldType::Toggle => new ToggleWidget($this->labels($field), $this->text($current)),
       FieldType::Select => new SelectWidget($this->options($field), $this->seed($field, $current), $field->multiple, $field->pageSize, $field->selectionBounds),
       FieldType::Reorder => new ReorderWidget($this->options($field), Field::stringList($current), $field->pageSize),
-      FieldType::Suggest => new SuggestWidget($field->selectableValues(), $this->text($current), $field->pageSize, $this->suggestDescriptions($field)),
+      FieldType::Suggest => new SuggestWidget($field->selectableValues(), $this->text($current), $field->pageSize, $this->suggestDescriptions($field), $field->ghost),
       FieldType::Search => new SearchWidget($this->options($field), $this->seed($field, $current), $field->multiple, $field->pageSize, $field->selectionBounds),
       FieldType::FilePicker => new FilePickerWidget($field->pickerStart, $this->seed($field, $current), $field->pickerConstraints, $field->pickerShowHidden, $field->multiple, $field->pageSize, $field->selectionBounds),
       FieldType::Number => new NumberWidget($this->number($current), $field->bounds),

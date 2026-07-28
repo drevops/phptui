@@ -284,6 +284,20 @@ final class WidgetFactoryTest extends TestCase {
     $this->assertStringContainsString('me-site', $view);
   }
 
+  public function testSuggestGhostFlagReachesWidget(): void {
+    $options = ['Apple' => 'Apple', 'Apricot' => 'Apricot'];
+
+    $off = new Field('fruit', 'Fruit', '', FieldType::Suggest, '', $options);
+    $this->assertStringNotContainsString("\033[90m", (new WidgetFactory())->create($off, 'ap')->view(new DefaultTheme()));
+
+    $on = new Field('fruit', 'Fruit', '', FieldType::Suggest, '', $options, ghost: TRUE);
+    $view = (new WidgetFactory())->create($on, 'ap')->view(new DefaultTheme());
+
+    // The opted-in field previews the leading candidate's remaining suffix.
+    $this->assertStringContainsString('ple', $view);
+    $this->assertStringContainsString("\033[90m", $view);
+  }
+
   public function testTextCompletionClosureReceivesAnswers(): void {
     $seen = [];
     $field = new Field('repo', 'Repo', '', FieldType::Text, '', completion: function (array $answers) use (&$seen): array {

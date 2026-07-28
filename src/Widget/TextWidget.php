@@ -49,6 +49,16 @@ class TextWidget extends AbstractWidget implements TextEditCapableInterface, Com
   }
 
   /**
+   * The candidates the buffer is completed against.
+   *
+   * @return list<string>
+   *   The declared candidates, in declaration order.
+   */
+  protected function completionCandidates(): array {
+    return $this->completions;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function handle(Key $key): void {

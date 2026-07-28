@@ -144,6 +144,11 @@ final class FieldBuilder {
   protected array|\Closure $completion = [];
 
   /**
+   * Whether a suggest field previews its leading prefix match as ghost-text.
+   */
+  protected bool $ghost = FALSE;
+
+  /**
    * Whether a password editor offers a reveal/hide toggle.
    */
   protected bool $revealable = FALSE;
@@ -914,6 +919,26 @@ final class FieldBuilder {
   }
 
   /**
+   * Suggest only: preview the leading prefix match as inline ghost-text.
+   *
+   * As the user types, the highest-ranked option the input is a prefix of is
+   * shown dimmed after the caret and accepted with Tab or Right-arrow. The
+   * ranked list stays available; the preview is suppressed once a suggestion is
+   * highlighted, and whenever colour is off.
+   *
+   * @param bool $ghost
+   *   Whether the preview is shown.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function ghost(bool $ghost = TRUE): self {
+    $this->ghost = $ghost;
+
+    return $this;
+  }
+
+  /**
    * Template only: set the fixed shape whose slots the field fills in.
    *
    * The pattern carries `{{name}}` slots: its fixed text renders as context and
@@ -1190,6 +1215,7 @@ final class FieldBuilder {
       placeholder: $this->placeholder,
       envName: $this->envName,
       envAliases: $this->envAliases,
+      ghost: $this->ghost,
     );
   }
 

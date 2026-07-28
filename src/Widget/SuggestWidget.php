@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Widget;
 
+use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Utils\Strings;
+use DrevOps\Tui\Widget\Capability\CompletionCapableInterface;
+use DrevOps\Tui\Widget\Capability\CompletionCapableTrait;
 use DrevOps\Tui\Widget\Capability\PagingCapableInterface;
 use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
 use DrevOps\Tui\Widget\Capability\PlaceholderCapableInterface;
@@ -24,16 +28,29 @@ use DrevOps\Tui\Widget\Capability\TextEditCapableInterface;
  *
  * @package DrevOps\Tui\Widget
  */
-class SuggestWidget extends AbstractWidget implements SearchCapableInterface, TextEditCapableInterface, QueryOptionsCapableInterface, PagingCapableInterface, PlaceholderCapableInterface {
+class SuggestWidget extends AbstractWidget implements SearchCapableInterface, TextEditCapableInterface, QueryOptionsCapableInterface, PagingCapableInterface, PlaceholderCapableInterface, CompletionCapableInterface {
 
   use PagingCapableTrait;
   use QueryOptionsCapableTrait;
   use PlaceholderCapableTrait;
+  use CompletionCapableTrait;
 
   /**
    * The highlighted suggestion index, or -1 for none.
    */
   protected int $cursor = -1;
+
+  /**
+   * The buffer the memoized ranking was computed for, or NULL for none yet.
+   */
+  protected ?string $rankedFor = NULL;
+
+  /**
+   * The memoized ranking for {@see $rankedFor}.
+   *
+   * @var list<string>
+   */
+  protected array $ranked = [];
 
   /**
    * Construct a suggest widget.
@@ -48,9 +65,20 @@ class SuggestWidget extends AbstractWidget implements SearchCapableInterface, Te
    * @param array<string,string> $descriptions
    *   The description shown for a highlighted suggestion, keyed by value; a
    *   value with no entry shows none.
+   * @param bool $ghost
+   *   Whether the leading prefix match is previewed as inline ghost-text after
+   *   the caret; FALSE leaves the ranked list as the only completion.
    */
-  public function __construct(protected array $values, protected string $buffer = '', ?int $page_size = NULL, protected array $descriptions = []) {
+  public function __construct(protected array $values, protected string $buffer = '', ?int $page_size = NULL, protected array $descriptions = [], protected bool $ghost = FALSE) {
     $this->pageSize = $this->resolvePageSize($page_size);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  protected function keyScope(): Scope {
+    return Scope::field(FieldType::Suggest);
   }
 
   /**
@@ -64,6 +92,20 @@ class SuggestWidget extends AbstractWidget implements SearchCapableInterface, Te
     }
 
     if ($this->handleAccept($key)) {
+      return;
+    }
+
+    if ($keys->matches($key, Action::Complete)) {
+      $this->applyCompletion();
+
+      return;
+    }
+
+    // Right accepts the ghost-text like Tab; with nothing to complete it is
+    // inert, as it is for a suggest field that never opted into ghost-text.
+    if ($keys->matches($key, Action::MoveRight) && $this->bestMatch() !== NULL) {
+      $this->applyCompletion();
+
       return;
     }
 
@@ -131,11 +173,65 @@ class SuggestWidget extends AbstractWidget implements SearchCapableInterface, Te
   }
 
   /**
+   * Whether a completion is offered in the widget's current state.
+   *
+   * The buffer is append-only, so the caret is always at its end; what gates a
+   * completion here is what the rest of the editor is saying. Once a suggestion
+   * is highlighted it, not the buffer, is the live value, so previewing a
+   * completion of the buffer would contradict it. While a query is in flight
+   * the candidates still held are the previous query's, and the list they came
+   * from has already been replaced by the loading indicator - previewing one of
+   * them would put back the very answer the widget is withdrawing.
+   *
+   * @return bool
+   *   TRUE when the ghost-text preview applies.
+   */
+  protected function completionAvailable(): bool {
+    return $this->ghost && $this->cursor < 0 && !$this->queryLoading;
+  }
+
+  /**
+   * The candidates the buffer is completed against.
+   *
+   * Drawn from the displayed list rather than the declared order, so the
+   * previewed completion is always the leading prefix match of the very list
+   * shown beneath it - whether that order came from local ranking or from a
+   * query source.
+   *
+   * @return list<string>
+   *   The suggestion values in display order.
+   */
+  protected function completionCandidates(): array {
+    return $this->visible();
+  }
+
+  /**
+   * Land an accepted completion in the query.
+   *
+   * The completion is a new query, not a selection: the list re-filters around
+   * it and stays open, with nothing highlighted.
+   *
+   * @param string $match
+   *   The candidate to complete the query to.
+   */
+  protected function completeBuffer(string $match): void {
+    $this->buffer = $match;
+    $this->resetFilterCursor();
+  }
+
+  /**
    * The suggestions matching the current buffer, ranked by fuzzy relevance.
    *
    * Suggestions that came from a query source are already the answer to the
    * buffer, so ranking them again locally would drop the ones that do not
    * literally match it.
+   *
+   * Only the locally ranked path is memoized, and deliberately so: there the
+   * values are fixed for the widget's life, so the query alone determines the
+   * ranking and one pass serves the several reads a frame makes - the list, the
+   * highlighted description, the live value and the ghost-text preview. A query
+   * source replaces the values as each query settles, which a query-keyed
+   * memo could not see, so that path reads them directly every time.
    *
    * @return list<string>
    *   The matching suggestion values, most relevant first.
@@ -145,7 +241,13 @@ class SuggestWidget extends AbstractWidget implements SearchCapableInterface, Te
       return $this->values;
     }
 
-    return $this->matcher()->rankValues($this->values, $this->buffer);
+    if ($this->rankedFor === $this->buffer) {
+      return $this->ranked;
+    }
+
+    $this->rankedFor = $this->buffer;
+
+    return $this->ranked = $this->matcher()->rankValues($this->values, $this->buffer);
   }
 
   /**
@@ -225,9 +327,15 @@ class SuggestWidget extends AbstractWidget implements SearchCapableInterface, Te
 
   /**
    * {@inheritdoc}
+   *
+   * The completion suffix and the placeholder share the one ghost slot after
+   * the caret: the former needs a typed query to complete, the latter an empty
+   * one, so at most one of them is ever set.
    */
   public function queryLine(ThemeInterface $theme): string {
-    return $this->buffer . $theme->caret() . $this->placeholderGhost($theme, $this->buffer);
+    $completion = $this->ghostSuffix();
+
+    return $this->buffer . $theme->caret() . ($completion === '' ? $this->placeholderGhost($theme, $this->buffer) : $theme->ghost($completion));
   }
 
   /**
