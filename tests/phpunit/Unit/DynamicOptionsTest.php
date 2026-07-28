@@ -162,7 +162,7 @@ final class DynamicOptionsTest extends TestCase {
     $this->assertSame('carrot', $answers->value('item'));
   }
 
-  public function testSuggestKeepsAValueTheResolvedHintsDoNotHold(): void {
+  public function testSuggestKeepsValueTheResolvedHintsDoNotHold(): void {
     $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p): void {
       $p->select('category', 'Category')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable'])->default('fruit');
       $p->suggest('item', 'Item')->options($this->resolver());
@@ -324,7 +324,7 @@ final class DynamicOptionsTest extends TestCase {
     $this->assertStringNotContainsString('apple', $help);
   }
 
-  public function testReconcilingLeavesAValueThatIsNotAChoiceAlone(): void {
+  public function testReconcilingLeavesNonChoiceValueAlone(): void {
     $field = new Field('name', 'Order name', '', FieldType::Text, 'Pear');
 
     $this->assertSame('Pear', $field->reconcileValue('Pear'));

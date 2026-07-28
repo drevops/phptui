@@ -283,10 +283,8 @@ final class Field {
       throw new FormException(sprintf('Field "%s" of type "%s" shows no options; only select, search, suggest, toggle and reorder fields have a list.', $this->id, $this->type->value));
     }
 
-    if ($this->optionsResolver instanceof \Closure) {
-      if ($options !== [] || $optionsLoader instanceof \Closure || $this->optionsSource instanceof \Closure) {
-        throw new FormException(sprintf('Field "%s" resolves its options from the answers and declares another set of options as well; the resolved set replaces them, so declare only one.', $this->id));
-      }
+    if ($this->optionsResolver instanceof \Closure && ($options !== [] || $optionsLoader instanceof \Closure || $this->optionsSource instanceof \Closure)) {
+      throw new FormException(sprintf('Field "%s" resolves its options from the answers and declares another set of options as well; the resolved set replaces them, so declare only one.', $this->id));
     }
 
     if ($this->placeholder !== '' && !$this->type->supportsPlaceholder()) {

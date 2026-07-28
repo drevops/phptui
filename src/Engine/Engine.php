@@ -207,7 +207,8 @@ class Engine {
     $resolved = new Context($context->directory, $answers, $context->update, $context->version);
 
     // Everything the resolver is handed, so a second run against another
-    // directory - or in update mode - is not answered from the first one's memo.
+    // directory - or in update mode - is not answered from the memo of the
+    // first one.
     $run = [$context->directory, $context->update, $context->version];
 
     foreach ($fields as $field) {
