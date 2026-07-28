@@ -12,11 +12,12 @@ use DrevOps\Tui\Discovery\DiscoverInterface;
 /**
  * Generates a machine-readable schema of every configured question.
  *
- * Each prompt entry carries `{id, type, label, description, options, default,
- * required}` plus the declared bounds and the `when`, `derive` and `discover`
- * rules, so external tooling can drive or validate the form without loading
- * the PHP declaration. A closure default is resolved against the context (see
- * {@see DefaultResolver}) so a computed default advertises a real value.
+ * Each prompt entry carries `{id, type, label, description, hint, placeholder,
+ * options, default, required}` plus the declared bounds and the `when`,
+ * `derive` and `discover` rules, so external tooling can drive or validate the
+ * form without loading the PHP declaration. A closure default is resolved
+ * against the context (see {@see DefaultResolver}) so a computed default
+ * advertises a real value.
  *
  * @package DrevOps\Tui\Schema
  */
@@ -55,6 +56,8 @@ class SchemaGenerator {
         'type' => $field->type->value,
         'label' => $field->label,
         'description' => $field->description,
+        'hint' => $field->hint,
+        'placeholder' => $field->placeholder,
         'options' => $this->options($field),
         'default' => DefaultResolver::resolve($field, $this->context),
         'required' => $field->required,

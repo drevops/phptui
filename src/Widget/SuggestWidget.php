@@ -12,6 +12,8 @@ use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Utils\Strings;
 use DrevOps\Tui\Widget\Capability\PagingCapableInterface;
 use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableInterface;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableTrait;
 use DrevOps\Tui\Widget\Capability\QueryOptionsCapableInterface;
 use DrevOps\Tui\Widget\Capability\QueryOptionsCapableTrait;
 use DrevOps\Tui\Widget\Capability\SearchCapableInterface;
@@ -22,10 +24,11 @@ use DrevOps\Tui\Widget\Capability\TextEditCapableInterface;
  *
  * @package DrevOps\Tui\Widget
  */
-class SuggestWidget extends AbstractWidget implements SearchCapableInterface, TextEditCapableInterface, QueryOptionsCapableInterface, PagingCapableInterface {
+class SuggestWidget extends AbstractWidget implements SearchCapableInterface, TextEditCapableInterface, QueryOptionsCapableInterface, PagingCapableInterface, PlaceholderCapableInterface {
 
   use PagingCapableTrait;
   use QueryOptionsCapableTrait;
+  use PlaceholderCapableTrait;
 
   /**
    * The highlighted suggestion index, or -1 for none.
@@ -224,7 +227,7 @@ class SuggestWidget extends AbstractWidget implements SearchCapableInterface, Te
    * {@inheritdoc}
    */
   public function queryLine(ThemeInterface $theme): string {
-    return $this->buffer . $theme->caret();
+    return $this->buffer . $theme->caret() . $this->placeholderGhost($theme, $this->buffer);
   }
 
   /**

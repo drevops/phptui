@@ -11,6 +11,7 @@ use DrevOps\Tui\Testing\ArrayKeyStream;
 use DrevOps\Tui\Testing\WidgetRunner;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Widget\TextareaWidget;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableTrait;
 use DrevOps\Tui\Widget\Capability\TextEditCapableTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
@@ -22,6 +23,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(TextareaWidget::class)]
 #[CoversTrait(TextEditCapableTrait::class)]
+#[CoversTrait(PlaceholderCapableTrait::class)]
 #[Group('widget')]
 final class TextareaWidgetTest extends TestCase {
 
@@ -148,6 +150,16 @@ final class TextareaWidgetTest extends TestCase {
 
     $disabled = array_map(static fn(Hint $hint): string => $hint->label, (new TextareaWidget('x'))->hints());
     $this->assertNotContains('editor', $disabled);
+  }
+
+  public function testPlaceholderGhostsAnEmptyBufferOnly(): void {
+    $widget = (new TextareaWidget())->setPlaceholder('E.g. Crisp and sweet');
+
+    $this->assertStringContainsString('E.g. Crisp and sweet', $widget->view(new DefaultTheme()));
+
+    $widget->handle(Key::char('C'));
+
+    $this->assertStringNotContainsString('E.g. Crisp and sweet', $widget->view(new DefaultTheme()));
   }
 
 }

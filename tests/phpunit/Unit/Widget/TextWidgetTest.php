@@ -12,6 +12,7 @@ use DrevOps\Tui\Testing\WidgetRunner;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Widget\AbstractWidget;
 use DrevOps\Tui\Widget\Capability\CompletionCapableTrait;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableTrait;
 use DrevOps\Tui\Widget\Capability\TextEditCapableTrait;
 use DrevOps\Tui\Widget\TextWidget;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -26,6 +27,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(AbstractWidget::class)]
 #[CoversTrait(TextEditCapableTrait::class)]
 #[CoversTrait(CompletionCapableTrait::class)]
+#[CoversTrait(PlaceholderCapableTrait::class)]
 #[CoversClass(WidgetRunner::class)]
 #[Group('widget')]
 final class TextWidgetTest extends TestCase {
@@ -236,6 +238,48 @@ final class TextWidgetTest extends TestCase {
     $view = $widget->view(new DefaultTheme(76, ['color' => FALSE]));
     $this->assertStringNotContainsString('me-site', $view);
     $this->assertStringNotContainsString("\033", $view);
+  }
+
+  public function testPlaceholderGhostsAnEmptyBuffer(): void {
+    $widget = (new TextWidget())->setPlaceholder('E.g. Golden Beetroot');
+
+    $view = $widget->view(new DefaultTheme());
+    $this->assertStringContainsString('E.g. Golden Beetroot', $view);
+    $this->assertStringContainsString("\033[90m", $view);
+
+    // The placeholder is not a value: the field still reads as unanswered.
+    $this->assertSame('', $widget->value());
+  }
+
+  public function testPlaceholderClearsOnFirstKeystroke(): void {
+    $widget = (new TextWidget())->setPlaceholder('E.g. Golden Beetroot');
+
+    $widget->handle(Key::char('a'));
+
+    $this->assertStringNotContainsString('E.g. Golden Beetroot', $widget->view(new DefaultTheme()));
+  }
+
+  public function testPlaceholderNeverCompetesWithCompletion(): void {
+    $widget = (new TextWidget('', ['acme-site']))->setPlaceholder('E.g. Golden Beetroot');
+
+    // A completion needs a typed prefix and a placeholder needs an empty
+    // buffer, so the one ghost slot is never contested.
+    $widget->handle(Key::char('a'));
+
+    $view = $widget->view(new DefaultTheme());
+    $this->assertStringContainsString('cme-site', $view);
+    $this->assertStringNotContainsString('E.g. Golden Beetroot', $view);
+  }
+
+  public function testPlaceholderSuppressedInNoAnsiMode(): void {
+    $widget = (new TextWidget())->setPlaceholder('E.g. Golden Beetroot');
+
+    // Without colour it would read as a typed value rather than as a prompt.
+    $this->assertStringNotContainsString('E.g. Golden Beetroot', $widget->view(new DefaultTheme(76, ['color' => FALSE])));
+  }
+
+  public function testUndeclaredPlaceholderGhostsNothing(): void {
+    $this->assertStringNotContainsString("\033[90m", (new TextWidget())->view(new DefaultTheme()));
   }
 
 }

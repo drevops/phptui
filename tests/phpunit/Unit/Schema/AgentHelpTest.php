@@ -148,6 +148,38 @@ final class AgentHelpTest extends TestCase {
     $this->assertStringContainsString('"description": "The public name"', $help);
   }
 
+  public function testFieldHintAndPlaceholderTravelAsExtensionKeys(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('name', 'Site name')
+          ->description('The public name')
+          ->hint('Type a few letters to filter.')
+          ->placeholder('E.g. Golden Beetroot');
+      })
+      ->build();
+
+    $help = (new AgentHelp($form))->generate();
+
+    // Each text keeps its own key, so an agent reads the same three guidance
+    // texts a human does rather than one merged description.
+    $this->assertStringContainsString('"description": "The public name"', $help);
+    $this->assertStringContainsString('"x-hint": "Type a few letters to filter."', $help);
+    $this->assertStringContainsString('"x-placeholder": "E.g. Golden Beetroot"', $help);
+  }
+
+  public function testUndeclaredHintAndPlaceholderAreOmitted(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('name', 'Site name');
+      })
+      ->build();
+
+    $help = (new AgentHelp($form))->generate();
+
+    $this->assertStringNotContainsString('"x-hint"', $help);
+    $this->assertStringNotContainsString('"x-placeholder"', $help);
+  }
+
   public function testNoEnvPrefixOmitsEnv(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {

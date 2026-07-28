@@ -24,14 +24,14 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Template widget')
   ->panel('main', 'Template', function (PanelBuilder $p): void {
-    // ->pattern() declares the shape; ->placeholder() labels one slot and
-    // gives it a validator of its own, checked apart from the others.
+    // ->pattern() declares the shape; ->slot() labels one slot and gives it a
+    // validator of its own, checked apart from the others.
     $p->template('crate', 'Crate label')
       ->pattern('{{orchard}}-{{fruit}}-{{grade}}')
       ->default('valley-pear-a')
-      ->placeholder('orchard', 'Orchard')
-      ->placeholder('fruit', 'Fruit')
-      ->placeholder('grade', 'Grade', static fn(string $value): ?string => preg_match('/^[a-c]$/', $value) === 1 ? NULL : 'use a single letter a-c');
+      ->slot('orchard', 'Orchard')
+      ->slot('fruit', 'Fruit')
+      ->slot('grade', 'Grade', static fn(string $value): ?string => preg_match('/^[a-c]$/', $value) === 1 ? NULL : 'use a single letter a-c');
   });
 
 try {

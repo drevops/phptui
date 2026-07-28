@@ -25,6 +25,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(FormDefinition::class)]
 #[CoversClass(Panel::class)]
 #[CoversClass(Field::class)]
+#[CoversClass(FieldType::class)]
 #[CoversClass(Option::class)]
 #[Group('model')]
 final class BuiltModelTest extends TestCase {
@@ -209,6 +210,35 @@ final class BuiltModelTest extends TestCase {
     $this->expectExceptionMessage('Field "s" declares selection limits but does not collect several values.');
 
     new Field('s', 'S', '', FieldType::Text, '', selectionBounds: new SelectionBounds(2, 3));
+  }
+
+  #[DataProvider('dataProviderPlaceholderIsRejectedWhenTypeHasNoInput')]
+  public function testPlaceholderIsRejectedWhenTypeHasNoInput(FieldType $type): void {
+    if (!$type->supportsPlaceholder()) {
+      $this->expectException(FormException::class);
+      $this->expectExceptionMessage(sprintf('Field "f" of type "%s" shows no placeholder', $type->value));
+    }
+
+    $field = new Field('f', 'F', '', $type, '', template: $type === FieldType::Template ? new Template('{{a}}-{{b}}') : NULL, placeholder: 'E.g. Golden Beetroot');
+
+    $this->assertSame('E.g. Golden Beetroot', $field->placeholder);
+  }
+
+  public static function dataProviderPlaceholderIsRejectedWhenTypeHasNoInput(): \Iterator {
+    foreach (FieldType::cases() as $type) {
+      yield $type->value => [$type];
+    }
+  }
+
+  #[DataProvider('dataProviderHintIsAcceptedOnEveryType')]
+  public function testHintIsAcceptedOnEveryType(FieldType $type): void {
+    $field = new Field('f', 'F', '', $type, '', template: $type === FieldType::Template ? new Template('{{a}}-{{b}}') : NULL, hint: 'Use the arrows.');
+
+    $this->assertSame('Use the arrows.', $field->hint);
+  }
+
+  public static function dataProviderHintIsAcceptedOnEveryType(): \Iterator {
+    yield from self::dataProviderPlaceholderIsRejectedWhenTypeHasNoInput();
   }
 
   public function testFormDefaults(): void {

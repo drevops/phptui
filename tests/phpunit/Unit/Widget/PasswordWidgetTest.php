@@ -11,6 +11,7 @@ use DrevOps\Tui\Testing\ArrayKeyStream;
 use DrevOps\Tui\Testing\WidgetRunner;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Widget\PasswordWidget;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableTrait;
 use DrevOps\Tui\Widget\Capability\TextEditCapableTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
@@ -22,6 +23,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(PasswordWidget::class)]
 #[CoversTrait(TextEditCapableTrait::class)]
+#[CoversTrait(PlaceholderCapableTrait::class)]
 #[Group('widget')]
 final class PasswordWidgetTest extends TestCase {
 
@@ -179,6 +181,29 @@ final class PasswordWidgetTest extends TestCase {
     $this->assertFalse($widget->isComplete());
     $this->assertStringContainsString('Too weak.', $widget->view($theme));
     $this->assertStringNotContainsString('re-enter to confirm', $widget->view($theme));
+  }
+
+  public function testPlaceholderGhostsAnEmptyBufferInEveryDisplayMode(): void {
+    $widget = (new PasswordWidget('', revealable: TRUE))->setPlaceholder('At least 12 characters');
+    $theme = new DefaultTheme();
+
+    // An empty buffer hides nothing, so the prompt shows masked, plaintext and
+    // hidden alike.
+    $this->assertStringContainsString('At least 12 characters', $widget->view($theme));
+
+    $widget->handle(Key::named(KeyName::Tab));
+    $this->assertStringContainsString('At least 12 characters', $widget->view($theme));
+
+    $widget->handle(Key::named(KeyName::Tab));
+    $this->assertStringContainsString('At least 12 characters', $widget->view($theme));
+  }
+
+  public function testPlaceholderClearsOnceTheEntryIsMasked(): void {
+    $widget = (new PasswordWidget())->setPlaceholder('At least 12 characters');
+
+    $this->type($widget, 's3cret');
+
+    $this->assertStringNotContainsString('At least 12 characters', $widget->view(new DefaultTheme()));
   }
 
   /**

@@ -13,6 +13,8 @@ use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Utils\Strings;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableInterface;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableTrait;
 use DrevOps\Tui\Widget\Capability\StepCapableInterface;
 use DrevOps\Tui\Widget\Capability\TextEditCapableInterface;
 use DrevOps\Tui\Widget\Capability\TextEditCapableTrait;
@@ -26,11 +28,12 @@ use DrevOps\Tui\Widget\Capability\TextEditCapableTrait;
  *
  * @package DrevOps\Tui\Widget
  */
-class NumberWidget extends AbstractWidget implements TextEditCapableInterface, StepCapableInterface {
+class NumberWidget extends AbstractWidget implements TextEditCapableInterface, StepCapableInterface, PlaceholderCapableInterface {
 
   use TextEditCapableTrait {
     insert as protected insertText;
   }
+  use PlaceholderCapableTrait;
 
   /**
    * Construct a number widget.
@@ -143,7 +146,7 @@ class NumberWidget extends AbstractWidget implements TextEditCapableInterface, S
    * {@inheritdoc}
    */
   protected function renderBody(ThemeInterface $theme): string {
-    return $this->renderInputLine($theme);
+    return $this->renderInputLine($theme, $this->placeholderText($this->buffer));
   }
 
   /**

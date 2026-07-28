@@ -72,6 +72,17 @@ class DosTheme extends DefaultTheme {
    * {@inheritdoc}
    */
   #[\Override]
+  public function hint(string $text, bool $selected = FALSE): string {
+    // CGA had no italic, so the inherited style would leave the hint identical
+    // to the body text; bright cyan is the period-correct help colour and lifts
+    // off the blue wash.
+    return $this->paint($this->emphasize(Sgr::of(Sgr::BrightCyan), $selected), $text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
   public function footer(string $text): string {
     return $this->paint(Sgr::of(Sgr::White), $text);
   }

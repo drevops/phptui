@@ -15,6 +15,8 @@ use DrevOps\Tui\Widget\Capability\OptionsCapableInterface;
 use DrevOps\Tui\Widget\Capability\OptionsCapableTrait;
 use DrevOps\Tui\Widget\Capability\PagingCapableInterface;
 use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableInterface;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableTrait;
 use DrevOps\Tui\Widget\Capability\QueryOptionsCapableInterface;
 use DrevOps\Tui\Widget\Capability\QueryOptionsCapableTrait;
 use DrevOps\Tui\Widget\Capability\SearchCapableInterface;
@@ -38,15 +40,19 @@ class SearchWidget extends AbstractWidget implements
   FilterCapableInterface,
   SearchCapableInterface,
   QueryOptionsCapableInterface,
-  PagingCapableInterface {
+  PagingCapableInterface,
+  PlaceholderCapableInterface {
 
   use OptionsCapableTrait;
   use SelectionCapableTrait;
   use SelectionBoundedTrait;
   use FilterCapableTrait;
-  use SearchCapableTrait;
+  use SearchCapableTrait {
+    queryLine as protected filterLine;
+  }
   use QueryOptionsCapableTrait;
   use PagingCapableTrait;
+  use PlaceholderCapableTrait;
 
   /**
    * Construct a search widget.
@@ -122,6 +128,13 @@ class SearchWidget extends AbstractWidget implements
    */
   protected function renderBody(ThemeInterface $theme): string {
     return $this->queryLine($theme) . "\n" . ($this->queryStateLine($theme) ?? $this->withSelectionHint($theme, $this->renderChoiceList($theme)));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function queryLine(ThemeInterface $theme): string {
+    return $this->filterLine($theme) . $this->placeholderGhost($theme, $this->filter);
   }
 
 }

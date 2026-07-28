@@ -132,4 +132,24 @@ enum FieldType: string {
     return in_array($this, [self::Search, self::Suggest], TRUE);
   }
 
+  /**
+   * Whether a field of this type can show ghost text in an empty input.
+   *
+   * Template is excluded: it ghosts each empty slot with that slot's own label,
+   * so a field-level placeholder would compete with it.
+   *
+   * @return bool
+   *   TRUE for the types that edit a text buffer or a query line.
+   */
+  public function supportsPlaceholder(): bool {
+    return in_array($this, [
+      self::Text,
+      self::Number,
+      self::Textarea,
+      self::Password,
+      self::Suggest,
+      self::Search,
+    ], TRUE);
+  }
+
 }

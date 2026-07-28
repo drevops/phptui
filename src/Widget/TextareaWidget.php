@@ -12,6 +12,8 @@ use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Utils\Strings;
 use DrevOps\Tui\Widget\Capability\ExternalEditCapableInterface;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableInterface;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableTrait;
 use DrevOps\Tui\Widget\Capability\TextEditCapableInterface;
 use DrevOps\Tui\Widget\Capability\TextEditCapableTrait;
 
@@ -20,9 +22,10 @@ use DrevOps\Tui\Widget\Capability\TextEditCapableTrait;
  *
  * @package DrevOps\Tui\Widget
  */
-class TextareaWidget extends AbstractWidget implements TextEditCapableInterface, ExternalEditCapableInterface {
+class TextareaWidget extends AbstractWidget implements TextEditCapableInterface, ExternalEditCapableInterface, PlaceholderCapableInterface {
 
   use TextEditCapableTrait;
+  use PlaceholderCapableTrait;
 
   /**
    * Whether the external-editor handoff has been requested.
@@ -163,7 +166,7 @@ class TextareaWidget extends AbstractWidget implements TextEditCapableInterface,
    * {@inheritdoc}
    */
   protected function renderBody(ThemeInterface $theme): string {
-    return $this->renderCaretLine($theme);
+    return $this->renderCaretLine($theme) . $this->placeholderGhost($theme, $this->buffer);
   }
 
   /**

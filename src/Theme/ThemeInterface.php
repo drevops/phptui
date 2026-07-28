@@ -54,6 +54,15 @@ interface ThemeInterface {
   public function description(string $text, bool $selected = FALSE): string;
 
   /**
+   * A field's hint - how to answer it; bold when its row is selected.
+   *
+   * The guidance text a field declares, styled apart from its description so
+   * the two read as different things. Unrelated to {@see keyHint()} and
+   * {@see keysHint()}, which draw the bound keys.
+   */
+  public function hint(string $text, bool $selected = FALSE): string;
+
+  /**
    * A provenance badge (e.g. "edited"); bold when its row is selected.
    */
   public function badge(string $text, bool $selected = FALSE): string;

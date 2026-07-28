@@ -226,7 +226,7 @@ final class EngineTest extends TestCase {
   protected static function crate(PanelBuilder $panel): FieldBuilder {
     return $panel->template('crate')
       ->pattern('{{orchard}}-{{grade}}')
-      ->placeholder('grade', 'Grade', static fn(string $value): ?string => preg_match('/^[a-c]$/', $value) === 1 ? NULL : 'use a single letter a-c');
+      ->slot('grade', 'Grade', static fn(string $value): ?string => preg_match('/^[a-c]$/', $value) === 1 ? NULL : 'use a single letter a-c');
   }
 
   /**

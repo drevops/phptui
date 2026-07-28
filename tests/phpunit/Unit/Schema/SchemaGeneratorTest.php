@@ -27,7 +27,7 @@ final class SchemaGeneratorTest extends TestCase {
       ->panel('p', 'p', function (PanelBuilder $p): void {
         $profile = $p->select('profile', 'Profile')->description('The profile')->default('standard')->required();
         $profile->option('standard', 'Standard', 'Std')->option('minimal', 'Minimal');
-        $p->text('theme')->derive(new Derive('{{profile}}'))->when(new Condition('profile', eq: 'standard'));
+        $p->text('theme')->hint('Leave empty to follow the profile.')->placeholder('E.g. Golden Beetroot')->derive(new Derive('{{profile}}'))->when(new Condition('profile', eq: 'standard'));
         $p->number('port', 'Port')->min(1)->max(65535)->step(5);
         $p->calendar('release', 'Release date')->minDate('2000-01-01')->maxDate('2030-12-31')->weekStart(Weekday::Sunday);
       })
@@ -40,6 +40,8 @@ final class SchemaGeneratorTest extends TestCase {
           'type' => 'select',
           'label' => 'Profile',
           'description' => 'The profile',
+          'hint' => '',
+          'placeholder' => '',
           'options' => [
             ['value' => 'standard', 'label' => 'Standard', 'description' => 'Std'],
             ['value' => 'minimal', 'label' => 'Minimal', 'description' => ''],
@@ -66,6 +68,8 @@ final class SchemaGeneratorTest extends TestCase {
           'type' => 'text',
           'label' => 'theme',
           'description' => '',
+          'hint' => 'Leave empty to follow the profile.',
+          'placeholder' => 'E.g. Golden Beetroot',
           'options' => [],
           'default' => '',
           'required' => FALSE,
@@ -89,6 +93,8 @@ final class SchemaGeneratorTest extends TestCase {
           'type' => 'number',
           'label' => 'Port',
           'description' => '',
+          'hint' => '',
+          'placeholder' => '',
           'options' => [],
           'default' => 0,
           'required' => FALSE,
@@ -112,6 +118,8 @@ final class SchemaGeneratorTest extends TestCase {
           'type' => 'calendar',
           'label' => 'Release date',
           'description' => '',
+          'hint' => '',
+          'placeholder' => '',
           'options' => [],
           'default' => '',
           'required' => FALSE,
@@ -152,6 +160,8 @@ final class SchemaGeneratorTest extends TestCase {
           'type' => 'template',
           'label' => 'Crate label',
           'description' => '',
+          'hint' => '',
+          'placeholder' => '',
           'options' => [],
           'default' => 'valley-a',
           'required' => FALSE,
@@ -194,6 +204,8 @@ final class SchemaGeneratorTest extends TestCase {
           'type' => 'select',
           'label' => 'Profile',
           'description' => '',
+          'hint' => '',
+          'placeholder' => '',
           'options' => [
             ['value' => 'standard', 'label' => 'Standard', 'description' => ''],
           ],

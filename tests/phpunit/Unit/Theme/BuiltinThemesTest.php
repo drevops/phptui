@@ -145,4 +145,20 @@ final class BuiltinThemesTest extends TestCase {
     yield 'light' => [Mode::Light];
   }
 
+  /**
+   * CGA has no italic, so the dos hint takes a colour of its own instead.
+   */
+  #[DataProvider('dataProviderDosHintTakesItsOwnColourRatherThanItalic')]
+  public function testDosHintTakesItsOwnColourRatherThanItalic(Mode $mode): void {
+    $theme = ThemeManager::create('dos', 76, ['mode' => $mode]);
+
+    $this->assertSame(Ansi::style('X', '96'), $theme->hint('X'));
+    $this->assertSame(Ansi::style('X', '1;96'), $theme->hint('X', TRUE));
+    $this->assertNotSame($theme->description('X'), $theme->hint('X'));
+  }
+
+  public static function dataProviderDosHintTakesItsOwnColourRatherThanItalic(): \Iterator {
+    yield from self::dataProviderDosSecondaryTextIsLegibleOnBlue();
+  }
+
 }

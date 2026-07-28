@@ -620,6 +620,15 @@ class DefaultTheme implements ThemeInterface {
   /**
    * {@inheritdoc}
    */
+  public function hint(string $text, bool $selected = FALSE): string {
+    // The description's grey, italicized: guidance on how to answer is never
+    // louder than the question itself, but still reads as its own voice.
+    return $this->paint($this->emphasize(Sgr::of(Sgr::Italic, Sgr::Grey), $selected), $this->linkify($text));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function badge(string $text, bool $selected = FALSE): string {
     return $this->paint($this->emphasize(Sgr::of(Sgr::Reverse), $selected), $text);
   }
@@ -1102,9 +1111,9 @@ class DefaultTheme implements ThemeInterface {
           $lines[] = $line;
         }
 
-        if ($verbose && $field->description !== '') {
-          foreach ($this->renderDescriptionBlock(Translator::t($field->description), $index === $cursor) as $description_line) {
-            $lines[] = $indent . $description_line;
+        if ($verbose) {
+          foreach ($this->renderFieldGuidance($field, $index === $cursor) as $guidance_line) {
+            $lines[] = $indent . $guidance_line;
           }
         }
 
@@ -1118,9 +1127,9 @@ class DefaultTheme implements ThemeInterface {
         $lines[] = $line;
       }
 
-      if ($verbose && $field->description !== '') {
-        foreach ($this->renderDescriptionBlock(Translator::t($field->description), $index === $cursor) as $description_line) {
-          $lines[] = $indent . $description_line;
+      if ($verbose) {
+        foreach ($this->renderFieldGuidance($field, $index === $cursor) as $guidance_line) {
+          $lines[] = $indent . $guidance_line;
         }
       }
 
@@ -1632,6 +1641,54 @@ class DefaultTheme implements ThemeInterface {
   }
 
   /**
+   * The guidance beneath a field's row: its description, then its hint.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field.
+   * @param bool $selected
+   *   Whether the field's row is selected.
+   *
+   * @return list<string>
+   *   The rendered lines; empty when the field declares neither text.
+   */
+  protected function renderFieldGuidance(Field $field, bool $selected): array {
+    $lines = [];
+
+    if ($field->description !== '') {
+      foreach ($this->renderDescriptionBlock(Translator::t($field->description), $selected) as $line) {
+        $lines[] = $line;
+      }
+    }
+
+    if ($field->hint !== '') {
+      foreach ($this->renderFieldHint(Translator::t($field->hint), $selected) as $line) {
+        $lines[] = $line;
+      }
+    }
+
+    return $lines;
+  }
+
+  /**
+   * Render a field's hint as indented lines, in the hint style.
+   *
+   * Plain text rather than the description's markup subset: a hint is one short
+   * instruction, so it carries no formatting of its own and reads uniformly
+   * against the description above it.
+   *
+   * @param string $hint
+   *   The hint source; newlines separate physical lines.
+   * @param bool $selected
+   *   Whether the owning row is selected.
+   *
+   * @return list<string>
+   *   The indented hint lines.
+   */
+  public function renderFieldHint(string $hint, bool $selected): array {
+    return array_map(fn(string $line): string => '    ' . $this->hint($line, $selected), explode("\n", $hint));
+  }
+
+  /**
    * Summarize a sub-panel's active field values into one line, for the hub.
    *
    * @param \DrevOps\Tui\Model\Panel $panel
@@ -1775,8 +1832,16 @@ class DefaultTheme implements ThemeInterface {
 
       $width = max($width, $row);
 
-      if ($verbose && $field->description !== '') {
+      if (!$verbose) {
+        continue;
+      }
+
+      if ($field->description !== '') {
         $width = max($width, $indent + 4 + Markup::width(Translator::t($field->description), $this->markdown, $this->color));
+      }
+
+      if ($field->hint !== '') {
+        $width = max($width, $indent + 4 + Markup::width(Translator::t($field->hint), FALSE, $this->color));
       }
     }
 

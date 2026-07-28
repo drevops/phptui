@@ -157,6 +157,20 @@ final class ThemeFullscreenTest extends TestCase {
     $this->assertSame(35, (new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Compact]))->measureContentWidth($form, $answers));
   }
 
+  public function testMeasureContentWidthCoversHints(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $p): void {
+        $p->text('a', 'A')->hint('a rather long field hint row that outruns every other');
+      })
+      ->build();
+
+    // The hint row (4 + 53) is the widest, so the frame fits it unclipped.
+    $this->assertSame(57, (new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None]))->measureContentWidth($form, new Answers()));
+
+    // Compact spacing drops the hint with the rest of the guidance rows.
+    $this->assertSame(24, (new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Compact]))->measureContentWidth($form, new Answers()));
+  }
+
   public function testMeasureContentWidthFloorsAtTheButtonBar(): void {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $p): void {
