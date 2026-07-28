@@ -27,11 +27,23 @@ of its own. The public surface is:
 A consumer declares a form with `Form::create(...)->panel(...)` and drives it
 through the `Tui` facade.
 
-The facade also exposes **primitives** - standalone, theme-drawn interactive
-elements that collect no answer and never run inside the panel. The first is
-`Tui::progress()` (`DrevOps\Tui\Primitive\Progress`), which wraps a slow
-callback with a spinner (unknown length) or a determinate bar (known total)
-for work that runs around the form.
+The facade also exposes **primitives** - standalone, theme-drawn elements that
+collect no answer and never run inside the panel:
+
+- `Tui::progress()` (`DrevOps\Tui\Primitive\Progress`) wraps a slow callback
+  with a spinner (unknown length) or a determinate bar (known total) for work
+  that runs around the form.
+- `Tui::output()` (`DrevOps\Tui\Primitive\Output`) draws the static chrome
+  around a form: boxes and cards, aligned tables, the five status lines of
+  `DrevOps\Tui\Primitive\Status`, definition lists, wrapped text, rules and a
+  banner.
+
+Every piece a primitive draws routes through a `render*()` method on the theme
+that takes only plain strings and arrays - never a `Field`, `Panel` or
+`Answers`. `renderCard()` and `renderTable()` are each the single renderer
+behind both the standalone piece and its in-panel counterpart (a note field's
+card and its grid), so a theme override restyles the two together. Keep it that
+way: a renderer that reaches for form state cannot be used standalone.
 
 
 ### Namespace Structure
@@ -175,26 +187,35 @@ After a structural change, update them with the `render-tui-diagrams` skill.
 ### Terminal SVG assets
 
 Every widget and every primitive carries a full set of terminal SVGs under
-`docs/assets/` - light and dark, animated and static, in all four display
-modes (Unicode/ASCII, colour on/off) - embedded in the README and the docs
-pages. They render deterministically (no pty) from the scripts in `docs/util/`:
+`docs/assets/` - light and dark, in all four display modes (Unicode/ASCII,
+colour on/off) - embedded in the README and the docs pages. Anything that
+moves also carries an animated variant beside its static one; a subject with
+no motion to record (the output primitives, which write finished lines and
+return) is static-only by design. They render deterministically (no pty) from
+the scripts in `docs/util/`:
 `render-widget-svgs.php` for widgets, `render-progress-svgs.php` for the
-progress primitive, and `render-theme-svgs.php` for theme previews, all run by
-`update-assets.php`. The naming convention lives in `docs/assets/README.md`.
+progress primitive, `render-output-svgs.php` for the output primitives (static
+only - they write finished lines, so there is no motion to record), and
+`render-theme-svgs.php` for theme previews, all run by `update-assets.php`. The
+naming convention lives in `docs/assets/README.md`.
 
 Whenever you add a widget or a primitive, do all of the following before
 opening a PR:
 
-- Add a spec (form, keystrokes, rows) to `widgetSpecs()` in
-  `render-widget-svgs.php` (or `progressSpecs()` in `render-progress-svgs.php`
-  for a primitive), then generate its 16 SVG variants with the matching
-  renderer: `php docs/util/render-widget-svgs.php <name>` for a widget, or
-  `php docs/util/render-progress-svgs.php <name>` for a primitive.
-- Regenerate the all-widgets montage so the gallery includes it:
-  `php docs/util/update-assets.php --record widgets`.
-- Add a `docs/content/widgets/<name>.mdx` page (mirror `pause.mdx`) and a
-  `docs/sidebars.js` entry, then run `php docs/util/audit-svgs.php` - it must
-  stay green, and every dark asset needs its light twin.
+- Add a spec to the matching renderer and generate its variants with it: a
+  widget's spec (form, keystrokes, rows) goes in `widgetSpecs()` in
+  `render-widget-svgs.php` for 16 variants; a primitive's goes in the renderer
+  that suits how it draws - `progressSpecs()` in `render-progress-svgs.php`
+  when it animates, `outputSpecs()` in `render-output-svgs.php` when it does
+  not. Run `php docs/util/render-<kind>-svgs.php <name>` to generate them.
+- For a widget only, regenerate the all-widgets montage so the gallery includes
+  it: `php docs/util/update-assets.php --record widgets`. A primitive is not in
+  the montage, so it skips this step.
+- Add its documentation page and a `docs/sidebars.js` entry: a widget goes in
+  `docs/content/widgets/<name>.mdx` (mirror `pause.mdx`), a primitive at the
+  top level in `docs/content/<name>.mdx` (mirror `progress.mdx`).
+- Run `php docs/util/audit-svgs.php` - it must stay green, and every dark asset
+  needs its light twin.
 - Visually confirm at least the `-dark-static` render (open the SVG in a
   browser and screenshot it) - a render that completes is not proof it fits.
 

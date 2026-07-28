@@ -12,6 +12,7 @@ use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Input\KeyMap;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Model\FormDefinition;
+use DrevOps\Tui\Primitive\Output;
 use DrevOps\Tui\Primitive\Progress;
 use DrevOps\Tui\Resolver\InputResolver;
 use DrevOps\Tui\Schema\AgentHelp;
@@ -395,6 +396,34 @@ final class Tui {
   }
 
   /**
+   * The output primitives for the chrome around a form run.
+   *
+   * Boxes, status lines and definition lists a consumer writes before, after or
+   * between form runs - a welcome box, a "ready" summary, the next steps. The
+   * active theme draws them, so they match the panel's look and honour the
+   * colour and Unicode switches, and they wrap to the terminal's width. Off an
+   * interactive terminal the colour is dropped unless it was forced, so a
+   * captured log holds clean text.
+   *
+   * @param \DrevOps\Tui\Render\Terminal|null $terminal
+   *   The terminal to write to (defaults to a real one on standard error).
+   *
+   * @return \DrevOps\Tui\Primitive\Output
+   *   The output primitive; hold onto it to write more than one piece.
+   */
+  public function output(?Terminal $terminal = NULL): Output {
+    // Restore this facade's language at the operation boundary (see collect()).
+    Translator::setShared($this->translator);
+
+    $terminal ??= self::primitiveTerminal();
+
+    $options = $this->primitiveThemeOptions($terminal->isOutputTty());
+    $theme = ThemeManager::create($this->resolveTheme(''), self::frameWidth($options, $terminal->width()), $options);
+
+    return new Output($terminal, $theme);
+  }
+
+  /**
    * Collect answers interactively through the panel TUI.
    *
    * @param string $theme
@@ -706,18 +735,30 @@ final class Tui {
    * a single line rather than a framed panel, so it skips the background query
    * and leaves the dark/light mode at dark unless the consumer set one.
    *
+   * @param bool|null $tty
+   *   Whether the primitive's output stream is an interactive terminal, or NULL
+   *   to leave auto-detected colour alone. Escape codes written to a redirected
+   *   stream land in the captured text rather than on a terminal, so an
+   *   auto-detected colour switches off there; a forced one still wins.
+   *
    * @return array<string,mixed>
    *   The resolved options.
    */
-  protected function primitiveThemeOptions(): array {
+  protected function primitiveThemeOptions(?bool $tty = NULL): array {
     $options = $this->themeOptions;
 
     if (!isset($options['color'])) {
-      $options['color'] = $this->resolvedColor();
+      // A forced colour wins over the stream: only auto-detection also requires
+      // an interactive stream, where the escape codes have an effect at all.
+      $options['color'] = $this->color ?? (Terminal::detectColor() && ($tty ?? TRUE));
     }
 
     if (!isset($options['unicode'])) {
       $options['unicode'] = $this->resolvedUnicode();
+    }
+
+    if (!isset($options['markdown'])) {
+      $options['markdown'] = $this->markdown;
     }
 
     $options['mode'] ??= Mode::Dark;

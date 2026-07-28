@@ -32,6 +32,7 @@ Every interactive script also runs unattended: pipe stdin (or run it from CI) an
 | `15-progress-*` | The progress primitive - a spinner when the length is unknown, a determinate bar when it is - theme-drawn, animating on a TTY and degrading to a plain line when piped or headless. | [`15-progress-spinner.php`](15-progress-spinner.php), [`15-progress-bar.php`](15-progress-bar.php) |
 | `16-loading-data` | Loading a panel's data on demand: a field's `->options()` and a panel's `->preload()` taking a callback, resolved the first time the panel opens with a themed `Loading…` on the field. | [`16-loading-data.php`](16-loading-data.php) |
 | `17-query-options` | Options that follow the query: `->optionsFrom()` called again on every query change with a themed `Loading…` while it runs, a per-query cache, and `->minQuery()` holding the call back until the query is long enough. | [`17-query-options.php`](17-query-options.php) |
+| `18-output-*` | The output primitives - a titled box and card, an aligned table, the five status lines, a definition list, wrapped prose, rules and a banner - theme-drawn chrome for around a form run, dropping their colour when piped or redirected. | [`18-output-box.php`](18-output-box.php), [`18-output-status.php`](18-output-status.php), [`18-output-definitions.php`](18-output-definitions.php), [`18-output-table.php`](18-output-table.php), [`18-output-text.php`](18-output-text.php) |
 
 ## Running the examples
 

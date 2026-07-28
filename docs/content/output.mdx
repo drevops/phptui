@@ -1,0 +1,258 @@
+---
+title: Output
+description: 'Boxes, status lines and definition lists you can draw outside a form run - theme-drawn, and dropping their colour when piped.'
+keywords: ['output', 'box', 'status', 'definition list', 'primitive', 'chrome']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Output
+
+A form is rarely the whole program. A market-stall order opens with a welcome box, says what it is doing between steps, and closes with a summary and its next steps. The `output()` primitives draw that chrome with the same theme the panel uses, so the text around the form belongs to the same program as the form itself.
+
+`output()` returns a `DrevOps\Tui\Primitive\Output` carrying the pieces: a **box** and a **card**, an aligned **table**, five **status lines**, a **definition list**, wrapped **text**, a **rule** and a **banner**. Like [`progress()`](/progress), it is a primitive: it collects no answer and never runs inside the interactive panel. Hold onto the object and call it as often as you need - every call returns it, so the calls chain.
+
+```php
+$out = $tui->output();
+
+$out->box('Everything below is picked the morning it ships.', 'Welcome');
+
+$answers = $tui->run();
+
+$out->success('Preserves are ready')
+  ->definitions(['Jars' => '12', 'Fruit' => 'Apricot'])
+  ->note('Anything short is refunded, never substituted');
+```
+
+## Box
+
+`box()` frames a body under an optional title, sized to its widest line and capped at the terminal. Pass a string, or a list of lines when you want to control the spacing - an empty entry stays a blank line.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/output-box-light-static.svg'), dark: useBaseUrl('/output-box-dark-static.svg')}} alt="Output box" />
+</p>
+
+```php
+$out->box([
+  'Everything below is picked the morning it ships.',
+  '',
+  'Nothing is charged until the box leaves the packing shed.',
+], 'Welcome to the produce box');
+```
+
+Long lines wrap inside the border rather than being clipped by it, so you can hand `box()` a paragraph and let it fit itself to the terminal.
+
+Runnable in [`playground/18-output-box.php`](https://github.com/drevops/tui/blob/main/playground/18-output-box.php).
+
+In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-box-light-static.svg'), dark: useBaseUrl('/output-box-dark-static.svg')}} alt="Box: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-box-light-static-no-ansi.svg'), dark: useBaseUrl('/output-box-dark-static-no-ansi.svg')}} alt="Box: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-box-light-static-ascii.svg'), dark: useBaseUrl('/output-box-dark-static-ascii.svg')}} alt="Box: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-box-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/output-box-dark-static-ascii-no-ansi.svg')}} alt="Box: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+## Table
+
+`table()` lays headers and rows into a bordered grid, sizing each column to its widest cell and capping the whole thing at the terminal. It is the same renderer a [note field's grid](/widgets/table) uses, so a standalone table matches the ones inside the panel.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/output-table-light-static.svg'), dark: useBaseUrl('/output-table-dark-static.svg')}} alt="Output table" />
+</p>
+
+```php
+$out->table(['Item', 'Crates', 'Picked'], [
+  ['Apricot', '4', 'Tuesday'],
+  ['Peach', '2', 'Tuesday'],
+  ['Carrot', '6', 'Wednesday'],
+]);
+```
+
+Pass an empty header list to draw the rows with no header row. When the natural width exceeds the terminal, the widest columns shrink and over-long cells are cut short with an ellipsis, so the borders always stay whole.
+
+Runnable in [`playground/18-output-table.php`](https://github.com/drevops/tui/blob/main/playground/18-output-table.php).
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-table-light-static.svg'), dark: useBaseUrl('/output-table-dark-static.svg')}} alt="Table: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-table-light-static-no-ansi.svg'), dark: useBaseUrl('/output-table-dark-static-no-ansi.svg')}} alt="Table: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-table-light-static-ascii.svg'), dark: useBaseUrl('/output-table-dark-static-ascii.svg')}} alt="Table: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-table-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/output-table-dark-static-ascii-no-ansi.svg')}} alt="Table: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+## Card
+
+`card()` is the full form of `box()`: a title, a body and a grid, boxed together when the three belong to one another. It is the same renderer behind a [note field's card](/widgets/note), so a standalone card and a note card are the same object drawn twice.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/output-card-light-static.svg'), dark: useBaseUrl('/output-card-dark-static.svg')}} alt="Output card" />
+</p>
+
+```php
+$out->card('Loaded for delivery', 'Everything below leaves the shed at seven.', ['Item', 'Crates'], [
+  ['Apricot', '4'],
+  ['Peach', '2'],
+]);
+```
+
+The grid is sized to fit inside the card's own border, so the two frames never collide. Pass `bordered: false` for the indented card a note field draws without `->border()`.
+
+## Status lines
+
+Five kinds, each with its own glyph and its own colour: `note()`, `info()`, `success()`, `warning()` and `error()`.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/output-status-light-static.svg'), dark: useBaseUrl('/output-status-dark-static.svg')}} alt="Status lines" />
+</p>
+
+```php
+$out->info('Checking the morning harvest')
+  ->success('Apricots picked and weighed')
+  ->warning('Only two crates of pears left')
+  ->error('The cherry shelf is empty')
+  ->note('Anything short is refunded, never substituted');
+```
+
+The glyph carries the meaning on its own, so the five stay distinguishable with colour off and in ASCII alike. Every glyph is one column wide in any terminal, so a run of status lines always aligns.
+
+To choose the kind at runtime, pass a `Status` case to `status()`:
+
+```php
+use DrevOps\Tui\Primitive\Status;
+
+$out->status($ok ? Status::Success : Status::Error, 'Packed the box');
+```
+
+Runnable in [`playground/18-output-status.php`](https://github.com/drevops/tui/blob/main/playground/18-output-status.php).
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-status-light-static.svg'), dark: useBaseUrl('/output-status-dark-static.svg')}} alt="Status: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-status-light-static-no-ansi.svg'), dark: useBaseUrl('/output-status-dark-static-no-ansi.svg')}} alt="Status: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-status-light-static-ascii.svg'), dark: useBaseUrl('/output-status-dark-static-ascii.svg')}} alt="Status: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-status-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/output-status-dark-static-ascii-no-ansi.svg')}} alt="Status: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+## Definition list
+
+`definitions()` lays label/value pairs into two columns - the labels sized to the widest of them, a long value wrapped under its own column. It is the natural way to read a collected form back to the person who filled it in.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/output-definitions-light-static.svg'), dark: useBaseUrl('/output-definitions-dark-static.svg')}} alt="Definition list" />
+</p>
+
+```php
+$out->definitions([
+  'Order' => 'Summer Box',
+  'Fruit' => 'Apricot, Peach, Plum',
+  'Vegetables' => 'Carrot, Spinach, Tomato',
+  'Quantity' => '6 baskets',
+  'Note' => 'Everything is picked the morning it ships, packed in the shed, and loaded onto the van before seven.',
+]);
+```
+
+Runnable in [`playground/18-output-definitions.php`](https://github.com/drevops/tui/blob/main/playground/18-output-definitions.php).
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-definitions-light-static.svg'), dark: useBaseUrl('/output-definitions-dark-static.svg')}} alt="Definitions: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-definitions-light-static-no-ansi.svg'), dark: useBaseUrl('/output-definitions-dark-static-no-ansi.svg')}} alt="Definitions: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-definitions-light-static-ascii.svg'), dark: useBaseUrl('/output-definitions-dark-static-ascii.svg')}} alt="Definitions: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-definitions-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/output-definitions-dark-static-ascii-no-ansi.svg')}} alt="Definitions: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+## Text, rules and a banner
+
+Three smaller pieces round out the set. `text()` wraps a paragraph to the terminal and renders the same [markdown subset](/markdown) a field description carries, so prose outside the form reads like prose inside it. `rule()` draws a themed separator between sections, and `banner()` opens the program with a logo above an optional version line.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/output-text-light-static.svg'), dark: useBaseUrl('/output-text-dark-static.svg')}} alt="Banner, rule and wrapped text" />
+</p>
+
+```php
+$out->banner('Produce Box', '1.2.3');
+$out->rule();
+$out->text('Every box is picked the morning it ships. Nothing is charged until the crates leave the packing shed.');
+```
+
+The markdown subset is off by default, exactly as it is for field descriptions - turn it on with `$tui->markdown()` before reaching for `output()`:
+
+```php
+$out = $tui->markdown()->output();
+
+$out->text("**Before you order:**\n\n- Pick a *delivery day* between Monday and Saturday\n- Leave a note if the gate code is not `1234`");
+```
+
+Runnable in [`playground/18-output-text.php`](https://github.com/drevops/tui/blob/main/playground/18-output-text.php).
+
+## Theme-drawn
+
+The colours and glyphs come from the active [theme](/themes), the same way every widget does, and the pieces reuse the atoms the panel already styles: a box takes the frame's border and heading, a success line the value colour, an info line the theme's accent. So `->theme('ember')` prints info lines in ember's orange and `->theme('frost')` in frost's blue, with no extra configuration and nothing a custom theme has to override to inherit its own palette.
+
+To go further and restyle one piece outright, override its `render*()` method on your theme - `renderCard()`, `renderTable()`, `renderStatus()`, `renderDefinitions()`, `renderText()` or `renderBanner()`.
+
+`renderCard()` and `renderTable()` are each the single renderer behind both the standalone piece and its in-panel counterpart, so overriding one restyles the note card - or the note grid - at the same time. None of them takes a field, a panel or an answer set: they take plain strings and arrays, which is what makes them usable outside a form at all.
+
+## Degrading off a TTY
+
+Output is chrome, not data, so it is written to standard error and leaves standard output for your program's own results. Piped, redirected or captured, the escape codes would land in the text rather than on a terminal, so the colour is dropped and the plain lines remain:
+
+```bash
+php playground/18-output-status.php 2>&1 | cat
+# › Checking the morning harvest
+# ✓ Apricots picked and weighed
+# ! Only two crates of pears left
+```
+
+The frames, glyphs and alignment survive, because they are text. Forcing wins over the detection either way, and both switches are set on the facade before you reach for `output()`: `$tui->color(true)->output()` keeps the colour in a captured log, and `$tui->unicode(false)->output()` draws the ASCII glyphs on a capable terminal. See [display modes](/display-modes) for the full set of switches.
+
+To write somewhere other than standard error - standard output, or a stream you control - pass your own terminal:
+
+```php
+use DrevOps\Tui\Render\Terminal;
+
+$out = $tui->output(new Terminal(STDOUT));
+```

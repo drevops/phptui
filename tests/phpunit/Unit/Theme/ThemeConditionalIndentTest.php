@@ -137,11 +137,20 @@ final class ThemeConditionalIndentTest extends TestCase {
     $flush = $this->theme(FALSE)->renderNoteLines($note, new Answers());
     $stepped = $this->theme()->renderNoteLines($note, new Answers());
 
-    // The box loses exactly the columns the gutter takes, so its right edge
-    // stays where the flush one put it.
-    $this->assertSame(40, Ansi::width($flush[0]));
-    $this->assertSame(40, Ansi::width($stepped[0]));
+    // The body wraps to the room the card's own chrome leaves, so an indented
+    // card narrows by the columns its gutter takes and its right edge still
+    // lands inside the frame instead of overflowing it.
+    $this->assertLessThanOrEqual(40, Ansi::width($flush[0]));
+    $this->assertLessThanOrEqual(40, Ansi::width($stepped[0]));
     $this->assertSame(self::STEP, $this->leadingSpaces(Ansi::strip($stepped[0])));
+
+    // Every row of the wrapped body stays inside the frame too, and the long
+    // body is carried across rows rather than clipped to one.
+    $this->assertGreaterThan(3, count($stepped));
+
+    foreach ($stepped as $line) {
+      $this->assertLessThanOrEqual(40, Ansi::width(Ansi::strip($line)));
+    }
   }
 
   public function testMeasuredWidthCoversTheIndent(): void {

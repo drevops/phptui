@@ -18,6 +18,7 @@ use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Input\ScopedKeyMap;
+use DrevOps\Tui\Primitive\Status;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\Box;
 use DrevOps\Tui\Render\HelpSection;
@@ -112,6 +113,26 @@ class DefaultTheme implements ThemeInterface {
    * row and a card line up on the same steps.
    */
   protected const int CONDITIONAL_INDENT = 2;
+
+  /**
+   * The left indent of a definition list, in columns.
+   */
+  protected const int DEFINITION_INDENT = 2;
+
+  /**
+   * The gap between a definition's label column and its value, in columns.
+   */
+  protected const int DEFINITION_GAP = 2;
+
+  /**
+   * The chrome a box spends per line: a border column and a gutter, each side.
+   */
+  protected const int BOX_CHROME = 4;
+
+  /**
+   * The columns an unbordered card indents its content by.
+   */
+  protected const int CARD_INDENT = 2;
 
   /**
    * Whether colour (ANSI) is enabled, resolved from the "color" option.
@@ -1030,6 +1051,259 @@ class DefaultTheme implements ThemeInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function renderCard(string $title, array $body, array $headers = [], array $rows = [], bool $bordered = TRUE, int $reserved = 0): array {
+    // A bordered card spends a border column and a gutter each side; an
+    // unbordered one only its indent. Either way the content wraps to what is
+    // left rather than being clipped against the chrome.
+    $inner = max(1, $this->width - $reserved - ($bordered ? self::BOX_CHROME : self::CARD_INDENT));
+
+    $content = [];
+
+    if ($title !== '') {
+      // Wrapped like the body: a title too long for the card would otherwise be
+      // clipped against the border rather than carried onto the next row.
+      foreach ($this->wrapLines($title, $inner) as $line) {
+        $content[] = $this->heading($line);
+      }
+    }
+
+    foreach ($body as $source) {
+      foreach ($this->wrapMarkup($source, $inner) as $line) {
+        $content[] = $line;
+      }
+    }
+
+    foreach ($this->cardTable($headers, $rows, $inner, $content !== []) as $line) {
+      $content[] = $line;
+    }
+
+    if ($content === []) {
+      return [];
+    }
+
+    if (!$bordered) {
+      return array_map(static fn(string $line): string => str_repeat(' ', self::CARD_INDENT) . $line, $content);
+    }
+
+    return $this->boxedNote($content, $reserved);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderText(string $text): array {
+    return $this->wrapMarkup($text, max(1, $this->width));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderTable(array $headers, array $rows): array {
+    return $this->tableLines($headers, $rows, $this->width);
+  }
+
+  /**
+   * A card's grid, set off from any title and body above it by a blank line.
+   *
+   * @param list<string> $headers
+   *   The header cells.
+   * @param list<list<string>> $rows
+   *   The body rows.
+   * @param int $width
+   *   The width available inside the card's own chrome.
+   * @param bool $spaced
+   *   Whether a blank line precedes the grid; FALSE when the grid opens the
+   *   card and so has nothing above to be set off from.
+   *
+   * @return list<string>
+   *   The grid's lines, empty when there is no grid.
+   */
+  protected function cardTable(array $headers, array $rows, int $width, bool $spaced): array {
+    if ($headers === [] && $rows === []) {
+      return [];
+    }
+
+    $table = $this->tableLines($headers, $rows, $width);
+
+    if ($table === [] || !$spaced) {
+      return $table;
+    }
+
+    return array_merge([''], $table);
+  }
+
+  /**
+   * Wrap source text to a width and style each physical line as markup.
+   *
+   * @param string $text
+   *   The source text; its own newlines split it into physical lines first.
+   * @param int $width
+   *   The width to wrap to.
+   *
+   * @return list<string>
+   *   The styled lines, each fitting the width.
+   */
+  protected function wrapMarkup(string $text, int $width): array {
+    $lines = [];
+
+    foreach ($this->wrapLines($text, $width) as $chunk) {
+      if ($chunk === '') {
+        $lines[] = '';
+
+        continue;
+      }
+
+      foreach ($this->markupBody($chunk, FALSE) as $rendered) {
+        $lines[] = $rendered;
+      }
+    }
+
+    return $lines;
+  }
+
+  /**
+   * Split source text into physical lines and word-wrap each to a width.
+   *
+   * @param string $text
+   *   The source text; its own line endings split it first.
+   * @param int $width
+   *   The width to wrap to.
+   *
+   * @return list<string>
+   *   The wrapped lines, unstyled.
+   */
+  protected function wrapLines(string $text, int $width): array {
+    $lines = [];
+
+    foreach (explode("\n", $this->normalizeLines($text)) as $physical) {
+      $wrapped = Strings::wrap($physical, $width);
+
+      // A line with no visible characters wraps to nothing; keeping it blank
+      // lets a caller space the content out.
+      foreach ($wrapped === [] ? [''] : $wrapped as $line) {
+        $lines[] = $line;
+      }
+    }
+
+    return $lines;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderStatus(Status $status, string $text): string {
+    // The glyph and the message share one colour so the line reads as a single
+    // statement, and the glyph alone still tells the five apart without it.
+    $line = rtrim($this->statusSymbol($status) . ' ' . $this->linkify($this->oneLine($text)));
+
+    return match ($status) {
+      Status::Note => $this->description($line),
+      Status::Info => $this->highlight($line),
+      Status::Success => $this->value($line),
+      Status::Warning => $this->indicator($line),
+      Status::Error => $this->error($line),
+    };
+  }
+
+  /**
+   * The glyph that leads a status line.
+   *
+   * @param \DrevOps\Tui\Primitive\Status $status
+   *   The kind of status.
+   *
+   * @return string
+   *   The glyph, respecting the theme's Unicode mode.
+   */
+  protected function statusSymbol(Status $status): string {
+    // Every glyph is one column wide in any terminal - none has an emoji
+    // presentation or an East Asian width - so a run of status lines aligns.
+    return match ($status) {
+      Status::Note => $this->unicode ? '•' : '-',
+      Status::Info => $this->unicode ? '›' : '>',
+      Status::Success => $this->unicode ? '✓' : '+',
+      Status::Warning => '!',
+      Status::Error => $this->unicode ? '✗' : 'x',
+    };
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderDefinitions(array $pairs): array {
+    $rows = [];
+
+    foreach ($pairs as $label => $value) {
+      // A numeric-string label arrives as an integer array key; the cast keeps
+      // the width maths and the styling working on strings either way.
+      $rows[] = [$this->oneLine((string) $label), $this->oneLine($value)];
+    }
+
+    if ($rows === []) {
+      return [];
+    }
+
+    $widest = 0;
+
+    foreach ($rows as $row) {
+      $widest = max($widest, Ansi::width($row[0]));
+    }
+
+    // A runaway label would squeeze the values to nothing, so the label column
+    // stops at half the frame and anything longer is clipped to it.
+    $column = max(1, min($widest, intdiv($this->width, 2)));
+    $value_width = max(1, $this->width - self::DEFINITION_INDENT - $column - self::DEFINITION_GAP);
+
+    $lines = [];
+
+    foreach ($rows as $row) {
+      foreach ($this->definitionLines($row[0], $row[1], $column, $value_width) as $line) {
+        $lines[] = $line;
+      }
+    }
+
+    return $lines;
+  }
+
+  /**
+   * Render one definition: its label, its value, and any wrapped continuation.
+   *
+   * @param string $label
+   *   The label.
+   * @param string $value
+   *   The value.
+   * @param int $column
+   *   The width of the label column.
+   * @param int $value_width
+   *   The width available to the value.
+   *
+   * @return list<string>
+   *   The pair's physical lines.
+   */
+  protected function definitionLines(string $label, string $value, int $column, int $value_width): array {
+    $indent = str_repeat(' ', self::DEFINITION_INDENT);
+    $gap = str_repeat(' ', self::DEFINITION_GAP);
+    $chunks = Strings::wrap($value, $value_width);
+
+    // A pair whose value is empty still shows its label.
+    if ($chunks === []) {
+      $chunks = [''];
+    }
+
+    $lines = [$indent . $this->label(Box::fit($label, $column)) . $gap . $this->value($chunks[0])];
+
+    // A wrapped value continues under the value column, clear of the labels.
+    $continuation = str_repeat(' ', self::DEFINITION_INDENT + $column + self::DEFINITION_GAP);
+
+    foreach (array_slice($chunks, 1) as $chunk) {
+      $lines[] = $continuation . $this->value($chunk);
+    }
+
+    return $lines;
+  }
+
+  /**
    * Fold a caption or label to a single physical line for the indicators.
    *
    * The spinner and bar redraw in place with carriage returns, so a CR or LF
@@ -1389,83 +1663,49 @@ class DefaultTheme implements ThemeInterface {
    *   The card's physical lines; empty when it has neither title nor body.
    */
   public function renderNoteLines(Field $field, Answers $answers): array {
-    $title = $this->noteText($field->label, $answers);
+    $indent = $this->fieldIndent($field);
     $body = $this->noteText($field->description, $answers);
 
-    $content = [];
+    [$headers, $rows] = $this->noteTable($field, $answers);
 
-    // Split the title and body on their own newlines so no returned line ever
-    // carries an embedded newline that would desync the box and scroll maths.
-    if ($title !== '') {
-      foreach (explode("\n", $this->normalizeLines($title)) as $line) {
-        $content[] = $this->heading($line);
-      }
-    }
+    $lines = $this->renderCard(
+      $this->noteText($field->label, $answers),
+      $body === '' ? [] : [$body],
+      $headers,
+      $rows,
+      $field->bordered,
+      Ansi::width($indent),
+    );
 
-    if ($body !== '') {
-      foreach ($this->markupBody($body, FALSE) as $line) {
-        $content[] = $line;
-      }
-    }
-
-    $table = $this->noteTableLines($field, $answers);
-
-    if ($table !== []) {
-      // A blank line sets the grid off from the title and body above it.
-      if ($content !== []) {
-        $content[] = '';
-      }
-
-      foreach ($table as $line) {
-        $content[] = $line;
-      }
-    }
-
-    if ($content === []) {
-      return [];
-    }
-
-    $indent = $this->fieldIndent($field);
-
-    if (!$field->bordered) {
-      return array_map(static fn(string $line): string => $indent . '  ' . $line, $content);
-    }
-
-    return array_map(static fn(string $line): string => $indent . $line, $this->boxedNote($content, Ansi::width($indent)));
+    return array_map(static fn(string $line): string => $indent . $line, $lines);
   }
 
   /**
-   * Render a note's table, its cells interpolated against the current answers.
-   *
-   * The grid fits inside the card: a bordered note boxes the whole card, an
-   * unbordered one indents it, so the table is sized narrower than the frame to
-   * leave room for that chrome - and for the card's own gutter - and keep its
-   * own borders whole.
+   * A note's table cells, interpolated against the current answers.
    *
    * @param \DrevOps\Tui\Model\Field $field
    *   The note field.
    * @param \DrevOps\Tui\Answers\Answers $answers
    *   The current answers, interpolated into each cell.
    *
-   * @return list<string>
-   *   The table's physical lines, or an empty list when the note has no table.
+   * @return array{list<string>,list<list<string>>}
+   *   The headers and rows, both empty when the note has no table.
    */
-  protected function noteTableLines(Field $field, Answers $answers): array {
+  protected function noteTable(Field $field, Answers $answers): array {
     $spec = $field->table;
 
     if (!$spec instanceof TableSpec) {
-      return [];
+      return [[], []];
     }
 
     $interpolate = fn(string $cell): string => $this->noteText($cell, $answers);
-    $headers = array_map($interpolate, $spec->headers);
 
     $rows = [];
     foreach ($spec->rows as $row) {
       $rows[] = array_map($interpolate, $row);
     }
 
-    return $this->tableLines($headers, $rows, max(1, $this->width - Ansi::width($this->fieldIndent($field)) - ($field->bordered ? 4 : 2)));
+    return [array_map($interpolate, $spec->headers), $rows];
   }
 
   /**
@@ -1510,25 +1750,6 @@ class DefaultTheme implements ThemeInterface {
     $lines[] = $this->borderRule($chars['bl'], $chars['br'], $chars['h'], $outer);
 
     return $lines;
-  }
-
-  /**
-   * Render an aligned, bordered table from headers and rows.
-   *
-   * Lays the data out as a grid coloured with the theme's atoms and drawn in
-   * its border style, honouring the Unicode and colour switches. The columns
-   * size to their widest cell and the whole grid is capped at the frame width.
-   *
-   * @param list<string> $headers
-   *   The header cells; an empty list draws the grid with no header row.
-   * @param list<list<string>> $rows
-   *   The body rows, each a list of cell strings.
-   *
-   * @return list<string>
-   *   The table's physical lines, capped at the frame width.
-   */
-  public function renderTable(array $headers, array $rows): array {
-    return $this->tableLines($headers, $rows, $this->width);
   }
 
   /**
@@ -2225,15 +2446,7 @@ class DefaultTheme implements ThemeInterface {
   }
 
   /**
-   * Compose a start banner: the logo above an optional version line.
-   *
-   * @param string $logo
-   *   The banner logo (may be multi-line).
-   * @param string $version
-   *   The version string, shown dimmed below the logo when non-empty.
-   *
-   * @return string
-   *   The composed banner.
+   * {@inheritdoc}
    */
   public function renderBanner(string $logo, string $version): string {
     $lines = [];

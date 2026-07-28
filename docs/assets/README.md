@@ -33,7 +33,7 @@ from their borderless twins.
 
 ## What generates what
 
-`update-assets.php` is the single entry point: run without arguments it records every live-terminal job in parallel and spawns the three deterministic sibling generators alongside them, so one command regenerates the whole set.
+`update-assets.php` is the single entry point: run without arguments it records every live-terminal job in parallel and spawns the four deterministic sibling generators alongside them, so one command regenerates the whole set.
 
 - **`update-assets.php`** - the full panel demos, the widget montage and the
   option-group / password-reveal / discovery frames, recorded from a live
@@ -54,6 +54,13 @@ from their borderless twins.
   into frames on the carriage return, and renders both the animation and a
   single mid-run static frame in all four display modes, borderless like the
   widget statics.
+- **`render-output-svgs.php`** - the output primitives' assets (`output-box-*`,
+  `output-card-*`, `output-table-*`, `output-status-*`,
+  `output-definitions-*`, `output-text-*`), driven through the real primitive
+  against an in-memory terminal in all four display modes, borderless like the
+  widget statics. These are the one subject with no `-animated` variant: the
+  output primitives write finished lines and return, so there is no motion to
+  record.
 - **`render-social-card.php`** - the one non-SVG asset: `social-card.png`, the
   1200x630 Open Graph image composed from `quickstart-dark-static.svg` and the
   site branding, screenshotted through agent-browser. It runs after the workers
