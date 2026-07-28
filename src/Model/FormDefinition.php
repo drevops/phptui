@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Model;
 
+use DrevOps\Tui\Condition\ConditionInterface;
+
 /**
  * The immutable form definition: a questionnaire and its own chrome.
  *
@@ -61,6 +63,8 @@ final readonly class FormDefinition {
     public array $layout = [],
   ) {
     $this->flatFields = self::collectFields($this->panels);
+
+    self::resolveConditionalDepths($this->flatFields);
   }
 
   /**
@@ -110,6 +114,71 @@ final readonly class FormDefinition {
     }
 
     return $fields;
+  }
+
+  /**
+   * Stamp every field with how many conditions deep it sits.
+   *
+   * A `when` rule may reference a field on any panel, so the depth is a
+   * property of the whole form rather than of a panel or a field on its own.
+   *
+   * @param \DrevOps\Tui\Model\Field[] $fields
+   *   The flattened fields.
+   */
+  protected static function resolveConditionalDepths(array $fields): void {
+    $by_id = [];
+    foreach ($fields as $field) {
+      $by_id[$field->id] = $field;
+    }
+
+    $resolved = [];
+    foreach ($fields as $field) {
+      $field->conditionalDepth = self::conditionalDepth($field, $by_id, $resolved, []);
+    }
+  }
+
+  /**
+   * The depth of one field: one more than the deepest field it depends on.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field to measure.
+   * @param array<string,\DrevOps\Tui\Model\Field> $by_id
+   *   Every field in the form, keyed by id.
+   * @param array<string,int> $resolved
+   *   The depths measured so far, so a field shared by several rules is walked
+   *   once.
+   * @param array<string,bool> $walking
+   *   The ids on the current walk, keyed by id.
+   *
+   * @return int
+   *   The depth.
+   */
+  protected static function conditionalDepth(Field $field, array $by_id, array &$resolved, array $walking): int {
+    if (array_key_exists($field->id, $resolved)) {
+      return $resolved[$field->id];
+    }
+
+    if (!$field->when instanceof ConditionInterface) {
+      return $resolved[$field->id] = 0;
+    }
+
+    // A reference leading back to a field already on the walk closes a cycle.
+    // Such a rule can never hold a stable depth, so the back edge contributes
+    // none and the walk ends rather than deepening forever.
+    if (isset($walking[$field->id])) {
+      return 0;
+    }
+
+    $walking[$field->id] = TRUE;
+
+    $deepest = 0;
+    foreach ($field->when->fields() as $id) {
+      if (isset($by_id[$id])) {
+        $deepest = max($deepest, self::conditionalDepth($by_id[$id], $by_id, $resolved, $walking));
+      }
+    }
+
+    return $resolved[$field->id] = $deepest + 1;
   }
 
 }

@@ -106,6 +106,14 @@ class DefaultTheme implements ThemeInterface {
   protected const int PROGRESS_WIDTH = 24;
 
   /**
+   * The columns one condition of nesting indents a field by.
+   *
+   * Matches the gutter an unbordered note card already sits in, so an indented
+   * row and a card line up on the same steps.
+   */
+  protected const int CONDITIONAL_INDENT = 2;
+
+  /**
    * Whether colour (ANSI) is enabled, resolved from the "color" option.
    */
   protected bool $color;
@@ -119,6 +127,11 @@ class DefaultTheme implements ThemeInterface {
    * Whether markdown in descriptions and notes is rendered, from "markdown".
    */
   protected bool $markdown;
+
+  /**
+   * Whether conditional fields are indented, from "indent_conditional".
+   */
+  protected bool $indentConditional;
 
   /**
    * Whether the dark palette is used, resolved from the "mode" option.
@@ -147,6 +160,7 @@ class DefaultTheme implements ThemeInterface {
     $this->color = is_bool($this->options['color'] ?? NULL) ? $this->options['color'] : TRUE;
     $this->unicode = is_bool($this->options['unicode'] ?? NULL) ? $this->options['unicode'] : TRUE;
     $this->markdown = is_bool($this->options['markdown'] ?? NULL) && $this->options['markdown'];
+    $this->indentConditional = is_bool($this->options['indent_conditional'] ?? NULL) && $this->options['indent_conditional'];
     $this->isDark = $this->mode() === Mode::Dark;
 
     // In fullscreen the given width is the whole terminal's; a max-width cap
@@ -233,6 +247,7 @@ class DefaultTheme implements ThemeInterface {
       'color' => [TRUE, FALSE],
       'unicode' => [TRUE, FALSE],
       'markdown' => [TRUE, FALSE],
+      'indent_conditional' => [TRUE, FALSE],
       'spacing' => array_column(Spacing::cases(), 'value'),
       'border' => array_column(Border::cases(), 'value'),
       'field' => array_column(FieldStyle::cases(), 'value'),
@@ -388,6 +403,31 @@ class DefaultTheme implements ThemeInterface {
    */
   protected function field(): FieldStyle {
     return $this->enumOption('field', FieldStyle::class, FieldStyle::Flat);
+  }
+
+  /**
+   * The leading blank gutter a field's rows are laid out after.
+   *
+   * A field shown behind a `when` rule steps in from the fields that decide
+   * it, one step per condition in the chain, so the panel reads as a hierarchy
+   * rather than a flat list. The single source of the indent: every row a
+   * field contributes - its label row, its value continuation lines, its
+   * description, its note card - is laid out after this same gutter, and the
+   * width measurement adds it back.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field.
+   *
+   * @return string
+   *   The gutter, or an empty string when the option is off or the field shows
+   *   unconditionally.
+   */
+  protected function fieldIndent(Field $field): string {
+    if (!$this->indentConditional) {
+      return '';
+    }
+
+    return str_repeat(' ', self::CONDITIONAL_INDENT * $field->conditionalDepth);
   }
 
   /**
@@ -1053,6 +1093,10 @@ class DefaultTheme implements ThemeInterface {
         $cursor_line = count($lines);
       }
 
+      // The row methods lay a field's own rows out after its gutter; the
+      // shared description block knows no field, so it is stepped in here.
+      $indent = $this->fieldIndent($field);
+
       if ($editing instanceof Field && $field->id === $editing->id) {
         foreach ($this->renderInlineEditor($field, $editorView, $index === $cursor) as $line) {
           $lines[] = $line;
@@ -1060,7 +1104,7 @@ class DefaultTheme implements ThemeInterface {
 
         if ($verbose && $field->description !== '') {
           foreach ($this->renderDescriptionBlock(Translator::t($field->description), $index === $cursor) as $description_line) {
-            $lines[] = $description_line;
+            $lines[] = $indent . $description_line;
           }
         }
 
@@ -1076,7 +1120,7 @@ class DefaultTheme implements ThemeInterface {
 
       if ($verbose && $field->description !== '') {
         foreach ($this->renderDescriptionBlock(Translator::t($field->description), $index === $cursor) as $description_line) {
-          $lines[] = $description_line;
+          $lines[] = $indent . $description_line;
         }
       }
 
@@ -1214,11 +1258,13 @@ class DefaultTheme implements ThemeInterface {
     }
 
     foreach ($panel->fields as $field) {
+      $indent = $this->fieldIndent($field);
+
       // A presentational field carries no value; it previews as its title.
       if ($field->type->isPresentational()) {
         $title = $this->noteTitleFirstLine($field, $answers);
         if ($title !== '') {
-          $lines[] = '  ' . $this->heading($title);
+          $lines[] = $indent . '  ' . $this->heading($title);
         }
 
         continue;
@@ -1228,7 +1274,7 @@ class DefaultTheme implements ThemeInterface {
       // its first line - an embedded newline would desync the column zip.
       $value_lines = explode("\n", $this->normalizeLines($this->renderFieldValue($field, $answers->value($field->id))));
       $value = $value_lines[0] . (count($value_lines) > 1 ? '…' : '');
-      $lines[] = '  ' . $this->description(Translator::t($field->label), $selected) . '  ' . $this->value($value, $selected);
+      $lines[] = $indent . '  ' . $this->description(Translator::t($field->label), $selected) . '  ' . $this->value($value, $selected);
     }
 
     foreach ($panel->panels as $subpanel) {
@@ -1245,7 +1291,9 @@ class DefaultTheme implements ThemeInterface {
    * value (a textarea) spans one row per line - the first rides the label row,
    * the rest align under the value column - so no row ever carries an embedded
    * newline that would desync the box border and scroll maths. Each line is
-   * styled on its own, so no colour span crosses a row boundary.
+   * styled on its own, so no colour span crosses a row boundary. The rows sit
+   * after the field's own gutter, so the value column follows the indent
+   * rather than the frame edge.
    *
    * @param \DrevOps\Tui\Model\Field $field
    *   The field.
@@ -1259,7 +1307,7 @@ class DefaultTheme implements ThemeInterface {
    *   further value lines indented to the value column.
    */
   public function renderFieldLine(Field $field, Answers $answers, bool $selected): array {
-    $prefix = $this->marker($selected) . ' ' . $this->label(Translator::t($field->label), $selected) . '  ';
+    $prefix = $this->fieldIndent($field) . $this->marker($selected) . ' ' . $this->label(Translator::t($field->label), $selected) . '  ';
     $indent = str_repeat(' ', Ansi::width($prefix));
 
     $lines = [];
@@ -1297,7 +1345,7 @@ class DefaultTheme implements ThemeInterface {
    *   indented to the value column.
    */
   public function renderInlineEditor(Field $field, string $view, bool $selected): array {
-    $prefix = $this->marker($selected) . ' ' . $this->label(Translator::t($field->label), $selected) . '  ';
+    $prefix = $this->fieldIndent($field) . $this->marker($selected) . ' ' . $this->label(Translator::t($field->label), $selected) . '  ';
     $indent = str_repeat(' ', Ansi::width($prefix));
 
     $lines = [];
@@ -1315,7 +1363,9 @@ class DefaultTheme implements ThemeInterface {
    * The title and body carry the same `{{field}}` templating derived values
    * use, interpolated here against the current answers so a note reflects prior
    * answers. A plain card is a heading title over grey body lines; a bordered
-   * note wraps them in the theme's box with a one-column gutter each side.
+   * note wraps them in the theme's box with a one-column gutter each side. The
+   * card sits after the field's own gutter, and a boxed one narrows by that
+   * much so its right edge still lands inside the frame.
    *
    * @param \DrevOps\Tui\Model\Field $field
    *   The note field.
@@ -1362,11 +1412,13 @@ class DefaultTheme implements ThemeInterface {
       return [];
     }
 
+    $indent = $this->fieldIndent($field);
+
     if (!$field->bordered) {
-      return array_map(static fn(string $line): string => '  ' . $line, $content);
+      return array_map(static fn(string $line): string => $indent . '  ' . $line, $content);
     }
 
-    return $this->boxedNote($content);
+    return array_map(static fn(string $line): string => $indent . $line, $this->boxedNote($content, Ansi::width($indent)));
   }
 
   /**
@@ -1374,7 +1426,8 @@ class DefaultTheme implements ThemeInterface {
    *
    * The grid fits inside the card: a bordered note boxes the whole card, an
    * unbordered one indents it, so the table is sized narrower than the frame to
-   * leave room for that chrome and keep its own borders whole.
+   * leave room for that chrome - and for the card's own gutter - and keep its
+   * own borders whole.
    *
    * @param \DrevOps\Tui\Model\Field $field
    *   The note field.
@@ -1399,7 +1452,7 @@ class DefaultTheme implements ThemeInterface {
       $rows[] = array_map($interpolate, $row);
     }
 
-    return $this->tableLines($headers, $rows, max(1, $this->width - ($field->bordered ? 4 : 2)));
+    return $this->tableLines($headers, $rows, max(1, $this->width - Ansi::width($this->fieldIndent($field)) - ($field->bordered ? 4 : 2)));
   }
 
   /**
@@ -1411,11 +1464,14 @@ class DefaultTheme implements ThemeInterface {
    *
    * @param list<string> $content
    *   The styled content lines (title and body).
+   * @param int $reserved
+   *   Columns the caller lays the box out after, kept out of the width cap so
+   *   the box's right edge still lands inside the frame.
    *
    * @return list<string>
    *   The boxed lines.
    */
-  protected function boxedNote(array $content): array {
+  protected function boxedNote(array $content, int $reserved = 0): array {
     $style = $this->borderStyle();
     if ($style === Border::None) {
       $style = Border::Line;
@@ -1430,7 +1486,7 @@ class DefaultTheme implements ThemeInterface {
 
     // boxLine adds a one-column gutter and a border column each side, so the
     // outer width is the content width plus four columns of chrome.
-    $outer = min($this->width, $inner + 4);
+    $outer = min(max(1, $this->width - $reserved), $inner + 4);
 
     $lines = [$this->borderRule($chars['tl'], $chars['tr'], $chars['h'], $outer)];
 
@@ -1706,9 +1762,11 @@ class DefaultTheme implements ThemeInterface {
         continue;
       }
 
+      $indent = Ansi::width($this->fieldIndent($field));
+
       // A multi-line value renders one physical row per line, all under the
       // value column, so the widest single line is what the row needs.
-      $row = 4 + Markup::width(Translator::t($field->label), FALSE, $this->color) + $this->measureValueWidth($field, $answers);
+      $row = $indent + 4 + Markup::width(Translator::t($field->label), FALSE, $this->color) + $this->measureValueWidth($field, $answers);
 
       $provenance = $answers->provenanceOf($field->id);
       if ($provenance !== Provenance::Default) {
@@ -1718,7 +1776,7 @@ class DefaultTheme implements ThemeInterface {
       $width = max($width, $row);
 
       if ($verbose && $field->description !== '') {
-        $width = max($width, 4 + Markup::width(Translator::t($field->description), $this->markdown, $this->color));
+        $width = max($width, $indent + 4 + Markup::width(Translator::t($field->description), $this->markdown, $this->color));
       }
     }
 
@@ -1784,16 +1842,18 @@ class DefaultTheme implements ThemeInterface {
     }
 
     foreach ($panel->fields as $field) {
+      $indent = Ansi::width($this->fieldIndent($field));
+
       if ($field->type->isPresentational()) {
         $title = $this->noteTitleFirstLine($field, $answers);
         if ($title !== '') {
-          $width = max($width, 2 + Markup::width($title, FALSE, $this->color));
+          $width = max($width, $indent + 2 + Markup::width($title, FALSE, $this->color));
         }
 
         continue;
       }
 
-      $width = max($width, 4 + Markup::width(Translator::t($field->label), FALSE, $this->color) + $this->measureValueWidth($field, $answers));
+      $width = max($width, $indent + 4 + Markup::width(Translator::t($field->label), FALSE, $this->color) + $this->measureValueWidth($field, $answers));
     }
 
     foreach ($panel->panels as $subpanel) {

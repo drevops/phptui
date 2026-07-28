@@ -63,6 +63,7 @@ function contentNeedles(): array {
     'produce-box-dark-animated.svg' => ['Contents'],
     'derived-values-dark-animated.svg' => ['red_plum'],
     'conditional-fields-dark-animated.svg' => ['Herb bundle'],
+    'conditional-indent-dark-animated.svg' => ['Weekly delivery?'],
     'inline-editing-dark-animated.svg' => ['Harvest date'],
     'key-bindings-vim-dark-animated.svg' => ['Fruit'],
     'translations-dark-animated.svg' => ['Фрукти'],
