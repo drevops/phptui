@@ -95,6 +95,25 @@ type_text "Apple"
 wait_and_enter
 arrow_down
 
+# Template: refill the first slot, tab to the last, change it, accept.
+pause 800
+safe_send "\r"
+pause 1000
+press_backspace
+press_backspace
+press_backspace
+press_backspace
+press_backspace
+press_backspace
+type_text "ridge"
+pause 800
+press_tab
+press_tab
+press_backspace
+type_text "b"
+wait_and_enter
+arrow_down
+
 # Number: clear the default, type a new one, accept.
 pause 800
 safe_send "\r"
@@ -896,15 +915,15 @@ function getJobs(string $project_dir): array {
   // The all-widgets montage: every widget on one panel, walked field by
   // field, in all display modes. "Pause" is the last field walked, so its
   // label proves the whole sequence was recorded. The screen is sized for
-  // the content: all fifteen fields fit without scrolling, and the rows
+  // the content: all sixteen fields fit without scrolling, and the rows
   // stay wide enough for the right-aligned provenance badges - on a
   // narrower terminal a badged row overflows, wraps, and every frame below
   // it renders torn.
   foreach ($env_variants as $suffix => $env) {
     $jobs['widgets' . $suffix] = [
-      'command' => 'env LINES=24 COLUMNS=80 ' . $env . 'php ' . $project_dir . '/playground/02-widgets-all-widgets.php',
+      'command' => 'env LINES=25 COLUMNS=80 ' . $env . 'php ' . $project_dir . '/playground/02-widgets-all-widgets.php',
       'interact' => allWidgetsInteraction(),
-      'rows' => 24,
+      'rows' => 25,
       'cols' => 80,
       'verify' => 'Pause',
     ];

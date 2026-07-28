@@ -80,6 +80,38 @@ final class AnswersTest extends TestCase {
     $this->assertSame(['General', 'Advanced'], $debug->panels);
   }
 
+  public function testForFormSplitsTemplateAnswerIntoItsParts(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $p): void {
+        $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{grade}}');
+        $p->text('name', 'Name');
+      })
+      ->build();
+
+    $answers = Answers::forForm($form, ['crate' => 'valley-a', 'name' => 'Acme'], []);
+
+    // The value stays whole and the parts ride alongside it.
+    $this->assertSame('valley-a', $answers->value('crate'));
+    $this->assertSame(['orchard' => 'valley', 'grade' => 'a'], $answers->parts('crate'));
+    $this->assertSame(['orchard' => 'valley', 'grade' => 'a'], $answers->item('crate')?->parts);
+
+    // Only a template question carries parts.
+    $this->assertSame([], $answers->parts('name'));
+    $this->assertSame([], $answers->parts('absent'));
+  }
+
+  public function testPartsAreEmptyWhenTheAnswerDoesNotMatchTheShape(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $p): void {
+        $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{grade}}');
+      })
+      ->build();
+
+    $answers = Answers::forForm($form, ['crate' => 'nope'], []);
+
+    $this->assertSame([], $answers->parts('crate'));
+  }
+
   public function testToSummaryDelegates(): void {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $p): void {

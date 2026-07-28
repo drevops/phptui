@@ -14,6 +14,7 @@ use DrevOps\Tui\Translation\Translator;
 enum FieldType: string {
 
   case Text = 'text';
+  case Template = 'template';
   case Select = 'select';
   case Confirm = 'confirm';
   case Toggle = 'toggle';
@@ -41,6 +42,7 @@ enum FieldType: string {
   public function label(): string {
     return match ($this) {
       self::Text => Translator::t('Text'),
+      self::Template => Translator::t('Template'),
       self::Select => Translator::t('Select'),
       self::Confirm => Translator::t('Confirm'),
       self::Toggle => Translator::t('Toggle'),

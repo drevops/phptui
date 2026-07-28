@@ -21,6 +21,7 @@ use DrevOps\Tui\Model\OptionKind;
 use DrevOps\Tui\Model\RenderMode;
 use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Model\TableSpec;
+use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Model\Weekday;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\Dotenv;
@@ -326,6 +327,64 @@ final class FormTest extends TestCase {
     $this->assertSame($closure, $form->field('repo')?->completion);
     // A field with no completion source defaults to an empty list.
     $this->assertSame([], $form->field('plain')?->completion);
+  }
+
+  public function testTemplateAssembled(): void {
+    $grade = fn (string $value): ?string => $value === 'a' ? NULL : 'nope';
+
+    $form = Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $panel) use ($grade): void {
+        $panel->template('crate', 'Crate label')
+          ->pattern('{{orchard}}-{{grade}}')
+          ->placeholder('orchard', 'Orchard')
+          ->placeholder('grade', 'Grade', $grade)
+          ->default('valley-a');
+      })
+      ->build();
+
+    $crate = $form->field('crate');
+    $this->assertInstanceOf(Field::class, $crate);
+    $this->assertInstanceOf(Template::class, $crate->template);
+    $this->assertSame('{{orchard}}-{{grade}}', $crate->template->pattern());
+    $this->assertSame(['orchard', 'grade'], $crate->template->placeholders());
+    $this->assertSame('Orchard', $crate->template->labelOf('orchard'));
+    $this->assertSame($grade, $crate->template->validatorOf('grade'));
+    $this->assertNotInstanceOf(\Closure::class, $crate->template->validatorOf('orchard'));
+    $this->assertSame('valley-a', $crate->default);
+  }
+
+  public function testPlaceholderWithoutLabelOrValidatorLeavesBothUnset(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $panel): void {
+        $panel->template('crate', 'Crate')->pattern('{{a}}-{{b}}')->placeholder('a');
+      })
+      ->build();
+
+    $template = $form->field('crate')?->template;
+    $this->assertInstanceOf(Template::class, $template);
+    $this->assertSame('a', $template->labelOf('a'));
+    $this->assertNotInstanceOf(\Closure::class, $template->validatorOf('a'));
+  }
+
+  public function testTemplateWithoutPatternThrows(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Field "crate" is a template field but declares no pattern');
+
+    Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $panel): void {
+        $panel->template('crate', 'Crate');
+      })
+      ->build();
+  }
+
+  public function testPatternIgnoredOnNonTemplateField(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $panel): void {
+        $panel->text('name', 'Name')->pattern('{{a}}-{{b}}');
+      })
+      ->build();
+
+    $this->assertNotInstanceOf(Template::class, $form->field('name')?->template);
   }
 
   public function testNumberBoundsAssembled(): void {

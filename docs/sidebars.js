@@ -42,6 +42,7 @@ const sidebars = {
         'widgets/select',
         'widgets/suggest',
         'widgets/table',
+        'widgets/template',
         'widgets/text',
         'widgets/textarea',
         'widgets/toggle',

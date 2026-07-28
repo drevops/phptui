@@ -35,6 +35,7 @@ final readonly class Scope {
    */
   protected const array TEXT_ENTRY = [
     FieldType::Text,
+    FieldType::Template,
     FieldType::Number,
     FieldType::Password,
     FieldType::Textarea,

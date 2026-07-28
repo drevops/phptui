@@ -141,6 +141,9 @@ final class Field {
    * @param \DrevOps\Tui\Model\TableSpec|null $table
    *   Note only: a presentational table rendered beneath the card's title and
    *   body; NULL when the note carries no table. Ignored by other types.
+   * @param \DrevOps\Tui\Model\Template|null $template
+   *   Template only: the fixed shape whose `{{placeholder}}` slots the field
+   *   fills in. NULL for every other type.
    */
   public function __construct(
     public readonly string $id,
@@ -178,7 +181,12 @@ final class Field {
     public readonly mixed $schemaDefault = NULL,
     public readonly bool $hasSchemaDefault = FALSE,
     public readonly ?TableSpec $table = NULL,
+    public readonly ?Template $template = NULL,
   ) {
+    if ($this->type === FieldType::Template && !$this->template instanceof Template) {
+      throw new FormException(sprintf('Field "%s" is a template field but declares no pattern; add ->pattern() with the shape to fill in.', $this->id));
+    }
+
     if ($this->multiple && !$this->type->supportsMultiple()) {
       throw new FormException(sprintf('Field "%s" of type "%s" does not collect several values; only select, search and file picker fields may be multiple.', $this->id, $this->type->value));
     }
@@ -336,6 +344,45 @@ final class Field {
     }
 
     return $this->pickerConstraints->violation($value);
+  }
+
+  /**
+   * The reason a supplied value does not fit the field's template, else NULL.
+   *
+   * An empty string is an unfilled template, left to the required check; any
+   * other value must have the template's shape and pass every slot validator.
+   *
+   * @param mixed $value
+   *   The candidate value.
+   *
+   * @return string|null
+   *   The error message, or NULL when the value fits or the field declares no
+   *   template.
+   */
+  public function templateError(mixed $value): ?string {
+    if (!$this->template instanceof Template || !is_string($value) || $value === '') {
+      return NULL;
+    }
+
+    return $this->template->error($value);
+  }
+
+  /**
+   * The values of the template's slots recovered from an assembled answer.
+   *
+   * @param mixed $value
+   *   The assembled answer.
+   *
+   * @return array<string,string>
+   *   The value of each slot keyed by slot name; empty when the field declares
+   *   no template or the answer does not have its shape.
+   */
+  public function templateParts(mixed $value): array {
+    if (!$this->template instanceof Template || !is_string($value)) {
+      return [];
+    }
+
+    return $this->template->extract($value);
   }
 
   /**

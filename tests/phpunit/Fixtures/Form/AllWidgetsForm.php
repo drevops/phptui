@@ -34,6 +34,7 @@ final class AllWidgetsForm {
       ->panel('widgets', 'Widgets', function (PanelBuilder $p) use ($picker_start): void {
         $p->note('note', 'Note')->description('A read-only note field.');
         $p->text('text', 'Text')->default('txt');
+        $p->template('template', 'Template')->pattern('{{head}}-{{tail}}')->default('a-b');
         $p->number('number', 'Number')->default(7);
         $p->calendar('date', 'Calendar')->default('2026-07-15');
         $p->textarea('textarea', 'Textarea')->default('note');

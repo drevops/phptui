@@ -120,6 +120,22 @@ final class AgentHelpTest extends TestCase {
     $this->assertStringContainsString('"format": "date"', $help);
   }
 
+  public function testTemplatePattern(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{grade}}');
+      })
+      ->build();
+
+    $help = (new AgentHelp($form))->generate();
+
+    // The answer is the assembled string, described by the expression it must
+    // match rather than by the pattern's own slot syntax.
+    $this->assertStringContainsString('"type": "string"', $help);
+    $this->assertStringContainsString('"pattern": "^(.*?)-(.*?)$"', $help);
+    $this->assertStringNotContainsString('{{orchard}}', $help);
+  }
+
   public function testFieldDescription(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {

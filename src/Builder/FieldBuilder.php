@@ -17,6 +17,7 @@ use DrevOps\Tui\Model\OptionKind;
 use DrevOps\Tui\Model\RenderMode;
 use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Model\TableSpec;
+use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Model\Weekday;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\DiscoverInterface;
@@ -223,6 +224,25 @@ final class FieldBuilder {
    * Note only: a presentational table rendered beneath the card, when declared.
    */
   protected ?TableSpec $table = NULL;
+
+  /**
+   * Template only: the fixed shape whose slots are filled in, when declared.
+   */
+  protected string $pattern = '';
+
+  /**
+   * Template only: the human label of each slot, keyed by slot name.
+   *
+   * @var array<string,string>
+   */
+  protected array $placeholderLabels = [];
+
+  /**
+   * Template only: the validator of each slot, keyed by slot name.
+   *
+   * @var array<string,\Closure>
+   */
+  protected array $placeholderValidators = [];
 
   /**
    * Construct a field builder.
@@ -786,6 +806,53 @@ final class FieldBuilder {
   }
 
   /**
+   * Template only: set the fixed shape whose slots the field fills in.
+   *
+   * The pattern carries `{{name}}` slots: its fixed text renders as context and
+   * each slot is filled in separately. Two slots must be separated by some
+   * fixed text, so a filled string can be read back into its parts.
+   *
+   * @param string $pattern
+   *   The pattern, e.g. `{{orchard}}-{{fruit}}-{{grade}}`.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function pattern(string $pattern): self {
+    $this->pattern = $pattern;
+
+    return $this;
+  }
+
+  /**
+   * Template only: label and validate one of the pattern's slots.
+   *
+   * @param string $name
+   *   The slot name, as it appears in the pattern.
+   * @param string $label
+   *   The human label shown while the slot is being filled; defaults to the
+   *   slot name.
+   * @param \Closure|null $validate
+   *   The validator `fn (string $value): ?string` returning an error message,
+   *   or NULL when the part is valid. Runs on its own, independently of every
+   *   other slot and of the field's own validator.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function placeholder(string $name, string $label = '', ?\Closure $validate = NULL): self {
+    if ($label !== '') {
+      $this->placeholderLabels[$name] = $label;
+    }
+
+    if ($validate instanceof \Closure) {
+      $this->placeholderValidators[$name] = $validate;
+    }
+
+    return $this;
+  }
+
+  /**
    * Add a single option.
    *
    * @param string $value
@@ -957,7 +1024,25 @@ final class FieldBuilder {
       schemaDefault: $this->schemaDefault,
       hasSchemaDefault: $this->hasSchemaDefault,
       table: $this->table,
+      template: $this->buildTemplate(),
     );
+  }
+
+  /**
+   * Assemble the template of a template field from the declared pattern.
+   *
+   * @return \DrevOps\Tui\Model\Template|null
+   *   The template, or NULL for any other field type or an absent pattern.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the pattern cannot be filled in or read back unambiguously.
+   */
+  protected function buildTemplate(): ?Template {
+    if ($this->fieldType !== FieldType::Template || $this->pattern === '') {
+      return NULL;
+    }
+
+    return new Template($this->pattern, $this->placeholderLabels, $this->placeholderValidators);
   }
 
   /**

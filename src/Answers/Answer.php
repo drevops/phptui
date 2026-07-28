@@ -32,6 +32,10 @@ final readonly class Answer {
    *   The question kind.
    * @param list<string> $panels
    *   The titles of the panels the question lives under, outermost first.
+   * @param array<string,string> $parts
+   *   A template question only: the value of each of the shape's slots, keyed
+   *   by slot name. Read back from the assembled value, so the two can never
+   *   disagree; empty for every other kind of question.
    */
   public function __construct(
     public string $id,
@@ -40,6 +44,7 @@ final readonly class Answer {
     public string $label,
     public FieldType $type,
     public array $panels,
+    public array $parts = [],
   ) {
   }
 

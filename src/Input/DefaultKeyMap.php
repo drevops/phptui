@@ -54,6 +54,12 @@ class DefaultKeyMap {
       // The text field accepts its inline ghost-text completion on Tab.
       new Binding(Scope::field(FieldType::Text), Action::Complete, KeyName::Tab),
 
+      // Up and Down step between a template's slots, Tab joining Down as the
+      // key a reader reaches for first; Left and Right stay on the base
+      // bindings, moving the caret inside the slot being filled in.
+      new Binding(Scope::field(FieldType::Template), Action::MoveDown, KeyName::Down, KeyName::Tab),
+      new Binding(Scope::field(FieldType::Template), Action::MoveUp, KeyName::Up),
+
       new Binding(Scope::field(FieldType::Textarea), Action::NewLine, KeyName::Enter),
       new Binding(Scope::field(FieldType::Textarea), Action::Accept, KeyName::Tab),
       // The textarea hands off to the user's $EDITOR on Ctrl-E.
