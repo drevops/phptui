@@ -17,6 +17,7 @@ return [
   'move' => 'mover',
   'select' => 'seleccionar',
   'Basic tier' => 'Nivel basico',
+  'Excellent' => 'Excelente',
   'Agree' => 'De acuerdo',
   'yes' => 'si',
   'edited' => 'editado',

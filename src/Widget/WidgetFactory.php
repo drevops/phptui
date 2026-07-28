@@ -171,7 +171,23 @@ class WidgetFactory {
       // @codeCoverageIgnoreEnd
     }
 
-    return new RatingWidget(is_int($current) || is_float($current) ? (int) $current : $scale->min, $scale->min, $scale->max, $field->ratingCaptions);
+    return new RatingWidget(is_int($current) || is_float($current) ? (int) $current : $scale->min, $scale->min, $scale->max, $this->captions($field));
+  }
+
+  /**
+   * A rating's captions, localized to the active language.
+   *
+   * Translated once here rather than at each draw, the way the option labels
+   * are, so the caption a widget shows is the caption the panel row shows.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field.
+   *
+   * @return array<int,string>
+   *   The localized caption of each point, keyed by the point.
+   */
+  protected function captions(Field $field): array {
+    return array_map(static fn(string $caption): string => $caption === '' ? '' : Translator::t($caption), $field->ratingCaptions);
   }
 
   /**

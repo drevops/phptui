@@ -2876,8 +2876,9 @@ class DefaultTheme implements ThemeInterface {
     // the frame it is drawn in.
     $min = $field->bounds->min ?? 0;
     $point = is_int($value) || is_float($value) ? (int) $value : $min;
+    $caption = $field->ratingCaptions[$point] ?? '';
 
-    return $this->renderScale($point, $min, $field->bounds->max ?? 0, $field->ratingCaptions[$point] ?? '');
+    return $this->renderScale($point, $min, $field->bounds->max ?? 0, $caption === '' ? '' : Translator::t($caption));
   }
 
   /**

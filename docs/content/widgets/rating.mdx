@@ -13,7 +13,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   <ThemedImage sources={{light: useBaseUrl('/widget-rating-light-animated.svg'), dark: useBaseUrl('/widget-rating-dark-animated.svg')}} alt="Rating widget" />
 </p>
 
-A graded answer - a satisfaction level, a one-to-five score, an agree/disagree scale. The arrows walk a row of points and the chosen one is collected as an **`int`**.
+A graded answer - how fresh the produce was, how ripe a fruit is, a one-to-five score. The arrows walk a row of points and the chosen one is collected as an **`int`**.
 
 ```php
 $p->rating('freshness', 'Freshness')
@@ -44,7 +44,7 @@ The points _are_ the steps, so a rating takes no `step()` - declaring one is a b
 
 ## Rating or number?
 
-Both collect an `int`. Reach for `number()` when the answer is a figure the user knows and types - a weight, a port, a count - and for `rating()` when the answer is one of a handful of graded points that are worth showing all at once.
+Both collect an `int`. Reach for `number()` when the answer is a figure the user knows and types - a basket weight, a crate count - and for `rating()` when the answer is one of a handful of graded points that are worth showing all at once.
 
 ## Keyboard
 
