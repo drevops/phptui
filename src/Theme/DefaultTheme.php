@@ -1050,8 +1050,10 @@ class DefaultTheme implements ThemeInterface {
 
     // Clamp onto the scale: this method is public, so a direct call with a
     // point outside the range must not hand str_repeat() a negative count. The
-    // lowest point still fills one, because it is a point like any other.
-    $points = max(1, $max - $min + 1);
+    // lowest point still fills one, because it is a point like any other. The
+    // frame bounds the run because nothing wider than it can be drawn anyway,
+    // so an absurd range costs a truncated line rather than the whole heap.
+    $points = max(1, min($this->width, $max - $min + 1));
     $filled = max(1, min($points, $current - $min + 1));
 
     $line = $this->highlight(str_repeat($on, $filled)) . str_repeat($off, $points - $filled) . ' ' . $current . '/' . $max;

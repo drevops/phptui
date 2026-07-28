@@ -206,6 +206,11 @@ final class KeyMapTest extends TestCase {
       new Binding(Scope::field(FieldType::Search), Action::MoveDown, 'j'),
       'search scope consumes typed characters',
     ];
+    // Claiming a digit in the rating scope would make that point un-typeable.
+    yield 'digit in the rating scope' => [
+      new Binding(Scope::field(FieldType::Rating), Action::Accept, '3'),
+      'rating scope consumes typed characters',
+    ];
     yield 'multi-character binding' => [
       new Binding(Scope::field(FieldType::Select), Action::Accept, 'ab'),
       'must be a single character',
@@ -260,6 +265,8 @@ final class KeyMapTest extends TestCase {
     yield 'text is a text-entry scope' => [Scope::field(FieldType::Text), 'field:Text', 'text', TRUE];
     yield 'template is a text-entry scope' => [Scope::field(FieldType::Template), 'field:Template', 'template', TRUE];
     yield 'select is not a text-entry scope' => [Scope::field(FieldType::Select), 'field:Select', 'select', FALSE];
+    // A rating selects a point by typed digit, so it reserves the digits.
+    yield 'rating is a text-entry scope' => [Scope::field(FieldType::Rating), 'field:Rating', 'rating', TRUE];
     // The file picker filters by typing, so it is a text-entry scope.
     yield 'filepicker is a text-entry scope' => [Scope::field(FieldType::FilePicker), 'field:FilePicker', 'filepicker', TRUE];
     // A multiple select filters by typing, so it becomes a text-entry scope

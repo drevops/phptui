@@ -117,6 +117,7 @@ return [
   'a date (YYYY-MM-DD)' => 'дата (РРРР-ММ-ДД)',
   'a list' => 'список',
   'a number' => 'число',
+  'a whole number' => 'ціле число',
   'a string' => 'рядок',
   'accept' => 'прийняти',
   'adjust' => 'налаштувати',

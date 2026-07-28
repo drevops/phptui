@@ -83,6 +83,7 @@ return [
   'a file with a permitted extension (@extensions)' => 'a file with a permitted extension (@extensions)',
   'a list' => 'a list',
   'a number' => 'a number',
+  'a whole number' => 'a whole number',
   'a string' => 'a string',
   'accept' => 'accept',
   'adjust' => 'adjust',

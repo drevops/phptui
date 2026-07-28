@@ -59,7 +59,7 @@ The scale stops at either end rather than wrapping round - a grade has a floor a
 
 ## Headless behavior
 
-The point is supplied directly as an integer when the form runs [headlessly](/headless-collection), and the scale is enforced there too: a value off the scale is rejected. It surfaces in the JSON schema as an `integer` with `minimum` and `maximum`.
+The point is supplied directly as an integer when the form runs [headlessly](/headless-collection), and the scale is enforced there too: a value off the scale is rejected, and so is a fraction between two points, since a scale has no point between its points. It surfaces in the JSON schema as an `integer` with `minimum` and `maximum`.
 
 ## Display modes
 

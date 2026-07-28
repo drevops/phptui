@@ -377,6 +377,9 @@ final class Field {
     return match (TRUE) {
       $this->type === FieldType::Confirm, $this->type === FieldType::Pause => is_bool($value),
       $this->collectsList() => is_array($value),
+      // A scale has no point between its points, so only a whole number names
+      // one - where a number field takes any numeric entry and rounds it.
+      $this->type === FieldType::Rating => is_int($value),
       $this->type->collectsInteger() => is_int($value) || is_float($value),
       // An empty string is an unset date, left to the required check; any
       // other value must be a strict `Y-m-d` calendar date.
@@ -395,6 +398,7 @@ final class Field {
     return match (TRUE) {
       $this->type === FieldType::Confirm, $this->type === FieldType::Pause => Translator::t('a boolean'),
       $this->collectsList() => Translator::t('a list'),
+      $this->type === FieldType::Rating => Translator::t('a whole number'),
       $this->type->collectsInteger() => Translator::t('a number'),
       $this->type === FieldType::Calendar => Translator::t('a date (YYYY-MM-DD)'),
       default => Translator::t('a string'),

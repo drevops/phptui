@@ -83,6 +83,16 @@ final class ScaleRenderTest extends TestCase {
     $this->assertSame('● 2/2', $this->theme(color: FALSE)->renderScale(2, 2, 2, ''));
   }
 
+  public function testScaleWiderThanTheFrameIsBoundedByIt(): void {
+    // Nothing wider than the frame can be drawn, so a public call with an
+    // absurd range costs a truncated line rather than the whole heap.
+    $line = $this->theme(color: FALSE)->renderScale(1, 1, PHP_INT_MAX, '');
+
+    $points = substr_count($line, '●') + substr_count($line, '○');
+    $this->assertGreaterThan(0, $points);
+    $this->assertLessThanOrEqual(DefaultTheme::DEFAULT_WIDTH, $points);
+  }
+
   public function testCollapsedRowDrawsTheScale(): void {
     // A rating row shows its scale rather than a bare number, so the grade
     // reads the same whether or not the editor is open.
