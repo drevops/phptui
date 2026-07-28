@@ -162,4 +162,31 @@ final class BuiltinThemesTest extends TestCase {
     yield 'light' => [Mode::Light];
   }
 
+  /**
+   * A theme's description atom reaches the body text, not only its own rows.
+   */
+  public function testDosDescriptionBodyCarriesTheThemeAtom(): void {
+    $dos = ThemeManager::create('dos', 76);
+    $default = ThemeManager::create('default', 76);
+
+    $line = $dos->renderDescriptionBlock('Picked this morning', FALSE)[0];
+
+    // The body is styled by the same atom the one-line rows use, so the dos
+    // theme's legible white reaches it instead of the dim grey it inherits.
+    $this->assertSame('    ' . $dos->description('Picked this morning'), $line);
+    $this->assertNotSame($default->renderDescriptionBlock('Picked this morning', FALSE)[0], $line);
+  }
+
+  /**
+   * The bullet leading a list item is themed with the text beside it.
+   */
+  public function testDosBulletCarriesTheThemeAtom(): void {
+    $theme = ThemeManager::create('dos', 76, ['markdown' => TRUE]);
+
+    $line = $theme->renderDescriptionBlock('- crisp apples', FALSE)[0];
+
+    $this->assertStringContainsString($theme->description($theme->bullet() . ' '), $line);
+    $this->assertStringContainsString($theme->description('crisp apples'), $line);
+  }
+
 }

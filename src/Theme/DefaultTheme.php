@@ -755,21 +755,19 @@ class DefaultTheme implements ThemeInterface {
    * @param string $source
    *   The source text; newlines separate physical lines.
    * @param bool $selected
-   *   Whether the owning row is selected, for the base emphasis.
+   *   Whether the owning row is selected.
    *
    * @return list<string>
    *   The rendered lines.
    */
   protected function markupBody(string $source, bool $selected): array {
-    $base = $this->emphasize(Sgr::of(Sgr::Grey), $selected);
-
     $lines = [];
 
     foreach (Markup::parse($source, $this->markdown) as $line) {
-      $rendered = $line->bullet ? $this->paint($base, $this->bullet() . ' ') : '';
+      $rendered = $line->bullet ? $this->description($this->bullet() . ' ', $selected) : '';
 
       foreach ($line->segments as $segment) {
-        $rendered .= $this->markupSegment($segment, $base);
+        $rendered .= $this->markupSegment($segment, $selected);
       }
 
       $lines[] = $rendered;
@@ -781,21 +779,27 @@ class DefaultTheme implements ThemeInterface {
   /**
    * Style one parsed markup span with its atom.
    *
+   * Plain text is the description atom, so a theme that restyles description
+   * text restyles the body of a description and a note with it - not only the
+   * one-line rows that call the atom directly.
+   *
    * @param \DrevOps\Tui\Render\MarkupSegment $segment
    *   The span.
-   * @param string $base
-   *   The base SGR for plain text.
+   * @param bool $selected
+   *   Whether the owning row is selected.
    *
    * @return string
    *   The styled span.
    */
-  protected function markupSegment(MarkupSegment $segment, string $base): string {
+  protected function markupSegment(MarkupSegment $segment, bool $selected): string {
     return match ($segment->kind) {
       MarkupKind::Bold => $this->strong($segment->text),
       MarkupKind::Emphasis => $this->emphasis($segment->text),
       MarkupKind::Code => $this->code($segment->text),
       MarkupKind::Link => $this->link($segment->text, $segment->url),
-      MarkupKind::Text => $this->paint($base, $segment->text),
+      // The parser has already split every link into its own span, so the
+      // atom's own link resolution finds nothing left to do here.
+      MarkupKind::Text => $this->description($segment->text, $selected),
     };
   }
 
