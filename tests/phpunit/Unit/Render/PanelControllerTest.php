@@ -1378,6 +1378,33 @@ final class PanelControllerTest extends TestCase {
     $this->assertTrue($controller->isDone());
   }
 
+  public function testModalKeepsItsEditsAndTheFormSubmitCatchesTheGap(): void {
+    // A dialog's Apply means "keep my edits and close", so it is not withheld -
+    // trapping the user would leave Discard, which drops every dialog edit, as
+    // the only way out. The form submit is the boundary that catches the gap.
+    $form = Form::create('Demo')
+      ->panel('edit', 'Quick edit', function (PanelBuilder $m): void {
+        $m->modal('Apply', 'Discard');
+        $m->text('plot', 'Garden plot name')->required();
+      })
+      ->build();
+
+    $controller = new PanelController($form, $this->plainTheme(), values: ['plot' => '']);
+
+    // Open the dialog, move to Apply, and close it with the field still empty.
+    $controller->handle(Key::named(KeyName::Enter));
+    $controller->handle(Key::named(KeyName::Down));
+    $controller->handle(Key::named(KeyName::Enter));
+    $this->assertSame('Demo', $controller->currentPanel()->title);
+    $this->assertFalse($controller->isDone());
+
+    // The form's own submit refuses, naming the field the dialog left empty.
+    $controller->handle(Key::named(KeyName::Down));
+    $controller->handle(Key::named(KeyName::Enter));
+    $this->assertFalse($controller->isDone());
+    $this->assertStringContainsString('Garden plot name is required.', Ansi::strip($controller->frame(24)));
+  }
+
   /**
    * A controller over one required and one optional field on a single panel.
    *
