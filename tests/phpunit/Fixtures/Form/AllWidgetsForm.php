@@ -36,6 +36,7 @@ final class AllWidgetsForm {
         $p->text('text', 'Text')->default('txt');
         $p->template('template', 'Template')->pattern('{{head}}-{{tail}}')->default('a-b');
         $p->number('number', 'Number')->default(7);
+        $p->rating('rating', 'Rating')->captions([1 => 'Poor', 5 => 'Excellent'])->default(4);
         $p->calendar('date', 'Calendar')->default('2026-07-15');
         $p->textarea('textarea', 'Textarea')->default('note');
         $p->password('password', 'Password')->default('pw');

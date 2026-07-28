@@ -92,6 +92,7 @@ return [
   'Question "@id" must be @constraint.' => 'Питання "@id" має бути @constraint.',
   'Question "@id": @error' => 'Питання "@id": @error',
   'Question "@id": @error.' => 'Питання "@id": @error.',
+  'Rating' => 'Оцінка',
   'Reorder' => 'Перевпорядкувати',
   'Sa' => 'Сб',
   'Search' => 'Пошук',

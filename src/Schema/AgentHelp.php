@@ -111,7 +111,7 @@ class AgentHelp {
       $property['type'] = 'array';
       $property['items'] = $values === [] ? ['type' => 'string'] : ['enum' => $values];
     }
-    elseif ($field->type === FieldType::Number) {
+    elseif ($field->type->collectsInteger()) {
       $property['type'] = 'integer';
     }
     elseif ($field->type === FieldType::Confirm) {

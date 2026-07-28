@@ -54,6 +54,7 @@ return [
   'Question "@id" must be @constraint.' => 'Question "@id" must be @constraint.',
   'Question "@id": @error' => 'Question "@id": @error',
   'Question "@id": @error.' => 'Question "@id": @error.',
+  'Rating' => 'Rating',
   'Reorder' => 'Reorder',
   'Sa' => 'Sa',
   'Search' => 'Search',

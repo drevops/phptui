@@ -227,6 +227,25 @@ final class PanelBuilder {
   }
 
   /**
+   * Add a rating field: a graded answer picked from a scale of points.
+   *
+   * The scale runs from `->min()` to `->max()` (one to five by default) and the
+   * answer is the chosen point as an integer. Chain `->captions()` to name what
+   * the points mean.
+   *
+   * @param string $id
+   *   The field id.
+   * @param string $label
+   *   The label (defaults to the id).
+   *
+   * @return \DrevOps\Tui\Builder\FieldBuilder
+   *   The field builder.
+   */
+  public function rating(string $id, string $label = ''): FieldBuilder {
+    return $this->field($id, $label, FieldType::Rating);
+  }
+
+  /**
    * Add a calendar field: a navigable month picker returning an ISO date.
    *
    * @param string $id

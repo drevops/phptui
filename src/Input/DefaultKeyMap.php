@@ -51,6 +51,11 @@ class DefaultKeyMap {
       new Binding(Scope::field(FieldType::Number), Action::Increment, KeyName::Up),
       new Binding(Scope::field(FieldType::Number), Action::Decrement, KeyName::Down),
 
+      // A rating is walked along its scale, so both axes step it: the scale
+      // reads left to right, and Up/Down join in as "more" and "less".
+      new Binding(Scope::field(FieldType::Rating), Action::Increment, KeyName::Right, KeyName::Up),
+      new Binding(Scope::field(FieldType::Rating), Action::Decrement, KeyName::Left, KeyName::Down),
+
       // The text and suggest fields accept their inline ghost-text completion
       // on Tab.
       new Binding(Scope::field(FieldType::Text), Action::Complete, KeyName::Tab),
