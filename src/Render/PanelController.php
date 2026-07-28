@@ -12,6 +12,7 @@ use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormDefinition;
+use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\Panel;
 use DrevOps\Tui\Model\RenderMode;
 use DrevOps\Tui\Primitive\ProgressReporter;
@@ -26,6 +27,7 @@ use DrevOps\Tui\Input\ScopedKeyMap;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Widget\Capability\ExternalEditCapableInterface;
+use DrevOps\Tui\Widget\Capability\QueryOptionsCapableInterface;
 use DrevOps\Tui\Widget\WidgetFactory;
 use DrevOps\Tui\Widget\WidgetInterface;
 
@@ -378,6 +380,8 @@ class PanelController {
 
           $this->handle($key);
         }
+
+        $this->resolveQuery();
       }
     }
     finally {
@@ -1186,6 +1190,41 @@ class PanelController {
 
     $this->engine->loadOptions($loading);
     $this->resettle();
+  }
+
+  /**
+   * Resolve the open editor's query against its field's source, when due.
+   *
+   * Runs once the whole read has been consumed rather than once per key, so a
+   * burst of typing - or a paste - costs the source one call instead of one per
+   * character. The loading frame is painted first, because the call blocks.
+   */
+  protected function resolveQuery(): void {
+    $editor = $this->editor;
+    $field = $this->editing;
+
+    if (!$editor instanceof QueryOptionsCapableInterface || !$field instanceof Field || !$field->optionsSource instanceof \Closure) {
+      return;
+    }
+
+    $query = $editor->pendingQuery();
+    if ($query === NULL) {
+      return;
+    }
+
+    $editor->beginQuery();
+    $this->repaint();
+
+    try {
+      $editor->applyQuery($query, Option::resolved(($field->optionsSource)($query, $this->values)));
+    }
+    catch (\Throwable) {
+      // Consumer code that cannot answer must not end the session over a
+      // terminal still in raw mode: the field says so and stays editable, and
+      // the query is remembered so the same failing call is not repeated on
+      // every frame.
+      $editor->failQuery($query, Translator::t('Could not load options.'));
+    }
   }
 
   /**

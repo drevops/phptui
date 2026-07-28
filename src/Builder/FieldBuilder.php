@@ -67,6 +67,16 @@ final class FieldBuilder {
   protected ?\Closure $optionsLoader = NULL;
 
   /**
+   * A query source for the options, or NULL when they do not follow the query.
+   */
+  protected ?\Closure $optionsSource = NULL;
+
+  /**
+   * The query length below which the query source is not called.
+   */
+  protected int $queryMinLength = 0;
+
+  /**
    * The step count for a progress bar, or NULL for an indeterminate spinner.
    */
   protected ?int $progressSteps = NULL;
@@ -945,6 +955,57 @@ final class FieldBuilder {
   }
 
   /**
+   * Search and suggest only: source the options from the live query.
+   *
+   * Where `->options()` resolves one fixed list, a query source is called again
+   * every time the query changes, so the candidates can come from a backend
+   * that does the filtering itself - a remote search, a database lookup, an
+   * index. The field shows a themed "Loading…" while a call is in flight, and
+   * the result replaces the list wholesale, so the local filter is turned off.
+   *
+   * Repeats are free: a query already answered in this editor session is served
+   * from a cache, and a burst of typing resolves once, not once per character.
+   *
+   * @param \Closure $source
+   *   An
+   *   `fn (string $query, array<string,mixed> $answers): array<string,string>`
+   *   returning the options for the given query, keyed by value with a label -
+   *   the shape `->options()` takes. It also receives the answers collected so
+   *   far, so one field's query can narrow by another's answer.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function optionsFrom(\Closure $source): self {
+    $this->optionsSource = $source;
+
+    return $this;
+  }
+
+  /**
+   * Set the query length below which the query source is not called.
+   *
+   * A remote source asked for the empty query has to answer with everything, so
+   * a floor keeps the field quiet until the query is worth sending. Below it
+   * the field shows a prompt to keep typing instead of a list.
+   *
+   * @param int $length
+   *   The minimum number of characters, at least one.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function minQuery(int $length): self {
+    if ($length < 1) {
+      throw new FormException(sprintf('Field "%s" declares a minimum query length of %d; it must be at least one character (omit minQuery() to query on every keystroke).', $this->id, $length));
+    }
+
+    $this->queryMinLength = $length;
+
+    return $this;
+  }
+
+  /**
    * Set the step count of a progress row, making its indicator a bar.
    *
    * Without a step count a progress row shows an indeterminate spinner; with
@@ -1025,6 +1086,8 @@ final class FieldBuilder {
       hasSchemaDefault: $this->hasSchemaDefault,
       table: $this->table,
       template: $this->buildTemplate(),
+      optionsSource: $this->optionsSource,
+      queryMinLength: $this->queryMinLength,
     );
   }
 

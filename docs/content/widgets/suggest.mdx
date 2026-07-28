@@ -93,3 +93,11 @@ The highlighted suggestion's [description](/widgets/select#option-descriptions),
     <td><ThemedImage sources={{light: useBaseUrl('/widget-suggest-descriptions-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-suggest-descriptions-dark-static-ascii-no-ansi.svg')}} alt="Suggest option descriptions: ASCII + No ANSI" /></td>
   </tr>
 </table>
+
+## Suggestions from a query
+
+The suggestions can come from the query itself rather than a fixed list, for a catalog too large to hold - see [options from a query](/progress#options-from-a-query):
+
+```php
+$p->suggest('extra', 'Add another')->optionsFrom(fn(string $query): array => $pantry->search($query))->minQuery(2);
+```

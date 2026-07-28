@@ -109,10 +109,11 @@ php playground/15-progress-bar.php 2>&1 | cat
 
 ## Inside the form
 
-`progress()` runs _around_ the form. Three counterparts show feedback _inside_ the interactive panel, drawn by the same theme and resolved the first time a panel opens - so a drill-in fetches only what that panel needs, once.
+`progress()` runs _around_ the form. Four counterparts show feedback _inside_ the interactive panel, drawn by the same theme.
 
 - **Loading a field's options.** `->options()` takes a callback instead of a fixed list; it resolves when the field's panel opens, the field showing a themed `Loading…` until it returns. Headless collection resolves it up front.
 - **Preloading a panel.** `->preload(closure)` on a panel runs once, before the panel's fields first draw - prep the panel needs, fetched on entry rather than up front, so one fetch can feed several fields.
+- **[Options that follow the query](#options-from-a-query).** `->optionsFrom()` is called again on every query change rather than once, for candidates that live behind a search API.
 - **The [progress widget](/widgets/progress).** A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself. Unlike `progress()`, it lives among the fields and collects no value.
 
 ```php
@@ -126,3 +127,31 @@ $form->panel('order', 'New order', function (PanelBuilder $p) use ($pack): void 
 ```
 
 Runnable in [`playground/16-loading-data.php`](https://github.com/drevops/tui/blob/main/playground/16-loading-data.php) and [`playground/02-widgets-progress.php`](https://github.com/drevops/tui/blob/main/playground/02-widgets-progress.php).
+
+## Options from a query
+
+A loader resolves one list, once. When the candidates are too many to hold - a catalog behind a search API, a database lookup, an index - a [search](/widgets/search) or [suggest](/widgets/suggest) field can source them from the query instead, with `->optionsFrom()`:
+
+```php
+$form->panel('order', 'New order', function (PanelBuilder $p) use ($pantry): void {
+  // Called again whenever the query changes, so the list follows what is typed.
+  $p->search('veg', 'Vegetable')->optionsFrom(fn(string $query): array => $pantry->search($query));
+
+  // Silent until two characters are typed.
+  $p->suggest('extra', 'Add another')->optionsFrom(fn(string $query): array => $pantry->search($query))->minQuery(2);
+});
+```
+
+The source returns the same `value => label` map `->options()` takes, and also receives the answers collected so far, so one field's query can narrow by another's answer. Its result replaces the list wholesale and **is not filtered again locally** - the backend already did the matching, so a row whose label does not literally contain the query still shows.
+
+The panel loop is synchronous, so the call blocks: the field paints a themed `Loading…` in place of its list, then repaints with the result. Three behaviors keep that from becoming a call per keystroke:
+
+- **A burst settles once.** Keys that arrive together - fast typing, a paste - resolve to a single query rather than one per character.
+- **Repeats are cached.** A query already answered in this editor session is served from the cache, so backspacing costs nothing.
+- **`->minQuery(n)` holds the call back** until the query is `n` characters long, showing a prompt to keep typing instead of a list. Without it the field opens by asking the source for the empty query.
+
+A source that throws does not end the session: the field shows `Could not load options.` in place of its list and stays editable, and the failed query is remembered so the same call is not retried on every frame.
+
+Headless collection has nothing typed to query with, so it looks the supplied value up **as** the query and checks the value against what comes back - a value no query can produce is rejected, exactly as one outside a static option list is. A suggest field's candidates are hints rather than a closed set, so its value is not checked in either mode.
+
+Runnable in [`playground/17-query-options.php`](https://github.com/drevops/tui/blob/main/playground/17-query-options.php).

@@ -7,10 +7,13 @@ namespace DrevOps\Tui\Widget;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Utils\Strings;
 use DrevOps\Tui\Widget\Capability\PagingCapableInterface;
 use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
+use DrevOps\Tui\Widget\Capability\QueryOptionsCapableInterface;
+use DrevOps\Tui\Widget\Capability\QueryOptionsCapableTrait;
 use DrevOps\Tui\Widget\Capability\SearchCapableInterface;
 use DrevOps\Tui\Widget\Capability\TextEditCapableInterface;
 
@@ -19,9 +22,10 @@ use DrevOps\Tui\Widget\Capability\TextEditCapableInterface;
  *
  * @package DrevOps\Tui\Widget
  */
-class SuggestWidget extends AbstractWidget implements SearchCapableInterface, TextEditCapableInterface, PagingCapableInterface {
+class SuggestWidget extends AbstractWidget implements SearchCapableInterface, TextEditCapableInterface, QueryOptionsCapableInterface, PagingCapableInterface {
 
   use PagingCapableTrait;
+  use QueryOptionsCapableTrait;
 
   /**
    * The highlighted suggestion index, or -1 for none.
@@ -126,15 +130,42 @@ class SuggestWidget extends AbstractWidget implements SearchCapableInterface, Te
   /**
    * The suggestions matching the current buffer, ranked by fuzzy relevance.
    *
+   * Suggestions that came from a query source are already the answer to the
+   * buffer, so ranking them again locally would drop the ones that do not
+   * literally match it.
+   *
    * @return list<string>
    *   The matching suggestion values, most relevant first.
    */
   protected function visible(): array {
-    if ($this->buffer === '') {
+    if ($this->buffer === '' || $this->queryDriven) {
       return $this->values;
     }
 
     return $this->matcher()->rankValues($this->values, $this->buffer);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function query(): string {
+    return $this->buffer;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function adoptQueryRows(array $rows): void {
+    $this->values = Option::selectableValues($rows);
+
+    $this->descriptions = [];
+    foreach ($rows as $row) {
+      if ($row->selectable()) {
+        $this->descriptions[$row->value] = $row->description;
+      }
+    }
+
+    $this->resetFilterCursor();
   }
 
   /**
@@ -154,6 +185,11 @@ class SuggestWidget extends AbstractWidget implements SearchCapableInterface, Te
    * {@inheritdoc}
    */
   protected function renderBody(ThemeInterface $theme): string {
+    $state = $this->queryStateLine($theme);
+    if ($state !== NULL) {
+      return $this->queryLine($theme) . "\n" . $state;
+    }
+
     $visible = $this->visible();
     $viewport = $this->pageViewport(count($visible), $this->cursor);
 

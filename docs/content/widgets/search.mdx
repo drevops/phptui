@@ -171,3 +171,11 @@ The highlighted match's [description](/widgets/select#option-descriptions), in e
     <td><ThemedImage sources={{light: useBaseUrl('/widget-search-descriptions-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-search-descriptions-dark-static-ascii-no-ansi.svg')}} alt="Search option descriptions: ASCII + No ANSI" /></td>
   </tr>
 </table>
+
+## Options from a query
+
+The options can come from the query itself rather than a fixed list, for a catalog too large to hold - see [options from a query](/progress#options-from-a-query):
+
+```php
+$p->search('veg', 'Vegetable')->optionsFrom(fn(string $query): array => $pantry->search($query));
+```

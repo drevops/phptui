@@ -12,6 +12,7 @@ use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Input\KeyMap;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Translation\Translator;
+use DrevOps\Tui\Widget\Capability\QueryOptionsCapableInterface;
 
 /**
  * Builds the widget for a field, seeded with the field's current value.
@@ -81,6 +82,10 @@ class WidgetFactory {
       // panel row; it has no editor to open.
       FieldType::Progress => throw new \LogicException('A progress row is not edited.'),
     };
+
+    if ($widget instanceof QueryOptionsCapableInterface && $field->optionsSource instanceof \Closure) {
+      $widget->driveByQuery($field->queryMinLength);
+    }
 
     // The field declaration always wins over the registry's convention-resolved
     // behaviour, mirroring the engine's headless resolution.

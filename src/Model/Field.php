@@ -157,6 +157,17 @@ final class Field {
    * @param \DrevOps\Tui\Model\Template|null $template
    *   Template only: the fixed shape whose `{{placeholder}}` slots the field
    *   fills in. NULL for every other type.
+   * @param \Closure|null $optionsSource
+   *   An
+   *   `fn(string $query, array<string,mixed> $answers): array<string,string>`
+   *   resolving the options for a live query, or NULL for options that do not
+   *   follow the query. Unlike a loader it is called again whenever the query
+   *   changes, so the candidates can come from a remote backend that filters
+   *   for itself.
+   * @param int $queryMinLength
+   *   The number of query characters below which a query source is not called
+   *   at all, so a remote backend is not asked to list everything; zero calls
+   *   it for the empty query too.
    */
   public function __construct(
     public readonly string $id,
@@ -195,9 +206,25 @@ final class Field {
     public readonly bool $hasSchemaDefault = FALSE,
     public readonly ?TableSpec $table = NULL,
     public readonly ?Template $template = NULL,
+    public readonly ?\Closure $optionsSource = NULL,
+    public readonly int $queryMinLength = 0,
   ) {
     if ($this->type === FieldType::Template && !$this->template instanceof Template) {
       throw new FormException(sprintf('Field "%s" is a template field but declares no pattern; add ->pattern() with the shape to fill in.', $this->id));
+    }
+
+    if ($this->optionsSource instanceof \Closure) {
+      if (!$this->type->supportsQuerySource()) {
+        throw new FormException(sprintf('Field "%s" of type "%s" cannot source its options from a query; only search and suggest fields show one.', $this->id, $this->type->value));
+      }
+
+      if ($options !== [] || $optionsLoader instanceof \Closure) {
+        throw new FormException(sprintf('Field "%s" declares both a query source and its own options; a query source replaces them, so declare only one.', $this->id));
+      }
+    }
+
+    if ($this->queryMinLength > 0 && !$this->optionsSource instanceof \Closure) {
+      throw new FormException(sprintf('Field "%s" declares a minimum query length but no query source to apply it to.', $this->id));
     }
 
     if ($this->multiple && !$this->type->supportsMultiple()) {
@@ -413,7 +440,10 @@ final class Field {
    *   the field is unconstrained or every item is allowed.
    */
   public function optionError(mixed $value): ?string {
-    if (!$this->type->constrainsToOptions() || $this->options === []) {
+    // A field that declares no options constrains nothing - but one whose
+    // options come from a query is constrained by whatever the query answered,
+    // and answering with nothing means the value does not exist.
+    if (!$this->type->constrainsToOptions() || ($this->options === [] && !$this->optionsSource instanceof \Closure)) {
       return NULL;
     }
 
@@ -455,6 +485,13 @@ final class Field {
   protected function scalarOptionError(string $value): ?string {
     if (in_array($value, $this->selectableValues(), TRUE)) {
       return NULL;
+    }
+
+    // Listing the allowed values is what makes the message useful, so when a
+    // query source found nothing there is no list to offer and naming the value
+    // is all that can honestly be said.
+    if ($this->options === []) {
+      return Translator::t('value "@value" was not found', ['@value' => $value]);
     }
 
     $option = $this->option($value);
