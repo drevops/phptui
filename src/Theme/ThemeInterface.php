@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Theme;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\ScopedKeyMap;
+use DrevOps\Tui\Primitive\Status;
 
 /**
  * A theme's look: one method per themeable element.
@@ -305,6 +306,44 @@ interface ThemeInterface {
    *   The composed loading line.
    */
   public function renderLoading(string $caption): string;
+
+  /**
+   * Render a bordered box: an optional heading above the body lines.
+   *
+   * @param string $title
+   *   The heading shown as the box's first line; empty for a bare box.
+   * @param list<string> $body
+   *   The body lines. Each is word-wrapped to the box's inner width, and an
+   *   empty entry stays an empty line so a caller can space the content out.
+   *
+   * @return list<string>
+   *   The box's physical lines; empty when there is neither title nor body.
+   */
+  public function renderBox(string $title, array $body): array;
+
+  /**
+   * Render a status line: the kind's glyph and the message, in its colour.
+   *
+   * @param \DrevOps\Tui\Primitive\Status $status
+   *   The kind of status.
+   * @param string $text
+   *   The message; its line breaks fold to spaces so the status stays one line.
+   *
+   * @return string
+   *   The composed line.
+   */
+  public function renderStatus(Status $status, string $text): string;
+
+  /**
+   * Render label/value pairs as an aligned definition list.
+   *
+   * @param array<string,string> $pairs
+   *   The values keyed by their label.
+   *
+   * @return list<string>
+   *   The list's physical lines; empty when there are no pairs.
+   */
+  public function renderDefinitions(array $pairs): array;
 
   /**
    * The masked-character symbol for secret values.

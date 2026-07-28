@@ -419,6 +419,73 @@ final class TuiTest extends TestCase {
     $this->assertSame("Packing\n", $terminal->output());
   }
 
+  public function testOutputWritesThemedChromeToTheGivenTerminal(): void {
+    $terminal = new BufferedTerminal();
+
+    (new Tui($this->demoForm()))->output($terminal)
+      ->box('Pick your fruit.', 'Welcome')
+      ->success('Preserves are ready')
+      ->definitions(['Jars' => '12']);
+
+    $output = $terminal->output();
+
+    $this->assertStringContainsString('Welcome', $output);
+    $this->assertStringContainsString('Pick your fruit.', $output);
+    $this->assertStringContainsString('✓ Preserves are ready', $output);
+    $this->assertStringContainsString('Jars', $output);
+  }
+
+  public function testOutputDropsAutoDetectedColourOffATty(): void {
+    $terminal = new BufferedTerminal();
+
+    // The in-memory stream is not a TTY, so escape codes would land in the
+    // captured text rather than on a terminal.
+    (new Tui($this->demoForm()))->output($terminal)->success('Preserves are ready');
+
+    $this->assertStringNotContainsString("\033", $terminal->output());
+  }
+
+  public function testOutputKeepsForcedColourOffATty(): void {
+    $terminal = new BufferedTerminal();
+
+    (new Tui($this->demoForm()))->color(TRUE)->output($terminal)->success('Preserves are ready');
+
+    // Forcing wins over the stream check: the default dark value colour shows.
+    $this->assertStringContainsString("\033[32m", $terminal->output());
+  }
+
+  public function testOutputHonoursForcedAsciiGlyphs(): void {
+    $terminal = new BufferedTerminal();
+
+    (new Tui($this->demoForm()))->unicode(FALSE)->output($terminal)->box('Fruit', 'Welcome');
+
+    $output = $terminal->output();
+
+    $this->assertStringContainsString('+', $output);
+    $this->assertStringNotContainsString('╭', $output);
+  }
+
+  public function testOutputWrapsToANarrowTerminal(): void {
+    // A frame sized past the terminal hard-wraps and corrupts the layout, so
+    // the box follows the narrower of the terminal and the default width.
+    $terminal = new BufferedTerminal(cols: 30);
+
+    (new Tui($this->demoForm()))->output($terminal)->box('The weekly produce box carries apples, pears, plums, carrots and a bunch of fresh herbs.');
+
+    foreach (explode("\n", trim($terminal->output(), "\n")) as $line) {
+      $this->assertLessThanOrEqual(30, Ansi::width($line));
+    }
+  }
+
+  public function testOutputUsesTheFacadeTheme(): void {
+    $terminal = new BufferedTerminal();
+
+    (new Tui($this->demoForm()))->theme('ember')->color(TRUE)->output($terminal)->info('Packing the order');
+
+    // Ember's accent (bold orange) carries into the info line.
+    $this->assertStringContainsString("\033[1;38;5;208m", $terminal->output());
+  }
+
   /**
    * A TUI over a small in-memory form.
    */

@@ -18,6 +18,7 @@ use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Input\ScopedKeyMap;
+use DrevOps\Tui\Primitive\Status;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\Box;
 use DrevOps\Tui\Render\HelpSection;
@@ -112,6 +113,21 @@ class DefaultTheme implements ThemeInterface {
    * row and a card line up on the same steps.
    */
   protected const int CONDITIONAL_INDENT = 2;
+
+  /**
+   * The left indent of a definition list, in columns.
+   */
+  protected const int DEFINITION_INDENT = 2;
+
+  /**
+   * The gap between a definition's label column and its value, in columns.
+   */
+  protected const int DEFINITION_GAP = 2;
+
+  /**
+   * The chrome a box spends per line: a border column and a gutter, each side.
+   */
+  protected const int BOX_CHROME = 4;
 
   /**
    * Whether colour (ANSI) is enabled, resolved from the "color" option.
@@ -1014,6 +1030,195 @@ class DefaultTheme implements ThemeInterface {
     $caption = $this->oneLine($caption);
 
     return $caption === '' ? $dots : $caption . ' ' . $dots;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderBox(string $title, array $body): array {
+    $content = [];
+
+    if ($title !== '') {
+      foreach (explode("\n", $this->normalizeLines($title)) as $line) {
+        $content[] = $this->heading($line);
+      }
+    }
+
+    foreach ($this->boxBody($body) as $line) {
+      $content[] = $line;
+    }
+
+    return $content === [] ? [] : $this->boxedNote($content);
+  }
+
+  /**
+   * Wrap and style a box's body lines to the width inside its border.
+   *
+   * @param list<string> $body
+   *   The body lines; an entry may itself carry newlines.
+   *
+   * @return list<string>
+   *   The styled lines, each fitting inside the border.
+   */
+  protected function boxBody(array $body): array {
+    // A box spends a border column and a gutter on each side, so the text wraps
+    // to what is left rather than being clipped against the border.
+    $width = max(1, $this->width - self::BOX_CHROME);
+    $lines = [];
+
+    foreach ($body as $source) {
+      foreach (explode("\n", $this->normalizeLines($source)) as $physical) {
+        foreach ($this->boxBodyLine($physical, $width) as $line) {
+          $lines[] = $line;
+        }
+      }
+    }
+
+    return $lines;
+  }
+
+  /**
+   * Wrap one physical body line to a width and style each piece.
+   *
+   * @param string $line
+   *   The source line, free of newlines.
+   * @param int $width
+   *   The width to wrap to.
+   *
+   * @return list<string>
+   *   The styled pieces.
+   */
+  protected function boxBodyLine(string $line, int $width): array {
+    $wrapped = Strings::wrap($line, $width);
+
+    // A line with no visible characters wraps to nothing; keeping it blank lets
+    // a caller space the content out.
+    if ($wrapped === []) {
+      return [''];
+    }
+
+    $pieces = [];
+
+    foreach ($wrapped as $chunk) {
+      foreach ($this->markupBody($chunk, FALSE) as $rendered) {
+        $pieces[] = $rendered;
+      }
+    }
+
+    return $pieces;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderStatus(Status $status, string $text): string {
+    // The glyph and the message share one colour so the line reads as a single
+    // statement, and the glyph alone still tells the five apart with colour off.
+    $line = rtrim($this->statusSymbol($status) . ' ' . $this->linkify($this->oneLine($text)));
+
+    return match ($status) {
+      Status::Note => $this->description($line),
+      Status::Info => $this->highlight($line),
+      Status::Success => $this->value($line),
+      Status::Warning => $this->indicator($line),
+      Status::Error => $this->error($line),
+    };
+  }
+
+  /**
+   * The glyph that leads a status line.
+   *
+   * @param \DrevOps\Tui\Primitive\Status $status
+   *   The kind of status.
+   *
+   * @return string
+   *   The glyph, respecting the theme's Unicode mode.
+   */
+  protected function statusSymbol(Status $status): string {
+    // Every glyph is one column wide in any terminal - none has an emoji
+    // presentation or an East Asian width - so a run of status lines aligns.
+    return match ($status) {
+      Status::Note => $this->unicode ? '•' : '-',
+      Status::Info => $this->unicode ? '›' : '>',
+      Status::Success => $this->unicode ? '✓' : '+',
+      Status::Warning => '!',
+      Status::Error => $this->unicode ? '✗' : 'x',
+    };
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderDefinitions(array $pairs): array {
+    $rows = [];
+
+    foreach ($pairs as $label => $value) {
+      // A numeric-string label arrives as an integer array key; the cast keeps
+      // the width maths and the styling working on strings either way.
+      $rows[] = [$this->oneLine((string) $label), $this->oneLine($value)];
+    }
+
+    if ($rows === []) {
+      return [];
+    }
+
+    $widest = 0;
+
+    foreach ($rows as $row) {
+      $widest = max($widest, Ansi::width($row[0]));
+    }
+
+    // A runaway label would squeeze the values to nothing, so the label column
+    // stops at half the frame and anything longer is clipped to it.
+    $column = max(1, min($widest, intdiv($this->width, 2)));
+    $value_width = max(1, $this->width - self::DEFINITION_INDENT - $column - self::DEFINITION_GAP);
+
+    $lines = [];
+
+    foreach ($rows as $row) {
+      foreach ($this->definitionLines($row[0], $row[1], $column, $value_width) as $line) {
+        $lines[] = $line;
+      }
+    }
+
+    return $lines;
+  }
+
+  /**
+   * Render one definition: its label, its value, and any wrapped continuation.
+   *
+   * @param string $label
+   *   The label.
+   * @param string $value
+   *   The value.
+   * @param int $column
+   *   The width of the label column.
+   * @param int $value_width
+   *   The width available to the value.
+   *
+   * @return list<string>
+   *   The pair's physical lines.
+   */
+  protected function definitionLines(string $label, string $value, int $column, int $value_width): array {
+    $indent = str_repeat(' ', self::DEFINITION_INDENT);
+    $gap = str_repeat(' ', self::DEFINITION_GAP);
+    $chunks = Strings::wrap($value, $value_width);
+
+    // A pair whose value is empty still shows its label.
+    if ($chunks === []) {
+      $chunks = [''];
+    }
+
+    $lines = [$indent . $this->label(Box::fit($label, $column)) . $gap . $this->value($chunks[0])];
+
+    // A wrapped value continues under the value column, clear of the labels.
+    $continuation = str_repeat(' ', self::DEFINITION_INDENT + $column + self::DEFINITION_GAP);
+
+    foreach (array_slice($chunks, 1) as $chunk) {
+      $lines[] = $continuation . $this->value($chunk);
+    }
+
+    return $lines;
   }
 
   /**
