@@ -34,8 +34,16 @@ collect no answer and never run inside the panel:
   with a spinner (unknown length) or a determinate bar (known total) for work
   that runs around the form.
 - `Tui::output()` (`DrevOps\Tui\Primitive\Output`) draws the static chrome
-  around a form: a box with an optional title, the five status lines of
-  `DrevOps\Tui\Primitive\Status`, and an aligned definition list.
+  around a form: boxes and cards, aligned tables, the five status lines of
+  `DrevOps\Tui\Primitive\Status`, definition lists, wrapped text, rules and a
+  banner.
+
+Every piece a primitive draws routes through a `render*()` method on the theme
+that takes only plain strings and arrays - never a `Field`, `Panel` or
+`Answers`. `renderCard()` and `renderTable()` are each the single renderer
+behind both the standalone piece and its in-panel counterpart (a note field's
+card and its grid), so a theme override restyles the two together. Keep it that
+way: a renderer that reaches for form state cannot be used standalone.
 
 
 ### Namespace Structure

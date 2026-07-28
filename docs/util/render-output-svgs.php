@@ -77,6 +77,25 @@ function outputSpecs(): array {
         ->error('The cherry shelf is empty')
         ->note('Anything short is refunded, never substituted');
     },
+    'table' => static function (Output $out): void {
+      $out->table(['Item', 'Crates', 'Picked'], [
+        ['Apricot', '4', 'Tuesday'],
+        ['Peach', '2', 'Tuesday'],
+        ['Carrot', '6', 'Wednesday'],
+      ]);
+    },
+    'card' => static function (Output $out): void {
+      $out->card('Loaded for delivery', 'Everything below leaves the shed at seven.', ['Item', 'Crates'], [
+        ['Apricot', '4'],
+        ['Peach', '2'],
+      ]);
+    },
+    'text' => static function (Output $out): void {
+      $out->banner('Produce Box', '1.2.3');
+      $out->rule();
+      $out->text('Every box is picked the morning it ships. Nothing is charged until the crates leave the packing shed.');
+      $out->rule();
+    },
     'definitions' => static function (Output $out): void {
       $out->box('Your order is packed.', 'Summary');
       $out->definitions([

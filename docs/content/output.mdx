@@ -11,7 +11,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 A form is rarely the whole program. A market-stall order opens with a welcome box, says what it is doing between steps, and closes with a summary and its next steps. The `output()` primitives draw that chrome with the same theme the panel uses, so the text around the form belongs to the same program as the form itself.
 
-`output()` returns a `DrevOps\Tui\Primitive\Output` carrying three pieces: a **box** with an optional title, five **status lines**, and an aligned **definition list**. Like [`progress()`](/progress), it is a primitive: it collects no answer and never runs inside the interactive panel. Hold onto the object and call it as often as you need - every call returns it, so the calls chain.
+`output()` returns a `DrevOps\Tui\Primitive\Output` carrying the pieces: a **box** and a **card**, an aligned **table**, five **status lines**, a **definition list**, wrapped **text**, a **rule** and a **banner**. Like [`progress()`](/progress), it is a primitive: it collects no answer and never runs inside the interactive panel. Hold onto the object and call it as often as you need - every call returns it, so the calls chain.
 
 ```php
 $out = $tui->output();
@@ -64,6 +64,61 @@ In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off
     <td><ThemedImage sources={{light: useBaseUrl('/output-box-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/output-box-dark-static-ascii-no-ansi.svg')}} alt="Box: ASCII + No ANSI" /></td>
   </tr>
 </table>
+
+## Table
+
+`table()` lays headers and rows into a bordered grid, sizing each column to its widest cell and capping the whole thing at the terminal. It is the same renderer a [note field's grid](/widgets/table) uses, so a standalone table matches the ones inside the panel.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/output-table-light-static.svg'), dark: useBaseUrl('/output-table-dark-static.svg')}} alt="Output table" />
+</p>
+
+```php
+$out->table(['Item', 'Crates', 'Picked'], [
+  ['Apricot', '4', 'Tuesday'],
+  ['Peach', '2', 'Tuesday'],
+  ['Carrot', '6', 'Wednesday'],
+]);
+```
+
+Pass an empty header list to draw the rows with no header row. When the natural width exceeds the terminal, the widest columns shrink and over-long cells are cut short with an ellipsis, so the borders always stay whole.
+
+Runnable in [`playground/17-output-table.php`](https://github.com/drevops/tui/blob/main/playground/17-output-table.php).
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-table-light-static.svg'), dark: useBaseUrl('/output-table-dark-static.svg')}} alt="Table: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-table-light-static-no-ansi.svg'), dark: useBaseUrl('/output-table-dark-static-no-ansi.svg')}} alt="Table: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-table-light-static-ascii.svg'), dark: useBaseUrl('/output-table-dark-static-ascii.svg')}} alt="Table: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/output-table-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/output-table-dark-static-ascii-no-ansi.svg')}} alt="Table: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+## Card
+
+`card()` is the full form of `box()`: a title, a body and a grid, boxed together when the three belong to one another. It is the same renderer behind a [note field's card](/widgets/note), so a standalone card and a note card are the same object drawn twice.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/output-card-light-static.svg'), dark: useBaseUrl('/output-card-dark-static.svg')}} alt="Output card" />
+</p>
+
+```php
+$out->card('Loaded for delivery', 'Everything below leaves the shed at seven.', ['Item', 'Crates'], [
+  ['Apricot', '4'],
+  ['Peach', '2'],
+]);
+```
+
+The grid is sized to fit inside the card's own border, so the two frames never collide. Pass `bordered: false` for the indented card a note field draws without `->border()`.
 
 ## Status lines
 
@@ -149,11 +204,37 @@ Runnable in [`playground/17-output-definitions.php`](https://github.com/drevops/
   </tr>
 </table>
 
+## Text, rules and a banner
+
+Three smaller pieces round out the set. `text()` wraps a paragraph to the terminal and renders the same [markdown subset](/markdown) a field description carries, so prose outside the form reads like prose inside it. `rule()` draws a themed separator between sections, and `banner()` opens the program with a logo above an optional version line.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/output-text-light-static.svg'), dark: useBaseUrl('/output-text-dark-static.svg')}} alt="Banner, rule and wrapped text" />
+</p>
+
+```php
+$out->banner('Produce Box', '1.2.3');
+$out->rule();
+$out->text('Every box is picked the morning it ships. Nothing is charged until the crates leave the packing shed.');
+```
+
+The markdown subset is off by default, exactly as it is for field descriptions - turn it on with `$tui->markdown()` before reaching for `output()`:
+
+```php
+$out = $tui->markdown()->output();
+
+$out->text("**Before you order:**\n\n- Pick a *delivery day* between Monday and Saturday\n- Leave a note if the gate code is not `1234`");
+```
+
+Runnable in [`playground/17-output-text.php`](https://github.com/drevops/tui/blob/main/playground/17-output-text.php).
+
 ## Theme-drawn
 
 The colours and glyphs come from the active [theme](/themes), the same way every widget does, and the pieces reuse the atoms the panel already styles: a box takes the frame's border and heading, a success line the value colour, an info line the theme's accent. So `->theme('ember')` prints info lines in ember's orange and `->theme('frost')` in frost's blue, with no extra configuration and nothing a custom theme has to override to inherit its own palette.
 
-To go further and restyle one piece outright, override its `render*()` method on your theme - `renderBox()`, `renderStatus()` or `renderDefinitions()`.
+To go further and restyle one piece outright, override its `render*()` method on your theme - `renderCard()`, `renderTable()`, `renderStatus()`, `renderDefinitions()`, `renderText()` or `renderBanner()`.
+
+`renderCard()` and `renderTable()` are each the single renderer behind both the standalone piece and its in-panel counterpart, so overriding one restyles the note card - or the note grid - at the same time. None of them takes a field, a panel or an answer set: they take plain strings and arrays, which is what makes them usable outside a form at all.
 
 ## Degrading off a TTY
 

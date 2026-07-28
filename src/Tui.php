@@ -757,6 +757,10 @@ final class Tui {
       $options['unicode'] = $this->resolvedUnicode();
     }
 
+    if (!isset($options['markdown'])) {
+      $options['markdown'] = $this->markdown;
+    }
+
     $options['mode'] ??= Mode::Dark;
 
     return $options;

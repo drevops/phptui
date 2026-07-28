@@ -479,6 +479,19 @@ final class TuiTest extends TestCase {
     }
   }
 
+  public function testOutputHonoursTheFacadeMarkdownSwitch(): void {
+    $off = new BufferedTerminal();
+    $on = new BufferedTerminal();
+
+    (new Tui($this->demoForm()))->output($off)->text('Pick a **ripe** one');
+    (new Tui($this->demoForm()))->markdown()->output($on)->text('Pick a **ripe** one');
+
+    // Off, the markup is literal text; on, the subset is consumed and styled.
+    $this->assertStringContainsString('**ripe**', $off->output());
+    $this->assertStringNotContainsString('**', $on->output());
+    $this->assertStringContainsString('ripe', $on->output());
+  }
+
   public function testOutputUsesTheFacadeTheme(): void {
     $terminal = new BufferedTerminal();
 
