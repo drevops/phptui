@@ -32,7 +32,7 @@ The actions are the fixed set of intents the widgets understand - the bindings b
 | `InsertSpace`                                    | Type a space                                                   |
 | `NewLine`                                        | Insert a newline (textarea)                                    |
 | `ExternalEdit`                                   | Hand off to the external editor (textarea)                     |
-| `Complete`                                       | Accept the ghost-text completion (text)                        |
+| `Complete`                                       | Accept the ghost-text completion (text, suggest)               |
 | `Increment` / `Decrement`                        | Step a bounded number                                          |
 | `Toggle`                                         | Check an option, or flip a two-state switch                    |
 | `SelectAll` / `SelectNone`                       | Check or clear every visible option                            |
@@ -59,7 +59,7 @@ What `default` actually declares, scope by scope. Every widget inherits the base
 | navigation                           | <kbd>?</kbd>                                                                 | `Help`                                           |
 | navigation                           | mouse wheel                                                                  | `ScrollUp` / `ScrollDown`                        |
 | number                               | <kbd>↑</kbd> / <kbd>↓</kbd>                                                  | `Increment` / `Decrement`                        |
-| text                                 | <kbd>Tab</kbd>                                                               | `Complete`                                       |
+| text, suggest                        | <kbd>Tab</kbd>                                                               | `Complete`                                       |
 | template                             | <kbd>Tab</kbd> / <kbd>↓</kbd> and <kbd>↑</kbd>                               | `MoveDown` and `MoveUp` (between slots)          |
 | textarea                             | <kbd>Enter</kbd>                                                             | `NewLine`                                        |
 | textarea                             | <kbd>Tab</kbd>                                                               | `Accept`                                         |

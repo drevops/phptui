@@ -157,6 +157,14 @@ function widgetSpecs(string $tree): array {
       'keys' => [...$open, 'C', 'h', $down],
       'rows' => 10,
     ],
+    'suggest-ghost' => [
+      'form' => Form::create('Ghost text')->panel('main', 'Suggest', function (PanelBuilder $p): void { $p->suggest('fruit', 'Fruit')->options(['Apple' => 'Apple', 'Apricot' => 'Apricot', 'Banana' => 'Banana', 'Cherry' => 'Cherry', 'Mango' => 'Mango'])->ghost(); }),
+      // The preview only exists while the query is a prefix of a candidate and
+      // nothing is highlighted, so the frames settle on typed text alone.
+      'keys' => [...$open, 'A', 'p'],
+      'static_keys' => [...$open, 'A', 'p'],
+      'rows' => 10,
+    ],
     'suggest-descriptions' => [
       'form' => Form::create('Option descriptions')->panel('main', 'Suggest', function (PanelBuilder $p): void { $p->suggest('fruit', 'Fruit')->option('Apple', 'Apple', description: 'Crisp and sweet, the everyday choice.')->option('Apricot', 'Apricot', description: 'Small and tart; best when soft.')->option('Banana', 'Banana', description: 'Rich in potassium; ripens off the tree.')->option('Cherry', 'Cherry', description: 'Short season; best eaten fresh.')->option('Mango', 'Mango', description: 'Fragrant and juicy when it yields to a squeeze.'); }),
       'keys' => [...$open, $down],
