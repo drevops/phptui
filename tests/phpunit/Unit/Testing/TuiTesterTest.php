@@ -140,7 +140,7 @@ final class TuiTesterTest extends TestCase {
   public function testUpdateModePreFillsDetectedValues(): void {
     vfsStream::setup('project', NULL, [
       'box.json' => '{"name": "Weekly Box"}',
-      '.env' => "SEASON=winter\n",
+      '.env' => 'SEASON=winter',
     ]);
     $dir = vfsStream::url('project');
 
@@ -168,7 +168,7 @@ final class TuiTesterTest extends TestCase {
   public function testUpdateModeReBadgesEditedDetectedValue(): void {
     vfsStream::setup('project', NULL, [
       'box.json' => '{"name": "Weekly Box"}',
-      '.env' => "SEASON=winter\n",
+      '.env' => 'SEASON=winter',
     ]);
     $dir = vfsStream::url('project');
 
