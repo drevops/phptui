@@ -102,7 +102,7 @@ $p->select('item', 'Item')->options(function (Context $c) use ($catalog): array 
 });
 ```
 
-**The callback's own signature says when it runs.** One that asks for the context follows the answers, as above; one that asks for nothing is the [loader](/progress#inside-the-form) it has always been - resolved once when the panel opens, showing a themed `Loading…` until it returns. Either way it returns the same `value => label` map the fixed form takes, and the context carries the answers collected so far alongside the target directory, the update flag and the version.
+**The callback's own signature says when it runs.** One that asks for the context follows the answers, as above; one that asks for nothing is the [loader](/progress#inside-the-form) it has always been - resolved once when the panel opens, showing a themed `Loading…` until it returns, and resolved up front when collection is headless and there is no panel to open. Either way it returns the same `value => label` map the fixed form takes, and the context carries the answers collected so far alongside the target directory, the update flag and the version.
 
 Options are for the types that have a list - `select`, `search`, `suggest`, `toggle` and `reorder`. Declaring them on any other type raises a `FormException` when the form is built, as does declaring a resolver beside a fixed list, a loader or a [query source](/progress#options-from-a-query), since the resolved set replaces them.
 

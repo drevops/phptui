@@ -9,7 +9,8 @@
  * another's answer. It runs as part of the form settling, before anything is
  * drawn or validated, so the narrowed list is what the panel offers, what a
  * headless payload is checked against and what the schema advertises - and a
- * choice the narrowed list no longer holds is dropped from the answers.
+ * choice the narrowed list no longer holds is dropped from the answers, unless
+ * it was supplied headlessly, which collection reports instead.
  *
  * Usage:
  *   php playground/19-dynamic-options.php
