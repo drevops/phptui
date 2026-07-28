@@ -208,7 +208,13 @@ class AgentHelp {
    *   field is not constrained to a closed set.
    */
   protected function optionValues(Field $field): array {
-    return $field->type->constrainsToOptions() ? $field->selectableValues() : [];
+    if (!$field->type->constrainsToOptions()) {
+      return [];
+    }
+
+    OptionsResolver::resolve($field, $this->context);
+
+    return $field->selectableValues();
   }
 
 }

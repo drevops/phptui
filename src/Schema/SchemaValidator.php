@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Schema;
 
+use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Translation\Translator;
@@ -12,8 +13,10 @@ use DrevOps\Tui\Translation\Translator;
  * Validates an answer set against the configuration.
  *
  * Checks value types, option membership and required questions, and skips
- * questions whose `when` condition is not met by the answer set. Returns a
- * list of actionable error messages (empty when the set is valid).
+ * questions whose `when` condition is not met by the answer set. A question
+ * whose options follow the answers is checked against the set those very
+ * answers resolve to. Returns a list of actionable error messages (empty when
+ * the set is valid).
  *
  * @package DrevOps\Tui\Schema
  */
@@ -61,6 +64,10 @@ class SchemaValidator {
 
         continue;
       }
+
+      // Options that follow the answers describe what this very answer set
+      // allows, so they are settled against it before membership is checked.
+      OptionsResolver::resolve($field, new Context('', $answers));
 
       $error = $this->validateValue($field, $answers[$field->id]);
       if ($error !== NULL) {

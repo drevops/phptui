@@ -39,6 +39,20 @@ class Engine {
   protected Deriver $deriver;
 
   /**
+   * What each field's dynamic option set was last resolved from, and to.
+   *
+   * A settling pass that leaves the answers as they were leaves the options
+   * they produced valid, so the resolver is called again only when what it
+   * reads has actually changed. The rows are remembered alongside them because
+   * a field's options are settled state anyone may write: a schema surface
+   * resolving them against a context of its own retires this memo rather than
+   * leaving the engine convinced they are still its own.
+   *
+   * @var array<string,array{answers:array<string,mixed>,rows:list<\DrevOps\Tui\Model\Option>}>
+   */
+  protected array $optionMemo = [];
+
+  /**
    * Construct an engine.
    *
    * @param \DrevOps\Tui\Model\FormDefinition $form
@@ -74,7 +88,7 @@ class Engine {
     [$values, $sources] = $this->resolveAll($fields, $inputs, $context);
     $values = $this->transformInputs($fields, $values, $sources);
     [$rules, $pinned] = $this->deriveRules($fields, $sources);
-    [$active, $values] = $this->stabilize($fields, $values, $rules, $pinned);
+    [$active, $values] = $this->stabilize($fields, $values, $rules, $pinned, $context, $this->suppliedInputs($sources));
     $this->loadQueryOptions($fields, $values, $active);
     $this->guardInputs($fields, $values, $sources, $active);
 
@@ -147,10 +161,7 @@ class Engine {
           // the field, but headlessly there is nobody to retype the query, so
           // the collection fails - as an engine error like every other, rather
           // than as whatever the consumer's backend happened to throw.
-          throw new EngineException(Translator::t('Could not load options for field "@id": @error', [
-            '@id' => $field->id,
-            '@error' => $throwable->getMessage(),
-          ]), $throwable->getCode(), $throwable);
+          throw $this->optionsError($field, $throwable);
         }
 
         foreach ($resolved as $row) {
@@ -160,6 +171,97 @@ class Engine {
 
       $field->options = array_values($rows);
     }
+  }
+
+  /**
+   * Resolve every dynamic option set against the answers, in place.
+   *
+   * A resolver reads the answers, so it is called again whenever they change
+   * and skipped when they have not - a settling pass that alters nothing costs
+   * nothing. The resolved set then decides the field's value: one that is no
+   * longer offered is dropped, a ranking is completed and a toggle falls back,
+   * so the answers never name an option that is not on offer. A value the
+   * caller supplied is left alone for the input guard to report, rather than
+   * disappearing without a word.
+   *
+   * @param \DrevOps\Tui\Model\Field[] $fields
+   *   The fields.
+   * @param array<string,mixed> $values
+   *   The current values keyed by field id.
+   * @param array<string,bool> $active
+   *   Which fields are active, keyed by field id.
+   * @param \DrevOps\Tui\Handler\Context $context
+   *   The run context the resolvers are called with.
+   * @param array<string,bool> $supplied
+   *   Field ids whose value was supplied by the caller.
+   *
+   * @return array<string,mixed>
+   *   The values, reconciled against the resolved option sets.
+   *
+   * @throws \DrevOps\Tui\Engine\EngineException
+   *   When a resolver cannot answer.
+   */
+  protected function resolveDynamicOptions(array $fields, array $values, array $active, Context $context, array $supplied): array {
+    $answers = $this->activeAnswers($fields, $values, $active);
+
+    foreach ($fields as $field) {
+      if (!$field->optionsFor instanceof \Closure) {
+        continue;
+      }
+
+      $memo = $this->optionMemo[$field->id] ?? NULL;
+      if ($memo !== NULL && $memo['answers'] === $answers && $memo['rows'] === $field->options) {
+        continue;
+      }
+
+      try {
+        $field->options = Option::resolved(($field->optionsFor)(new Context($context->directory, $answers, $context->update, $context->version)));
+      }
+      catch (\Throwable $throwable) {
+        throw $this->optionsError($field, $throwable);
+      }
+
+      $this->optionMemo[$field->id] = ['answers' => $answers, 'rows' => $field->options];
+
+      if ($supplied[$field->id] ?? FALSE) {
+        continue;
+      }
+
+      $values[$field->id] = $field->reconcileValue($values[$field->id] ?? NULL);
+    }
+
+    return $values;
+  }
+
+  /**
+   * The fields whose value the caller supplied, keyed by field id.
+   *
+   * @param array<string,\DrevOps\Tui\Engine\Source> $sources
+   *   The initial source per field id.
+   *
+   * @return array<string,bool>
+   *   TRUE for each field answered by a supplied input.
+   */
+  protected function suppliedInputs(array $sources): array {
+    return array_map(static fn(Source $source): bool => $source === Source::Input, $sources);
+  }
+
+  /**
+   * The engine error for consumer option code that could not answer.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field whose options were being resolved.
+   * @param \Throwable $throwable
+   *   What the consumer code threw.
+   *
+   * @return \DrevOps\Tui\Engine\EngineException
+   *   The engine error naming the field.
+   */
+  protected function optionsError(Field $field, \Throwable $throwable): EngineException {
+    return new EngineException(Translator::t('Could not load options for field "@id": @error', [
+      '@id' => $field->id,
+      '@error' => $throwable->getMessage(),
+    ]), $throwable->getCode(), $throwable);
   }
 
   /**
@@ -206,7 +308,7 @@ class Engine {
     [$values, $sources] = $this->resolveAll($fields, $inputs, $context);
     $values = $this->transformInputs($fields, $values, $sources);
     [$rules, $pinned] = $this->deriveRules($fields, $sources);
-    [$active, $values] = $this->stabilize($fields, $values, $rules, $pinned);
+    [$active, $values] = $this->stabilize($fields, $values, $rules, $pinned, $context, $this->suppliedInputs($sources));
 
     $all = array_fill_keys(array_keys($sources), TRUE);
 
@@ -225,14 +327,19 @@ class Engine {
    *   The current values keyed by field id.
    * @param array<string,bool> $pinned
    *   Derive-ruled field ids that must not be recomputed.
+   * @param \DrevOps\Tui\Handler\Context $context
+   *   The run context the dynamic option sets resolve against.
    *
    * @return array{array<string,bool>,array<string,mixed>}
    *   The active map and the settled values.
    */
-  public function settle(array $values, array $pinned): array {
+  public function settle(array $values, array $pinned, Context $context): array {
     $fields = $this->form->fields();
 
-    return $this->stabilize($fields, $values, $this->ruleMap($fields), $pinned);
+    // Nothing here was supplied: an edited value is the live one the user is
+    // working with, so a narrowed option set reconciles it rather than
+    // reporting it the way a headless input would be reported.
+    return $this->stabilize($fields, $values, $this->ruleMap($fields), $pinned, $context, []);
   }
 
   /**
@@ -542,11 +649,15 @@ class Engine {
    *   Derive rules keyed by field id.
    * @param array<string,bool> $pinned
    *   Field ids that must not be re-derived (input or detected).
+   * @param \DrevOps\Tui\Handler\Context $context
+   *   The run context the dynamic option sets resolve against.
+   * @param array<string,bool> $supplied
+   *   Field ids whose value was supplied by the caller, keyed by field id.
    *
    * @return array{array<string,bool>,array<string,mixed>}
    *   The active map and the settled values.
    */
-  protected function stabilize(array $fields, array $values, array $derive_rules, array $pinned): array {
+  protected function stabilize(array $fields, array $values, array $derive_rules, array $pinned, Context $context, array $supplied): array {
     $active = [];
     foreach ($fields as $field) {
       $active[$field->id] = TRUE;
@@ -557,6 +668,10 @@ class Engine {
     // the activation and fix-up interplay.
     $limit = count($fields) + 2;
     for ($i = 0; $i <= $limit; $i++) {
+      // Options resolve first: a set that follows the answers decides what the
+      // conditions below then see, and what a value is still allowed to be.
+      $values = $this->resolveDynamicOptions($fields, $values, $active, $context, $supplied);
+
       $derived = $this->deriver->derive($derive_rules, $values, $pinned);
 
       $next_active = [];

@@ -158,10 +158,10 @@ final class EngineConditionalTest extends TestCase {
   public function testSettleReappliesFormLogic(): void {
     $engine = $this->gatedEngine();
 
-    [$active] = $engine->settle(['theme' => 'custom', 'custom_theme' => 'mytheme'], []);
+    [$active] = $engine->settle(['theme' => 'custom', 'custom_theme' => 'mytheme'], [], new Context());
     $this->assertSame(['theme' => TRUE, 'custom_theme' => TRUE], $active);
 
-    [$active] = $engine->settle(['theme' => 'olivero', 'custom_theme' => 'mytheme'], []);
+    [$active] = $engine->settle(['theme' => 'olivero', 'custom_theme' => 'mytheme'], [], new Context());
     $this->assertFalse($active['custom_theme']);
   }
 

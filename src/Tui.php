@@ -517,10 +517,12 @@ final class Tui {
     // Restore this facade's language before rendering (see collect()).
     Translator::setShared($this->translator);
 
+    $context = $this->context($directory, $update, $version);
+
     // The full state, not collect()'s active-only answers: an inactive field
     // keeps its settled value, so a condition satisfied mid-session surfaces
     // the field with its default rather than an empty value.
-    [$values, $provenance] = $this->engine->resolveState([], $this->context($directory, $update, $version));
+    [$values, $provenance] = $this->engine->resolveState([], $context);
 
     $banner_text = $banner !== '' ? $banner : $this->form->banner;
 
@@ -535,6 +537,8 @@ final class Tui {
       clearOnExit: $this->clearOnExit,
       banner: $banner_text,
       version: $version,
+      context: $context,
+      engine: $this->engine,
     );
   }
 

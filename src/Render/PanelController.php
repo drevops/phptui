@@ -8,6 +8,7 @@ use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Engine\Engine;
+use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
@@ -218,6 +219,14 @@ class PanelController {
    *   An optional start banner (logo) shown before the interactive loop.
    * @param string $version
    *   An optional version string shown below the banner.
+   * @param \DrevOps\Tui\Handler\Context $context
+   *   The run context each settling passes to the closures that read it - the
+   *   option sets resolved from the answers; defaults to a bare context.
+   * @param \DrevOps\Tui\Engine\Engine|null $engine
+   *   The engine settling the form; NULL builds one over the same form and
+   *   handlers. Passing the one that resolved the initial state keeps a single
+   *   engine over the run, so what it has already resolved is not resolved
+   *   again on the first settling.
    */
   public function __construct(
     protected FormDefinition $form,
@@ -231,6 +240,8 @@ class PanelController {
     protected bool $clearOnExit = TRUE,
     protected string $banner = '',
     protected string $version = '',
+    protected Context $context = new Context(),
+    ?Engine $engine = NULL,
   ) {
     $this->keymap = $keymap ?? KeyMapManager::create();
     $this->externalEditor = $external_editor ?? new ExternalEditor();
@@ -238,7 +249,7 @@ class PanelController {
     $this->nav = $this->keymap->navigation();
     $this->scroller = new Scroller();
     $this->navigator = new Navigator(new Panel('hub', $form->title, '', panels: $form->panels, layout: $form->layout));
-    $this->engine = new Engine($form, $handlers ?? new HandlerRegistry());
+    $this->engine = $engine ?? new Engine($form, $handlers ?? new HandlerRegistry());
 
     // Settle once at construction so the activation map exists before the
     // first frame and a seeded value set is coherent with the form logic.
@@ -851,12 +862,13 @@ class PanelController {
   /**
    * Re-settle the form logic over the current values and clamp the cursor.
    *
-   * Runs the engine's settling - derive rules, conditional activation and
-   * fix-ups - so an interactive change propagates exactly as a headless input
-   * does, then keeps the cursor inside the possibly-changed item range.
+   * Runs the engine's settling - option sets resolved from the answers, derive
+   * rules, conditional activation and fix-ups - so an interactive change
+   * propagates exactly as a headless input does, then keeps the cursor inside
+   * the possibly-changed item range.
    */
   protected function resettle(): void {
-    [$this->active, $this->values] = $this->engine->settle($this->values, $this->pinnedDerives());
+    [$this->active, $this->values] = $this->engine->settle($this->values, $this->pinnedDerives(), $this->context);
 
     // The refusal describes the values as they were when submit was pressed, so
     // a change of any kind retires it rather than leaving it to contradict what
