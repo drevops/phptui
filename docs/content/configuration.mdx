@@ -4,6 +4,9 @@ description: 'Declare a form as a tree of panels and fields with the fluent buil
 keywords: ['form builder', 'derived values', 'conditional fields', 'fix-up', 'php']
 ---
 
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
 # Configuration
 
 A form is a tree of panels, each holding fields, and you build it fluently. Rules are named-argument spec objects, so your IDE completes them and a typo fails at declaration time - not half-way through a session:
@@ -57,5 +60,19 @@ $p->confirm('warning_label', 'Add a heat warning?')->when(Condition::all(new Con
 ```
 
 A form-level `->fixup(new Fixup(set: ..., to: ..., when: ...))` reconciles dependent answers on every settle pass - so an answer that stops making sense after another change is corrected instead of leaking through.
+
+### Showing the dependency
+
+A conditional field renders flush with every other field, so nothing on screen says which answer brought it into view. The `indent_conditional` theme option steps each one in from the fields that decide it - one step per condition in the chain, so a field shown behind three conditions sits three steps in and an unconditional field stays at the frame edge. It is off by default:
+
+```php
+$tui = (new Tui($form))->theme('default', ['indent_conditional' => TRUE]);
+```
+
+The steps follow the rules rather than the declaration order: a rule naming several fields takes the deepest of them, and a field whose rule names another conditional field sits one step further in than that one.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/conditional-indent-light-animated.svg'), dark: useBaseUrl('/conditional-indent-dark-animated.svg')}} alt="One answer opening a chain of conditional fields, each stepped in from the field that decides it" width="100%" />
+</p>
 
 Derived values, conditional fields and fix-ups each have a runnable script in [`playground/05-form-logic-*`](https://github.com/drevops/tui/tree/main/playground).

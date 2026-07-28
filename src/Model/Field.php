@@ -12,11 +12,12 @@ use DrevOps\Tui\Translation\Translator;
 /**
  * A single question in the configuration model.
  *
- * The definition is immutable except for two runtime concerns: a field may
- * declare an options loader that is resolved once and cached back
- * (`$options`, `$optionsLoader`), and a progress row tracks its live indicator
- * (`$progressCurrent`, `$progressLabel`) as its work advances. Those four
- * properties are the only mutable state.
+ * The definition is immutable except for three concerns resolved once and
+ * written back: a field may declare an options loader whose result is cached
+ * (`$options`, `$optionsLoader`), a progress row tracks its live indicator
+ * (`$progressCurrent`, `$progressLabel`) as its work advances, and the owning
+ * form definition stamps the field's place in the condition graph
+ * (`$conditionalDepth`). Those five properties are the only mutable state.
  *
  * @package DrevOps\Tui\Model
  */
@@ -28,6 +29,18 @@ final class Field {
    * @var list<\DrevOps\Tui\Model\Option>
    */
   public array $options;
+
+  /**
+   * How many conditions deep the field sits, resolved by its form definition.
+   *
+   * Zero for a field that shows unconditionally, one for a field whose `when`
+   * rule references only unconditional fields, and one more for each further
+   * link in the chain. A field outside any form definition keeps the zero it
+   * is constructed with.
+   *
+   * @see \DrevOps\Tui\Model\FormDefinition::resolveConditionalDepths()
+   */
+  public int $conditionalDepth = 0;
 
   /**
    * File picker only: the type, extension and size limits on a valid pick.

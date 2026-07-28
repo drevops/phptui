@@ -434,6 +434,50 @@ EXPECT;
 }
 
 /**
+ * The expect body driving the indented conditional-fields panel TUI.
+ *
+ * @return string
+ *   The expect script body.
+ */
+function conditionalIndentInteraction(): string {
+  return <<<'EXPECT'
+# Wait for the hub, then drill into the order panel.
+expect "Produce order" {
+    pause 2000
+    safe_send "\r"
+}
+
+# Category: pick Vegetable. The whole chain opens at once, each field one
+# step further in than the field that decides it.
+pause 1500
+safe_send "\r"
+pause 1000
+arrow_down
+pause 600
+safe_send "\r"
+pause 3500
+
+# Drop Carrot from the basket: the two fields hanging off it fold away and
+# the rows below step back out to the frame edge.
+arrow_down
+pause 800
+safe_send "\r"
+pause 1000
+toggle_space
+pause 800
+safe_send "\r"
+pause 3000
+
+# Back to the hub and submit.
+press_escape
+pause 1000
+arrow_down
+pause 600
+safe_send "\r"
+EXPECT;
+}
+
+/**
  * The expect body driving the conditional-fields panel TUI.
  *
  * @return string
@@ -979,6 +1023,18 @@ function getJobs(string $project_dir): array {
     'rows' => 22,
     'cols' => 72,
     'verify' => 'Herb bundle',
+  ];
+
+  // Indented conditional fields: one answer opens a three-link chain, each
+  // field stepped in from the one that decides it. The second link only
+  // renders once the first one did, so it proves the chain opened past its
+  // head; "Courier" would not, matching the monospace font stack as well.
+  $jobs['conditional-indent'] = [
+    'command' => 'env LINES=22 COLUMNS=72 php ' . $project_dir . '/playground/05-form-logic-conditional-indent.php',
+    'interact' => conditionalIndentInteraction(),
+    'rows' => 22,
+    'cols' => 72,
+    'verify' => 'Weekly delivery?',
   ];
 
   // The vim key-bindings preset: j/k navigation and the ? help overlay. The
