@@ -29,7 +29,7 @@ trait QueryOptionsCapableTrait {
    * A session's queries are short-lived and short, so the cap is about never
    * growing without bound rather than about memory pressure.
    */
-  protected const int QUERY_CACHE_SIZE = 50;
+  public const int QUERY_CACHE_SIZE = 50;
 
   /**
    * Whether a query source is driving the rows.
@@ -79,13 +79,6 @@ trait QueryOptionsCapableTrait {
    */
   public function isQueryDriven(): bool {
     return $this->queryDriven;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isQueryLoading(): bool {
-    return $this->queryLoading;
   }
 
   /**

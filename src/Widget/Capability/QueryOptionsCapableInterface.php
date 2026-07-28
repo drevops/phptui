@@ -79,12 +79,4 @@ interface QueryOptionsCapableInterface {
    */
   public function failQuery(string $query, string $message): void;
 
-  /**
-   * Whether a call to the source is in flight.
-   *
-   * @return bool
-   *   TRUE while the widget waits on the source.
-   */
-  public function isQueryLoading(): bool;
-
 }

@@ -143,6 +143,7 @@ return [
   'toggle' => 'toggle',
   'up' => 'up',
   'value "@value" is not one of: @options' => 'value "@value" is not one of: @options',
+  'value "@value" was not found' => 'value "@value" was not found',
   'value must be a list' => 'value must be a list',
   'week' => 'week',
   'yes' => 'yes',

@@ -440,7 +440,10 @@ final class Field {
    *   the field is unconstrained or every item is allowed.
    */
   public function optionError(mixed $value): ?string {
-    if (!$this->type->constrainsToOptions() || $this->options === []) {
+    // A field that declares no options constrains nothing - but one whose
+    // options come from a query is constrained by whatever the query answered,
+    // and answering with nothing means the value does not exist.
+    if (!$this->type->constrainsToOptions() || ($this->options === [] && !$this->optionsSource instanceof \Closure)) {
       return NULL;
     }
 
@@ -482,6 +485,13 @@ final class Field {
   protected function scalarOptionError(string $value): ?string {
     if (in_array($value, $this->selectableValues(), TRUE)) {
       return NULL;
+    }
+
+    // Listing the allowed values is what makes the message useful, so when a
+    // query source found nothing there is no list to offer and naming the value
+    // is all that can honestly be said.
+    if ($this->options === []) {
+      return Translator::t('value "@value" was not found', ['@value' => $value]);
     }
 
     $option = $this->option($value);
