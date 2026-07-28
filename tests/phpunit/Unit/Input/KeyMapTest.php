@@ -63,6 +63,14 @@ final class KeyMapTest extends TestCase {
     yield 'number down decrements' => [Scope::field(FieldType::Number), Key::named(KeyName::Down), Action::Decrement, TRUE];
     yield 'number up is no longer move up' => [Scope::field(FieldType::Number), Key::named(KeyName::Up), Action::MoveUp, FALSE];
     yield 'number left still moves the caret' => [Scope::field(FieldType::Number), Key::named(KeyName::Left), Action::MoveLeft, TRUE];
+    // A rating is walked along its scale, so both axes step it and neither
+    // keeps its base movement meaning.
+    yield 'rating right increments' => [Scope::field(FieldType::Rating), Key::named(KeyName::Right), Action::Increment, TRUE];
+    yield 'rating up increments' => [Scope::field(FieldType::Rating), Key::named(KeyName::Up), Action::Increment, TRUE];
+    yield 'rating left decrements' => [Scope::field(FieldType::Rating), Key::named(KeyName::Left), Action::Decrement, TRUE];
+    yield 'rating down decrements' => [Scope::field(FieldType::Rating), Key::named(KeyName::Down), Action::Decrement, TRUE];
+    yield 'rating right is no longer move right' => [Scope::field(FieldType::Rating), Key::named(KeyName::Right), Action::MoveRight, FALSE];
+    yield 'rating enter accepts' => [Scope::field(FieldType::Rating), Key::named(KeyName::Enter), Action::Accept, TRUE];
     // Text.
     yield 'text enter accepts' => [Scope::field(FieldType::Text), Key::named(KeyName::Enter), Action::Accept, TRUE];
     yield 'text space inserts' => [Scope::field(FieldType::Text), Key::named(KeyName::Space), Action::InsertSpace, TRUE];

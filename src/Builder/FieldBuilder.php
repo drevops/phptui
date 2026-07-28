@@ -638,10 +638,10 @@ final class FieldBuilder {
   /**
    * Rating only: caption points on the scale.
    *
-   * A caption names what a point means ("Poor", "Excellent") and is shown while
-   * that point is chosen. Points may be captioned sparsely - captioning only the
-   * two ends labels the scale without claiming a reading for every step in
-   * between - and an uncaptioned point still answers with its number.
+   * A caption names what a point means ("Poor", "Excellent") and is shown
+   * while that point is chosen. Points may be captioned sparsely - captioning
+   * only the two ends labels the scale without claiming a reading for every
+   * step in between - and an uncaptioned point still answers with its number.
    *
    * @param array<int,string> $captions
    *   The caption of each point, keyed by the point; every key must be within
@@ -1368,8 +1368,8 @@ final class FieldBuilder {
    * Assemble a rating's scale: a closed range, defaulting to one through five.
    *
    * Unlike a number, a rating is never open-ended - the points are what it
-   * draws - so both ends always resolve, and the arrows walk the range one point
-   * at a time rather than by a declared increment.
+   * draws - so both ends always resolve, and the arrows walk the range one
+   * point at a time rather than by a declared increment.
    *
    * @return \DrevOps\Tui\Model\NumberBounds
    *   The scale.

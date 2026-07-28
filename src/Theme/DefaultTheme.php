@@ -1048,9 +1048,9 @@ class DefaultTheme implements ThemeInterface {
     [$on, $off] = $this->unicode ? ['●', '○'] : ['*', '-'];
     $caption = $this->oneLine($caption);
 
-    // Clamp onto the scale: this method is public, so a direct call with a point
-    // outside the range must not hand str_repeat() a negative count. The lowest
-    // point still fills one, because it is a point like any other.
+    // Clamp onto the scale: this method is public, so a direct call with a
+    // point outside the range must not hand str_repeat() a negative count. The
+    // lowest point still fills one, because it is a point like any other.
     $points = max(1, $max - $min + 1);
     $filled = max(1, min($points, $current - $min + 1));
 
@@ -2871,10 +2871,13 @@ class DefaultTheme implements ThemeInterface {
    *   The rendered scale.
    */
   protected function renderRating(Field $field, mixed $value): string {
-    $min = $field->bounds?->min ?? 0;
+    // The builder always closes a rating's scale, so the fallbacks only catch a
+    // hand-built field: a row degrades to a single point rather than crashing
+    // the frame it is drawn in.
+    $min = $field->bounds->min ?? 0;
     $point = is_int($value) || is_float($value) ? (int) $value : $min;
 
-    return $this->renderScale($point, $min, $field->bounds?->max ?? 0, $field->ratingCaptions[$point] ?? '');
+    return $this->renderScale($point, $min, $field->bounds->max ?? 0, $field->ratingCaptions[$point] ?? '');
   }
 
   /**

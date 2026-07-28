@@ -95,9 +95,9 @@ enum FieldType: string {
    * Whether the field's answer is a whole number rather than text.
    *
    * The two integer types reach the same shape from opposite directions: a
-   * number is typed digit by digit, a rating is stepped along a scale - but both
-   * answer with an int, so the type check, the environment coercion and the
-   * machine schemas treat them alike.
+   * number is typed digit by digit, a rating is stepped along a scale - but
+   * both answer with an int, so the type check, the environment coercion and
+   * the machine schemas treat them alike.
    *
    * @return bool
    *   TRUE for the integer-valued types.

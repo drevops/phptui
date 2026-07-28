@@ -285,6 +285,22 @@ final class SchemaGeneratorTest extends TestCase {
     $this->assertStringContainsString('"value":"private"', $json);
   }
 
+  public function testRatingDescribesItsScale(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->rating('taste', 'Taste')->min(0)->max(10);
+      })
+      ->build();
+
+    $json = (string) json_encode((new SchemaGenerator($form))->generate());
+
+    $this->assertStringContainsString('"type":"rating"', $json);
+    $this->assertStringContainsString('"min":0', $json);
+    $this->assertStringContainsString('"max":10', $json);
+    // The points are the steps, so a rating never advertises an increment.
+    $this->assertStringContainsString('"step":null', $json);
+  }
+
   public function testDescribesReorderField(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {

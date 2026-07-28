@@ -481,6 +481,95 @@ final class FormTest extends TestCase {
     $this->assertNotInstanceOf(NumberBounds::class, $form->field('plain')?->bounds);
   }
 
+  public function testRatingScaleAssembled(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $panel): void {
+        $panel->rating('nps', 'Recommend us')->min(0)->max(10);
+        $panel->rating('taste', 'Taste');
+      })
+      ->build();
+
+    $nps = $form->field('nps');
+    $this->assertInstanceOf(Field::class, $nps);
+    $this->assertInstanceOf(NumberBounds::class, $nps->bounds);
+    $this->assertSame(0, $nps->bounds->min);
+    $this->assertSame(10, $nps->bounds->max);
+    $this->assertSame(0, $nps->default);
+
+    // A rating with nothing declared still carries a scale: one to five,
+    // sitting on its lowest point.
+    $taste = $form->field('taste');
+    $this->assertInstanceOf(NumberBounds::class, $taste?->bounds);
+    $this->assertSame(1, $taste->bounds->min);
+    $this->assertSame(5, $taste->bounds->max);
+    $this->assertNull($taste->bounds->step);
+    $this->assertSame(1, $taste->default);
+  }
+
+  public function testRatingKeepsDeclaredDefault(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->rating('taste')->default(4))
+      ->build();
+
+    $this->assertSame(4, $form->field('taste')?->default);
+  }
+
+  public function testRatingCaptionsAssembled(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->rating('taste')->captions([1 => 'Poor', 5 => 'Excellent']))
+      ->build();
+
+    $this->assertSame([1 => 'Poor', 5 => 'Excellent'], $form->field('taste')?->ratingCaptions);
+  }
+
+  public function testRatingStepThrows(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Field "r" declares a step of 2 on a scale whose points are its steps');
+
+    Form::create('T')
+      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->rating('r')->step(2))
+      ->build();
+  }
+
+  #[DataProvider('dataProviderRatingCollapsedScaleThrows')]
+  public function testRatingCollapsedScaleThrows(int $min, int $max): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage(sprintf('Field "r" declares a scale from %d to %d; a scale needs at least two points', $min, $max));
+
+    Form::create('T')
+      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->rating('r')->min($min)->max($max))
+      ->build();
+  }
+
+  /**
+   * Data provider for testRatingCollapsedScaleThrows().
+   *
+   * @return \Iterator<string, array{int, int}>
+   *   The declared ends of a scale holding fewer than two points.
+   */
+  public static function dataProviderRatingCollapsedScaleThrows(): \Iterator {
+    yield 'one point' => [3, 3];
+    yield 'inverted' => [5, 2];
+  }
+
+  public function testRatingCaptionOutsideTheScaleThrows(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Field "r" captions the point 9, which is outside its scale of between 1 and 5.');
+
+    Form::create('T')
+      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->rating('r')->captions([9 => 'Nope']))
+      ->build();
+  }
+
+  public function testCaptionsOnNonRatingFieldThrows(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Field "t" of type "text" draws no scale to caption');
+
+    Form::create('T')
+      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->text('t')->captions([1 => 'Poor']))
+      ->build();
+  }
+
   public function testDateBoundsAssembled(): void {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $panel): void {

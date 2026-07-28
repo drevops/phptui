@@ -24,6 +24,7 @@ use DrevOps\Tui\Widget\FilePickerWidget;
 use DrevOps\Tui\Widget\NumberWidget;
 use DrevOps\Tui\Widget\PasswordWidget;
 use DrevOps\Tui\Widget\PauseWidget;
+use DrevOps\Tui\Widget\RatingWidget;
 use DrevOps\Tui\Widget\ReorderWidget;
 use DrevOps\Tui\Widget\SearchWidget;
 use DrevOps\Tui\Widget\SelectWidget;
@@ -55,6 +56,7 @@ final class WidgetFactoryTest extends TestCase {
     $this->assertInstanceOf(SelectWidget::class, $factory->create($this->multiFieldWithOptions(FieldType::Select), ['a']));
     $this->assertInstanceOf(SuggestWidget::class, $factory->create($this->fieldWithOptions(FieldType::Suggest), 'a'));
     $this->assertInstanceOf(NumberWidget::class, $factory->create($this->field(FieldType::Number), 42));
+    $this->assertInstanceOf(RatingWidget::class, $factory->create($this->ratingField(), 3));
     $this->assertInstanceOf(CalendarWidget::class, $factory->create($this->field(FieldType::Calendar), '2026-07-15'));
     $this->assertInstanceOf(TextareaWidget::class, $factory->create($this->field(FieldType::Textarea), 'x'));
     $this->assertInstanceOf(PasswordWidget::class, $factory->create($this->field(FieldType::Password), 'x'));
@@ -153,6 +155,18 @@ final class WidgetFactoryTest extends TestCase {
     $this->assertContains('adjust', $labels);
     $widget->handle(Key::named(KeyName::Up));
     $this->assertSame(6, $widget->value());
+  }
+
+  public function testRatingScaleAndCaptionsPassedThrough(): void {
+    $widget = (new WidgetFactory())->create($this->ratingField(), 3);
+
+    $this->assertStringContainsString('●●●○○ 3/5 Fair', Ansi::strip($widget->view(new DefaultTheme())));
+  }
+
+  public function testRatingWithNonNumericCurrentStartsAtTheLowestPoint(): void {
+    $widget = (new WidgetFactory())->create($this->ratingField(), 'oops');
+
+    $this->assertSame(1, $widget->value());
   }
 
   public function testDateBoundsPassedThrough(): void {
@@ -475,6 +489,16 @@ final class WidgetFactoryTest extends TestCase {
    */
   protected function templateField(): Field {
     return new Field('f', 'F', '', FieldType::Template, '', template: new Template('{{a}}-{{b}}'));
+  }
+
+  /**
+   * A rating field over a one-to-five scale with one captioned point.
+   *
+   * @return \DrevOps\Tui\Model\Field
+   *   The field.
+   */
+  protected function ratingField(): Field {
+    return new Field('f', 'F', '', FieldType::Rating, 1, bounds: new NumberBounds(1, 5), ratingCaptions: [3 => 'Fair']);
   }
 
   /**

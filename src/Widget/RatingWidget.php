@@ -15,13 +15,13 @@ use DrevOps\Tui\Widget\Capability\StepCapableInterface;
 /**
  * A graded answer: a point chosen from a scale, accepted as an int.
  *
- * The arrows walk the scale one point at a time and stop at either end - a grade
- * has a floor and a ceiling, so unlike a two-state switch the ends do not wrap
- * round. A digit selects its point outright when the scale reaches it.
+ * The arrows walk the scale one point at a time and stop at either end - a
+ * grade has a floor and a ceiling, so unlike a two-state switch the ends do
+ * not wrap round. A digit selects its point outright when the scale reaches it.
  *
- * The ends are plain integers rather than {@see \DrevOps\Tui\Model\NumberBounds}
- * because a scale is closed by construction: there is no point to draw beyond
- * either end, so neither may be left open.
+ * The ends are plain integers rather than a bounds object because a scale is
+ * closed by construction: there is no point to draw beyond either end, so
+ * neither may be left open.
  *
  * @package DrevOps\Tui\Widget
  */

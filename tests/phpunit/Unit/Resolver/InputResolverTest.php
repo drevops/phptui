@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Tests\Unit\Resolver;
 
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Resolver\InputResolver;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -170,6 +171,21 @@ final class InputResolverTest extends TestCase {
     $this->assertSame(['a', 'b'], $inputs['tags']);
   }
 
+  public function testRatingCoercion(): void {
+    $inputs = (new InputResolver('APP_'))->resolve($this->fields(), '', [
+      'APP_TASTE' => ' 4 ',
+    ]);
+
+    $this->assertSame(4, $inputs['taste']);
+  }
+
+  public function testRatingNonIntegralValueStaysString(): void {
+    // Left as typed so the engine rejects it instead of it becoming a 0.
+    $inputs = (new InputResolver('APP_'))->resolve($this->fields(), '', ['APP_TASTE' => 'great']);
+
+    $this->assertSame('great', $inputs['taste']);
+  }
+
   public function testReorderCoercion(): void {
     $inputs = (new InputResolver('APP_'))->resolve($this->fields(), '', ['APP_RANK' => 'c, a, b']);
 
@@ -188,6 +204,7 @@ final class InputResolverTest extends TestCase {
       new Field('agree', 'Agree', '', FieldType::Confirm, FALSE),
       new Field('mods', 'Mods', '', FieldType::Select, [], multiple: TRUE),
       new Field('port', 'Port', '', FieldType::Number, 0),
+      new Field('taste', 'Taste', '', FieldType::Rating, 1, bounds: new NumberBounds(1, 5)),
       new Field('ack', 'Ack', '', FieldType::Pause, TRUE),
       new Field('tags', 'Tags', '', FieldType::Search, [], multiple: TRUE),
       new Field('rank', 'Rank', '', FieldType::Reorder, []),
