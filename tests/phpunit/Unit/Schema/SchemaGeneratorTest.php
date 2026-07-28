@@ -48,6 +48,8 @@ final class SchemaGeneratorTest extends TestCase {
           ],
           'default' => 'standard',
           'required' => TRUE,
+          'env' => NULL,
+          'env_aliases' => [],
           'min' => NULL,
           'max' => NULL,
           'step' => NULL,
@@ -73,6 +75,8 @@ final class SchemaGeneratorTest extends TestCase {
           'options' => [],
           'default' => '',
           'required' => FALSE,
+          'env' => NULL,
+          'env_aliases' => [],
           'min' => NULL,
           'max' => NULL,
           'step' => NULL,
@@ -98,6 +102,8 @@ final class SchemaGeneratorTest extends TestCase {
           'options' => [],
           'default' => 0,
           'required' => FALSE,
+          'env' => NULL,
+          'env_aliases' => [],
           'min' => 1,
           'max' => 65535,
           'step' => 5,
@@ -123,6 +129,8 @@ final class SchemaGeneratorTest extends TestCase {
           'options' => [],
           'default' => '',
           'required' => FALSE,
+          'env' => NULL,
+          'env_aliases' => [],
           'min' => NULL,
           'max' => NULL,
           'step' => NULL,
@@ -165,6 +173,8 @@ final class SchemaGeneratorTest extends TestCase {
           'options' => [],
           'default' => 'valley-a',
           'required' => FALSE,
+          'env' => NULL,
+          'env_aliases' => [],
           'min' => NULL,
           'max' => NULL,
           'step' => NULL,
@@ -211,6 +221,8 @@ final class SchemaGeneratorTest extends TestCase {
           ],
           'default' => '',
           'required' => FALSE,
+          'env' => NULL,
+          'env_aliases' => [],
           'min' => NULL,
           'max' => NULL,
           'step' => NULL,
@@ -303,6 +315,42 @@ final class SchemaGeneratorTest extends TestCase {
     $this->assertIsArray($prompts);
     $ids = array_column($prompts, 'id');
     $this->assertSame(['name'], $ids);
+  }
+
+  public function testDescribesTheEnvironmentVariablesAnsweringField(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('crate_size', 'Crate size');
+        $p->text('grade', 'Grade')->env('LEGACY_GRADE')->envAliases(['OLD_GRADE']);
+      })
+      ->build();
+
+    $prompts = (new SchemaGenerator($form, new Context(), 'APP_'))->generate()['prompts'];
+    $this->assertIsArray($prompts);
+
+    $mechanical = $prompts[0];
+    $this->assertIsArray($mechanical);
+    $this->assertSame('APP_CRATE_SIZE', $mechanical['env']);
+    $this->assertSame([], $mechanical['env_aliases']);
+
+    $declared = $prompts[1];
+    $this->assertIsArray($declared);
+    $this->assertSame('LEGACY_GRADE', $declared['env']);
+    $this->assertSame(['OLD_GRADE'], $declared['env_aliases']);
+  }
+
+  public function testDescribesNoVariableForBareMechanicalName(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('crate_size', 'Crate size');
+      })
+      ->build();
+
+    $prompts = (new SchemaGenerator($form))->generate()['prompts'];
+    $this->assertIsArray($prompts);
+    $first = $prompts[0];
+    $this->assertIsArray($first);
+    $this->assertNull($first['env']);
   }
 
   public function testResolvesClosureDefault(): void {

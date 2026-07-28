@@ -8,16 +8,17 @@ use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Discovery\DiscoverInterface;
+use DrevOps\Tui\Resolver\EnvNameResolver;
 
 /**
  * Generates a machine-readable schema of every configured question.
  *
  * Each prompt entry carries `{id, type, label, description, hint, placeholder,
- * options, default, required}` plus the declared bounds and the `when`,
- * `derive` and `discover` rules, so external tooling can drive or validate the
- * form without loading the PHP declaration. A closure default is resolved
- * against the context (see {@see DefaultResolver}) so a computed default
- * advertises a real value.
+ * options, default, required}` plus the declared bounds, the environment
+ * variables that answer it and the `when`, `derive` and `discover` rules, so
+ * external tooling can drive or validate the form without loading the PHP
+ * declaration. A closure default is resolved against the context (see
+ * {@see DefaultResolver}) so a computed default advertises a real value.
  *
  * @package DrevOps\Tui\Schema
  */
@@ -31,8 +32,11 @@ class SchemaGenerator {
    * @param \DrevOps\Tui\Handler\Context $context
    *   The context a closure default is evaluated against; defaults to an empty
    *   context carrying no prior answers.
+   * @param string $envPrefix
+   *   The prefix for per-question env variable names (e.g. "APP_"); under an
+   *   empty prefix only a field naming its own variable advertises one.
    */
-  public function __construct(protected FormDefinition $form, protected Context $context = new Context()) {
+  public function __construct(protected FormDefinition $form, protected Context $context = new Context(), protected string $envPrefix = '') {
   }
 
   /**
@@ -42,6 +46,7 @@ class SchemaGenerator {
    *   The schema, keyed by `prompts`.
    */
   public function generate(): array {
+    $names = new EnvNameResolver($this->envPrefix);
     $prompts = [];
 
     foreach ($this->form->fields() as $field) {
@@ -61,6 +66,8 @@ class SchemaGenerator {
         'options' => $this->options($field),
         'default' => DefaultResolver::resolve($field, $this->context),
         'required' => $field->required,
+        'env' => $names->isAdvertisable($field) ? $names->canonical($field) : NULL,
+        'env_aliases' => $names->aliases($field),
         'min' => $field->bounds?->min,
         'max' => $field->bounds?->max,
         'step' => $field->bounds?->step,

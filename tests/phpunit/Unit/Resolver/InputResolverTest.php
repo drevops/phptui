@@ -92,6 +92,61 @@ final class InputResolverTest extends TestCase {
     $this->assertSame(['machine_name' => 'x'], $inputs);
   }
 
+  public function testDeclaredEnvNameReplacesTheMechanicalOne(): void {
+    $fields = [new Field('crate_size', 'Crate size', '', FieldType::Text, '', envName: 'LEGACY_CRATE')];
+
+    $inputs = (new InputResolver('APP_'))->resolve($fields, '', [
+      'LEGACY_CRATE' => 'large',
+      'APP_CRATE_SIZE' => 'small',
+    ]);
+
+    $this->assertSame(['crate_size' => 'large'], $inputs);
+  }
+
+  public function testMechanicalNameIsNotReadOnceReplaced(): void {
+    $fields = [new Field('crate_size', 'Crate size', '', FieldType::Text, '', envName: 'LEGACY_CRATE')];
+
+    $this->assertSame([], (new InputResolver('APP_'))->resolve($fields, '', ['APP_CRATE_SIZE' => 'small']));
+  }
+
+  public function testAliasAnswersWhenTheCanonicalNameIsUnset(): void {
+    $fields = [new Field('crate_size', 'Crate size', '', FieldType::Text, '', envAliases: ['OLD_CRATE'])];
+
+    $inputs = (new InputResolver('APP_'))->resolve($fields, '', ['OLD_CRATE' => 'large']);
+
+    $this->assertSame(['crate_size' => 'large'], $inputs);
+  }
+
+  public function testCanonicalNameWinsOverAnAlias(): void {
+    $fields = [new Field('crate_size', 'Crate size', '', FieldType::Text, '', envAliases: ['OLD_CRATE'])];
+
+    $inputs = (new InputResolver('APP_'))->resolve($fields, '', [
+      'OLD_CRATE' => 'large',
+      'APP_CRATE_SIZE' => 'small',
+    ]);
+
+    $this->assertSame(['crate_size' => 'small'], $inputs);
+  }
+
+  public function testEarlierAliasWinsOverLaterOne(): void {
+    $fields = [new Field('crate_size', 'Crate size', '', FieldType::Text, '', envAliases: ['OLD_CRATE', 'OLDER_CRATE'])];
+
+    $inputs = (new InputResolver('APP_'))->resolve($fields, '', [
+      'OLDER_CRATE' => 'small',
+      'OLD_CRATE' => 'large',
+    ]);
+
+    $this->assertSame(['crate_size' => 'large'], $inputs);
+  }
+
+  public function testAliasValueIsCoercedLikeTheCanonicalOne(): void {
+    $fields = [new Field('organic', 'Organic', '', FieldType::Confirm, FALSE, envAliases: ['OLD_ORGANIC'])];
+
+    $inputs = (new InputResolver('APP_'))->resolve($fields, '', ['OLD_ORGANIC' => 'yes']);
+
+    $this->assertTrue($inputs['organic']);
+  }
+
   public function testFilePickerCoercion(): void {
     $inputs = (new InputResolver('APP_'))->resolve($this->fields(), '', [
       'APP_PATHS' => 'a/b, c/d',

@@ -329,6 +329,36 @@ final class FormTest extends TestCase {
     $this->assertSame([], $form->field('plain')?->completion);
   }
 
+  public function testEnvNameAndAliasesStored(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $panel): void {
+        $panel->text('crate_size', 'Crate size')->env('LEGACY_CRATE')->envAliases(['OLD_CRATE', 'OLDER_CRATE']);
+        $panel->text('grade', 'Grade');
+      })
+      ->build();
+
+    $crate = $form->field('crate_size');
+    $this->assertInstanceOf(Field::class, $crate);
+    $this->assertSame('LEGACY_CRATE', $crate->envName);
+    $this->assertSame(['OLD_CRATE', 'OLDER_CRATE'], $crate->envAliases);
+
+    // A field that names nothing keeps the mechanical name and no aliases.
+    $grade = $form->field('grade');
+    $this->assertInstanceOf(Field::class, $grade);
+    $this->assertSame('', $grade->envName);
+    $this->assertSame([], $grade->envAliases);
+  }
+
+  public function testEnvAliasesAreReindexed(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $panel): void {
+        $panel->text('crate_size', 'Crate size')->envAliases([2 => 'OLD_CRATE', 5 => 'OLDER_CRATE']);
+      })
+      ->build();
+
+    $this->assertSame(['OLD_CRATE', 'OLDER_CRATE'], $form->field('crate_size')?->envAliases);
+  }
+
   public function testTemplateAssembled(): void {
     $grade = fn (string $value): ?string => $value === 'a' ? NULL : 'nope';
 

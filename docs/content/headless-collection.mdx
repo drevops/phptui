@@ -13,11 +13,27 @@ $answers = $tui->collect('{"name":"Weekly Box"}');
 $answers = $tui->run($prompts, '1.0.0'); // Headless when prompts are supplied; otherwise the TUI on a TTY.
 ```
 
+## Naming the variables
+
 Environment overrides are named `<PREFIX><FIELD_ID>` - the uppercased field id under a prefix. `->envPrefix('MYAPP_')` declares that namespace on the form, a `new Tui($form, env_prefix: 'MYAPP_')` constructor argument overrides it, and if you set neither, the prefix is `TUI_`:
 
 ```bash
 MYAPP_TIMEZONE=UTC php my-installer.php
 ```
+
+A field can name its own variable instead, and can list further names it also answers to, so a form can adopt a naming scheme that already exists rather than imposing one:
+
+```php
+$panel->text('crate_size', 'Crate size')
+  ->env('ORCHARD_CRATE')
+  ->envAliases(['LEGACY_CRATE_SIZE']);
+```
+
+The name `->env()` declares is absolute: the form's prefix is not applied to it, which is what lets it reproduce a variable published elsewhere character for character. It replaces `<PREFIX><FIELD_ID>` rather than adding to it, so once a field names itself the mechanical name is no longer read - list it in `->envAliases()` if you want to keep honouring it.
+
+Aliases are absolute for the same reason, and they are consulted in the order you declare them, after the canonical name. So with the field above, `ORCHARD_CRATE` wins wherever it is set, `LEGACY_CRATE_SIZE` answers only when it is not, and a deployment can move from the old name to the new one without a cut-over that breaks the scripts already in use.
+
+Both names reach machine-readable output: `agentHelp()` advertises the canonical name as `env` with the rest in `x-env-aliases`, and `schema()` carries the same pair as `env` and `env_aliases`. See [AI agents](/ai-agents).
 
 ## Self-describing answers
 

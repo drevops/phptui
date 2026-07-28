@@ -574,7 +574,7 @@ final class Tui {
    *   The schema.
    */
   public function schema(?Context $context = NULL): array {
-    return (new SchemaGenerator($this->form, $context ?? new Context()))->generate();
+    return (new SchemaGenerator($this->form, $context ?? new Context(), $this->envPrefix))->generate();
   }
 
   /**
