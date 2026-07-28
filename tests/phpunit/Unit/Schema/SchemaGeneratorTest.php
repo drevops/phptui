@@ -136,6 +136,46 @@ final class SchemaGeneratorTest extends TestCase {
     $this->assertSame($expected, (new SchemaGenerator($form))->generate());
   }
 
+  public function testDescribesTemplateShape(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{grade}}')->default('valley-a');
+      })
+      ->build();
+
+    // The pattern travels as declared, with its slots named in shape order, so
+    // external tooling can drive the field rather than guess at its shape.
+    $expected = [
+      'prompts' => [
+        [
+          'id' => 'crate',
+          'type' => 'template',
+          'label' => 'Crate label',
+          'description' => '',
+          'options' => [],
+          'default' => 'valley-a',
+          'required' => FALSE,
+          'min' => NULL,
+          'max' => NULL,
+          'step' => NULL,
+          'min_selections' => NULL,
+          'max_selections' => NULL,
+          'min_date' => NULL,
+          'max_date' => NULL,
+          'week_start' => NULL,
+          'template' => '{{orchard}}-{{grade}}',
+          'placeholders' => ['orchard', 'grade'],
+          'when' => NULL,
+          'derive' => NULL,
+          'discover' => NULL,
+          'depends_on' => [],
+        ],
+      ],
+    ];
+
+    $this->assertSame($expected, (new SchemaGenerator($form))->generate());
+  }
+
   public function testExcludesNonSelectableOptions(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
