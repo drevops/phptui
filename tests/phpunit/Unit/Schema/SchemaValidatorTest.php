@@ -47,7 +47,7 @@ final class SchemaValidatorTest extends TestCase {
   public static function dataProviderValidate(): \Iterator {
     yield 'valid full set' => [['name' => 'Acme', 'profile' => 'standard', 'agree' => TRUE, 'mods' => ['a', 'b']], NULL];
     yield 'missing required' => [['profile' => 'standard'], 'Missing required question "name".'];
-    yield 'required empty string' => [['name' => ''], 'Question "name" is required.'];
+    yield 'required empty string' => [['name' => ''], 'Question "name": name is required.'];
     yield 'wrong type' => [['name' => 'Acme', 'agree' => 'yes'], 'Question "agree" must be a boolean.'];
     yield 'invalid select option' => [['name' => 'Acme', 'profile' => 'bogus'], 'Question "profile": value "bogus" is not one of: standard, minimal.'];
     yield 'disabled select option' => [['name' => 'Acme', 'profile' => 'demo'], 'Question "profile": option "demo" is disabled: unavailable.'];
@@ -92,6 +92,48 @@ final class SchemaValidatorTest extends TestCase {
     yield 'reorder wrong type' => [['name' => 'Acme', 'ranking' => 'notalist'], 'Question "ranking" must be a list.'];
     yield 'reorder incomplete rejected' => [['name' => 'Acme', 'ranking' => ['x', 'y']], 'Question "ranking": must rank every option exactly once (x, y, z).'];
     yield 'reorder unknown item rejected' => [['name' => 'Acme', 'ranking' => ['x', 'y', 'w']], 'Question "ranking": value "w" is not one of: x, y, z.'];
+  }
+
+  /**
+   * An empty value on a required field reports the field's required message.
+   *
+   * @param string $id
+   *   The id of the field under test.
+   * @param mixed $value
+   *   The value supplied for the field under test.
+   * @param string|null $expected_error
+   *   The expected error message, or NULL when the value is accepted.
+   */
+  #[DataProvider('dataProviderRequired')]
+  public function testRequired(string $id, mixed $value, ?string $expected_error): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('name', 'Produce name')->required();
+        $p->select('crates', 'Crates')->multiple()->required()->option('a')->option('b');
+        $p->text('plot', 'Garden plot name')->required(message: 'The garden plot name is required.');
+        $p->text('note', 'Delivery note');
+      })
+      ->build();
+
+    $answers = ['name' => 'Pear', 'crates' => ['a'], 'plot' => 'North bed', 'note' => ''];
+    $answers[$id] = $value;
+
+    $this->assertSame($expected_error === NULL ? [] : [$expected_error], (new SchemaValidator($form))->validate($answers));
+  }
+
+  /**
+   * Data provider for testRequired().
+   *
+   * @return \Iterator<string,array{string,mixed,string|null}>
+   *   The field id, the value supplied for it and the expected error.
+   */
+  public static function dataProviderRequired(): \Iterator {
+    yield 'empty string' => ['name', '', 'Question "name": Produce name is required.'];
+    yield 'empty list' => ['crates', [], 'Question "crates": Crates is required.'];
+    yield 'declared message wins over the label' => ['plot', '', 'Question "plot": The garden plot name is required.'];
+    yield 'non-empty value accepted' => ['name', 'Pear', NULL];
+    // Emptiness is only rejected where the field asked for it.
+    yield 'empty value on an optional field accepted' => ['note', '', NULL];
   }
 
   public function testNumericStringOptionMembership(): void {

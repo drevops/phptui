@@ -82,9 +82,33 @@ class WidgetFactory {
 
     // The field declaration always wins over the registry's convention-resolved
     // behaviour, mirroring the engine's headless resolution.
-    $widget->setHandlers($field->validate ?? $this->handlers?->validator($field->id), $field->transform ?? $this->handlers?->transformer($field->id));
+    $widget->setHandlers($this->guarded($field, $field->validate ?? $this->handlers?->validator($field->id)), $field->transform ?? $this->handlers?->transformer($field->id));
 
     return $widget->setKeys($this->keymap->forField($field->type, $field->multiple));
+  }
+
+  /**
+   * A validator that rejects an empty value before the field's own runs.
+   *
+   * Composed here rather than inside the widgets so every type enforces
+   * emptiness identically, in the same order the engine validates a supplied
+   * input.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field.
+   * @param \Closure|null $validator
+   *   The field's resolved validator, or NULL when it declares none.
+   *
+   * @return \Closure|null
+   *   The guarded validator, the resolved one unchanged for an optional field,
+   *   or NULL when there is nothing to enforce.
+   */
+  protected function guarded(Field $field, ?\Closure $validator): ?\Closure {
+    if (!$field->required) {
+      return $validator;
+    }
+
+    return static fn(mixed $value): ?string => $field->requiredViolation($value) ?? ($validator instanceof \Closure ? $validator($value) : NULL);
   }
 
   /**

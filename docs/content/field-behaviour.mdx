@@ -1,7 +1,7 @@
 ---
 title: Field behavior
-description: 'Declare dynamic defaults, validation and transforms as closures on the field - or in handler classes - and detect defaults with discovery rules.'
-keywords: ['validation', 'transform', 'dynamic default', 'discovery', 'handler']
+description: 'Mark fields required, and declare dynamic defaults, validation and transforms as closures on the field - or in handler classes - and detect defaults with discovery rules.'
+keywords: ['required', 'validation', 'transform', 'dynamic default', 'discovery', 'handler']
 ---
 
 import ThemedImage from '@theme/ThemedImage';
@@ -16,7 +16,7 @@ use DrevOps\Tui\Handler\Context;
 
 $p->text('name', 'Produce name')
   ->default(fn(Context $c): string => basename($c->directory))
-  ->validate(fn(mixed $v): ?string => is_string($v) && trim($v) !== '' ? NULL : 'A name is required.')
+  ->validate(fn(mixed $v): ?string => is_string($v) && preg_match('/\s/u', $v) === 1 ? 'Use a single word.' : NULL)
   ->transform(fn(mixed $v): mixed => is_string($v) ? trim($v) : $v);
 ```
 
@@ -33,6 +33,26 @@ Reusable validators and transformers live as public static methods on a class in
 The TUI only collects. It presents answers and never applies them - **writing files, renaming directories, acting on the answers is your job**. A consumer that processes answers defines its own processor interface, keeping the form for collection and the processors for side effects; one class per field can carry both its `process()` and the reusable static behavior. (This is exactly what a consumer CLI does.)
 
 Both declaration styles are runnable in [`playground/06-field-behaviour-*`](https://github.com/drevops/tui/tree/main/playground).
+
+## Required fields
+
+`->required()` makes an empty value an error, so a validator never has to check emptiness itself. The message is derived from the field label, or declared per field:
+
+```php
+$p->text('item', 'Item')->required();
+// -> "Item is required."
+
+$p->select('basket', 'Basket')->multiple()
+  ->required(message: 'Add at least one item to the basket.')
+  ->option('apple', 'Apple')->option('carrot', 'Carrot');
+```
+
+Empty means an empty string, an empty list or `null` - so a cleared text field, a multiple choice with nothing picked, and a missing JSON value all trip it, while a `false` toggle and a `0` number are answers and pass.
+
+The check runs before the field's own validator and before the type check, in both collection modes:
+
+- Headlessly, an empty supplied input throws an `EngineException` naming the field. A field nothing was supplied for keeps its default - reporting that gap belongs to [`Tui::validate()`](/ai-agents), which lists it as a missing question.
+- Interactively, committing an empty value keeps the editor open with the message shown like any other validation error, and the Submit button refuses to finish the form while any active required field is empty. Cancel is never blocked, and a field hidden by its `when` condition is not asked for.
 
 ## Discovery
 

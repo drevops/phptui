@@ -54,6 +54,9 @@ final class Field {
    *   {@see Option::list()}).
    * @param bool $required
    *   Whether a value is required.
+   * @param string $requiredMessage
+   *   The message shown when a required field is left empty; empty derives one
+   *   from the label.
    * @param \DrevOps\Tui\Condition\ConditionInterface|null $when
    *   The conditional-visibility rule, evaluated by the engine.
    * @param \DrevOps\Tui\Derive\Derive|null $derive
@@ -147,6 +150,7 @@ final class Field {
     public readonly mixed $default,
     array $options = [],
     public readonly bool $required = FALSE,
+    public readonly string $requiredMessage = '',
     public readonly ?ConditionInterface $when = NULL,
     public readonly ?Derive $derive = NULL,
     public readonly DiscoverInterface|\Closure|null $discover = NULL,
@@ -272,6 +276,34 @@ final class Field {
    */
   public function selectableValues(): array {
     return Option::selectableValues($this->options);
+  }
+
+  /**
+   * The whole message for an empty value on a required field, else NULL.
+   *
+   * Unlike the neighbouring checks this returns a complete sentence rather than
+   * a fragment: the message is the consumer's to declare, so it cannot be
+   * framed by a caller.
+   *
+   * @param mixed $value
+   *   The candidate value.
+   *
+   * @return string|null
+   *   The declared message, or one derived from the label; NULL when the field
+   *   is optional or the value is not empty.
+   */
+  public function requiredViolation(mixed $value): ?string {
+    // Strict comparison, so a FALSE confirm and a 0 number are values, not
+    // omissions.
+    if (!$this->required || !in_array($value, ['', [], NULL], TRUE)) {
+      return NULL;
+    }
+
+    if ($this->requiredMessage !== '') {
+      return Translator::t($this->requiredMessage);
+    }
+
+    return Translator::t('@label is required.', ['@label' => Translator::t($this->label)]);
   }
 
   /**

@@ -181,6 +181,11 @@ class PanelController {
   protected array $active = [];
 
   /**
+   * The message from the last submit refused for an empty required field.
+   */
+  protected ?string $submitError = NULL;
+
+  /**
    * Construct a controller.
    *
    * The order groups the arguments by role - the form and its theme, the
@@ -540,6 +545,10 @@ class PanelController {
       // The action row always detaches from the items above it.
       $body[] = '';
 
+      if ($this->submitError !== NULL) {
+        $body[] = $this->theme->renderPanelError($this->submitError);
+      }
+
       if ($this->cursor >= $base) {
         $cursor_line = count($body);
       }
@@ -844,6 +853,11 @@ class PanelController {
    */
   protected function resettle(): void {
     [$this->active, $this->values] = $this->engine->settle($this->values, $this->pinnedDerives());
+
+    // The refusal describes the values as they were when submit was pressed, so
+    // a change of any kind retires it rather than leaving it to contradict what
+    // the panel now shows.
+    $this->submitError = NULL;
 
     $count = $this->itemCountFor($this->navigator->current()) + ($this->buttonsVisible() ? self::BUTTON_COUNT : 0);
     $this->cursor = max(0, min(max(0, $count - 1), $this->cursor));
@@ -1342,8 +1356,53 @@ class PanelController {
       return;
     }
 
+    $cancelled = $index === self::CANCEL_BUTTON;
+
+    // Abandoning the form is always allowed - only completing it has to answer
+    // for the required fields.
+    if (!$cancelled && !$this->guardRequired()) {
+      return;
+    }
+
     $this->done = TRUE;
-    $this->cancelled = $index === self::CANCEL_BUTTON;
+    $this->cancelled = $cancelled;
+  }
+
+  /**
+   * Whether every active required field holds a value, else refuse the submit.
+   *
+   * A field left untouched never opens its editor, so the widget's own guard
+   * never runs on it; this is the boundary where an empty required answer is
+   * caught instead. The message names the field, which is as far as pointing
+   * can go: the buttons live on the root panel and every field lives inside a
+   * sub-panel, so there is never an offending row on the panel being shown.
+   *
+   * @return bool
+   *   TRUE when the form may be completed; FALSE after recording the first
+   *   offending field's message.
+   */
+  protected function guardRequired(): bool {
+    foreach ($this->form->fields() as $field) {
+      if ($field->type->isDisplayOnly()) {
+        continue;
+      }
+      if (!($this->active[$field->id] ?? FALSE)) {
+        continue;
+      }
+
+      $missing = $field->requiredViolation($this->values[$field->id] ?? NULL);
+      if ($missing === NULL) {
+        continue;
+      }
+
+      $this->submitError = $missing;
+
+      return FALSE;
+    }
+
+    $this->submitError = NULL;
+
+    return TRUE;
   }
 
   /**

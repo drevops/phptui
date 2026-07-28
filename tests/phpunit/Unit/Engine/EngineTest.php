@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Engine;
 
+use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
@@ -150,6 +151,19 @@ final class EngineTest extends TestCase {
     $answers = $engine->collect([], new Context('project', [], TRUE));
 
     $this->assertSame($root . '/ok.yml', $answers->value('cfg'));
+  }
+
+  public function testCollectRejectsDetectedEmptyValueOnRequiredField(): void {
+    $engine = $this->engine(function (PanelBuilder $p): void {
+      $p->text('name', 'Produce name')->required()->default('Pear')->discover(fn(Context $context): string => '');
+    });
+
+    // A blank detected value would leave a required field empty, so it is not
+    // adopted: the field falls back to its declared default instead.
+    $answers = $engine->collect([], new Context('project', [], TRUE));
+
+    $this->assertSame('Pear', $answers->value('name'));
+    $this->assertSame(Provenance::Default, $answers->provenanceOf('name'));
   }
 
   /**

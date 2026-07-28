@@ -29,7 +29,7 @@ loop each field, in order
   alt update mode and no input
     Eng -> Disc: discover(directory)
     Disc --> Eng: discovered value
-    note right of Eng: adopted only when it passes the\nfield's type, bounds and options
+    note right of Eng: adopted only when it passes the field's\nemptiness, type, bounds and options
   end
   note right of Eng: input > discovered > declared default > static default
 end
@@ -53,7 +53,7 @@ note right of Eng: apply fix-ups; repeat until stable
 loop each active field with a supplied input
   Eng -> B: validate(value)
   B --> Eng: error or null
-  note right of Eng: type and bounds checked first;\nthe first error throws
+  note right of Eng: a required field's emptiness, then type\nand bounds; the first error throws
 end
 
 Eng -> Ans: build(values, provenance)

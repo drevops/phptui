@@ -280,6 +280,36 @@ final class FormTest extends TestCase {
     $this->assertSame($transformer, $field->transform);
   }
 
+  public function testRequiredFlagAndMessageStored(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $panel): void {
+        $panel->text('plain', 'Plain');
+        $panel->text('name', 'Produce name')->required();
+        $panel->text('plot', 'Garden plot name')->required(message: 'The garden plot name is required.');
+        $panel->text('note', 'Delivery note')->required(FALSE);
+      })
+      ->build();
+
+    $plain = $form->field('plain');
+    $this->assertInstanceOf(Field::class, $plain);
+    $this->assertFalse($plain->required);
+    $this->assertSame('', $plain->requiredMessage);
+
+    $name = $form->field('name');
+    $this->assertInstanceOf(Field::class, $name);
+    $this->assertTrue($name->required);
+    $this->assertSame('', $name->requiredMessage);
+
+    $plot = $form->field('plot');
+    $this->assertInstanceOf(Field::class, $plot);
+    $this->assertTrue($plot->required);
+    $this->assertSame('The garden plot name is required.', $plot->requiredMessage);
+
+    $note = $form->field('note');
+    $this->assertInstanceOf(Field::class, $note);
+    $this->assertFalse($note->required);
+  }
+
   public function testCompletionSourceStored(): void {
     $list = ['acme-site', 'acme-app'];
     $closure = fn (array $answers): array => [];

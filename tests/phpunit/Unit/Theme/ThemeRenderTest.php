@@ -636,6 +636,18 @@ final class ThemeRenderTest extends TestCase {
     $this->assertStringNotContainsString("\033[1;7m", (new DefaultTheme())->renderButtonBar(['Submit', 'Cancel'], -1));
   }
 
+  public function testPanelError(): void {
+    $row = (new DefaultTheme())->renderPanelError('Item is required.');
+
+    // The row is indented like the button bar it sits above, and painted red.
+    $this->assertSame('  Item is required.', Ansi::strip($row));
+    $this->assertStringContainsString("\033[31m", $row);
+
+    // A declared message carrying line breaks still occupies one row.
+    $folded = (new DefaultTheme())->renderPanelError("Item is required.\r\nPick one.\rOr two.\nOr three.");
+    $this->assertSame('  Item is required. Pick one. Or two. Or three.', Ansi::strip($folded));
+  }
+
   public function testDimRecedesText(): void {
     // With colour, dim wraps the text; with colour off, it is left untouched.
     $this->assertSame("\033[2mx\033[0m", (new DefaultTheme(40))->dim('x'));

@@ -1294,6 +1294,147 @@ final class PanelControllerTest extends TestCase {
     $this->assertSame('b', $controller->answers()->value('name'));
   }
 
+  public function testSubmitRefusedWhileRequiredFieldIsEmpty(): void {
+    $controller = $this->requiredController(['name' => '', 'note' => '']);
+
+    // The root holds the one panel plus the buttons: Submit is index 1.
+    $controller->handle(Key::named(KeyName::Down));
+    $controller->handle(Key::named(KeyName::Enter));
+
+    $this->assertFalse($controller->isDone());
+    $this->assertStringContainsString('Produce name is required.', Ansi::strip($controller->frame(24)));
+
+    // Drill into the panel, fill the field, and come back out.
+    $controller->handle(Key::named(KeyName::Up));
+    $controller->handle(Key::named(KeyName::Enter));
+    $controller->handle(Key::named(KeyName::Enter));
+    $this->assertTrue($controller->isEditing());
+    $controller->handle(Key::char('P'));
+    $controller->handle(Key::named(KeyName::Enter));
+    $controller->handle(Key::named(KeyName::Escape));
+
+    // The accepted edit retired the message and the submit now goes through.
+    $this->assertStringNotContainsString('Produce name is required.', Ansi::strip($controller->frame(24)));
+    $controller->handle(Key::named(KeyName::Down));
+    $controller->handle(Key::named(KeyName::Enter));
+    $this->assertTrue($controller->isDone());
+    $this->assertFalse($controller->isCancelled());
+  }
+
+  public function testSubmitAllowedWhenRequiredFieldsHoldValues(): void {
+    $controller = $this->requiredController(['name' => 'Pear', 'note' => '']);
+
+    $controller->handle(Key::named(KeyName::Down));
+    $controller->handle(Key::named(KeyName::Enter));
+
+    // An empty optional field never blocks the submit.
+    $this->assertTrue($controller->isDone());
+    $this->assertFalse($controller->isCancelled());
+  }
+
+  public function testCancelIgnoresAnEmptyRequiredField(): void {
+    $controller = $this->requiredController(['name' => '', 'note' => '']);
+
+    // Past the panel and Submit to Cancel (index 2).
+    $controller->handle(Key::named(KeyName::Down));
+    $controller->handle(Key::named(KeyName::Down));
+    $controller->handle(Key::named(KeyName::Enter));
+
+    $this->assertTrue($controller->isDone());
+    $this->assertTrue($controller->isCancelled());
+  }
+
+  public function testSubmitIgnoresAnInactiveRequiredField(): void {
+    $form = Form::create('Demo')
+      ->panel('stall', 'Stall', function (PanelBuilder $p): void {
+        $p->text('mode', 'Mode');
+        $p->text('plot', 'Garden plot name')->required()->when(new Condition('mode', eq: 'custom'));
+      })
+      ->build();
+
+    $controller = new PanelController($form, $this->plainTheme(), values: ['mode' => 'standard', 'plot' => '']);
+
+    $controller->handle(Key::named(KeyName::Down));
+    $controller->handle(Key::named(KeyName::Enter));
+
+    $this->assertTrue($controller->isDone());
+  }
+
+  public function testSubmitIgnoresRequiredNote(): void {
+    // A note carries no answer, so marking one required can never withhold the
+    // submit.
+    $form = Form::create('Demo')
+      ->panel('stall', 'Stall', function (PanelBuilder $p): void {
+        $p->note('intro', 'Intro')->required();
+        $p->text('name', 'Produce name');
+      })
+      ->build();
+
+    $controller = new PanelController($form, $this->plainTheme(), values: ['name' => 'Pear']);
+
+    $controller->handle(Key::named(KeyName::Down));
+    $controller->handle(Key::named(KeyName::Enter));
+
+    $this->assertTrue($controller->isDone());
+  }
+
+  public function testModalKeepsItsEditsAndTheFormSubmitCatchesTheGap(): void {
+    // A dialog's Apply means "keep my edits and close", so it is not withheld -
+    // trapping the user would leave Discard, which drops every dialog edit, as
+    // the only way out. The form submit is the boundary that catches the gap.
+    $form = Form::create('Demo')
+      ->panel('edit', 'Quick edit', function (PanelBuilder $m): void {
+        $m->modal('Apply', 'Discard');
+        $m->text('plot', 'Garden plot name')->required();
+      })
+      ->build();
+
+    $controller = new PanelController($form, $this->plainTheme(), values: ['plot' => '']);
+
+    // Open the dialog, move to Apply, and close it with the field still empty.
+    $controller->handle(Key::named(KeyName::Enter));
+    $controller->handle(Key::named(KeyName::Down));
+    $controller->handle(Key::named(KeyName::Enter));
+    $this->assertSame('Demo', $controller->currentPanel()->title);
+    $this->assertFalse($controller->isDone());
+
+    // The form's own submit refuses, naming the field the dialog left empty.
+    $controller->handle(Key::named(KeyName::Down));
+    $controller->handle(Key::named(KeyName::Enter));
+    $this->assertFalse($controller->isDone());
+    $this->assertStringContainsString('Garden plot name is required.', Ansi::strip($controller->frame(24)));
+  }
+
+  /**
+   * A controller over one required and one optional field on a single panel.
+   *
+   * @param array<string,mixed> $values
+   *   The seeded answer values.
+   *
+   * @return \DrevOps\Tui\Render\PanelController
+   *   The controller.
+   */
+  protected function requiredController(array $values): PanelController {
+    $form = Form::create('Demo')
+      ->panel('stall', 'Stall', function (PanelBuilder $p): void {
+        $p->text('name', 'Produce name')->required();
+        $p->text('note', 'Delivery note');
+      })
+      ->build();
+
+    return new PanelController($form, $this->plainTheme(), values: $values);
+  }
+
+  /**
+   * An unstyled, borderless theme for frame assertions.
+   *
+   * @return \DrevOps\Tui\Theme\DefaultTheme
+   *   The theme.
+   */
+  protected function plainTheme(): DefaultTheme {
+    return new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Normal]);
+  }
+
   public function testEditEnforcesHandlerBehaviour(): void {
     $form = Form::create('Demo')
       ->panel('stall', 'Stall', function (PanelBuilder $p): void {
