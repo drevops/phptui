@@ -131,17 +131,6 @@ final class Field {
    *   An `fn(): array<string,string>` loading the options on demand, or NULL
    *   for static options. Resolved lazily when the panel opens (headless
    *   collection resolves it up front); until then the field reads as loading.
-   * @param \Closure|null $optionsSource
-   *   An
-   *   `fn(string $query, array<string,mixed> $answers): array<string,string>`
-   *   resolving the options for a live query, or NULL for options that do not
-   *   follow the query. Unlike a loader it is called again whenever the query
-   *   changes, so the candidates can come from a remote backend that filters
-   *   for itself.
-   * @param int $queryMinLength
-   *   The number of query characters below which a query source is not called
-   *   at all, so a remote backend is not asked to list everything; zero calls
-   *   it for the empty query too.
    * @param int|null $progressSteps
    *   Progress only: the number of steps for a determinate bar, or NULL for an
    *   indeterminate spinner.
@@ -168,6 +157,17 @@ final class Field {
    * @param \DrevOps\Tui\Model\Template|null $template
    *   Template only: the fixed shape whose `{{placeholder}}` slots the field
    *   fills in. NULL for every other type.
+   * @param \Closure|null $optionsSource
+   *   An
+   *   `fn(string $query, array<string,mixed> $answers): array<string,string>`
+   *   resolving the options for a live query, or NULL for options that do not
+   *   follow the query. Unlike a loader it is called again whenever the query
+   *   changes, so the candidates can come from a remote backend that filters
+   *   for itself.
+   * @param int $queryMinLength
+   *   The number of query characters below which a query source is not called
+   *   at all, so a remote backend is not asked to list everything; zero calls
+   *   it for the empty query too.
    */
   public function __construct(
     public readonly string $id,

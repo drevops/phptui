@@ -126,7 +126,13 @@ class Engine {
    */
   protected function loadQueryOptions(array $fields, array $values, array $active): void {
     foreach ($fields as $field) {
-      if (!$field->optionsSource instanceof \Closure || !$field->type->constrainsToOptions() || !($active[$field->id] ?? FALSE)) {
+      if (!$field->optionsSource instanceof \Closure) {
+        continue;
+      }
+      if (!$field->type->constrainsToOptions()) {
+        continue;
+      }
+      if (!($active[$field->id] ?? FALSE)) {
         continue;
       }
 
@@ -144,7 +150,7 @@ class Engine {
           throw new EngineException(Translator::t('Could not load options for field "@id": @error', [
             '@id' => $field->id,
             '@error' => $throwable->getMessage(),
-          ]), previous: $throwable);
+          ]), $throwable->getCode(), $throwable);
         }
 
         foreach ($resolved as $row) {

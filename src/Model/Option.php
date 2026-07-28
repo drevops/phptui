@@ -101,7 +101,7 @@ final readonly class Option {
    *   strings.
    */
   public static function resolved(mixed $result): array {
-    return self::list(array_filter(is_array($result) ? $result : [], static fn(mixed $label): bool => is_string($label)));
+    return self::list(array_filter(is_array($result) ? $result : [], is_string(...)));
   }
 
   /**

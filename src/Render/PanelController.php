@@ -1193,7 +1193,7 @@ class PanelController {
   }
 
   /**
-   * Resolve the open editor's query against its field's source, when one is due.
+   * Resolve the open editor's query against its field's source, when due.
    *
    * Runs once the whole read has been consumed rather than once per key, so a
    * burst of typing - or a paste - costs the source one call instead of one per
