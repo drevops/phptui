@@ -34,6 +34,7 @@ always match.
 | Widget | Label | Default | Options / bounds |
 | --- | --- | --- | --- |
 | text | `Item` | `Pear` | complete: `Pear`, `Peach`, `Plum` |
+| template | `Crate label` | `valley-pear-a` | pattern `{{orchard}}-{{fruit}}-{{grade}}`; slots Orchard, Fruit, Grade (a single letter a-c) |
 | number | `Basket weight (g)` | `1200` | min `200`, max `9000`, step `100` |
 | calendar | `Harvest date` | `2026-07-15` | - |
 | textarea | `Tasting notes` | `Crisp and sweet\nHint of citrus` | - |

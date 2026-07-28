@@ -11,6 +11,7 @@ use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\OptionKind;
+use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyMapManager;
@@ -27,6 +28,7 @@ use DrevOps\Tui\Widget\ReorderWidget;
 use DrevOps\Tui\Widget\SearchWidget;
 use DrevOps\Tui\Widget\SelectWidget;
 use DrevOps\Tui\Widget\SuggestWidget;
+use DrevOps\Tui\Widget\TemplateWidget;
 use DrevOps\Tui\Widget\TextareaWidget;
 use DrevOps\Tui\Widget\TextWidget;
 use DrevOps\Tui\Widget\ToggleWidget;
@@ -60,6 +62,19 @@ final class WidgetFactoryTest extends TestCase {
     $this->assertInstanceOf(ReorderWidget::class, $factory->create($this->fieldWithOptions(FieldType::Reorder), ['a']));
     $this->assertInstanceOf(FilePickerWidget::class, $factory->create($this->field(FieldType::FilePicker), '/tmp'));
     $this->assertInstanceOf(PauseWidget::class, $factory->create($this->field(FieldType::Pause), TRUE));
+    $this->assertInstanceOf(TemplateWidget::class, $factory->create($this->templateField(), 'one-two'));
+  }
+
+  public function testTemplateSeededFromTheAssembledValue(): void {
+    $widget = (new WidgetFactory())->create($this->templateField(), 'one-two');
+
+    $this->assertSame('one-two', $widget->value());
+  }
+
+  public function testTemplateWithNonStringCurrentStartsEmpty(): void {
+    $widget = (new WidgetFactory())->create($this->templateField(), 42);
+
+    $this->assertSame('-', $widget->value());
   }
 
   public function testNoteHasNoEditorWidget(): void {
@@ -412,6 +427,16 @@ final class WidgetFactoryTest extends TestCase {
    */
   protected function field(FieldType $type): Field {
     return new Field('f', 'F', '', $type, '');
+  }
+
+  /**
+   * A template field with a two-slot shape.
+   *
+   * @return \DrevOps\Tui\Model\Field
+   *   The field.
+   */
+  protected function templateField(): Field {
+    return new Field('f', 'F', '', FieldType::Template, '', template: new Template('{{a}}-{{b}}'));
   }
 
   /**

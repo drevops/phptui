@@ -8,6 +8,7 @@ use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\Option;
+use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Input\KeyMap;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Translation\Translator;
@@ -72,6 +73,7 @@ class WidgetFactory {
       FieldType::Password => new PasswordWidget($this->text($current), $field->revealable, $field->confirm),
       FieldType::Pause => new PauseWidget(),
       FieldType::Text => new TextWidget($this->text($current), $this->completionsFor($field, $answers)),
+      FieldType::Template => new TemplateWidget($this->template($field), $this->text($current)),
       // A note is presentational: the theme renders it and the cursor skips it,
       // so it is never edited and needs no widget.
       FieldType::Note => throw new \LogicException('Note fields are presentational and have no editor widget.'),
@@ -172,6 +174,25 @@ class WidgetFactory {
     $source = $field->completion instanceof \Closure ? ($field->completion)($answers) : $field->completion;
 
     return Field::stringList($source);
+  }
+
+  /**
+   * The shape a template field fills in.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field.
+   *
+   * @return \DrevOps\Tui\Model\Template
+   *   The template.
+   */
+  protected function template(Field $field): Template {
+    if (!$field->template instanceof Template) {
+      // @codeCoverageIgnoreStart
+      throw new \LogicException(sprintf('Field "%s" is a template field carrying no template.', $field->id));
+      // @codeCoverageIgnoreEnd
+    }
+
+    return $field->template;
   }
 
   /**

@@ -61,6 +61,8 @@ final class AllWidgetsFormTest extends TestCase {
     $answers = $tester->run(...$this->keystrokes());
 
     $this->assertSame('txt', $answers->value('text'));
+    $this->assertSame('a-b', $answers->value('template'));
+    $this->assertSame(['head' => 'a', 'tail' => 'b'], $answers->parts('template'));
     $this->assertSame(7, $answers->value('number'));
     $this->assertSame('2026-07-15', $answers->value('date'));
     $this->assertSame('note', $answers->value('textarea'));
@@ -91,7 +93,7 @@ final class AllWidgetsFormTest extends TestCase {
 
     // Every widget's label was rendered somewhere in the session.
     $display = $tester->display();
-    foreach (['Note', 'Text', 'Number', 'Calendar', 'Textarea', 'Password', 'Select', 'MultiSelect', 'Suggest', 'Search', 'MultiSearch', 'Reorder', 'Confirm', 'Toggle', 'FilePicker', 'MultiFilePicker', 'Pause', 'Progress'] as $label) {
+    foreach (['Note', 'Text', 'Template', 'Number', 'Calendar', 'Textarea', 'Password', 'Select', 'MultiSelect', 'Suggest', 'Search', 'MultiSearch', 'Reorder', 'Confirm', 'Toggle', 'FilePicker', 'MultiFilePicker', 'Pause', 'Progress'] as $label) {
       $this->assertStringContainsString($label, $display, sprintf('The "%s" label was not rendered.', $label));
     }
   }
@@ -127,6 +129,8 @@ final class AllWidgetsFormTest extends TestCase {
       // Drill into the Widgets panel; the cursor lands on the first field.
       $enter,
       // Each field: open the editor, accept its default, move to the next.
+      $enter, $enter, $down,
+      // Template: open, accept the filled-in default.
       $enter, $enter, $down,
       $enter, $enter, $down,
       // Calendar accepts the current day with Enter.

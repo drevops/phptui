@@ -116,6 +116,27 @@ final class PanelBuilder {
   }
 
   /**
+   * Add a template field: fill named slots in a fixed shape.
+   *
+   * Chain `->pattern()` with the shape to fill in - its fixed text renders as
+   * context and each `{{name}}` slot is filled separately - and
+   * `->placeholder()` to label or validate one slot. The answer is the
+   * assembled string; its parts are read back with
+   * {@see \DrevOps\Tui\Answers\Answers::parts()}.
+   *
+   * @param string $id
+   *   The field id.
+   * @param string $label
+   *   The label (defaults to the id).
+   *
+   * @return \DrevOps\Tui\Builder\FieldBuilder
+   *   The field builder.
+   */
+  public function template(string $id, string $label = ''): FieldBuilder {
+    return $this->field($id, $label, FieldType::Template);
+  }
+
+  /**
    * Add a select field. Call ->multiple() to collect several values as a list.
    *
    * @param string $id

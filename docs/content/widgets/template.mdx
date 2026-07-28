@@ -1,0 +1,102 @@
+---
+title: Template
+description: 'Fill the named slots of a fixed shape, tabbing between them, and collect the assembled string plus its parts.'
+keywords: ['template', 'placeholder', 'pattern', 'structured', 'widget']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Template
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/widget-template-light-animated.svg'), dark: useBaseUrl('/widget-template-dark-animated.svg')}} alt="Template widget" />
+</p>
+
+A fixed shape with named slots to fill in. The shape's fixed text renders as context and only the slots are typed into, so a value that has to be formatted a particular way does not put that burden on the reader. It collects a **`string`** - the assembled shape - and its parts are available alongside it.
+
+```php
+$p->template('crate', 'Crate label')
+  ->pattern('{{orchard}}-{{fruit}}-{{grade}}') // The shape to fill in.
+  ->default('valley-pear-a');                  // Initial value, assembled.
+
+// Label a slot, and validate it apart from the others:
+$p->template('crate', 'Crate label')
+  ->pattern('{{orchard}}-{{fruit}}-{{grade}}')
+  ->placeholder('orchard', 'Orchard')
+  ->placeholder('fruit', 'Fruit')
+  ->placeholder('grade', 'Grade', fn(string $value): ?string => preg_match('/^[a-c]$/', $value) === 1 ? NULL : 'use a single letter a-c');
+```
+
+Runnable script: [`playground/02-widgets-template.php`](https://github.com/drevops/tui/blob/main/playground/02-widgets-template.php).
+
+## Options
+
+| Name            | Description                                                                                      | Required | Default      |
+| --------------- | ------------------------------------------------------------------------------------------------ | -------- | ------------ |
+| `pattern()`     | The shape to fill in, carrying `{{name}}` slots.                                                 | Yes      | None         |
+| `default()`     | Initial value, as the assembled string.                                                          | No       | `''` (empty) |
+| `placeholder()` | Label and validator of one slot: `placeholder(string $name, string $label, ?Closure $validate)`. | No       | None         |
+
+A slot name is a word (`{{grade}}`, `{{part_1}}`), and inner whitespace is allowed (`{{ grade }}`). Every other character in the pattern is fixed text.
+
+Two rules are enforced when the form is built, both raising a `FormException`: a pattern must declare at least one slot, and two slots must be separated by some fixed text. A slot ends where the next fixed chunk begins, so `{{a}}{{b}}` could not be read back into its parts.
+
+## Reading the answer
+
+The answer is the whole assembled string; the parts are read back off it, so the two can never disagree.
+
+```php
+$answers = (new Tui($form))->run();
+
+$answers->value('crate'); // 'valley-pear-a'
+$answers->parts('crate'); // ['orchard' => 'valley', 'fruit' => 'pear', 'grade' => 'a']
+```
+
+`parts()` returns an empty array for any question that is not a template, and for a template answer that does not have the shape.
+
+## Keyboard
+
+| Key                           | Action                                 |
+| ----------------------------- | -------------------------------------- |
+| printable keys                | Insert into the slot holding the caret |
+| <kbd>Tab</kbd> / <kbd>↓</kbd> | Move to the next slot                  |
+| <kbd>↑</kbd>                  | Move to the previous slot              |
+| <kbd>←</kbd> / <kbd>→</kbd>   | Move the caret inside the slot         |
+| <kbd>Backspace</kbd>          | Delete the character before the caret  |
+| <kbd>Enter</kbd>              | Accept                                 |
+| <kbd>Esc</kbd>                | Cancel                                 |
+
+Moving off a slot validates it. A rejected slot shows its error but does not hold the caret, so slots can be filled in any order; accepting validates every slot and puts the caret back on the first one that fails.
+
+## Headless behavior
+
+An unattended run asks for the assembled value directly - there are no slots to tab between - and holds it to the same rules the editor does: it must have the shape, and every slot must pass its own validator.
+
+```bash
+APP_CRATE=valley-pear-a php collect.php
+```
+
+An empty value is an unfilled template, left to the `required()` check rather than rejected as a mismatch. In the [agent schema](/ai-agents) the field is a string carrying a `pattern` - the expression the assembled answer must match - so a generated answer can be checked before it is sent.
+
+## Display modes
+
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-template-light-static.svg'), dark: useBaseUrl('/widget-template-dark-static.svg')}} alt="Template: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-template-light-static-no-ansi.svg'), dark: useBaseUrl('/widget-template-dark-static-no-ansi.svg')}} alt="Template: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-template-light-static-ascii.svg'), dark: useBaseUrl('/widget-template-dark-static-ascii.svg')}} alt="Template: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/widget-template-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-template-dark-static-ascii-no-ansi.svg')}} alt="Template: ASCII + No ANSI" /></td>
+  </tr>
+</table>

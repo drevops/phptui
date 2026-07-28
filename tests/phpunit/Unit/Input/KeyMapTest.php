@@ -68,6 +68,13 @@ final class KeyMapTest extends TestCase {
     yield 'text space inserts' => [Scope::field(FieldType::Text), Key::named(KeyName::Space), Action::InsertSpace, TRUE];
     yield 'text backspace deletes' => [Scope::field(FieldType::Text), Key::named(KeyName::Backspace), Action::DeleteBack, TRUE];
     yield 'text tab completes' => [Scope::field(FieldType::Text), Key::named(KeyName::Tab), Action::Complete, TRUE];
+    // Template: Tab joins Down to step between slots, while Left and Right stay
+    // on the base bindings so they move the caret inside the live slot.
+    yield 'template tab steps forward' => [Scope::field(FieldType::Template), Key::named(KeyName::Tab), Action::MoveDown, TRUE];
+    yield 'template down steps forward' => [Scope::field(FieldType::Template), Key::named(KeyName::Down), Action::MoveDown, TRUE];
+    yield 'template up steps back' => [Scope::field(FieldType::Template), Key::named(KeyName::Up), Action::MoveUp, TRUE];
+    yield 'template left still moves the caret' => [Scope::field(FieldType::Template), Key::named(KeyName::Left), Action::MoveLeft, TRUE];
+    yield 'template enter accepts' => [Scope::field(FieldType::Template), Key::named(KeyName::Enter), Action::Accept, TRUE];
     // Textarea overrides the base.
     yield 'textarea enter is newline' => [Scope::field(FieldType::Textarea), Key::named(KeyName::Enter), Action::NewLine, TRUE];
     yield 'textarea enter is not accept' => [Scope::field(FieldType::Textarea), Key::named(KeyName::Enter), Action::Accept, FALSE];
@@ -239,6 +246,7 @@ final class KeyMapTest extends TestCase {
     yield 'base' => [Scope::base(), '@base', 'base', FALSE];
     yield 'navigation' => [Scope::navigation(), '@navigation', 'navigation', FALSE];
     yield 'text is a text-entry scope' => [Scope::field(FieldType::Text), 'field:Text', 'text', TRUE];
+    yield 'template is a text-entry scope' => [Scope::field(FieldType::Template), 'field:Template', 'template', TRUE];
     yield 'select is not a text-entry scope' => [Scope::field(FieldType::Select), 'field:Select', 'select', FALSE];
     // The file picker filters by typing, so it is a text-entry scope.
     yield 'filepicker is a text-entry scope' => [Scope::field(FieldType::FilePicker), 'field:FilePicker', 'filepicker', TRUE];

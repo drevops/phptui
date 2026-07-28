@@ -92,7 +92,7 @@ final readonly class Answers {
         continue;
       }
 
-      $items[$field->id] = new Answer($field->id, $values[$field->id], $provenance[$field->id] ?? Provenance::Default, $field->label, $field->type, $trail);
+      $items[$field->id] = new Answer($field->id, $values[$field->id], $provenance[$field->id] ?? Provenance::Default, $field->label, $field->type, $trail, $field->templateParts($values[$field->id]));
     }
 
     foreach ($panel->panels as $subpanel) {
@@ -126,6 +126,23 @@ final readonly class Answers {
    */
   public function value(string $id): mixed {
     return $this->values[$id] ?? NULL;
+  }
+
+  /**
+   * The slot values of a template question's answer.
+   *
+   * The answer itself stays the assembled string; the parts are read back from
+   * it, so a caller can take the whole value, the pieces, or both.
+   *
+   * @param string $id
+   *   The question id.
+   *
+   * @return array<string,string>
+   *   The value of each slot keyed by slot name; empty when the question is
+   *   absent, is not a template, or its answer does not have the shape.
+   */
+  public function parts(string $id): array {
+    return $this->items[$id]->parts ?? [];
   }
 
   /**

@@ -10,6 +10,7 @@ use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Model\SelectionBounds;
+use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Translation\Translator;
 
 /**
@@ -117,6 +118,13 @@ class AgentHelp {
 
     if ($field->type === FieldType::Calendar) {
       $property['format'] = 'date';
+    }
+
+    // A template answer is the assembled string, so its shape travels as the
+    // expression that string must match rather than as the pattern's own
+    // `{{slot}}` syntax, which no schema consumer would understand.
+    if ($field->template instanceof Template) {
+      $property['pattern'] = $field->template->schemaPattern();
     }
 
     // The step is a keyboard increment, not a value constraint - the library

@@ -89,6 +89,41 @@ final class EngineTest extends TestCase {
     yield 'multisearch unknown' => [static fn(PanelBuilder $p): FieldBuilder => self::choiceOptions($p->search('choice')->multiple()), ['bogus'], 'Invalid value for field "choice": value "bogus" is not one of: standard, minimal'];
   }
 
+  #[DataProvider('dataProviderCollectRejectsTemplateAnswer')]
+  public function testCollectRejectsTemplateAnswer(string $value, string $message): void {
+    $engine = $this->engine(static fn(PanelBuilder $p): FieldBuilder => self::crate($p));
+
+    $this->expectException(EngineException::class);
+    $this->expectExceptionMessage($message);
+    $engine->collect(['crate' => $value], new Context('project'));
+  }
+
+  public static function dataProviderCollectRejectsTemplateAnswer(): \Iterator {
+    yield 'shape mismatch' => ['nope', 'Invalid value for field "crate": "nope" does not match the template "{{orchard}}-{{grade}}".'];
+    yield 'slot rejected' => ['valley-z', 'Invalid value for field "crate": Grade: use a single letter a-c'];
+  }
+
+  public function testCollectAcceptsAndSplitsTemplateAnswer(): void {
+    $engine = $this->engine(static fn(PanelBuilder $p): FieldBuilder => self::crate($p));
+
+    $answers = $engine->collect(['crate' => 'valley-a'], new Context('project'));
+
+    // The answer stays the assembled string; the parts come back off it.
+    $this->assertSame('valley-a', $answers->value('crate'));
+    $this->assertSame(['orchard' => 'valley', 'grade' => 'a'], $answers->parts('crate'));
+  }
+
+  public function testCollectAcceptsAnEmptyTemplateAnswer(): void {
+    $engine = $this->engine(static fn(PanelBuilder $p): FieldBuilder => self::crate($p));
+
+    // An empty answer is an unfilled template, left to the required check
+    // rather than rejected as a shape mismatch.
+    $answers = $engine->collect(['crate' => ''], new Context('project'));
+
+    $this->assertSame('', $answers->value('crate'));
+    $this->assertSame([], $answers->parts('crate'));
+  }
+
   public function testCollectAcceptsSelectableOptions(): void {
     $engine = $this->engine(function (PanelBuilder $p): void {
       $p->select('profile')->option('standard')->option('minimal');
@@ -177,6 +212,21 @@ final class EngineTest extends TestCase {
    */
   protected static function choiceOptions(FieldBuilder $builder): FieldBuilder {
     return $builder->option('standard')->option('minimal')->option('demo', 'Demo', disabled: TRUE, disabled_reason: 'unavailable');
+  }
+
+  /**
+   * Declare a template field whose second slot takes a single letter a-c.
+   *
+   * @param \DrevOps\Tui\Builder\PanelBuilder $panel
+   *   The panel builder.
+   *
+   * @return \DrevOps\Tui\Builder\FieldBuilder
+   *   The field builder.
+   */
+  protected static function crate(PanelBuilder $panel): FieldBuilder {
+    return $panel->template('crate')
+      ->pattern('{{orchard}}-{{grade}}')
+      ->placeholder('grade', 'Grade', static fn(string $value): ?string => preg_match('/^[a-c]$/', $value) === 1 ? NULL : 'use a single letter a-c');
   }
 
   /**

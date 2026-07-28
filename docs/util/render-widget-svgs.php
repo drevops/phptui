@@ -78,6 +78,7 @@ function widgetSpecs(string $tree): array {
   $down = Key::named(KeyName::Down);
   $space = Key::named(KeyName::Space);
   $bs = Key::named(KeyName::Backspace);
+  $tab = Key::named(KeyName::Tab);
   // Two Enters walk the hub into the panel and open the field editor; the
   // animation then ends inside the editor on the changed value, so the frame
   // stays as narrow as the widget itself rather than the full-width panel row.
@@ -95,6 +96,11 @@ function widgetSpecs(string $tree): array {
       'form' => Form::create('Text widget')->panel('main', 'Text', function (PanelBuilder $p): void { $p->text('item', 'Item')->default('Pear')->complete(['Pear', 'Peach', 'Plum']); }),
       'keys' => [...$open, $bs, $bs, $bs, $bs, 'A', 'p', 'p', 'l', 'e'],
       'rows' => 6,
+    ],
+    'template' => [
+      'form' => Form::create('Template widget')->panel('main', 'Template', function (PanelBuilder $p): void { $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{fruit}}-{{grade}}')->default('valley-pear-a')->placeholder('orchard', 'Orchard')->placeholder('fruit', 'Fruit')->placeholder('grade', 'Grade'); }),
+      'keys' => [...$open, $bs, $bs, $bs, $bs, $bs, $bs, 'r', 'i', 'd', 'g', 'e', $tab, $tab, $bs, 'b'],
+      'rows' => 7,
     ],
     'number' => [
       'form' => Form::create('Number widget')->panel('main', 'Number', function (PanelBuilder $p): void { $p->number('weight', 'Basket weight (g)')->default(1200)->min(200)->max(9000)->step(100); }),
