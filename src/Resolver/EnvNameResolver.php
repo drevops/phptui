@@ -73,11 +73,12 @@ class EnvNameResolver {
   }
 
   /**
-   * Whether the field has a name worth advertising to a machine consumer.
+   * Whether the canonical name is worth advertising to a machine consumer.
    *
    * A mechanically named field under an empty prefix would advertise a bare,
    * unnamespaced variable that collides with anything else in the environment,
-   * so it is not offered as an answer route.
+   * so it is not offered as an answer route. Declared aliases are absolute and
+   * carry no such risk, so they stand on their own.
    *
    * @param \DrevOps\Tui\Model\Field $field
    *   The field.

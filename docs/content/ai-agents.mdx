@@ -128,7 +128,7 @@ $errors = $tui->validate(['name' => 'Weekly Box', 'fruit' => 'grape', 'quantity'
 The schema's `x-precedence` spells out how every field resolves - the first source that provides a value wins:
 
 1. **Provided** - an explicit value you pass in, however your interface accepts one. Highest precedence.
-2. **Environment** - the per-question variable named in `env` (e.g. `TUI_NAME`), the uppercased id under the active prefix, or any name listed in `x-env-aliases` when that one is unset.
+2. **Environment** - the per-question variable named in `env` (e.g. `TUI_NAME`), which is the uppercased id under the active prefix unless the field named its own, followed by each name in `x-env-aliases` in declaration order; the first one that is set wins.
 3. **Discovered** - a value detected from the target directory (see [Discovery](/field-behaviour#discovery)).
 4. **Derived** - a value computed from other fields.
 5. **Default** - the declared default.

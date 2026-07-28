@@ -407,8 +407,8 @@ final class FieldBuilder {
    * the canonical name - so the canonical name wins when both are set, and a
    * naming scheme can change without breaking the variables already published.
    *
-   * @param list<string> $names
-   *   The alias names, most preferred first.
+   * @param array<array-key,string> $names
+   *   The alias names, most preferred first; reindexed as declared.
    *
    * @return $this
    *   The builder.

@@ -118,6 +118,10 @@ final class BuiltModelTest extends TestCase {
     yield 'optional field ignores a declared message' => [FALSE, $declared, '', NULL];
   }
 
+  /**
+   * @param list<string> $aliases
+   *   The declared aliases.
+   */
   #[DataProvider('dataProviderEnvNameViolation')]
   public function testEnvNameViolationThrows(string $env_name, array $aliases, string $expected): void {
     $this->expectException(FormException::class);
@@ -136,6 +140,10 @@ final class BuiltModelTest extends TestCase {
     yield 'alias declared twice' => ['', ['OLD_CRATE', 'OLD_CRATE'], 'Field "crate_size" declares the environment variable alias "OLD_CRATE" more than once'];
   }
 
+  /**
+   * @param list<string> $aliases
+   *   The declared aliases.
+   */
   #[DataProvider('dataProviderEnvNameAccepted')]
   public function testEnvNameAccepted(string $env_name, array $aliases): void {
     $field = new Field('crate_size', 'Crate size', '', FieldType::Text, '', envName: $env_name, envAliases: $aliases);

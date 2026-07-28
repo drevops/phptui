@@ -234,6 +234,21 @@ final class AgentHelpTest extends TestCase {
     $this->assertMatchesRegularExpression('/"x-env-aliases":\s*\[\s*"OLD_CRATE",\s*"OLDER_CRATE"\s*\]/', $help);
   }
 
+  public function testEnvAliasesAreAdvertisedWithoutAdvertisableCanonicalName(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('crate_size', 'Crate size')->envAliases(['OLD_CRATE']);
+      })
+      ->build();
+
+    $help = (new AgentHelp($form))->generate();
+
+    // The bare mechanical name stays hidden, but the alias answers the field
+    // either way, so withholding it would advertise less than is honoured.
+    $this->assertStringNotContainsString('"env":', $help);
+    $this->assertMatchesRegularExpression('/"x-env-aliases":\s*\[\s*"OLD_CRATE"\s*\]/', $help);
+  }
+
   public function testNoEnvAliasesOmitsTheAnnotation(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {

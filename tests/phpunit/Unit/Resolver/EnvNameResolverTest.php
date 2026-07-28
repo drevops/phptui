@@ -48,6 +48,12 @@ final class EnvNameResolverTest extends TestCase {
     $this->assertSame([], (new EnvNameResolver('APP_'))->aliases($field));
   }
 
+  /**
+   * @param list<string> $aliases
+   *   The declared aliases.
+   * @param list<string> $expected
+   *   The expected names, in precedence order.
+   */
   #[DataProvider('dataProviderAll')]
   public function testAll(string $env_name, array $aliases, array $expected): void {
     $field = new Field('crate_size', 'Crate size', '', FieldType::Text, '', envName: $env_name, envAliases: $aliases);
