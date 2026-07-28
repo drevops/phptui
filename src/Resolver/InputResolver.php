@@ -19,6 +19,10 @@ use DrevOps\Tui\Translation\Translator;
  * strings, so they are coerced to the field's type; `--prompts` values are
  * already typed by JSON.
  *
+ * Which variables answer a field is {@see EnvNameResolver}'s to say: a field
+ * may replace its mechanical name and declare aliases beside it, and the first
+ * of those names that is set answers it.
+ *
  * @package DrevOps\Tui\Resolver
  */
 class InputResolver {
@@ -46,12 +50,16 @@ class InputResolver {
    *   The input map keyed by field id.
    */
   public function resolve(array $fields, string $prompts, array $env): array {
+    $names = new EnvNameResolver($this->envPrefix);
     $inputs = [];
 
     foreach ($fields as $field) {
-      $name = $this->envName($field->id);
-      if (array_key_exists($name, $env)) {
-        $inputs[$field->id] = $this->coerce($env[$name], $field);
+      foreach ($names->all($field) as $name) {
+        if (array_key_exists($name, $env)) {
+          $inputs[$field->id] = $this->coerce($env[$name], $field);
+
+          break;
+        }
       }
     }
 
@@ -60,19 +68,6 @@ class InputResolver {
     }
 
     return $inputs;
-  }
-
-  /**
-   * The env variable name for a field id.
-   *
-   * @param string $id
-   *   The field id (snake_case).
-   *
-   * @return string
-   *   The env variable name (prefix + uppercased id).
-   */
-  protected function envName(string $id): string {
-    return $this->envPrefix . strtoupper($id);
   }
 
   /**

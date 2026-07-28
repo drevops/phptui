@@ -265,6 +265,18 @@ final class FieldBuilder {
   protected array $slotValidators = [];
 
   /**
+   * The environment variable answering the field, when it declares its own.
+   */
+  protected string $envName = '';
+
+  /**
+   * The further environment variables answering the field, in precedence order.
+   *
+   * @var list<string>
+   */
+  protected array $envAliases = [];
+
+  /**
    * Construct a field builder.
    *
    * @param string $id
@@ -364,6 +376,45 @@ final class FieldBuilder {
   public function schemaDefault(mixed $default): self {
     $this->hasSchemaDefault = TRUE;
     $this->schemaDefault = $default;
+
+    return $this;
+  }
+
+  /**
+   * Set the environment variable that answers the field.
+   *
+   * The name is absolute: the form's prefix is not applied to it, so a variable
+   * name published elsewhere can be reproduced exactly. It replaces the
+   * mechanical `<PREFIX><FIELD_ID>` name rather than adding to it - declare the
+   * mechanical name through {@see envAliases()} to keep honouring it too.
+   *
+   * @param string $name
+   *   The variable name.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function env(string $name): self {
+    $this->envName = $name;
+
+    return $this;
+  }
+
+  /**
+   * Set the further environment variables the field also answers to.
+   *
+   * Each is absolute, like {@see env()}, and they are consulted in order after
+   * the canonical name - so the canonical name wins when both are set, and a
+   * naming scheme can change without breaking the variables already published.
+   *
+   * @param list<string> $names
+   *   The alias names, most preferred first.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function envAliases(array $names): self {
+    $this->envAliases = array_values($names);
 
     return $this;
   }
@@ -1137,6 +1188,8 @@ final class FieldBuilder {
       queryMinLength: $this->queryMinLength,
       hint: $this->hint,
       placeholder: $this->placeholder,
+      envName: $this->envName,
+      envAliases: $this->envAliases,
     );
   }
 

@@ -118,6 +118,42 @@ final class BuiltModelTest extends TestCase {
     yield 'optional field ignores a declared message' => [FALSE, $declared, '', NULL];
   }
 
+  #[DataProvider('dataProviderEnvNameViolation')]
+  public function testEnvNameViolationThrows(string $env_name, array $aliases, string $expected): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage($expected);
+
+    new Field('crate_size', 'Crate size', '', FieldType::Text, '', envName: $env_name, envAliases: $aliases);
+  }
+
+  public static function dataProviderEnvNameViolation(): \Iterator {
+    yield 'name starting with a digit' => ['1CRATE', [], 'Field "crate_size" declares the environment variable name "1CRATE", which is not a portable name'];
+    yield 'name with a hyphen' => ['OLD-CRATE', [], 'Field "crate_size" declares the environment variable name "OLD-CRATE", which is not a portable name'];
+    yield 'name with a space' => ['OLD CRATE', [], 'Field "crate_size" declares the environment variable name "OLD CRATE", which is not a portable name'];
+    yield 'alias with a hyphen' => ['', ['OLD-CRATE'], 'Field "crate_size" declares the environment variable alias "OLD-CRATE", which is not a portable name'];
+    yield 'empty alias' => ['', [''], 'Field "crate_size" declares the environment variable alias "", which is not a portable name'];
+    yield 'alias repeating the name' => ['NEW_CRATE', ['NEW_CRATE'], 'Field "crate_size" declares "NEW_CRATE" as both its environment variable name and an alias of it'];
+    yield 'alias declared twice' => ['', ['OLD_CRATE', 'OLD_CRATE'], 'Field "crate_size" declares the environment variable alias "OLD_CRATE" more than once'];
+  }
+
+  #[DataProvider('dataProviderEnvNameAccepted')]
+  public function testEnvNameAccepted(string $env_name, array $aliases): void {
+    $field = new Field('crate_size', 'Crate size', '', FieldType::Text, '', envName: $env_name, envAliases: $aliases);
+
+    $this->assertSame($env_name, $field->envName);
+    $this->assertSame($aliases, $field->envAliases);
+  }
+
+  public static function dataProviderEnvNameAccepted(): \Iterator {
+    yield 'nothing declared' => ['', []];
+    yield 'name only' => ['NEW_CRATE', []];
+    yield 'aliases only' => ['', ['OLD_CRATE', 'OLDER_CRATE']];
+    yield 'name and aliases' => ['NEW_CRATE', ['OLD_CRATE']];
+    yield 'leading underscore' => ['_CRATE', []];
+    yield 'digits after the first character' => ['CRATE_2', []];
+    yield 'lowercase is left as declared' => ['old_crate', []];
+  }
+
   public function testTemplateFieldWithoutTemplateThrows(): void {
     $this->expectException(FormException::class);
     $this->expectExceptionMessage('Field "crate" is a template field but declares no pattern');

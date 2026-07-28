@@ -24,6 +24,14 @@ use DrevOps\Tui\Translation\Translator;
 final class Field {
 
   /**
+   * The shape a portable environment variable name has.
+   *
+   * Anything outside it cannot be set portably from a shell, so a name that
+   * does not match would be declared but unreachable.
+   */
+  protected const string ENV_NAME_PATTERN = '/^[A-Za-z_][A-Za-z0-9_]*$/';
+
+  /**
    * The option rows for choice-based fields, in display order.
    *
    * @var list<\DrevOps\Tui\Model\Option>
@@ -176,6 +184,15 @@ final class Field {
    *   "E.g. Golden Beetroot"). Never becomes a value: it disappears as soon as
    *   anything is typed, and it is suppressed without colour, where it could
    *   not be told apart from a real entry.
+   * @param string $envName
+   *   The environment variable that answers the field, replacing the
+   *   mechanically prefixed one. Absolute - the form's prefix is not applied to
+   *   it - so an existing published name can be reproduced exactly; empty keeps
+   *   the mechanical name.
+   * @param list<string> $envAliases
+   *   Further environment variables the field also answers to, absolute and in
+   *   precedence order, so a naming scheme can change without a breaking
+   *   cut-over. Consulted only when none of the names before them is set.
    */
   public function __construct(
     public readonly string $id,
@@ -218,7 +235,11 @@ final class Field {
     public readonly int $queryMinLength = 0,
     public readonly string $hint = '',
     public readonly string $placeholder = '',
+    public readonly string $envName = '',
+    public readonly array $envAliases = [],
   ) {
+    $this->assertEnvNames();
+
     if ($this->type === FieldType::Template && !$this->template instanceof Template) {
       throw new FormException(sprintf('Field "%s" is a template field but declares no pattern; add ->pattern() with the shape to fill in.', $this->id));
     }
@@ -251,6 +272,37 @@ final class Field {
 
     $this->options = Option::list($options);
     $this->pickerConstraints = $picker_constraints ?? new FilePickerConstraints();
+  }
+
+  /**
+   * Reject declared environment variable names that cannot be honoured.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When a declared name is not portable, or an alias repeats the name it
+   *   would never be reached behind.
+   */
+  protected function assertEnvNames(): void {
+    if ($this->envName !== '' && preg_match(self::ENV_NAME_PATTERN, $this->envName) !== 1) {
+      throw new FormException(sprintf('Field "%s" declares the environment variable name "%s", which is not a portable name; use letters, digits and underscores, starting with a letter or underscore.', $this->id, $this->envName));
+    }
+
+    $seen = [];
+
+    foreach ($this->envAliases as $alias) {
+      if (preg_match(self::ENV_NAME_PATTERN, $alias) !== 1) {
+        throw new FormException(sprintf('Field "%s" declares the environment variable alias "%s", which is not a portable name; use letters, digits and underscores, starting with a letter or underscore.', $this->id, $alias));
+      }
+
+      if ($alias === $this->envName) {
+        throw new FormException(sprintf('Field "%s" declares "%s" as both its environment variable name and an alias of it; the alias would never be reached, so declare it once.', $this->id, $alias));
+      }
+
+      if (isset($seen[$alias])) {
+        throw new FormException(sprintf('Field "%s" declares the environment variable alias "%s" more than once; only the first would ever be reached.', $this->id, $alias));
+      }
+
+      $seen[$alias] = TRUE;
+    }
   }
 
   /**

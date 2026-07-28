@@ -11,6 +11,7 @@ use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Model\Template;
+use DrevOps\Tui\Resolver\EnvNameResolver;
 use DrevOps\Tui\Translation\Translator;
 
 /**
@@ -19,15 +20,21 @@ use DrevOps\Tui\Translation\Translator;
  * The schema (draft 2020-12) types the answers object keyed by question id:
  * each property carries its allowed values (a `select`'s options, a number's
  * bounds), its `title`/`description`, whether it is `required`, its `default`,
- * and the `env` variable that sets it. Only what the library controls appears
- * here - the CLI flags an agent ultimately calls are the consumer's to define,
- * so they are absent. The resolution order is the root `x-precedence`. A
- * closure default is resolved against the context (see {@see DefaultResolver})
- * rather than omitted.
+ * and the `env` variable that sets it - with any further names it answers to
+ * in `x-env-aliases`. Only what the library controls appears here - the CLI
+ * flags an agent ultimately calls are the consumer's to define, so they are
+ * absent. The resolution order is the root `x-precedence`. A closure default is
+ * resolved against the context (see {@see DefaultResolver}) rather than
+ * omitted.
  *
  * @package DrevOps\Tui\Schema
  */
 class AgentHelp {
+
+  /**
+   * The variables that answer each field.
+   */
+  protected EnvNameResolver $names;
 
   /**
    * Construct the schema generator.
@@ -35,13 +42,15 @@ class AgentHelp {
    * @param \DrevOps\Tui\Model\FormDefinition $form
    *   The form definition to describe.
    * @param string $envPrefix
-   *   The prefix for per-question env variable names (e.g. "APP_"); an empty
-   *   prefix omits the `env` annotation.
+   *   The prefix for per-question env variable names (e.g. "APP_"); under an
+   *   empty prefix only a field naming its own variable carries the `env`
+   *   annotation.
    * @param \DrevOps\Tui\Handler\Context $context
    *   The context a closure default is evaluated against; defaults to an empty
    *   context carrying no prior answers.
    */
   public function __construct(protected FormDefinition $form, protected string $envPrefix = '', protected Context $context = new Context()) {
+    $this->names = new EnvNameResolver($envPrefix);
   }
 
   /**
@@ -173,8 +182,13 @@ class AgentHelp {
       $property['default'] = $default;
     }
 
-    if ($this->envPrefix !== '') {
-      $property['env'] = $this->envPrefix . strtoupper($field->id);
+    if ($this->names->isAdvertisable($field)) {
+      $property['env'] = $this->names->canonical($field);
+      $aliases = $this->names->aliases($field);
+
+      if ($aliases !== []) {
+        $property['x-env-aliases'] = $aliases;
+      }
     }
 
     return $property;

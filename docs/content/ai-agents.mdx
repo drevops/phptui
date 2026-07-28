@@ -58,7 +58,7 @@ The schema the produce-order form emits:
 }
 ```
 
-Each `env` is the variable that sets its answer - the uppercased id under the active prefix, which defaults to `TUI_` and changes with `->envPrefix('MYAPP_')` on the form or `new Tui($form, env_prefix: 'MYAPP_')`. The root `x-precedence` is the resolution order described below.
+Each `env` is the variable that sets its answer - the uppercased id under the active prefix, which defaults to `TUI_` and changes with `->envPrefix('MYAPP_')` on the form or `new Tui($form, env_prefix: 'MYAPP_')`. A field that names its own variable advertises that name instead, and any further names it answers to appear beside it in `x-env-aliases` - see [naming the variables](/headless-collection#naming-the-variables). The root `x-precedence` is the resolution order described below.
 
 A field's other two [guidance texts](/field-behaviour#guidance-texts) travel beside its `description` as extension keywords, so an agent reads all three rather than one merged text:
 
@@ -128,7 +128,7 @@ $errors = $tui->validate(['name' => 'Weekly Box', 'fruit' => 'grape', 'quantity'
 The schema's `x-precedence` spells out how every field resolves - the first source that provides a value wins:
 
 1. **Provided** - an explicit value you pass in, however your interface accepts one. Highest precedence.
-2. **Environment** - the per-question variable named in `env` (e.g. `TUI_NAME`), the uppercased id under the active prefix.
+2. **Environment** - the per-question variable named in `env` (e.g. `TUI_NAME`), the uppercased id under the active prefix, or any name listed in `x-env-aliases` when that one is unset.
 3. **Discovered** - a value detected from the target directory (see [Discovery](/field-behaviour#discovery)).
 4. **Derived** - a value computed from other fields.
 5. **Default** - the declared default.

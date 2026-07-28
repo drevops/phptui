@@ -192,6 +192,58 @@ final class AgentHelpTest extends TestCase {
     $this->assertStringNotContainsString('"env"', $help);
   }
 
+  public function testDeclaredEnvNameIsAdvertisedInsteadOfTheMechanicalOne(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('crate_size', 'Crate size')->env('LEGACY_CRATE');
+      })
+      ->build();
+
+    $help = (new AgentHelp($form, 'APP_'))->generate();
+
+    $this->assertStringContainsString('"env": "LEGACY_CRATE"', $help);
+    $this->assertStringNotContainsString('APP_CRATE_SIZE', $help);
+  }
+
+  public function testDeclaredEnvNameIsAdvertisedWithoutAPrefix(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('crate_size', 'Crate size')->env('LEGACY_CRATE');
+        $p->text('grade', 'Grade');
+      })
+      ->build();
+
+    $help = (new AgentHelp($form))->generate();
+
+    // The named field advertises itself; its unnamed neighbour has no
+    // namespaced variable to offer, so it stays absent.
+    $this->assertStringContainsString('"env": "LEGACY_CRATE"', $help);
+    $this->assertStringNotContainsString('"env": "GRADE"', $help);
+  }
+
+  public function testEnvAliasesAreAdvertisedInDeclarationOrder(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('crate_size', 'Crate size')->envAliases(['OLD_CRATE', 'OLDER_CRATE']);
+      })
+      ->build();
+
+    $help = (new AgentHelp($form, 'APP_'))->generate();
+
+    $this->assertStringContainsString('"env": "APP_CRATE_SIZE"', $help);
+    $this->assertMatchesRegularExpression('/"x-env-aliases":\s*\[\s*"OLD_CRATE",\s*"OLDER_CRATE"\s*\]/', $help);
+  }
+
+  public function testNoEnvAliasesOmitsTheAnnotation(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('crate_size', 'Crate size');
+      })
+      ->build();
+
+    $this->assertStringNotContainsString('x-env-aliases', (new AgentHelp($form, 'APP_'))->generate());
+  }
+
   public function testResolvesClosureDefault(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
