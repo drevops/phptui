@@ -1,7 +1,7 @@
 ---
 title: Field behavior
-description: 'Mark fields required, and declare dynamic defaults, validation and transforms as closures on the field - or in handler classes - and detect defaults with discovery rules.'
-keywords: ['required', 'validation', 'transform', 'dynamic default', 'discovery', 'handler']
+description: 'Guide an answer with a description, a hint and a placeholder; mark fields required, and declare dynamic defaults, validation and transforms as closures on the field - or in handler classes - and detect defaults with discovery rules.'
+keywords: ['description', 'hint', 'placeholder', 'required', 'validation', 'transform', 'dynamic default', 'discovery', 'handler']
 ---
 
 import ThemedImage from '@theme/ThemedImage';
@@ -33,6 +33,25 @@ Reusable validators and transformers live as public static methods on a class in
 The TUI only collects. It presents answers and never applies them - **writing files, renaming directories, acting on the answers is your job**. A consumer that processes answers defines its own processor interface, keeping the form for collection and the processors for side effects; one class per field can carry both its `process()` and the reusable static behavior. (This is exactly what a consumer CLI does.)
 
 Both declaration styles are runnable in [`playground/06-field-behaviour-*`](https://github.com/drevops/tui/tree/main/playground).
+
+## Guidance texts
+
+Three texts guide an answer, each declared on its own so a form never has to merge them into one:
+
+```php
+$p->text('crop', 'Crop')
+  ->description('The crop this basket was picked from.') // What is being asked.
+  ->hint('Type a few letters to filter.')                // How to answer it.
+  ->placeholder('E.g. Golden Beetroot');                 // Ghost text, empty input only.
+```
+
+`description()` says what the question is. It renders under the field row, carries the [markdown subset](/markdown), and widens the panel to fit.
+
+`hint()` says how to answer it. It renders beneath the description in a style of its own - italicized, so guidance never reads as part of the question - and stays plain text, because one short instruction carries no formatting of its own.
+
+`placeholder()` is the ghost text an empty editor shows. It never becomes a value: it disappears at the first keystroke, and it is suppressed when color is off, where it could not be told apart from something typed. Available on the `text`, `number`, `textarea`, `password`, `suggest` and `search` types - the ones with an input buffer to ghost. Declaring one on any other type raises a `FormException` when the form is built, rather than being quietly ignored.
+
+The description and hint rows are secondary chrome, so compact [spacing](/themes) drops both; a placeholder belongs to the editor and shows whatever the spacing. All three reach machine-readable output, so an agent reads the same guidance a person does - see [AI agents](/ai-agents).
 
 ## Required fields
 

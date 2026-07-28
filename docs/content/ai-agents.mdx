@@ -60,6 +60,21 @@ The schema the produce-order form emits:
 
 Each `env` is the variable that sets its answer - the uppercased id under the active prefix, which defaults to `TUI_` and changes with `->envPrefix('MYAPP_')` on the form or `new Tui($form, env_prefix: 'MYAPP_')`. The root `x-precedence` is the resolution order described below.
 
+A field's other two [guidance texts](/field-behaviour#guidance-texts) travel beside its `description` as extension keywords, so an agent reads all three rather than one merged text:
+
+```json
+"crop": {
+  "type": "string",
+  "title": "Crop",
+  "description": "The crop this basket was picked from.",
+  "x-hint": "Type a few letters to filter.",
+  "x-placeholder": "E.g. Golden Beetroot",
+  "env": "TUI_CROP"
+}
+```
+
+Neither is a standard JSON Schema keyword, and neither is `examples`: a placeholder illustrates the shape of an answer without being a valid one. A field that declares neither carries neither key.
+
 Dynamic defaults - the `fn (Context $c): mixed` closures from [field behavior](/field-behaviour) - are resolved for both `agentHelp()` and `schema()`, so a computed default shows a concrete value rather than null. Pass a context to seed the `directory` or `version` those closures read - `agentHelp(new Context(version: '2.0'))` - while the answers stay empty, since none are collected yet. A default that can only be computed from earlier answers has nothing to resolve from and reads as null unless the field declares a `->schemaDefault(...)` stand-in.
 
 ## Full metadata and validation
@@ -74,6 +89,8 @@ Dynamic defaults - the `fn (Context $c): mixed` closures from [field behavior](/
       "type": "text",
       "label": "Order name",
       "description": "",
+      "hint": "",
+      "placeholder": "",
       "options": [],
       "default": "",
       "required": true,
