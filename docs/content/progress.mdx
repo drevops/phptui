@@ -131,7 +131,7 @@ Runnable in [`playground/16-loading-data.php`](https://github.com/drevops/tui/bl
 
 ## Options from a query
 
-A loader resolves one list, once. When the candidates are too many to hold - a catalog behind a search API, a database lookup, an index - a [search](/widgets/search) or [suggest](/widgets/suggest) field can source them from the query instead, with `->optionsFrom()`. (For a list that follows the *answers* rather than the query, see [options from the answers](/field-behaviour#options-from-the-answers).)
+A loader resolves one list, once. When the candidates are too many to hold - a catalog behind a search API, a database lookup, an index - a [search](/widgets/search) or [suggest](/widgets/suggest) field can source them from the query instead, with `->optionsFrom()`. (For a list that follows the _answers_ rather than the query, see [options from the answers](/field-behaviour#options-from-the-answers).)
 
 ```php
 $form->panel('order', 'New order', function (PanelBuilder $p) use ($pantry): void {
