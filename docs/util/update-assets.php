@@ -522,6 +522,72 @@ EXPECT;
 }
 
 /**
+ * The expect body driving the declared field-behaviour panel TUI.
+ *
+ * @return string
+ *   The expect script body.
+ */
+function fieldBehaviourInteraction(): string {
+  return <<<'EXPECT'
+# Wait for the hub, then drill into the stall panel.
+expect "Stall" {
+    pause 2000
+    safe_send "\r"
+}
+
+# Stall name: clear the dynamic default and accept it empty - the required
+# check refuses it and the editor stays open with the derived message. The count
+# runs past the default's length ("Sample Project"); a backspace at the buffer
+# start is a no-op, so the clearing cannot leave a stray character behind.
+pause 1500
+safe_send "\r"
+pause 1200
+for {set i 0} {$i < 20} {incr i} {
+    press_backspace
+}
+pause 400
+safe_send "\r"
+pause 2500
+
+# A real name is accepted and the panel returns.
+type_text "Seaside Stall"
+pause 600
+safe_send "\r"
+pause 2000
+
+# Back to the hub and submit with the basket still empty - the field's own
+# declared message refuses the submit instead of the derived one.
+press_escape
+pause 1200
+arrow_down
+pause 400
+safe_send "\r"
+pause 3000
+
+# Fill the basket, so the submit has nothing left to withhold.
+arrow_up
+pause 400
+safe_send "\r"
+pause 1200
+arrow_down
+pause 400
+safe_send "\r"
+pause 1200
+toggle_space
+pause 600
+safe_send "\r"
+pause 2000
+
+# Out to the hub and submit - the transform lowercases the variety on the way.
+press_escape
+pause 1000
+arrow_down
+pause 600
+safe_send "\r"
+EXPECT;
+}
+
+/**
  * The expect body driving the vim key-bindings panel TUI.
  *
  * @return string
@@ -1035,6 +1101,17 @@ function getJobs(string $project_dir): array {
     'rows' => 22,
     'cols' => 72,
     'verify' => 'Weekly delivery?',
+  ];
+
+  // Declared field behaviour: the required check refuses an emptied field in
+  // the editor and withholds the submit for the untouched basket, so the
+  // derived message and a declared one both appear before the form completes.
+  $jobs['field-behaviour'] = [
+    'command' => 'env LINES=18 COLUMNS=72 php ' . $project_dir . '/playground/06-field-behaviour-closures.php',
+    'interact' => fieldBehaviourInteraction(),
+    'rows' => 18,
+    'cols' => 72,
+    'verify' => 'Stall name is required.',
   ];
 
   // The vim key-bindings preset: j/k navigation and the ? help overlay. The

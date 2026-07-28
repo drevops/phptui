@@ -30,8 +30,9 @@ require __DIR__ . '/../vendor/autoload.php';
 $form = Form::create('Field behaviour')
   ->panel('stall', 'Stall', function (PanelBuilder $p): void {
     // A dynamic default: computed when the run starts, here from the target
-    // directory's name ("my-stall" becomes "My Stall"). Required, so clearing
-    // it is rejected with a message derived from the label. Try emptying it.
+    // directory's name ("sample-project" becomes "Sample Project"). Required,
+    // so clearing it is rejected with a message derived from the label. Try
+    // emptying it.
     $p->text('name', 'Stall name')->required()
       ->default(fn (Context $c): string => ucwords(str_replace(['-', '_'], ' ', basename($c->directory))));
 
@@ -52,7 +53,9 @@ $form = Form::create('Field behaviour')
   });
 
 try {
-  $answers = (new Tui($form))->run();
+  // The bundled sample-project/ directory stands in for the run's target, so
+  // the dynamic default above resolves to the same name wherever the demo runs.
+  $answers = (new Tui($form))->run(directory: __DIR__ . '/sample-project');
 }
 catch (InterruptException) {
   // Leave quietly on Ctrl-C.
