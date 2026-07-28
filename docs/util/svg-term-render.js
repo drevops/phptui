@@ -19,6 +19,7 @@
 const fs = require('fs');
 const {render} = require('svg-term');
 const {load} = require('load-asciicast');
+const {pinRuns} = require('./svg-pin-runs');
 
 // Parse command line arguments.
 const args = process.argv.slice(2);
@@ -220,7 +221,9 @@ if (at !== null) {
 
 // Render SVG.
 try {
-  const svg = render(renderInput, options);
+  // Pin every text run to its grid width so box-drawing borders stay aligned
+  // on viewers whose monospace font does not match the assumed cell advance.
+  const svg = pinRuns(render(renderInput, options));
   fs.writeFileSync(outputFile, svg, 'utf8');
   console.log(`SVG rendered successfully: ${outputFile}`);
   console.log(`  lineHeight: ${lineHeight}`);

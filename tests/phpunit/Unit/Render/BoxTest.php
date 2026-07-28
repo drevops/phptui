@@ -37,6 +37,15 @@ final class BoxTest extends TestCase {
     yield 'ascii line fill' => [Border::Line, FALSE, 'h', '-'];
     yield 'ascii line vertical' => [Border::Line, FALSE, 'v', '|'];
     yield 'ascii double fill' => [Border::Double, FALSE, 'h', '='];
+    yield 'line top tee' => [Border::Line, TRUE, 'tt', '┬'];
+    yield 'line bottom tee' => [Border::Line, TRUE, 'bt', '┴'];
+    yield 'line cross' => [Border::Line, TRUE, 'cx', '┼'];
+    yield 'rounded cross' => [Border::Rounded, TRUE, 'cx', '┼'];
+    yield 'double top tee' => [Border::Double, TRUE, 'tt', '╦'];
+    yield 'double bottom tee' => [Border::Double, TRUE, 'bt', '╩'];
+    yield 'double cross' => [Border::Double, TRUE, 'cx', '╬'];
+    yield 'ascii cross' => [Border::Line, FALSE, 'cx', '+'];
+    yield 'ascii double cross' => [Border::Double, FALSE, 'cx', '+'];
   }
 
   #[DataProvider('dataProviderRule')]

@@ -12,6 +12,7 @@ use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\Modal;
 use DrevOps\Tui\Model\Panel;
+use DrevOps\Tui\Model\TableSpec;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
@@ -26,6 +27,7 @@ use DrevOps\Tui\Render\MarkupSegment;
 use DrevOps\Tui\Render\Navigator;
 use DrevOps\Tui\Render\Overlay;
 use DrevOps\Tui\Render\Scroller;
+use DrevOps\Tui\Render\Table;
 use DrevOps\Tui\Render\Viewport;
 use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Utils\Strings;
@@ -1343,6 +1345,19 @@ class DefaultTheme implements ThemeInterface {
       }
     }
 
+    $table = $this->noteTableLines($field, $answers);
+
+    if ($table !== []) {
+      // A blank line sets the grid off from the title and body above it.
+      if ($content !== []) {
+        $content[] = '';
+      }
+
+      foreach ($table as $line) {
+        $content[] = $line;
+      }
+    }
+
     if ($content === []) {
       return [];
     }
@@ -1352,6 +1367,39 @@ class DefaultTheme implements ThemeInterface {
     }
 
     return $this->boxedNote($content);
+  }
+
+  /**
+   * Render a note's table, its cells interpolated against the current answers.
+   *
+   * The grid fits inside the card: a bordered note boxes the whole card, an
+   * unbordered one indents it, so the table is sized narrower than the frame to
+   * leave room for that chrome and keep its own borders whole.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The note field.
+   * @param \DrevOps\Tui\Answers\Answers $answers
+   *   The current answers, interpolated into each cell.
+   *
+   * @return list<string>
+   *   The table's physical lines, or an empty list when the note has no table.
+   */
+  protected function noteTableLines(Field $field, Answers $answers): array {
+    $spec = $field->table;
+
+    if (!$spec instanceof TableSpec) {
+      return [];
+    }
+
+    $interpolate = fn(string $cell): string => $this->noteText($cell, $answers);
+    $headers = array_map($interpolate, $spec->headers);
+
+    $rows = [];
+    foreach ($spec->rows as $row) {
+      $rows[] = array_map($interpolate, $row);
+    }
+
+    return $this->tableLines($headers, $rows, max(1, $this->width - ($field->bordered ? 4 : 2)));
   }
 
   /**
@@ -1393,6 +1441,55 @@ class DefaultTheme implements ThemeInterface {
     $lines[] = $this->borderRule($chars['bl'], $chars['br'], $chars['h'], $outer);
 
     return $lines;
+  }
+
+  /**
+   * Render an aligned, bordered table from headers and rows.
+   *
+   * Lays the data out as a grid coloured with the theme's atoms and drawn in
+   * its border style, honouring the Unicode and colour switches. The columns
+   * size to their widest cell and the whole grid is capped at the frame width.
+   *
+   * @param list<string> $headers
+   *   The header cells; an empty list draws the grid with no header row.
+   * @param list<list<string>> $rows
+   *   The body rows, each a list of cell strings.
+   *
+   * @return list<string>
+   *   The table's physical lines, capped at the frame width.
+   */
+  public function renderTable(array $headers, array $rows): array {
+    return $this->tableLines($headers, $rows, $this->width);
+  }
+
+  /**
+   * Render a table at an explicit width cap, styled with the theme's atoms.
+   *
+   * @param list<string> $headers
+   *   The header cells.
+   * @param list<list<string>> $rows
+   *   The body rows.
+   * @param int $max_width
+   *   The widest the table may be, in columns.
+   *
+   * @return list<string>
+   *   The styled table lines.
+   */
+  protected function tableLines(array $headers, array $rows, int $max_width): array {
+    // An explicit table always draws its grid, so a None frame falls back to
+    // the single-line box, exactly as a bordered note does.
+    $style = $this->borderStyle() === Border::None ? Border::Line : $this->borderStyle();
+
+    return Table::render(
+      $headers,
+      $rows,
+      $style,
+      $this->unicode,
+      $max_width,
+      fn(string $cell): string => $this->heading($cell),
+      fn(string $cell): string => $this->value($cell),
+      fn(string $glyphs): string => $this->border($glyphs),
+    );
   }
 
   /**

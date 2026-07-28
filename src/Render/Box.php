@@ -28,20 +28,22 @@ final class Box {
    *   Whether Unicode glyphs are used; FALSE returns the ASCII fallback set.
    *
    * @return array<string,string>
-   *   Keyed by position: tl, tr, bl, br (corners), ml, mr (junctions), h
-   *   (horizontal), v (vertical).
+   *   Keyed by position: tl, tr, bl, br (corners), ml, mr (row junctions), h
+   *   (horizontal), v (vertical), tt, bt (top and bottom column tees) and cx
+   *   (the interior cross) - the last three joining a table's column
+   *   separators to its rules.
    */
   public static function chars(Border $style, bool $unicode): array {
-    $keys = ['tl', 'tr', 'bl', 'br', 'ml', 'mr', 'h', 'v'];
+    $keys = ['tl', 'tr', 'bl', 'br', 'ml', 'mr', 'h', 'v', 'tt', 'bt', 'cx'];
 
     if (!$unicode) {
-      return array_combine($keys, Strings::split($style === Border::Double ? '++++++=|' : '++++++-|'));
+      return array_combine($keys, Strings::split($style === Border::Double ? '++++++=|+++' : '++++++-|+++'));
     }
 
     $set = match ($style) {
-      Border::Rounded => '╭╮╰╯├┤─│',
-      Border::Double => '╔╗╚╝╠╣═║',
-      Border::None, Border::Line => '┌┐└┘├┤─│',
+      Border::Rounded => '╭╮╰╯├┤─│┬┴┼',
+      Border::Double => '╔╗╚╝╠╣═║╦╩╬',
+      Border::None, Border::Line => '┌┐└┘├┤─│┬┴┼',
     };
 
     return array_combine($keys, Strings::split($set));

@@ -94,21 +94,29 @@ final class EngineNonInteractiveTest extends TestCase {
         $p->text('name')->default('pear');
         // A note may be gated like any field, but still carries no answer.
         $p->note('gated', 'Gated')->when(new Condition('name', eq: 'pear'));
+        // A table is presentational too, so a note carrying one collects
+        // nothing.
+        $p->note('summary', 'Summary')->table(['Fruit', 'Qty'], [['Apple', '3']]);
       })
       ->build();
     $resolver = new InputResolver('APP_');
     $engine = new Engine($form, new HandlerRegistry());
 
     // Stray supplied values for the notes - even a malformed one - are ignored.
-    $inputs = $resolver->resolve($form->fields(), '{"intro": ["not", "a", "string"]}', ['APP_GATED' => 'ignored']);
+    $inputs = $resolver->resolve($form->fields(), '{"intro": ["not", "a", "string"]}', ['APP_GATED' => 'ignored', 'APP_SUMMARY' => 'ignored']);
     $answers = $engine->collect($inputs, new Context('', [], FALSE));
 
-    // Neither note contributes a value, provenance or self-describing item.
+    // No note contributes a value, provenance or self-describing item - not
+    // even the table-bearing one handed a supplied value.
     $this->assertArrayNotHasKey('intro', $answers->values);
     $this->assertArrayNotHasKey('gated', $answers->values);
+    $this->assertArrayNotHasKey('summary', $answers->values);
     $this->assertArrayNotHasKey('intro', $answers->provenance);
+    $this->assertArrayNotHasKey('summary', $answers->provenance);
     $this->assertNotInstanceOf(Answer::class, $answers->item('intro'));
+    $this->assertNotInstanceOf(Answer::class, $answers->item('summary'));
     $this->assertFalse($answers->has('gated'));
+    $this->assertFalse($answers->has('summary'));
 
     // The real field between the notes still collects normally.
     $this->assertSame('pear', $answers->value('name'));

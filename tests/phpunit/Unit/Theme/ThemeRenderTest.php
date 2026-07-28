@@ -11,6 +11,7 @@ use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\Modal;
 use DrevOps\Tui\Model\Panel;
+use DrevOps\Tui\Model\TableSpec;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
@@ -313,6 +314,91 @@ final class ThemeRenderTest extends TestCase {
     $this->assertStringContainsString('┐', $joined);
     $this->assertStringContainsString('└', $joined);
     $this->assertStringContainsString('┘', $joined);
+  }
+
+  public function testRenderTableDrawsAlignedGrid(): void {
+    // The borderless theme falls back to the single-line box for an explicit
+    // table, exactly as a bordered note does.
+    $expected = [
+      '┌───────┬────────┐',
+      '│ Fruit │ Colour │',
+      '├───────┼────────┤',
+      '│ Apple │ Red    │',
+      '└───────┴────────┘',
+    ];
+
+    $this->assertSame($expected, $this->theme()->renderTable(['Fruit', 'Colour'], [['Apple', 'Red']]));
+  }
+
+  public function testRenderTableColorsCellsAndBorders(): void {
+    $theme = new DefaultTheme(40, ['color' => TRUE, 'border' => Border::Line]);
+    $joined = implode("\n", $theme->renderTable(['Fruit'], [['Apple']]));
+
+    // Colour on wraps the cells and borders in ANSI; the grid still reads.
+    $this->assertStringContainsString("\033[", $joined);
+    $this->assertStringContainsString('Fruit', Ansi::strip($joined));
+    $this->assertStringContainsString('Apple', Ansi::strip($joined));
+  }
+
+  public function testRenderTableHonoursUnicodeOff(): void {
+    $theme = new DefaultTheme(40, ['color' => FALSE, 'unicode' => FALSE, 'border' => Border::Line]);
+    $lines = $theme->renderTable(['Fruit'], [['Apple']]);
+
+    $this->assertSame('+-------+', $lines[0]);
+    $this->assertStringContainsString('| Apple |', implode("\n", $lines));
+  }
+
+  public function testRenderTableCapsAtFrameWidth(): void {
+    // A narrow frame shrinks the column and ellipsizes the long cell so the
+    // border stays whole - the inner width here is 10 - 4 = 6.
+    $theme = new DefaultTheme(10, ['color' => FALSE, 'border' => Border::Line]);
+    $lines = $theme->renderTable(['Name'], [['Watermelon']]);
+
+    foreach ($lines as $line) {
+      $this->assertLessThanOrEqual(6, Ansi::width($line));
+    }
+    $this->assertStringContainsString('…', implode("\n", $lines));
+  }
+
+  public function testNoteRendersTableBeneathTitleAndBody(): void {
+    $field = new Field('stock', 'Stock', 'Current basket:', FieldType::Note, '', table: new TableSpec(['Fruit', 'Qty'], [['Apple', '3']]));
+    $joined = Ansi::strip(implode("\n", $this->theme()->renderNoteLines($field, new Answers())));
+
+    $this->assertStringContainsString('Stock', $joined);
+    $this->assertStringContainsString('Current basket:', $joined);
+    $this->assertStringContainsString('│ Fruit │ Qty │', $joined);
+    $this->assertStringContainsString('Apple', $joined);
+  }
+
+  public function testNoteInterpolatesTableCells(): void {
+    $field = new Field('echo', '', '', FieldType::Note, '', table: new TableSpec(['Item'], [['{{fruit}}']]));
+    $joined = Ansi::strip(implode("\n", $this->theme()->renderNoteLines($field, new Answers(['fruit' => 'pear'], []))));
+
+    $this->assertStringContainsString('pear', $joined);
+    $this->assertStringNotContainsString('{{fruit}}', $joined);
+  }
+
+  public function testNoteTableFoldsInterpolatedNewlines(): void {
+    // An answer carrying newlines - a textarea value - interpolated into a cell
+    // folds to one row so it never splits the grid.
+    $field = new Field('memo', '', '', FieldType::Note, '', table: new TableSpec(['Memo'], [['{{memo}}']]));
+    $lines = $this->theme()->renderNoteLines($field, new Answers(['memo' => "first\nsecond"], []));
+
+    foreach ($lines as $line) {
+      $this->assertStringNotContainsString("\n", $line);
+    }
+
+    $this->assertStringContainsString('first second', Ansi::strip(implode(' ', $lines)));
+  }
+
+  public function testBorderedNoteBoxesItsTable(): void {
+    $field = new Field('stock', 'Stock', '', FieldType::Note, '', bordered: TRUE, table: new TableSpec(['Fruit'], [['Apple']]));
+    $joined = Ansi::strip(implode("\n", $this->theme()->renderNoteLines($field, new Answers())));
+
+    $this->assertStringContainsString('Stock', $joined);
+    $this->assertStringContainsString('Apple', $joined);
+    // Two nested boxes: the note frame around the whole card, and the grid.
+    $this->assertGreaterThanOrEqual(2, substr_count($joined, '┌'));
   }
 
   public function testBodyIncludesSubPanels(): void {

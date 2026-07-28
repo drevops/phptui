@@ -208,6 +208,17 @@ function widgetSpecs(string $tree): array {
       'rows' => 14,
       'options' => ['markdown' => TRUE],
     ],
+    'table' => [
+      'form' => Form::create('Table widget')->panel('main', 'Stock', function (PanelBuilder $p): void {
+        $p->note('stock', 'Basket contents')->description('Everything picked so far:')->table(['Fruit', 'Colour', 'In stock'], [
+          ['Apple', 'Red', '12'],
+          ['Pear', 'Green', '5'],
+          ['Blackberry', 'Purple', '120'],
+        ]);
+      }),
+      'keys' => [$enter],
+      'rows' => 16,
+    ],
     'progress' => [
       'form' => Form::create('Progress widget')->panel('main', 'Progress', function (PanelBuilder $p) use ($pack): void { $p->progress('pack', 'Packing the box')->steps(6)->run($pack); }),
       'keys' => [$enter, $enter],
@@ -299,7 +310,7 @@ function renderStaticVariants(string $name, array $spec, string $assets_dir, str
   // with a single drill into the panel; every other widget opens its editor
   // with the hub-into-panel-into-field drill.
   $enter = Key::named(KeyName::Enter);
-  $open = in_array($name, ['pause', 'note', 'note-markdown'], TRUE) ? [$enter] : [$enter, $enter];
+  $open = in_array($name, ['pause', 'note', 'note-markdown', 'table'], TRUE) ? [$enter] : [$enter, $enter];
   // A widget whose opened editor shows nothing worth a screenshot until a key
   // is pressed (suggest highlights no row until you arrow into the list)
   // declares the keystrokes its static frame settles on.
