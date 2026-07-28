@@ -29,7 +29,7 @@ The engine doesn't know (or care) what application it serves. It stays generic: 
 - 🔗 [**Derived values**](/configuration#derived-values) - compute one field from others with [str2name](https://github.com/AlexSkrypnyk/str2name) transforms; chains settle to a fixpoint
 - 🔀 [**Conditional fields**](/configuration#conditional-fields) - show or hide fields with `when` rules; a fix-up pass reconciles dependent answers
 - 🔍 [**Discovery**](/field-behaviour#discovery) - detect sensible defaults from the target directory (`.env` keys, JSON paths, path existence, directory scans)
-- ⚙️ [**Declared behavior**](/field-behaviour) - validation, transforms and dynamic defaults as closures on the field; per-field handler classes remain as a fallback
+- ⚙️ [**Declared behavior**](/field-behaviour) - required fields, validation, transforms and dynamic defaults as closures on the field; per-field handler classes remain as a fallback
 - 📦 [**Self-describing answers**](/headless-collection#self-describing-answers) - each answer carries a snapshot of its question and its provenance; summaries need no form config
 - 🎨 [**Themes**](/themes) - the whole visual representation (colors, glyphs, layout) is a theme class; six ship built-in, each serving dark and light
 - ⌨️ [**Key bindings**](/key-bindings) - remap navigation, edit, accept and cancel keys per widget type; ships a vim-style preset, and a bad binding fails loudly at build time
