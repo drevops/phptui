@@ -146,8 +146,9 @@ final class Output {
   /**
    * Write label/value pairs as an aligned definition list.
    *
-   * @param array<string,string> $pairs
-   *   The values keyed by their label.
+   * @param array<array-key,string> $pairs
+   *   The values keyed by their label. A numeric-string label arrives as an
+   *   integer key and still renders as its own text.
    *
    * @return $this
    *   The primitive.

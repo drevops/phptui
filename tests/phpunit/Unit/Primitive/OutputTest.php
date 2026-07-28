@@ -55,7 +55,7 @@ final class OutputTest extends TestCase {
     $this->assertSame('', $terminal->output());
   }
 
-  #[DataProvider('dataProviderStatusMethods')]
+  #[DataProvider('dataProviderEachStatusMethodWritesItsOwnLine')]
   public function testEachStatusMethodWritesItsOwnLine(string $method, string $glyph): void {
     $terminal = new BufferedTerminal();
 
@@ -70,7 +70,7 @@ final class OutputTest extends TestCase {
    * @return array<string, array{string, string}>
    *   The method name and the glyph it leads with.
    */
-  public static function dataProviderStatusMethods(): array {
+  public static function dataProviderEachStatusMethodWritesItsOwnLine(): array {
     return [
       'note' => ['note', '•'],
       'info' => ['info', '›'],

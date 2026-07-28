@@ -92,7 +92,7 @@ final class OutputRenderTest extends TestCase {
     $this->assertStringContainsString("\033[1;90m", $lines[1]);
   }
 
-  #[DataProvider('dataProviderStatusGlyphs')]
+  #[DataProvider('dataProviderStatusLeadsWithItsOwnGlyph')]
   public function testStatusLeadsWithItsOwnGlyph(Status $status, string $unicode, string $ascii): void {
     $this->assertSame($unicode . ' Ready', $this->theme(color: FALSE)->renderStatus($status, 'Ready'));
     $this->assertSame($ascii . ' Ready', $this->theme(color: FALSE, unicode: FALSE)->renderStatus($status, 'Ready'));
@@ -104,7 +104,7 @@ final class OutputRenderTest extends TestCase {
    * @return array<string, array{Status, string, string}>
    *   The status, its Unicode glyph and its ASCII glyph.
    */
-  public static function dataProviderStatusGlyphs(): array {
+  public static function dataProviderStatusLeadsWithItsOwnGlyph(): array {
     return [
       'note' => [Status::Note, '•', '-'],
       'info' => [Status::Info, '›', '>'],
@@ -124,7 +124,7 @@ final class OutputRenderTest extends TestCase {
     }
   }
 
-  #[DataProvider('dataProviderStatusColours')]
+  #[DataProvider('dataProviderStatusCarriesItsOwnColour')]
   public function testStatusCarriesItsOwnColour(Status $status, string $sgr): void {
     $this->assertStringContainsString($sgr, $this->theme()->renderStatus($status, 'Ready'));
   }
@@ -135,7 +135,7 @@ final class OutputRenderTest extends TestCase {
    * @return array<string, array{Status, string}>
    *   The status and the SGR the default dark theme paints it with.
    */
-  public static function dataProviderStatusColours(): array {
+  public static function dataProviderStatusCarriesItsOwnColour(): array {
     return [
       'note is grey' => [Status::Note, "\033[90m"],
       'info is the accent' => [Status::Info, "\033[1;36m"],

@@ -337,8 +337,9 @@ interface ThemeInterface {
   /**
    * Render label/value pairs as an aligned definition list.
    *
-   * @param array<string,string> $pairs
-   *   The values keyed by their label.
+   * @param array<array-key,string> $pairs
+   *   The values keyed by their label. A numeric-string label arrives as an
+   *   integer key and still renders as its own text.
    *
    * @return list<string>
    *   The list's physical lines; empty when there are no pairs.

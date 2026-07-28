@@ -9,7 +9,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Output
 
-A form is rarely the whole program. An install-style flow opens with a welcome box, prints what it is doing between steps, and closes with a summary and its next steps. The `output()` primitives draw that chrome with the same theme the panel uses, so the text around the form belongs to the same program as the form itself.
+A form is rarely the whole program. A market-stall order opens with a welcome box, says what it is doing between steps, and closes with a summary and its next steps. The `output()` primitives draw that chrome with the same theme the panel uses, so the text around the form belongs to the same program as the form itself.
 
 `output()` returns a `DrevOps\Tui\Primitive\Output` carrying three pieces: a **box** with an optional title, five **status lines**, and an aligned **definition list**. Like [`progress()`](/progress), it is a primitive: it collects no answer and never runs inside the interactive panel. Hold onto the object and call it as often as you need - every call returns it, so the calls chain.
 
@@ -170,5 +170,7 @@ The frames, glyphs and alignment survive, because they are text. Forcing wins ov
 To write somewhere other than standard error - standard output, or a stream you control - pass your own terminal:
 
 ```php
+use DrevOps\Tui\Render\Terminal;
+
 $out = $tui->output(new Terminal(STDOUT));
 ```
