@@ -30,6 +30,7 @@ $form = Form::create('Widgets')
     $p->text('text', 'Text')->default('Pear');
     $p->template('template', 'Template')->pattern('{{orchard}}-{{fruit}}-{{grade}}')->default('valley-pear-a');
     $p->number('number', 'Number')->default(1200);
+    $p->rating('rating', 'Rating')->default(4)->captions([1 => 'Poor', 3 => 'Fair', 5 => 'Excellent']);
     // The month grid wants the whole screen, so it opts out of inline
     // editing; every other field here edits in place on its row.
     $p->calendar('calendar', 'Calendar')->default('2026-07-15')->standalone();

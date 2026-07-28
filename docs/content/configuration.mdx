@@ -19,7 +19,7 @@ use DrevOps\Tui\Derive\Derive;
 
 $form = Form::create('My form')
   ->panel('general', 'General', function (PanelBuilder $p): void {
-    // text | template | select | suggest | confirm | toggle | number
+    // text | template | select | suggest | confirm | toggle | number | rating
     // calendar | textarea | password | search | reorder | filepicker | pause
     // select, search and filepicker collect a list with ->multiple()
     $p->text('name', 'Produce name')->required();

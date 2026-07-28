@@ -147,12 +147,12 @@ class RatingWidget extends AbstractWidget implements StepCapableInterface {
   /**
    * {@inheritdoc}
    *
-   * The scale keys lead: nothing about a row of points says which keys move
+   * The stepping keys lead: nothing about a row of points says which keys move
    * along it.
    */
   #[\Override]
   public function hints(): array {
-    return [new Hint('adjust', Action::Decrement, Action::Increment), ...parent::hints()];
+    return [new Hint('adjust', Action::Increment, Action::Decrement), ...parent::hints()];
   }
 
 }
