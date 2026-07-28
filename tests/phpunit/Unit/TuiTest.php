@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit;
 
 use DrevOps\Tui\Answers\Answers;
+use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\CancelException;
 use DrevOps\Tui\Derive\Derive;
+use DrevOps\Tui\Discovery\Dotenv;
+use DrevOps\Tui\Discovery\JsonValue;
 use DrevOps\Tui\Engine\Engine;
 use DrevOps\Tui\Primitive\Progress;
 use DrevOps\Tui\Handler\Context;
@@ -31,6 +34,7 @@ use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Tui;
+use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -121,6 +125,25 @@ final class TuiTest extends TestCase {
     // An explicit FALSE forces headless collection from the defaults.
     $answers = $this->tui()->run('', '', '', FALSE);
     $this->assertSame('', $answers->value('name'));
+  }
+
+  public function testRunThreadsUpdateToCollect(): void {
+    vfsStream::setup('project', NULL, [
+      'box.json' => '{"name": "Weekly Box"}',
+      '.env' => "SEASON=winter\n",
+    ]);
+    $dir = vfsStream::url('project');
+
+    // Forced headless: run() forwards its update flag to collect(), so
+    // discovery pre-fills the answers with detected provenance.
+    $answers = $this->discoveryTui()->run('', '', $dir, FALSE, TRUE);
+    $this->assertSame('Weekly Box', $answers->value('name'));
+    $this->assertSame(Provenance::Detected, $answers->provenanceOf('name'));
+
+    // Update off (the default): the plain declared defaults collect instead.
+    $answers = $this->discoveryTui()->run('', '', $dir, FALSE);
+    $this->assertSame('', $answers->value('name'));
+    $this->assertSame(Provenance::Default, $answers->provenanceOf('name'));
   }
 
   public function testSchema(): void {
@@ -230,6 +253,27 @@ final class TuiTest extends TestCase {
     // Down twice reaches Cancel past the panel and Submit; Enter activates it.
     $down = KeyEncoder::encode(Key::named(KeyName::Down));
     $this->tui()->interact(terminal: new BufferedTerminal([$down, $down, KeyEncoder::encode(Key::named(KeyName::Enter))]));
+  }
+
+  public function testInteractUpdateModePreFillsDetectedValues(): void {
+    vfsStream::setup('project', NULL, [
+      'box.json' => '{"name": "Weekly Box"}',
+      '.env' => "SEASON=winter\n",
+    ]);
+    $dir = vfsStream::url('project');
+
+    // Update on: interact() carries the flag to the initial state resolution,
+    // so the panels open pre-filled with the detected values and their badges.
+    $answers = $this->discoveryTui()->interact(directory: $dir, update: TRUE, terminal: new BufferedTerminal([]));
+    $this->assertSame('Weekly Box', $answers->value('name'));
+    $this->assertSame('winter', $answers->value('season'));
+    $this->assertSame(Provenance::Detected, $answers->provenanceOf('name'));
+    $this->assertSame(Provenance::Detected, $answers->provenanceOf('season'));
+
+    // Update off (the default): the panels open on the plain declared defaults.
+    $answers = $this->discoveryTui()->interact(directory: $dir, terminal: new BufferedTerminal([]));
+    $this->assertSame('', $answers->value('name'));
+    $this->assertSame(Provenance::Default, $answers->provenanceOf('name'));
   }
 
   public function testFullscreenSugarMergesIntoThemeOptions(): void {
@@ -395,6 +439,19 @@ final class TuiTest extends TestCase {
     return Form::create('Demo')->panel('p', 'p', function (PanelBuilder $panel): void {
       $panel->text('name');
     });
+  }
+
+  /**
+   * A TUI whose fields discover their defaults from the project directory.
+   */
+  protected function discoveryTui(): Tui {
+    $form = Form::create('Update')
+      ->panel('box', 'Box', function (PanelBuilder $panel): void {
+        $panel->text('name', 'Box name')->default('')->discover(new JsonValue('box.json', 'name'));
+        $panel->text('season', 'Season')->default('summer')->discover(new Dotenv('SEASON'));
+      });
+
+    return new Tui($form);
   }
 
   /**
