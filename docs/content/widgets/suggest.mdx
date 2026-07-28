@@ -79,7 +79,9 @@ In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
 With `->ghost()`, the highest-ranked candidate your input is a prefix of is previewed dimmed after the caret, and <kbd>Tab</kbd> or <kbd>→</kbd> accepts it. The completion becomes the new query rather than a selection, so the ranked list stays open and narrows around it.
 
-It complements the list rather than replacing it, and it steps aside where it would mislead: the preview is suppressed once you arrow into the list (the highlighted suggestion is the value then, not your typed text), it only ever completes a _prefix_ - a fuzzy hit like `ga` → `Green apple` has no inline suffix to draw - and, like the [Text](/widgets/text) widget's ghost text, it is suppressed when color is off.
+It complements the list rather than replacing it, and it steps aside where it would mislead: the preview is suppressed once you arrow into the list (the highlighted suggestion is the value then, not your typed text), while a [query source](#suggestions-from-a-query) is still resolving (those candidates answer the previous query), and it only ever completes a _prefix_ - a fuzzy hit like `ga` → `Green apple` has no inline suffix to draw. Like the [Text](/widgets/text) widget's ghost text, it is suppressed when color is off.
+
+A completion and a [`placeholder()`](/field-behaviour#guidance-texts) share that dimmed slot and never contend for it: a completion needs a typed query, a placeholder needs an empty one.
 
 <table>
   <tr>

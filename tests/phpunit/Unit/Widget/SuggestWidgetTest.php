@@ -193,6 +193,20 @@ final class SuggestWidgetTest extends TestCase {
     $this->assertStringNotContainsString('Type to filter', Ansi::strip($widget->view($theme)));
   }
 
+  public function testPlaceholderNeverCompetesWithGhostText(): void {
+    $widget = (new SuggestWidget(['Apple'], '', NULL, [], TRUE))->setPlaceholder('Type to filter');
+    $theme = new DefaultTheme();
+
+    // Both occupy the one slot after the caret, but a completion needs a typed
+    // query and a placeholder an empty one, so the slot is never contested.
+    $this->assertStringContainsString('Type to filter', Ansi::strip($widget->queryLine($theme)));
+
+    $widget->handle(Key::char('a'));
+    $line = Ansi::strip($widget->queryLine($theme));
+    $this->assertStringContainsString('pple', $line);
+    $this->assertStringNotContainsString('Type to filter', $line);
+  }
+
   public function testGhostTextIsOptIn(): void {
     $widget = new SuggestWidget(['Apple', 'Apricot']);
 
