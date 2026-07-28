@@ -68,6 +68,7 @@ Every feature has a reference page and a runnable, self-contained example in [`p
 | 🔍 Discovery | Update mode detects defaults from an existing directory: dotenv keys, JSON dot-paths, path checks, directory scans | [discovery](https://phptui.dev/field-behaviour#discovery) | [`07-discovery`](playground/07-discovery.php) |
 | ⏳ Progress | A `progress()` primitive wraps slow work: a spinner when the length is unknown, a determinate bar when known - theme-drawn, animating on a TTY, degrading to a plain line when piped or headless | [progress](https://phptui.dev/progress) | [`15-progress-*`](playground) |
 | 🌐 Remote-backed options | `->optionsFrom()` resolves a search or suggest field's candidates from the live query - a themed `Loading…` while it runs, a typing burst settling into one call, a per-query cache, and `->minQuery()` holding it back until the query is worth sending | [options from a query](https://phptui.dev/progress#options-from-a-query) | [`17-query-options`](playground/17-query-options.php) |
+| 🧾 Output | An `output()` primitive draws the chrome around a form: a titled box, five status lines and an aligned definition list - theme-drawn, dropping their color when piped or redirected | [output](https://phptui.dev/output) | [`17-output-*`](playground) |
 | 📦 Self-describing answers | Answers carry provenance; `toSummary()` renders a badged, panel-grouped report and `toJson()` the machine result; `schema()`, `validate()` and `agentHelp()` describe the form itself | [self-describing answers](https://phptui.dev/headless-collection#self-describing-answers) | [`08-headless-*`](playground) |
 | 🎨 Themes | Six built-ins selected by name; a custom theme is a `DefaultTheme` subclass overriding palette atoms and render methods | [themes](https://phptui.dev/themes) | [`09-themes-*`](playground) |
 | ⌨️ Key bindings | Presets (`default`, `vim`, or a class) plus per-binding overrides scoped to navigation or a widget type; conflicts throw at setup | [key bindings](https://phptui.dev/key-bindings) | [`10-key-bindings-*`](playground) |
@@ -129,6 +130,7 @@ The facade's surface:
 | `collect($prompts, $directory, $update, $version)` | Headless collection from JSON + environment; `$update` enables discovery |
 | `interact()` | The interactive panel TUI, explicitly |
 | `progress($total, $caption, $work)` | Show slow work running around the form: a spinner with no total, a determinate bar with one - a theme-drawn primitive |
+| `output()` | Draw the chrome around the form: a titled box, the five status lines and an aligned definition list - theme-drawn primitives |
 | `schema()` / `validate($answers)` / `agentHelp()` | Describe the questions as structured metadata, validate an answer payload, emit the agent-facing answer schema |
 | `theme($theme, $options)` / `keys($preset, $overrides)` | Select the theme and key bindings |
 | `color($bool)` / `unicode($bool)` / `fullscreen($bool)` / `footer($bool)` / `clearOnExit($bool)` / `translator($t)` | Display and runtime switches |
