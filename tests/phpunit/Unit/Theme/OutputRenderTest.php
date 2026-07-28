@@ -49,6 +49,22 @@ final class OutputRenderTest extends TestCase {
     $this->assertSame([], $this->theme()->renderCard('', []));
   }
 
+  public function testBoxWrapsLongTitleInsideTheBorder(): void {
+    $theme = $this->theme(color: FALSE);
+    $title = 'Everything below is picked the morning it ships and nothing at all is charged before the crates leave';
+    $lines = $theme->renderCard($title, ['Pick your fruit.']);
+
+    // The title flows onto more rows rather than being clipped, and every row
+    // still fits inside the border.
+    $this->assertGreaterThan(3, count($lines));
+
+    foreach ($lines as $line) {
+      $this->assertLessThanOrEqual($theme->contentWidth(), Ansi::width($line));
+    }
+
+    $this->assertStringContainsString('crates', implode(' ', $lines));
+  }
+
   public function testCardPutsItsGridBelowTheBodyInsideTheBorder(): void {
     $lines = $this->theme(color: FALSE)->renderCard('Summary', ['Your order is packed.'], ['Item', 'Count'], [['Apricot', '12']]);
 

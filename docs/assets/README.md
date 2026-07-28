@@ -54,12 +54,13 @@ from their borderless twins.
   into frames on the carriage return, and renders both the animation and a
   single mid-run static frame in all four display modes, borderless like the
   widget statics.
-- **`render-output-svgs.php`** - the output primitives' box, status-line and
-  definition-list assets (`output-box-*`, `output-status-*`,
-  `output-definitions-*`), driven through the real primitive against an
-  in-memory terminal in all four display modes, borderless like the widget
-  statics. These are the one subject with no `-animated` variant: the output
-  primitives write finished lines and return, so there is no motion to record.
+- **`render-output-svgs.php`** - the output primitives' assets (`output-box-*`,
+  `output-card-*`, `output-table-*`, `output-status-*`,
+  `output-definitions-*`, `output-text-*`), driven through the real primitive
+  against an in-memory terminal in all four display modes, borderless like the
+  widget statics. These are the one subject with no `-animated` variant: the
+  output primitives write finished lines and return, so there is no motion to
+  record.
 - **`render-social-card.php`** - the one non-SVG asset: `social-card.png`, the
   1200x630 Open Graph image composed from `quickstart-dark-static.svg` and the
   site branding, screenshotted through agent-browser. It runs after the workers

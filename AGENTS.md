@@ -187,9 +187,12 @@ After a structural change, update them with the `render-tui-diagrams` skill.
 ### Terminal SVG assets
 
 Every widget and every primitive carries a full set of terminal SVGs under
-`docs/assets/` - light and dark, animated and static, in all four display
-modes (Unicode/ASCII, colour on/off) - embedded in the README and the docs
-pages. They render deterministically (no pty) from the scripts in `docs/util/`:
+`docs/assets/` - light and dark, in all four display modes (Unicode/ASCII,
+colour on/off) - embedded in the README and the docs pages. Anything that
+moves also carries an animated variant beside its static one; a subject with
+no motion to record (the output primitives, which write finished lines and
+return) is static-only by design. They render deterministically (no pty) from
+the scripts in `docs/util/`:
 `render-widget-svgs.php` for widgets, `render-progress-svgs.php` for the
 progress primitive, `render-output-svgs.php` for the output primitives (static
 only - they write finished lines, so there is no motion to record), and

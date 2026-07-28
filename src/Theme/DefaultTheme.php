@@ -1049,9 +1049,9 @@ class DefaultTheme implements ThemeInterface {
     $content = [];
 
     if ($title !== '') {
-      // Split the title on its own newlines so no returned line ever carries an
-      // embedded newline that would desync the box and scroll maths.
-      foreach (explode("\n", $this->normalizeLines($title)) as $line) {
+      // Wrapped like the body: a title too long for the card would otherwise be
+      // clipped against the border rather than carried onto the next row.
+      foreach ($this->wrapLines($title, $inner) as $line) {
         $content[] = $this->heading($line);
       }
     }
@@ -1135,21 +1135,42 @@ class DefaultTheme implements ThemeInterface {
   protected function wrapMarkup(string $text, int $width): array {
     $lines = [];
 
-    foreach (explode("\n", $this->normalizeLines($text)) as $physical) {
-      $wrapped = Strings::wrap($physical, $width);
-
-      // A line with no visible characters wraps to nothing; keeping it blank
-      // lets a caller space the content out.
-      if ($wrapped === []) {
+    foreach ($this->wrapLines($text, $width) as $chunk) {
+      if ($chunk === '') {
         $lines[] = '';
 
         continue;
       }
 
-      foreach ($wrapped as $chunk) {
-        foreach ($this->markupBody($chunk, FALSE) as $rendered) {
-          $lines[] = $rendered;
-        }
+      foreach ($this->markupBody($chunk, FALSE) as $rendered) {
+        $lines[] = $rendered;
+      }
+    }
+
+    return $lines;
+  }
+
+  /**
+   * Split source text into physical lines and word-wrap each to a width.
+   *
+   * @param string $text
+   *   The source text; its own line endings split it first.
+   * @param int $width
+   *   The width to wrap to.
+   *
+   * @return list<string>
+   *   The wrapped lines, unstyled.
+   */
+  protected function wrapLines(string $text, int $width): array {
+    $lines = [];
+
+    foreach (explode("\n", $this->normalizeLines($text)) as $physical) {
+      $wrapped = Strings::wrap($physical, $width);
+
+      // A line with no visible characters wraps to nothing; keeping it blank
+      // lets a caller space the content out.
+      foreach ($wrapped === [] ? [''] : $wrapped as $line) {
+        $lines[] = $line;
       }
     }
 
