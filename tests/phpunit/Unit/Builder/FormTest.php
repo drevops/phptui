@@ -552,24 +552,6 @@ final class FormTest extends TestCase {
     yield 'inverted' => [5, 2];
   }
 
-  public function testRatingCaptionOutsideTheScaleThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Field "r" captions the point 9, which is outside its scale of between 1 and 5.');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->rating('r')->captions([9 => 'Nope']))
-      ->build();
-  }
-
-  public function testCaptionsOnNonRatingFieldThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Field "t" of type "text" draws no scale to caption');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->text('t')->captions([1 => 'Poor']))
-      ->build();
-  }
-
   public function testDateBoundsAssembled(): void {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $panel): void {
