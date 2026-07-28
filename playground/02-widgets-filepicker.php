@@ -6,8 +6,9 @@
  *
  * Arrows move, Right enters a directory, Left returns to its parent, Enter
  * selects. The form points the picker at a small fixture tree with
- * ->startIn(), limits it to files with ->filesOnly() and to CSV with
- * ->extensions(); ->directoriesOnly() and ->showHidden() are the other
+ * ->startIn(), limits it to files with ->filesOnly(), to CSV with
+ * ->extensions() and to a size with ->maxSize() - a pick that breaks a limit
+ * is rejected inline; ->directoriesOnly() and ->showHidden() are the other
  * filters. The field collects the selected path as a string.
  *
  * Usage:
@@ -26,7 +27,7 @@ require __DIR__ . '/../vendor/autoload.php';
 // One field on one panel: the smallest form that exercises the widget.
 $form = Form::create('File picker widget')
   ->panel('main', 'File picker', function (PanelBuilder $p): void {
-    $p->filePicker('price_list', 'Price list')->startIn(__DIR__ . '/sample-project')->filesOnly()->extensions(['csv']);
+    $p->filePicker('price_list', 'Price list')->startIn(__DIR__ . '/sample-project')->filesOnly()->extensions(['csv'])->maxSize(50);
   });
 
 try {

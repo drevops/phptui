@@ -102,6 +102,11 @@ class SchemaValidator {
       return $bounds_error;
     }
 
+    $picker_error = $this->checkPicker($field, $value);
+    if ($picker_error !== NULL) {
+      return $picker_error;
+    }
+
     return $this->checkOptions($field, $value);
   }
 
@@ -118,6 +123,24 @@ class SchemaValidator {
    */
   protected function checkBounds(Field $field, mixed $value): ?string {
     $violation = $field->boundsViolation($value);
+
+    return $violation === NULL ? NULL : $this->constraintMessage($field, $violation);
+  }
+
+  /**
+   * Check a value against the field's declared file picker constraints.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field.
+   * @param mixed $value
+   *   The value.
+   *
+   * @return string|null
+   *   An error, or NULL when within limits (or the field declares no picker
+   *   constraints).
+   */
+  protected function checkPicker(Field $field, mixed $value): ?string {
+    $violation = $field->pickerViolation($value);
 
     return $violation === NULL ? NULL : $this->constraintMessage($field, $violation);
   }

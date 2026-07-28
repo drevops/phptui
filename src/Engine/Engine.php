@@ -363,7 +363,7 @@ class Engine {
    *   TRUE when the value passes the field's shape and constraints.
    */
   protected function acceptsDetected(Field $field, mixed $value): bool {
-    return $field->acceptsValue($value) && $field->boundsViolation($value) === NULL && $field->optionError($value) === NULL;
+    return $field->acceptsValue($value) && $field->boundsViolation($value) === NULL && $field->pickerViolation($value) === NULL && $field->optionError($value) === NULL;
   }
 
   /**
@@ -385,6 +385,11 @@ class Engine {
     $violation = $field->boundsViolation($value);
     if ($violation !== NULL) {
       return Translator::t('must be @constraint.', ['@constraint' => $violation]);
+    }
+
+    $picker = $field->pickerViolation($value);
+    if ($picker !== NULL) {
+      return Translator::t('must be @constraint.', ['@constraint' => $picker]);
     }
 
     $validator = $field->validate ?? $this->handlers->validator($field->id);

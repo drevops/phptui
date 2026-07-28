@@ -17,9 +17,10 @@ Browse the filesystem for a single path. It collects the **chosen path** (a `str
 
 ```php
 $p->filePicker('list', 'Price list')
-  ->startIn(getcwd())   // Directory to open in (and the floor for ←).
-  ->filesOnly()         // Only files are selectable; directories stay navigable.
-  ->extensions(['csv']) // Limit selectable files to these extensions.
+  ->startIn(getcwd())    // Directory to open in (and the floor for ←).
+  ->filesOnly()          // Only files are selectable; directories stay navigable.
+  ->extensions(['csv'])  // Limit selectable files to these extensions.
+  ->maxSize(5_000_000)   // Reject a selected file larger than this many bytes.
   ->showHidden();        // Show hidden (dot) entries when the browser opens.
 ```
 
@@ -33,6 +34,7 @@ Runnable scripts: [`playground/02-widgets-filepicker.php`](https://github.com/dr
 | `filesOnly()`       | Only files are selectable; directories stay navigable.                      | No       | Files and directories |
 | `directoriesOnly()` | Only directories are selectable.                                            | No       | Files and directories |
 | `extensions()`      | Restrict selectable files to these extensions (dot-less, case-insensitive). | No       | All                   |
+| `maxSize()`         | Reject any selected file larger than this many bytes.                       | No       | No limit              |
 | `showHidden()`      | Show hidden (dot) entries when the browser opens.                           | No       | Off                   |
 | `pageSize()`        | Entries shown before the list pages around the cursor.                      | No       | `10`                  |
 
@@ -72,6 +74,19 @@ In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
     <td><ThemedImage sources={{light: useBaseUrl('/widget-filepicker-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-filepicker-dark-static-ascii-no-ansi.svg')}} alt="File picker: ASCII + No ANSI" /></td>
   </tr>
 </table>
+
+## Type and size constraints
+
+Constrain what counts as a valid pick with `->filesOnly()` / `->directoriesOnly()`, `->extensions()` and `->maxSize()`. The active limits show as a hint below the browser, a pick that breaks one is rejected inline when you accept, and the same limits are enforced in [headless collection](/headless-collection).
+
+```php
+$p->filePicker('list', 'Price list')
+  ->filesOnly()          // A directory (or a missing path) is not a valid pick.
+  ->extensions(['csv'])  // Only .csv files may be chosen.
+  ->maxSize(5_000_000);  // Reject a file larger than 5 MB.
+```
+
+A missing path, a directory where a file is required (or the reverse), a disallowed extension, or an oversized file each fail with a message naming the unmet limit.
 
 ## Multiple selection
 

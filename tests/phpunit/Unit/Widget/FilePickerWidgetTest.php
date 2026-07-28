@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Widget;
 
 use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\FilePickerConstraints;
 use DrevOps\Tui\Model\FilePickerMode;
 use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Input\Key;
@@ -99,7 +100,7 @@ final class FilePickerWidgetTest extends TestCase {
 
   public function testRightOnFileDoesNotDescend(): void {
     // README.md is the first file; highlight it, then Right is a no-op.
-    $widget = new FilePickerWidget($this->root, mode: FilePickerMode::File);
+    $widget = new FilePickerWidget($this->root, constraints: new FilePickerConstraints(FilePickerMode::File));
 
     // Files-only lists directories (navigable) then files.
     $widget->handle(Key::named(KeyName::Down));
@@ -133,7 +134,7 @@ final class FilePickerWidgetTest extends TestCase {
   }
 
   public function testFileModeEnterOnDirectoryDescends(): void {
-    $widget = new FilePickerWidget($this->root, mode: FilePickerMode::File);
+    $widget = new FilePickerWidget($this->root, constraints: new FilePickerConstraints(FilePickerMode::File));
 
     $value = WidgetRunner::run($widget, ArrayKeyStream::of(
       Key::named(KeyName::Enter),
@@ -146,7 +147,7 @@ final class FilePickerWidgetTest extends TestCase {
   }
 
   public function testDirectoryModeHidesFilesAndSelectsDirectory(): void {
-    $widget = new FilePickerWidget($this->root, mode: FilePickerMode::Directory);
+    $widget = new FilePickerWidget($this->root, constraints: new FilePickerConstraints(FilePickerMode::Directory));
 
     $view = $this->render($widget);
     $this->assertStringContainsString('docs/', $view);
@@ -159,7 +160,7 @@ final class FilePickerWidgetTest extends TestCase {
   }
 
   public function testExtensionFilterLimitsFiles(): void {
-    $widget = new FilePickerWidget($this->root, mode: FilePickerMode::File, extensions: ['MD']);
+    $widget = new FilePickerWidget($this->root, constraints: new FilePickerConstraints(FilePickerMode::File, ['MD']));
 
     // Descend into src (docs, empty, src -> src is third).
     $widget->handle(Key::named(KeyName::Down));
@@ -251,7 +252,7 @@ final class FilePickerWidgetTest extends TestCase {
   }
 
   public function testMultipleSpaceIgnoresNonSelectableDirectory(): void {
-    $widget = new FilePickerWidget($this->root, mode: FilePickerMode::File, multiple: TRUE);
+    $widget = new FilePickerWidget($this->root, constraints: new FilePickerConstraints(FilePickerMode::File), multiple: TRUE);
     $theme = new DefaultTheme(76, ['unicode' => FALSE, 'color' => FALSE]);
 
     // The first entry is a directory, which files-only mode cannot select.
@@ -472,6 +473,49 @@ final class FilePickerWidgetTest extends TestCase {
 
     // The active limit is surfaced, capitalized, below the entries.
     $this->assertStringContainsString('Select between 2 and 3 items.', $this->render($widget));
+  }
+
+  public function testRejectsOversizeFileWithInlineError(): void {
+    vfsStream::setup('sized', NULL, ['big.txt' => str_repeat('a', 200), 'tiny.txt' => str_repeat('a', 10)]);
+    $root = vfsStream::url('sized');
+    $widget = new FilePickerWidget($root, constraints: new FilePickerConstraints(maxSize: 100));
+
+    // big.txt (200 bytes) is highlighted first and exceeds the 100-byte limit.
+    $widget->handle(Key::named(KeyName::Enter));
+
+    $this->assertFalse($widget->isComplete());
+    $this->assertStringContainsString('Choose a file no larger than 100 B.', $this->render($widget));
+  }
+
+  public function testAcceptsFileWithinSizeLimit(): void {
+    vfsStream::setup('sized', NULL, ['tiny.txt' => str_repeat('a', 10)]);
+    $root = vfsStream::url('sized');
+    $widget = new FilePickerWidget($root, constraints: new FilePickerConstraints(maxSize: 100));
+
+    $value = WidgetRunner::run($widget, ArrayKeyStream::of(Key::named(KeyName::Enter)));
+
+    $this->assertSame($root . '/tiny.txt', $value);
+    $this->assertTrue($widget->isComplete());
+  }
+
+  public function testConstraintHintShownBelowEntries(): void {
+    $widget = new FilePickerWidget($this->root, constraints: new FilePickerConstraints(FilePickerMode::File, ['md'], 2097152));
+
+    // The active limits are surfaced below the entries as a hint.
+    $this->assertStringContainsString('Files only. Extensions: md. Max 2 MB.', $this->render($widget));
+  }
+
+  public function testConstraintHintGivesWayToInlineError(): void {
+    vfsStream::setup('sized', NULL, ['big.txt' => str_repeat('a', 200)]);
+    $root = vfsStream::url('sized');
+    $widget = new FilePickerWidget($root, constraints: new FilePickerConstraints(maxSize: 100));
+
+    $widget->handle(Key::named(KeyName::Enter));
+
+    $view = $this->render($widget);
+    // The inline error replaces the persistent hint so the two never stack.
+    $this->assertStringContainsString('Choose a file no larger than 100 B.', $view);
+    $this->assertStringNotContainsString('Max 100 B.', $view);
   }
 
   /**
