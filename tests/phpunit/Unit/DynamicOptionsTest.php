@@ -450,14 +450,20 @@ final class DynamicOptionsTest extends TestCase {
    */
   protected function schemaOptions(array $schema, string $id): array {
     $options = $this->schemaFor($schema, $id)['options'] ?? NULL;
-    $this->assertIsArray($options);
+
+    if (!is_array($options)) {
+      $this->fail(sprintf('The prompt "%s" carries no options.', $id));
+    }
 
     $values = [];
 
     foreach ($options as $option) {
-      $this->assertIsArray($option);
-      $value = $option['value'] ?? NULL;
-      $this->assertIsString($value);
+      $value = is_array($option) ? ($option['value'] ?? NULL) : NULL;
+
+      if (!is_string($value)) {
+        $this->fail(sprintf('The prompt "%s" carries an option with no value.', $id));
+      }
+
       $values[] = $value;
     }
 
@@ -479,7 +485,10 @@ final class DynamicOptionsTest extends TestCase {
    */
   protected function schemaFlag(array $schema, string $id, string $key): bool {
     $flag = $this->schemaFor($schema, $id)[$key] ?? NULL;
-    $this->assertIsBool($flag);
+
+    if (!is_bool($flag)) {
+      $this->fail(sprintf('The prompt "%s" carries no "%s" flag.', $id, $key));
+    }
 
     return $flag;
   }
@@ -497,12 +506,13 @@ final class DynamicOptionsTest extends TestCase {
    */
   protected function schemaFor(array $schema, string $id): array {
     $prompts = $schema['prompts'] ?? NULL;
-    $this->assertIsArray($prompts);
+
+    if (!is_array($prompts)) {
+      $this->fail('The schema carries no prompts.');
+    }
 
     foreach ($prompts as $prompt) {
-      $this->assertIsArray($prompt);
-
-      if (($prompt['id'] ?? NULL) === $id) {
+      if (is_array($prompt) && ($prompt['id'] ?? NULL) === $id) {
         return $prompt;
       }
     }
