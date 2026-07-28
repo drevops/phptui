@@ -44,14 +44,14 @@ Because the set is open, <kbd>Enter</kbd> accepts the highlighted suggestion, or
 
 ## Keyboard
 
-| Key                         | Action                                                       |
-| --------------------------- | ------------------------------------------------------------ |
-| printable keys              | Type to filter the candidates                                |
-| <kbd>↑</kbd> / <kbd>↓</kbd> | Highlight a suggestion                                       |
-| <kbd>Backspace</kbd>        | Delete the character before the caret                        |
-| <kbd>Tab</kbd> / <kbd>→</kbd> | Accept the ghost-text preview, when `ghost()` is on         |
-| <kbd>Enter</kbd>            | Accept the highlighted suggestion, or the typed text if none |
-| <kbd>Esc</kbd>              | Cancel                                                       |
+| Key                           | Action                                                       |
+| ----------------------------- | ------------------------------------------------------------ |
+| printable keys                | Type to filter the candidates                                |
+| <kbd>↑</kbd> / <kbd>↓</kbd>   | Highlight a suggestion                                       |
+| <kbd>Backspace</kbd>          | Delete the character before the caret                        |
+| <kbd>Tab</kbd> / <kbd>→</kbd> | Accept the ghost-text preview, when `ghost()` is on          |
+| <kbd>Enter</kbd>              | Accept the highlighted suggestion, or the typed text if none |
+| <kbd>Esc</kbd>                | Cancel                                                       |
 
 ## Display modes
 
@@ -79,7 +79,7 @@ In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
 With `->ghost()`, the highest-ranked candidate your input is a prefix of is previewed dimmed after the caret, and <kbd>Tab</kbd> or <kbd>→</kbd> accepts it. The completion becomes the new query rather than a selection, so the ranked list stays open and narrows around it.
 
-It complements the list rather than replacing it, and it steps aside where it would mislead: the preview is suppressed once you arrow into the list (the highlighted suggestion is the value then, not your typed text), it only ever completes a *prefix* - a fuzzy hit like `ga` → `Green apple` has no inline suffix to draw - and, like the [Text](/widgets/text) widget's ghost text, it is suppressed when color is off.
+It complements the list rather than replacing it, and it steps aside where it would mislead: the preview is suppressed once you arrow into the list (the highlighted suggestion is the value then, not your typed text), it only ever completes a _prefix_ - a fuzzy hit like `ga` → `Green apple` has no inline suffix to draw - and, like the [Text](/widgets/text) widget's ghost text, it is suppressed when color is off.
 
 <table>
   <tr>
