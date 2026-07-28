@@ -1685,7 +1685,10 @@ class DefaultTheme implements ThemeInterface {
    *   The indented hint lines.
    */
   public function renderFieldHint(string $hint, bool $selected): array {
-    return array_map(fn(string $line): string => '    ' . $this->hint($line, $selected), explode("\n", $hint));
+    // Fold CRLF and lone-CR endings the way the markup parser does for a
+    // description: a surviving carriage return would send the cursor back to
+    // column 0 mid-frame and overwrite the row it sits on.
+    return array_map(fn(string $line): string => '    ' . $this->hint($line, $selected), explode("\n", $this->normalizeLines($hint)));
   }
 
   /**

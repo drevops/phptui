@@ -198,6 +198,20 @@ final class ThemeRenderTest extends TestCase {
     $this->assertNotSame($theme->description('Pick a date'), $theme->hint('Pick a date'));
   }
 
+  public function testFieldHintFoldsCarriageReturns(): void {
+    $theme = new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None]);
+
+    // A Windows-authored hint splits on its line breaks like any other, and no
+    // carriage return survives into a row to reposition the cursor.
+    $lines = $theme->renderFieldHint("Pick a date\r\nin the season\rthis year", FALSE);
+
+    $this->assertSame(['    Pick a date', '    in the season', '    this year'], array_map(Ansi::strip(...), $lines));
+
+    foreach ($lines as $line) {
+      $this->assertStringNotContainsString("\r", $line);
+    }
+  }
+
   public function testFieldHintRendersMarkupLiterally(): void {
     $theme = new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'markdown' => TRUE]);
 
