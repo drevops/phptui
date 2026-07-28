@@ -10,6 +10,7 @@ use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\EmberTheme;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\ThemeManager;
+use DrevOps\Tui\Utils\Strings;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -24,7 +25,7 @@ use PHPUnit\Framework\TestCase;
 final class OutputRenderTest extends TestCase {
 
   public function testBoxDrawsTitledFrameSizedToItsContent(): void {
-    $lines = $this->theme(color: FALSE)->renderBox('Welcome', ['Pick your fruit.']);
+    $lines = $this->theme(color: FALSE)->renderCard('Welcome', ['Pick your fruit.']);
 
     $this->assertCount(4, $lines);
     $this->assertStringStartsWith('╭', $lines[0]);
@@ -38,26 +39,142 @@ final class OutputRenderTest extends TestCase {
   }
 
   public function testBoxWithoutTitleDrawsTheBodyAlone(): void {
-    $lines = $this->theme(color: FALSE)->renderBox('', ['Pick your fruit.']);
+    $lines = $this->theme(color: FALSE)->renderCard('', ['Pick your fruit.']);
 
     $this->assertCount(3, $lines);
     $this->assertStringContainsString('Pick your fruit.', $lines[1]);
   }
 
   public function testBoxWithNeitherTitleNorBodyRendersNothing(): void {
-    $this->assertSame([], $this->theme()->renderBox('', []));
+    $this->assertSame([], $this->theme()->renderCard('', []));
+  }
+
+  public function testCardPutsItsGridBelowTheBodyInsideTheBorder(): void {
+    $lines = $this->theme(color: FALSE)->renderCard('Summary', ['Your order is packed.'], ['Item', 'Count'], [['Apricot', '12']]);
+
+    $body = implode("\n", $lines);
+
+    $this->assertStringContainsString('Summary', $body);
+    $this->assertStringContainsString('Your order is packed.', $body);
+    $this->assertStringContainsString('Apricot', $body);
+
+    // The grid sits inside the card's own border, so every row closes at the
+    // same width and the outer frame is unbroken.
+    $widths = array_map(Ansi::width(...), $lines);
+    $this->assertSame([$widths[0]], array_unique($widths));
+
+    // A blank row sets the grid off from the body above it.
+    $this->assertStringContainsString('│', $lines[3]);
+    $this->assertSame('', trim($lines[3], '│ '));
+  }
+
+  public function testUnborderedCardIndentsInsteadOfBoxing(): void {
+    $lines = $this->theme(color: FALSE)->renderCard('Summary', ['Packed.'], [], [], FALSE);
+
+    $this->assertSame(['  Summary', '  Packed.'], $lines);
+  }
+
+  public function testCardWithOnlyGridDrawsTheGridAlone(): void {
+    $lines = $this->theme(color: FALSE)->renderCard('', [], ['Item'], [['Apricot']]);
+
+    // With no title or body there is nothing to set the grid off from, so it
+    // opens the card rather than following a blank row.
+    $this->assertStringContainsString('Item', implode("\n", $lines));
+    $this->assertNotSame('', trim($lines[1], '│ '));
+  }
+
+  public function testCardNarrowsItsGridToStayInsideTheBorder(): void {
+    $theme = new DefaultTheme(30, ['color' => FALSE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
+    $lines = $theme->renderCard('Summary', [], ['Item', 'Count'], [['A very long produce name indeed', '12']]);
+
+    foreach ($lines as $line) {
+      $this->assertLessThanOrEqual(30, Ansi::width($line));
+    }
+  }
+
+  public function testTableDrawsAnAlignedGrid(): void {
+    $lines = $this->theme(color: FALSE)->renderTable(['Item', 'Count'], [['Apricot', '12'], ['Carrot', '6']]);
+
+    // Top rule, header row, header rule, two body rows, bottom rule.
+    $this->assertCount(6, $lines);
+    $this->assertStringStartsWith('╭', $lines[0]);
+    $this->assertStringContainsString('Item', $lines[1]);
+    $this->assertStringContainsString('Apricot', $lines[3]);
+    $this->assertStringContainsString('Carrot', $lines[4]);
+    $this->assertStringStartsWith('╰', $lines[5]);
+
+    $widths = array_map(Ansi::width(...), $lines);
+    $this->assertSame([$widths[0]], array_unique($widths));
+  }
+
+  public function testTableWithoutHeadersDrawsRowsAlone(): void {
+    $lines = $this->theme(color: FALSE)->renderTable([], [['Apricot', '12']]);
+
+    $this->assertCount(3, $lines);
+    $this->assertStringContainsString('Apricot', $lines[1]);
+  }
+
+  public function testTableFallsBackToAsciiGlyphs(): void {
+    $lines = $this->theme(color: FALSE, unicode: FALSE)->renderTable(['Item'], [['Apricot']]);
+
+    $this->assertStringStartsWith('+', $lines[0]);
+    $this->assertStringNotContainsString('╭', implode('', $lines));
+  }
+
+  public function testTextWrapsToTheFrameAndKeepsBlankLines(): void {
+    $theme = $this->theme(color: FALSE);
+    $long = 'The weekly produce box carries apples, pears, plums, carrots, beetroot and a bunch of fresh herbs picked the same morning.';
+    $lines = $theme->renderText($long . "\n\nPacked at dawn.");
+
+    $this->assertGreaterThan(2, count($lines));
+
+    foreach ($lines as $line) {
+      $this->assertLessThanOrEqual($theme->contentWidth(), Ansi::width($line));
+    }
+
+    // The blank source line survives as a blank rendered line.
+    $this->assertContains('', $lines);
+    $this->assertSame('Packed at dawn.', end($lines));
+  }
+
+  public function testTextRendersNothingForAnEmptyString(): void {
+    $this->assertSame([''], $this->theme()->renderText(''));
+  }
+
+  public function testRuleSpansTheRowWidth(): void {
+    $theme = $this->theme(color: FALSE);
+    $rule = $theme->divider();
+
+    // The row width, not the frame's: a rule sits inside the border like any
+    // other row, so it stops where the border's gutter begins.
+    $this->assertSame($theme->contentWidth(), Ansi::width($rule));
+    $this->assertSame('─', Strings::split($rule)[0]);
+  }
+
+  public function testBannerStacksTheLogoAboveItsVersion(): void {
+    $lines = explode("\n", $this->theme(color: FALSE)->renderBanner("Produce\nBox", '1.2.3'));
+
+    $this->assertSame('Produce', $lines[0]);
+    $this->assertSame('Box', $lines[1]);
+    $this->assertSame('', $lines[2]);
+    $this->assertStringContainsString('1.2.3', $lines[3]);
+  }
+
+  public function testBannerWithoutVersionIsTheLogoAlone(): void {
+    $this->assertSame('Produce', $this->theme(color: FALSE)->renderBanner('Produce', ''));
   }
 
   public function testBoxWrapsLongBodyTextInsideTheBorder(): void {
+    $theme = $this->theme(color: FALSE);
     $long = 'The weekly produce box carries apples, pears, plums, carrots, beetroot and a bunch of fresh herbs picked the same morning.';
-    $lines = $this->theme(color: FALSE)->renderBox('', [$long]);
+    $lines = $theme->renderCard('', [$long]);
 
     // The sentence flows onto more rows rather than being clipped, and every
     // row still fits the frame.
     $this->assertGreaterThan(3, count($lines));
 
     foreach ($lines as $line) {
-      $this->assertLessThanOrEqual(DefaultTheme::DEFAULT_WIDTH, Ansi::width($line));
+      $this->assertLessThanOrEqual($theme->contentWidth(), Ansi::width($line));
     }
 
     $this->assertStringContainsString('apples', implode(' ', $lines));
@@ -65,7 +182,7 @@ final class OutputRenderTest extends TestCase {
   }
 
   public function testBoxKeepsBlankLinesAndSplitsEmbeddedNewlines(): void {
-    $lines = $this->theme(color: FALSE)->renderBox('', ['Apples', '', "Pears\r\nPlums"]);
+    $lines = $this->theme(color: FALSE)->renderCard('', ['Apples', '', "Pears\r\nPlums"]);
 
     // Four content rows between the two rules: the blank one is preserved and
     // the CRLF pair splits into two.
@@ -77,7 +194,7 @@ final class OutputRenderTest extends TestCase {
   }
 
   public function testBoxFallsBackToAsciiGlyphs(): void {
-    $lines = $this->theme(color: FALSE, unicode: FALSE)->renderBox('Welcome', ['Fruit']);
+    $lines = $this->theme(color: FALSE, unicode: FALSE)->renderCard('Welcome', ['Fruit']);
 
     $this->assertStringStartsWith('+', $lines[0]);
     $this->assertStringContainsString('|', $lines[1]);
@@ -85,7 +202,7 @@ final class OutputRenderTest extends TestCase {
   }
 
   public function testBoxCarriesTheThemeBorderAndHeadingColour(): void {
-    $lines = $this->theme()->renderBox('Welcome', ['Fruit']);
+    $lines = $this->theme()->renderCard('Welcome', ['Fruit']);
 
     // The default dark border is cyan and the heading is bold grey.
     $this->assertStringContainsString("\033[36m", $lines[0]);
@@ -190,25 +307,27 @@ final class OutputRenderTest extends TestCase {
   }
 
   public function testDefinitionsWrapLongValueUnderTheValueColumn(): void {
+    $theme = $this->theme(color: FALSE);
     $value = 'Apricot, plum, greengage, damson, mirabelle, quince, medlar, pear, apple and a handful of blackcurrants.';
-    $lines = $this->theme(color: FALSE)->renderDefinitions(['Fruit' => $value]);
+    $lines = $theme->renderDefinitions(['Fruit' => $value]);
 
     $this->assertGreaterThan(1, count($lines));
     // The continuation aligns under the value, not under the label.
     $this->assertSame(strpos($lines[0], 'Apricot'), strspn($lines[1], ' '));
 
     foreach ($lines as $line) {
-      $this->assertLessThanOrEqual(DefaultTheme::DEFAULT_WIDTH, Ansi::width($line));
+      $this->assertLessThanOrEqual($theme->contentWidth(), Ansi::width($line));
     }
   }
 
   public function testDefinitionsCapRunawayLabelAtHalfTheFrame(): void {
+    $theme = $this->theme(color: FALSE);
     $label = str_repeat('long', 40);
-    $lines = $this->theme(color: FALSE)->renderDefinitions([$label => 'Apricot']);
+    $lines = $theme->renderDefinitions([$label => 'Apricot']);
 
     // The label is clipped to half the frame, so the value keeps its own room.
     $this->assertStringContainsString('Apricot', $lines[0]);
-    $this->assertLessThanOrEqual(DefaultTheme::DEFAULT_WIDTH, Ansi::width($lines[0]));
+    $this->assertLessThanOrEqual($theme->contentWidth(), Ansi::width($lines[0]));
   }
 
   public function testDefinitionsStyleLabelsAndValuesApart(): void {

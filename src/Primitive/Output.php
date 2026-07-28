@@ -56,11 +56,81 @@ final class Output {
    *   The primitive.
    */
   public function box(string|array $body, string $title = ''): self {
-    // A single empty string is an absent body, not a blank line: a caller
-    // spacing content out passes a list, and box('') must draw nothing.
-    $lines = is_array($body) ? $body : ($body === '' ? [] : [$body]);
+    return $this->writeLines($this->theme->renderCard($title, self::toLines($body)));
+  }
 
-    return $this->writeLines($this->theme->renderBox($title, $lines));
+  /**
+   * Write a card: a box with a grid below its body.
+   *
+   * @param string $title
+   *   The heading shown as the card's first line; empty for a bare card.
+   * @param string|list<string> $body
+   *   The body, as one string or a list of lines; empty for a grid alone.
+   * @param list<string> $headers
+   *   The grid's header cells; an empty list draws it with no header row.
+   * @param list<list<string>> $rows
+   *   The grid's body rows.
+   * @param bool $bordered
+   *   Whether the card is boxed in the theme's border, or merely indented.
+   *
+   * @return $this
+   *   The primitive.
+   */
+  public function card(string $title, string|array $body = '', array $headers = [], array $rows = [], bool $bordered = TRUE): self {
+    return $this->writeLines($this->theme->renderCard($title, self::toLines($body), $headers, $rows, $bordered));
+  }
+
+  /**
+   * Write an aligned, bordered table.
+   *
+   * @param list<string> $headers
+   *   The header cells; an empty list draws the grid with no header row.
+   * @param list<list<string>> $rows
+   *   The body rows, each a list of cell strings.
+   *
+   * @return $this
+   *   The primitive.
+   */
+  public function table(array $headers, array $rows): self {
+    return $this->writeLines($this->theme->renderTable($headers, $rows));
+  }
+
+  /**
+   * Write a paragraph, wrapped to the terminal and carrying the markup subset.
+   *
+   * @param string $text
+   *   The text; its own newlines split it into physical lines first.
+   *
+   * @return $this
+   *   The primitive.
+   */
+  public function text(string $text): self {
+    return $this->writeLines($this->theme->renderText($text));
+  }
+
+  /**
+   * Write a horizontal rule spanning the frame.
+   *
+   * @return $this
+   *   The primitive.
+   */
+  public function rule(): self {
+    return $this->writeLines([$this->theme->divider()]);
+  }
+
+  /**
+   * Write a start banner: the logo above an optional version line.
+   *
+   * @param string $logo
+   *   The logo; its newlines split it into lines.
+   * @param string $version
+   *   The version shown below the logo, or an empty string for none.
+   *
+   * @return $this
+   *   The primitive.
+   */
+  public function banner(string $logo, string $version = ''): self {
+    return $this->writeLines(explode("\n", $this->theme->renderBanner($logo, $version)));
   }
 
   /**
@@ -155,6 +225,21 @@ final class Output {
    */
   public function definitions(array $pairs): self {
     return $this->writeLines($this->theme->renderDefinitions($pairs));
+  }
+
+  /**
+   * Normalize a body argument to a list of lines.
+   *
+   * @param string|list<string> $body
+   *   The body, as one string or a list of lines.
+   *
+   * @return list<string>
+   *   The lines.
+   */
+  protected static function toLines(string|array $body): array {
+    // A single empty string is an absent body, not a blank line: a caller
+    // spacing content out passes a list, and box('') must draw nothing.
+    return is_array($body) ? $body : ($body === '' ? [] : [$body]);
   }
 
   /**

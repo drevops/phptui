@@ -308,18 +308,71 @@ interface ThemeInterface {
   public function renderLoading(string $caption): string;
 
   /**
-   * Render a bordered box: an optional heading above the body lines.
+   * Render a card: a heading, a body and an optional grid, boxed or indented.
+   *
+   * The one card renderer behind both a standalone box and a note field's card,
+   * so overriding it restyles the two together.
    *
    * @param string $title
-   *   The heading shown as the box's first line; empty for a bare box.
+   *   The heading shown as the card's first line; empty for a bare card.
    * @param list<string> $body
-   *   The body lines. Each is word-wrapped to the box's inner width, and an
+   *   The body lines. Each is word-wrapped to the card's inner width, and an
    *   empty entry stays an empty line so a caller can space the content out.
+   * @param list<string> $headers
+   *   The header cells of an optional grid below the body.
+   * @param list<list<string>> $rows
+   *   The body rows of that grid; with no headers or rows there is no grid.
+   * @param bool $bordered
+   *   Whether the card is boxed in the theme's border, or merely indented.
+   * @param int $reserved
+   *   Columns the caller lays the card out after, kept out of the width cap so
+   *   the card's right edge still lands inside the frame.
    *
    * @return list<string>
-   *   The box's physical lines; empty when there is neither title nor body.
+   *   The card's physical lines; empty when it has no content at all.
    */
-  public function renderBox(string $title, array $body): array;
+  public function renderCard(string $title, array $body, array $headers = [], array $rows = [], bool $bordered = TRUE, int $reserved = 0): array;
+
+  /**
+   * Render source text as wrapped, markup-styled lines at the frame width.
+   *
+   * @param string $text
+   *   The source text; its own newlines split it into physical lines first.
+   *
+   * @return list<string>
+   *   The styled lines.
+   */
+  public function renderText(string $text): array;
+
+  /**
+   * Render an aligned, bordered table from headers and rows.
+   *
+   * Lays the data out as a grid coloured with the theme's atoms and drawn in
+   * its border style, honouring the Unicode and colour switches. The columns
+   * size to their widest cell and the whole grid is capped at the frame width.
+   *
+   * @param list<string> $headers
+   *   The header cells; an empty list draws the grid with no header row.
+   * @param list<list<string>> $rows
+   *   The body rows, each a list of cell strings.
+   *
+   * @return list<string>
+   *   The table's physical lines, capped at the frame width.
+   */
+  public function renderTable(array $headers, array $rows): array;
+
+  /**
+   * Render a start banner: the logo above an optional version line.
+   *
+   * @param string $logo
+   *   The banner logo; its newlines split it into lines.
+   * @param string $version
+   *   The version shown below the logo, or an empty string for none.
+   *
+   * @return string
+   *   The composed banner.
+   */
+  public function renderBanner(string $logo, string $version): string;
 
   /**
    * Render a status line: the kind's glyph and the message, in its colour.

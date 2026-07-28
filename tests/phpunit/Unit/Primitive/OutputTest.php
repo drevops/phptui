@@ -78,6 +78,76 @@ final class OutputTest extends TestCase {
     yield 'error' => ['error', '✗'];
   }
 
+  public function testCardWritesItsGridInsideTheBox(): void {
+    $terminal = new BufferedTerminal();
+
+    (new Output($terminal, $this->theme()))->card('Summary', 'Your order is packed.', ['Item', 'Count'], [['Apricot', '12']]);
+
+    $output = $terminal->output();
+
+    $this->assertStringContainsString('Summary', $output);
+    $this->assertStringContainsString('Your order is packed.', $output);
+    $this->assertStringContainsString('Apricot', $output);
+    $this->assertStringContainsString('╭', $output);
+  }
+
+  public function testUnborderedCardWritesIndentedLines(): void {
+    $terminal = new BufferedTerminal();
+
+    (new Output($terminal, $this->theme()))->card('Summary', 'Packed.', bordered: FALSE);
+
+    $this->assertSame("  Summary\n  Packed.\n", $terminal->output());
+  }
+
+  public function testTableWritesTheGridAlone(): void {
+    $terminal = new BufferedTerminal();
+
+    (new Output($terminal, $this->theme()))->table(['Item'], [['Apricot']]);
+
+    $lines = explode("\n", trim($terminal->output(), "\n"));
+
+    $this->assertCount(5, $lines);
+    $this->assertStringContainsString('Item', $lines[1]);
+    $this->assertStringContainsString('Apricot', $lines[3]);
+  }
+
+  public function testAnEmptyTableWritesNothing(): void {
+    $terminal = new BufferedTerminal();
+
+    (new Output($terminal, $this->theme()))->table([], []);
+
+    $this->assertSame('', $terminal->output());
+  }
+
+  public function testTextWritesWrappedParagraph(): void {
+    $terminal = new BufferedTerminal();
+
+    (new Output($terminal, $this->theme()))->text('Everything is picked the morning it ships.');
+
+    $this->assertSame("Everything is picked the morning it ships.\n", $terminal->output());
+  }
+
+  public function testRuleWritesSpanningLine(): void {
+    $terminal = new BufferedTerminal();
+    $theme = $this->theme();
+
+    (new Output($terminal, $theme))->rule();
+
+    $this->assertSame(str_repeat('─', $theme->contentWidth()) . "\n", $terminal->output());
+  }
+
+  public function testBannerWritesTheLogoAndVersion(): void {
+    $terminal = new BufferedTerminal();
+
+    (new Output($terminal, $this->theme()))->banner('Produce Box', '1.2.3');
+
+    $output = $terminal->output();
+
+    $this->assertStringContainsString('Produce Box', $output);
+    $this->assertStringContainsString('1.2.3', $output);
+    $this->assertStringEndsWith("\n", $output);
+  }
+
   public function testStatusTakesTheKindDirectly(): void {
     $terminal = new BufferedTerminal();
 
