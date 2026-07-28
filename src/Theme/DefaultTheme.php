@@ -2403,6 +2403,10 @@ class DefaultTheme implements ThemeInterface {
   /**
    * Render a panel-level error row, aligned with the rows above it.
    *
+   * The message is a declared string, so it may carry line breaks; they fold to
+   * spaces because the caller counts this as one body row and a second physical
+   * line would push the frame past the height it laid out for.
+   *
    * @param string $message
    *   The message.
    *
@@ -2410,7 +2414,7 @@ class DefaultTheme implements ThemeInterface {
    *   The themed error row.
    */
   public function renderPanelError(string $message): string {
-    return '  ' . $this->error($message);
+    return '  ' . $this->error($this->oneLine($message));
   }
 
   /**

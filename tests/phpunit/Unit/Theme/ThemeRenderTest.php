@@ -642,6 +642,10 @@ final class ThemeRenderTest extends TestCase {
     // The row is indented like the button bar it sits above, and painted red.
     $this->assertSame('  Item is required.', Ansi::strip($row));
     $this->assertStringContainsString("\033[31m", $row);
+
+    // A declared message carrying line breaks still occupies one row.
+    $folded = (new DefaultTheme())->renderPanelError("Item is required.\r\nPick one.\rOr two.\nOr three.");
+    $this->assertSame('  Item is required. Pick one. Or two. Or three.', Ansi::strip($folded));
   }
 
   public function testDimRecedesText(): void {
