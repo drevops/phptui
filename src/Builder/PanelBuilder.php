@@ -120,7 +120,7 @@ final class PanelBuilder {
    *
    * Chain `->pattern()` with the shape to fill in - its fixed text renders as
    * context and each `{{name}}` slot is filled separately - and
-   * `->placeholder()` to label or validate one slot. The answer is the
+   * `->slot()` to label or validate one slot. The answer is the
    * assembled string; its parts are read back with
    * {@see \DrevOps\Tui\Answers\Answers::parts()}.
    *

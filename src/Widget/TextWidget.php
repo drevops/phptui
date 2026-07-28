@@ -11,6 +11,8 @@ use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Widget\Capability\CompletionCapableInterface;
 use DrevOps\Tui\Widget\Capability\CompletionCapableTrait;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableInterface;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableTrait;
 use DrevOps\Tui\Widget\Capability\TextEditCapableInterface;
 use DrevOps\Tui\Widget\Capability\TextEditCapableTrait;
 
@@ -19,10 +21,11 @@ use DrevOps\Tui\Widget\Capability\TextEditCapableTrait;
  *
  * @package DrevOps\Tui\Widget
  */
-class TextWidget extends AbstractWidget implements TextEditCapableInterface, CompletionCapableInterface {
+class TextWidget extends AbstractWidget implements TextEditCapableInterface, CompletionCapableInterface, PlaceholderCapableInterface {
 
   use TextEditCapableTrait;
   use CompletionCapableTrait;
+  use PlaceholderCapableTrait;
 
   /**
    * Construct a text widget.
@@ -86,6 +89,10 @@ class TextWidget extends AbstractWidget implements TextEditCapableInterface, Com
   /**
    * Render the input line with the caret and any inline ghost-text.
    *
+   * The completion suffix and the placeholder share the one ghost slot: the
+   * former needs a typed prefix to complete, the latter an empty buffer, so at
+   * most one of them is ever set.
+   *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme supplying the caret glyph and the ghost styling.
    *
@@ -93,7 +100,9 @@ class TextWidget extends AbstractWidget implements TextEditCapableInterface, Com
    *   The input line.
    */
   protected function caretLine(ThemeInterface $theme): string {
-    return $this->renderInputLine($theme, $this->ghostSuffix());
+    $completion = $this->ghostSuffix();
+
+    return $this->renderInputLine($theme, $completion === '' ? $this->placeholderText($this->buffer) : $completion);
   }
 
 }

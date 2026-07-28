@@ -12,6 +12,7 @@ use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Input\KeyMap;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Translation\Translator;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableInterface;
 use DrevOps\Tui\Widget\Capability\QueryOptionsCapableInterface;
 
 /**
@@ -90,6 +91,10 @@ class WidgetFactory {
     // The field declaration always wins over the registry's convention-resolved
     // behaviour, mirroring the engine's headless resolution.
     $widget->setHandlers($this->guarded($field, $field->validate ?? $this->handlers?->validator($field->id)), $field->transform ?? $this->handlers?->transformer($field->id));
+
+    if ($widget instanceof PlaceholderCapableInterface) {
+      $widget->setPlaceholder($field->placeholder);
+    }
 
     return $widget->setKeys($this->keymap->forField($field->type, $field->multiple));
   }

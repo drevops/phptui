@@ -98,7 +98,7 @@ function widgetSpecs(string $tree): array {
       'rows' => 6,
     ],
     'template' => [
-      'form' => Form::create('Template widget')->panel('main', 'Template', function (PanelBuilder $p): void { $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{fruit}}-{{grade}}')->default('valley-pear-a')->placeholder('orchard', 'Orchard')->placeholder('fruit', 'Fruit')->placeholder('grade', 'Grade'); }),
+      'form' => Form::create('Template widget')->panel('main', 'Template', function (PanelBuilder $p): void { $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{fruit}}-{{grade}}')->default('valley-pear-a')->slot('orchard', 'Orchard')->slot('fruit', 'Fruit')->slot('grade', 'Grade'); }),
       'keys' => [...$open, $bs, $bs, $bs, $bs, $bs, $bs, 'r', 'i', 'd', 'g', 'e', $tab, $tab, $bs, 'b'],
       'rows' => 7,
     ],

@@ -12,6 +12,8 @@ use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Utils\Strings;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableInterface;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableTrait;
 use DrevOps\Tui\Widget\Capability\RevealCapableInterface;
 use DrevOps\Tui\Widget\Capability\TextEditCapableInterface;
 use DrevOps\Tui\Widget\Capability\TextEditCapableTrait;
@@ -26,9 +28,10 @@ use DrevOps\Tui\Widget\Capability\TextEditCapableTrait;
  *
  * @package DrevOps\Tui\Widget
  */
-class PasswordWidget extends AbstractWidget implements TextEditCapableInterface, RevealCapableInterface {
+class PasswordWidget extends AbstractWidget implements TextEditCapableInterface, RevealCapableInterface, PlaceholderCapableInterface {
 
   use TextEditCapableTrait;
+  use PlaceholderCapableTrait;
 
   /**
    * The current live display mode.
@@ -181,10 +184,14 @@ class PasswordWidget extends AbstractWidget implements TextEditCapableInterface,
    *   The rendered input line.
    */
   protected function renderLine(ThemeInterface $theme): string {
+    // An empty buffer hides nothing, so the placeholder shows in every display
+    // mode and disappears the moment a first character masks the entry.
+    $placeholder = $this->placeholderText($this->buffer);
+
     return match ($this->display) {
-      PasswordDisplay::Hidden => $theme->renderInput('', ''),
-      PasswordDisplay::Masked => $theme->renderInput(str_repeat($theme->mask(), $this->cursor), str_repeat($theme->mask(), Strings::length($this->buffer) - $this->cursor)),
-      PasswordDisplay::Plaintext => $this->renderInputLine($theme),
+      PasswordDisplay::Hidden => $theme->renderInput('', '', $placeholder),
+      PasswordDisplay::Masked => $theme->renderInput(str_repeat($theme->mask(), $this->cursor), str_repeat($theme->mask(), Strings::length($this->buffer) - $this->cursor), $placeholder),
+      PasswordDisplay::Plaintext => $this->renderInputLine($theme, $placeholder),
     };
   }
 

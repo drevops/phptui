@@ -336,8 +336,8 @@ final class FormTest extends TestCase {
       ->panel('p', 'P', function (PanelBuilder $panel) use ($grade): void {
         $panel->template('crate', 'Crate label')
           ->pattern('{{orchard}}-{{grade}}')
-          ->placeholder('orchard', 'Orchard')
-          ->placeholder('grade', 'Grade', $grade)
+          ->slot('orchard', 'Orchard')
+          ->slot('grade', 'Grade', $grade)
           ->default('valley-a');
       })
       ->build();
@@ -353,10 +353,10 @@ final class FormTest extends TestCase {
     $this->assertSame('valley-a', $crate->default);
   }
 
-  public function testPlaceholderWithoutLabelOrValidatorLeavesBothUnset(): void {
+  public function testSlotWithoutLabelOrValidatorLeavesBothUnset(): void {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->template('crate', 'Crate')->pattern('{{a}}-{{b}}')->placeholder('a');
+        $panel->template('crate', 'Crate')->pattern('{{a}}-{{b}}')->slot('a');
       })
       ->build();
 
@@ -364,6 +364,36 @@ final class FormTest extends TestCase {
     $this->assertInstanceOf(Template::class, $template);
     $this->assertSame('a', $template->labelOf('a'));
     $this->assertNotInstanceOf(\Closure::class, $template->validatorOf('a'));
+  }
+
+  public function testHintAndPlaceholderCarryOntoTheField(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $panel): void {
+        $panel->text('crop', 'Crop')
+          ->description('The crop being logged.')
+          ->hint('Type a few letters to filter.')
+          ->placeholder('E.g. Golden Beetroot');
+      })
+      ->build();
+
+    $crop = $form->field('crop');
+    $this->assertInstanceOf(Field::class, $crop);
+    $this->assertSame('The crop being logged.', $crop->description);
+    $this->assertSame('Type a few letters to filter.', $crop->hint);
+    $this->assertSame('E.g. Golden Beetroot', $crop->placeholder);
+  }
+
+  public function testHintAndPlaceholderDefaultToEmpty(): void {
+    $form = Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $panel): void {
+        $panel->text('crop', 'Crop');
+      })
+      ->build();
+
+    $crop = $form->field('crop');
+    $this->assertInstanceOf(Field::class, $crop);
+    $this->assertSame('', $crop->hint);
+    $this->assertSame('', $crop->placeholder);
   }
 
   public function testTemplateWithoutPatternThrows(): void {

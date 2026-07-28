@@ -25,6 +25,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(FormDefinition::class)]
 #[CoversClass(Panel::class)]
 #[CoversClass(Field::class)]
+#[CoversClass(FieldType::class)]
 #[CoversClass(Option::class)]
 #[Group('model')]
 final class BuiltModelTest extends TestCase {
@@ -209,6 +210,49 @@ final class BuiltModelTest extends TestCase {
     $this->expectExceptionMessage('Field "s" declares selection limits but does not collect several values.');
 
     new Field('s', 'S', '', FieldType::Text, '', selectionBounds: new SelectionBounds(2, 3));
+  }
+
+  #[DataProvider('dataProviderPlaceholderIsRejectedWhenTypeHasNoInput')]
+  public function testPlaceholderIsRejectedWhenTypeHasNoInput(FieldType $type, bool $accepted): void {
+    if (!$accepted) {
+      $this->expectException(FormException::class);
+      $this->expectExceptionMessage(sprintf('Field "f" of type "%s" shows no placeholder', $type->value));
+    }
+
+    $field = new Field('f', 'F', '', $type, '', template: $type === FieldType::Template ? new Template('{{a}}-{{b}}') : NULL, placeholder: 'E.g. Golden Beetroot');
+
+    $this->assertSame('E.g. Golden Beetroot', $field->placeholder);
+  }
+
+  public static function dataProviderPlaceholderIsRejectedWhenTypeHasNoInput(): \Iterator {
+    // The accepting types are spelled out rather than read back from
+    // supportsPlaceholder(), so a change to that set fails here instead of
+    // moving the expectation along with it.
+    $accepting = [
+      FieldType::Text,
+      FieldType::Number,
+      FieldType::Textarea,
+      FieldType::Password,
+      FieldType::Suggest,
+      FieldType::Search,
+    ];
+
+    foreach (FieldType::cases() as $type) {
+      yield $type->value => [$type, in_array($type, $accepting, TRUE)];
+    }
+  }
+
+  #[DataProvider('dataProviderHintIsAcceptedOnEveryType')]
+  public function testHintIsAcceptedOnEveryType(FieldType $type): void {
+    $field = new Field('f', 'F', '', $type, '', template: $type === FieldType::Template ? new Template('{{a}}-{{b}}') : NULL, hint: 'Use the arrows.');
+
+    $this->assertSame('Use the arrows.', $field->hint);
+  }
+
+  public static function dataProviderHintIsAcceptedOnEveryType(): \Iterator {
+    foreach (FieldType::cases() as $type) {
+      yield $type->value => [$type];
+    }
   }
 
   public function testFormDefaults(): void {

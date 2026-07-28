@@ -14,6 +14,7 @@ use DrevOps\Tui\Tests\Traits\AssertsPagingTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Widget\AbstractWidget;
 use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableTrait;
 use DrevOps\Tui\Widget\SuggestWidget;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
@@ -26,6 +27,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(SuggestWidget::class)]
 #[CoversClass(AbstractWidget::class)]
 #[CoversTrait(PagingCapableTrait::class)]
+#[CoversTrait(PlaceholderCapableTrait::class)]
 #[Group('widget')]
 final class SuggestWidgetTest extends TestCase {
 
@@ -175,6 +177,17 @@ final class SuggestWidgetTest extends TestCase {
     $labels = array_map(static fn(Hint $hint): string => $hint->label, (new SuggestWidget(['UTC', 'GMT']))->hints());
 
     $this->assertSame(['move', 'accept', 'cancel'], $labels);
+  }
+
+  public function testPlaceholderGhostsAnEmptyQueryOnly(): void {
+    $widget = (new SuggestWidget(['Pear', 'Plum']))->setPlaceholder('Type to filter');
+    $theme = new DefaultTheme();
+
+    $this->assertStringContainsString('Type to filter', Ansi::strip($widget->view($theme)));
+
+    $widget->handle(Key::char('P'));
+
+    $this->assertStringNotContainsString('Type to filter', Ansi::strip($widget->view($theme)));
   }
 
 }

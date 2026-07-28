@@ -13,6 +13,7 @@ use DrevOps\Tui\Testing\ArrayKeyStream;
 use DrevOps\Tui\Testing\WidgetRunner;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Widget\NumberWidget;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableTrait;
 use DrevOps\Tui\Widget\Capability\TextEditCapableTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
@@ -24,6 +25,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(NumberWidget::class)]
 #[CoversTrait(TextEditCapableTrait::class)]
+#[CoversTrait(PlaceholderCapableTrait::class)]
 #[Group('widget')]
 final class NumberWidgetTest extends TestCase {
 
@@ -184,6 +186,16 @@ final class NumberWidgetTest extends TestCase {
       ['accept', [Action::Accept]],
       ['cancel', [Action::Cancel]],
     ], $hints);
+  }
+
+  public function testPlaceholderGhostsAnEmptyBufferOnly(): void {
+    $widget = (new NumberWidget())->setPlaceholder('E.g. 1200');
+
+    $this->assertStringContainsString('E.g. 1200', $widget->view(new DefaultTheme()));
+
+    $widget->handle(Key::char('4'));
+
+    $this->assertStringNotContainsString('E.g. 1200', $widget->view(new DefaultTheme()));
   }
 
 }

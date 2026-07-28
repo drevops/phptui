@@ -18,6 +18,7 @@ use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Widget\Capability\FilterCapableTrait;
 use DrevOps\Tui\Widget\Capability\OptionsCapableTrait;
 use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
+use DrevOps\Tui\Widget\Capability\PlaceholderCapableTrait;
 use DrevOps\Tui\Widget\Capability\SearchCapableTrait;
 use DrevOps\Tui\Widget\Capability\SelectionBoundedTrait;
 use DrevOps\Tui\Widget\Capability\SelectionCapableTrait;
@@ -35,6 +36,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversTrait(SelectionBoundedTrait::class)]
 #[CoversTrait(FilterCapableTrait::class)]
 #[CoversTrait(SearchCapableTrait::class)]
+#[CoversTrait(PlaceholderCapableTrait::class)]
 #[CoversTrait(OptionsCapableTrait::class)]
 #[CoversTrait(PagingCapableTrait::class)]
 #[Group('widget')]
@@ -405,6 +407,17 @@ final class SearchWidgetTest extends TestCase {
 
     // The active limit is surfaced before it is reached.
     $this->assertStringContainsString('Select between 2 and 3 items.', Ansi::strip($widget->view(new DefaultTheme())));
+  }
+
+  public function testPlaceholderGhostsAnEmptyQueryOnly(): void {
+    $widget = (new SearchWidget($this->services))->setPlaceholder('Type to filter');
+    $theme = new DefaultTheme();
+
+    $this->assertStringContainsString('Type to filter', Ansi::strip($widget->view($theme)));
+
+    $widget->handle(Key::char('c'));
+
+    $this->assertStringNotContainsString('Type to filter', Ansi::strip($widget->view($theme)));
   }
 
 }

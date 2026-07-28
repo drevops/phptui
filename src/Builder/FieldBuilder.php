@@ -35,6 +35,16 @@ final class FieldBuilder {
   protected string $description = '';
 
   /**
+   * How to answer the question.
+   */
+  protected string $hint = '';
+
+  /**
+   * The ghost text shown while the editor's buffer is empty.
+   */
+  protected string $placeholder = '';
+
+  /**
    * Whether an explicit default was set (otherwise the type default is used).
    */
   protected bool $hasDefault = FALSE;
@@ -245,14 +255,14 @@ final class FieldBuilder {
    *
    * @var array<string,string>
    */
-  protected array $placeholderLabels = [];
+  protected array $slotLabels = [];
 
   /**
    * Template only: the validator of each slot, keyed by slot name.
    *
    * @var array<string,\Closure>
    */
-  protected array $placeholderValidators = [];
+  protected array $slotValidators = [];
 
   /**
    * Construct a field builder.
@@ -278,6 +288,43 @@ final class FieldBuilder {
    */
   public function description(string $description): self {
     $this->description = $description;
+
+    return $this;
+  }
+
+  /**
+   * Set the hint: how to answer the question.
+   *
+   * Sits beneath the description and is styled apart from it, so "what is being
+   * asked" and "how to answer it" stay two separate texts.
+   *
+   * @param string $hint
+   *   The hint (e.g. "Use arrows and Space to select").
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function hint(string $hint): self {
+    $this->hint = $hint;
+
+    return $this;
+  }
+
+  /**
+   * Set the ghost text shown inside the editor while its buffer is empty.
+   *
+   * A placeholder never becomes a value: it disappears as soon as anything is
+   * typed. Available on the text, number, textarea, password, suggest and
+   * search types; any other type throws when the field is built.
+   *
+   * @param string $placeholder
+   *   The ghost text (e.g. "E.g. Golden Beetroot").
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function placeholder(string $placeholder): self {
+    $this->placeholder = $placeholder;
 
     return $this;
   }
@@ -850,13 +897,13 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    */
-  public function placeholder(string $name, string $label = '', ?\Closure $validate = NULL): self {
+  public function slot(string $name, string $label = '', ?\Closure $validate = NULL): self {
     if ($label !== '') {
-      $this->placeholderLabels[$name] = $label;
+      $this->slotLabels[$name] = $label;
     }
 
     if ($validate instanceof \Closure) {
-      $this->placeholderValidators[$name] = $validate;
+      $this->slotValidators[$name] = $validate;
     }
 
     return $this;
@@ -1088,6 +1135,8 @@ final class FieldBuilder {
       template: $this->buildTemplate(),
       optionsSource: $this->optionsSource,
       queryMinLength: $this->queryMinLength,
+      hint: $this->hint,
+      placeholder: $this->placeholder,
     );
   }
 
@@ -1105,7 +1154,7 @@ final class FieldBuilder {
       return NULL;
     }
 
-    return new Template($this->pattern, $this->placeholderLabels, $this->placeholderValidators);
+    return new Template($this->pattern, $this->slotLabels, $this->slotValidators);
   }
 
   /**

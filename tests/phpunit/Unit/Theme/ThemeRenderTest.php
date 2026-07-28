@@ -141,6 +141,85 @@ final class ThemeRenderTest extends TestCase {
     $this->assertContains('    Use a short name', $stripped);
   }
 
+  public function testBodyRendersHintUnderDescription(): void {
+    $field = new Field('name', 'Name', 'The grower of record', FieldType::Text, '', hint: 'Type a few letters to filter.');
+    $panel = new Panel('p', 'P', '', [$field]);
+
+    [$lines] = $this->theme()->renderBody($panel, new Answers(), 0);
+    $stripped = array_map(Ansi::strip(...), $lines);
+
+    // Guidance stacks under the row in declaration order: what is being asked,
+    // then how to answer it.
+    $this->assertSame('    The grower of record', $stripped[1]);
+    $this->assertSame('    Type a few letters to filter.', $stripped[2]);
+  }
+
+  public function testBodyRendersHintWithoutDescription(): void {
+    $field = new Field('name', 'Name', '', FieldType::Text, '', hint: 'Type a few letters to filter.');
+    $panel = new Panel('p', 'P', '', [$field]);
+
+    [$lines] = $this->theme()->renderBody($panel, new Answers(), 0);
+    $stripped = array_map(Ansi::strip(...), $lines);
+
+    $this->assertSame('    Type a few letters to filter.', $stripped[1]);
+    $this->assertCount(2, $stripped);
+  }
+
+  public function testBodyRendersHintUnderInlineEditor(): void {
+    $field = new Field('name', 'Name', '', FieldType::Text, '', hint: 'Type a few letters to filter.');
+    $panel = new Panel('p', 'P', '', [$field]);
+
+    [$lines] = $this->theme()->renderBody($panel, new Answers(), 0, $field, 'Acme');
+    $stripped = array_map(Ansi::strip(...), $lines);
+
+    $this->assertStringContainsString('Name  Acme', $stripped[0]);
+    $this->assertSame('    Type a few letters to filter.', $stripped[1]);
+  }
+
+  public function testBodyDropsHintWhenCompact(): void {
+    $field = new Field('name', 'Name', '', FieldType::Text, '', hint: 'Type a few letters to filter.');
+    $panel = new Panel('p', 'P', '', [$field]);
+    $theme = new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Compact]);
+
+    [$lines] = $theme->renderBody($panel, new Answers(), 0);
+
+    $this->assertCount(1, $lines);
+  }
+
+  public function testFieldHintStylesEachLineApartFromTheDescription(): void {
+    $theme = new DefaultTheme(40, ['border' => Border::None, 'spacing' => Spacing::Normal]);
+
+    $lines = $theme->renderFieldHint("Pick a date\nin the season", FALSE);
+
+    $this->assertCount(2, $lines);
+    $this->assertSame('    Pick a date', Ansi::strip($lines[0]));
+    $this->assertSame('    in the season', Ansi::strip($lines[1]));
+    $this->assertSame('    ' . $theme->hint('Pick a date'), $lines[0]);
+    $this->assertNotSame($theme->description('Pick a date'), $theme->hint('Pick a date'));
+  }
+
+  public function testFieldHintFoldsCarriageReturns(): void {
+    $theme = new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None]);
+
+    // A Windows-authored hint splits on its line breaks like any other, and no
+    // carriage return survives into a row to reposition the cursor.
+    $lines = $theme->renderFieldHint("Pick a date\r\nin the season\rthis year", FALSE);
+
+    $this->assertSame(['    Pick a date', '    in the season', '    this year'], array_map(Ansi::strip(...), $lines));
+
+    foreach ($lines as $line) {
+      $this->assertStringNotContainsString("\r", $line);
+    }
+  }
+
+  public function testFieldHintRendersMarkupLiterally(): void {
+    $theme = new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'markdown' => TRUE]);
+
+    // A hint is one short instruction, so it carries no formatting of its own -
+    // unlike the description above it, which expands its markdown.
+    $this->assertSame('    Use a **short** name', Ansi::strip($theme->renderFieldHint('Use a **short** name', FALSE)[0]));
+  }
+
   public function testPanelSummaryCollapsesMultiLineValue(): void {
     $panel = new Panel('sub', 'Sub', '', [new Field('notes', 'Notes', '', FieldType::Textarea, '')]);
     $answers = new Answers(['notes' => "Crisp and sweet\nHint of citrus"], []);

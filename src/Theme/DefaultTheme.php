@@ -620,6 +620,15 @@ class DefaultTheme implements ThemeInterface {
   /**
    * {@inheritdoc}
    */
+  public function hint(string $text, bool $selected = FALSE): string {
+    // The description's grey, italicized: guidance on how to answer is never
+    // louder than the question itself, but still reads as its own voice.
+    return $this->paint($this->emphasize(Sgr::of(Sgr::Italic, Sgr::Grey), $selected), $this->linkify($text));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function badge(string $text, bool $selected = FALSE): string {
     return $this->paint($this->emphasize(Sgr::of(Sgr::Reverse), $selected), $text);
   }
@@ -746,21 +755,19 @@ class DefaultTheme implements ThemeInterface {
    * @param string $source
    *   The source text; newlines separate physical lines.
    * @param bool $selected
-   *   Whether the owning row is selected, for the base emphasis.
+   *   Whether the owning row is selected.
    *
    * @return list<string>
    *   The rendered lines.
    */
   protected function markupBody(string $source, bool $selected): array {
-    $base = $this->emphasize(Sgr::of(Sgr::Grey), $selected);
-
     $lines = [];
 
     foreach (Markup::parse($source, $this->markdown) as $line) {
-      $rendered = $line->bullet ? $this->paint($base, $this->bullet() . ' ') : '';
+      $rendered = $line->bullet ? $this->description($this->bullet() . ' ', $selected) : '';
 
       foreach ($line->segments as $segment) {
-        $rendered .= $this->markupSegment($segment, $base);
+        $rendered .= $this->markupSegment($segment, $selected);
       }
 
       $lines[] = $rendered;
@@ -772,21 +779,27 @@ class DefaultTheme implements ThemeInterface {
   /**
    * Style one parsed markup span with its atom.
    *
+   * Plain text is the description atom, so a theme that restyles description
+   * text restyles the body of a description and a note with it - not only the
+   * one-line rows that call the atom directly.
+   *
    * @param \DrevOps\Tui\Render\MarkupSegment $segment
    *   The span.
-   * @param string $base
-   *   The base SGR for plain text.
+   * @param bool $selected
+   *   Whether the owning row is selected.
    *
    * @return string
    *   The styled span.
    */
-  protected function markupSegment(MarkupSegment $segment, string $base): string {
+  protected function markupSegment(MarkupSegment $segment, bool $selected): string {
     return match ($segment->kind) {
       MarkupKind::Bold => $this->strong($segment->text),
       MarkupKind::Emphasis => $this->emphasis($segment->text),
       MarkupKind::Code => $this->code($segment->text),
       MarkupKind::Link => $this->link($segment->text, $segment->url),
-      MarkupKind::Text => $this->paint($base, $segment->text),
+      // The parser has already split every link into its own span, so the
+      // atom's own link resolution finds nothing left to do here.
+      MarkupKind::Text => $this->description($segment->text, $selected),
     };
   }
 
@@ -1102,9 +1115,9 @@ class DefaultTheme implements ThemeInterface {
           $lines[] = $line;
         }
 
-        if ($verbose && $field->description !== '') {
-          foreach ($this->renderDescriptionBlock(Translator::t($field->description), $index === $cursor) as $description_line) {
-            $lines[] = $indent . $description_line;
+        if ($verbose) {
+          foreach ($this->renderFieldGuidance($field, $index === $cursor) as $guidance_line) {
+            $lines[] = $indent . $guidance_line;
           }
         }
 
@@ -1118,9 +1131,9 @@ class DefaultTheme implements ThemeInterface {
         $lines[] = $line;
       }
 
-      if ($verbose && $field->description !== '') {
-        foreach ($this->renderDescriptionBlock(Translator::t($field->description), $index === $cursor) as $description_line) {
-          $lines[] = $indent . $description_line;
+      if ($verbose) {
+        foreach ($this->renderFieldGuidance($field, $index === $cursor) as $guidance_line) {
+          $lines[] = $indent . $guidance_line;
         }
       }
 
@@ -1632,6 +1645,57 @@ class DefaultTheme implements ThemeInterface {
   }
 
   /**
+   * The guidance beneath a field's row: its description, then its hint.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field.
+   * @param bool $selected
+   *   Whether the field's row is selected.
+   *
+   * @return list<string>
+   *   The rendered lines; empty when the field declares neither text.
+   */
+  protected function renderFieldGuidance(Field $field, bool $selected): array {
+    $lines = [];
+
+    if ($field->description !== '') {
+      foreach ($this->renderDescriptionBlock(Translator::t($field->description), $selected) as $line) {
+        $lines[] = $line;
+      }
+    }
+
+    if ($field->hint !== '') {
+      foreach ($this->renderFieldHint(Translator::t($field->hint), $selected) as $line) {
+        $lines[] = $line;
+      }
+    }
+
+    return $lines;
+  }
+
+  /**
+   * Render a field's hint as indented lines, in the hint style.
+   *
+   * Plain text rather than the description's markup subset: a hint is one short
+   * instruction, so it carries no formatting of its own and reads uniformly
+   * against the description above it.
+   *
+   * @param string $hint
+   *   The hint source; newlines separate physical lines.
+   * @param bool $selected
+   *   Whether the owning row is selected.
+   *
+   * @return list<string>
+   *   The indented hint lines.
+   */
+  public function renderFieldHint(string $hint, bool $selected): array {
+    // Fold CRLF and lone-CR endings the way the markup parser does for a
+    // description: a surviving carriage return would send the cursor back to
+    // column 0 mid-frame and overwrite the row it sits on.
+    return array_map(fn(string $line): string => '    ' . $this->hint($line, $selected), explode("\n", $this->normalizeLines($hint)));
+  }
+
+  /**
    * Summarize a sub-panel's active field values into one line, for the hub.
    *
    * @param \DrevOps\Tui\Model\Panel $panel
@@ -1775,8 +1839,16 @@ class DefaultTheme implements ThemeInterface {
 
       $width = max($width, $row);
 
-      if ($verbose && $field->description !== '') {
+      if (!$verbose) {
+        continue;
+      }
+
+      if ($field->description !== '') {
         $width = max($width, $indent + 4 + Markup::width(Translator::t($field->description), $this->markdown, $this->color));
+      }
+
+      if ($field->hint !== '') {
+        $width = max($width, $indent + 4 + Markup::width(Translator::t($field->hint), FALSE, $this->color));
       }
     }
 

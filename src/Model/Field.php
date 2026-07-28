@@ -168,6 +168,14 @@ final class Field {
    *   The number of query characters below which a query source is not called
    *   at all, so a remote backend is not asked to list everything; zero calls
    *   it for the empty query too.
+   * @param string $hint
+   *   How to answer the question (e.g. "Use arrows and Space to select"), shown
+   *   beneath the description and styled apart from it. Empty shows no hint.
+   * @param string $placeholder
+   *   The ghost text shown inside the editor while its buffer is empty (e.g.
+   *   "E.g. Golden Beetroot"). Never becomes a value: it disappears as soon as
+   *   anything is typed, and it is suppressed without colour, where it could
+   *   not be told apart from a real entry.
    */
   public function __construct(
     public readonly string $id,
@@ -208,6 +216,8 @@ final class Field {
     public readonly ?Template $template = NULL,
     public readonly ?\Closure $optionsSource = NULL,
     public readonly int $queryMinLength = 0,
+    public readonly string $hint = '',
+    public readonly string $placeholder = '',
   ) {
     if ($this->type === FieldType::Template && !$this->template instanceof Template) {
       throw new FormException(sprintf('Field "%s" is a template field but declares no pattern; add ->pattern() with the shape to fill in.', $this->id));
@@ -225,6 +235,10 @@ final class Field {
 
     if ($this->queryMinLength > 0 && !$this->optionsSource instanceof \Closure) {
       throw new FormException(sprintf('Field "%s" declares a minimum query length but no query source to apply it to.', $this->id));
+    }
+
+    if ($this->placeholder !== '' && !$this->type->supportsPlaceholder()) {
+      throw new FormException(sprintf('Field "%s" of type "%s" shows no placeholder; only text, number, textarea, password, suggest and search fields have an input buffer to ghost.', $this->id, $this->type->value));
     }
 
     if ($this->multiple && !$this->type->supportsMultiple()) {

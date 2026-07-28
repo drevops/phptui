@@ -38,6 +38,9 @@ final class ThemeTest extends TestCase {
     yield 'light match highlight' => [static fn(): string => self::light()->highlightMatch('X'), '1;35'];
     // These roles are mode-independent: dimmed chrome and the red error.
     yield 'description' => [static fn(): string => (new DefaultTheme())->description('X'), '90'];
+    // A hint is the description's grey, italicized so guidance on how to answer
+    // reads apart from the question itself.
+    yield 'hint' => [static fn(): string => (new DefaultTheme())->hint('X'), '3;90'];
     yield 'error' => [static fn(): string => (new DefaultTheme())->error('X'), '31'];
     yield 'breadcrumb' => [static fn(): string => self::light()->breadcrumb('X'), '90'];
     // Option-list roles: a bold-gray heading and a gray disabled option.

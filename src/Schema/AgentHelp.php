@@ -156,6 +156,18 @@ class AgentHelp {
       $property['description'] = Translator::t($field->description);
     }
 
+    // Extension keywords: JSON Schema has no slot for either, and folding them
+    // into `description` would merge back the three texts a form keeps apart. A
+    // placeholder is not `examples` either - it illustrates the shape of an
+    // answer without being a valid one.
+    if ($field->hint !== '') {
+      $property['x-hint'] = Translator::t($field->hint);
+    }
+
+    if ($field->placeholder !== '') {
+      $property['x-placeholder'] = Translator::t($field->placeholder);
+    }
+
     $default = DefaultResolver::resolve($field, $this->context);
     if (!in_array($default, [NULL, '', []], TRUE)) {
       $property['default'] = $default;

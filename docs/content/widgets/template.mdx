@@ -1,7 +1,7 @@
 ---
 title: Template
 description: 'Fill the named slots of a fixed shape, tabbing between them, and collect the assembled string plus its parts.'
-keywords: ['template', 'placeholder', 'pattern', 'structured', 'widget']
+keywords: ['template', 'slot', 'pattern', 'structured', 'widget']
 ---
 
 import ThemedImage from '@theme/ThemedImage';
@@ -23,22 +23,24 @@ $p->template('crate', 'Crate label')
 // Label a slot, and validate it apart from the others:
 $p->template('crate', 'Crate label')
   ->pattern('{{orchard}}-{{fruit}}-{{grade}}')
-  ->placeholder('orchard', 'Orchard')
-  ->placeholder('fruit', 'Fruit')
-  ->placeholder('grade', 'Grade', fn(string $value): ?string => preg_match('/^[a-c]$/', $value) === 1 ? NULL : 'use a single letter a-c');
+  ->slot('orchard', 'Orchard')
+  ->slot('fruit', 'Fruit')
+  ->slot('grade', 'Grade', fn(string $value): ?string => preg_match('/^[a-c]$/', $value) === 1 ? NULL : 'use a single letter a-c');
 ```
 
 Runnable script: [`playground/02-widgets-template.php`](https://github.com/drevops/tui/blob/main/playground/02-widgets-template.php).
 
 ## Options
 
-| Name            | Description                                                                                      | Required | Default      |
-| --------------- | ------------------------------------------------------------------------------------------------ | -------- | ------------ |
-| `pattern()`     | The shape to fill in, carrying `{{name}}` slots.                                                 | Yes      | None         |
-| `default()`     | Initial value, as the assembled string.                                                          | No       | `''` (empty) |
-| `placeholder()` | Label and validator of one slot: `placeholder(string $name, string $label, ?Closure $validate)`. | No       | None         |
+| Name        | Description                                                                                           | Required | Default      |
+| ----------- | ----------------------------------------------------------------------------------------------------- | -------- | ------------ |
+| `pattern()` | The shape to fill in, carrying `{{name}}` slots.                                                      | Yes      | None         |
+| `default()` | Initial value, as the assembled string.                                                               | No       | `''` (empty) |
+| `slot()`    | Label and validator of one slot: `slot(string $name, string $label = '', ?Closure $validate = NULL)`. | No       | None         |
 
 A slot name is a word (`{{grade}}`, `{{part_1}}`), and inner whitespace is allowed (`{{ grade }}`). Every other character in the pattern is fixed text.
+
+Only the slot name is required: an omitted label falls back to the slot name, and an omitted validator leaves the slot checked by the field's own validator alone - so `->slot('grade')` is enough to name a slot without constraining it.
 
 Two rules are enforced when the form is built, both raising a `FormException`: a pattern must declare at least one slot, and two slots must be separated by some fixed text. A slot ends where the next fixed chunk begins, so `{{a}}{{b}}` could not be read back into its parts.
 

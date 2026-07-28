@@ -34,6 +34,7 @@ use DrevOps\Tui\Widget\TextWidget;
 use DrevOps\Tui\Widget\ToggleWidget;
 use DrevOps\Tui\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -307,6 +308,29 @@ final class WidgetFactoryTest extends TestCase {
 
     $scalar = new Field('b', 'B', '', FieldType::Text, '', completion: fn (array $answers): string => 'oops');
     $this->assertStringNotContainsString("\033[90m", (new WidgetFactory())->create($scalar, 'ac')->view(new DefaultTheme()));
+  }
+
+  #[DataProvider('dataProviderPlaceholderReachesEveryCapableWidget')]
+  public function testPlaceholderReachesEveryCapableWidget(FieldType $type): void {
+    $field = new Field('f', 'F', '', $type, '', placeholder: 'E.g. Golden Beetroot');
+
+    $view = Ansi::strip((new WidgetFactory())->create($field, '')->view(new DefaultTheme()));
+
+    $this->assertStringContainsString('E.g. Golden Beetroot', $view);
+  }
+
+  public static function dataProviderPlaceholderReachesEveryCapableWidget(): \Iterator {
+    foreach (FieldType::cases() as $type) {
+      if ($type->supportsPlaceholder()) {
+        yield $type->value => [$type];
+      }
+    }
+  }
+
+  public function testFieldWithoutPlaceholderGhostsNothing(): void {
+    $field = new Field('f', 'F', '', FieldType::Text, '');
+
+    $this->assertStringNotContainsString("\033[90m", (new WidgetFactory())->create($field, '')->view(new DefaultTheme()));
   }
 
   public function testDeclaredValidatorBlocksAcceptUntilItPasses(): void {
