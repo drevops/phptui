@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Tests\Unit;
 use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Engine\Engine;
 use DrevOps\Tui\Engine\EngineException;
 use DrevOps\Tui\Input\Key;
@@ -244,6 +245,20 @@ final class QueryOptionsTest extends TestCase {
     $this->expectExceptionMessageMatches('/Could not load options for field "veg": The pantry is unreachable\./');
 
     (new Tui($form))->collect('{"veg":"potato"}');
+  }
+
+  public function testHeadlessLeavesConditionHiddenFieldUnqueried(): void {
+    // The vegetable field is hidden unless the order is a box, so it carries no
+    // answer to check and must cost the source nothing.
+    $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p): void {
+      $p->confirm('box', 'Box order?');
+      $p->search('veg', 'Vegetable')->optionsFrom($this->source())->when(new Condition('box', eq: TRUE));
+    });
+
+    $answers = (new Tui($form))->collect('{"box":false,"veg":"carrot"}');
+
+    $this->assertSame([], $this->queries);
+    $this->assertNull($answers->value('veg'));
   }
 
   public function testHeadlessLeavesAnUnansweredFieldUnqueried(): void {
