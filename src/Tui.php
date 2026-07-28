@@ -310,6 +310,10 @@ final class Tui {
    * @param bool|null $interactive
    *   TRUE/FALSE to force the mode; NULL auto-detects from the prompts and
    *   the standard-input TTY.
+   * @param bool $update
+   *   Whether to enable discovery against an existing project. It reaches the
+   *   chosen mode's initial state, so the panels open pre-filled interactively
+   *   just as the headless answers resolve them.
    *
    * @return \DrevOps\Tui\Answers\Answers
    *   The collected answers.
@@ -321,10 +325,10 @@ final class Tui {
    * @throws \DrevOps\Tui\CancelException
    *   When the user dismisses the interactive session via the cancel button.
    */
-  public function run(string $prompts = '', string $version = '', string $directory = '', ?bool $interactive = NULL): Answers {
+  public function run(string $prompts = '', string $version = '', string $directory = '', ?bool $interactive = NULL, bool $update = FALSE): Answers {
     $interactive ??= $prompts === '' && defined('STDIN') && stream_isatty(STDIN);
 
-    return $interactive ? $this->interact(version: $version, directory: $directory) : $this->collect($prompts, $directory, FALSE, $version);
+    return $interactive ? $this->interact(version: $version, directory: $directory, update: $update) : $this->collect($prompts, $directory, $update, $version);
   }
 
   /**
@@ -403,6 +407,9 @@ final class Tui {
    *   An optional version shown below the banner and stamped into the context.
    * @param string $directory
    *   The target directory (defaults to the current working directory).
+   * @param bool $update
+   *   Whether discovery pre-fills the panels from an existing project, with the
+   *   detected values carrying their `detected` provenance badge.
    * @param \DrevOps\Tui\Render\Terminal|null $terminal
    *   The terminal to drive (defaults to a real one).
    *
@@ -416,7 +423,7 @@ final class Tui {
    * @throws \DrevOps\Tui\CancelException
    *   When the user dismisses the interactive session via the cancel button.
    */
-  public function interact(string $theme = '', string $banner = '', string $version = '', string $directory = '', ?Terminal $terminal = NULL): Answers {
+  public function interact(string $theme = '', string $banner = '', string $version = '', string $directory = '', bool $update = FALSE, ?Terminal $terminal = NULL): Answers {
     if (!$terminal instanceof Terminal) {
       // @codeCoverageIgnoreStart
       $terminal = new Terminal();
@@ -427,7 +434,7 @@ final class Tui {
     // when set, otherwise they are auto-detected from the terminal.
     $options = $this->resolveThemeOptions($terminal);
 
-    $controller = $this->controller($options, $theme, $banner, $version, $directory, self::frameWidth($options, $terminal->width()));
+    $controller = $this->controller($options, $theme, $banner, $version, $directory, self::frameWidth($options, $terminal->width()), $update);
 
     $answers = $controller->run($terminal);
 
@@ -467,6 +474,8 @@ final class Tui {
    * @param int $width
    *   The frame width the theme lays out to (the terminal width when
    *   fullscreen is on).
+   * @param bool $update
+   *   Whether discovery pre-fills the initial state from an existing project.
    *
    * @return \DrevOps\Tui\Render\PanelController
    *   The controller, ready to run against a terminal.
@@ -475,14 +484,14 @@ final class Tui {
    *   Public for the {@see \DrevOps\Tui\Testing\TuiTester} harness; consumers
    *   collect through run(), collect() or interact().
    */
-  public function controller(array $options, string $theme = '', string $banner = '', string $version = '', string $directory = '', int $width = DefaultTheme::DEFAULT_WIDTH): PanelController {
+  public function controller(array $options, string $theme = '', string $banner = '', string $version = '', string $directory = '', int $width = DefaultTheme::DEFAULT_WIDTH, bool $update = FALSE): PanelController {
     // Restore this facade's language before rendering (see collect()).
     Translator::setShared($this->translator);
 
     // The full state, not collect()'s active-only answers: an inactive field
     // keeps its settled value, so a condition satisfied mid-session surfaces
     // the field with its default rather than an empty value.
-    [$values, $provenance] = $this->engine->resolveState([], $this->context($directory, FALSE, $version));
+    [$values, $provenance] = $this->engine->resolveState([], $this->context($directory, $update, $version));
 
     $banner_text = $banner !== '' ? $banner : $this->form->banner;
 

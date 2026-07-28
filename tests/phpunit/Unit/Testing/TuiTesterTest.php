@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Testing;
 
+use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
+use DrevOps\Tui\Discovery\Dotenv;
+use DrevOps\Tui\Discovery\JsonValue;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\Spacing;
+use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -133,6 +137,64 @@ final class TuiTesterTest extends TestCase {
     $this->assertStringContainsString("\033[", $tester->output());
   }
 
+  public function testUpdateModePreFillsDetectedValues(): void {
+    vfsStream::setup('project', NULL, [
+      'box.json' => '{"name": "Weekly Box"}',
+      '.env' => 'SEASON=winter',
+    ]);
+    $dir = vfsStream::url('project');
+
+    // Update on: discovery pre-fills the panels, each detected value badged
+    // "detected" and shown once the panel is open.
+    $on = (new TuiTester($this->discoveryForm()))->directory($dir)->update();
+    $answers = $on->run(Key::named(KeyName::Enter));
+
+    $this->assertSame('Weekly Box', $answers->value('name'));
+    $this->assertSame('winter', $answers->value('season'));
+    $this->assertSame(Provenance::Detected, $answers->provenanceOf('name'));
+    $this->assertSame(Provenance::Detected, $answers->provenanceOf('season'));
+    $this->assertStringContainsString('Weekly Box', $on->display());
+
+    // Update off (the harness default): discovery never runs, so the plain
+    // declared defaults surface instead.
+    $off = (new TuiTester($this->discoveryForm()))->directory($dir);
+    $answers = $off->run(Key::named(KeyName::Enter));
+
+    $this->assertSame('', $answers->value('name'));
+    $this->assertSame('summer', $answers->value('season'));
+    $this->assertSame(Provenance::Default, $answers->provenanceOf('season'));
+  }
+
+  public function testUpdateModeReBadgesEditedDetectedValue(): void {
+    vfsStream::setup('project', NULL, [
+      'box.json' => '{"name": "Weekly Box"}',
+      '.env' => 'SEASON=winter',
+    ]);
+    $dir = vfsStream::url('project');
+
+    $tester = (new TuiTester($this->discoveryForm()))->directory($dir)->update();
+
+    // Drill in, edit the detected "name" (its buffer seeds with the detected
+    // value and lands the cursor at the end, so typing appends), accept, back
+    // out, then submit.
+    $answers = $tester->run(
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Enter),
+      ' XL',
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Escape),
+      Key::named(KeyName::Down),
+      Key::named(KeyName::Enter),
+    );
+
+    // The edited field re-badges detected -> edited; the untouched one keeps
+    // its detected badge.
+    $this->assertSame('Weekly Box XL', $answers->value('name'));
+    $this->assertSame(Provenance::Edited, $answers->provenanceOf('name'));
+    $this->assertSame('winter', $answers->value('season'));
+    $this->assertSame(Provenance::Detected, $answers->provenanceOf('season'));
+  }
+
   /**
    * Every result accessor guards against being read before run().
    *
@@ -245,6 +307,17 @@ final class TuiTesterTest extends TestCase {
       ->panel('edit', 'Quick edit', function (PanelBuilder $m): void {
         $m->modal('Apply', 'Discard');
         $m->text('nick', 'Nickname');
+      });
+  }
+
+  /**
+   * A form whose fields discover their defaults from the project directory.
+   */
+  protected function discoveryForm(): Form {
+    return Form::create('Update')
+      ->panel('box', 'Box', function (PanelBuilder $p): void {
+        $p->text('name', 'Box name')->default('')->discover(new JsonValue('box.json', 'name'));
+        $p->text('season', 'Season')->default('summer')->discover(new Dotenv('SEASON'));
       });
   }
 

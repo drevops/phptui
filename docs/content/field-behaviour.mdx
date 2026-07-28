@@ -43,7 +43,9 @@ $p->text('name', 'Produce name')->discover(new JsonValue('basket.json', 'name'))
 $p->confirm('inseason', 'In season?')->discover(new PathExists('harvest.csv'));
 ```
 
-Discovered values are badged in the summary, and explicit input (prompts or environment) always beats discovery:
+Update mode is off by default; the `update` flag turns it on and reaches both collection paths - `collect($prompts, $directory, update: TRUE)` headlessly, and `run(update: TRUE)` or `interact(update: TRUE)` for the panel TUI. Interactively the panels open pre-filled with the discovered values, each carrying its `detected` badge; editing one re-badges it `edited` like any other change. Without the flag every field starts from its declared default.
+
+Discovered values are badged in the panels and the summary alike, and explicit input (prompts or environment) always beats discovery:
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/discovery-light-static.svg'), dark: useBaseUrl('/discovery-dark-static.svg')}} alt="Discovery summary with provenance badges" width="100%" />

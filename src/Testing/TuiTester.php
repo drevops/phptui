@@ -74,6 +74,11 @@ final class TuiTester {
   protected string $directory = '';
 
   /**
+   * Whether discovery pre-fills the panels from an existing project.
+   */
+  protected bool $update = FALSE;
+
+  /**
    * The answers collected by the last run(), or NULL before the first run.
    */
   protected ?Answers $answers = NULL;
@@ -206,6 +211,21 @@ final class TuiTester {
   }
 
   /**
+   * Enable update mode so discovery pre-fills the panels from the directory.
+   *
+   * @param bool $update
+   *   Whether discovery runs against the target directory.
+   *
+   * @return $this
+   *   The tester.
+   */
+  public function update(bool $update = TRUE): self {
+    $this->update = $update;
+
+    return $this;
+  }
+
+  /**
    * Run the form, feeding it the given scripted keystrokes.
    *
    * @param string|\DrevOps\Tui\Input\Key ...$items
@@ -227,7 +247,7 @@ final class TuiTester {
     // terminal's columns.
     $width = Tui::frameWidth($this->options, $this->cols);
 
-    $controller = $this->tui->controller($this->options, $this->theme, '', $this->version, $this->directory, $width);
+    $controller = $this->tui->controller($this->options, $this->theme, '', $this->version, $this->directory, $width, $this->update);
 
     $this->answers = $controller->run($terminal);
     $this->output = $terminal->output();
