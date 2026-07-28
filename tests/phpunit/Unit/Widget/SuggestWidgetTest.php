@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Tests\Unit\Widget;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Testing\ArrayKeyStream;
 use DrevOps\Tui\Testing\WidgetRunner;
@@ -327,6 +328,41 @@ final class SuggestWidgetTest extends TestCase {
 
     $widget->handle(Key::named(KeyName::Tab));
     $this->assertSame('Éclair', $widget->value());
+  }
+
+  public function testGhostTextCompletesQuerySourcedRows(): void {
+    $widget = new SuggestWidget([], '', NULL, [], TRUE);
+    $widget->driveByQuery();
+
+    $widget->handle(Key::char('p'));
+    $widget->applyQuery('p', Option::list(['Pepper' => 'Pepper', 'Potato' => 'Potato']));
+
+    // A query source's rows are already the answer and are never ranked again
+    // locally, so the preview is simply their first prefix match.
+    $this->assertStringContainsString('epper', $widget->view(new DefaultTheme()));
+
+    $widget->handle(Key::named(KeyName::Tab));
+    $this->assertSame('Pepper', $widget->value());
+  }
+
+  public function testGhostTextSuppressedWhileQueryIsInFlight(): void {
+    $theme = new DefaultTheme();
+    $widget = new SuggestWidget([], '', NULL, [], TRUE);
+    $widget->driveByQuery();
+    $widget->applyQuery('', Option::list(['Apricot' => 'Apricot']));
+
+    $widget->handle(Key::char('a'));
+    $this->assertStringContainsString("\033[90m", $widget->queryLine($theme));
+
+    // The rows still held answer the previous query, and the list showing them
+    // has already given way to the loading indicator; previewing one of them
+    // would put back the answer being withdrawn.
+    $widget->beginQuery();
+    $this->assertSame('a' . $theme->caret(), $widget->queryLine($theme));
+
+    // Once the new rows settle the preview returns, drawn from them.
+    $widget->applyQuery('a', Option::list(['Apple' => 'Apple']));
+    $this->assertStringContainsString('pple', $widget->queryLine($theme));
   }
 
   public function testGhostTextBacksOffWhenTheQueryStopsMatching(): void {
