@@ -47,7 +47,7 @@ $p->text('crop', 'Crop')
 
 `description()` says what the question is. It renders under the field row, carries the [markdown subset](/markdown), and widens the panel to fit.
 
-`hint()` says how to answer it. It renders beneath the description in a style of its own - italicized, so guidance never reads as part of the question - and stays plain text, because one short instruction carries no formatting of its own.
+`hint()` says how to answer it. It renders beneath the description in a style of its own, so guidance never reads as part of the question - the default theme italicizes it, and a theme sets its own (the dos theme colors it instead, since CGA had no italic). It stays plain text either way, because one short instruction carries no formatting of its own.
 
 `placeholder()` is the ghost text an empty editor shows. It never becomes a value: it disappears at the first keystroke, and it is suppressed when color is off, where it could not be told apart from something typed. Available on the `text`, `number`, `textarea`, `password`, `suggest` and `search` types - the ones with an input buffer to ghost. Declaring one on any other type raises a `FormException` when the form is built, rather than being quietly ignored.
 

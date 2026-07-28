@@ -32,13 +32,15 @@ Runnable script: [`playground/02-widgets-template.php`](https://github.com/drevo
 
 ## Options
 
-| Name        | Description                                                                               | Required | Default      |
-| ----------- | ----------------------------------------------------------------------------------------- | -------- | ------------ |
-| `pattern()` | The shape to fill in, carrying `{{name}}` slots.                                          | Yes      | None         |
-| `default()` | Initial value, as the assembled string.                                                   | No       | `''` (empty) |
-| `slot()`    | Label and validator of one slot: `slot(string $name, string $label, ?Closure $validate)`. | No       | None         |
+| Name        | Description                                                                                           | Required | Default      |
+| ----------- | ----------------------------------------------------------------------------------------------------- | -------- | ------------ |
+| `pattern()` | The shape to fill in, carrying `{{name}}` slots.                                                      | Yes      | None         |
+| `default()` | Initial value, as the assembled string.                                                               | No       | `''` (empty) |
+| `slot()`    | Label and validator of one slot: `slot(string $name, string $label = '', ?Closure $validate = NULL)`. | No       | None         |
 
 A slot name is a word (`{{grade}}`, `{{part_1}}`), and inner whitespace is allowed (`{{ grade }}`). Every other character in the pattern is fixed text.
+
+Only the slot name is required: an omitted label falls back to the slot name, and an omitted validator leaves the slot checked by the field's own validator alone - so `->slot('grade')` is enough to name a slot without constraining it.
 
 Two rules are enforced when the form is built, both raising a `FormException`: a pattern must declare at least one slot, and two slots must be separated by some fixed text. A slot ends where the next fixed chunk begins, so `{{a}}{{b}}` could not be read back into its parts.
 

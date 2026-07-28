@@ -158,7 +158,8 @@ final class BuiltinThemesTest extends TestCase {
   }
 
   public static function dataProviderDosHintTakesItsOwnColourRatherThanItalic(): \Iterator {
-    yield from self::dataProviderDosSecondaryTextIsLegibleOnBlue();
+    yield 'dark' => [Mode::Dark];
+    yield 'light' => [Mode::Light];
   }
 
 }

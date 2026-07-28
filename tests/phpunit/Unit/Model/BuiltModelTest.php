@@ -213,8 +213,8 @@ final class BuiltModelTest extends TestCase {
   }
 
   #[DataProvider('dataProviderPlaceholderIsRejectedWhenTypeHasNoInput')]
-  public function testPlaceholderIsRejectedWhenTypeHasNoInput(FieldType $type): void {
-    if (!$type->supportsPlaceholder()) {
+  public function testPlaceholderIsRejectedWhenTypeHasNoInput(FieldType $type, bool $accepted): void {
+    if (!$accepted) {
       $this->expectException(FormException::class);
       $this->expectExceptionMessage(sprintf('Field "f" of type "%s" shows no placeholder', $type->value));
     }
@@ -225,8 +225,20 @@ final class BuiltModelTest extends TestCase {
   }
 
   public static function dataProviderPlaceholderIsRejectedWhenTypeHasNoInput(): \Iterator {
+    // The accepting types are spelled out rather than read back from
+    // supportsPlaceholder(), so a change to that set fails here instead of
+    // moving the expectation along with it.
+    $accepting = [
+      FieldType::Text,
+      FieldType::Number,
+      FieldType::Textarea,
+      FieldType::Password,
+      FieldType::Suggest,
+      FieldType::Search,
+    ];
+
     foreach (FieldType::cases() as $type) {
-      yield $type->value => [$type];
+      yield $type->value => [$type, in_array($type, $accepting, TRUE)];
     }
   }
 
@@ -238,7 +250,9 @@ final class BuiltModelTest extends TestCase {
   }
 
   public static function dataProviderHintIsAcceptedOnEveryType(): \Iterator {
-    yield from self::dataProviderPlaceholderIsRejectedWhenTypeHasNoInput();
+    foreach (FieldType::cases() as $type) {
+      yield $type->value => [$type];
+    }
   }
 
   public function testFormDefaults(): void {
