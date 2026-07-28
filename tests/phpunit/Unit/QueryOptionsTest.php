@@ -236,6 +236,17 @@ final class QueryOptionsTest extends TestCase {
     $this->assertSame(['carrot', 'onion'], $this->queries);
   }
 
+  public function testHeadlessTurnsASourceFailureIntoAnEngineError(): void {
+    $form = $this->form(static function (string $query): array {
+      throw new \RuntimeException('The pantry is unreachable.');
+    });
+
+    $this->expectException(EngineException::class);
+    $this->expectExceptionMessageMatches('/Could not load options for field "veg": The pantry is unreachable\./');
+
+    (new Tui($form))->collect('{"veg":"potato"}');
+  }
+
   public function testHeadlessLeavesAnUnansweredFieldUnqueried(): void {
     (new Tui($this->form()))->collect('{}');
 

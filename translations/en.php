@@ -26,6 +26,7 @@ return [
   'Calendar' => 'Calendar',
   'Choose @constraint.' => 'Choose @constraint.',
   'Confirm' => 'Confirm',
+  'Could not load options for field "@id": @error' => 'Could not load options for field "@id": @error',
   'Could not load options.' => 'Could not load options.',
   'Directories only' => 'Directories only',
   'Enter a number @constraint.' => 'Enter a number @constraint.',

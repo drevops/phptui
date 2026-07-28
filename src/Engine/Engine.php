@@ -133,7 +133,21 @@ class Engine {
       $rows = [];
 
       foreach ($this->queriesFor($field, $values[$field->id] ?? NULL) as $query) {
-        foreach (Option::resolved(($field->optionsSource)($query, $values)) as $row) {
+        try {
+          $resolved = Option::resolved(($field->optionsSource)($query, $values));
+        }
+        catch (\Throwable $throwable) {
+          // Interactively a source that cannot answer degrades to a message in
+          // the field, but headlessly there is nobody to retype the query, so
+          // the collection fails - as an engine error like every other, rather
+          // than as whatever the consumer's backend happened to throw.
+          throw new EngineException(Translator::t('Could not load options for field "@id": @error', [
+            '@id' => $field->id,
+            '@error' => $throwable->getMessage(),
+          ]), previous: $throwable);
+        }
+
+        foreach ($resolved as $row) {
           $rows[$row->value] = $row;
         }
       }
