@@ -84,6 +84,7 @@ function outputSpecs(): array {
         'Fruit' => 'Apricot, Peach, Plum',
         'Vegetables' => 'Carrot, Spinach, Tomato',
         'Quantity' => '6 baskets',
+        'Note' => 'Everything is picked the morning it ships, packed in the shed, and loaded onto the van before seven.',
       ]);
       $out->status(Status::Success, 'Leaving the packing shed at 07:00');
     },

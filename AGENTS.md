@@ -197,11 +197,14 @@ opening a PR:
   that suits how it draws - `progressSpecs()` in `render-progress-svgs.php`
   when it animates, `outputSpecs()` in `render-output-svgs.php` when it does
   not. Run `php docs/util/render-<kind>-svgs.php <name>` to generate them.
-- Regenerate the all-widgets montage so the gallery includes it:
-  `php docs/util/update-assets.php --record widgets`.
-- Add a `docs/content/widgets/<name>.mdx` page (mirror `pause.mdx`) and a
-  `docs/sidebars.js` entry, then run `php docs/util/audit-svgs.php` - it must
-  stay green, and every dark asset needs its light twin.
+- For a widget only, regenerate the all-widgets montage so the gallery includes
+  it: `php docs/util/update-assets.php --record widgets`. A primitive is not in
+  the montage, so it skips this step.
+- Add its documentation page and a `docs/sidebars.js` entry: a widget goes in
+  `docs/content/widgets/<name>.mdx` (mirror `pause.mdx`), a primitive at the
+  top level in `docs/content/<name>.mdx` (mirror `progress.mdx`).
+- Run `php docs/util/audit-svgs.php` - it must stay green, and every dark asset
+  needs its light twin.
 - Visually confirm at least the `-dark-static` render (open the SVG in a
   browser and screenshot it) - a render that completes is not proof it fits.
 

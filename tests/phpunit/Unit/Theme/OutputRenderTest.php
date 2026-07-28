@@ -186,7 +186,7 @@ final class OutputRenderTest extends TestCase {
   }
 
   public function testDefinitionsFoldLineBreaksInLabelsAndValues(): void {
-    $this->assertSame(['  Jars  12 sealed'], $this->theme(color: FALSE)->renderDefinitions(["Jars" => "12\nsealed"]));
+    $this->assertSame(['  Jars  12 sealed'], $this->theme(color: FALSE)->renderDefinitions(['Jars' => "12\nsealed"]));
   }
 
   public function testDefinitionsWrapLongValueUnderTheValueColumn(): void {
