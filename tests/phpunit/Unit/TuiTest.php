@@ -422,7 +422,9 @@ final class TuiTest extends TestCase {
   public function testOutputWritesThemedChromeToTheGivenTerminal(): void {
     $terminal = new BufferedTerminal();
 
-    (new Tui($this->demoForm()))->output($terminal)
+    // Force the glyphs: left to detect, they would follow the machine's locale
+    // and the asserted glyph would differ between environments.
+    (new Tui($this->demoForm()))->unicode(TRUE)->output($terminal)
       ->box('Pick your fruit.', 'Welcome')
       ->success('Preserves are ready')
       ->definitions(['Jars' => '12']);
