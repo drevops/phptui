@@ -12,7 +12,7 @@ This page names each part. The names are the vocabulary the rest of the document
 
 :::note
 
-The frames are real captured output, with a `[n]` marker added beside each part. The vocabulary is the agreed target: the [mapping](#what-the-code-calls-these-today) shows where the source still uses a different word.
+The frames are real captured output, with a marker added beside each part. The vocabulary is the agreed target: the [mapping](#what-the-code-calls-these-today) shows where the source still uses a different word.
 
 :::
 
@@ -22,28 +22,28 @@ A field that is not open draws one value line plus whatever supporting lines it 
 
 ```
 ╭──────────────────────────────────────────────────────────────────────────╮
-│ Anatomy › Basket [1]                                                     │
+│ Orchard order › Basket①                                                  │
 ├──────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
-│ ❯[2] Basket[3]  apple[4]                                                 │
-│     Pick the produce for this delivery. [5]                              │
-│     Space toggles, Enter confirms. [6]                                   │
+│ ❯② Basket③  apple④                                                       │
+│     Pick the produce for this delivery. ⑤                                │
+│     Space toggles, Enter confirms. ⑥                                     │
 │                                                                          │
-│   ▼[7]                                                                   │
+│   ▼⑦                                                                     │
 │                                                                          │
 ├──────────────────────────────────────────────────────────────────────────┤
-│ ↑/↓ move · ↵ select · esc back · q quit · ? help [8]                     │
+│ ↑/↓ move · ↵ select · esc back · q quit · ? help ⑧                       │
 ╰──────────────────────────────────────────────────────────────────────────╯
 ```
 
-**[1]** breadcrumb - the trail of panel titles.
-**[2]** marker - which row has focus.
-**[3]** label - the field's name.
-**[4]** value - the settled answer.
-**[5]** description - the field's explanatory text.
-**[6]** instruction - the field's short how-to line.
-**[7]** overflow - content continues above or below.
-**[8]** key legend - the keys available right now.
+① **breadcrumb** - the trail of panel titles.
+② **marker** - which row has focus.
+③ **label** - the field's name.
+④ **value** - the settled answer.
+⑤ **description** - the field's explanatory text.
+⑥ **instruction** - the field's short how-to line.
+⑦ **overflow** - content continues above or below.
+⑧ **key legend** - the keys available right now.
 
 ## The editor
 
@@ -51,28 +51,28 @@ Opening the row hands the region right of the label to the widget. A multiple-ch
 
 ```
 ╭──────────────────────────────────────────────────────────────────────────╮
-│ Anatomy › Basket                                                         │
+│ Orchard order › Basket                                                   │
 ├──────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
-│ ❯ Basket    ◼[9] Apple[10]                                               │
-│           ❯[11] ◼ Carrot                                                 │
-│             ◻ Tomato (out of season)[12]                                 │
-│           Select between 2 and 3 items. [13]                             │
-│           Stays crisp for weeks when kept cold. [14]                     │
-│     Pick the produce for this delivery. [5]                              │
-│   ▼[7]                                                                   │
+│ ❯ Basket    ◼⑨ Apple⑩                                                    │
+│           ❯⑪ ◼ Carrot                                                    │
+│             ◻ Tomato (out of season)⑫                                    │
+│           Select between 2 and 3 items. ⑬                                │
+│           Stays crisp for weeks when kept cold. ⑭                        │
+│     Pick the produce for this delivery. ⑤                                │
+│   ▼⑦                                                                     │
 │                                                                          │
 ├──────────────────────────────────────────────────────────────────────────┤
-│ ↑/↓ move · ↵ accept · esc cancel [8]                                     │
+│ ↑/↓ move · ↵ accept · esc cancel ⑧                                       │
 ╰──────────────────────────────────────────────────────────────────────────╯
 ```
 
-**[9]** selector - the per-entry chosen-state glyph.
-**[10]** entry - one line of the list the widget offers.
-**[11]** entry marker - which entry is highlighted.
-**[12]** entry note - a qualifier, such as why an entry is unavailable.
-**[13]** constraint - what the field expects, shown before anything is rejected.
-**[14]** entry detail - the highlighted entry's own explanatory text.
+⑨ **selector** - the per-entry chosen-state glyph.
+⑩ **entry** - one line of the list the widget offers.
+⑪ **entry marker** - which entry is highlighted.
+⑫ **entry note** - a qualifier, such as why an entry is unavailable.
+⑬ **constraint** - what the field expects, shown before anything is rejected.
+⑭ **entry detail** - the highlighted entry's own explanatory text.
 
 ## The file picker
 
@@ -80,22 +80,22 @@ The same skeleton over a directory listing, plus the one part unique to it.
 
 ```
 ╭──────────────────────────────────────────────────────────────────────────╮
-│ Anatomy › Price list                                                     │
+│ Orchard order › Price list                                               │
 ├──────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
-│ ❯ Price list  sample-project[15]                                         │
-│                 baskets/[10]                                             │
-│               ❯[11] deliveries/                                          │
+│ ❯ Price list  sample-project⑮                                            │
+│                 baskets/⑩                                                │
+│               ❯⑪ deliveries/                                             │
 │                 harvest.csv                                              │
-│               Files only. Extensions: csv. Max 2 MB. [13]                │
-│     The CSV the orchard sends each week. [5]                             │
+│               Files only. Extensions: csv. Max 2 MB. ⑬                   │
+│     The CSV the orchard sends each week. ⑤                               │
 │                                                                          │
 ├──────────────────────────────────────────────────────────────────────────┤
-│ ↑/↓ move · → open · ← up · ↵ select · tab hidden · esc cancel [8]        │
+│ ↑/↓ move · → open · ← up · ↵ select · tab hidden · esc cancel ⑧          │
 ╰──────────────────────────────────────────────────────────────────────────╯
 ```
 
-**[15]** location - the directory currently being browsed.
+⑮ **location** - the directory currently being browsed.
 
 ## A text editor
 
@@ -103,78 +103,78 @@ No list, so a buffer and a caret take the place of entries.
 
 ```
 ╭──────────────────────────────────────────────────────────────────────────╮
-│ Anatomy › Crate                                                          │
+│ Orchard order › Crate                                                    │
 ├──────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
-│ ❯ Crate label  valley-pear█[17]-a[16]                                    │
-│                filling in Fruit [18]                                     │
-│     Identifies the crate on the loading dock. [5]                        │
+│ ❯ Crate label  valley-pear█⑰-a⑯                                          │
+│                filling in Fruit ⑱                                        │
+│     Identifies the crate on the loading dock. ⑤                          │
 │                                                                          │
 ├──────────────────────────────────────────────────────────────────────────┤
-│ ↓/↑ next/previous · ↵ accept · esc cancel [8]                            │
+│ ↓/↑ next/previous · ↵ accept · esc cancel ⑧                              │
 ╰──────────────────────────────────────────────────────────────────────────╯
 ```
 
-**[16]** buffer - the in-progress text, before it is accepted.
-**[17]** caret - the insertion point within the buffer.
-**[18]** activity - what the widget is doing right now.
+⑯ **buffer** - the in-progress text, before it is accepted.
+⑰ **caret** - the insertion point within the buffer.
+⑱ **activity** - what the widget is doing right now.
 
 ## One line, two states
 
-The constraint **[13]** and the error **[19]** are the same physical line. The constraint is guidance shown *before* anything goes wrong; the moment a value is rejected the error replaces it, so the two never stack. Compare the bounded select above with the same bounds breached on a number field.
+The constraint ⑬ and the error ⑲ are the same physical line. The constraint is guidance shown *before* anything goes wrong; the moment a value is rejected the error replaces it, so the two never stack. Compare the bounded select above with the same bounds breached on a number field.
 
 ```
 ╭──────────────────────────────────────────────────────────────────────────╮
-│ Anatomy › Weight                                                         │
+│ Orchard order › Weight                                                   │
 ├──────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
-│ ❯ Basket weight (g)  1[16]█[17]                                          │
-│                      Enter a number between 200 and 9000. [19]           │
-│     Weighed at the packing bench. [5]                                    │
+│ ❯ Basket weight (g)  1⑯█⑰                                                │
+│                      Enter a number between 200 and 9000. ⑲              │
+│     Weighed at the packing bench. ⑤                                      │
 │                                                                          │
 ├──────────────────────────────────────────────────────────────────────────┤
-│ ↑/↓ adjust · ↵ accept · esc cancel [8]                                   │
+│ ↑/↓ adjust · ↵ accept · esc cancel ⑧                                     │
 ╰──────────────────────────────────────────────────────────────────────────╯
 ```
 
-**[19]** error - why the value was rejected. Replaces the constraint **[13]**.
+⑲ **error** - why the value was rejected. Replaces the constraint ⑬.
 
 ## What the code calls these today
 
-| # | Part | In the source today |
-|---|---|---|
-| 1 | breadcrumb | `ThemeInterface::breadcrumb()` |
-| 2 | marker | `ThemeInterface::marker()`, shared with (11) |
-| 3 | label | `ThemeInterface::label()`, `Field::$label` |
-| 4 | value | `ThemeInterface::value()` |
-| 5 | description | `ThemeInterface::description()`, shared with (13) and (14) |
-| 6 | instruction | `Field::$hint`, `DefaultTheme::renderFieldHint()`, `ThemeInterface::hint()` |
-| 7 | overflow | `ThemeInterface::indicator()`, `indicatorUp()`, `indicatorDown()` |
-| 8 | key legend | `WidgetInterface::hints()`, `Hint`, `ThemeInterface::keysHint()` |
-| 9 | selector | `ThemeInterface::check()`, `radio()` - no shared name |
-| 10 | entry | unnamed |
-| 11 | entry marker | `ThemeInterface::marker()`, shared with (2) |
-| 12 | entry note | `Option::$disabledReason`, concatenated in `OptionsCapableTrait` |
-| 13 | constraint | `SelectionBoundedTrait::selectionHint()`, `FilePickerWidget::constraintHint()`, `NumberBounds::describe()` |
-| 14 | entry detail | `Option::$description` through `ThemeInterface::description()` |
-| 15 | location | unnamed |
-| 16 | buffer | `$buffer`, per widget - not in any shared API |
-| 17 | caret | `ThemeInterface::caret()` |
-| 18 | activity | `ThemeInterface::footer()`, used away from the footer |
-| 19 | error | `ThemeInterface::error()`, `WidgetInterface::error()` |
+| Part | In the source today |
+|---|---|
+| ① breadcrumb | `ThemeInterface::breadcrumb()` |
+| ② marker | `ThemeInterface::marker()`, shared with ⑪ |
+| ③ label | `ThemeInterface::label()`, `Field::$label` |
+| ④ value | `ThemeInterface::value()` |
+| ⑤ description | `ThemeInterface::description()`, shared with ⑬ and ⑭ |
+| ⑥ instruction | `Field::$hint`, `DefaultTheme::renderFieldHint()`, `ThemeInterface::hint()` |
+| ⑦ overflow | `ThemeInterface::indicator()`, `indicatorUp()`, `indicatorDown()` |
+| ⑧ key legend | `WidgetInterface::hints()`, `Hint`, `ThemeInterface::keysHint()` |
+| ⑨ selector | `ThemeInterface::check()`, `radio()` - no shared name |
+| ⑩ entry | unnamed |
+| ⑪ entry marker | `ThemeInterface::marker()`, shared with ② |
+| ⑫ entry note | `Option::$disabledReason`, concatenated in `OptionsCapableTrait` |
+| ⑬ constraint | `SelectionBoundedTrait::selectionHint()`, `FilePickerWidget::constraintHint()`, `NumberBounds::describe()` |
+| ⑭ entry detail | `Option::$description` through `ThemeInterface::description()` |
+| ⑮ location | unnamed |
+| ⑯ buffer | `$buffer`, per widget - not in any shared API |
+| ⑰ caret | `ThemeInterface::caret()` |
+| ⑱ activity | `ThemeInterface::footer()`, used away from the footer |
+| ⑲ error | `ThemeInterface::error()`, `WidgetInterface::error()` |
 
 ## Where the names disagree
 
-**`hint` names four unrelated things.** `ThemeInterface::hint()` is a text style. `Field::$hint` is the instruction **[6]**. `WidgetInterface::hints()` returns the key legend **[8]**. `SelectionBoundedTrait::selectionHint()` returns the constraint **[13]**. Nothing connects them, and the last one does not even use the `hint()` style - it draws through `description()`.
+**`hint` names four unrelated things.** `ThemeInterface::hint()` is a text style. `Field::$hint` is the instruction ⑥. `WidgetInterface::hints()` returns the key legend ⑧. `SelectionBoundedTrait::selectionHint()` returns the constraint ⑬. Nothing connects them, and the last one does not even use the `hint()` style - it draws through `description()`.
 
-**`description` names three parts.** The field's description **[5]**, the highlighted entry's detail **[14]** and the constraint **[13]** all render through `ThemeInterface::description()`. Restyling one restyles all three.
+**`description` names three parts.** The field's description ⑤, the highlighted entry's detail ⑭ and the constraint ⑬ all render through `ThemeInterface::description()`. Restyling one restyles all three.
 
 **The constraint has two names.** `SelectionBoundedTrait::selectionHint()` and `FilePickerWidget::constraintHint()` are the same part in two widgets, with the same body and two different names.
 
-**`marker` covers two levels.** The row marker **[2]** and the entry marker **[11]** are both `ThemeInterface::marker()`, so a theme cannot restyle one without the other.
+**`marker` covers two levels.** The row marker ② and the entry marker ⑪ are both `ThemeInterface::marker()`, so a theme cannot restyle one without the other.
 
 **`error` names four things.** `ThemeInterface::error()` is a style, `WidgetInterface::error()` is widget state, `Field::templateError()` and friends produce a message, and `Engine::optionsError()` builds an exception.
 
-**`footer` is drawn outside the footer.** The template widget's activity line **[18]** uses `ThemeInterface::footer()`, which otherwise styles the key legend **[8]** at the bottom of the frame.
+**`footer` is drawn outside the footer.** The template widget's activity line ⑱ uses `ThemeInterface::footer()`, which otherwise styles the key legend ⑧ at the bottom of the frame.
 
-**Three parts have no name at all.** The entry **[10]**, the selector **[9]** and the location **[15]** are drawn inline with no named method behind them.
+**Three parts have no name at all.** The entry ⑩, the selector ⑨ and the location ⑮ are drawn inline with no named method behind them.
