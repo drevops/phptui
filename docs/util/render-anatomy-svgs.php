@@ -36,6 +36,34 @@ require __DIR__ . '/svg-light-twin.php';
 const MARGIN_COLUMNS = 19;
 
 /**
+ * The canonical part names, in reference order.
+ *
+ * A part's number is its position here, so the same part carries the same
+ * number in every diagram and the documentation can cite it by number alone.
+ */
+const PARTS = [
+  'breadcrumb',
+  'marker',
+  'label',
+  'value',
+  'description',
+  'instruction',
+  'overflow',
+  'key legend',
+  'selector',
+  'entry',
+  'entry marker',
+  'entry note',
+  'constraint',
+  'entry detail',
+  'location',
+  'buffer',
+  'caret',
+  'activity',
+  'error',
+];
+
+/**
  * The line height the frames are drawn at.
  *
  * Matches the other terminal assets, and cannot be loosened to give the
@@ -299,9 +327,15 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
     $label_x = $side === 'left' ? $offset - $cell_width * 2.2 : $offset + $frame_width + $cell_width * 2.2;
     $anchor = $side === 'left' ? 'end' : 'start';
 
+    $number = array_search($callout['label'], PARTS, TRUE);
+
+    if ($number === FALSE) {
+      throw new \RuntimeException(sprintf('"%s" is not a named part.', $callout['label']));
+    }
+
     $marks .= sprintf('<circle cx="%.2f" cy="%.2f" r="2.8" fill="none" stroke="%s" stroke-width="1.2"/>', $cell_x, $cell_y, $leader_color);
     $marks .= sprintf('<path d="M %.2f %.2f L %.2f %.2f L %.2f %.2f" fill="none" stroke="%s" stroke-width="0.9" stroke-linejoin="round" stroke-opacity="0.6" stroke-dasharray="1.5 3"/>', $start, $cell_y, $edge_x, $cell_y, $label_x + ($side === 'left' ? 5.0 : -5.0), $label_y, $leader_color);
-    $marks .= sprintf('<text x="%.2f" y="%.2f" text-anchor="%s" fill="%s" font-family="Consolas, &quot;Courier New&quot;, Courier, monospace" font-size="13">%s</text>', $label_x, $label_y + 4.5, $anchor, $label_color, htmlspecialchars((string) $callout['label'], ENT_XML1));
+    $marks .= sprintf('<text x="%.2f" y="%.2f" text-anchor="%s" fill="%s" font-family="Consolas, &quot;Courier New&quot;, Courier, monospace" font-size="13"><tspan font-weight="bold">%d</tspan> %s</text>', $label_x, $label_y + 4.5, $anchor, $label_color, $number + 1, htmlspecialchars((string) $callout['label'], ENT_XML1));
   }
 
   $height = max($frame_height, max($next['left'], $next['right']) + $cell_height);
