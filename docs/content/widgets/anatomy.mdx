@@ -15,7 +15,7 @@ This page names each part, so a bug report can say "the constraint line is wrong
 
 The names describe what you see, never how it's built. A file browser's list is captioned with the directory you're in, but the part is a **caption** (edit 11) rather than a "directory line", because the next browser to caption its list won't be showing you a directory.
 
-Every part is drawn by a theme method - an [atom](/themes) - named after the part it draws. The tables below list them, and that mapping is the contract: a theme overriding the atom restyles the part, everywhere the part appears. Some rows are still blank, because the part is drawn inline with no atom to override yet. Those blanks are the work list.
+Every part is drawn by a theme method - an [atom](/themes) - named after the part it draws. The tables below are the contract: override the atom and you restyle the part, everywhere that part appears. The [renames](#what-the-code-calls-these-today) list where the source hasn't caught up yet.
 
 :::note
 
@@ -34,16 +34,16 @@ A panel stacks its fields as rows, each one in view mode until you open it. Five
 | # | Part | What it does | Atom |
 |---|---|---|---|
 | 1 | breadcrumb | The trail of panel titles. It's every panel you've descended through plus the one you're in, so it gains a segment when you open a sub-panel and drops one when you come back. | `breadcrumb()` |
-| 2 | breadcrumb separator | Stands between the segments of the **breadcrumb** (1). | `separator()` |
-| 3 | field selector | Which field has focus. Only one field holds focus at a time - which is why this is the one part here with a single arrow - and it moves with <kbd>↑</kbd> and <kbd>↓</kbd>; the row it's on is drawn brighter, so the glyph and that emphasis are one signal in two forms. | `marker()` |
+| 2 | breadcrumb separator | Stands between the segments of the **breadcrumb** (1). | `breadcrumbSeparator()` |
+| 3 | field selector | Which field has focus. Only one field holds focus at a time - which is why this is the one part here with a single arrow - and it moves with <kbd>↑</kbd> and <kbd>↓</kbd>; the row it's on is drawn brighter, so the glyph and that emphasis are one signal in two forms. | `fieldSelector()` |
 | 4 | label | The field's name, and the one part of a row that never changes while you work. Every row has one, so the number carries an arrow per row: a part that occurs several times keeps a single number, since numbering each occurrence would read as several different parts. | `label()` |
 | 5 | help marker | Sits after the **label** (4) when a field has **help** (9) to show, in the label's own colour. `Basket contents` is the only field here carrying **help** (9), so it's the only one wearing one. It hangs off the **label** (4) rather than the **description** (8), because a field can carry **help** (9) without carrying a **description** (8), and a **label** (4) is the one part every row draws. | `helpMarker()` |
 | 6 | value | The settled answer. It shows what was accepted, so it stays empty until the field is answered and never shows what you're mid-way through typing - that's the **draft** (edit 9). Like the **label** (4), every row has one, so its number carries an arrow per row. | `value()` |
-| 7 | value separator | Stands between the parts of a **value** (6) that has more than one. `Basket contents` holds two, so it reads `apple, carrot`. | |
+| 7 | value separator | Stands between the parts of a **value** (6) that has more than one. `Basket contents` holds two, so it reads `apple, carrot`. | `valueSeparator()` |
 | 8 | description | The field's explanatory text, under its row. Declared once on the field and shown whether or not the row has focus, so it never changes while you work. | `description()` |
-| 9 | help | The field's long-form text. It's the only part not on screen: press <kbd>?</kbd> and it opens in a popup, which is what lets it run to paragraphs where a **description** (8) has to stay a sentence. | |
-| 10 | overflow marker | Content continues above or below. It appears only when the rows don't fit the panel, and points the way there's more. | `indicator()` |
-| 11 | legend | The keys available right now. It rewrites itself as focus moves, so a field in edit mode lists different keys from the panel around it. | `renderHintLine()` |
+| 9 | help | The field's long-form text. It's the only part not on screen: press <kbd>?</kbd> and it opens in a popup, which is what lets it run to paragraphs where a **description** (8) has to stay a sentence. | `renderHelp()` |
+| 10 | overflow marker | Content continues above or below. It appears only when the rows don't fit the panel, and points the way there's more. | `overflowMarker()` |
+| 11 | legend | The keys available right now. It rewrites itself as focus moves, so a field in edit mode lists different keys from the panel around it. | `renderLegend()` |
 | 12 | legend key | One key in the **legend** (11). Worded keys are uppercased - <kbd>ESC</kbd>, <kbd>TAB</kbd>, <kbd>SPACE</kbd> - so the eye lands on what to press before reading what it does. | `legendKey()` |
 | 13 | legend description | What that key does, reading as `KEY to action` so an entry is a sentence rather than two words abutted. | `legendDescription()` |
 | 14 | legend separator | Stands between one **legend** (11) entry and the next. | `legendSeparator()` |
@@ -62,12 +62,12 @@ A multiple-choice field with bounds and per-entry text draws the fullest set of 
 
 | # | Part | What it does | Atom |
 |---|---|---|---|
-| 1 | entry | One line of the list the widget offers. What fills the list varies by widget: a fixed set, a set filtered as you type, or one fetched by a query. | |
-| 2 | entry selector | Which **entry** (1) has focus. It moves with <kbd>↑</kbd> and <kbd>↓</kbd>, and moving it chooses nothing on its own. | `marker()` |
-| 3 | entry marker | The per-entry chosen-state glyph. It shows what's chosen, not what has focus, so it only changes when you actually pick something - <kbd>Space</kbd> in a multiple-choice list. | `check()`, `radio()` |
-| 4 | entry note | A qualifier on an **entry** (1), such as why it's unavailable. It appears only on entries that carry a reason. | |
+| 1 | entry | One line of the list the widget offers. What fills the list varies by widget: a fixed set, a set filtered as you type, or one fetched by a query. | `entry()` |
+| 2 | entry selector | Which **entry** (1) has focus. It moves with <kbd>↑</kbd> and <kbd>↓</kbd>, and moving it chooses nothing on its own. | `entrySelector()` |
+| 3 | entry marker | The per-entry chosen-state glyph. It shows what's chosen, not what has focus, so it only changes when you actually pick something - <kbd>Space</kbd> in a multiple-choice list. | `entryMarker()` |
+| 4 | entry note | A qualifier on an **entry** (1), such as why it's unavailable. It appears only on entries that carry a reason. | `entryNote()` |
 | 5 | entry description | The focused **entry** (1)'s own explanatory text. It's rewritten every time the **entry selector** (2) moves, and is absent for entries that declare none. Indented to start where the entry text starts, so it reads as belonging to the entry above it rather than to the list. | `entryDescription()` |
-| 6 | constraint | What the field expects, before anything is rejected. It's there from the moment edit mode opens, and the **error** (7) replaces it the instant a value is refused. | `renderGuidance()` |
+| 6 | constraint | What the field expects, before anything is rejected. It's there from the moment edit mode opens, and the **error** (7) replaces it the instant a value is refused. | `constraint()` |
 
 **Selecting and marking are different things.** A selector shows where you are; a marker shows what you've marked. That's why the **entry selector** (2) and the **field selector** (view 3) are the glyphs that follow your movement, while the **entry marker** (3) is the box that records a decision. Moving a selector chooses nothing.
 
@@ -84,8 +84,8 @@ Some widgets collect an answer by typing instead of by choosing from a list, so 
 | # | Part | What it does | Atom |
 |---|---|---|---|
 | 8 | caret | The insertion point within the **draft** (9). It shows where the next keystroke lands, and in the [Template](/widgets/template) widget it's what moves between slots as you fill them. | `caret()` |
-| 9 | draft | The text you're typing, before it's accepted. It becomes the **value** (view 6) when you accept, and is discarded if you cancel. | |
-| 10 | state | What the widget is doing right now. It tracks the widget rather than the field, so it changes as you work - here it names the slot you're filling. | `footer()` |
+| 9 | draft | The text you're typing, before it's accepted. It becomes the **value** (view 6) when you accept, and is discarded if you cancel. | `draft()` |
+| 10 | state | What the widget is doing right now. It tracks the widget rather than the field, so it changes as you work - here it names the slot you're filling. | `state()` |
 
 The **draft** (9) and the **value** (view 6) are the same answer at two moments: what you're typing, and what was accepted.
 
@@ -134,38 +134,38 @@ Read the two lines side by side and the distinction is the whole point:
 
 A **constraint** (6) describes the field; an **error** (7) describes your value. That's also why they're built differently. The first is an unframed phrase - `a file no larger than 64 B` - that its caller wraps, so the same phrase becomes `Choose ...` in the picker, `Select ...` in a bounded list and `must be ...` headlessly. The second is already a whole message, and is shown as it stands.
 
-## Where the names disagree
+## What the code calls these today
 
-**An atom is named after the part it draws.** `Field::$label` and `ThemeInterface::label()` line up because a theme's vocabulary should be the vocabulary a reader uses for what's on screen. Where the code and this page disagree on a name, the code is what moves.
+The atom column above is the target. Where the source disagrees, the source is what moves - a theme's vocabulary should be the vocabulary a reader uses for what's on screen.
 
-**`hints()` returns the legend, not a hint.** `WidgetInterface::hints()` has nothing to do with `Field::$hint` or with `ThemeInterface::hint()` - it returns the keys of the **legend** (view 11). It becomes `WidgetInterface::legend()`.
+| Part | Today | Becomes |
+|---|---|---|
+| **breadcrumb separator** (view 2) | `separator()` | `breadcrumbSeparator()` |
+| **field selector** (view 3) | `marker()`, shared with the **entry selector** (edit 2) | `fieldSelector()` |
+| **value separator** (view 7) | hardcoded in `ValueFormatter::format()` | `valueSeparator()` |
+| **help** (view 9) | `Field::$hint`, drawn inline under the row | `Field::$help`, drawn by `renderHelp()` |
+| **overflow marker** (view 10) | `indicator()`, `indicatorUp()`, `indicatorDown()` | `overflowMarker()` |
+| **legend** (view 11) | `WidgetInterface::hints()`, `renderHintLine()` | `WidgetInterface::legend()`, `renderLegend()` |
+| **entry** (edit 1) | drawn inline, no atom | `entry()` |
+| **entry selector** (edit 2) | `marker()`, shared with the **field selector** (view 3) | `entrySelector()` |
+| **entry marker** (edit 3) | `check()` when multiple-choice, `radio()` when single | `entryMarker()` |
+| **entry note** (edit 4) | concatenated in `OptionsCapableTrait`, no atom | `entryNote()` |
+| **constraint** (edit 6) | `hint()` via `renderGuidance()`; produced by `selectionHint()` and `constraintHint()` | `constraint()`, from one producer |
+| **draft** (edit 9) | `$buffer`, per widget, no atom | `draft()` |
+| **state** (edit 10) | `footer()` | `state()` |
 
-**`hint` will name one thing.** `Field::$hint` becomes `Field::$help`, since its text is the **help** (view 9) and belongs in the popup rather than on a line under the row. That leaves `ThemeInterface::hint()` drawing exactly one part, the **constraint** (edit 6), so the atom takes that name too.
+Three of those need more than a rename.
 
-**`marker` covers two levels.** The **field selector** (view 3) and the **entry selector** (edit 2) are both `ThemeInterface::marker()`, so a theme can't restyle one without the other - and neither is a marker any more.
+**`hint` currently names three unrelated things.** `WidgetInterface::hints()` returns the **legend** (view 11), `Field::$hint` holds the **help** (view 9), and `ThemeInterface::hint()` draws the **constraint** (edit 6). Nothing connects them. Renaming each to the part it serves leaves `hint` naming nothing, which is the point.
 
-**The entry marker answers to two names.** It's `ThemeInterface::check()` in a multiple-choice list and `radio()` in a single-choice one, so which atom draws it depends on the widget rather than on the theme.
+**Two atoms are shared by parts that aren't the same part.** `marker()` draws both selectors, so a theme can't restyle the field cursor without restyling the one inside every list. `description()` draws the **description** (view 8) and, until recently, the **entry description** (edit 5) - the second now has its own atom, and the first keeps `description()`.
 
-**`error` names four things.** `ThemeInterface::error()` is a style atom, `WidgetInterface::error()` is widget state, `Field::templateError()` and friends produce a message, and `Engine::optionsError()` builds an exception.
+**Two atoms have other legitimate users, so they can't simply be renamed.** `footer()` also draws the calendar's weekday header, the password confirm prompt and the version line, so the **state** (edit 10) needs its own atom rather than a rename of that one. `indicator()` also draws a warning status line, so the **overflow marker** (view 10) is the same story.
 
-**`footer` is drawn outside the footer.** The **state** (edit 10) uses `ThemeInterface::footer()`, which otherwise styles the **legend** (view 11) at the bottom of the frame.
-
-**The separators aren't named as a pair.** The **breadcrumb separator** (view 2) is `ThemeInterface::separator()`, which reads as the only separator there is, and the **value separator** (view 7) is hardcoded in `ValueFormatter::format()` with no atom at all.
+**`error` names four things**, and only one of them is an atom. `ThemeInterface::error()` draws the **error** (edit 7) and keeps the name; `WidgetInterface::error()` is widget state; `Field::templateError()` and friends produce a message; `Engine::optionsError()` builds an exception. The last three are the subject of the naming work this page came out of.
 
 ## Open questions
 
-Working notes, kept here only until each one is settled.
+**Why doesn't the legend advertise <kbd>Space</kbd> in a multiple-choice list?** The frame under *Choosing from a list* shows `↑/↓ to move · ↵ to accept · ESC to cancel`, with nothing for the key that actually picks an entry. The widget does report it - `SelectionCapableTrait::hints()` returns a `select` hint for `Action::Toggle` ahead of everything else, precisely because toggling is the non-obvious action - and the atom resolves it: `keysHint()` renders `SPACE to select` when asked. So the hint is produced and can be drawn, but doesn't reach the **legend** (view 11). Same for `select none or all`.
 
-**Should the entry marker be one atom?** It's two today - `check()` for a multiple-choice list and `radio()` for a single-choice one - picked by the widget rather than by the theme. One `entryMarker()` that flips between them would put the whole part in a theme's hands at once.
-
-**Should the field selector and the entry selector be separate atoms?** They're one method today, so a theme can't restyle the field cursor without also restyling the one inside every list. They're named as a parent/child pair, which argues they should be stylable as one.
-
-**Should the entry get an atom of its own?** The **entry** (edit 1) is drawn inline today, so it can't be restyled without overriding the whole list renderer. The **entry note** (edit 4) and the **draft** (edit 9) are in the same position.
-
-**Should the state stop borrowing `footer()`?** The **state** (edit 10) is drawn with the atom that styles the **legend** (view 11) at the bottom of the frame, which is a different part in a different place.
-
-**What replaces the keyboard overlay?** <kbd>?</kbd> currently opens a list of every widget type's keys, which is being dropped in favour of the **help** (view 9) popup - the **legend** (view 11) already shows the keys that apply right now, and rewrites itself as focus moves. Worth confirming nothing is lost with it.
-
-**Why doesn't the legend advertise <kbd>Space</kbd> in a multiple-choice list?** The frame above shows `↑/↓ move · ↵ accept · esc cancel`, with nothing for the key that actually picks an entry. The widget does report it - `SelectionCapableTrait::hints()` returns a `select` hint for `Action::Toggle` ahead of everything else, precisely because toggling is the non-obvious action - and the atom resolves it: `keysHint()` renders `space select` when asked. So the hint is produced and can be drawn, but doesn't reach the **legend** (view 11). Same for `none/all`.
-
-**Can the help marker be a single glyph?** `[?]` is three characters because every enclosed question mark fails one way or another: `⍰` has no glyph in the monospace stack and renders as a missing-character box, while `ⓘ` and `ℹ` are naturally wider than one cell and get squeezed out of shape by a surface that pins each cell to a fixed advance.
+**Does dropping the keyboard overlay lose anything?** <kbd>?</kbd> currently opens a list of every widget type's keys, and is being handed to the **help** (view 9) popup instead. The **legend** (view 11) already shows the keys that apply right now and rewrites itself as focus moves, so the overlay largely duplicated it - but it did answer "what can this other widget type do" in one place, and nothing will.
