@@ -36,16 +36,16 @@ require __DIR__ . '/svg-light-twin.php';
  */
 const PARTS = [
   'breadcrumb',
-  'marker',
+  'field selector',
   'label',
   'value',
   'description',
   'instruction',
   'overflow',
   'legend',
-  'selector',
-  'entry',
   'entry marker',
+  'entry',
+  'entry selector',
   'entry note',
   'constraint',
   'entry detail',
@@ -54,6 +54,7 @@ const PARTS = [
   'draft',
   'state',
   'error',
+  'separator',
 ];
 
 /**
@@ -124,7 +125,8 @@ function anatomySpecs(string $tree): array {
       'rows' => 21,
       'callouts' => [
         ['col' => 2, 'row' => 1, 'label' => 'breadcrumb', 'side' => 'left'],
-        ['col' => 2, 'row' => 4, 'label' => 'marker'],
+        ['col' => 16, 'row' => 1, 'label' => 'separator'],
+        ['col' => 2, 'row' => 4, 'label' => 'field selector'],
         ['col' => 6, 'row' => 5, 'label' => 'description'],
         ['label' => 'label', 'side' => 'left', 'cells' => [[7, 4], [10, 4], [12, 4]]],
         ['label' => 'value', 'side' => 'right', 'cells' => [[4, 25], [7, 22], [10, 27], [12, 23]]],
@@ -143,8 +145,8 @@ function anatomySpecs(string $tree): array {
       'rows' => 16,
       'callouts' => [
         ['col' => 20, 'row' => 4, 'label' => 'entry'],
-        ['col' => 12, 'row' => 5, 'label' => 'entry marker'],
-        ['col' => 14, 'row' => 6, 'label' => 'selector'],
+        ['col' => 12, 'row' => 5, 'label' => 'entry selector'],
+        ['col' => 14, 'row' => 6, 'label' => 'entry marker'],
         ['col' => 37, 'row' => 6, 'label' => 'entry note'],
         ['col' => 12, 'row' => 7, 'label' => 'entry detail'],
         ['col' => 12, 'row' => 8, 'label' => 'constraint'],
@@ -175,7 +177,7 @@ function anatomySpecs(string $tree): array {
       'callouts' => [
         ['col' => 29, 'row' => 4, 'label' => 'caption'],
         ['col' => 18, 'row' => 5, 'label' => 'entry'],
-        ['col' => 16, 'row' => 6, 'label' => 'entry marker'],
+        ['col' => 16, 'row' => 6, 'label' => 'entry selector'],
         ['col' => 16, 'row' => 8, 'label' => 'constraint'],
         ['col' => 6, 'row' => 9, 'label' => 'description'],
       ],
