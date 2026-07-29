@@ -174,8 +174,10 @@ function anatomySpecs(string $tree): array {
         ['col' => 4, 'row' => 15, 'label' => 'overflow marker'],
         ['col' => 2, 'row' => 18, 'label' => 'legend', 'side' => 'left'],
         ['col' => 2, 'row' => 18, 'label' => 'legend key', 'side' => 'down'],
-        ['col' => 6, 'row' => 18, 'label' => 'legend description', 'side' => 'down'],
-        ['col' => 14, 'row' => 18, 'label' => 'legend separator', 'side' => 'down'],
+        // Each points at the far end of its part rather than the near one, so a
+        // riser clears the label of the band above instead of crossing it.
+        ['col' => 12, 'row' => 18, 'label' => 'legend description', 'side' => 'down'],
+        ['col' => 28, 'row' => 18, 'label' => 'legend separator', 'side' => 'down'],
       ],
     ],
     'editor' => [
