@@ -123,7 +123,7 @@ function anatomySpecs(string $tree): array {
       'keys' => [$enter],
       'rows' => 21,
       'callouts' => [
-        ['col' => 2, 'row' => 1, 'label' => 'breadcrumb'],
+        ['col' => 2, 'row' => 1, 'label' => 'breadcrumb', 'side' => 'left'],
         ['col' => 2, 'row' => 4, 'label' => 'marker'],
         ['col' => 6, 'row' => 5, 'label' => 'description'],
         ['label' => 'label', 'side' => 'left', 'cells' => [[7, 4], [10, 4], [12, 4]]],
@@ -577,7 +577,12 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
   }
 
   $offset_x = $needs['left'];
-  $offset_y = $cell_height * MARGIN_ROWS;
+
+  // The bands above and below are only worth their room when something lands
+  // in them; a diagram labelled entirely from the sides would otherwise open
+  // with a strip of empty canvas.
+  $vertical = array_filter($plans, static fn(array $plan): bool => in_array($plan[1], ['up', 'down'], TRUE));
+  $offset_y = $cell_height * ($vertical === [] ? 0.4 : MARGIN_ROWS);
   $left_edge = $offset_x;
   $right_edge = $offset_x + $frame_width;
   $bottom_edge = $offset_y + $frame_height;

@@ -17,7 +17,7 @@ The names describe what you see, never how it's built. A file browser's list is 
 
 :::note
 
-The frames are real captured output. The vocabulary is the agreed target, and the source doesn't use it consistently yet: see [what the code calls these today](#what-the-code-calls-these-today).
+The frames are real captured output. The vocabulary is the settled target and the source hasn't caught up with all of it yet, so [what the code calls these today](#what-the-code-calls-these-today) records the gap, and [open questions](#open-questions) tracks what's still undecided.
 
 :::
 
@@ -29,12 +29,12 @@ A panel stacks its fields as rows. Five fields of a delivery form are visible he
   <ThemedImage sources={{light: useBaseUrl('/anatomy-row-light-static.svg'), dark: useBaseUrl('/anatomy-row-dark-static.svg')}} alt="Five rows of a form with their parts named" width="100%" />
 </p>
 
-- **1** breadcrumb - the trail of panel titles.
-- **2** marker - which row has focus.
-- **3** label - the field's name.
-- **4** value - the settled answer.
-- **7** overflow - content continues above or below.
-- **8** key legend - the keys available right now.
+- **1** breadcrumb - the trail of panel titles. It's the titles of every panel you've descended through plus the one you're in, so it gains a segment when you open a sub-panel and drops one when you come back.
+- **2** marker - which row has focus. Exactly one row has it at a time, it moves with <kbd>↑</kbd> and <kbd>↓</kbd>, and the row it's on is drawn brighter - the glyph and that emphasis are one signal in two forms.
+- **3** label - the field's name. The one part of a row that never changes while you work.
+- **4** value - the settled answer. It shows what was accepted, so it stays empty until the field is answered and never shows what you're mid-way through typing - that's the draft (16).
+- **7** overflow - content continues above or below. It appears only when the rows don't fit the panel, and points the way there's more.
+- **8** key legend - the keys available right now. It rewrites itself as focus moves, so an open editor lists different keys from the panel around it.
 
 **One number, several arrows.** The **label** (3) and the **value** (4) each carry an arrow per row, because every row has one of each - they belong to a row, not to a particular field. A part that occurs several times keeps a single number; numbering each occurrence would read as several different parts.
 
@@ -48,8 +48,8 @@ A field can declare lines that sit beneath its row. They draw only while the row
   <ThemedImage sources={{light: useBaseUrl('/anatomy-lines-light-static.svg'), dark: useBaseUrl('/anatomy-lines-dark-static.svg')}} alt="Two rows showing a field's description and instruction" width="100%" />
 </p>
 
-- **5** description - the field's explanatory text.
-- **6** instruction - the field's short how-to line.
+- **5** description - the field's explanatory text. Declared once on the field and shown whether or not the row has focus, so it never changes while you work.
+- **6** instruction - the field's short how-to line, under the description. Also declared on the field and equally static, but drawn in the guidance voice so it reads as the widget telling you how rather than as more prose.
 
 Both belong to the field that declares them, not to the panel. The **description** (5) carries two arrows because both fields declare one; the **instruction** (6) carries one, because only `Basket contents` declares one and `Basket weight` has no second line at all.
 
@@ -61,12 +61,12 @@ Opening a row hands the region right of the label to the widget. A multiple-choi
   <ThemedImage sources={{light: useBaseUrl('/anatomy-editor-light-static.svg'), dark: useBaseUrl('/anatomy-editor-dark-static.svg')}} alt="An open multiple-choice editor with its parts named" width="100%" />
 </p>
 
-- **9** selector - the per-entry chosen-state glyph.
-- **10** entry - one line of the list the widget offers.
-- **11** entry marker - which entry is highlighted.
-- **12** entry note - a qualifier, such as why an entry is unavailable.
-- **13** constraint - what the field expects, before anything is rejected.
-- **14** entry detail - the highlighted entry's own explanatory text.
+- **9** selector - the per-entry chosen-state glyph. It reflects what's chosen, not what's highlighted, so it only changes when you actually pick something - <kbd>Space</kbd> in a multiple-choice list.
+- **10** entry - one line of the list the widget offers. What fills the list varies by widget: a fixed set, a set filtered as you type, or one fetched by a query.
+- **11** entry marker - which entry is highlighted. It moves with <kbd>↑</kbd> and <kbd>↓</kbd>, and moving it chooses nothing on its own.
+- **12** entry note - a qualifier on an entry, such as why it's unavailable. It appears only on entries that carry a reason.
+- **13** constraint - what the field expects, before anything is rejected. It's there from the moment the editor opens, and the error replaces it the instant a value is refused.
+- **14** entry detail - the highlighted entry's own explanatory text. It's rewritten every time the entry marker moves, and is simply absent for entries that declare none.
 
 The pairs are deliberate. A widget's own focus glyph is the **marker** (2) and the one inside its list is the **entry marker** (11); the field's explanatory line is the **description** (5) and an option's is the **entry detail** (14). Same idea at two levels, so a parent's name is never reused for its child.
 
@@ -80,9 +80,9 @@ Some widgets offer no list at all. A template editor introduces the three parts 
   <ThemedImage sources={{light: useBaseUrl('/anatomy-text-light-static.svg'), dark: useBaseUrl('/anatomy-text-dark-static.svg')}} alt="An open template editor with its parts named" width="100%" />
 </p>
 
-- **16** draft - the text you're typing, before it's accepted.
-- **17** caret - the insertion point within the draft.
-- **18** state - what the widget is doing right now.
+- **16** draft - the text you're typing, before it's accepted. It becomes the value (4) when you accept, and is discarded if you cancel.
+- **17** caret - the insertion point within the draft. It shows where the next keystroke lands, and in a template editor it's what the widget moves between slots for you.
+- **18** state - what the widget is doing right now. It tracks the widget rather than the field, so it changes as you work - here it names the slot you're filling.
 
 The **draft** (16) and the **value** (4) are the same answer at two moments: the draft is what you're typing, the value is what was accepted.
 
@@ -96,7 +96,7 @@ The same skeleton over a directory listing, plus the one part unique to a browsa
   <ThemedImage sources={{light: useBaseUrl('/anatomy-filepicker-light-static.svg'), dark: useBaseUrl('/anatomy-filepicker-dark-static.svg')}} alt="An open file picker with its parts named" width="100%" />
 </p>
 
-- **15** caption - what the list below is showing.
+- **15** caption - what the list below is showing. It's rewritten whenever the list changes underneath it, so here it names the directory you've navigated into.
 
 The entries here are files and directories rather than options, and they're still **entries** (10): the name describes the line the widget offers, not where its content came from. The **caption** (15) names a directory in this widget because that's what a file browser browses, but the part - and the atom that draws it - stays generic.
 
@@ -116,7 +116,7 @@ Now `harvest.csv` is picked, and at 88 bytes it breaks that limit. The same line
   <ThemedImage sources={{light: useBaseUrl('/anatomy-error-light-static.svg'), dark: useBaseUrl('/anatomy-error-dark-static.svg')}} alt="The same file picker showing an error in place of its constraint" width="100%" />
 </p>
 
-- **19** error - why the value was rejected.
+- **19** error - why the value was rejected. It appears only after a refused accept, and clears the moment the value becomes acceptable, handing the line back to the constraint.
 
 Read the two lines side by side and the distinction is the whole point:
 
@@ -190,3 +190,17 @@ A constraint describes the field; an error describes your value. That's also why
 **`footer` is drawn outside the footer.** The template widget's state line (18) uses `ThemeInterface::footer()`, which otherwise styles the key legend (8) at the bottom of the frame.
 
 **Two parts have no name at all.** The entry (10) and the selector (9) are drawn inline, with no atom behind them.
+
+## Open questions
+
+Working notes, kept here only until each one is settled. The vocabulary above is decided; these are the edges still being argued.
+
+**Should the entry detail (14) be tied to the highlighted entry by color?** It's the one part that's rewritten every time the entry marker moves, and today it borrows `description()` - the same atom as the field's own description (5), which never moves. Giving it its own atom in the marker's accent would say "this belongs to the row you're pointing at". The catch: green is already the value, and the marker's cyan is also the border, so the accent isn't free.
+
+**Should the row marker (2) and the entry marker (11) be separate atoms?** They're one method today, so a theme can't restyle the row cursor without also restyling the one inside every list. They're deliberately named as a parent/child pair, which argues they should be stylable as one.
+
+**Should `hint()` be renamed to `guidance()`?** The atom draws the guidance voice - the instruction (6) and the constraint (13) - but `hint` also names `Field::$hint` and `WidgetInterface::hints()`, which are different things entirely. Renaming the atom removes one of the three collisions outright.
+
+**Should the selector (9) and the entry (10) get atoms of their own?** Both are drawn inline today, so neither can be restyled without overriding the whole list renderer.
+
+**Should the state (18) stop borrowing `footer()`?** It's drawn with the atom that styles the key legend at the bottom of the frame, which is a different part in a different place.
