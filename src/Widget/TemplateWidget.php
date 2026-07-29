@@ -54,13 +54,13 @@ class TemplateWidget extends AbstractWidget implements TextEditCapableInterface 
    *
    * @param \DrevOps\Tui\Model\Template $template
    *   The shape to fill in.
-   * @param string $value
+   * @param string $default
    *   The initial assembled value; a value that does not have the shape leaves
    *   every slot empty.
    */
-  public function __construct(protected Template $template, string $value = '') {
+  public function __construct(protected Template $template, string $default = '') {
     $this->names = $this->template->placeholders();
-    $extracted = $this->template->extract($value);
+    $extracted = $this->template->extract($default);
 
     foreach ($this->names as $name) {
       $this->parts[$name] = $extracted[$name] ?? '';

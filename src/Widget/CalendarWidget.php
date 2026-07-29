@@ -55,15 +55,15 @@ class CalendarWidget extends AbstractWidget implements StepCapableInterface {
   /**
    * Construct a calendar widget.
    *
-   * @param string $value
+   * @param string $default
    *   The initial date as an ISO `Y-m-d` string; empty opens on today.
    * @param \DrevOps\Tui\Model\DateBounds|null $bounds
    *   Optional min/max range and week-start day; NULL for an open range that
    *   starts the week on Monday.
    */
-  public function __construct(string $value = '', ?DateBounds $bounds = NULL) {
+  public function __construct(string $default = '', ?DateBounds $bounds = NULL) {
     $this->bounds = $bounds ?? new DateBounds();
-    $seed = DateBounds::parse($value) ?? new \DateTimeImmutable('today');
+    $seed = DateBounds::parse($default) ?? new \DateTimeImmutable('today');
     $this->cursor = $this->bounds->clamp($seed);
   }
 

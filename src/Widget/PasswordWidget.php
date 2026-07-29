@@ -46,15 +46,15 @@ class PasswordWidget extends AbstractWidget implements TextEditCapableInterface,
   /**
    * Construct a password widget.
    *
-   * @param string $buffer
+   * @param string $default
    *   The initial value (and live input buffer).
    * @param bool $revealable
    *   Whether the reveal toggle is enabled.
    * @param bool $confirm
    *   Whether confirmation mode is enabled.
    */
-  public function __construct(string $buffer = '', protected bool $revealable = FALSE, protected bool $confirm = FALSE) {
-    $this->initTextBuffer($buffer);
+  public function __construct(string $default = '', protected bool $revealable = FALSE, protected bool $confirm = FALSE) {
+    $this->initTextBuffer($default);
   }
 
   /**

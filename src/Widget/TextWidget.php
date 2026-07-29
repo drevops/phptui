@@ -30,14 +30,14 @@ class TextWidget extends AbstractWidget implements TextEditCapableInterface, Com
   /**
    * Construct a text widget.
    *
-   * @param string $buffer
+   * @param string $default
    *   The initial value (and live input buffer).
    * @param list<string> $completions
    *   Inline ghost-text candidates: the buffer is completed to the first
    *   candidate it is a prefix of. Empty leaves a plain text field.
    */
-  public function __construct(string $buffer = '', protected array $completions = []) {
-    $this->initTextBuffer($buffer);
+  public function __construct(string $default = '', protected array $completions = []) {
+    $this->initTextBuffer($default);
   }
 
   /**

@@ -25,6 +25,7 @@ use Rector\Naming\Rector\ClassMethod\RenameVariableToMatchNewTypeRector;
 use Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchExprVariableRector;
 use Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchMethodCallReturnTypeRector;
 use Rector\Naming\Rector\ClassMethod\RenameParamToMatchTypeRector;
+use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
 use Rector\Php80\Rector\Switch_\ChangeSwitchToMatchRector;
 use Rector\Php81\Rector\FuncCall\NullToStrictStringFuncCallArgRector;
 use Rector\PHPUnit\Set\PHPUnitSetList;
@@ -56,6 +57,12 @@ return RectorConfig::configure()
     // Rules added by Rector's rule sets.
     CatchExceptionNameMatchingTypeRector::class,
     ChangeSwitchToMatchRector::class,
+    // Promotion ties the constructor parameter name to the property name, but
+    // the two are named for different things here: the parameter for the seed
+    // value a caller passes, the property for the live answer it becomes.
+    ClassPropertyAssignToConstructorPromotionRector::class => [
+      __DIR__ . '/src/Widget/ConfirmWidget.php',
+    ],
     CompleteDynamicPropertiesRector::class,
     CountArrayToEmptyArrayComparisonRector::class,
     DisallowedEmptyRuleFixerRector::class,

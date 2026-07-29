@@ -21,12 +21,18 @@ use DrevOps\Tui\Widget\Capability\StepCapableInterface;
 class ConfirmWidget extends AbstractWidget implements StepCapableInterface {
 
   /**
+   * The chosen answer.
+   */
+  protected bool $current;
+
+  /**
    * Construct a confirm widget.
    *
-   * @param bool $current
+   * @param bool $default
    *   The initial choice.
    */
-  public function __construct(protected bool $current = FALSE) {
+  public function __construct(bool $default = FALSE) {
+    $this->current = $default;
   }
 
   /**
