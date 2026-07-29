@@ -112,21 +112,25 @@ function anatomySpecs(string $tree): array {
 
   return [
     'row' => [
-      'form' => Form::create('Orchard order')->panel('main', 'Basket', function (PanelBuilder $p): void {
+      'form' => Form::create('Orchard order')->panel('main', 'Delivery', function (PanelBuilder $p): void {
         $p->select('basket', 'Basket')->description('Pick the produce for this delivery.')->hint('Space toggles, Enter confirms.')->multiple()->default(['apple'])->options(['apple' => 'Apple', 'carrot' => 'Carrot']);
-        $p->number('weight', 'Basket weight (g)')->description('Weighed at the packing bench.')->default(1200)->min(200)->max(9000);
+        $p->number('weight', 'Basket weight')->description('Weighed at the packing bench.')->default(1200)->min(200)->max(9000);
+        $p->calendar('harvest', 'Harvest date')->default('2026-07-15');
+        $p->text('courier', 'Courier')->default('Valley Runs');
+        $p->confirm('organic', 'Organic only?')->default(TRUE);
+        $p->text('notes', 'Notes')->default('Leave at the gate');
       }),
       'keys' => [$enter],
-      'rows' => 13,
+      'rows' => 18,
       'callouts' => [
         ['col' => 2, 'row' => 1, 'label' => 'breadcrumb'],
         ['col' => 2, 'row' => 4, 'label' => 'marker'],
-        ['col' => 9, 'row' => 4, 'label' => 'label'],
-        ['col' => 16, 'row' => 4, 'label' => 'value'],
         ['col' => 6, 'row' => 5, 'label' => 'description'],
         ['col' => 6, 'row' => 6, 'label' => 'instruction'],
-        ['col' => 4, 'row' => 7, 'label' => 'overflow'],
-        ['col' => 2, 'row' => 10, 'label' => 'key legend'],
+        ['col' => 4, 'row' => 8, 'label' => 'label'],
+        ['col' => 27, 'row' => 11, 'label' => 'value'],
+        ['col' => 4, 'row' => 12, 'label' => 'overflow'],
+        ['col' => 2, 'row' => 15, 'label' => 'key legend'],
       ],
     ],
     'editor' => [

@@ -21,7 +21,7 @@ The frames are real captured output. The vocabulary is the agreed target, and th
 
 ## The row
 
-A field that is not open draws one value line plus whatever supporting lines it declares.
+A panel stacks its fields as rows. Every row carries a **label** and a **value**, and declares its own supporting lines; only one row at a time carries the **marker**. Three fields of a delivery form are visible below - `Basket` has focus, `Basket weight` and `Harvest date` do not, and more fields continue past the bottom edge.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/anatomy-row-light-static.svg'), dark: useBaseUrl('/anatomy-row-dark-static.svg')}} alt="A closed panel row with its parts named" width="100%" />
@@ -35,6 +35,8 @@ A field that is not open draws one value line plus whatever supporting lines it 
 6. **instruction** - the field's short how-to line.
 7. **overflow** - content continues above or below.
 8. **key legend** - the keys available right now.
+
+Each part is called out on a different row on purpose. The **marker** (2) sits only on `Basket`, which is what makes it a marker; the **label** (3) and the **value** (4) are pointed out on rows that do not have focus, because every row has both. The **description** (5) and the **instruction** (6) belong to the field that declares them - `Basket weight` has a description of its own and no instruction, so its second supporting line is simply absent.
 
 ## The editor
 
