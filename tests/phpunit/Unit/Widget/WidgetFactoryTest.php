@@ -34,6 +34,7 @@ use DrevOps\Tui\Widget\TextareaWidget;
 use DrevOps\Tui\Widget\TextWidget;
 use DrevOps\Tui\Widget\ToggleWidget;
 use DrevOps\Tui\Widget\WidgetFactory;
+use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -113,27 +114,35 @@ final class WidgetFactoryTest extends TestCase {
     // flag reaches the select and search widgets.
     yield 'multiple select' => [self::multiFieldWithOptions(FieldType::Select), ['a', 'b'], ['a', 'b']];
     yield 'multiple search' => [self::multiFieldWithOptions(FieldType::Search), ['a'], ['a']];
-    // A current path outside the start is ignored and the missing directory
-    // lists nothing, so a single picker opens empty.
-    yield 'single picker outside its start' => [
-      new Field('f', 'F', '', FieldType::FilePicker, '', pickerStart: '/nonexistent'),
-      'x',
-      '',
-    ];
+  }
 
-    yield 'multiple picker keeps its paths' => [
-      new Field('g', 'G', '', FieldType::FilePicker, [], pickerStart: '/nonexistent', multiple: TRUE),
-      ['/a', '/b'],
-      ['/a', '/b'],
-    ];
+  public function testFilePickerSeedsValueFromCurrent(): void {
+    // Kept out of the seeding provider: the picker reads a directory, and a
+    // virtual one lists nothing without depending on what the host happens to
+    // have on disk.
+    vfsStream::setup('crates');
+    $start = vfsStream::url('crates');
+
+    // A current path outside the start is ignored and the empty directory
+    // lists nothing, so the value is empty.
+    $single = new Field('f', 'F', '', FieldType::FilePicker, '', pickerStart: $start);
+    $this->assertSame('', (new WidgetFactory())->create($single, 'x')->value());
+
+    // The multiple picker yields a list seeded from the current value, proving
+    // the multiple flag is threaded through.
+    $multi = new Field('g', 'G', '', FieldType::FilePicker, [], pickerStart: $start, multiple: TRUE);
+    $this->assertSame(['/a', '/b'], (new WidgetFactory())->create($multi, ['/a', '/b'])->value());
   }
 
   public function testDateWithNonStringCurrentOpensOnToday(): void {
     // Kept out of the seeding provider: a static provider would fix "today" at
-    // collection time, so a run spanning midnight would fail.
+    // collection time. Bracketing the call keeps a midnight rollover between
+    // the two reads from failing the run.
+    $before = (new \DateTimeImmutable('today'))->format('Y-m-d');
     $widget = (new WidgetFactory())->create(self::field(FieldType::Calendar), 42);
+    $after = (new \DateTimeImmutable('today'))->format('Y-m-d');
 
-    $this->assertSame((new \DateTimeImmutable('today'))->format('Y-m-d'), $widget->value());
+    $this->assertContains($widget->value(), [$before, $after]);
   }
 
   public function testNoteHasNoEditorWidget(): void {
