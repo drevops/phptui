@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
+use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\EmberTheme;
 use DrevOps\Tui\Theme\Mode;
@@ -19,6 +20,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(EmberTheme::class)]
 #[Group('theme')]
 final class ProgressRenderTest extends TestCase {
+
+  use BuildsThemesTrait;
 
   public function testSpinnerCyclesFramesInTheAccent(): void {
     $theme = $this->theme();
@@ -108,21 +111,6 @@ final class ProgressRenderTest extends TestCase {
 
     $this->assertSame('...', $theme->renderLoading(''));
     $this->assertStringContainsString('Loading ...', $theme->renderLoading('Loading'));
-  }
-
-  /**
-   * A default theme in the given display modes, fixed to dark.
-   *
-   * @param bool $color
-   *   Whether colour is on.
-   * @param bool $unicode
-   *   Whether Unicode glyphs are on.
-   *
-   * @return \DrevOps\Tui\Theme\DefaultTheme
-   *   The theme.
-   */
-  protected function theme(bool $color = TRUE, bool $unicode = TRUE): DefaultTheme {
-    return ThemeManager::create('default', DefaultTheme::DEFAULT_WIDTH, ['color' => $color, 'unicode' => $unicode, 'mode' => Mode::Dark]);
   }
 
 }

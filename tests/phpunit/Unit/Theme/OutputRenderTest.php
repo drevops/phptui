@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Tests\Unit\Theme;
 
 use DrevOps\Tui\Primitive\Status;
 use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\EmberTheme;
 use DrevOps\Tui\Theme\Mode;
@@ -23,6 +24,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(EmberTheme::class)]
 #[Group('theme')]
 final class OutputRenderTest extends TestCase {
+
+  use BuildsThemesTrait;
 
   public function testBoxDrawsTitledFrameSizedToItsContent(): void {
     $lines = $this->theme(color: FALSE)->renderCard('Welcome', ['Pick your fruit.']);
@@ -352,21 +355,6 @@ final class OutputRenderTest extends TestCase {
     // The value carries the theme's value colour (default dark: green).
     $this->assertStringContainsString("\033[32m", $lines[0]);
     $this->assertStringContainsString('Jars', $lines[0]);
-  }
-
-  /**
-   * A default theme in the given display modes, fixed to dark.
-   *
-   * @param bool $color
-   *   Whether colour is on.
-   * @param bool $unicode
-   *   Whether Unicode glyphs are on.
-   *
-   * @return \DrevOps\Tui\Theme\DefaultTheme
-   *   The theme.
-   */
-  protected function theme(bool $color = TRUE, bool $unicode = TRUE): DefaultTheme {
-    return ThemeManager::create('default', DefaultTheme::DEFAULT_WIDTH, ['color' => $color, 'unicode' => $unicode, 'mode' => Mode::Dark]);
   }
 
 }

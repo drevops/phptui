@@ -7,9 +7,7 @@ namespace DrevOps\Tui\Tests\Unit\Primitive;
 use DrevOps\Tui\Primitive\Output;
 use DrevOps\Tui\Primitive\Status;
 use DrevOps\Tui\Testing\BufferedTerminal;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\ThemeManager;
+use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -22,10 +20,12 @@ use PHPUnit\Framework\TestCase;
 #[Group('primitive')]
 final class OutputTest extends TestCase {
 
+  use BuildsThemesTrait;
+
   public function testBoxWritesTheFramedLines(): void {
     $terminal = new BufferedTerminal();
 
-    (new Output($terminal, $this->theme()))->box('Pick your fruit.', 'Welcome');
+    (new Output($terminal, $this->theme(color: FALSE)))->box('Pick your fruit.', 'Welcome');
 
     $output = $terminal->output();
 
@@ -38,7 +38,7 @@ final class OutputTest extends TestCase {
   public function testBoxAcceptsLineList(): void {
     $terminal = new BufferedTerminal();
 
-    (new Output($terminal, $this->theme()))->box(['Apples', 'Pears']);
+    (new Output($terminal, $this->theme(color: FALSE)))->box(['Apples', 'Pears']);
 
     $lines = explode("\n", trim($terminal->output(), "\n"));
 
@@ -50,7 +50,7 @@ final class OutputTest extends TestCase {
   public function testAnEmptyBoxWritesNothing(): void {
     $terminal = new BufferedTerminal();
 
-    (new Output($terminal, $this->theme()))->box('');
+    (new Output($terminal, $this->theme(color: FALSE)))->box('');
 
     $this->assertSame('', $terminal->output());
   }
@@ -59,7 +59,7 @@ final class OutputTest extends TestCase {
   public function testEachStatusMethodWritesItsOwnLine(string $method, string $glyph): void {
     $terminal = new BufferedTerminal();
 
-    (new Output($terminal, $this->theme()))->{$method}('Preserves are ready');
+    (new Output($terminal, $this->theme(color: FALSE)))->{$method}('Preserves are ready');
 
     $this->assertSame($glyph . ' Preserves are ready' . "\n", $terminal->output());
   }
@@ -81,7 +81,7 @@ final class OutputTest extends TestCase {
   public function testCardWritesItsGridInsideTheBox(): void {
     $terminal = new BufferedTerminal();
 
-    (new Output($terminal, $this->theme()))->card('Summary', 'Your order is packed.', ['Item', 'Count'], [['Apricot', '12']]);
+    (new Output($terminal, $this->theme(color: FALSE)))->card('Summary', 'Your order is packed.', ['Item', 'Count'], [['Apricot', '12']]);
 
     $output = $terminal->output();
 
@@ -94,7 +94,7 @@ final class OutputTest extends TestCase {
   public function testUnborderedCardWritesIndentedLines(): void {
     $terminal = new BufferedTerminal();
 
-    (new Output($terminal, $this->theme()))->card('Summary', 'Packed.', bordered: FALSE);
+    (new Output($terminal, $this->theme(color: FALSE)))->card('Summary', 'Packed.', bordered: FALSE);
 
     $this->assertSame("  Summary\n  Packed.\n", $terminal->output());
   }
@@ -102,7 +102,7 @@ final class OutputTest extends TestCase {
   public function testTableWritesTheGridAlone(): void {
     $terminal = new BufferedTerminal();
 
-    (new Output($terminal, $this->theme()))->table(['Item'], [['Apricot']]);
+    (new Output($terminal, $this->theme(color: FALSE)))->table(['Item'], [['Apricot']]);
 
     $lines = explode("\n", trim($terminal->output(), "\n"));
 
@@ -114,7 +114,7 @@ final class OutputTest extends TestCase {
   public function testAnEmptyTableWritesNothing(): void {
     $terminal = new BufferedTerminal();
 
-    (new Output($terminal, $this->theme()))->table([], []);
+    (new Output($terminal, $this->theme(color: FALSE)))->table([], []);
 
     $this->assertSame('', $terminal->output());
   }
@@ -122,14 +122,14 @@ final class OutputTest extends TestCase {
   public function testTextWritesWrappedParagraph(): void {
     $terminal = new BufferedTerminal();
 
-    (new Output($terminal, $this->theme()))->text('Everything is picked the morning it ships.');
+    (new Output($terminal, $this->theme(color: FALSE)))->text('Everything is picked the morning it ships.');
 
     $this->assertSame("Everything is picked the morning it ships.\n", $terminal->output());
   }
 
   public function testRuleWritesSpanningLine(): void {
     $terminal = new BufferedTerminal();
-    $theme = $this->theme();
+    $theme = $this->theme(color: FALSE);
 
     (new Output($terminal, $theme))->rule();
 
@@ -139,7 +139,7 @@ final class OutputTest extends TestCase {
   public function testBannerWritesTheLogoAndVersion(): void {
     $terminal = new BufferedTerminal();
 
-    (new Output($terminal, $this->theme()))->banner('Produce Box', '1.2.3');
+    (new Output($terminal, $this->theme(color: FALSE)))->banner('Produce Box', '1.2.3');
 
     $output = $terminal->output();
 
@@ -151,7 +151,7 @@ final class OutputTest extends TestCase {
   public function testStatusTakesTheKindDirectly(): void {
     $terminal = new BufferedTerminal();
 
-    (new Output($terminal, $this->theme()))->status(Status::Warning, 'Short on jars');
+    (new Output($terminal, $this->theme(color: FALSE)))->status(Status::Warning, 'Short on jars');
 
     $this->assertSame("! Short on jars\n", $terminal->output());
   }
@@ -159,7 +159,7 @@ final class OutputTest extends TestCase {
   public function testDefinitionsWriteAnAlignedList(): void {
     $terminal = new BufferedTerminal();
 
-    (new Output($terminal, $this->theme()))->definitions(['Jars' => '12', 'Fruit' => 'Apricot']);
+    (new Output($terminal, $this->theme(color: FALSE)))->definitions(['Jars' => '12', 'Fruit' => 'Apricot']);
 
     $this->assertSame("  Jars   12\n  Fruit  Apricot\n", $terminal->output());
   }
@@ -167,14 +167,14 @@ final class OutputTest extends TestCase {
   public function testEmptyDefinitionsWriteNothing(): void {
     $terminal = new BufferedTerminal();
 
-    (new Output($terminal, $this->theme()))->definitions([]);
+    (new Output($terminal, $this->theme(color: FALSE)))->definitions([]);
 
     $this->assertSame('', $terminal->output());
   }
 
   public function testCallsChainInOrder(): void {
     $terminal = new BufferedTerminal();
-    $output = new Output($terminal, $this->theme());
+    $output = new Output($terminal, $this->theme(color: FALSE));
 
     $this->assertSame($output, $output->success('Packed')->note('Sealed'));
     $this->assertSame("✓ Packed\n• Sealed\n", $terminal->output());
@@ -205,21 +205,6 @@ final class OutputTest extends TestCase {
     // own colour from the theme.
     $this->assertStringContainsString("\033[36m", $output);
     $this->assertStringContainsString("\033[32m", $output);
-  }
-
-  /**
-   * A default theme in the given display modes, fixed to dark.
-   *
-   * @param bool $color
-   *   Whether colour is on.
-   * @param bool $unicode
-   *   Whether Unicode glyphs are on.
-   *
-   * @return \DrevOps\Tui\Theme\DefaultTheme
-   *   The theme.
-   */
-  protected function theme(bool $color = FALSE, bool $unicode = TRUE): DefaultTheme {
-    return ThemeManager::create('default', DefaultTheme::DEFAULT_WIDTH, ['color' => $color, 'unicode' => $unicode, 'mode' => Mode::Dark]);
   }
 
 }

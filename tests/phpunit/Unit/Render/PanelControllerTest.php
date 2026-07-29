@@ -21,6 +21,7 @@ use DrevOps\Tui\Render\Terminal;
 use DrevOps\Tui\Render\TerminalControl;
 use DrevOps\Tui\Testing\BufferedTerminal;
 use DrevOps\Tui\Testing\KeyEncoder;
+use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\DosTheme;
@@ -37,6 +38,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(PanelController::class)]
 #[Group('render')]
 final class PanelControllerTest extends TestCase {
+
+  use BuildsThemesTrait;
 
   public function testDrillIntoPanelAndBack(): void {
     $controller = $this->controller();
@@ -1423,16 +1426,6 @@ final class PanelControllerTest extends TestCase {
       ->build();
 
     return new PanelController($form, $this->plainTheme(), values: $values);
-  }
-
-  /**
-   * An unstyled, borderless theme for frame assertions.
-   *
-   * @return \DrevOps\Tui\Theme\DefaultTheme
-   *   The theme.
-   */
-  protected function plainTheme(): DefaultTheme {
-    return new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Normal]);
   }
 
   public function testEditEnforcesHandlerBehaviour(): void {

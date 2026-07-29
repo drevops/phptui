@@ -36,7 +36,7 @@ final class ThemeConditionalIndentTest extends TestCase {
   public function testOptionIsOffByDefault(): void {
     $panel = $this->chainPanel();
 
-    [$lines] = $this->theme(FALSE)->renderBody($panel, new Answers(), 0);
+    [$lines] = $this->indentTheme(FALSE)->renderBody($panel, new Answers(), 0);
 
     // The cursor row leads with the marker glyph; every other row leads with
     // the two blank columns that stand in for it, and nothing more.
@@ -47,7 +47,7 @@ final class ThemeConditionalIndentTest extends TestCase {
   public function testEachConditionStepsTheRowInFurther(): void {
     $panel = $this->chainPanel();
 
-    [$lines] = $this->theme()->renderBody($panel, new Answers(), 0);
+    [$lines] = $this->indentTheme()->renderBody($panel, new Answers(), 0);
 
     // The cursor sits on the unconditional root, so its marker shows; the
     // conditional rows carry the blank marker plus one step per condition.
@@ -63,7 +63,7 @@ final class ThemeConditionalIndentTest extends TestCase {
     $field = $this->fieldsOf($this->chainPanel())['first'];
     $answers = new Answers(['first' => 'Acme'], ['first' => Provenance::Edited]);
 
-    $lines = $this->theme()->renderFieldLine($field, $answers, FALSE);
+    $lines = $this->indentTheme()->renderFieldLine($field, $answers, FALSE);
 
     $this->assertStringContainsString('First  Acme', Ansi::strip($lines[0]));
     $this->assertStringContainsString('edited', Ansi::strip($lines[0]));
@@ -80,7 +80,7 @@ final class ThemeConditionalIndentTest extends TestCase {
     $form = new FormDefinition('T', 'S', [$panel]);
     $answers = new Answers(['notes' => "Crisp and sweet\nHint of citrus"], []);
 
-    $lines = $this->theme()->renderFieldLine($this->fieldsOf($form->panels[0])['notes'], $answers, FALSE);
+    $lines = $this->indentTheme()->renderFieldLine($this->fieldsOf($form->panels[0])['notes'], $answers, FALSE);
 
     $this->assertSame('    Notes  Crisp and sweet', Ansi::strip($lines[0]));
     // The second line aligns under the value column, which the gutter moved.
@@ -94,7 +94,7 @@ final class ThemeConditionalIndentTest extends TestCase {
     ]);
     new FormDefinition('T', 'S', [$panel]);
 
-    [$lines] = $this->theme()->renderBody($panel, new Answers(), 0);
+    [$lines] = $this->indentTheme()->renderBody($panel, new Answers(), 0);
     $rows = array_map(Ansi::strip(...), $lines);
 
     // A description already sits four columns in; the conditional one carries
@@ -106,7 +106,7 @@ final class ThemeConditionalIndentTest extends TestCase {
   public function testInlineEditorOpensAtTheIndentedColumn(): void {
     $field = $this->fieldsOf($this->chainPanel())['second'];
 
-    $lines = $this->theme()->renderInlineEditor($field, "line one\nline two", TRUE);
+    $lines = $this->indentTheme()->renderInlineEditor($field, "line one\nline two", TRUE);
 
     $this->assertSame('    ❯ Second  line one', Ansi::strip($lines[0]));
     $this->assertSame($this->columnOf($lines[0], 'line one'), $this->columnOf($lines[1], 'line two'));
@@ -119,7 +119,7 @@ final class ThemeConditionalIndentTest extends TestCase {
     ]);
     new FormDefinition('T', 'S', [$panel]);
 
-    $lines = array_map(Ansi::strip(...), $this->theme()->renderNoteLines($this->fieldsOf($panel)['hint'], new Answers()));
+    $lines = array_map(Ansi::strip(...), $this->indentTheme()->renderNoteLines($this->fieldsOf($panel)['hint'], new Answers()));
 
     // A card already sits in a two-column gutter of its own.
     $this->assertSame('    Storage', $lines[0]);
@@ -134,8 +134,8 @@ final class ThemeConditionalIndentTest extends TestCase {
     new FormDefinition('T', 'S', [$panel]);
     $note = $this->fieldsOf($panel)['hint'];
 
-    $flush = $this->theme(FALSE)->renderNoteLines($note, new Answers());
-    $stepped = $this->theme()->renderNoteLines($note, new Answers());
+    $flush = $this->indentTheme(FALSE)->renderNoteLines($note, new Answers());
+    $stepped = $this->indentTheme()->renderNoteLines($note, new Answers());
 
     // The body wraps to the room the card's own chrome leaves, so an indented
     // card narrows by the columns its gutter takes and its right edge still
@@ -160,8 +160,8 @@ final class ThemeConditionalIndentTest extends TestCase {
     ]);
     $form = new FormDefinition('T', 'S', [$panel], buttons: new Buttons(show: FALSE));
 
-    $flush = $this->theme(FALSE)->measureContentWidth($form, new Answers());
-    $stepped = $this->theme()->measureContentWidth($form, new Answers());
+    $flush = $this->indentTheme(FALSE)->measureContentWidth($form, new Answers());
+    $stepped = $this->indentTheme()->measureContentWidth($form, new Answers());
 
     $this->assertSame($flush + self::STEP, $stepped);
   }
@@ -174,7 +174,7 @@ final class ThemeConditionalIndentTest extends TestCase {
     $panel = new Panel('p', 'P', '', [], [$sub], layout: [1]);
     new FormDefinition('T', 'S', [$panel]);
 
-    [$lines] = $this->theme()->renderBody($panel, new Answers(), -1);
+    [$lines] = $this->indentTheme()->renderBody($panel, new Answers(), -1);
     $rows = array_map(Ansi::strip(...), $lines);
 
     $this->assertSame(2, $this->leadingSpaces($rows[1]), 'An unconditional preview row keeps the block gutter.');
@@ -290,7 +290,7 @@ final class ThemeConditionalIndentTest extends TestCase {
    * @return \DrevOps\Tui\Theme\DefaultTheme
    *   The theme.
    */
-  protected function theme(bool $indent = TRUE): DefaultTheme {
+  protected function indentTheme(bool $indent = TRUE): DefaultTheme {
     return new DefaultTheme(40, [
       'color' => FALSE,
       'border' => Border::None,

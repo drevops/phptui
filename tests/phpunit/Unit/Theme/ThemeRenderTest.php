@@ -21,6 +21,7 @@ use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\HelpSection;
 use DrevOps\Tui\Render\Navigator;
 use DrevOps\Tui\Render\Viewport;
+use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Spacing;
@@ -37,8 +38,10 @@ use PHPUnit\Framework\TestCase;
 #[Group('theme')]
 final class ThemeRenderTest extends TestCase {
 
+  use BuildsThemesTrait;
+
   public function testFieldLineSelectedRightAlignsBadge(): void {
-    $lines = $this->theme()->renderFieldLine(new Field('name', 'Name', '', FieldType::Text, ''), new Answers(['name' => 'Acme'], ['name' => Provenance::Edited]), TRUE);
+    $lines = $this->plainTheme()->renderFieldLine(new Field('name', 'Name', '', FieldType::Text, ''), new Answers(['name' => 'Acme'], ['name' => Provenance::Edited]), TRUE);
 
     // A single-line value is one row.
     $this->assertCount(1, $lines);
@@ -48,14 +51,14 @@ final class ThemeRenderTest extends TestCase {
   }
 
   public function testFieldLineDefaultHasNoBadge(): void {
-    $lines = $this->theme()->renderFieldLine(new Field('name', 'Name', '', FieldType::Text, ''), new Answers(['name' => 'Acme'], ['name' => Provenance::Default]), FALSE);
+    $lines = $this->plainTheme()->renderFieldLine(new Field('name', 'Name', '', FieldType::Text, ''), new Answers(['name' => 'Acme'], ['name' => Provenance::Default]), FALSE);
 
     $this->assertStringNotContainsString('default', $lines[0]);
     $this->assertStringContainsString('Name  Acme', Ansi::strip($lines[0]));
   }
 
   public function testFieldLineRendersValues(): void {
-    $theme = $this->theme();
+    $theme = $this->plainTheme();
 
     $bool = Ansi::strip($theme->renderFieldLine(new Field('b', 'B', '', FieldType::Confirm, FALSE), new Answers(['b' => TRUE], ['b' => Provenance::Default]), FALSE)[0]);
     $this->assertStringContainsString('B  yes', $bool);
@@ -67,20 +70,20 @@ final class ThemeRenderTest extends TestCase {
   public function testFieldLineMasksPasswordValue(): void {
     $field = new Field('token', 'Token', '', FieldType::Password, '');
 
-    $line = Ansi::strip($this->theme()->renderFieldLine($field, new Answers(['token' => 's3cret-long'], ['token' => Provenance::Edited]), FALSE)[0]);
+    $line = Ansi::strip($this->plainTheme()->renderFieldLine($field, new Answers(['token' => 's3cret-long'], ['token' => Provenance::Edited]), FALSE)[0]);
 
     $this->assertStringNotContainsString('s3cret-long', $line);
     // The mask has a fixed length so it does not leak the value's length.
     $this->assertStringContainsString('Token  ••••••••', $line);
 
-    $empty = Ansi::strip($this->theme()->renderFieldLine($field, new Answers(['token' => ''], ['token' => Provenance::Default]), FALSE)[0]);
+    $empty = Ansi::strip($this->plainTheme()->renderFieldLine($field, new Answers(['token' => ''], ['token' => Provenance::Default]), FALSE)[0]);
     $this->assertStringNotContainsString('•', $empty);
   }
 
   public function testRenderInlineEditorPutsViewInPlaceOfValue(): void {
     $field = new Field('cdn', 'CDN', '', FieldType::Confirm, FALSE);
 
-    $lines = $this->theme()->renderInlineEditor($field, "line one\nline two", TRUE);
+    $lines = $this->plainTheme()->renderInlineEditor($field, "line one\nline two", TRUE);
 
     // The view's first line sits on the label row where the value would be; a
     // further line aligns under that value column.
@@ -93,7 +96,7 @@ final class ThemeRenderTest extends TestCase {
     $panel = new Panel('p', 'P', '', [new Field('notes', 'Notes', '', FieldType::Textarea, '')]);
     $answers = new Answers(['notes' => "Crisp and sweet\nHint of citrus"], ['notes' => Provenance::Edited]);
 
-    [$lines] = $this->theme()->renderBody($panel, $answers, 0);
+    [$lines] = $this->plainTheme()->renderBody($panel, $answers, 0);
 
     // Each body entry is one physical row: an embedded newline would desync the
     // box border, the badge alignment and the scroll maths.
@@ -118,7 +121,7 @@ final class ThemeRenderTest extends TestCase {
     $panel = new Panel('p', 'P', '', [$field]);
 
     // The editor hands back a multi-line caret view for the field being edited.
-    [$lines] = $this->theme()->renderBody($panel, new Answers(), 0, $field, "Crisp and sweet\nHint of citrus");
+    [$lines] = $this->plainTheme()->renderBody($panel, new Answers(), 0, $field, "Crisp and sweet\nHint of citrus");
 
     foreach ($lines as $line) {
       $this->assertStringNotContainsString("\n", $line);
@@ -145,7 +148,7 @@ final class ThemeRenderTest extends TestCase {
     $field = new Field('name', 'Name', 'The grower of record', FieldType::Text, '', hint: 'Type a few letters to filter.');
     $panel = new Panel('p', 'P', '', [$field]);
 
-    [$lines] = $this->theme()->renderBody($panel, new Answers(), 0);
+    [$lines] = $this->plainTheme()->renderBody($panel, new Answers(), 0);
     $stripped = array_map(Ansi::strip(...), $lines);
 
     // Guidance stacks under the row in declaration order: what is being asked,
@@ -158,7 +161,7 @@ final class ThemeRenderTest extends TestCase {
     $field = new Field('name', 'Name', '', FieldType::Text, '', hint: 'Type a few letters to filter.');
     $panel = new Panel('p', 'P', '', [$field]);
 
-    [$lines] = $this->theme()->renderBody($panel, new Answers(), 0);
+    [$lines] = $this->plainTheme()->renderBody($panel, new Answers(), 0);
     $stripped = array_map(Ansi::strip(...), $lines);
 
     $this->assertSame('    Type a few letters to filter.', $stripped[1]);
@@ -169,7 +172,7 @@ final class ThemeRenderTest extends TestCase {
     $field = new Field('name', 'Name', '', FieldType::Text, '', hint: 'Type a few letters to filter.');
     $panel = new Panel('p', 'P', '', [$field]);
 
-    [$lines] = $this->theme()->renderBody($panel, new Answers(), 0, $field, 'Acme');
+    [$lines] = $this->plainTheme()->renderBody($panel, new Answers(), 0, $field, 'Acme');
     $stripped = array_map(Ansi::strip(...), $lines);
 
     $this->assertStringContainsString('Name  Acme', $stripped[0]);
@@ -224,7 +227,7 @@ final class ThemeRenderTest extends TestCase {
     $panel = new Panel('sub', 'Sub', '', [new Field('notes', 'Notes', '', FieldType::Textarea, '')]);
     $answers = new Answers(['notes' => "Crisp and sweet\nHint of citrus"], []);
 
-    $summary = $this->theme()->summarizePanel($panel, $answers);
+    $summary = $this->plainTheme()->summarizePanel($panel, $answers);
 
     // A summary is a single line: newlines collapse so a multi-line value does
     // not break the row it sits on.
@@ -238,7 +241,7 @@ final class ThemeRenderTest extends TestCase {
     $panel = new Panel('p', 'P', '', [new Field('notes', 'Notes', '', FieldType::Textarea, '')]);
     $answers = new Answers(['notes' => $value], []);
 
-    [$lines] = $this->theme()->renderBody($panel, $answers, 0);
+    [$lines] = $this->plainTheme()->renderBody($panel, $answers, 0);
 
     // A carriage return would send the terminal cursor back to the row start
     // and overprint the row, so every line ending an external editor's save
@@ -264,7 +267,7 @@ final class ThemeRenderTest extends TestCase {
     $panel = new Panel('sub', 'Sub', '', [new Field('notes', 'Notes', '', FieldType::Textarea, '')]);
     $answers = new Answers(['notes' => $value], []);
 
-    $summary = $this->theme()->summarizePanel($panel, $answers);
+    $summary = $this->plainTheme()->summarizePanel($panel, $answers);
 
     $this->assertStringNotContainsString("\r", $summary);
     $this->assertStringNotContainsString("\n", $summary);
@@ -278,7 +281,7 @@ final class ThemeRenderTest extends TestCase {
   }
 
   public function testPanelLineShowsDrillIndicator(): void {
-    $line = Ansi::strip($this->theme()->renderPanelLine(new Panel('adv', 'Advanced', ''), TRUE));
+    $line = Ansi::strip($this->plainTheme()->renderPanelLine(new Panel('adv', 'Advanced', ''), TRUE));
 
     $this->assertStringContainsString('❯ Advanced', $line);
     $this->assertStringContainsString('›', $line);
@@ -290,7 +293,7 @@ final class ThemeRenderTest extends TestCase {
       new Field('b', 'B', '', FieldType::Text, ''),
     ]);
 
-    [$lines, $cursor_line] = $this->theme()->renderBody($panel, new Answers(), 1);
+    [$lines, $cursor_line] = $this->plainTheme()->renderBody($panel, new Answers(), 1);
 
     $this->assertSame(2, $cursor_line);
     $this->assertStringContainsString('❯ B', Ansi::strip($lines[2]));
@@ -304,7 +307,7 @@ final class ThemeRenderTest extends TestCase {
     ]);
 
     // Cursor index 1 is the second navigable field; the note is not counted.
-    [$lines, $cursor_line] = $this->theme()->renderBody($panel, new Answers(['name' => 'Acme', 'agree' => FALSE], []), 1);
+    [$lines, $cursor_line] = $this->plainTheme()->renderBody($panel, new Answers(['name' => 'Acme', 'agree' => FALSE], []), 1);
 
     $body = Ansi::strip(implode("\n", $lines));
     $this->assertStringContainsString('Getting started', $body);
@@ -321,17 +324,17 @@ final class ThemeRenderTest extends TestCase {
       new Field('blank', '', '', FieldType::Note, ''),
     ]);
 
-    [$lines] = $this->theme()->renderBody($panel, new Answers(['name' => 'Acme'], []), 0);
+    [$lines] = $this->plainTheme()->renderBody($panel, new Answers(['name' => 'Acme'], []), 0);
 
     // A note with neither title nor body contributes no lines.
     $this->assertStringContainsString('Name', Ansi::strip(implode("\n", $lines)));
-    $this->assertSame([], $this->theme()->renderNoteLines(new Field('blank', '', '', FieldType::Note, ''), new Answers()));
+    $this->assertSame([], $this->plainTheme()->renderNoteLines(new Field('blank', '', '', FieldType::Note, ''), new Answers()));
   }
 
   public function testNoteInterpolatesAnswersInTitleAndBody(): void {
     $note = new Field('echo', 'Hello {{name}}', 'You picked {{fruit}}.', FieldType::Note, '');
 
-    $lines = Ansi::strip(implode("\n", $this->theme()->renderNoteLines($note, new Answers(['name' => 'Ada', 'fruit' => 'pear'], []))));
+    $lines = Ansi::strip(implode("\n", $this->plainTheme()->renderNoteLines($note, new Answers(['name' => 'Ada', 'fruit' => 'pear'], []))));
 
     $this->assertStringContainsString('Hello Ada', $lines);
     $this->assertStringContainsString('You picked pear.', $lines);
@@ -384,7 +387,7 @@ final class ThemeRenderTest extends TestCase {
   public function testRenderNoteLinesBoxesBorderedNote(): void {
     // The theme frame is borderless, so an opt-in note border falls back to the
     // single-line box; its glyphs come only from the note.
-    $lines = $this->theme()->renderNoteLines(new Field('boxed', 'Boxed', 'In a box.', FieldType::Note, '', bordered: TRUE), new Answers());
+    $lines = $this->plainTheme()->renderNoteLines(new Field('boxed', 'Boxed', 'In a box.', FieldType::Note, '', bordered: TRUE), new Answers());
     $joined = Ansi::strip(implode("\n", $lines));
 
     $this->assertStringContainsString('Boxed', $joined);
@@ -406,7 +409,7 @@ final class ThemeRenderTest extends TestCase {
       '└───────┴────────┘',
     ];
 
-    $this->assertSame($expected, $this->theme()->renderTable(['Fruit', 'Colour'], [['Apple', 'Red']]));
+    $this->assertSame($expected, $this->plainTheme()->renderTable(['Fruit', 'Colour'], [['Apple', 'Red']]));
   }
 
   public function testRenderTableColorsCellsAndBorders(): void {
@@ -441,7 +444,7 @@ final class ThemeRenderTest extends TestCase {
 
   public function testNoteRendersTableBeneathTitleAndBody(): void {
     $field = new Field('stock', 'Stock', 'Current basket:', FieldType::Note, '', table: new TableSpec(['Fruit', 'Qty'], [['Apple', '3']]));
-    $joined = Ansi::strip(implode("\n", $this->theme()->renderNoteLines($field, new Answers())));
+    $joined = Ansi::strip(implode("\n", $this->plainTheme()->renderNoteLines($field, new Answers())));
 
     $this->assertStringContainsString('Stock', $joined);
     $this->assertStringContainsString('Current basket:', $joined);
@@ -451,7 +454,7 @@ final class ThemeRenderTest extends TestCase {
 
   public function testNoteInterpolatesTableCells(): void {
     $field = new Field('echo', '', '', FieldType::Note, '', table: new TableSpec(['Item'], [['{{fruit}}']]));
-    $joined = Ansi::strip(implode("\n", $this->theme()->renderNoteLines($field, new Answers(['fruit' => 'pear'], []))));
+    $joined = Ansi::strip(implode("\n", $this->plainTheme()->renderNoteLines($field, new Answers(['fruit' => 'pear'], []))));
 
     $this->assertStringContainsString('pear', $joined);
     $this->assertStringNotContainsString('{{fruit}}', $joined);
@@ -461,7 +464,7 @@ final class ThemeRenderTest extends TestCase {
     // An answer carrying newlines - a textarea value - interpolated into a cell
     // folds to one row so it never splits the grid.
     $field = new Field('memo', '', '', FieldType::Note, '', table: new TableSpec(['Memo'], [['{{memo}}']]));
-    $lines = $this->theme()->renderNoteLines($field, new Answers(['memo' => "first\nsecond"], []));
+    $lines = $this->plainTheme()->renderNoteLines($field, new Answers(['memo' => "first\nsecond"], []));
 
     foreach ($lines as $line) {
       $this->assertStringNotContainsString("\n", $line);
@@ -472,7 +475,7 @@ final class ThemeRenderTest extends TestCase {
 
   public function testBorderedNoteBoxesItsTable(): void {
     $field = new Field('stock', 'Stock', '', FieldType::Note, '', bordered: TRUE, table: new TableSpec(['Fruit'], [['Apple']]));
-    $joined = Ansi::strip(implode("\n", $this->theme()->renderNoteLines($field, new Answers())));
+    $joined = Ansi::strip(implode("\n", $this->plainTheme()->renderNoteLines($field, new Answers())));
 
     $this->assertStringContainsString('Stock', $joined);
     $this->assertStringContainsString('Apple', $joined);
@@ -485,7 +488,7 @@ final class ThemeRenderTest extends TestCase {
       new Panel('sub', 'Sub', 'sub desc'),
     ]);
 
-    [$lines, $cursor_line] = $this->theme()->renderBody($panel, new Answers(), 1);
+    [$lines, $cursor_line] = $this->plainTheme()->renderBody($panel, new Answers(), 1);
 
     // The cursor is on the sub-panel (index 1, after the single field).
     $this->assertSame(1, $cursor_line);
@@ -498,7 +501,7 @@ final class ThemeRenderTest extends TestCase {
       new Panel('general', 'General', 'the general panel', [new Field('name', 'Name', '', FieldType::Text, '')]),
     ]);
 
-    [$lines] = $this->theme()->renderBody($hub, new Answers(['name' => 'Acme'], []), 0);
+    [$lines] = $this->plainTheme()->renderBody($hub, new Answers(['name' => 'Acme'], []), 0);
 
     // The hub shows the sub-panel's title, description and value summary.
     $body = Ansi::strip(implode("\n", $lines));
@@ -520,11 +523,11 @@ final class ThemeRenderTest extends TestCase {
 
     // "gated" is skipped (no answer), the multiselect condenses to a pluralized
     // count, and only the first four active values appear ("Delta" is dropped).
-    $this->assertSame('Acme · Beta · 4 items selected · Gamma', $this->theme()->summarizePanel($panel, $answers));
+    $this->assertSame('Acme · Beta · 4 items selected · Gamma', $this->plainTheme()->summarizePanel($panel, $answers));
   }
 
   public function testSummaryLineClipsToWidth(): void {
-    $line = Ansi::strip($this->theme()->renderSummaryLine(str_repeat('x', 100), FALSE));
+    $line = Ansi::strip($this->plainTheme()->renderSummaryLine(str_repeat('x', 100), FALSE));
 
     $this->assertLessThanOrEqual(40, mb_strlen($line));
     $this->assertStringContainsString('…', $line);
@@ -558,7 +561,7 @@ final class ThemeRenderTest extends TestCase {
   public function testFrameShowsIndicatorsAndWindow(): void {
     $body = array_map(static fn(int $i): string => 'line' . $i, range(0, 9));
 
-    $frame = $this->theme()->renderFrame(['HEAD'], $body, ['FOOT'], new Viewport(3, TRUE, TRUE), 4);
+    $frame = $this->plainTheme()->renderFrame(['HEAD'], $body, ['FOOT'], new Viewport(3, TRUE, TRUE), 4);
 
     $this->assertStringContainsString('▲', $frame);
     $this->assertStringContainsString('▼', $frame);
@@ -571,16 +574,16 @@ final class ThemeRenderTest extends TestCase {
   public function testBreadcrumbLine(): void {
     $navigator = new Navigator(new Panel('hub', 'Hub', '', [], [new Panel('d', 'Drupal', '')]));
 
-    $this->assertSame('Hub', Ansi::strip($this->theme()->renderBreadcrumbLine($navigator)));
+    $this->assertSame('Hub', Ansi::strip($this->plainTheme()->renderBreadcrumbLine($navigator)));
   }
 
   public function testBanner(): void {
-    $banner = Ansi::strip($this->theme()->renderBanner("LOGO\nline", '1.2.3'));
+    $banner = Ansi::strip($this->plainTheme()->renderBanner("LOGO\nline", '1.2.3'));
 
     $this->assertStringContainsString('LOGO', $banner);
     $this->assertStringContainsString('Version: 1.2.3', $banner);
 
-    $this->assertStringNotContainsString('Version', Ansi::strip($this->theme()->renderBanner('LOGO', '')));
+    $this->assertStringNotContainsString('Version', Ansi::strip($this->plainTheme()->renderBanner('LOGO', '')));
   }
 
   public function testHintsLineIsThemed(): void {
@@ -740,11 +743,11 @@ final class ThemeRenderTest extends TestCase {
   public function testDimRecedesText(): void {
     // With colour, dim wraps the text; with colour off, it is left untouched.
     $this->assertSame("\033[2mx\033[0m", (new DefaultTheme(40))->dim('x'));
-    $this->assertSame('x', $this->theme()->dim('x'));
+    $this->assertSame('x', $this->plainTheme()->dim('x'));
   }
 
   public function testRenderModalCentersDialogOverBackdrop(): void {
-    $theme = $this->theme();
+    $theme = $this->plainTheme();
     $modal = new Panel('c', 'Confirm', 'Proceed with care.', [
       new Field('opt', 'Option', '', FieldType::Text, 'val'),
     ], [], new Modal(new Buttons(TRUE, 'Yes', 'No')));
@@ -763,7 +766,7 @@ final class ThemeRenderTest extends TestCase {
   }
 
   public function testRenderModalWithoutFields(): void {
-    $theme = $this->theme();
+    $theme = $this->plainTheme();
     $modal = new Panel('n', 'Notice', 'Saved successfully.', [], [], new Modal());
     $backdrop = "aaaaaa\nbbbbbb\ncccccc\ndddddd\neeeeee\nffffff\ngggggg\nhhhhhh";
 
@@ -790,7 +793,7 @@ final class ThemeRenderTest extends TestCase {
   }
 
   public function testRenderModalScrollsBodyAndPinsButtonsWhenTall(): void {
-    $theme = $this->theme();
+    $theme = $this->plainTheme();
     $fields = [];
     $values = [];
     for ($i = 1; $i <= 10; $i++) {
@@ -809,19 +812,6 @@ final class ThemeRenderTest extends TestCase {
     $this->assertStringContainsString('[ Discard ]', $out);
     // The last field scrolls out of view, but the buttons never do.
     $this->assertStringNotContainsString('Field 10', $out);
-  }
-
-  /**
-   * A colourless borderless theme of fixed width.
-   *
-   * The explicit border and spacing keep these layout assertions on the
-   * plain look, independent of the theme's bordered-and-padded defaults.
-   *
-   * @return \DrevOps\Tui\Theme\DefaultTheme
-   *   The theme.
-   */
-  protected function theme(): DefaultTheme {
-    return new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Normal]);
   }
 
 }

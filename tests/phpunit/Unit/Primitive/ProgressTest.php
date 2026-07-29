@@ -6,9 +6,7 @@ namespace DrevOps\Tui\Tests\Unit\Primitive;
 
 use DrevOps\Tui\Primitive\Progress;
 use DrevOps\Tui\Testing\BufferedTerminal;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\ThemeManager;
+use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -19,6 +17,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Progress::class)]
 #[Group('primitive')]
 final class ProgressTest extends TestCase {
+
+  use BuildsThemesTrait;
 
   public function testReturnsTheCallbackResult(): void {
     $progress = new Progress(new BufferedTerminal(), $this->theme(), TRUE, NULL, 'Scanning');
@@ -148,21 +148,6 @@ final class ProgressTest extends TestCase {
     // The exception propagates and the cursor is restored despite the throw.
     $this->assertSame('boom', $message);
     $this->assertStringContainsString("\033[?25h", $terminal->output());
-  }
-
-  /**
-   * A default theme in the given display modes, fixed to dark.
-   *
-   * @param bool $color
-   *   Whether colour is on.
-   * @param bool $unicode
-   *   Whether Unicode glyphs are on.
-   *
-   * @return \DrevOps\Tui\Theme\DefaultTheme
-   *   The theme.
-   */
-  protected function theme(bool $color = TRUE, bool $unicode = TRUE): DefaultTheme {
-    return ThemeManager::create('default', DefaultTheme::DEFAULT_WIDTH, ['color' => $color, 'unicode' => $unicode, 'mode' => Mode::Dark]);
   }
 
 }
