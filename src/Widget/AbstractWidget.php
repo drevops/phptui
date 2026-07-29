@@ -305,16 +305,26 @@ abstract class AbstractWidget implements WidgetInterface {
   /**
    * {@inheritdoc}
    *
-   * The frame every widget shares: the widget's own body, then the highlighted
-   * option's description beneath it (choice widgets only), then the validation
-   * error line. A widget renders only its body via {@see renderBody()}.
+   * The frame every widget shares, stacked so that each line sits nearest what
+   * it belongs to: the widget's own body, the highlighted option's detail
+   * (choice widgets only), then what the field expects of an answer, then why
+   * the last one was refused. The detail leads because it changes as the
+   * highlight moves - a line that follows the cursor belongs against the list
+   * it follows, not below a constraint that never moves. A widget renders only
+   * its body via {@see renderBody()} and states its expectation via
+   * {@see renderConstraint()}.
    */
   public function view(ThemeInterface $theme): string {
     $lines = [$this->renderBody($theme)];
 
-    $description = $this->renderOptionDescription($theme, $this->highlightedDescription());
-    if ($description !== '') {
-      $lines[] = $description;
+    $detail = $this->renderOptionDescription($theme, $this->highlightedDescription());
+    if ($detail !== '') {
+      $lines[] = $detail;
+    }
+
+    $constraint = $this->renderConstraint($theme);
+    if ($constraint !== '') {
+      $lines[] = $constraint;
     }
 
     if ($this->error !== NULL) {
@@ -322,6 +332,20 @@ abstract class AbstractWidget implements WidgetInterface {
     }
 
     return implode("\n", $lines);
+  }
+
+  /**
+   * What the widget expects of an answer, before anything is refused.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   *
+   * @return string
+   *   The constraint line(s), or an empty string when the widget declares no
+   *   limits or an error has already replaced them.
+   */
+  protected function renderConstraint(ThemeInterface $theme): string {
+    return '';
   }
 
   /**

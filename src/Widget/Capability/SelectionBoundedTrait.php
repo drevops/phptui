@@ -89,20 +89,10 @@ trait SelectionBoundedTrait {
   }
 
   /**
-   * Append the selection-count hint line beneath a view, when it is shown.
-   *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
-   *   The theme.
-   * @param string $view
-   *   The rendered view.
-   *
-   * @return string
-   *   The view, with the hint line below it when bounds are present.
+   * {@inheritdoc}
    */
-  protected function withSelectionHint(ThemeInterface $theme, string $view): string {
-    $hint = $this->selectionHint($theme);
-
-    return $hint === '' ? $view : $view . "\n" . $hint;
+  protected function renderConstraint(ThemeInterface $theme): string {
+    return $this->selectionHint($theme);
   }
 
 }

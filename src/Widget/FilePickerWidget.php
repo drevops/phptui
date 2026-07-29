@@ -245,7 +245,7 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
 
     $body = implode("\n", array_merge($lines, $this->wrapScrolled($theme, $rows, $viewport)));
 
-    return $this->withSelectionHint($theme, $this->withConstraintHint($theme, $body));
+    return $body;
   }
 
   /**
@@ -275,20 +275,14 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
   }
 
   /**
-   * Append the constraint hint line beneath a view, when it is shown.
+   * {@inheritdoc}
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
-   *   The theme.
-   * @param string $view
-   *   The rendered view.
-   *
-   * @return string
-   *   The view, with the hint line below it when constraints are present.
+   * A picker states two limits at once - what may be picked, and how many -
+   * and either may stand alone.
    */
-  protected function withConstraintHint(ThemeInterface $theme, string $view): string {
-    $hint = $this->constraintHint($theme);
-
-    return $hint === '' ? $view : $view . "\n" . $hint;
+  #[\Override]
+  protected function renderConstraint(ThemeInterface $theme): string {
+    return implode("\n", array_filter([$this->constraintHint($theme), $this->selectionHint($theme)]));
   }
 
   /**

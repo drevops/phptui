@@ -127,7 +127,18 @@ class SearchWidget extends AbstractWidget implements
    * {@inheritdoc}
    */
   protected function renderBody(ThemeInterface $theme): string {
-    return $this->queryLine($theme) . "\n" . ($this->queryStateLine($theme) ?? $this->withSelectionHint($theme, $this->renderChoiceList($theme)));
+    return $this->queryLine($theme) . "\n" . ($this->queryStateLine($theme) ?? $this->renderChoiceList($theme));
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * A query that has not run yet stands in for the list, and a count limit on
+   * a list nobody can see yet is noise.
+   */
+  #[\Override]
+  protected function renderConstraint(ThemeInterface $theme): string {
+    return $this->queryStateLine($theme) === NULL ? $this->selectionHint($theme) : '';
   }
 
   /**

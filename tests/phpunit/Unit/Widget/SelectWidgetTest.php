@@ -486,6 +486,19 @@ final class SelectWidgetTest extends TestCase {
     $this->assertGreaterThan(strpos($view, 'B'), strpos($view, 'Select between 1 and 2 items.'));
   }
 
+  public function testHighlightedDetailSitsAboveTheConstraint(): void {
+    $widget = new SelectWidget([
+      new Option('a', 'A', 'Crisp and sweet, the everyday choice.'),
+      new Option('b', 'B'),
+    ], [], TRUE, selection_bounds: new SelectionBounds(1, 2));
+
+    $view = Ansi::strip($widget->view(new DefaultTheme()));
+
+    // The detail changes as the highlight moves, so it belongs against the list
+    // it follows rather than below a limit that never moves.
+    $this->assertLessThan(strpos($view, 'Select between 1 and 2 items.'), strpos($view, 'Crisp and sweet, the everyday choice.'));
+  }
+
   public function testMultipleSelectionHintReadsApartFromAnOptionDescription(): void {
     $theme = new DefaultTheme();
     $widget = new SelectWidget([
