@@ -1,6 +1,6 @@
 ---
 title: Anatomy
-description: 'The parts of a widget, named: the panel row, the open editor, and every line each of them draws.'
+description: 'The parts of a widget, named: view mode, edit mode, and every line each of them draws.'
 keywords: ['anatomy', 'nomenclature', 'parts', 'widgets', 'tui']
 ---
 
@@ -9,11 +9,11 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Anatomy of a widget
 
-Every field draws itself twice. In the panel it's a **row**: one line carrying the answer, with any supporting lines beneath it. Open that row and it becomes an **editor**, where the widget takes over the space to the right of the label and draws whatever it needs to collect the answer.
+Every field draws itself in one of two modes. In **view mode** it's a single line carrying the answer, with any supporting lines beneath it. Open it and it switches to **edit mode**, where the widget takes over the space to the right of the label and draws whatever it needs to collect the answer.
 
 This page names each part and gives it a number, so a bug report can say "the constraint line is wrong" and mean exactly one thing. The numbers are fixed across every diagram below, so the **constraint** (13) carries the same number wherever it appears.
 
-The names describe what you see, never how it's built. A file browser's list is captioned with the directory you're in, but the part is a **caption** (15) rather than a "directory line", because the next browser to caption its list won't be showing you a directory. Each one is drawn by a theme method - an [atom](/themes) - that you can override.
+The names describe what you see, never how it's built. A file browser's list is captioned with the directory you're in, but the part is a **caption** (15) rather than a "directory line", because the next browser to caption its list won't be showing you a directory. Each one is drawn by a theme method - an [atom](/themes) - named after the part it draws.
 
 :::note
 
@@ -21,63 +21,62 @@ The frames are real captured output. The vocabulary is the settled target and th
 
 :::
 
-## The row
+## View mode
 
-A panel stacks its fields as rows. Five fields of a delivery form are visible here, with more continuing past the bottom edge.
+A panel stacks its fields as rows, each one in view mode until you open it. Five fields of a delivery form are visible here, with more continuing past the bottom edge.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/anatomy-row-light-static.svg'), dark: useBaseUrl('/anatomy-row-dark-static.svg')}} alt="Five rows of a form with their parts named" width="100%" />
 </p>
 
 - **1** breadcrumb - the trail of panel titles. It's the titles of every panel you've descended through plus the one you're in, so it gains a segment when you open a sub-panel and drops one when you come back.
-- **2** marker - which row has focus. Exactly one row has it at a time, it moves with <kbd>↑</kbd> and <kbd>↓</kbd>, and the row it's on is drawn brighter - the glyph and that emphasis are one signal in two forms.
+- **20** separator - the glyph between breadcrumb segments. It's drawn by the theme, so it isn't always a chevron.
+- **2** field selector - which field has focus. Exactly one row has it at a time, it moves with <kbd>↑</kbd> and <kbd>↓</kbd>, and the row it's on is drawn brighter - the glyph and that emphasis are one signal in two forms.
 - **3** label - the field's name. The one part of a row that never changes while you work.
 - **4** value - the settled answer. It shows what was accepted, so it stays empty until the field is answered and never shows what you're mid-way through typing - that's the **draft** (17).
+- **5** description - the field's explanatory text, under its row. Declared once on the field and shown whether or not the row has focus, so it never changes while you work.
 - **7** overflow - content continues above or below. It appears only when the rows don't fit the panel, and points the way there's more.
-- **8** legend - the keys available right now. It rewrites itself as focus moves, so an open **editor** lists different keys from the panel around it.
+- **8** legend - the keys available right now. It rewrites itself as focus moves, so a field in edit mode lists different keys from the panel around it.
 
 **One number, several arrows.** The **label** (3) and the **value** (4) each carry an arrow per row, because every row has one of each - they belong to a row, not to a particular field. A part that occurs several times keeps a single number; numbering each occurrence would read as several different parts.
 
-The **marker** (2) is the exception. It gets one arrow, because only one row holds focus at a time. That row is drawn differently too: `Basket contents` has a brighter **label** (3) and **value** (4) than the rows below it. The glyph and that emphasis are the same signal in two forms, and both come from the theme.
+The **field selector** (2) is the exception. It gets one arrow, because only one field holds focus at a time. That row is drawn differently too: `Basket contents` has a brighter **label** (3) and **value** (4) than the rows below it. The glyph and that emphasis are the same signal in two forms, and both come from the theme.
 
-## Supporting lines
+## Help
 
-A field can declare lines that sit beneath its row. They draw only while the row is closed, which is why they get a frame of their own here.
+A field can carry longer text than a **description** (5) has room for. That text is its **help** (6), and it isn't on screen until you ask for it: press <kbd>?</kbd> on a field and it opens in a popup.
 
-<p align="center">
-  <ThemedImage sources={{light: useBaseUrl('/anatomy-lines-light-static.svg'), dark: useBaseUrl('/anatomy-lines-dark-static.svg')}} alt="Two rows showing a field's description and instruction" width="100%" />
-</p>
+- **6** help - the field's long-form text, shown on request. Unlike the **description** (5), it can run to several paragraphs, because a popup has the room a row doesn't.
 
-- **5** description - the field's explanatory text. Declared once on the field and shown whether or not the row has focus, so it never changes while you work.
-- **6** instruction - the field's short how-to line, under the **description** (5). Also declared on the field and equally static, but drawn in the guidance voice so it reads as the widget telling you how rather than as more prose.
+Keeping it behind a keystroke is what lets it be thorough. A **description** (5) has to earn its line in a stack of rows, so it stays a sentence; **help** (6) is asked for, so it can take as long as the field deserves.
 
-Both belong to the field that declares them, not to the panel. The **description** (5) carries two arrows because both fields declare one; the **instruction** (6) carries one, because only `Basket contents` declares one and `Basket weight` has no second line at all.
+## Edit mode
 
-## The editor
-
-Opening a row hands the region right of the label to the widget. A multiple-choice field with bounds and option detail draws the fullest set of parts.
+Edit mode hands the region right of the label to the widget. A multiple-choice field with bounds and option detail draws the fullest set of parts.
 
 <p align="center">
-  <ThemedImage sources={{light: useBaseUrl('/anatomy-editor-light-static.svg'), dark: useBaseUrl('/anatomy-editor-dark-static.svg')}} alt="An open multiple-choice editor with its parts named" width="100%" />
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-editor-light-static.svg'), dark: useBaseUrl('/anatomy-editor-dark-static.svg')}} alt="A multiple-choice field in edit mode with its parts named" width="100%" />
 </p>
 
-- **9** selector - the per-entry chosen-state glyph. It reflects what's chosen, not what's highlighted, so it only changes when you actually pick something - <kbd>Space</kbd> in a multiple-choice list.
+- **9** entry marker - the per-entry chosen-state glyph. It shows what's chosen, not what's highlighted, so it only changes when you actually pick something - <kbd>Space</kbd> in a multiple-choice list.
 - **10** entry - one line of the list the widget offers. What fills the list varies by widget: a fixed set, a set filtered as you type, or one fetched by a query.
-- **11** entry marker - which **entry** (10) is highlighted. It moves with <kbd>↑</kbd> and <kbd>↓</kbd>, and moving it chooses nothing on its own.
+- **11** entry selector - which **entry** (10) has focus. It moves with <kbd>↑</kbd> and <kbd>↓</kbd>, and moving it chooses nothing on its own.
 - **12** entry note - a qualifier on an **entry** (10), such as why it's unavailable. It appears only on entries that carry a reason.
-- **13** constraint - what the field expects, before anything is rejected. It's there from the moment the **editor** opens, and the **error** (19) replaces it the instant a value is refused.
-- **14** entry detail - the highlighted **entry** (10)'s own explanatory text. It's rewritten every time the **entry marker** (11) moves, and is simply absent for entries that declare none.
+- **13** constraint - what the field expects, before anything is rejected. It's there from the moment edit mode opens, and the **error** (19) replaces it the instant a value is refused.
+- **14** entry detail - the focused **entry** (10)'s own explanatory text. It's rewritten every time the **entry selector** (11) moves, and is simply absent for entries that declare none.
 
-The pairs are deliberate. A widget's own focus glyph is the **marker** (2) and the one inside its list is the **entry marker** (11); the field's explanatory line is the **description** (5) and an option's is the **entry detail** (14). Same idea at two levels, so a parent's name is never reused for its child.
+**Selecting and marking are different things.** A selector shows where you are; a marker shows what you've marked. That's why the **field selector** (2) and the **entry selector** (11) are the glyphs that follow your movement, while the **entry marker** (9) is the box that records a decision. Moving a selector chooses nothing.
 
-Order matters here too. The **entry detail** (14) sits directly under the list and above the **constraint** (13), because it changes as the highlight moves. A line that follows the cursor belongs against the list it follows; a limit that never moves can wait below it.
+The pairs are deliberate. The **field selector** (2) shows which field you're on and the **entry selector** (11) which entry within it; the **description** (5) is the field's own text and the **entry detail** (14) an entry's. Same idea at two levels, so a parent's name is never reused for its child.
 
-## Typing rather than choosing
+Order matters here too. The **entry detail** (14) sits directly under the list and above the **constraint** (13), because it changes as focus moves. A line that follows the cursor belongs against the list it follows; a limit that never moves can wait below it.
+
+## Edit mode: typing rather than choosing
 
 Some widgets collect an answer by typing instead of by choosing from a list, so they have no **entry** (10) at all. The [Template](/widgets/template) widget shown here fills the named slots of a fixed pattern, and it introduces the three parts that appear whenever you type.
 
 <p align="center">
-  <ThemedImage sources={{light: useBaseUrl('/anatomy-text-light-static.svg'), dark: useBaseUrl('/anatomy-text-dark-static.svg')}} alt="An open template editor with its parts named" width="100%" />
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-text-light-static.svg'), dark: useBaseUrl('/anatomy-text-dark-static.svg')}} alt="A Template field in edit mode with its parts named" width="100%" />
 </p>
 
 - **16** caret - the insertion point within the **draft** (17). It shows where the next keystroke lands, and in the [Template](/widgets/template) widget it's what moves between slots as you fill them.
@@ -88,7 +87,7 @@ The **draft** (17) and the **value** (4) are the same answer at two moments: wha
 
 The **state** (18) is easy to confuse with the **description** (5) below it, so it's worth being precise. The first tracks the widget and changes while you work - here it names the slot you're filling - while the second belongs to the field and never moves.
 
-## Browsing a list
+## Edit mode: browsing a list
 
 The [FilePicker](/widgets/filepicker) widget draws the same skeleton over a directory listing, and adds a **caption** (15) above it.
 
@@ -132,40 +131,41 @@ A **constraint** (13) describes the field; an **error** (19) describes your valu
 | # | Part | What it is |
 |---|---|---|
 | 1 | breadcrumb | The trail of panel titles above the content. |
-| 2 | marker | The glyph showing which row has focus. |
+| 2 | field selector | The glyph showing which field has focus. |
 | 3 | label | The field's name. |
 | 4 | value | The settled answer, shown on a closed row. |
-| 5 | description | The field's explanatory text. |
-| 6 | instruction | The field's short how-to line, below the **description** (5). |
+| 5 | description | The field's explanatory text, under its row. |
+| 6 | help | The field's long-form text, shown in a popup on request. |
 | 7 | overflow | The glyph showing content continues above or below. |
 | 8 | legend | The keys available right now, in the footer. |
-| 9 | selector | The per-entry chosen-state glyph. |
+| 9 | entry marker | The per-entry chosen-state glyph. |
 | 10 | entry | One line of a list the widget offers. |
-| 11 | entry marker | The glyph showing which **entry** (10) is highlighted. |
+| 11 | entry selector | The glyph showing which **entry** (10) has focus. |
 | 12 | entry note | A qualifier on an **entry** (10), such as why it is unavailable. |
 | 13 | constraint | What the field expects, shown before anything is rejected. |
-| 14 | entry detail | The highlighted **entry** (10)'s own explanatory text. |
+| 14 | entry detail | The focused **entry** (10)'s own explanatory text. |
 | 15 | caption | What a browsable list is showing - a directory, in a file picker. |
 | 16 | caret | The insertion point within the **draft** (17). |
 | 17 | draft | The text you are typing, before it is accepted. |
 | 18 | state | What the widget is doing right now. |
 | 19 | error | Why the value was rejected. Replaces the **constraint** (13). |
+| 20 | separator | The glyph between **breadcrumb** (1) segments. |
 
 ## What the code calls these today
 
 | # | Part | In the source today |
 |---|---|---|
 | 1 | breadcrumb | `ThemeInterface::breadcrumb()` |
-| 2 | marker | `ThemeInterface::marker()`, shared with the **entry marker** (11) |
+| 2 | field selector | `ThemeInterface::marker()`, shared with the **entry selector** (11) |
 | 3 | label | `ThemeInterface::label()`, `Field::$label` |
 | 4 | value | `ThemeInterface::value()` |
 | 5 | description | `ThemeInterface::description()`, shared with the **entry detail** (14) |
-| 6 | instruction | `Field::$hint`, `DefaultTheme::renderFieldHint()`, `ThemeInterface::hint()` |
+| 6 | help | `Field::$hint`, drawn inline by `DefaultTheme::renderFieldHint()` - to become `Field::$help` in a popup |
 | 7 | overflow | `ThemeInterface::indicator()`, `indicatorUp()`, `indicatorDown()` |
 | 8 | legend | `WidgetInterface::hints()`, `Hint`, `ThemeInterface::keysHint()` - to be renamed to `legend()` |
-| 9 | selector | `ThemeInterface::check()`, `radio()` - no shared name |
+| 9 | entry marker | `ThemeInterface::check()`, `radio()` - no shared name |
 | 10 | entry | unnamed |
-| 11 | entry marker | `ThemeInterface::marker()`, shared with the **marker** (2) |
+| 11 | entry selector | `ThemeInterface::marker()`, shared with the **field selector** (2) |
 | 12 | entry note | `Option::$disabledReason`, concatenated in `OptionsCapableTrait` |
 | 13 | constraint | `SelectionBoundedTrait::selectionHint()`, `FilePickerWidget::constraintHint()`, `NumberBounds::describe()`, drawn with `ThemeInterface::renderGuidance()` |
 | 14 | entry detail | `Option::$description` through `ThemeInterface::description()` |
@@ -174,35 +174,38 @@ A **constraint** (13) describes the field; an **error** (19) describes your valu
 | 17 | draft | `$buffer`, per widget - not in any shared API |
 | 18 | state | `ThemeInterface::footer()`, used away from the footer |
 | 19 | error | `ThemeInterface::error()`, `WidgetInterface::error()` |
+| 20 | separator | `ThemeInterface::separator()` |
 
 ## Where the names disagree
 
-**`hints()` returns the legend, not a hint.** `WidgetInterface::hints()` has nothing to do with `Field::$hint` or with `ThemeInterface::hint()` - it returns the keys of the **legend** (8). It becomes `WidgetInterface::legend()`, which leaves `hint` naming one thing in the field and one thing in the theme, and those two agree with each other on purpose.
+**An atom is named after the part it draws.** `Field::$label` and `ThemeInterface::label()` line up because a theme's vocabulary should be the vocabulary a reader uses for what's on screen. Where the code and this page disagree on a name, the code is what moves.
 
-**An atom is named after the part it draws.** `Field::$hint` and `ThemeInterface::hint()` line up because a theme's vocabulary should be the same vocabulary a reader uses for what's on screen. Where the code and this page disagree on a name, the code is what moves.
+**`hints()` returns the legend, not a hint.** `WidgetInterface::hints()` has nothing to do with `Field::$hint` or with `ThemeInterface::hint()` - it returns the keys of the **legend** (8). It becomes `WidgetInterface::legend()`.
 
-**`description` names two parts.** The **description** (5) and the **entry detail** (14) both render through `ThemeInterface::description()`, so restyling one restyles the other. The **constraint** (13) used to make a third, drawn identically and sitting right beside the **entry detail** (14); it now goes through `renderGuidance()`, the guidance voice it shares with the **instruction** (6).
+**`hint` will name one thing.** `Field::$hint` becomes `Field::$help`, since its text is the **help** (6) and belongs in the popup rather than on a line under the row. That leaves `ThemeInterface::hint()` drawing exactly one part, the **constraint** (13), so the atom takes that name too.
+
+**`description` names two parts.** The **description** (5) and the **entry detail** (14) both render through `ThemeInterface::description()`, so restyling one restyles the other.
 
 **The constraint has two names.** `SelectionBoundedTrait::selectionHint()` and `FilePickerWidget::constraintHint()` both draw the **constraint** (13), with the same body and two different names.
 
-**`marker` covers two levels.** The **marker** (2) and the **entry marker** (11) are both `ThemeInterface::marker()`, so a theme can't restyle one without the other.
+**`marker` covers two levels.** The **field selector** (2) and the **entry selector** (11) are both `ThemeInterface::marker()`, so a theme can't restyle one without the other - and neither is a marker any more.
 
 **`error` names four things.** `ThemeInterface::error()` is a style atom, `WidgetInterface::error()` is widget state, `Field::templateError()` and friends produce a message, and `Engine::optionsError()` builds an exception.
 
-**`footer` is drawn outside the footer.** The **state** (18) uses `ThemeInterface::footer()`, which otherwise styles the **key legend** (8) at the bottom of the frame.
+**`footer` is drawn outside the footer.** The **state** (18) uses `ThemeInterface::footer()`, which otherwise styles the **legend** (8) at the bottom of the frame.
 
-**Two parts have no name at all.** The **entry** (10) and the **selector** (9) are drawn inline, with no atom behind them.
+**Two parts have no name at all.** The **entry** (10) and the **entry marker** (9) are drawn inline, with no atom behind them.
 
 ## Open questions
 
 Working notes, kept here only until each one is settled. The vocabulary above is decided; these are the edges still being argued.
 
-**Should the entry detail be tied to the highlighted entry by color?** The **entry detail** (14) is the one part rewritten every time the **entry marker** (11) moves, and today it borrows `description()` - the same atom as the **description** (5), which never moves. Giving it its own atom in the marker's accent would say "this belongs to the row you're pointing at". The catch: green is already the **value** (4), and the marker's cyan is also the border, so the accent isn't free.
+**Should the entry detail be tied to the focused entry by color?** The **entry detail** (14) is the one part rewritten every time the **entry selector** (11) moves, and today it borrows `description()` - the same atom as the **description** (5), which never moves. Giving it its own atom in the selector's accent would say "this belongs to the row you're pointing at". The catch: green is already the **value** (4), and the selector's cyan is also the border, so the accent isn't free.
 
-**Should the marker and the entry marker be separate atoms?** The **marker** (2) and the **entry marker** (11) are one method today, so a theme can't restyle the row cursor without also restyling the one inside every list. They're deliberately named as a parent/child pair, which argues they should be stylable as one.
+**Should the field selector and the entry selector be separate atoms?** They're one method today, so a theme can't restyle the field cursor without also restyling the one inside every list. They're deliberately named as a parent/child pair, which argues they should be stylable as one.
 
-**Should `hint()` be renamed to `guidance()`?** The atom draws the guidance voice - the **instruction** (6) and the **constraint** (13) - but `hint` also names `Field::$hint` and `WidgetInterface::hints()`, which are different things entirely. Renaming the atom removes one of the three collisions outright.
+**Should the entry and the entry marker get atoms of their own?** The **entry** (10) and the **entry marker** (9) are drawn inline today, so neither can be restyled without overriding the whole list renderer.
 
-**Should the selector and the entry get atoms of their own?** The **selector** (9) and the **entry** (10) are drawn inline today, so neither can be restyled without overriding the whole list renderer.
+**Should the state stop borrowing `footer()`?** The **state** (18) is drawn with the atom that styles the **legend** (8) at the bottom of the frame, which is a different part in a different place.
 
-**Should the state stop borrowing `footer()`?** The **state** (18) is drawn with the atom that styles the **key legend** (8) at the bottom of the frame, which is a different part in a different place.
+**What replaces the keyboard overlay?** <kbd>?</kbd> currently opens a list of every widget type's keys, which is being dropped in favour of the **help** (6) popup - the **legend** (8) already shows the keys that apply right now, and rewrites itself as focus moves. Worth confirming nothing is lost with it.

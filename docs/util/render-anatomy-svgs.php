@@ -40,7 +40,7 @@ const PARTS = [
   'label',
   'value',
   'description',
-  'instruction',
+  'help',
   'overflow',
   'legend',
   'entry marker',
@@ -151,21 +151,6 @@ function anatomySpecs(string $tree): array {
         ['col' => 12, 'row' => 7, 'label' => 'entry detail'],
         ['col' => 12, 'row' => 8, 'label' => 'constraint'],
         ['col' => 6, 'row' => 9, 'label' => 'description'],
-      ],
-    ],
-    // A field's supporting lines draw only on a closed row, so they get a
-    // frame of their own rather than crowding the one that names the parts
-    // every row repeats.
-    'lines' => [
-      'form' => Form::create('Orchard order')->panel('main', 'Delivery', function (PanelBuilder $p): void {
-        $p->select('basket', 'Basket contents')->description('Pick the produce for this delivery.')->hint('Space toggles, Enter confirms.')->multiple()->default(['apple'])->options(['apple' => 'Apple', 'carrot' => 'Carrot']);
-        $p->number('weight', 'Basket weight')->description('Weighed at the packing bench.')->default(1200)->min(200)->max(9000);
-      }),
-      'keys' => [$enter],
-      'rows' => 16,
-      'callouts' => [
-        ['label' => 'description', 'side' => 'left', 'cells' => [[5, 6], [9, 6]]],
-        ['col' => 35, 'row' => 6, 'label' => 'instruction'],
       ],
     ],
     'filepicker' => [
