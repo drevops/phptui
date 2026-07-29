@@ -635,7 +635,10 @@ class DefaultTheme implements ThemeInterface {
    * {@inheritdoc}
    */
   public function description(string $text, bool $selected = FALSE): string {
-    return $this->paint($this->emphasize(Sgr::of(Sgr::Grey), $selected), $this->linkify($text));
+    // Secondary text stays secondary on the selected row too: bolding it puts
+    // a field's explanation at the same weight as the answer it explains, and
+    // the row already reads as selected from its marker and its value.
+    return $this->paint(Sgr::of(Sgr::Grey), $this->linkify($text));
   }
 
   /**
@@ -644,10 +647,22 @@ class DefaultTheme implements ThemeInterface {
   public function hint(string $text, bool $selected = FALSE): string {
     // Guidance on how to answer is never louder than the question itself, but
     // still reads as its own voice - and a constraint sits directly beneath an
-    // option's own description, so the two must not share a hue. The italic
-    // reinforces it where the surface honours it, but cannot carry the
-    // distinction alone: renderers and plain terminals drop it.
+    // option's own description, so the two must not be mistaken for each other
+    // on any surface. Colour carries it where there is colour, italic
+    // reinforces it where the surface honours it, and where neither survives
+    // the voice falls back to a mark, which nothing can strip.
     return $this->paint($this->emphasize(Sgr::of(Sgr::Italic, Sgr::Steel), $selected), $this->linkify($text));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderGuidance(string $text, bool $selected = FALSE): string {
+    // Strip the surface back far enough and neither the hue nor the italic
+    // survives, leaving guidance indistinguishable from the description beside
+    // it; a mark is the one cue nothing can take away, so it appears exactly
+    // when the others are gone.
+    return $this->hint($this->hasColor() ? $text : ($this->hasUnicode() ? '› ' : '> ') . $text, $selected);
   }
 
   /**
@@ -1960,7 +1975,11 @@ class DefaultTheme implements ThemeInterface {
     // Fold CRLF and lone-CR endings the way the markup parser does for a
     // description: a surviving carriage return would send the cursor back to
     // column 0 mid-frame and overwrite the row it sits on.
-    return array_map(fn(string $line): string => '    ' . $this->hint($line, $selected), explode("\n", $this->normalizeLines($hint)));
+    $lines = explode("\n", $this->normalizeLines($hint));
+
+    // Only the opening line is guidance rendered as such: a mark repeated down
+    // every wrapped line would read as a list rather than as one instruction.
+    return array_map(fn(string $line, int $index): string => '    ' . ($index === 0 ? $this->renderGuidance($line, $selected) : $this->hint($line, $selected)), $lines, array_keys($lines));
   }
 
   /**

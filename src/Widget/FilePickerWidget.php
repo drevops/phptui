@@ -271,7 +271,7 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
 
     // The guidance voice, not the description's: this line states what the
     // field expects, and shares its row with the error that replaces it.
-    return $theme->hint($describe);
+    return $theme->renderGuidance($describe);
   }
 
   /**

@@ -188,6 +188,26 @@ final class BuiltinThemesTest extends TestCase {
   }
 
   /**
+   * Guidance stays apart from a description with the colour switched off.
+   *
+   * Strip the surface back and neither hue nor italic survives, so the voice
+   * has to fall back on something a plain terminal still carries.
+   */
+  #[DataProvider('dataProviderGuidanceSurvivesColourOff')]
+  public function testGuidanceSurvivesColourOff(string $name, bool $unicode): void {
+    $theme = ThemeManager::create($name, 76, ['color' => FALSE, 'unicode' => $unicode]);
+
+    $this->assertNotSame($theme->description('X'), $theme->renderGuidance('X'));
+  }
+
+  public static function dataProviderGuidanceSurvivesColourOff(): \Iterator {
+    foreach (['default', 'midnight', 'frost', 'ember', 'mono', 'dos'] as $name) {
+      yield $name . ' unicode' => [$name, TRUE];
+      yield $name . ' ascii' => [$name, FALSE];
+    }
+  }
+
+  /**
    * A theme's description atom reaches the body text, not only its own rows.
    */
   public function testDosDescriptionBodyCarriesTheThemeAtom(): void {

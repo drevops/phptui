@@ -125,6 +125,7 @@ function anatomySpecs(string $tree): array {
       'callouts' => [
         ['col' => 2, 'row' => 1, 'label' => 'breadcrumb'],
         ['col' => 2, 'row' => 4, 'label' => 'marker'],
+        ['col' => 6, 'row' => 5, 'label' => 'description'],
         ['label' => 'label', 'side' => 'left', 'cells' => [[7, 4], [10, 4], [12, 4]]],
         ['label' => 'value', 'side' => 'right', 'cells' => [[4, 25], [7, 22], [10, 27], [12, 23]]],
         ['col' => 4, 'row' => 15, 'label' => 'overflow'],
@@ -268,11 +269,12 @@ function renderAnatomy(string $name, array $spec, string $assets_dir, string $ut
 
   $plain = array_map(static fn(string $line): string => Ansi::strip($line), $lines);
 
-  // Lime reads as annotation rather than as output: the palettes already spend
-  // teal on the frame, green on values and red on errors, so a callout in any
-  // of those would look like something the widget had drawn.
+  // A callout must read as annotation rather than as output, so it takes a hue
+  // the palettes do not spend on the frame, on values or on errors - and one
+  // that stays legible against its own surface, which is why the two modes do
+  // not share it.
   annotate($dark_file, $spec['callouts'], $plain, $width, 'rgb(163,230,53)');
-  annotate($light_file, $spec['callouts'], $plain, $width, 'rgb(77,124,15)');
+  annotate($light_file, $spec['callouts'], $plain, $width, 'rgb(124,45,190)');
 }
 
 /**
@@ -367,7 +369,9 @@ function bracketColumn(array $lines, array $cells, string $side, int $columns): 
   $cols = array_column($cells, 1);
   $first = min($rows);
   $last = max($rows);
-  $range = $side === 'left' ? range(min($cols) - 1, 0) : range(max($cols) + 1, $columns - 1);
+  // The frame's own border occupies the outermost column, and a bracket laid
+  // against it reads as part of the frame rather than as an annotation of it.
+  $range = $side === 'left' ? range(min($cols) - 1, 2) : range(max($cols) + 1, $columns - 3);
   $clear = [];
 
   foreach ($range as $offset => $column) {

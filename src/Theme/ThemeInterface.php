@@ -72,6 +72,17 @@ interface ThemeInterface {
   public function hint(string $text, bool $selected = FALSE): string;
 
   /**
+   * One line of guidance, in the voice of {@see hint()}.
+   *
+   * The renderer every guidance line goes through, so what distinguishes an
+   * expectation from the prose beside it is decided once. It carries the
+   * fallback the atom cannot: with colour switched off there is no hue and no
+   * dependable italic, so the line takes a leading mark instead - and a theme
+   * that draws its own may open the line however its surface allows.
+   */
+  public function renderGuidance(string $text, bool $selected = FALSE): string;
+
+  /**
    * A provenance badge (e.g. "edited"); bold when its row is selected.
    */
   public function badge(string $text, bool $selected = FALSE): string;

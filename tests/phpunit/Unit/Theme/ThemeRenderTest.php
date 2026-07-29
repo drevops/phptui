@@ -154,7 +154,7 @@ final class ThemeRenderTest extends TestCase {
     // Guidance stacks under the row in declaration order: what is being asked,
     // then how to answer it.
     $this->assertSame('    The grower of record', $stripped[1]);
-    $this->assertSame('    Type a few letters to filter.', $stripped[2]);
+    $this->assertSame('    › Type a few letters to filter.', $stripped[2]);
   }
 
   public function testBodyRendersHintWithoutDescription(): void {
@@ -164,7 +164,7 @@ final class ThemeRenderTest extends TestCase {
     [$lines] = $this->plainTheme()->renderBody($panel, new Answers(), 0);
     $stripped = array_map(Ansi::strip(...), $lines);
 
-    $this->assertSame('    Type a few letters to filter.', $stripped[1]);
+    $this->assertSame('    › Type a few letters to filter.', $stripped[1]);
     $this->assertCount(2, $stripped);
   }
 
@@ -176,7 +176,7 @@ final class ThemeRenderTest extends TestCase {
     $stripped = array_map(Ansi::strip(...), $lines);
 
     $this->assertStringContainsString('Name  Acme', $stripped[0]);
-    $this->assertSame('    Type a few letters to filter.', $stripped[1]);
+    $this->assertSame('    › Type a few letters to filter.', $stripped[1]);
   }
 
   public function testBodyDropsHintWhenCompact(): void {
@@ -208,7 +208,9 @@ final class ThemeRenderTest extends TestCase {
     // carriage return survives into a row to reposition the cursor.
     $lines = $theme->renderFieldHint("Pick a date\r\nin the season\rthis year", FALSE);
 
-    $this->assertSame(['    Pick a date', '    in the season', '    this year'], array_map(Ansi::strip(...), $lines));
+    // Only the opening line is marked; a mark down every line would read as a
+    // list rather than as one instruction.
+    $this->assertSame(['    › Pick a date', '    in the season', '    this year'], array_map(Ansi::strip(...), $lines));
 
     foreach ($lines as $line) {
       $this->assertStringNotContainsString("\r", $line);
@@ -220,7 +222,7 @@ final class ThemeRenderTest extends TestCase {
 
     // A hint is one short instruction, so it carries no formatting of its own -
     // unlike the description above it, which expands its markdown.
-    $this->assertSame('    Use a **short** name', Ansi::strip($theme->renderFieldHint('Use a **short** name', FALSE)[0]));
+    $this->assertSame('    › Use a **short** name', Ansi::strip($theme->renderFieldHint('Use a **short** name', FALSE)[0]));
   }
 
   public function testPanelSummaryCollapsesMultiLineValue(): void {
@@ -552,9 +554,12 @@ final class ThemeRenderTest extends TestCase {
     $this->assertStringContainsString("\033[1", $theme->renderFieldLine($field, $answers, TRUE)[0]);
     $this->assertStringNotContainsString("\033[1", $theme->renderFieldLine($field, $answers, FALSE)[0]);
 
-    // The selected item's description and summary rows are bold too.
-    $this->assertStringContainsString("\033[1", $theme->renderDescriptionLine('help', TRUE));
-    $this->assertStringNotContainsString("\033[1", $theme->renderDescriptionLine('help', FALSE));
+    // A description stays secondary on the selected row: bolding it would put a
+    // field's explanation at the same weight as the answer it explains.
+    $this->assertStringNotContainsString("\033[1", $theme->renderDescriptionLine('help', TRUE));
+    $this->assertSame($theme->renderDescriptionLine('help', FALSE), $theme->renderDescriptionLine('help', TRUE));
+
+    // The summary row still follows the selection.
     $this->assertStringContainsString("\033[1", $theme->renderSummaryLine('sum', TRUE));
   }
 

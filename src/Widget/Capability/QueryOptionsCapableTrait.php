@@ -189,7 +189,7 @@ trait QueryOptionsCapableTrait {
     if (Strings::length($this->query()) < $this->queryMinLength) {
       // The guidance voice, not the description's: this line shares its row
       // with the error above, and states what the field expects.
-      return $theme->hint(Translator::formatPlural($this->queryMinLength, 'Type 1 character to search.', 'Type @count characters to search.'));
+      return $theme->renderGuidance(Translator::formatPlural($this->queryMinLength, 'Type 1 character to search.', 'Type @count characters to search.'));
     }
 
     return NULL;
