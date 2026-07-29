@@ -140,8 +140,7 @@ final class PanelControllerTest extends TestCase {
 
   public function testInlineEditExpandsWidgetInsideThePanel(): void {
     $controller = $this->controller();
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
     $this->assertTrue($controller->isEditing());
 
     $frame = Ansi::strip($controller->frame(12));
@@ -166,8 +165,7 @@ final class PanelControllerTest extends TestCase {
       });
     $controller = new PanelController($builder->build(), $this->plainTheme(), ['env' => 'dev', 'note' => 'n']);
 
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
 
     $frame = Ansi::strip($controller->frame(12));
 
@@ -186,8 +184,7 @@ final class PanelControllerTest extends TestCase {
       });
     $controller = new PanelController($builder->build(), new DefaultTheme(50, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Normal]), ['cdn' => TRUE]);
 
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
 
     // The field's help text stays visible while its editor is open in the row.
     $this->assertStringContainsString('Cache assets at the edge.', Ansi::strip($controller->frame(12)));
@@ -202,8 +199,7 @@ final class PanelControllerTest extends TestCase {
       });
     $controller = new PanelController($builder->build(), $this->plainTheme(), ['name' => 'Acme', 'other' => 'x']);
 
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
     $this->assertTrue($controller->isEditing());
 
     $frame = Ansi::strip($controller->frame(12));
@@ -247,8 +243,7 @@ final class PanelControllerTest extends TestCase {
 
   public function testEditFieldReturnsWithValue(): void {
     $controller = $this->controller();
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
     $this->assertTrue($controller->isEditing());
 
     $controller->handle(Key::char('!'));
@@ -261,8 +256,7 @@ final class PanelControllerTest extends TestCase {
 
   public function testEditCancelKeepsValue(): void {
     $controller = $this->controller();
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
     $this->assertTrue($controller->isEditing());
 
     $controller->handle(Key::named(KeyName::Escape));
@@ -324,8 +318,7 @@ final class PanelControllerTest extends TestCase {
 
   public function testEditingFrameShowsWidget(): void {
     $controller = $this->controller();
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
 
     $frame = $controller->frame(12);
 
@@ -521,8 +514,7 @@ final class PanelControllerTest extends TestCase {
     $this->assertStringNotContainsString('quit', Ansi::strip($controller->frame(12)));
 
     // And so is the editor's hint line (drill into the panel, then the field).
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
     $this->assertTrue($controller->isEditing());
     $this->assertStringNotContainsString('accept', Ansi::strip($controller->frame(12)));
   }
@@ -659,8 +651,7 @@ final class PanelControllerTest extends TestCase {
   public function testTextareaExternalEditCommitsCapturedValue(): void {
     $controller = $this->textareaController($this->fixedEditor('FROM EDITOR'));
 
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
     $this->assertTrue($controller->isEditing());
 
     $controller->handle(Key::char("\x05"));
@@ -673,8 +664,7 @@ final class PanelControllerTest extends TestCase {
   public function testTextareaExternalEditAbortKeepsEditing(): void {
     $controller = $this->textareaController($this->fixedEditor(NULL));
 
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
     $controller->handle(Key::char("\x05"));
 
     // A NULL capture (aborted edit) leaves the field open, value intact.
@@ -686,8 +676,7 @@ final class PanelControllerTest extends TestCase {
   public function testTextareaEditorHintFollowsAvailability(bool $available, bool $shown): void {
     $controller = $this->textareaController($available ? $this->fixedEditor(NULL) : $this->unavailableEditor());
 
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
 
     $frame = Ansi::strip($controller->frame(12));
 
@@ -708,8 +697,7 @@ final class PanelControllerTest extends TestCase {
   public function testTextareaHandoffInertWithoutAnEditor(): void {
     $controller = $this->textareaController($this->unavailableEditor());
 
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
 
     // With no editor available the trigger is inert - editing continues.
     $controller->handle(Key::char("\x05"));
@@ -890,8 +878,7 @@ final class PanelControllerTest extends TestCase {
     $controller = $this->modalController();
 
     $controller->handle(Key::named(KeyName::Down));
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
     $this->assertTrue($controller->isEditing());
 
     // Type a character so the live editor value differs from the stored one -
@@ -1302,8 +1289,7 @@ final class PanelControllerTest extends TestCase {
       ->build();
 
     $controller = new PanelController($form, $this->plainTheme(), values: ['name' => '']);
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
     $this->assertTrue($controller->isEditing());
 
     // An invalid value is rejected: the editor stays open showing the error.
@@ -1330,8 +1316,7 @@ final class PanelControllerTest extends TestCase {
 
     // Drill into the panel, fill the field, and come back out.
     $controller->handle(Key::named(KeyName::Up));
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
     $this->assertTrue($controller->isEditing());
     $controller->handle(Key::char('P'));
     $controller->handle(Key::named(KeyName::Enter));
@@ -1457,8 +1442,7 @@ final class PanelControllerTest extends TestCase {
       ->build();
 
     $controller = new PanelController($form, $this->plainTheme(), values: ['machine_name' => 'Seed'], handlers: new HandlerRegistry(['DrevOps\Tui\Tests\Fixtures\Handler']));
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Enter));
+    $this->drillAndEdit($controller);
     $controller->handle(Key::char('X'));
     $controller->handle(Key::named(KeyName::Enter));
 
@@ -1595,6 +1579,17 @@ final class PanelControllerTest extends TestCase {
       ->build();
 
     return new PanelController($form, $this->plainTheme(), ['name' => 'Red Apple'], ['slug' => Provenance::Derived]);
+  }
+
+  /**
+   * Enter the panel under the cursor, then open the editor on its field.
+   *
+   * @param \DrevOps\Tui\Render\PanelController $controller
+   *   The controller to drive.
+   */
+  protected function drillAndEdit(PanelController $controller): void {
+    $controller->handle(Key::named(KeyName::Enter));
+    $controller->handle(Key::named(KeyName::Enter));
   }
 
   protected function controller(): PanelController {
