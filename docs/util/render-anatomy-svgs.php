@@ -121,14 +121,14 @@ function anatomySpecs(string $tree): array {
         $p->text('notes', 'Notes')->default('Leave at the gate');
       }),
       'keys' => [$enter],
-      'rows' => 18,
+      'rows' => 21,
       'callouts' => [
         ['col' => 2, 'row' => 1, 'label' => 'breadcrumb'],
         ['col' => 2, 'row' => 4, 'label' => 'marker'],
-        ['label' => 'label', 'side' => 'left', 'cells' => [[4, 4], [7, 4], [10, 4]]],
-        ['label' => 'value', 'side' => 'right', 'cells' => [[4, 25], [7, 22], [10, 27]]],
-        ['col' => 4, 'row' => 12, 'label' => 'overflow'],
-        ['col' => 2, 'row' => 15, 'label' => 'key legend'],
+        ['label' => 'label', 'side' => 'left', 'cells' => [[7, 4], [10, 4], [12, 4]]],
+        ['label' => 'value', 'side' => 'right', 'cells' => [[4, 25], [7, 22], [10, 27], [12, 23]]],
+        ['col' => 4, 'row' => 15, 'label' => 'overflow'],
+        ['col' => 2, 'row' => 18, 'label' => 'key legend'],
       ],
     ],
     'editor' => [
@@ -368,8 +368,9 @@ function bracketColumn(array $lines, array $cells, string $side, int $columns): 
   $first = min($rows);
   $last = max($rows);
   $range = $side === 'left' ? range(min($cols) - 1, 0) : range(max($cols) + 1, $columns - 1);
+  $clear = [];
 
-  foreach ($range as $column) {
+  foreach ($range as $offset => $column) {
     if (!columnClear($lines, $column, $first, $last)) {
       continue;
     }
@@ -383,10 +384,17 @@ function bracketColumn(array $lines, array $cells, string $side, int $columns): 
       }
     }
 
-    return $column;
+    // Standing the bracket off by a few columns where the room exists keeps
+    // the arrowheads clear of the glyphs they point at; hard against the text
+    // they read as part of it.
+    $clear[] = $column;
+
+    if ($offset >= 3) {
+      break;
+    }
   }
 
-  return NULL;
+  return $clear === [] ? NULL : end($clear);
 }
 
 /**

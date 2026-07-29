@@ -21,7 +21,7 @@ The frames are real captured output. The vocabulary is the agreed target, and th
 
 ## The row
 
-A panel stacks its fields as rows. Three fields of a delivery form are visible below, with more continuing past the bottom edge.
+A panel stacks its fields as rows. Five fields of a delivery form are visible below, with more continuing past the bottom edge.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/anatomy-row-light-static.svg'), dark: useBaseUrl('/anatomy-row-dark-static.svg')}} alt="Three rows of a form with their parts named" width="100%" />
@@ -34,7 +34,7 @@ A panel stacks its fields as rows. Three fields of a delivery form are visible b
 - **7** overflow - content continues above or below.
 - **8** key legend - the keys available right now.
 
-**One number, several arrows.** The **label** (3) and the **value** (4) each carry three arrows, because every row has one of each - they are parts of a row, not of a particular field. A part that occurs several times keeps one number; three numbers would read as three different parts.
+**One number, several arrows.** The **label** (3) and the **value** (4) each carry an arrow per row, because every row has one of each - they are parts of a row, not of a particular field. A part that occurs several times keeps one number; a number per occurrence would read as several different parts.
 
 **The marker is the exception.** It carries a single arrow, because only one row holds focus at a time. That row is also drawn differently - `Basket contents` has a brighter label and value than the two rows below it. The marker and that emphasis are the same signal in two forms, and both come from the theme: `marker()` supplies the glyph, and every part named on this page is drawn by a theme method you can override.
 
