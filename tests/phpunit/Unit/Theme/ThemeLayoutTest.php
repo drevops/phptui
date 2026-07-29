@@ -219,6 +219,31 @@ final class ThemeLayoutTest extends TestCase {
     $this->assertSame(48, $ascii);
   }
 
+  public function testMeasureCountsColumnsNotEscapeSequences(): void {
+    $grid = Form::create('T')
+      ->buttons(FALSE)
+      ->layout(2)
+      ->panel('a', 'A', fn(PanelBuilder $p): FieldBuilder => $p->rating('grade', 'A'))
+      ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('two', 'B'))
+      ->build();
+    $linear = Form::create('T')
+      ->buttons(FALSE)
+      ->panel('a', 'A', fn(PanelBuilder $p): FieldBuilder => $p->rating('grade', 'A'))
+      ->build();
+    $answers = new Answers(['grade' => 3], []);
+    $options = ['border' => Border::None, 'spacing' => Spacing::Compact];
+
+    // A rating renders painted, so measuring its raw string would count the
+    // escape sequences as columns and oversize the frame. Colour is invisible,
+    // so it must not move the measurement either in a grid cell or in a row.
+    foreach ([$grid, $linear] as $form) {
+      $plain = (new DefaultTheme(40, $options + ['color' => FALSE]))->measureContentWidth($form, $answers);
+      $painted = (new DefaultTheme(40, $options + ['color' => TRUE]))->measureContentWidth($form, $answers);
+
+      $this->assertSame($plain, $painted);
+    }
+  }
+
   public function testLayoutPreviewsNoteAsItsTitle(): void {
     $theme = new DefaultTheme(60, ['color' => FALSE, 'unicode' => FALSE]);
     $panel = new Panel('p', 'P', '', [], [

@@ -2198,7 +2198,7 @@ class DefaultTheme implements ThemeInterface {
         continue;
       }
 
-      $width = max($width, $indent + 4 + Markup::width(Translator::t($field->label), FALSE, $this->color) + Strings::length($this->columnValuePreview($field, $answers)));
+      $width = max($width, $indent + 4 + Markup::width(Translator::t($field->label), FALSE, $this->color) + Ansi::width($this->columnValuePreview($field, $answers)));
     }
 
     foreach ($panel->panels as $subpanel) {
@@ -2227,7 +2227,7 @@ class DefaultTheme implements ThemeInterface {
     $width = 0;
 
     foreach (explode("\n", $this->normalizeLines($this->renderFieldValue($field, $answers->value($field->id)))) as $line) {
-      $width = max($width, Strings::length($line));
+      $width = max($width, Ansi::width($line));
     }
 
     return $width;
