@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Widget;
 
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\Scope;
+use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Utils\Strings;

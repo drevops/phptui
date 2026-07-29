@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Model;
 
-use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\DateBounds;
+use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\Weekday;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;

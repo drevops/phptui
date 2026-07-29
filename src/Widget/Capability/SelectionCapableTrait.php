@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Widget\Capability;
 
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\Scope;
+use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**

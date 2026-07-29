@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
 use DrevOps\Tui\Answers\Answers;
-use DrevOps\Tui\Model\Field;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Panel;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\KeyMapManager;
+use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\Panel;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\Viewport;
 use DrevOps\Tui\Tests\Fixtures\Theme\AccentOptionTheme;

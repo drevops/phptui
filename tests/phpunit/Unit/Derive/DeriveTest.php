@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Derive;
 
-use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Derive\Derive;
+use DrevOps\Tui\Model\FormException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Builder;
 
 use DrevOps\Tui\Condition\ConditionInterface;
-use DrevOps\Tui\Model\FormException;
+use DrevOps\Tui\Derive\Derive;
+use DrevOps\Tui\Discovery\DiscoverInterface;
 use DrevOps\Tui\Model\DateBounds;
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FilePickerConstraints;
 use DrevOps\Tui\Model\FilePickerMode;
+use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\OptionKind;
@@ -19,8 +21,6 @@ use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Model\TableSpec;
 use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Model\Weekday;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Discovery\DiscoverInterface;
 
 /**
  * A fluent builder for a single Field.

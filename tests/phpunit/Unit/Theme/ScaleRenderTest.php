@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\ThemeManager;

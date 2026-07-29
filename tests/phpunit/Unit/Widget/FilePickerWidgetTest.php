@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Widget;
 
+use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\KeyMapManager;
+use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FilePickerConstraints;
 use DrevOps\Tui\Model\FilePickerMode;
 use DrevOps\Tui\Model\SelectionBounds;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Testing\ArrayKeyStream;
 use DrevOps\Tui\Testing\WidgetRunner;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Widget\AbstractWidget;
-use DrevOps\Tui\Widget\FilePickerWidget;
 use DrevOps\Tui\Widget\Capability\PagingCapableTrait;
 use DrevOps\Tui\Widget\Capability\SelectionBoundedTrait;
+use DrevOps\Tui\Widget\FilePickerWidget;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;

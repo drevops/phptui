@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Playground\Themes;
 
 use DrevOps\Tui\Answers\Answers;
-use DrevOps\Tui\Model\Field;
-use DrevOps\Tui\Model\Panel;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\ScopedKeyMap;
+use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Model\Panel;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\Navigator;
 use DrevOps\Tui\Theme\DefaultTheme;
