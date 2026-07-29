@@ -223,7 +223,7 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
    * {@inheritdoc}
    */
   protected function renderBody(ThemeInterface $theme): string {
-    $lines = [$theme->breadcrumb($this->crumb())];
+    $lines = [$theme->caption($this->crumb())];
 
     if ($this->filter !== '') {
       $lines[] = $this->filter . $theme->caret();

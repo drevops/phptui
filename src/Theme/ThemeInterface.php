@@ -72,6 +72,20 @@ interface ThemeInterface {
   public function hint(string $text, bool $selected = FALSE): string;
 
   /**
+   * The line that captions a browsable list, saying what is being shown.
+   *
+   * A file browser captions its entries with the directory they are in;
+   * another browser captions its own with whatever it is looking at. The atom
+   * is named for what the reader sees - a caption over a list - so it does not
+   * bind the theme to any one widget's idea of where it is.
+   *
+   * Related to {@see hint()} and set apart from it by weight rather than hue:
+   * both are the widget speaking about the list rather than listing it, but a
+   * caption states where you are and guidance states what is expected.
+   */
+  public function caption(string $text): string;
+
+  /**
    * One line of guidance, in the voice of {@see hint()}.
    *
    * The renderer every guidance line goes through, so what distinguishes an

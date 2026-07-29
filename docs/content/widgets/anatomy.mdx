@@ -9,22 +9,24 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Anatomy of a widget
 
-Every field draws itself twice. In the panel it is a **row**: one line carrying the answer, with any supporting lines beneath it. Open the row and it becomes an **editor**: the widget takes over the space to the right of the label and draws whatever it needs to collect the answer.
+Every field draws itself twice. In the panel it's a **row**: one line carrying the answer, with any supporting lines beneath it. Open that row and it becomes an **editor**, where the widget takes over the space to the right of the label and draws whatever it needs to collect the answer.
 
-This page names each part and gives it a number. Those names are the vocabulary the rest of the documentation uses, so a bug report can say "the constraint line is wrong" and mean exactly one thing. Every number is fixed across all five diagrams below: part 13 is the constraint wherever it appears.
+This page names each part and gives it a number, so a bug report can say "the constraint line is wrong" and mean exactly one thing. The numbers are fixed across every diagram below: part 13 is the constraint wherever you find it.
+
+The names describe what you see, never how it's built. A file browser's list is captioned with the directory you're in, but the part is a **caption** rather than a "directory line", because the next browser to caption its list won't be showing you a directory. Each one is drawn by a theme method - an [atom](/themes) - that you can override.
 
 :::note
 
-The frames are real captured output. The vocabulary is the agreed target, and the source does not use it consistently yet: see [what the code calls these today](#what-the-code-calls-these-today).
+The frames are real captured output. The vocabulary is the agreed target, and the source doesn't use it consistently yet: see [what the code calls these today](#what-the-code-calls-these-today).
 
 :::
 
 ## The row
 
-A panel stacks its fields as rows. Five fields of a delivery form are visible below, with more continuing past the bottom edge.
+A panel stacks its fields as rows. Five fields of a delivery form are visible here, with more continuing past the bottom edge.
 
 <p align="center">
-  <ThemedImage sources={{light: useBaseUrl('/anatomy-row-light-static.svg'), dark: useBaseUrl('/anatomy-row-dark-static.svg')}} alt="Three rows of a form with their parts named" width="100%" />
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-row-light-static.svg'), dark: useBaseUrl('/anatomy-row-dark-static.svg')}} alt="Five rows of a form with their parts named" width="100%" />
 </p>
 
 - **1** breadcrumb - the trail of panel titles.
@@ -34,13 +36,13 @@ A panel stacks its fields as rows. Five fields of a delivery form are visible be
 - **7** overflow - content continues above or below.
 - **8** key legend - the keys available right now.
 
-**One number, several arrows.** The **label** (3) and the **value** (4) each carry an arrow per row, because every row has one of each - they are parts of a row, not of a particular field. A part that occurs several times keeps one number; a number per occurrence would read as several different parts.
+**One number, several arrows.** The **label** (3) and the **value** (4) each carry an arrow per row, because every row has one of each - they belong to a row, not to a particular field. A part that occurs several times keeps a single number; numbering each occurrence would read as several different parts.
 
-**The marker is the exception.** It carries a single arrow, because only one row holds focus at a time. That row is also drawn differently - `Basket contents` has a brighter label and value than the two rows below it. The marker and that emphasis are the same signal in two forms, and both come from the theme: `marker()` supplies the glyph, and every part named on this page is drawn by a theme method you can override.
+**The marker is the exception.** It gets one arrow, because only one row holds focus at a time. That row is drawn differently too: `Basket contents` has a brighter label and value than the rows below it. The marker and that emphasis are the same signal in two forms, and both come from the theme - `marker()` supplies the glyph.
 
 ## Supporting lines
 
-A field can declare lines that sit beneath its row. They draw only while the row is closed, so they are shown on their own here.
+A field can declare lines that sit beneath its row. They draw only while the row is closed, which is why they get a frame of their own here.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/anatomy-lines-light-static.svg'), dark: useBaseUrl('/anatomy-lines-dark-static.svg')}} alt="Two rows showing a field's description and instruction" width="100%" />
@@ -49,11 +51,11 @@ A field can declare lines that sit beneath its row. They draw only while the row
 - **5** description - the field's explanatory text.
 - **6** instruction - the field's short how-to line.
 
-These belong to the field that declares them, not to the panel. The **description** (5) carries two arrows because both fields declare one; the **instruction** (6) carries a single arrow, because only `Basket contents` declares one and `Basket weight` simply has no second line.
+Both belong to the field that declares them, not to the panel. The **description** (5) carries two arrows because both fields declare one; the **instruction** (6) carries one, because only `Basket contents` declares one and `Basket weight` has no second line at all.
 
 ## The editor
 
-Opening the row hands the region right of the label to the widget. A multiple-choice field with bounds and option detail draws the fullest set of parts.
+Opening a row hands the region right of the label to the widget. A multiple-choice field with bounds and option detail draws the fullest set of parts.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/anatomy-editor-light-static.svg'), dark: useBaseUrl('/anatomy-editor-dark-static.svg')}} alt="An open multiple-choice editor with its parts named" width="100%" />
@@ -63,40 +65,44 @@ Opening the row hands the region right of the label to the widget. A multiple-ch
 - **10** entry - one line of the list the widget offers.
 - **11** entry marker - which entry is highlighted.
 - **12** entry note - a qualifier, such as why an entry is unavailable.
-- **13** constraint - what the field expects, shown before anything is rejected.
+- **13** constraint - what the field expects, before anything is rejected.
 - **14** entry detail - the highlighted entry's own explanatory text.
 
-The pairs are deliberate. A widget's own focus glyph is the **marker** (2) and the one inside its list is the **entry marker** (11); the field's own explanatory line is the **description** (5) and an option's is the **entry detail** (14). Same idea at two levels, so the parent name is never reused for the child.
+The pairs are deliberate. A widget's own focus glyph is the **marker** (2) and the one inside its list is the **entry marker** (11); the field's explanatory line is the **description** (5) and an option's is the **entry detail** (14). Same idea at two levels, so a parent's name is never reused for its child.
 
-## The file picker
-
-The same skeleton over a directory listing, plus the one part unique to it.
-
-<p align="center">
-  <ThemedImage sources={{light: useBaseUrl('/anatomy-filepicker-light-static.svg'), dark: useBaseUrl('/anatomy-filepicker-dark-static.svg')}} alt="An open file picker with its parts named" width="100%" />
-</p>
-
-- **15** location - the directory currently being browsed.
-
-The entries are files and directories rather than options, and they are still **entries** (10): the name describes the line the widget offers, not where its content came from.
+Order matters here too. The **entry detail** (14) sits directly under the list and above the **constraint** (13), because it changes as the highlight moves. A line that follows the cursor belongs against the list it follows; a limit that never moves can wait below it.
 
 ## A text editor
 
-No list, so a buffer and a caret take the place of entries.
+Some widgets offer no list at all. A template editor introduces the three parts that appear when you're typing rather than choosing.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/anatomy-text-light-static.svg'), dark: useBaseUrl('/anatomy-text-dark-static.svg')}} alt="An open template editor with its parts named" width="100%" />
 </p>
 
-- **16** buffer - the in-progress text, before it is accepted.
-- **17** caret - the insertion point within the buffer.
-- **18** activity - what the widget is doing right now.
+- **16** draft - the text you're typing, before it's accepted.
+- **17** caret - the insertion point within the draft.
+- **18** state - what the widget is doing right now.
 
-The **buffer** (16) and the **value** (4) are the same answer at two moments: the buffer is what you are typing, the value is what was accepted.
+The **draft** (16) and the **value** (4) are the same answer at two moments: the draft is what you're typing, the value is what was accepted.
 
-## One line, two states
+The **state** (18) is easy to confuse with the **description** (5) below it, so it's worth being precise: the state tracks the widget and changes while you work - here it names the template slot you're filling - while the description belongs to the field and never moves.
 
-The **constraint** (13) and the **error** (19) are the same physical line. Below is one file picker, limited to files of at most 64 bytes, photographed twice.
+## The file picker
+
+The same skeleton over a directory listing, plus the one part unique to a browsable list.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-filepicker-light-static.svg'), dark: useBaseUrl('/anatomy-filepicker-dark-static.svg')}} alt="An open file picker with its parts named" width="100%" />
+</p>
+
+- **15** caption - what the list below is showing.
+
+The entries here are files and directories rather than options, and they're still **entries** (10): the name describes the line the widget offers, not where its content came from. The **caption** (15) names a directory in this widget because that's what a file browser browses, but the part - and the atom that draws it - stays generic.
+
+## Constraint and error: one line, two states
+
+The **constraint** (13) and the **error** (19) share a single physical line. Below is one file picker, limited to files of at most 64 bytes, photographed twice.
 
 Nothing has been picked yet, so the line states what the field expects:
 
@@ -104,7 +110,7 @@ Nothing has been picked yet, so the line states what the field expects:
   <ThemedImage sources={{light: useBaseUrl('/anatomy-constraint-light-static.svg'), dark: useBaseUrl('/anatomy-constraint-dark-static.svg')}} alt="A file picker showing its constraint before anything is rejected" width="100%" />
 </p>
 
-Now `harvest.csv` is picked, and at 88 bytes it breaks that limit. The same line, in the same place, turns into the error - the constraint does not move down or stay above it, it is replaced:
+Now `harvest.csv` is picked, and at 88 bytes it breaks that limit. The same line, in the same place, turns into the error. The constraint doesn't move down or stay above it - it's replaced:
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/anatomy-error-light-static.svg'), dark: useBaseUrl('/anatomy-error-dark-static.svg')}} alt="The same file picker showing an error in place of its constraint" width="100%" />
@@ -119,7 +125,7 @@ Read the two lines side by side and the distinction is the whole point:
 | **constraint** (13) | `Files only. Max 64 B.` | what the field will accept, before you act |
 | **error** (19) | `Choose a file no larger than 64 B.` | why what you just did was refused |
 
-A constraint describes the field; an error describes your value. That is also why they are built differently. A constraint is an unframed phrase - `a file no larger than 64 B` - that its caller wraps, so the same phrase becomes `Choose ...` in the picker, `Select ...` in a bounded list, and `must be ...` headlessly. An error is already a whole message and is shown as it stands.
+A constraint describes the field; an error describes your value. That's also why they're built differently. A constraint is an unframed phrase - `a file no larger than 64 B` - that its caller wraps, so the same phrase becomes `Choose ...` in the picker, `Select ...` in a bounded list and `must be ...` headlessly. An error is already a whole message, and is shown as it stands.
 
 ## Vocabulary
 
@@ -139,10 +145,10 @@ A constraint describes the field; an error describes your value. That is also wh
 | 12 | entry note | A qualifier on an entry, such as why it is unavailable. |
 | 13 | constraint | What the field expects, shown before anything is rejected. |
 | 14 | entry detail | The highlighted entry's own explanatory text. |
-| 15 | location | The file picker's current directory. |
-| 16 | buffer | The in-progress text, before it is accepted. |
-| 17 | caret | The insertion point within the buffer. |
-| 18 | activity | What the widget is doing right now. |
+| 15 | caption | What a browsable list is showing - a directory, in a file picker. |
+| 16 | draft | The text you are typing, before it is accepted. |
+| 17 | caret | The insertion point within the draft. |
+| 18 | state | What the widget is doing right now. |
 | 19 | error | Why the value was rejected. Replaces the constraint (13). |
 
 ## What the code calls these today
@@ -161,26 +167,26 @@ A constraint describes the field; an error describes your value. That is also wh
 | 10 | entry | unnamed |
 | 11 | entry marker | `ThemeInterface::marker()`, shared with (2) |
 | 12 | entry note | `Option::$disabledReason`, concatenated in `OptionsCapableTrait` |
-| 13 | constraint | `SelectionBoundedTrait::selectionHint()`, `FilePickerWidget::constraintHint()`, `NumberBounds::describe()`, drawn with `ThemeInterface::hint()` |
+| 13 | constraint | `SelectionBoundedTrait::selectionHint()`, `FilePickerWidget::constraintHint()`, `NumberBounds::describe()`, drawn with `ThemeInterface::renderGuidance()` |
 | 14 | entry detail | `Option::$description` through `ThemeInterface::description()` |
-| 15 | location | unnamed |
-| 16 | buffer | `$buffer`, per widget - not in any shared API |
+| 15 | caption | `ThemeInterface::caption()` |
+| 16 | draft | `$buffer`, per widget - not in any shared API |
 | 17 | caret | `ThemeInterface::caret()` |
-| 18 | activity | `ThemeInterface::footer()`, used away from the footer |
+| 18 | state | `ThemeInterface::footer()`, used away from the footer |
 | 19 | error | `ThemeInterface::error()`, `WidgetInterface::error()` |
 
 ## Where the names disagree
 
-**`hint` names four unrelated things.** `ThemeInterface::hint()` is a text style. `Field::$hint` is the instruction (6). `WidgetInterface::hints()` returns the key legend (8). `SelectionBoundedTrait::selectionHint()` returns the constraint (13). Nothing connects them, and the last one does not even use the `hint()` style - it draws through `description()`.
+**`hint` names four unrelated things.** `ThemeInterface::hint()` is a style atom. `Field::$hint` is the instruction (6). `WidgetInterface::hints()` returns the key legend (8). `SelectionBoundedTrait::selectionHint()` returns the constraint (13). Nothing connects them.
 
-**`description` names two parts.** The field's description (5) and the highlighted entry's detail (14) both render through `ThemeInterface::description()`, so restyling one restyles the other. The constraint (13) used to make a third, drawn identically and sitting directly beneath the entry detail; it now draws through `ThemeInterface::hint()`, the guidance voice it shares with the instruction (6).
+**`description` names two parts.** The field's description (5) and the highlighted entry's detail (14) both render through `ThemeInterface::description()`, so restyling one restyles the other. The constraint (13) used to make a third, drawn identically and sitting right beside the entry detail; it now goes through `renderGuidance()`, the guidance voice it shares with the instruction (6).
 
 **The constraint has two names.** `SelectionBoundedTrait::selectionHint()` and `FilePickerWidget::constraintHint()` are the same part in two widgets, with the same body and two different names.
 
-**`marker` covers two levels.** The row marker (2) and the entry marker (11) are both `ThemeInterface::marker()`, so a theme cannot restyle one without the other.
+**`marker` covers two levels.** The row marker (2) and the entry marker (11) are both `ThemeInterface::marker()`, so a theme can't restyle one without the other.
 
-**`error` names four things.** `ThemeInterface::error()` is a style, `WidgetInterface::error()` is widget state, `Field::templateError()` and friends produce a message, and `Engine::optionsError()` builds an exception.
+**`error` names four things.** `ThemeInterface::error()` is a style atom, `WidgetInterface::error()` is widget state, `Field::templateError()` and friends produce a message, and `Engine::optionsError()` builds an exception.
 
-**`footer` is drawn outside the footer.** The template widget's activity line (18) uses `ThemeInterface::footer()`, which otherwise styles the key legend (8) at the bottom of the frame.
+**`footer` is drawn outside the footer.** The template widget's state line (18) uses `ThemeInterface::footer()`, which otherwise styles the key legend (8) at the bottom of the frame.
 
-**Three parts have no name at all.** The entry (10), the selector (9) and the location (15) are drawn inline with no named method behind them.
+**Two parts have no name at all.** The entry (10) and the selector (9) are drawn inline, with no atom behind them.

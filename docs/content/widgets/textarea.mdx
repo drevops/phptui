@@ -30,7 +30,7 @@ Runnable script: [`playground/02-widgets-textarea.php`](https://github.com/drevo
 | `default()`        | Initial value; may contain newlines.                   | No       | `''` (empty) |
 | `externalEditor()` | Allow a handoff to the reader's `$EDITOR` / `$VISUAL`. | No       | Off          |
 
-With `externalEditor()` on, <kbd>Ctrl-E</kbd> suspends the TUI, opens the editor seeded with the current value, and captures the saved buffer on return: saving commits it, and an aborted edit (a non-zero editor exit) keeps the inline value. With no editor available, the option is silently ignored and the field stays a plain inline textarea.
+With `externalEditor()` on, <kbd>Ctrl-E</kbd> suspends the TUI, opens the editor seeded with the current value, and captures the saved text on return: saving commits it, and an aborted edit (a non-zero editor exit) keeps the inline value. With no editor available, the option is silently ignored and the field stays a plain inline textarea.
 
 ## Keyboard
 

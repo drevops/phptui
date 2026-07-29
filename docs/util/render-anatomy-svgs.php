@@ -49,10 +49,10 @@ const PARTS = [
   'entry note',
   'constraint',
   'entry detail',
-  'location',
-  'buffer',
+  'caption',
+  'draft',
   'caret',
-  'activity',
+  'state',
   'error',
 ];
 
@@ -173,10 +173,11 @@ function anatomySpecs(string $tree): array {
       'keys' => [...$open, $down],
       'rows' => 16,
       'callouts' => [
-        ['col' => 29, 'row' => 4, 'label' => 'location'],
+        ['col' => 29, 'row' => 4, 'label' => 'caption'],
         ['col' => 18, 'row' => 5, 'label' => 'entry'],
         ['col' => 16, 'row' => 6, 'label' => 'entry marker'],
         ['col' => 16, 'row' => 8, 'label' => 'constraint'],
+        ['col' => 6, 'row' => 9, 'label' => 'description'],
       ],
     ],
     'text' => [
@@ -187,8 +188,9 @@ function anatomySpecs(string $tree): array {
       'rows' => 10,
       'callouts' => [
         ['col' => 28, 'row' => 4, 'label' => 'caret'],
-        ['col' => 30, 'row' => 4, 'label' => 'buffer'],
-        ['col' => 17, 'row' => 5, 'label' => 'activity'],
+        ['col' => 30, 'row' => 4, 'label' => 'draft'],
+        ['col' => 17, 'row' => 5, 'label' => 'state'],
+        ['col' => 6, 'row' => 6, 'label' => 'description'],
       ],
     ],
     'constraint' => [

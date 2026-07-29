@@ -153,6 +153,8 @@ Colors come from the `Sgr` palette map - named cases like `Sgr::Cyan` or `Sgr::S
 
 Override as many atoms as the palette needs. For reference, the built-in themes each redeclare the accent-colored atoms (`title()`, `highlight()`, `marker()`, `radio()`, `caret()`) plus `value()`, `indicator()`, `highlightMatch()` and `border()`. To change how an element is laid out rather than colored, override a `render*()` method instead.
 
+Two atoms carry a rule worth knowing before you repaint them. `hint()` is the guidance voice - a field's instruction, and the constraint a bounded field states above its options - and it has to stay apart from `description()` **by color**, because the two are drawn on adjacent lines and a reader has nothing else to tell an expectation from prose. Weight and italic won't do it: an SVG render drops italic entirely, and so do plenty of terminals. `caption()` heads a browsable list, saying what's being shown, and sits beside the guidance voice at a different weight. Switch color off and guidance falls back to a leading mark, which is the one cue nothing can strip - that fallback lives in `renderGuidance()`, so a theme drawing its own surface can open the line however it likes.
+
 The lowest-friction route: name the class directly on the facade, no registration needed:
 
 ```php

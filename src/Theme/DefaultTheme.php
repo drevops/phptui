@@ -657,6 +657,17 @@ class DefaultTheme implements ThemeInterface {
   /**
    * {@inheritdoc}
    */
+  public function caption(string $text): string {
+    // The guidance hue at a different weight: a caption and a constraint are
+    // both the widget speaking about the list rather than listing it, so they
+    // read as a pair - but bold against italic keeps them apart, and keeps the
+    // caption from being read as the panel's own trail.
+    return $this->paint(Sgr::of(Sgr::Bold, Sgr::Steel), $text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function renderGuidance(string $text, bool $selected = FALSE): string {
     // Strip the surface back far enough and neither the hue nor the italic
     // survives, leaving guidance indistinguishable from the description beside
