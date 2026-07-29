@@ -70,10 +70,10 @@ final class MarkupTest extends TestCase {
   }
 
   public static function dataProviderParseMarkdownMarkersAreLiteralWhenOff(): \Iterator {
-    yield ['**bold**'];
-    yield ['*emphasis*'];
-    yield ['`code`'];
-    yield ['- bullet'];
+    yield 'bold' => ['**bold**'];
+    yield 'emphasis' => ['*emphasis*'];
+    yield 'code' => ['`code`'];
+    yield 'bullet' => ['- bullet'];
   }
 
   public function testParseBold(): void {

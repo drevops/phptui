@@ -25,13 +25,13 @@ final class PasswordDisplayTest extends TestCase {
   /**
    * Data provider for testNext().
    *
-   * @return \Iterator<(int | string), array{\DrevOps\Tui\Widget\PasswordDisplay, \DrevOps\Tui\Widget\PasswordDisplay}>
+   * @return \Iterator<string, array{\DrevOps\Tui\Widget\PasswordDisplay, \DrevOps\Tui\Widget\PasswordDisplay}>
    *   The current display and the one that follows it.
    */
   public static function dataProviderNext(): \Iterator {
-    yield [PasswordDisplay::Hidden, PasswordDisplay::Masked];
-    yield [PasswordDisplay::Masked, PasswordDisplay::Plaintext];
-    yield [PasswordDisplay::Plaintext, PasswordDisplay::Hidden];
+    yield 'hidden to masked' => [PasswordDisplay::Hidden, PasswordDisplay::Masked];
+    yield 'masked to plaintext' => [PasswordDisplay::Masked, PasswordDisplay::Plaintext];
+    yield 'plaintext to hidden' => [PasswordDisplay::Plaintext, PasswordDisplay::Hidden];
   }
 
 }
