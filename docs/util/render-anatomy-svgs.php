@@ -113,7 +113,7 @@ function anatomySpecs(string $tree): array {
   return [
     'row' => [
       'form' => Form::create('Orchard order')->panel('main', 'Delivery', function (PanelBuilder $p): void {
-        $p->select('basket', 'Basket')->description('Pick the produce for this delivery.')->hint('Space toggles, Enter confirms.')->multiple()->default(['apple'])->options(['apple' => 'Apple', 'carrot' => 'Carrot']);
+        $p->select('basket', 'Basket contents')->description('Pick the produce for this delivery.')->multiple()->default(['apple'])->options(['apple' => 'Apple', 'carrot' => 'Carrot']);
         $p->number('weight', 'Basket weight')->description('Weighed at the packing bench.')->default(1200)->min(200)->max(9000);
         $p->calendar('harvest', 'Harvest date')->default('2026-07-15');
         $p->text('courier', 'Courier')->default('Valley Runs');
@@ -125,10 +125,8 @@ function anatomySpecs(string $tree): array {
       'callouts' => [
         ['col' => 2, 'row' => 1, 'label' => 'breadcrumb'],
         ['col' => 2, 'row' => 4, 'label' => 'marker'],
-        ['col' => 6, 'row' => 5, 'label' => 'description'],
-        ['col' => 6, 'row' => 6, 'label' => 'instruction'],
-        ['col' => 4, 'row' => 8, 'label' => 'label'],
-        ['col' => 27, 'row' => 11, 'label' => 'value'],
+        ['label' => 'label', 'side' => 'left', 'cells' => [[4, 4], [7, 4], [10, 4]]],
+        ['label' => 'value', 'side' => 'right', 'cells' => [[4, 25], [7, 22], [10, 27]]],
         ['col' => 4, 'row' => 12, 'label' => 'overflow'],
         ['col' => 2, 'row' => 15, 'label' => 'key legend'],
       ],
@@ -150,6 +148,21 @@ function anatomySpecs(string $tree): array {
         ['col' => 12, 'row' => 7, 'label' => 'constraint'],
         ['col' => 12, 'row' => 8, 'label' => 'entry detail'],
         ['col' => 6, 'row' => 9, 'label' => 'description'],
+      ],
+    ],
+    // A field's supporting lines draw only on a closed row, so they get a
+    // frame of their own rather than crowding the one that names the parts
+    // every row repeats.
+    'lines' => [
+      'form' => Form::create('Orchard order')->panel('main', 'Delivery', function (PanelBuilder $p): void {
+        $p->select('basket', 'Basket contents')->description('Pick the produce for this delivery.')->hint('Space toggles, Enter confirms.')->multiple()->default(['apple'])->options(['apple' => 'Apple', 'carrot' => 'Carrot']);
+        $p->number('weight', 'Basket weight')->description('Weighed at the packing bench.')->default(1200)->min(200)->max(9000);
+      }),
+      'keys' => [$enter],
+      'rows' => 16,
+      'callouts' => [
+        ['label' => 'description', 'side' => 'left', 'cells' => [[5, 6], [9, 6]]],
+        ['col' => 35, 'row' => 6, 'label' => 'instruction'],
       ],
     ],
     'filepicker' => [
@@ -318,6 +331,102 @@ function columnClear(array $lines, int $column, int $from, int $to): bool {
 }
 
 /**
+ * The cells a callout points at.
+ *
+ * @param array<string,mixed> $callout
+ *   The callout.
+ *
+ * @return array<int,array<int,int>>
+ *   The cells, each a row and a column.
+ */
+function cellsOf(array $callout): array {
+  return $callout['cells'] ?? [[(int) $callout['row'], (int) $callout['col']]];
+}
+
+/**
+ * The column a multi-cell callout gathers its arrows on.
+ *
+ * The bracket has to stand clear of every row it spans, not just the rows it
+ * points at, and each arrow has to reach its cell without crossing anything.
+ * The nearest column satisfying both wins, so the bracket hugs the cells.
+ *
+ * @param array<int,string> $lines
+ *   The frame's rows, without escape sequences.
+ * @param array<int,array<int,int>> $cells
+ *   The cells, each a row and a column.
+ * @param string $side
+ *   The side the bracket stands on, 'left' or 'right'.
+ * @param int $columns
+ *   The number of columns the frame holds.
+ *
+ * @return int|null
+ *   The column, or NULL when no column on that side is clear.
+ */
+function bracketColumn(array $lines, array $cells, string $side, int $columns): ?int {
+  $rows = array_column($cells, 0);
+  $cols = array_column($cells, 1);
+  $first = min($rows);
+  $last = max($rows);
+  $range = $side === 'left' ? range(min($cols) - 1, 0) : range(max($cols) + 1, $columns - 1);
+
+  foreach ($range as $column) {
+    if (!columnClear($lines, $column, $first, $last)) {
+      continue;
+    }
+
+    foreach ($cells as [$row, $cell]) {
+      $from = $side === 'left' ? $column + 1 : $cell + 1;
+      $to = $side === 'left' ? $cell - 1 : $column - 1;
+
+      if (!crossable($lines[$row] ?? '', $from, $to)) {
+        continue 2;
+      }
+    }
+
+    return $column;
+  }
+
+  return NULL;
+}
+
+/**
+ * The row a bracket's label reaches it on.
+ *
+ * @param array<int,string> $lines
+ *   The frame's rows, without escape sequences.
+ * @param int $bracket
+ *   The bracket's column.
+ * @param string $side
+ *   The side the bracket stands on, 'left' or 'right'.
+ * @param int $first
+ *   The first row the bracket spans.
+ * @param int $last
+ *   The last row the bracket spans.
+ * @param int $columns
+ *   The number of columns the frame holds.
+ *
+ * @return int
+ *   The row, closest to the bracket's middle that the label can reach along.
+ */
+function connectorRow(array $lines, int $bracket, string $side, int $first, int $last, int $columns): int {
+  $middle = (int) round(($first + $last) / 2);
+  $rows = range($first, $last);
+
+  usort($rows, static fn(int $a, int $b): int => abs($a - $middle) <=> abs($b - $middle));
+
+  foreach ($rows as $row) {
+    $from = $side === 'left' ? 0 : $bracket + 1;
+    $to = $side === 'left' ? $bracket - 1 : $columns - 1;
+
+    if (crossable($lines[$row] ?? '', $from, $to)) {
+      return $row;
+    }
+  }
+
+  return $middle;
+}
+
+/**
  * The side a callout's leader arrives from.
  *
  * Vertical exits are preferred near the top and bottom of the frame so the
@@ -392,12 +501,17 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
   $cell_width = $frame_width / $columns;
   $cell_height = $frame_height / count($lines);
 
-  usort($callouts, static fn(array $a, array $b): int => [$a['row'], $a['col']] <=> [$b['row'], $b['col']]);
+  usort($callouts, static function (array $a, array $b): int {
+    $first = cellsOf($a)[0];
+    $second = cellsOf($b)[0];
+
+    return $first <=> $second;
+  });
 
   // Each side is settled first, then the margins are sized from the labels
   // that will actually land in them: a fixed margin either clips the longest
   // part name or pads every diagram out to fit it.
-  $sides = [];
+  $plans = [];
   $needs = ['left' => 0.0, 'right' => 0.0];
 
   foreach ($callouts as $index => $callout) {
@@ -408,9 +522,30 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
     }
 
     $text = ($number + 1) . '  ' . $callout['label'];
-    $side = leaderSide($lines, (int) $callout['row'], (int) $callout['col'], $columns);
-    $sides[$index] = [$side, $text];
     $width = mb_strlen($text) * FONT_SIZE * 0.6;
+    $cells = cellsOf($callout);
+
+    // A part that occurs several times gets one label and one arrow per
+    // occurrence, gathered on a bracket - three numbers for one part would
+    // read as three parts.
+    if (count($cells) > 1) {
+      $side = $callout['side'] ?? 'right';
+      $bracket = bracketColumn($lines, $cells, $side, $columns);
+
+      if ($bracket === NULL) {
+        throw new \RuntimeException(sprintf('No clear %s bracket for "%s".', $side, $callout['label']));
+      }
+
+      $rows = array_column($cells, 0);
+      $plans[$index] = ['bracket', $side, $text, $cells, $bracket, connectorRow($lines, $bracket, $side, min($rows), max($rows), $columns)];
+      $needs[$side] = max($needs[$side], $width + $cell_width * 2.4);
+
+      continue;
+    }
+
+    [$row, $column] = $cells[0];
+    $side = leaderSide($lines, $row, $column, $columns);
+    $plans[$index] = ['single', $side, $text, $cells];
 
     if ($side === 'left' || $side === 'right') {
       $needs[$side] = max($needs[$side], $width + $cell_width * 2.4);
@@ -420,7 +555,7 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
 
     // A label above or below is centred on its cell, so one near either end of
     // the frame hangs over that edge and the margin has to take the overhang.
-    $centre = ((float) $callout['col'] + 0.5) * $cell_width;
+    $centre = ((float) $column + 0.5) * $cell_width;
     $needs['left'] = max($needs['left'], $width / 2 - $centre);
     $needs['right'] = max($needs['right'], $width / 2 - ($frame_width - $centre));
   }
@@ -436,10 +571,35 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
   $bands = ['up' => [], 'down' => []];
   $lowest = $bottom_edge;
 
-  foreach ($callouts as $index => $callout) {
-    $row = (int) $callout['row'];
-    $column = (int) $callout['col'];
-    [$side, $text] = $sides[$index];
+  foreach ($plans as $plan) {
+    [$kind, $side, $text, $cells] = $plan;
+
+    if ($kind === 'bracket') {
+      [, , , , $bracket, $connector] = $plan;
+      $bracket_x = $offset_x + ((float) $bracket + 0.5) * $cell_width;
+      $connector_y = $offset_y + ((float) $connector + 0.5) * $cell_height;
+      $rows = array_column($cells, 0);
+      $top = $offset_y + ((float) min($rows) + 0.5) * $cell_height;
+      $foot = $offset_y + ((float) max($rows) + 0.5) * $cell_height;
+      $edge = $side === 'left' ? $left_edge - $cell_width * 0.6 : $right_edge + $cell_width * 0.6;
+      $label_x = $side === 'left' ? $left_edge - $cell_width * 1.4 : $right_edge + $cell_width * 1.4;
+
+      $marks .= sprintf('<path d="M %.2f %.2f L %.2f %.2f" fill="none" stroke="%s" stroke-width="1.4"/>', $bracket_x, $top, $bracket_x, $foot, $color);
+      $marks .= sprintf('<path d="M %.2f %.2f L %.2f %.2f" fill="none" stroke="%s" stroke-width="1.4"/>', $side === 'left' ? $label_x + FONT_SIZE * 0.4 : $label_x - FONT_SIZE * 0.4, $connector_y, $bracket_x, $connector_y, $color);
+
+      foreach ($cells as [$cell_row, $cell_col]) {
+        $to_x = $offset_x + ((float) $cell_col + 0.5) * $cell_width;
+        $tip = $side === 'left' ? $to_x - $cell_width * 0.7 : $to_x + $cell_width * 0.7;
+        $marks .= sprintf('<path d="M %.2f %.2f L %.2f %.2f" fill="none" stroke="%s" stroke-width="1.4" marker-end="url(#anatomy-arrow)"/>', $bracket_x, $offset_y + ((float) $cell_row + 0.5) * $cell_height, $tip, $offset_y + ((float) $cell_row + 0.5) * $cell_height, $color);
+      }
+
+      $marks .= sprintf('<text x="%.2f" y="%.2f" text-anchor="%s" fill="%s" font-family="Consolas, &quot;Courier New&quot;, Courier, monospace" font-size="%.1f">%s</text>', $label_x, $connector_y + FONT_SIZE * 0.35, $side === 'left' ? 'end' : 'start', $color, FONT_SIZE, label($text));
+      $stack[$side] = max($stack[$side], $foot);
+
+      continue;
+    }
+
+    [$row, $column] = $cells[0];
     $cell_x = $offset_x + ((float) $column + 0.5) * $cell_width;
     $cell_y = $offset_y + ((float) $row + 0.5) * $cell_height;
 
