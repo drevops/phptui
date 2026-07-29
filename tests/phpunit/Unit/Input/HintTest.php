@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the key-hint fragment.
  */
 #[CoversClass(Hint::class)]
-#[Group('tui')]
+#[Group('input')]
 final class HintTest extends TestCase {
 
   use ResetsTranslatorTrait;

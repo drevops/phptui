@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the panel model.
  */
 #[CoversClass(Panel::class)]
-#[Group('tui')]
+#[Group('model')]
 final class PanelTest extends TestCase {
 
   public function testItemCountSumsFieldsAndPanels(): void {

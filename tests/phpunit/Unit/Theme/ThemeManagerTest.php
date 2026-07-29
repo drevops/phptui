@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the theme registry and factory.
  */
 #[CoversClass(ThemeManager::class)]
-#[Group('tui')]
+#[Group('theme')]
 final class ThemeManagerTest extends TestCase {
 
   use ResetsRegistriesTrait;

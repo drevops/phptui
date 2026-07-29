@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the theme's semantic styler and symbol methods.
  */
 #[CoversClass(DefaultTheme::class)]
-#[Group('tui')]
+#[Group('theme')]
 final class ThemeTest extends TestCase {
 
   #[DataProvider('dataProviderStyler')]

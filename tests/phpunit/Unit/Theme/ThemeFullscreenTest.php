@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the fullscreen frame stretch, block alignment and content measuring.
  */
 #[CoversClass(DefaultTheme::class)]
-#[Group('tui')]
+#[Group('theme')]
 final class ThemeFullscreenTest extends TestCase {
 
   #[DataProvider('dataProviderChromeHeight')]

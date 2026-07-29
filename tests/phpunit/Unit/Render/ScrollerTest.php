@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(Scroller::class)]
 #[CoversClass(Viewport::class)]
-#[Group('tui')]
+#[Group('render')]
 final class ScrollerTest extends TestCase {
 
   public function testCursorAtTop(): void {

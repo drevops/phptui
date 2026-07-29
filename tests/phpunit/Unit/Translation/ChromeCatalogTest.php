@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
  * chrome stays complete and honest.
  */
 #[CoversNothing]
-#[Group('tui')]
+#[Group('translation')]
 final class ChromeCatalogTest extends TestCase {
 
   public function testTemplateMatchesSourceLiterals(): void {

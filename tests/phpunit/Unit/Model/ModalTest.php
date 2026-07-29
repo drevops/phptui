@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the modal presentation config value object.
  */
 #[CoversClass(Modal::class)]
-#[Group('tui')]
+#[Group('model')]
 final class ModalTest extends TestCase {
 
   public function testDefaultButtons(): void {

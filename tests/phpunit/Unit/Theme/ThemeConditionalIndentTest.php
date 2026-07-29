@@ -25,7 +25,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the opt-in indentation of conditional fields.
  */
 #[CoversClass(DefaultTheme::class)]
-#[Group('tui')]
+#[Group('theme')]
 final class ThemeConditionalIndentTest extends TestCase {
 
   /**

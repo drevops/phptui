@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the theme's rating-scale rendering.
  */
 #[CoversClass(DefaultTheme::class)]
-#[Group('tui')]
+#[Group('theme')]
 final class ScaleRenderTest extends TestCase {
 
   public function testScaleFillsUpToTheChosenPoint(): void {

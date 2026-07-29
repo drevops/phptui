@@ -28,7 +28,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(MonoTheme::class)]
 #[CoversClass(DosTheme::class)]
 #[CoversClass(Sgr::class)]
-#[Group('tui')]
+#[Group('theme')]
 final class BuiltinThemesTest extends TestCase {
 
   /**

@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the external editor service.
  */
 #[CoversClass(ExternalEditor::class)]
-#[Group('tui')]
+#[Group('render')]
 final class ExternalEditorTest extends TestCase {
 
   use IsolatesEnvTrait;

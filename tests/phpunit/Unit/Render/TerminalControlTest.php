@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the terminal control sequences.
  */
 #[CoversClass(TerminalControl::class)]
-#[Group('tui')]
+#[Group('render')]
 final class TerminalControlTest extends TestCase {
 
   public function testSequences(): void {

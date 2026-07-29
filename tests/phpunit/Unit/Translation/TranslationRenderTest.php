@@ -34,7 +34,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(SummaryFormatter::class)]
 #[CoversClass(SchemaValidator::class)]
 #[CoversClass(AgentHelp::class)]
-#[Group('tui')]
+#[Group('translation')]
 final class TranslationRenderTest extends TestCase {
 
   use ResetsTranslatorTrait;

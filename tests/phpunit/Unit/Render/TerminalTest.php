@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the terminal output and capability detection.
  */
 #[CoversClass(Terminal::class)]
-#[Group('tui')]
+#[Group('render')]
 final class TerminalTest extends TestCase {
 
   use IsolatesEnvTrait;

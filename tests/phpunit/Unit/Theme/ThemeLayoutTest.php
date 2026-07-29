@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the panel-grid layout rendering and measurement.
  */
 #[CoversClass(DefaultTheme::class)]
-#[Group('tui')]
+#[Group('theme')]
 final class ThemeLayoutTest extends TestCase {
 
   public function testLayoutZipsPanelsSideBySide(): void {

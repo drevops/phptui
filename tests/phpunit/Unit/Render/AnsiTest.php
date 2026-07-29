@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the ANSI helpers.
  */
 #[CoversClass(Ansi::class)]
-#[Group('tui')]
+#[Group('render')]
 final class AnsiTest extends TestCase {
 
   public function testStyle(): void {

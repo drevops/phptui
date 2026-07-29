@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the presentational table value object.
  */
 #[CoversClass(TableSpec::class)]
-#[Group('tui')]
+#[Group('model')]
 final class TableSpecTest extends TestCase {
 
   public function testKeepsStringCells(): void {

@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the pure box-drawing geometry helper.
  */
 #[CoversClass(Box::class)]
-#[Group('tui')]
+#[Group('render')]
 final class BoxTest extends TestCase {
 
   #[DataProvider('dataProviderChars')]

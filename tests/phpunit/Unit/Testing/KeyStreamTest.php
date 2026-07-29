@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(Key::class)]
 #[CoversClass(ArrayKeyStream::class)]
-#[Group('input')]
+#[Group('testing')]
 final class KeyStreamTest extends TestCase {
 
   public function testCharAndNamed(): void {

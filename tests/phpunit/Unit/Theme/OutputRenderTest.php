@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(DefaultTheme::class)]
 #[CoversClass(EmberTheme::class)]
-#[Group('tui')]
+#[Group('theme')]
 final class OutputRenderTest extends TestCase {
 
   public function testBoxDrawsTitledFrameSizedToItsContent(): void {

@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the pure table geometry helper.
  */
 #[CoversClass(Table::class)]
-#[Group('tui')]
+#[Group('render')]
 final class TableTest extends TestCase {
 
   public function testRendersAlignedGrid(): void {
