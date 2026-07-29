@@ -30,7 +30,7 @@ $form = Form::create('Select with groups')
       ->option('apple', 'Apple')
       ->option('banana', 'Banana')
       ->separator()
-      ->option('rhubarb', 'Rhubarb', disabled: TRUE, disabled_reason: 'out of season');
+      ->option('cherry', 'Cherry', disabled: TRUE, disabled_reason: 'out of season');
   });
 
 try {

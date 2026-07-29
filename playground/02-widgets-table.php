@@ -28,7 +28,7 @@ $headers = ['Fruit', 'Colour', 'In stock'];
 $rows = [
   ['Apple', 'Red', '12'],
   ['Pear', 'Green', '5'],
-  ['Blackberry', 'Purple', '120'],
+  ['Plum', 'Purple', '120'],
 ];
 
 $form = Form::create('Table')

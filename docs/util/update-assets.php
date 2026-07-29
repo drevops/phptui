@@ -1282,7 +1282,7 @@ EXPECT,
   // static frame is anchored to an option only visible once the list is open
   // (the hub shows the form title too, so gating on it would capture the hub).
   $group_demos = [
-    'select-groups' => ['gate' => 'Select with groups', 'needle' => 'Rhubarb', 'rows' => 18],
+    'select-groups' => ['gate' => 'Select with groups', 'needle' => 'Cherry', 'rows' => 18],
     'select-multiple-groups' => ['gate' => 'MultiSelect with groups', 'needle' => 'Leek', 'rows' => 21],
   ];
 
