@@ -110,11 +110,11 @@ $columns = static function (string $left, string $right, int $gap = 8): string {
   return implode("\n", $rows);
 };
 
-echo "\n";
-echo $columns('UNICODE', 'TEXTUAL (ASCII)') . "\n";
-echo str_repeat('-', 60) . "\n\n";
+echo PHP_EOL;
+echo $columns('UNICODE', 'TEXTUAL (ASCII)') . PHP_EOL;
+echo str_repeat('-', 60) . PHP_EOL . PHP_EOL;
 
 foreach ($widgets as $name => $make) {
-  echo $name . "\n";
-  echo $columns($make()->view($unicode), $make()->view($ascii)) . "\n\n";
+  echo $name . PHP_EOL;
+  echo $columns($make()->view($unicode), $make()->view($ascii)) . PHP_EOL . PHP_EOL;
 }
