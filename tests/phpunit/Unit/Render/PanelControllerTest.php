@@ -995,6 +995,16 @@ final class PanelControllerTest extends TestCase {
     $this->assertSame(str_repeat(' ', 15) . '+' . str_repeat('-', 28) . '+', rtrim($lines[0]));
   }
 
+  /**
+   * Tests the guard screen a terminal below the minimum size falls back to.
+   *
+   * @param list<string> $keys
+   *   The encoded keys the guard screen reads.
+   * @param bool $done
+   *   Whether the keys finish the form.
+   * @param bool $interrupted
+   *   Whether the keys interrupt it.
+   */
   #[DataProvider('dataProviderRunFullscreenTooSmallGuard')]
   public function testRunFullscreenTooSmallGuard(array $keys, bool $done, bool $interrupted): void {
     $controller = $this->fullscreenController(['fullscreen' => TRUE]);

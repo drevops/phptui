@@ -46,6 +46,16 @@ use PHPUnit\Framework\TestCase;
 #[Group('widget')]
 final class WidgetFactoryTest extends TestCase {
 
+  /**
+   * Tests the widget each field type builds an editor from.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field to build an editor for.
+   * @param mixed $current
+   *   The value the widget opens on.
+   * @param class-string $expected
+   *   The widget the factory builds.
+   */
   #[DataProvider('dataProviderCreatesByType')]
   public function testCreatesByType(Field $field, mixed $current, string $expected): void {
     $this->assertInstanceOf($expected, (new WidgetFactory())->create($field, $current));
