@@ -199,6 +199,26 @@ final class ThemeLayoutTest extends TestCase {
     $this->assertSame(56, (new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Compact]))->measureContentWidth($form, $answers));
   }
 
+  public function testMeasureReservesRoomForTheMultiLineMarker(): void {
+    $form = Form::create('T')
+      ->buttons(FALSE)
+      ->layout(2)
+      ->panel('a', 'A', fn(PanelBuilder $p): FieldBuilder => $p->textarea('notes', 'A')->default("Crisp and sweet\nshort"))
+      ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('two', 'B'))
+      ->build();
+    $answers = new Answers(['notes' => "Crisp and sweet\nshort"], []);
+    $options = ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Compact];
+
+    $unicode = (new DefaultTheme(40, $options + ['unicode' => TRUE]))->measureContentWidth($form, $answers);
+    $ascii = (new DefaultTheme(40, $options + ['unicode' => FALSE]))->measureContentWidth($form, $answers);
+
+    // The first line is the widest, so a grid cell is that line plus its
+    // marker. Measuring the raw lines alone would size both modes the same and
+    // clip the marker off the end of the cell.
+    $this->assertSame(44, $unicode);
+    $this->assertSame(48, $ascii);
+  }
+
   public function testLayoutPreviewsNoteAsItsTitle(): void {
     $theme = new DefaultTheme(60, ['color' => FALSE, 'unicode' => FALSE]);
     $panel = new Panel('p', 'P', '', [], [

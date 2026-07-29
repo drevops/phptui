@@ -1580,11 +1580,7 @@ class DefaultTheme implements ThemeInterface {
         continue;
       }
 
-      // A grid cell is one physical row, so a multi-line value previews as
-      // its first line - an embedded newline would desync the column zip.
-      $value_lines = explode("\n", $this->normalizeLines($this->renderFieldValue($field, $answers->value($field->id))));
-      $more = $this->unicode ? '…' : '...';
-      $value = $value_lines[0] . (count($value_lines) > 1 ? $more : '');
+      $value = $this->columnValuePreview($field, $answers);
       $lines[] = $indent . '  ' . $this->description(Translator::t($field->label), $selected) . '  ' . $this->value($value, $selected);
     }
 
@@ -1593,6 +1589,30 @@ class DefaultTheme implements ThemeInterface {
     }
 
     return $lines;
+  }
+
+  /**
+   * A field's value as one grid cell: first line, marked when there is more.
+   *
+   * A grid cell is one physical row, so a multi-line value previews as its
+   * first line - an embedded newline would desync the column zip - followed by
+   * a marker so the cell does not read as the whole value. Rendering and
+   * measuring both route through here, so a column can never be sized without
+   * the room its marker needs.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field to preview.
+   * @param \DrevOps\Tui\Answers\Answers $answers
+   *   The collected answers.
+   *
+   * @return string
+   *   The previewed value.
+   */
+  protected function columnValuePreview(Field $field, Answers $answers): string {
+    $value_lines = explode("\n", $this->normalizeLines($this->renderFieldValue($field, $answers->value($field->id))));
+    $more = $this->unicode ? '…' : '...';
+
+    return $value_lines[0] . (count($value_lines) > 1 ? $more : '');
   }
 
   /**
@@ -2178,7 +2198,7 @@ class DefaultTheme implements ThemeInterface {
         continue;
       }
 
-      $width = max($width, $indent + 4 + Markup::width(Translator::t($field->label), FALSE, $this->color) + $this->measureValueWidth($field, $answers));
+      $width = max($width, $indent + 4 + Markup::width(Translator::t($field->label), FALSE, $this->color) + Strings::length($this->columnValuePreview($field, $answers)));
     }
 
     foreach ($panel->panels as $subpanel) {
