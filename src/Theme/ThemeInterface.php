@@ -72,6 +72,15 @@ interface ThemeInterface {
   public function hint(string $text, bool $selected = FALSE): string;
 
   /**
+   * The mark beside a label saying the field has help to show.
+   *
+   * A field's help is only ever drawn on request, so this is the only thing
+   * announcing it. It marks the label rather than the description, because a
+   * field can carry help without carrying a description at all.
+   */
+  public function helpMarker(bool $selected = FALSE): string;
+
+  /**
    * The line that captions a browsable list, saying what is being shown.
    *
    * A file browser captions its entries with the directory they are in;

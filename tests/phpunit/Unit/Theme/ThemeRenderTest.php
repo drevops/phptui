@@ -144,39 +144,40 @@ final class ThemeRenderTest extends TestCase {
     $this->assertContains('    Use a short name', $stripped);
   }
 
-  public function testBodyRendersHintUnderDescription(): void {
+  public function testBodyMarksHelpBesideTheLabelRatherThanPrintingIt(): void {
     $field = new Field('name', 'Name', 'The grower of record', FieldType::Text, '', hint: 'Type a few letters to filter.');
     $panel = new Panel('p', 'P', '', [$field]);
 
     [$lines] = $this->plainTheme()->renderBody($panel, new Answers(), 0);
     $stripped = array_map(Ansi::strip(...), $lines);
 
-    // Guidance stacks under the row in declaration order: what is being asked,
-    // then how to answer it.
+    // Help can run to paragraphs, which a row cannot carry, so the row marks
+    // that there is something to ask for and the text stays out of the panel.
+    $this->assertStringContainsString('ⓘ', $stripped[0]);
     $this->assertSame('    The grower of record', $stripped[1]);
-    $this->assertSame('    › Type a few letters to filter.', $stripped[2]);
+    $this->assertCount(2, $stripped);
   }
 
-  public function testBodyRendersHintWithoutDescription(): void {
+  public function testBodyMarksHelpWithoutADescription(): void {
     $field = new Field('name', 'Name', '', FieldType::Text, '', hint: 'Type a few letters to filter.');
     $panel = new Panel('p', 'P', '', [$field]);
 
     [$lines] = $this->plainTheme()->renderBody($panel, new Answers(), 0);
     $stripped = array_map(Ansi::strip(...), $lines);
 
-    $this->assertSame('    › Type a few letters to filter.', $stripped[1]);
-    $this->assertCount(2, $stripped);
+    // The mark hangs off the label, so a field with help and no description
+    // still announces it.
+    $this->assertStringContainsString('ⓘ', $stripped[0]);
+    $this->assertCount(1, $stripped);
   }
 
-  public function testBodyRendersHintUnderInlineEditor(): void {
-    $field = new Field('name', 'Name', '', FieldType::Text, '', hint: 'Type a few letters to filter.');
+  public function testBodyLeavesTheHelpMarkOffAFieldWithoutHelp(): void {
+    $field = new Field('name', 'Name', 'The grower of record', FieldType::Text, '');
     $panel = new Panel('p', 'P', '', [$field]);
 
-    [$lines] = $this->plainTheme()->renderBody($panel, new Answers(), 0, $field, 'Acme');
-    $stripped = array_map(Ansi::strip(...), $lines);
+    [$lines] = $this->plainTheme()->renderBody($panel, new Answers(), 0);
 
-    $this->assertStringContainsString('Name  Acme', $stripped[0]);
-    $this->assertSame('    › Type a few letters to filter.', $stripped[1]);
+    $this->assertStringNotContainsString('ⓘ', Ansi::strip($lines[0]));
   }
 
   public function testBodyDropsHintWhenCompact(): void {

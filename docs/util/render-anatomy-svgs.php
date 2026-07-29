@@ -41,20 +41,21 @@ const PARTS = [
   'value',
   'description',
   'help',
-  'overflow',
+  'overflow marker',
   'legend',
   'entry marker',
   'entry',
   'entry selector',
   'entry note',
   'constraint',
-  'entry detail',
+  'entry description',
   'caption',
   'caret',
   'draft',
   'state',
   'error',
   'separator',
+  'help marker',
 ];
 
 /**
@@ -114,7 +115,7 @@ function anatomySpecs(string $tree): array {
   return [
     'row' => [
       'form' => Form::create('Orchard order')->panel('main', 'Delivery', function (PanelBuilder $p): void {
-        $p->select('basket', 'Basket contents')->description('Pick the produce for this delivery.')->multiple()->default(['apple'])->options(['apple' => 'Apple', 'carrot' => 'Carrot']);
+        $p->select('basket', 'Basket contents')->description('Pick the produce for this delivery.')->hint('Every crate is weighed and labelled at the packing bench before it leaves the orchard.')->multiple()->options(['apple' => 'Apple', 'carrot' => 'Carrot']);
         $p->number('weight', 'Basket weight')->description('Weighed at the packing bench.')->default(1200)->min(200)->max(9000);
         $p->calendar('harvest', 'Harvest date')->default('2026-07-15');
         $p->text('courier', 'Courier')->default('Valley Runs');
@@ -129,8 +130,9 @@ function anatomySpecs(string $tree): array {
         ['col' => 2, 'row' => 4, 'label' => 'field selector'],
         ['col' => 6, 'row' => 5, 'label' => 'description'],
         ['label' => 'label', 'side' => 'left', 'cells' => [[7, 4], [10, 4], [12, 4]]],
-        ['label' => 'value', 'side' => 'right', 'cells' => [[4, 25], [7, 22], [10, 27], [12, 23]]],
-        ['col' => 4, 'row' => 15, 'label' => 'overflow'],
+        ['col' => 20, 'row' => 4, 'label' => 'help marker'],
+        ['label' => 'value', 'side' => 'right', 'cells' => [[7, 22], [10, 27], [12, 23]]],
+        ['col' => 4, 'row' => 15, 'label' => 'overflow marker'],
         ['col' => 2, 'row' => 18, 'label' => 'legend', 'side' => 'left'],
       ],
     ],
@@ -148,7 +150,7 @@ function anatomySpecs(string $tree): array {
         ['col' => 12, 'row' => 5, 'label' => 'entry selector'],
         ['col' => 14, 'row' => 6, 'label' => 'entry marker'],
         ['col' => 37, 'row' => 6, 'label' => 'entry note'],
-        ['col' => 12, 'row' => 7, 'label' => 'entry detail'],
+        ['col' => 12, 'row' => 7, 'label' => 'entry description'],
         ['col' => 12, 'row' => 8, 'label' => 'constraint'],
         ['col' => 6, 'row' => 9, 'label' => 'description'],
       ],

@@ -912,6 +912,16 @@ class DefaultTheme implements ThemeInterface {
   /**
    * {@inheritdoc}
    */
+  public function helpMarker(bool $selected = FALSE): string {
+    // A circled question mark has no dependable coverage in terminal fonts, so
+    // the information glyph stands in for it: it is the conventional mark for
+    // "there is more to read here", and it is one cell wide everywhere.
+    return $this->paint($this->emphasize(Sgr::of(Sgr::Steel), $selected), $this->unicode ? 'ⓘ' : '(?)');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function arrowUp(): string {
     return $this->unicode ? '↑' : '^';
   }
@@ -1667,7 +1677,12 @@ class DefaultTheme implements ThemeInterface {
    *   further value lines indented to the value column.
    */
   public function renderFieldLine(Field $field, Answers $answers, bool $selected): array {
-    $prefix = $this->fieldIndent($field) . $this->marker($selected) . ' ' . $this->label(Translator::t($field->label), $selected) . '  ';
+    // Help is only ever shown on request, so the marker beside the label is the
+    // only thing telling the reader there is anything to ask for. It hangs off
+    // the label because a field can carry help without carrying a description,
+    // and the label is the one part every row draws.
+    $help = $field->hint === '' ? '' : ' ' . $this->helpMarker($selected);
+    $prefix = $this->fieldIndent($field) . $this->marker($selected) . ' ' . $this->label(Translator::t($field->label), $selected) . $help . '  ';
     $indent = str_repeat(' ', Ansi::width($prefix));
 
     $lines = [];
@@ -1958,12 +1973,9 @@ class DefaultTheme implements ThemeInterface {
       }
     }
 
-    if ($field->hint !== '') {
-      foreach ($this->renderFieldHint(Translator::t($field->hint), $selected) as $line) {
-        $lines[] = $line;
-      }
-    }
-
+    // A field's help is not part of its row: it can run to paragraphs, which a
+    // row cannot carry, so it is shown on request and the row only marks that
+    // there is something to ask for.
     return $lines;
   }
 
