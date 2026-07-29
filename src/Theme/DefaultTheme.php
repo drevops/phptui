@@ -914,6 +914,29 @@ class DefaultTheme implements ThemeInterface {
   /**
    * {@inheritdoc}
    */
+  public function legendKey(string $text): string {
+    // Bolder than what it does, so the eye lands on the key it has to press
+    // first. Uppercased here so a translated key name is uppercased with it.
+    return $this->paint(Sgr::of(Sgr::Bold, Sgr::Grey), Strings::upper($text));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function legendDescription(string $text): string {
+    return $this->paint(Sgr::of(Sgr::Grey), $text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function legendSeparator(): string {
+    return $this->paint(Sgr::of(Sgr::Ash), $this->dot());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function entryDescription(string $text): string {
     // Italicized against the description's grey: it says the same kind of thing
     // about a smaller subject, and the slant marks it as belonging to the entry
@@ -2621,7 +2644,13 @@ class DefaultTheme implements ThemeInterface {
       }
     }
 
-    return $glyphs === [] ? '' : implode('/', $glyphs) . ' ' . $label;
+    if ($glyphs === []) {
+      return '';
+    }
+
+    // "KEY to action" rather than "KEY action": the preposition is what makes a
+    // legend entry a sentence you can read rather than two words abutted.
+    return $this->legendKey(implode('/', $glyphs)) . ' ' . $this->legendDescription(Translator::t('to @action', ['@action' => $label]));
   }
 
   /**
@@ -2664,7 +2693,8 @@ class DefaultTheme implements ThemeInterface {
    *   The themed hint line.
    */
   public function renderHintLine(string ...$hints): string {
-    return $this->footer(implode(' ' . $this->dot() . ' ', array_filter($hints)));
+    // The parts arrive styled by their own atoms, so the line only joins them.
+    return implode(' ' . $this->legendSeparator() . ' ', array_filter($hints));
   }
 
   /**

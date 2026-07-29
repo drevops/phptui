@@ -297,9 +297,9 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
       new Hint('select', Action::Toggle),
       new Hint('move', Action::MoveUp, Action::MoveDown),
       new Hint('open', Action::MoveRight),
-      new Hint('up', Action::MoveLeft),
+      new Hint('go up', Action::MoveLeft),
       new Hint($this->multiple ? 'accept' : 'select', Action::Accept),
-      new Hint('hidden', Action::Reveal),
+      new Hint('show hidden', Action::Reveal),
       new Hint('cancel', Action::Cancel),
     ];
   }

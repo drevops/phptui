@@ -208,7 +208,7 @@ final class PanelControllerTest extends TestCase {
     // widget's hints, with none of the other panel rows around it.
     $this->assertStringContainsString("Name\n────", $frame);
     $this->assertStringContainsString('accept', $frame);
-    $this->assertStringContainsString('esc cancel', $frame);
+    $this->assertStringContainsString('ESC to cancel', $frame);
     $this->assertStringNotContainsString('Other', $frame);
   }
 
@@ -476,8 +476,8 @@ final class PanelControllerTest extends TestCase {
     // The hub footer is complete: it surfaces quit and the help toggle, not
     // just the move/select/back subset.
     $footer = Ansi::strip($controller->frame(12));
-    $this->assertStringContainsString('q quit', $footer);
-    $this->assertStringContainsString('? help', $footer);
+    $this->assertStringContainsString('Q to quit', $footer);
+    $this->assertStringContainsString('? to show help', $footer);
   }
 
   public function testHelpOverlayTogglesAndCloses(): void {
@@ -493,7 +493,7 @@ final class PanelControllerTest extends TestCase {
     $this->assertStringContainsString('Navigation', $help);
     $this->assertStringContainsString('Text', $help);
     $this->assertStringContainsString('Confirm', $help);
-    $this->assertStringContainsString('? close', $help);
+    $this->assertStringContainsString('? to close', $help);
 
     // Any key dismisses it, and that key does nothing else (the cursor stays).
     $controller->handle(Key::named(KeyName::Down));
@@ -680,7 +680,7 @@ final class PanelControllerTest extends TestCase {
 
     $frame = Ansi::strip($controller->frame(12));
 
-    $this->assertSame($shown, str_contains($frame, 'ctrl-e editor'), 'the editor hint follows availability');
+    $this->assertSame($shown, str_contains($frame, 'CTRL-E to open the editor'), 'the editor hint follows availability');
   }
 
   /**
@@ -1239,7 +1239,7 @@ final class PanelControllerTest extends TestCase {
     $this->assertStringContainsString('> A', Ansi::strip($controller->frame(20)));
 
     // The spatial hint advertises all four arrows.
-    $this->assertStringContainsString('^/v/</> move', Ansi::strip($controller->frame(20)));
+    $this->assertStringContainsString('^/V/</> to move', Ansi::strip($controller->frame(20)));
   }
 
   /**

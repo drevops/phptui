@@ -191,7 +191,7 @@ final class CalendarWidgetTest extends TestCase {
   public function testHints(): void {
     $labels = array_map(static fn(Hint $hint): string => $hint->label, (new CalendarWidget('2026-07-15'))->hints());
 
-    $this->assertSame(['day', 'week', 'accept', 'cancel'], $labels);
+    $this->assertSame(['move by day', 'move by week', 'accept', 'cancel'], $labels);
   }
 
   public function testWeekStartRotatesHeaderAndLayout(): void {

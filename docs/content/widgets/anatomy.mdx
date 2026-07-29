@@ -43,7 +43,10 @@ A panel stacks its fields as rows, each one in view mode until you open it. Five
 | 8 | description | The field's explanatory text, under its row. Declared once on the field and shown whether or not the row has focus, so it never changes while you work. | `description()` |
 | 9 | help | The field's long-form text. It's the only part not on screen: press <kbd>?</kbd> and it opens in a popup, which is what lets it run to paragraphs where a **description** (8) has to stay a sentence. | |
 | 10 | overflow marker | Content continues above or below. It appears only when the rows don't fit the panel, and points the way there's more. | `indicator()` |
-| 11 | legend | The keys available right now. It rewrites itself as focus moves, so a field in edit mode lists different keys from the panel around it. | `keysHint()` |
+| 11 | legend | The keys available right now. It rewrites itself as focus moves, so a field in edit mode lists different keys from the panel around it. | `renderHintLine()` |
+| 12 | legend key | One key in the **legend** (11). Worded keys are uppercased - <kbd>ESC</kbd>, <kbd>TAB</kbd>, <kbd>SPACE</kbd> - so the eye lands on what to press before reading what it does. | `legendKey()` |
+| 13 | legend description | What that key does, reading as `KEY to action` so an entry is a sentence rather than two words abutted. | `legendDescription()` |
+| 14 | legend separator | Stands between one **legend** (11) entry and the next. | `legendSeparator()` |
 
 ## Edit mode
 

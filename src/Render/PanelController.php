@@ -1338,9 +1338,9 @@ class PanelController {
     return [
       $move,
       new Hint('select', Action::Activate),
-      new Hint('back', Action::Back),
+      new Hint('go back', Action::Back),
       new Hint('quit', Action::Quit),
-      new Hint('help', Action::Help),
+      new Hint('show help', Action::Help),
     ];
   }
 

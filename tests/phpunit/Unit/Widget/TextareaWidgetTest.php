@@ -89,7 +89,7 @@ final class TextareaWidgetTest extends TestCase {
   public function testHints(): void {
     $labels = array_map(static fn(Hint $hint): string => $hint->label, (new TextareaWidget('x'))->hints());
 
-    $this->assertSame(['newline', 'accept', 'cancel'], $labels);
+    $this->assertSame(['insert a newline', 'accept', 'cancel'], $labels);
   }
 
   public function testEditorKeyRequestsHandoffWhenEnabled(): void {
@@ -146,10 +146,10 @@ final class TextareaWidgetTest extends TestCase {
 
   public function testEditorHintOnlyWhenEnabled(): void {
     $enabled = array_map(static fn(Hint $hint): string => $hint->label, (new TextareaWidget('x', externalEdit: TRUE))->hints());
-    $this->assertContains('editor', $enabled);
+    $this->assertContains('open the editor', $enabled);
 
     $disabled = array_map(static fn(Hint $hint): string => $hint->label, (new TextareaWidget('x'))->hints());
-    $this->assertNotContains('editor', $disabled);
+    $this->assertNotContains('open the editor', $disabled);
   }
 
   public function testPlaceholderGhostsAnEmptyBufferOnly(): void {

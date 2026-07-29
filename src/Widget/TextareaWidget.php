@@ -174,10 +174,10 @@ class TextareaWidget extends AbstractWidget implements TextEditCapableInterface,
    */
   #[\Override]
   public function hints(): array {
-    $hints = [new Hint('newline', Action::NewLine), ...parent::hints()];
+    $hints = [new Hint('insert a newline', Action::NewLine), ...parent::hints()];
 
     if ($this->externalEdit) {
-      $hints[] = new Hint('editor', Action::ExternalEdit);
+      $hints[] = new Hint('open the editor', Action::ExternalEdit);
     }
 
     return $hints;

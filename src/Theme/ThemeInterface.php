@@ -72,6 +72,24 @@ interface ThemeInterface {
   public function hint(string $text, bool $selected = FALSE): string;
 
   /**
+   * One key as it appears in the legend.
+   *
+   * A worded key is uppercased here rather than at its source, so a translated
+   * key name is uppercased too and the legend reads as keys throughout.
+   */
+  public function legendKey(string $text): string;
+
+  /**
+   * What one key in the legend does.
+   */
+  public function legendDescription(string $text): string;
+
+  /**
+   * What stands between one legend entry and the next.
+   */
+  public function legendSeparator(): string;
+
+  /**
    * The focused entry's own text, drawn beneath it.
    *
    * Its own atom rather than a reuse of {@see description()}: a field's

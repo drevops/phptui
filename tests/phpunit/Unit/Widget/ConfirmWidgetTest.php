@@ -91,7 +91,7 @@ final class ConfirmWidgetTest extends TestCase {
   public function testHints(): void {
     $labels = array_map(static fn(Hint $hint): string => $hint->label, (new ConfirmWidget(FALSE))->hints());
 
-    $this->assertSame(['yes/no', 'toggle', 'accept', 'cancel'], $labels);
+    $this->assertSame(['answer yes or no', 'toggle', 'accept', 'cancel'], $labels);
   }
 
 }

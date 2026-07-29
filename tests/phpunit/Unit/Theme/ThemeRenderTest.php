@@ -609,7 +609,7 @@ final class ThemeRenderTest extends TestCase {
 
     // Themed with the footer role (dim gray) and composed from arrow glyphs.
     $this->assertStringContainsString("\033[90m", $line);
-    $this->assertStringContainsString('↑/↓ move', Ansi::strip($line));
+    $this->assertStringContainsString('↑/↓ to move', Ansi::strip($line));
   }
 
   public function testRenderHintsJoinsFragmentsInBothModes(): void {
@@ -617,11 +617,11 @@ final class ThemeRenderTest extends TestCase {
     $hints = [new Hint('select', Action::Toggle), new Hint('none/all', Action::SelectNone, Action::SelectAll)];
 
     $unicode = Ansi::strip((new DefaultTheme())->renderHints($keys, ...$hints));
-    $this->assertSame('space select · ←/→ none/all', $unicode);
+    $this->assertSame('SPACE to select · ←/→ to none/all', $unicode);
 
     // The glyphs degrade with the theme's Unicode mode.
     $ascii = Ansi::strip((new DefaultTheme(76, ['unicode' => FALSE]))->renderHints($keys, ...$hints));
-    $this->assertStringContainsString('</> none/all', $ascii);
+    $this->assertStringContainsString('</> to none/all', $ascii);
   }
 
   public function testRenderHintsEmptyWhenNothingBound(): void {
@@ -645,10 +645,10 @@ final class ThemeRenderTest extends TestCase {
 
     $this->assertStringContainsString('Keyboard help', $help);
     $this->assertStringContainsString('Navigation', $help);
-    $this->assertStringContainsString('↑/↓ move', $help);
+    $this->assertStringContainsString('↑/↓ to move', $help);
     $this->assertStringContainsString('Text', $help);
     $this->assertStringContainsString('Empty', $help);
-    $this->assertStringContainsString('? close', $help);
+    $this->assertStringContainsString('? to close', $help);
   }
 
   #[DataProvider('dataProviderKeyHint')]
@@ -683,7 +683,7 @@ final class ThemeRenderTest extends TestCase {
     $nav = KeyMapManager::create()->navigation();
     $theme = new DefaultTheme();
 
-    $this->assertSame('↑/↓ move', $theme->keysHint($nav, 'move', Action::MoveUp, Action::MoveDown));
+    $this->assertSame('↑/↓ to move', Ansi::strip($theme->keysHint($nav, 'move', Action::MoveUp, Action::MoveDown)));
     // Newline is not bound in the navigation scope, so the fragment is empty.
     $this->assertSame('', $theme->keysHint($nav, 'newline', Action::NewLine));
   }
@@ -694,8 +694,8 @@ final class ThemeRenderTest extends TestCase {
     $editor = Ansi::strip((new DefaultTheme())->renderEditor('Name', 'value', $hints, $keys));
 
     // The hint reflects the active bindings.
-    $this->assertStringContainsString('↵ accept', $editor);
-    $this->assertStringContainsString('esc cancel', $editor);
+    $this->assertStringContainsString('↵ to accept', $editor);
+    $this->assertStringContainsString('ESC to cancel', $editor);
   }
 
   public function testHorizontalArrowGlyphs(): void {
@@ -712,7 +712,10 @@ final class ThemeRenderTest extends TestCase {
     $line = (new DefaultTheme())->renderHintLine('enter accept', 'esc cancel');
 
     $this->assertSame('enter accept · esc cancel', Ansi::strip($line));
-    $this->assertStringContainsString("\033[90m", $line);
+
+    // The fragments arrive already styled by their own atoms, so the line only
+    // styles what it adds: the separator between them.
+    $this->assertStringContainsString((new DefaultTheme())->legendSeparator(), $line);
 
     $ascii = (new DefaultTheme(76, ['unicode' => FALSE]))->renderHintLine('a', 'b');
     $this->assertSame('a * b', Ansi::strip($ascii));

@@ -48,6 +48,9 @@ const VIEW_PARTS = [
   'help',
   'overflow marker',
   'legend',
+  'legend key',
+  'legend description',
+  'legend separator',
 ];
 
 /**
@@ -156,6 +159,9 @@ function anatomySpecs(string $tree): array {
       'mode' => 'view',
       'keys' => [$enter],
       'rows' => 21,
+      // The panel's own legend is the longest line any diagram carries, and a
+      // truncated legend is the one thing this frame must not show.
+      'cols' => 78,
       'callouts' => [
         ['col' => 2, 'row' => 1, 'label' => 'breadcrumb', 'side' => 'left'],
         ['col' => 10, 'row' => 1, 'label' => 'breadcrumb separator'],
@@ -167,6 +173,9 @@ function anatomySpecs(string $tree): array {
         ['label' => 'value', 'side' => 'right', 'cells' => [[4, 35], [7, 22], [10, 27], [12, 23]]],
         ['col' => 4, 'row' => 15, 'label' => 'overflow marker'],
         ['col' => 2, 'row' => 18, 'label' => 'legend', 'side' => 'left'],
+        ['col' => 2, 'row' => 18, 'label' => 'legend key', 'side' => 'down'],
+        ['col' => 6, 'row' => 18, 'label' => 'legend description', 'side' => 'down'],
+        ['col' => 14, 'row' => 18, 'label' => 'legend separator', 'side' => 'down'],
       ],
     ],
     'editor' => [
@@ -257,7 +266,7 @@ function anatomySpecs(string $tree): array {
  *   The scratch directory for the intermediate cast.
  */
 function renderAnatomy(string $name, array $spec, string $assets_dir, string $util_dir, string $tmp_dir): void {
-  $tester = (new TuiTester($spec['form']))->options(['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark])->rows($spec['rows'])->cols(FRAME_COLUMNS);
+  $tester = (new TuiTester($spec['form']))->options(['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark])->rows($spec['rows'])->cols($spec['cols'] ?? FRAME_COLUMNS);
   $tester->run(...$spec['keys']);
 
   $clear = Ansi::ESC . '[2J' . Ansi::ESC . '[H';

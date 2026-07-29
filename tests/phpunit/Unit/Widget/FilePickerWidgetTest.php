@@ -388,13 +388,13 @@ final class FilePickerWidgetTest extends TestCase {
     // A single picker binds no toggle key, so that fragment drops and Accept
     // reads "select"; the browse and hidden fragments are always present.
     $single = Ansi::strip($theme->renderHints(KeyMapManager::create()->forField(FieldType::FilePicker), ...(new FilePickerWidget($this->root))->hints()));
-    $this->assertStringNotContainsString('space select', $single);
+    $this->assertStringNotContainsString('SPACE to select', $single);
     $this->assertStringContainsString('open', $single);
-    $this->assertStringContainsString('tab hidden', $single);
+    $this->assertStringContainsString('TAB to show hidden', $single);
 
     // Multiple mode leads with the toggle key and Accept reads "accept".
     $multiple = Ansi::strip($theme->renderHints(KeyMapManager::create()->forField(FieldType::FilePicker, TRUE), ...(new FilePickerWidget($this->root, multiple: TRUE))->hints()));
-    $this->assertStringContainsString('space select', $multiple);
+    $this->assertStringContainsString('SPACE to select', $multiple);
     $this->assertStringContainsString('accept', $multiple);
   }
 

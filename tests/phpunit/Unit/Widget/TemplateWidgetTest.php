@@ -226,7 +226,7 @@ final class TemplateWidgetTest extends TestCase {
   public function testHintLeadsWithSlotNavigation(): void {
     $labels = array_map(static fn(Hint $hint): string => $hint->label, (new TemplateWidget(new Template('{{a}}-{{b}}')))->hints());
 
-    $this->assertSame(['next/previous', 'accept', 'cancel'], $labels);
+    $this->assertSame(['move between parts', 'accept', 'cancel'], $labels);
   }
 
   /**

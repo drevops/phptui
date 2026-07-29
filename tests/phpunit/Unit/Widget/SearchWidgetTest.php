@@ -325,7 +325,7 @@ final class SearchWidgetTest extends TestCase {
   public function testMultipleHints(): void {
     $labels = array_map(static fn(Hint $hint): string => $hint->label, (new SearchWidget($this->services, [], TRUE))->hints());
 
-    $this->assertSame(['select', 'move', 'none/all', 'accept', 'cancel'], $labels);
+    $this->assertSame(['select', 'move', 'select none or all', 'accept', 'cancel'], $labels);
   }
 
   public function testMultipleSkipsNonSelectableWhenToggling(): void {

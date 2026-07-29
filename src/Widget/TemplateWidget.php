@@ -125,7 +125,7 @@ class TemplateWidget extends AbstractWidget implements TextEditCapableInterface 
    */
   #[\Override]
   public function hints(): array {
-    return [new Hint('next/previous', Action::MoveDown, Action::MoveUp), ...parent::hints()];
+    return [new Hint('move between parts', Action::MoveDown, Action::MoveUp), ...parent::hints()];
   }
 
   /**

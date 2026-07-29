@@ -108,6 +108,19 @@ final class Strings {
   }
 
   /**
+   * Uppercase text.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The uppercased text; the fallback uppercases ASCII letters only.
+   */
+  public static function upper(string $text): string {
+    return self::mbstring() ? mb_strtoupper($text, 'UTF-8') : strtoupper($text);
+  }
+
+  /**
    * Replace `{{token}}` placeholders in a template with values.
    *
    * A token is `{{name}}` with optional inner whitespace; one missing from the

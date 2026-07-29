@@ -178,8 +178,8 @@ class CalendarWidget extends AbstractWidget implements StepCapableInterface {
   #[\Override]
   public function hints(): array {
     return [
-      new Hint('day', Action::MoveLeft, Action::MoveRight),
-      new Hint('week', Action::MoveUp, Action::MoveDown),
+      new Hint('move by day', Action::MoveLeft, Action::MoveRight),
+      new Hint('move by week', Action::MoveUp, Action::MoveDown),
       ...parent::hints(),
     ];
   }

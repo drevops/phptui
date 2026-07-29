@@ -345,7 +345,7 @@ final class SelectWidgetTest extends TestCase {
     $this->assertSame([
       ['select', [Action::Toggle]],
       ['move', [Action::MoveUp, Action::MoveDown]],
-      ['none/all', [Action::SelectNone, Action::SelectAll]],
+      ['select none or all', [Action::SelectNone, Action::SelectAll]],
       ['accept', [Action::Accept]],
       ['cancel', [Action::Cancel]],
     ], $hints);
