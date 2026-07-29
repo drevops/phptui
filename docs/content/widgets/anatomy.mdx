@@ -34,7 +34,7 @@ A panel stacks its fields as rows. Five fields of a delivery form are visible he
 - **3** label - the field's name. The one part of a row that never changes while you work.
 - **4** value - the settled answer. It shows what was accepted, so it stays empty until the field is answered and never shows what you're mid-way through typing - that's the **draft** (17).
 - **7** overflow - content continues above or below. It appears only when the rows don't fit the panel, and points the way there's more.
-- **8** key legend - the keys available right now. It rewrites itself as focus moves, so an open **editor** lists different keys from the panel around it.
+- **8** legend - the keys available right now. It rewrites itself as focus moves, so an open **editor** lists different keys from the panel around it.
 
 **One number, several arrows.** The **label** (3) and the **value** (4) each carry an arrow per row, because every row has one of each - they belong to a row, not to a particular field. A part that occurs several times keeps a single number; numbering each occurrence would read as several different parts.
 
@@ -138,7 +138,7 @@ A **constraint** (13) describes the field; an **error** (19) describes your valu
 | 5 | description | The field's explanatory text. |
 | 6 | instruction | The field's short how-to line, below the **description** (5). |
 | 7 | overflow | The glyph showing content continues above or below. |
-| 8 | key legend | The keys available right now, in the footer. |
+| 8 | legend | The keys available right now, in the footer. |
 | 9 | selector | The per-entry chosen-state glyph. |
 | 10 | entry | One line of a list the widget offers. |
 | 11 | entry marker | The glyph showing which **entry** (10) is highlighted. |
@@ -162,7 +162,7 @@ A **constraint** (13) describes the field; an **error** (19) describes your valu
 | 5 | description | `ThemeInterface::description()`, shared with the **entry detail** (14) |
 | 6 | instruction | `Field::$hint`, `DefaultTheme::renderFieldHint()`, `ThemeInterface::hint()` |
 | 7 | overflow | `ThemeInterface::indicator()`, `indicatorUp()`, `indicatorDown()` |
-| 8 | key legend | `WidgetInterface::hints()`, `Hint`, `ThemeInterface::keysHint()` |
+| 8 | legend | `WidgetInterface::hints()`, `Hint`, `ThemeInterface::keysHint()` - to be renamed to `legend()` |
 | 9 | selector | `ThemeInterface::check()`, `radio()` - no shared name |
 | 10 | entry | unnamed |
 | 11 | entry marker | `ThemeInterface::marker()`, shared with the **marker** (2) |
@@ -177,7 +177,9 @@ A **constraint** (13) describes the field; an **error** (19) describes your valu
 
 ## Where the names disagree
 
-**`hint` names four unrelated things.** `ThemeInterface::hint()` is a style atom. `Field::$hint` is the **instruction** (6). `WidgetInterface::hints()` returns the **key legend** (8). `SelectionBoundedTrait::selectionHint()` returns the **constraint** (13). Nothing connects them.
+**`hints()` returns the legend, not a hint.** `WidgetInterface::hints()` has nothing to do with `Field::$hint` or with `ThemeInterface::hint()` - it returns the keys of the **legend** (8). It becomes `WidgetInterface::legend()`, which leaves `hint` naming one thing in the field and one thing in the theme, and those two agree with each other on purpose.
+
+**An atom is named after the part it draws.** `Field::$hint` and `ThemeInterface::hint()` line up because a theme's vocabulary should be the same vocabulary a reader uses for what's on screen. Where the code and this page disagree on a name, the code is what moves.
 
 **`description` names two parts.** The **description** (5) and the **entry detail** (14) both render through `ThemeInterface::description()`, so restyling one restyles the other. The **constraint** (13) used to make a third, drawn identically and sitting right beside the **entry detail** (14); it now goes through `renderGuidance()`, the guidance voice it shares with the **instruction** (6).
 

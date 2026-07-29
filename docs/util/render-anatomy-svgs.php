@@ -42,7 +42,7 @@ const PARTS = [
   'description',
   'instruction',
   'overflow',
-  'key legend',
+  'legend',
   'selector',
   'entry',
   'entry marker',
@@ -129,7 +129,7 @@ function anatomySpecs(string $tree): array {
         ['label' => 'label', 'side' => 'left', 'cells' => [[7, 4], [10, 4], [12, 4]]],
         ['label' => 'value', 'side' => 'right', 'cells' => [[4, 25], [7, 22], [10, 27], [12, 23]]],
         ['col' => 4, 'row' => 15, 'label' => 'overflow'],
-        ['col' => 2, 'row' => 18, 'label' => 'key legend', 'side' => 'left'],
+        ['col' => 2, 'row' => 18, 'label' => 'legend', 'side' => 'left'],
       ],
     ],
     'editor' => [
