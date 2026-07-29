@@ -441,17 +441,6 @@ final class FormTest extends TestCase {
     $this->assertSame('', $crop->placeholder);
   }
 
-  public function testTemplateWithoutPatternThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Field "crate" is a template field but declares no pattern');
-
-    Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->template('crate', 'Crate');
-      })
-      ->build();
-  }
-
   public function testPatternIgnoredOnNonTemplateField(): void {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $panel): void {
@@ -522,15 +511,6 @@ final class FormTest extends TestCase {
     $this->assertSame([1 => 'Poor', 5 => 'Excellent'], $form->field('taste')?->ratingCaptions);
   }
 
-  public function testRatingStepThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Field "r" declares a step of 2 on a scale whose points are its steps');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->rating('r')->step(2))
-      ->build();
-  }
-
   #[DataProvider('dataProviderRatingCollapsedScaleThrows')]
   public function testRatingCollapsedScaleThrows(int $min, int $max): void {
     $this->expectException(FormException::class);
@@ -576,24 +556,6 @@ final class FormTest extends TestCase {
     $this->assertSame(Weekday::Monday, $plain->dateBounds->weekStart);
   }
 
-  public function testDateInvalidBoundThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Field "d" declares an invalid date "2026-13-01".');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->calendar('d')->minDate('2026-13-01'))
-      ->build();
-  }
-
-  public function testDateMinAfterMaxThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Field "d" declares min date 2026-12-31 after max date 2026-01-01.');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->calendar('d')->minDate('2026-12-31')->maxDate('2026-01-01'))
-      ->build();
-  }
-
   public function testDateBoundsIgnoredOnNonDateField(): void {
     $form = Form::create('T')
       ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->text('t')->minDate('2020-01-01')->weekStart(Weekday::Sunday))
@@ -601,33 +563,6 @@ final class FormTest extends TestCase {
 
     // The date setters are inert on a non-date field: no bounds are attached.
     $this->assertNotInstanceOf(DateBounds::class, $form->field('t')?->dateBounds);
-  }
-
-  public function testNumberMinGreaterThanMaxThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Field "n" declares min 10 greater than max 1.');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->number('n')->min(10)->max(1))
-      ->build();
-  }
-
-  public function testNumberNonPositiveStepThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Field "n" declares a non-positive step 0.');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->number('n')->step(0))
-      ->build();
-  }
-
-  public function testFilePickerNonPositiveMaxSizeThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Field "f" declares a maximum file size of 0 below one byte.');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->filePicker('f')->maxSize(0))
-      ->build();
   }
 
   public function testPageSizeAssembled(): void {
@@ -642,24 +577,6 @@ final class FormTest extends TestCase {
 
     // A field with nothing declared carries no page size and uses the default.
     $this->assertNull($form->field('plain')?->pageSize);
-  }
-
-  public function testNonPositivePageSizeThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Field "n" declares a non-positive page size 0.');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->search('n')->pageSize(0))
-      ->build();
-  }
-
-  public function testMultipleOnUnsupportedTypeThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Field "t" of type "text" does not collect several values');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->text('t')->multiple())
-      ->build();
   }
 
   public function testSelectionBoundsAssembled(): void {
@@ -693,33 +610,6 @@ final class FormTest extends TestCase {
 
     // A multiple field with no selection limits carries none.
     $this->assertNotInstanceOf(SelectionBounds::class, $form->field('plain')?->selectionBounds);
-  }
-
-  public function testSelectionLimitOnNonMultipleThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Field "s" declares selection limits but is not multiple');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->select('s')->minSelections(2)->option('a'))
-      ->build();
-  }
-
-  public function testSelectionMinGreaterThanMaxThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Field "s" declares min 5 selections greater than max 2.');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->select('s')->multiple()->minSelections(5)->maxSelections(2))
-      ->build();
-  }
-
-  public function testSelectionMinBelowOneThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Selection bounds declare a minimum of 0 below one.');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->select('s')->multiple()->minSelections(0))
-      ->build();
   }
 
   public function testFilePickerOptions(): void {
@@ -788,25 +678,6 @@ final class FormTest extends TestCase {
     $this->assertSame(['a'], $field->selectableValues());
   }
 
-  public function testDuplicateFieldIdThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Duplicate field id "x".');
-
-    Form::create('T')
-      ->panel('a', 'A', fn(PanelBuilder $p): FieldBuilder => $p->text('x'))
-      ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('x'))
-      ->build();
-  }
-
-  public function testToggleWithoutTwoOptionsThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Toggle field "t" must have exactly two options, 1 given.');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->toggle('t')->option('only'))
-      ->build();
-  }
-
   #[DataProvider('dataProviderToggleInvalidDefaultThrows')]
   public function testToggleInvalidDefaultThrows(mixed $default): void {
     $this->expectException(FormException::class);
@@ -854,24 +725,6 @@ final class FormTest extends TestCase {
     $this->assertSame(['b', 'a'], $form->field('rk2')?->default);
   }
 
-  public function testReorderWithFewerThanTwoOptionsThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Reorder field "r" must have at least two options, 1 given.');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->reorder('r')->option('only'))
-      ->build();
-  }
-
-  public function testReorderWithStructuralOptionThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Reorder field "r" allows only plain options - no headings, separators or disabled rows.');
-
-    Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->reorder('r')->option('a')->separator()->option('b'))
-      ->build();
-  }
-
   public function testModalPanelBuildsWithConfiguredButtons(): void {
     $form = Form::create('T')
       ->panel('root', 'Root', function (PanelBuilder $p): void {
@@ -905,18 +758,6 @@ final class FormTest extends TestCase {
     $this->assertSame('Cancel', $config->buttons->cancelLabel);
   }
 
-  public function testModalPanelWithSubPanelThrows(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Modal panel "confirm" cannot contain sub-panels.');
-
-    Form::create('T')
-      ->panel('confirm', 'Confirm', function (PanelBuilder $m): void {
-        $m->modal();
-        $m->panel('nested', 'Nested', fn(PanelBuilder $n): FieldBuilder => $n->text('x'));
-      })
-      ->build();
-  }
-
   public function testLayoutFlowsToTheDefinitionAndPanels(): void {
     $form = Form::create('Demo')
       ->layout(1, 2)
@@ -935,15 +776,188 @@ final class FormTest extends TestCase {
     $this->assertSame([], $form->panels[1]->layout);
   }
 
-  #[DataProvider('dataProviderLayoutMismatchThrows')]
-  public function testLayoutMismatchThrows(\Closure $declare, string $message): void {
+  #[DataProvider('dataProviderBuildThrows')]
+  public function testBuildThrows(\Closure $declare, string $message): void {
     $this->expectException(FormException::class);
     $this->expectExceptionMessage($message);
 
     $declare();
   }
 
-  public static function dataProviderLayoutMismatchThrows(): \Iterator {
+  /**
+   * Data provider for testBuildThrows().
+   *
+   * @return \Iterator<string, array{\Closure, string}>
+   *   A declaration the builder refuses, and the message it refuses it with.
+   */
+  public static function dataProviderBuildThrows(): \Iterator {
+    yield 'template without a pattern' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->template('crate', 'Crate'))
+          ->build();
+      },
+      'Field "crate" is a template field but declares no pattern',
+    ];
+
+    yield 'rating with a step' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->rating('r')->step(2))
+          ->build();
+      },
+      'Field "r" declares a step of 2 on a scale whose points are its steps',
+    ];
+
+    yield 'unparseable date bound' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->calendar('d')->minDate('2026-13-01'))
+          ->build();
+      },
+      'Field "d" declares an invalid date "2026-13-01".',
+    ];
+
+    yield 'min date after max date' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('p', 'P', function (PanelBuilder $p): void {
+            $p->calendar('d')->minDate('2026-12-31')->maxDate('2026-01-01');
+          })
+          ->build();
+      },
+      'Field "d" declares min date 2026-12-31 after max date 2026-01-01.',
+    ];
+
+    yield 'number min above max' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->number('n')->min(10)->max(1))
+          ->build();
+      },
+      'Field "n" declares min 10 greater than max 1.',
+    ];
+
+    yield 'non-positive number step' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->number('n')->step(0))
+          ->build();
+      },
+      'Field "n" declares a non-positive step 0.',
+    ];
+
+    yield 'non-positive file size' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->filePicker('f')->maxSize(0))
+          ->build();
+      },
+      'Field "f" declares a maximum file size of 0 below one byte.',
+    ];
+
+    yield 'non-positive page size' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->search('n')->pageSize(0))
+          ->build();
+      },
+      'Field "n" declares a non-positive page size 0.',
+    ];
+
+    yield 'multiple on a single-value type' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->text('t')->multiple())
+          ->build();
+      },
+      'Field "t" of type "text" does not collect several values',
+    ];
+
+    yield 'selection limits without multiple' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('p', 'P', function (PanelBuilder $p): void {
+            $p->select('s')->minSelections(2)->option('a');
+          })
+          ->build();
+      },
+      'Field "s" declares selection limits but is not multiple',
+    ];
+
+    yield 'selection min above max' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('p', 'P', function (PanelBuilder $p): void {
+            $p->select('s')->multiple()->minSelections(5)->maxSelections(2);
+          })
+          ->build();
+      },
+      'Field "s" declares min 5 selections greater than max 2.',
+    ];
+
+    yield 'selection min below one' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('p', 'P', function (PanelBuilder $p): void {
+            $p->select('s')->multiple()->minSelections(0);
+          })
+          ->build();
+      },
+      'Selection bounds declare a minimum of 0 below one.',
+    ];
+
+    yield 'field id used twice' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('a', 'A', fn(PanelBuilder $p): FieldBuilder => $p->text('x'))
+          ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('x'))
+          ->build();
+      },
+      'Duplicate field id "x".',
+    ];
+
+    yield 'toggle without two options' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->toggle('t')->option('only'))
+          ->build();
+      },
+      'Toggle field "t" must have exactly two options, 1 given.',
+    ];
+
+    yield 'reorder with a single option' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->reorder('r')->option('only'))
+          ->build();
+      },
+      'Reorder field "r" must have at least two options, 1 given.',
+    ];
+
+    yield 'reorder with a structural option' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('p', 'P', function (PanelBuilder $p): void {
+            $p->reorder('r')->option('a')->separator()->option('b');
+          })
+          ->build();
+      },
+      'Reorder field "r" allows only plain options - no headings, separators or disabled rows.',
+    ];
+
+    yield 'modal panel holding a sub-panel' => [
+      static function (): void {
+        Form::create('T')
+          ->panel('confirm', 'Confirm', function (PanelBuilder $m): void {
+            $m->modal();
+            $m->panel('nested', 'Nested', fn(PanelBuilder $n): FieldBuilder => $n->text('x'));
+          })
+          ->build();
+      },
+      'Modal panel "confirm" cannot contain sub-panels.',
+    ];
+
     yield 'form slots below the panels' => [
       static function (): void {
         Form::create('Demo')
