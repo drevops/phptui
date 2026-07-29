@@ -29,6 +29,7 @@ use DrevOps\Tui\Theme\HAlign;
 use DrevOps\Tui\Theme\Spacing;
 use DrevOps\Tui\Theme\VAlign;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -681,24 +682,38 @@ final class PanelControllerTest extends TestCase {
     $this->assertSame('seeded', $controller->answers()->value('notes'));
   }
 
-  public function testTextareaEditorHintShownWhenAvailable(): void {
-    $controller = $this->textareaController($this->fixedEditor(NULL));
+  #[DataProvider('dataProviderTextareaEditorHintFollowsAvailability')]
+  public function testTextareaEditorHintFollowsAvailability(bool $available, bool $shown): void {
+    $controller = $this->textareaController($available ? $this->fixedEditor(NULL) : $this->unavailableEditor());
 
     $controller->handle(Key::named(KeyName::Enter));
     $controller->handle(Key::named(KeyName::Enter));
 
-    $this->assertStringContainsString('ctrl-e editor', Ansi::strip($controller->frame(12)));
+    $frame = Ansi::strip($controller->frame(12));
+
+    $this->assertSame($shown, str_contains($frame, 'ctrl-e editor'), 'the editor hint follows availability');
   }
 
-  public function testTextareaEditorHintHiddenAndHandoffInertWhenUnavailable(): void {
+  /**
+   * Data provider for testTextareaEditorHintFollowsAvailability().
+   *
+   * @return \Iterator<string, array{bool, bool}>
+   *   Whether an editor is available and whether the hint offers it.
+   */
+  public static function dataProviderTextareaEditorHintFollowsAvailability(): \Iterator {
+    yield 'editor available' => [TRUE, TRUE];
+    yield 'no editor available' => [FALSE, FALSE];
+  }
+
+  public function testTextareaHandoffInertWithoutAnEditor(): void {
     $controller = $this->textareaController($this->unavailableEditor());
 
     $controller->handle(Key::named(KeyName::Enter));
     $controller->handle(Key::named(KeyName::Enter));
-    $this->assertStringNotContainsString('ctrl-e editor', Ansi::strip($controller->frame(12)));
 
     // With no editor available the trigger is inert - editing continues.
     $controller->handle(Key::char("\x05"));
+
     $this->assertTrue($controller->isEditing());
     $this->assertSame('seeded', $controller->answers()->value('notes'));
   }
@@ -805,40 +820,41 @@ final class PanelControllerTest extends TestCase {
     $this->assertSame(1, $controller->cursor());
   }
 
-  public function testModalCancelButtonRestoresTheAnswers(): void {
+  #[DataProvider('dataProviderModalDismissalRestoresTheAnswers')]
+  public function testModalDismissalRestoresTheAnswers(array $dismissal): void {
     $controller = $this->modalController();
 
     $controller->handle(Key::named(KeyName::Down));
     $controller->handle(Key::named(KeyName::Enter));
 
-    // Edit the field, then activate the Cancel button.
+    // Edit the field so the dialog has something to discard.
     $controller->handle(Key::named(KeyName::Enter));
     $controller->handle(Key::char('X'));
     $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::named(KeyName::Down));
-    $controller->handle(Key::named(KeyName::Down));
-    $controller->handle(Key::named(KeyName::Enter));
+
+    foreach ($dismissal as $key) {
+      $controller->handle($key);
+    }
 
     $this->assertFalse($controller->currentPanel()->isModal());
     $this->assertSame('ace', $controller->answers()->value('nick'));
+    // The cursor is restored to the item that opened the dialog.
+    $this->assertSame(1, $controller->cursor());
   }
 
-  public function testModalEscapeRestoresTheAnswers(): void {
-    $controller = $this->modalController();
+  /**
+   * Data provider for testModalDismissalRestoresTheAnswers().
+   *
+   * @return \Iterator<string, array{\DrevOps\Tui\Input\Key[]}>
+   *   The keys that dismiss an open dialog, discarding its edits.
+   */
+  public static function dataProviderModalDismissalRestoresTheAnswers(): \Iterator {
+    // Past the field to Cancel, then activate it.
+    yield 'cancel button' => [
+      [Key::named(KeyName::Down), Key::named(KeyName::Down), Key::named(KeyName::Enter)],
+    ];
 
-    $controller->handle(Key::named(KeyName::Down));
-    $controller->handle(Key::named(KeyName::Enter));
-
-    $controller->handle(Key::named(KeyName::Enter));
-    $controller->handle(Key::char('Z'));
-    $controller->handle(Key::named(KeyName::Enter));
-
-    // Escape dismisses the dialog like Cancel: edits are discarded.
-    $controller->handle(Key::named(KeyName::Escape));
-
-    $this->assertFalse($controller->currentPanel()->isModal());
-    $this->assertSame('ace', $controller->answers()->value('nick'));
-    $this->assertSame(1, $controller->cursor());
+    yield 'escape' => [[Key::named(KeyName::Escape)]];
   }
 
   public function testModalQuitDismissesInsteadOfEndingTheForm(): void {
@@ -992,70 +1008,91 @@ final class PanelControllerTest extends TestCase {
     $this->assertSame(str_repeat(' ', 15) . '+' . str_repeat('-', 28) . '+', rtrim($lines[0]));
   }
 
-  public function testRunFullscreenTooSmallGuardSwallowsAllButQuit(): void {
+  #[DataProvider('dataProviderRunFullscreenTooSmallGuard')]
+  public function testRunFullscreenTooSmallGuard(array $keys, bool $done, bool $interrupted): void {
     $controller = $this->fullscreenController(['fullscreen' => TRUE]);
-    // Six rows are below the ten-row minimum; Down must be swallowed by the
-    // guard screen, then quit ends the loop.
-    $terminal = new BufferedTerminal([KeyEncoder::encode(Key::named(KeyName::Down)), 'q'], 6, 40);
+    // Six rows are below the ten-row minimum, so the guard screen stands in
+    // for the frame and swallows everything that is not an exit.
+    $terminal = new BufferedTerminal($keys, 6, 40);
 
     $controller->run($terminal);
 
     $output = Ansi::strip($terminal->output());
     $this->assertStringContainsString('Terminal too small.', $output);
     $this->assertStringContainsString('Need at least 24 x 10 - have 40 x 6.', $output);
-    $this->assertTrue($controller->isDone());
+    $this->assertSame($done, $controller->isDone());
+    $this->assertSame($interrupted, $controller->isInterrupted());
     $this->assertSame(0, $controller->cursor());
   }
 
-  public function testRunFullscreenTooSmallGuardStillInterrupts(): void {
-    $controller = $this->fullscreenController(['fullscreen' => TRUE]);
-    $terminal = new BufferedTerminal([KeyEncoder::encode(Key::named(KeyName::Interrupt))], 6, 40);
+  /**
+   * Data provider for testRunFullscreenTooSmallGuard().
+   *
+   * @return \Iterator<string, array{string[], bool, bool}>
+   *   The encoded keys the guard screen reads, and whether they leave the
+   *   controller finished and interrupted.
+   */
+  public static function dataProviderRunFullscreenTooSmallGuard(): \Iterator {
+    // The Down is swallowed by the guard, then quit ends the loop.
+    yield 'quit after a swallowed key' => [
+      [KeyEncoder::encode(Key::named(KeyName::Down)), 'q'],
+      TRUE,
+      FALSE,
+    ];
+
+    yield 'interrupt' => [[KeyEncoder::encode(Key::named(KeyName::Interrupt))], FALSE, TRUE];
+  }
+
+  #[DataProvider('dataProviderRunFullscreenMinimums')]
+  public function testRunFullscreenMinimums(array $options, int $width, string $label, int $rows, int $cols, bool $too_small): void {
+    $controller = $this->fullscreenController($options, $width, $label);
+    $terminal = new BufferedTerminal([], $rows, $cols);
 
     $controller->run($terminal);
 
-    $this->assertTrue($controller->isInterrupted());
-    $this->assertFalse($controller->isDone());
+    $output = Ansi::strip($terminal->output());
+
+    // The guard screen stands in for the frame, so the two are exclusive.
+    $this->assertSame($too_small, str_contains($output, 'Terminal too small.'), 'the guard screen shows only when the terminal is too small');
+    $this->assertSame(!$too_small, str_contains($output, 'General'), 'the frame renders only when the terminal is big enough');
   }
 
-  public function testRunFullscreenMinWidthIsMeasuredFromContent(): void {
-    $builder = Form::create('Demo')
-      ->panel('general', 'General', function (PanelBuilder $p): void {
-        $p->text('window', 'Preferred delivery window of the season');
-      });
-    $controller = new PanelController($builder->build(), new DefaultTheme(30, ['color' => FALSE, 'unicode' => FALSE, 'fullscreen' => TRUE, 'border' => Border::None, 'spacing' => Spacing::Normal]), ['window' => 'Morning']);
+  /**
+   * Data provider for testRunFullscreenMinimums().
+   *
+   * @return \Iterator<string, array{array<string,mixed>, int, string, int, int, bool}>
+   *   The theme options, theme width and field label, the terminal rows and
+   *   columns, and whether the run dead-ends on the too-small guard.
+   */
+  public static function dataProviderRunFullscreenMinimums(): \Iterator {
+    $long = 'Preferred delivery window of the season';
 
     // Thirty columns cannot fit the measured 50-column field row.
-    $terminal = new BufferedTerminal([], 24, 30);
-    $controller->run($terminal);
+    yield 'measured min width exceeds the terminal' => [['fullscreen' => TRUE], 30, $long, 24, 30, TRUE];
 
-    $this->assertStringContainsString('Terminal too small.', Ansi::strip($terminal->output()));
-  }
+    yield 'explicit min width overrides the measure' => [
+      ['fullscreen' => TRUE, 'min_width' => 10],
+      30,
+      $long,
+      24,
+      30,
+      FALSE,
+    ];
 
-  public function testRunFullscreenExplicitMinWidthOverridesTheMeasure(): void {
-    $builder = Form::create('Demo')
-      ->panel('general', 'General', function (PanelBuilder $p): void {
-        $p->text('window', 'Preferred delivery window of the season');
-      });
-    $controller = new PanelController($builder->build(), new DefaultTheme(30, ['color' => FALSE, 'unicode' => FALSE, 'fullscreen' => TRUE, 'min_width' => 10, 'border' => Border::None, 'spacing' => Spacing::Normal]), ['window' => 'Morning']);
+    // The content measures ~50 columns, but the 30-column cap is the
+    // consumer's word that clipping is acceptable: a 40-column terminal must
+    // render the capped frame, not dead-end on an unsatisfiable notice.
+    yield 'max width caps the measured min width' => [
+      ['fullscreen' => TRUE, 'max_width' => 30],
+      40,
+      $long,
+      24,
+      40,
+      FALSE,
+    ];
 
-    $terminal = new BufferedTerminal([], 24, 30);
-    $controller->run($terminal);
-
-    $output = Ansi::strip($terminal->output());
-    $this->assertStringNotContainsString('Terminal too small.', $output);
-    $this->assertStringContainsString('General', $output);
-  }
-
-  public function testRunOutsideFullscreenIgnoresTheMinimums(): void {
     // The same six-row terminal renders the plain frame when not fullscreen.
-    $controller = $this->fullscreenController([]);
-    $terminal = new BufferedTerminal([], 6, 40);
-
-    $controller->run($terminal);
-
-    $output = Ansi::strip($terminal->output());
-    $this->assertStringNotContainsString('Terminal too small.', $output);
-    $this->assertStringContainsString('General', $output);
+    yield 'outside fullscreen the minimums do not apply' => [[], 40, 'Name', 6, 40, FALSE];
   }
 
   public function testRunFullscreenTooSmallQuitDismissesAnOpenModal(): void {
@@ -1102,24 +1139,6 @@ final class PanelControllerTest extends TestCase {
     // screen; a body-viewport bound would deduct the frame chrome a second
     // time and slice the last field away.
     $this->assertStringContainsString('Fourth', Ansi::strip($controller->frame(14)));
-  }
-
-  public function testRunFullscreenMeasuredMinWidthIsCappedByMaxWidth(): void {
-    $builder = Form::create('Demo')
-      ->panel('general', 'General', function (PanelBuilder $p): void {
-        $p->text('window', 'Preferred delivery window of the season');
-      });
-    $controller = new PanelController($builder->build(), new DefaultTheme(40, ['color' => FALSE, 'unicode' => FALSE, 'fullscreen' => TRUE, 'max_width' => 30, 'border' => Border::None, 'spacing' => Spacing::Normal]), ['window' => 'Morning']);
-
-    // The content measures ~50 columns, but the 30-column cap is the
-    // consumer's word that clipping is acceptable: a 40-column terminal must
-    // render the capped frame, not dead-end on an unsatisfiable notice.
-    $terminal = new BufferedTerminal([], 24, 40);
-    $controller->run($terminal);
-
-    $output = Ansi::strip($terminal->output());
-    $this->assertStringNotContainsString('Terminal too small.', $output);
-    $this->assertStringContainsString('General', $output);
   }
 
   public function testRunFullscreenMinHeightIsCappedByMaxHeight(): void {
@@ -1255,14 +1274,16 @@ final class PanelControllerTest extends TestCase {
    *   Theme options merged over colourless ASCII defaults.
    * @param int $width
    *   The theme width (the terminal width in fullscreen).
+   * @param string $label
+   *   The field label, which is what the content measures at its widest.
    *
    * @return \DrevOps\Tui\Render\PanelController
    *   The controller.
    */
-  protected function fullscreenController(array $options, int $width = 40): PanelController {
+  protected function fullscreenController(array $options, int $width = 40, string $label = 'Name'): PanelController {
     $builder = Form::create('Demo')
-      ->panel('general', 'General', function (PanelBuilder $p): void {
-        $p->text('name', 'Name');
+      ->panel('general', 'General', function (PanelBuilder $p) use ($label): void {
+        $p->text('name', $label);
       });
 
     return new PanelController($builder->build(), new DefaultTheme($width, ['color' => FALSE, 'unicode' => FALSE] + $options + ['border' => Border::None, 'spacing' => Spacing::Normal]), ['name' => 'Acme']);
