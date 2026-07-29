@@ -28,6 +28,7 @@ const sidebars = {
       collapsible: false,
       items: [
         {type: 'doc', id: 'widgets/index', label: 'Overview'},
+        'widgets/anatomy',
         'widgets/calendar',
         'widgets/confirm',
         'widgets/filepicker',
