@@ -78,7 +78,7 @@ const FRAME_COLUMNS = 68;
  * the documentation column, so type sized to look right here lands near body
  * size on the page.
  */
-const FONT_SIZE = 20.0;
+const FONT_SIZE = 15.0;
 
 /**
  * The line height the frames are drawn at.
@@ -121,7 +121,7 @@ function anatomySpecs(string $tree): array {
       'callouts' => [
         ['col' => 2, 'row' => 1, 'label' => 'breadcrumb'],
         ['col' => 2, 'row' => 4, 'label' => 'marker'],
-        ['col' => 5, 'row' => 4, 'label' => 'label'],
+        ['col' => 9, 'row' => 4, 'label' => 'label'],
         ['col' => 16, 'row' => 4, 'label' => 'value'],
         ['col' => 6, 'row' => 5, 'label' => 'description'],
         ['col' => 6, 'row' => 6, 'label' => 'instruction'],
@@ -454,7 +454,10 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
       continue;
     }
 
-    $label_y = max($cell_y, $stack[$side] + FONT_SIZE * 1.4);
+    // One row of separation is enough, and it is what keeps a leader straight:
+    // a label that fits its own row sits level with the cell it names, so the
+    // leader is a horizontal line and can cross nothing on the way.
+    $label_y = max($cell_y, $stack[$side] + max($cell_height, FONT_SIZE * 1.15));
     $stack[$side] = $label_y;
     $tip_x = $side === 'left' ? $cell_x - $cell_width * 0.7 : $cell_x + $cell_width * 0.7;
     $bend_x = $side === 'left' ? $left_edge - $cell_width * 0.6 : $right_edge + $cell_width * 0.6;
