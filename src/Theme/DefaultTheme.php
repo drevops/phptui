@@ -642,9 +642,12 @@ class DefaultTheme implements ThemeInterface {
    * {@inheritdoc}
    */
   public function hint(string $text, bool $selected = FALSE): string {
-    // The description's grey, italicized: guidance on how to answer is never
-    // louder than the question itself, but still reads as its own voice.
-    return $this->paint($this->emphasize(Sgr::of(Sgr::Italic, Sgr::Grey), $selected), $this->linkify($text));
+    // Guidance on how to answer is never louder than the question itself, but
+    // still reads as its own voice - and a constraint sits directly beneath an
+    // option's own description, so the two must not share a hue. The italic
+    // reinforces it where the surface honours it, but cannot carry the
+    // distinction alone: renderers and plain terminals drop it.
+    return $this->paint($this->emphasize(Sgr::of(Sgr::Italic, Sgr::Steel), $selected), $this->linkify($text));
   }
 
   /**

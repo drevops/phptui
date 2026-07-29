@@ -38,6 +38,17 @@ class MonoTheme extends DefaultTheme {
    * {@inheritdoc}
    */
   #[\Override]
+  public function hint(string $text, bool $selected = FALSE): string {
+    // The inherited guidance hue would be the one colour in a hue-free theme,
+    // so the voice moves along the grey ramp instead: a step away from the
+    // description it must not be mistaken for.
+    return $this->paint($this->emphasize($this->isDark ? Sgr::of(Sgr::Italic, Sgr::Pewter) : Sgr::of(Sgr::Italic, Sgr::Ash), $selected), $this->linkify($text));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
   public function indicator(string $text): string {
     return $this->paint(Sgr::of(Sgr::Bold), $text);
   }

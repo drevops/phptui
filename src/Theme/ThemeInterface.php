@@ -55,11 +55,19 @@ interface ThemeInterface {
   public function description(string $text, bool $selected = FALSE): string;
 
   /**
-   * A field's hint - how to answer it; bold when its row is selected.
+   * The guidance voice - how to answer; bold when its row is selected.
    *
-   * The guidance text a field declares, styled apart from its description so
-   * the two read as different things. Unrelated to {@see keyHint()} and
+   * Draws every line that tells the reader what is expected before anything
+   * has gone wrong: a field's own hint, and the constraint a bounded field
+   * states above its options. Unrelated to {@see keyHint()} and
    * {@see keysHint()}, which draw the bound keys.
+   *
+   * An overriding theme must keep this apart from {@see description()} by
+   * colour. The two are drawn on adjacent lines - a field's constraint sits
+   * directly beneath the highlighted option's own description - so a reader
+   * has no other cue to tell an expectation from prose. Weight and italic do
+   * not survive every surface: an SVG render drops italic entirely, and a
+   * terminal may too.
    */
   public function hint(string $text, bool $selected = FALSE): string;
 

@@ -163,6 +163,31 @@ final class BuiltinThemesTest extends TestCase {
   }
 
   /**
+   * Every theme separates guidance from description by colour, not italic.
+   *
+   * A constraint is drawn directly beneath the highlighted option's own
+   * description, so the two need a cue that survives the surface: an SVG
+   * render carries colour but drops italic entirely.
+   */
+  #[DataProvider('dataProviderGuidanceTakesItsOwnColour')]
+  public function testGuidanceTakesItsOwnColour(string $name, Mode $mode): void {
+    $theme = ThemeManager::create($name, 76, ['mode' => $mode]);
+
+    $hint = $theme->hint('X');
+    $description = $theme->description('X');
+
+    $this->assertNotSame($description, $hint);
+    $this->assertNotSame($description, str_replace(Sgr::Italic->value . ';', '', $hint));
+  }
+
+  public static function dataProviderGuidanceTakesItsOwnColour(): \Iterator {
+    foreach (['default', 'midnight', 'frost', 'ember', 'mono', 'dos'] as $name) {
+      yield $name . ' dark' => [$name, Mode::Dark];
+      yield $name . ' light' => [$name, Mode::Light];
+    }
+  }
+
+  /**
    * A theme's description atom reaches the body text, not only its own rows.
    */
   public function testDosDescriptionBodyCarriesTheThemeAtom(): void {
