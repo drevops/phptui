@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Widget;
 
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Widget\Capability\FilterCapableInterface;
 use DrevOps\Tui\Widget\Capability\FilterCapableTrait;

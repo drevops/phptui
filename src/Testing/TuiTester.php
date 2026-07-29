@@ -6,8 +6,8 @@ namespace DrevOps\Tui\Testing;
 
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Tui;

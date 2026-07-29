@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Widget;
 
-use DrevOps\Tui\Model\DateBounds;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Weekday;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\Model\DateBounds;
+use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\Weekday;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Testing\ArrayKeyStream;
 use DrevOps\Tui\Testing\WidgetRunner;

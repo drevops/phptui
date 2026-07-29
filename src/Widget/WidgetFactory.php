@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Widget;
 
 use DrevOps\Tui\Handler\HandlerRegistry;
+use DrevOps\Tui\Input\KeyMap;
+use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\Template;
-use DrevOps\Tui\Input\KeyMap;
-use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Widget\Capability\PlaceholderCapableInterface;
 use DrevOps\Tui\Widget\Capability\QueryOptionsCapableInterface;

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Testing;
 
-use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Tests\Fixtures\Form\AllWidgetsForm;
 use DrevOps\Tui\Tests\Fixtures\Theme\OceanTheme;

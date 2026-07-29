@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Widget;
 
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Model\OptionKind;
-use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\Option;
+use DrevOps\Tui\Model\OptionKind;
+use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Testing\ArrayKeyStream;
 use DrevOps\Tui\Testing\WidgetRunner;

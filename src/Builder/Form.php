@@ -6,9 +6,9 @@ namespace DrevOps\Tui\Builder;
 
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\Fixup;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\FormException;
-use DrevOps\Tui\Model\Fixup;
 use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\Panel;
 

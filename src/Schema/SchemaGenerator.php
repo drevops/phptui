@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Schema;
 
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Model\FormDefinition;
-use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Discovery\DiscoverInterface;
+use DrevOps\Tui\Handler\Context;
+use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Resolver\EnvNameResolver;
 
 /**
