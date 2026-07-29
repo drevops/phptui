@@ -530,6 +530,16 @@ final class ThemeRenderTest extends TestCase {
     $this->assertStringContainsString('…', $line);
   }
 
+  public function testSummaryLineClipsWithoutTheGlyphInAsciiMode(): void {
+    $theme = new DefaultTheme(40, ['color' => FALSE, 'unicode' => FALSE]);
+
+    $line = Ansi::strip($theme->renderSummaryLine(str_repeat('x', 100), FALSE));
+
+    // ASCII spends no column on a marker, so the clip still fits the width.
+    $this->assertLessThanOrEqual(40, mb_strlen($line));
+    $this->assertStringNotContainsString('…', $line);
+  }
+
   public function testSelectedItemIsBold(): void {
     $theme = new DefaultTheme(40);
     $field = new Field('name', 'Name', '', FieldType::Text, '');
