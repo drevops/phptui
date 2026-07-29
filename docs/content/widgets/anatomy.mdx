@@ -81,15 +81,30 @@ The **buffer** (16) and the **value** (4) are the same answer at two moments: th
 
 ## One line, two states
 
+The **constraint** (13) and the **error** (19) are the same physical line. Below is one file picker, limited to files of at most 64 bytes, photographed twice.
+
+Nothing has been picked yet, so the line states what the field expects:
+
 <p align="center">
-  <ThemedImage sources={{light: useBaseUrl('/anatomy-error-light-static.svg'), dark: useBaseUrl('/anatomy-error-dark-static.svg')}} alt="A number editor showing an error in place of its constraint" width="100%" />
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-constraint-light-static.svg'), dark: useBaseUrl('/anatomy-constraint-dark-static.svg')}} alt="A file picker showing its constraint before anything is rejected" width="100%" />
+</p>
+
+Now `harvest.csv` is picked, and at 88 bytes it breaks that limit. The same line, in the same place, turns into the error - the constraint does not move down or stay above it, it is replaced:
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-error-light-static.svg'), dark: useBaseUrl('/anatomy-error-dark-static.svg')}} alt="The same file picker showing an error in place of its constraint" width="100%" />
 </p>
 
 19. **error** - why the value was rejected.
 
-The **constraint** (13) and the **error** (19) are the same physical line. The constraint is guidance shown *before* anything goes wrong; the moment a value is rejected the error replaces it, so the two never stack. Compare the bounded select above, showing "Select between 2 and 3 items.", with the same bounds breached here.
+Read the two lines side by side and the distinction is the whole point:
 
-That is also why the two read differently. A constraint states an expectation and its caller frames it - the very same phrase becomes `must be between 1 and 10.` headlessly and `Select between 2 and 3 items.` in the panel - while an error names what is wrong with the value you gave and is shown as it stands.
+| | Line | Says |
+|---|---|---|
+| **constraint** (13) | `Files only. Max 64 B.` | what the field will accept, before you act |
+| **error** (19) | `Choose a file no larger than 64 B.` | why what you just did was refused |
+
+A constraint describes the field; an error describes your value. That is also why they are built differently. A constraint is an unframed phrase - `a file no larger than 64 B` - that its caller wraps, so the same phrase becomes `Choose ...` in the picker, `Select ...` in a bounded list, and `must be ...` headlessly. An error is already a whole message and is shown as it stands.
 
 ## Vocabulary
 

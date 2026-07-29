@@ -173,16 +173,26 @@ function anatomySpecs(string $tree): array {
         ['col' => 17, 'row' => 5, 'label' => 'activity'],
       ],
     ],
-    'error' => [
-      'form' => Form::create('Orchard order')->panel('main', 'Weight', function (PanelBuilder $p): void {
-        $p->number('weight', 'Basket weight (g)')->description('Weighed at the packing bench.')->default(1200)->min(200)->max(9000)->step(100);
+    'constraint' => [
+      'form' => Form::create('Orchard order')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
+        $p->filePicker('price_list', 'Price list')->startIn($tree)->filesOnly()->maxSize(64);
       }),
-      'keys' => [...$open, $bs, $bs, $bs, $bs, '1', '2', $enter],
-      'rows' => 10,
+      'keys' => [...$open],
+      'rows' => 20,
       'callouts' => [
-        ['col' => 24, 'row' => 4, 'label' => 'buffer'],
-        ['col' => 25, 'row' => 4, 'label' => 'caret'],
-        ['col' => 23, 'row' => 5, 'label' => 'error'],
+        ['col' => 16, 'row' => 11, 'label' => 'constraint'],
+      ],
+    ],
+    // The same picker, after a pick that breaks the size limit the line above
+    // announced: one line, the other of its two states.
+    'error' => [
+      'form' => Form::create('Orchard order')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
+        $p->filePicker('price_list', 'Price list')->startIn($tree)->filesOnly()->maxSize(64);
+      }),
+      'keys' => [...$open, $down, $down, $down, $enter],
+      'rows' => 20,
+      'callouts' => [
+        ['col' => 16, 'row' => 11, 'label' => 'error'],
       ],
     ],
   ];
