@@ -29,35 +29,65 @@ require dirname(__DIR__, 2) . '/vendor/autoload.php';
 require __DIR__ . '/svg-light-twin.php';
 
 /**
- * The canonical part names, in reference order.
+ * The parts a field draws in view mode, in reading order.
  *
- * A part's number is its position here, so the same part carries the same
- * number in every diagram and the documentation can cite it by number alone.
+ * A part's number is its position here. The two modes are numbered separately,
+ * because a reader looking at one is not looking at the other, and a single run
+ * of numbers across both would make every reference in the smaller list start
+ * at some arbitrary offset.
  */
-const PARTS = [
+const VIEW_PARTS = [
   'breadcrumb',
+  'breadcrumb separator',
   'field selector',
   'label',
+  'help marker',
   'value',
+  'value separator',
   'description',
   'help',
   'overflow marker',
   'legend',
-  'entry marker',
+];
+
+/**
+ * The parts a field draws in edit mode, in reading order.
+ */
+const EDIT_PARTS = [
   'entry',
   'entry selector',
+  'entry marker',
   'entry note',
-  'constraint',
   'entry description',
-  'caption',
+  'constraint',
+  'error',
   'caret',
   'draft',
   'state',
-  'error',
-  'breadcrumb separator',
-  'help marker',
-  'value separator',
+  'caption',
 ];
+
+/**
+ * The number a part carries within its mode.
+ *
+ * @param string $label
+ *   The part name.
+ * @param string $mode
+ *   The mode the diagram belongs to, 'view' or 'edit'.
+ *
+ * @return int
+ *   The part's number.
+ */
+function numberOf(string $label, string $mode): int {
+  $parts = $mode === 'view' ? VIEW_PARTS : EDIT_PARTS;
+  $index = array_search($label, $parts, TRUE);
+
+  if ($index === FALSE) {
+    throw new \RuntimeException(sprintf('"%s" is not a named part of %s mode.', $label, $mode));
+  }
+
+  return $index + 1;
+}
 
 /**
  * The rows reserved above and below the frame for the callout labels.
@@ -123,6 +153,7 @@ function anatomySpecs(string $tree): array {
         $p->confirm('organic', 'Organic only?')->default(TRUE);
         $p->text('notes', 'Notes')->default('Leave at the gate');
       }),
+      'mode' => 'view',
       'keys' => [$enter],
       'rows' => 21,
       'callouts' => [
@@ -132,8 +163,8 @@ function anatomySpecs(string $tree): array {
         ['col' => 6, 'row' => 5, 'label' => 'description'],
         ['label' => 'label', 'side' => 'left', 'cells' => [[7, 4], [10, 4], [12, 4]]],
         ['col' => 20, 'row' => 4, 'label' => 'help marker'],
-        ['col' => 30, 'row' => 4, 'label' => 'value separator'],
-        ['label' => 'value', 'side' => 'right', 'cells' => [[4, 37], [7, 22], [10, 27], [12, 23]]],
+        ['col' => 28, 'row' => 4, 'label' => 'value separator'],
+        ['label' => 'value', 'side' => 'right', 'cells' => [[4, 35], [7, 22], [10, 27], [12, 23]]],
         ['col' => 4, 'row' => 15, 'label' => 'overflow marker'],
         ['col' => 2, 'row' => 18, 'label' => 'legend', 'side' => 'left'],
       ],
@@ -145,6 +176,7 @@ function anatomySpecs(string $tree): array {
           ->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')
           ->option('tomato', 'Tomato', disabled: TRUE, disabled_reason: 'out of season');
       }),
+      'mode' => 'edit',
       'keys' => [...$open, $space, $down, $space],
       'rows' => 16,
       'callouts' => [
@@ -160,6 +192,7 @@ function anatomySpecs(string $tree): array {
       'form' => Form::create('Orchard')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
         $p->filePicker('price_list', 'Price list')->description('The CSV the orchard sends each week.')->startIn($tree)->filesOnly()->extensions(['csv'])->maxSize(2097152);
       }),
+      'mode' => 'edit',
       'keys' => [...$open, $down],
       'rows' => 16,
       'callouts' => [
@@ -173,6 +206,7 @@ function anatomySpecs(string $tree): array {
       'form' => Form::create('Orchard')->panel('main', 'Crate', function (PanelBuilder $p): void {
         $p->template('crate', 'Crate label')->description('Identifies the crate on the loading dock.')->pattern('{{orchard}}-{{fruit}}-{{grade}}')->default('valley-pear-a')->slot('orchard', 'Orchard')->slot('fruit', 'Fruit')->slot('grade', 'Grade');
       }),
+      'mode' => 'edit',
       'keys' => [...$open, $tab],
       'rows' => 10,
       'callouts' => [
@@ -185,6 +219,7 @@ function anatomySpecs(string $tree): array {
       'form' => Form::create('Orchard')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
         $p->filePicker('price_list', 'Price list')->startIn($tree)->filesOnly()->maxSize(64);
       }),
+      'mode' => 'edit',
       'keys' => [...$open],
       'rows' => 20,
       'callouts' => [
@@ -197,6 +232,7 @@ function anatomySpecs(string $tree): array {
       'form' => Form::create('Orchard')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
         $p->filePicker('price_list', 'Price list')->startIn($tree)->filesOnly()->maxSize(64);
       }),
+      'mode' => 'edit',
       'keys' => [...$open, $down, $down, $down, $enter],
       'rows' => 20,
       'callouts' => [
@@ -263,8 +299,8 @@ function renderAnatomy(string $name, array $spec, string $assets_dir, string $ut
   // the palettes do not spend on the frame, on values or on errors - and one
   // that stays legible against its own surface, which is why the two modes do
   // not share it.
-  annotate($dark_file, $spec['callouts'], $plain, $width, 'rgb(163,230,53)');
-  annotate($light_file, $spec['callouts'], $plain, $width, 'rgb(124,45,190)');
+  annotate($dark_file, $spec['callouts'], $plain, $width, $spec['mode'], 'rgb(163,230,53)');
+  annotate($light_file, $spec['callouts'], $plain, $width, $spec['mode'], 'rgb(124,45,190)');
 }
 
 /**
@@ -485,10 +521,12 @@ function leaderSide(array $lines, int $row, int $column, int $columns): string {
  *   The frame's rows, without escape sequences.
  * @param int $columns
  *   The number of columns the frame holds.
+ * @param string $mode
+ *   The mode the diagram belongs to, which its numbering runs within.
  * @param string $color
  *   The colour for the leaders and labels.
  */
-function annotate(string $file, array $callouts, array $lines, int $columns, string $color): void {
+function annotate(string $file, array $callouts, array $lines, int $columns, string $mode, string $color): void {
   $svg = file_get_contents($file);
 
   if ($svg === FALSE || !preg_match('/<svg[^>]*width="([\d.]+)"[^>]*height="([\d.]+)"/', $svg, $m)) {
@@ -514,16 +552,11 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
   // that will actually land in them: a fixed margin either clips the longest
   // part name or pads every diagram out to fit it.
   $plans = [];
+  $levels = [];
   $needs = ['left' => 0.0, 'right' => 0.0];
 
   foreach ($callouts as $index => $callout) {
-    $number = array_search($callout['label'], PARTS, TRUE);
-
-    if ($number === FALSE) {
-      throw new \RuntimeException(sprintf('"%s" is not a named part.', $callout['label']));
-    }
-
-    $text = ($number + 1) . '  ' . $callout['label'];
+    $text = numberOf($callout['label'], $mode) . '  ' . $callout['label'];
     $width = mb_strlen($text) * FONT_SIZE * 0.6;
     $cells = cellsOf($callout);
 
@@ -559,25 +592,37 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
 
     // A label above or below is centred on its cell, so one near either end of
     // the frame hangs over that edge and the margin has to take the overhang.
+    // Two that overlap horizontally stack into bands, and the band count is
+    // what the room above has to be measured from - a fixed allowance clips the
+    // outermost one the moment a second band is needed.
     $centre = ((float) $column + 0.5) * $cell_width;
     $needs['left'] = max($needs['left'], $width / 2 - $centre);
     $needs['right'] = max($needs['right'], $width / 2 - ($frame_width - $centre));
+
+    $level = 0;
+
+    while (isset($levels[$side][$level]) && overlaps($levels[$side][$level], $centre - $width / 2, $centre + $width / 2)) {
+      $level++;
+    }
+
+    $levels[$side][$level][] = [$centre - $width / 2, $centre + $width / 2];
+    $plans[$index][4] = $level;
   }
 
   $offset_x = $needs['left'];
 
-  // The bands above and below are only worth their room when something lands
-  // in them; a diagram labelled entirely from the sides would otherwise open
-  // with a strip of empty canvas.
-  $vertical = array_filter($plans, static fn(array $plan): bool => in_array($plan[1], ['up', 'down'], TRUE));
-  $offset_y = $cell_height * ($vertical === [] ? 0.4 : MARGIN_ROWS);
+  // The bands above are only worth their room when something lands in them; a
+  // diagram labelled entirely from the sides would otherwise open with a strip
+  // of empty canvas.
+  $offset_y = isset($levels['up'])
+    ? FONT_SIZE * (1.35 * count($levels['up']) + 0.4)
+    : $cell_height * 0.4;
   $left_edge = $offset_x;
   $right_edge = $offset_x + $frame_width;
   $bottom_edge = $offset_y + $frame_height;
 
   $marks = '';
   $stack = ['left' => -$cell_height, 'right' => -$cell_height];
-  $bands = ['up' => [], 'down' => []];
   $lowest = $bottom_edge;
 
   foreach ($plans as $plan) {
@@ -613,19 +658,9 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
     $cell_y = $offset_y + ((float) $row + 0.5) * $cell_height;
 
     if ($side === 'up' || $side === 'down') {
-      // A label above or below is centred on its own column, so two of them
-      // collide by overlapping horizontally rather than vertically; the second
-      // one moves out a band instead of sideways, which would break the
-      // straight line down to the cell.
-      $half = mb_strlen($text) * FONT_SIZE * 0.31;
-      $level = 0;
-
-      while (isset($bands[$side][$level]) && overlaps($bands[$side][$level], $cell_x - $half, $cell_x + $half)) {
-        $level++;
-      }
-
-      $bands[$side][$level][] = [$cell_x - $half, $cell_x + $half];
-      $step = (FONT_SIZE * 1.35) * $level;
+      // The band was settled while the margins were being measured, so the room
+      // above the frame already accounts for however many bands are in use.
+      $step = (FONT_SIZE * 1.35) * $plan[4];
       $label_y = $side === 'up' ? $offset_y - FONT_SIZE * 0.5 - $step : $bottom_edge + FONT_SIZE * 1.1 + $step;
       $tip_y = $side === 'up' ? $cell_y - $cell_height * 0.55 : $cell_y + $cell_height * 0.55;
       $from_y = $side === 'up' ? $label_y + FONT_SIZE * 0.35 : $label_y - FONT_SIZE * 0.95;

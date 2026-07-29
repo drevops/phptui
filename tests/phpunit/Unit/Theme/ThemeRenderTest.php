@@ -145,39 +145,51 @@ final class ThemeRenderTest extends TestCase {
   }
 
   public function testBodyMarksHelpBesideTheLabelRatherThanPrintingIt(): void {
+    $theme = $this->plainTheme();
     $field = new Field('name', 'Name', 'The grower of record', FieldType::Text, '', hint: 'Type a few letters to filter.');
     $panel = new Panel('p', 'P', '', [$field]);
 
-    [$lines] = $this->plainTheme()->renderBody($panel, new Answers(), 0);
+    [$lines] = $theme->renderBody($panel, new Answers(), 0);
     $stripped = array_map(Ansi::strip(...), $lines);
 
     // Help can run to paragraphs, which a row cannot carry, so the row marks
     // that there is something to ask for and the text stays out of the panel.
-    $this->assertStringContainsString('[?]', $stripped[0]);
+    // Asserted against the atom rather than a literal glyph, which is a themed
+    // choice and has already changed more than once.
+    $this->assertStringContainsString(Ansi::strip($theme->helpMarker()), $stripped[0]);
     $this->assertSame('    The grower of record', $stripped[1]);
     $this->assertCount(2, $stripped);
   }
 
   public function testBodyMarksHelpWithoutADescription(): void {
+    $theme = $this->plainTheme();
     $field = new Field('name', 'Name', '', FieldType::Text, '', hint: 'Type a few letters to filter.');
     $panel = new Panel('p', 'P', '', [$field]);
 
-    [$lines] = $this->plainTheme()->renderBody($panel, new Answers(), 0);
+    [$lines] = $theme->renderBody($panel, new Answers(), 0);
     $stripped = array_map(Ansi::strip(...), $lines);
 
     // The mark hangs off the label, so a field with help and no description
     // still announces it.
-    $this->assertStringContainsString('[?]', $stripped[0]);
+    $this->assertStringContainsString(Ansi::strip($theme->helpMarker()), $stripped[0]);
     $this->assertCount(1, $stripped);
   }
 
   public function testBodyLeavesTheHelpMarkOffAFieldWithoutHelp(): void {
+    $theme = $this->plainTheme();
     $field = new Field('name', 'Name', 'The grower of record', FieldType::Text, '');
     $panel = new Panel('p', 'P', '', [$field]);
 
-    [$lines] = $this->plainTheme()->renderBody($panel, new Answers(), 0);
+    [$lines] = $theme->renderBody($panel, new Answers(), 0);
 
-    $this->assertStringNotContainsString('[?]', Ansi::strip($lines[0]));
+    $this->assertStringNotContainsString(Ansi::strip($theme->helpMarker()), Ansi::strip($lines[0]));
+  }
+
+  public function testHelpMarkerFallsBackToTextWithoutUnicode(): void {
+    // The glyph is narrow by design so a fixed-advance surface cannot squeeze
+    // it, but a surface with no Unicode at all still needs a mark.
+    $this->assertSame('ⁱ', Ansi::strip((new DefaultTheme(40, ['color' => FALSE]))->helpMarker()));
+    $this->assertSame('[?]', Ansi::strip((new DefaultTheme(40, ['color' => FALSE, 'unicode' => FALSE]))->helpMarker()));
   }
 
   public function testBodyDropsHintWhenCompact(): void {
