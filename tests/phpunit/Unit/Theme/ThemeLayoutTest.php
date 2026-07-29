@@ -148,13 +148,28 @@ final class ThemeLayoutTest extends TestCase {
     [$lines] = $theme->renderBody($panel, new Answers(['notes' => "Crisp and sweet\nHint of citrus", 'two' => 'x'], []), 0);
 
     // A grid cell is one physical row: the multi-line value previews as its
-    // first line with an ellipsis, and no entry carries an embedded newline
-    // that would desync the column zip.
+    // first line with a there-is-more marker, and no entry carries an embedded
+    // newline that would desync the column zip.
     $body = implode('|', $lines);
-    $this->assertStringContainsString('Crisp and sweet…', $body);
+    $this->assertStringContainsString('Crisp and sweet...', $body);
     $this->assertStringNotContainsString('Hint of citrus', $body);
     $this->assertStringNotContainsString("\n", $body);
     $this->assertCount(2, $lines);
+  }
+
+  public function testLayoutPreviewMarkerFollowsTheDisplayMode(): void {
+    $panel = new Panel('p', 'P', '', [], [
+      new Panel('a', 'A', '', [new Field('notes', 'Notes', '', FieldType::Textarea, '')]),
+      new Panel('b', 'B', '', [new Field('two', 'Two', '', FieldType::Text, '')]),
+    ], NULL, [2]);
+    $answers = new Answers(['notes' => "Crisp and sweet\nHint of citrus", 'two' => 'x'], []);
+
+    [$unicode_lines] = (new DefaultTheme(60, ['color' => FALSE, 'unicode' => TRUE]))->renderBody($panel, $answers, 0);
+    [$ascii_lines] = (new DefaultTheme(60, ['color' => FALSE, 'unicode' => FALSE]))->renderBody($panel, $answers, 0);
+
+    // A terminal without Unicode must never be handed the glyph.
+    $this->assertStringContainsString('Crisp and sweet…', implode('|', $unicode_lines));
+    $this->assertStringNotContainsString('…', implode('|', $ascii_lines));
   }
 
   public function testMeasureUsesTheWidestValueLine(): void {

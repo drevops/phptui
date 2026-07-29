@@ -1583,7 +1583,8 @@ class DefaultTheme implements ThemeInterface {
       // A grid cell is one physical row, so a multi-line value previews as
       // its first line - an embedded newline would desync the column zip.
       $value_lines = explode("\n", $this->normalizeLines($this->renderFieldValue($field, $answers->value($field->id))));
-      $value = $value_lines[0] . (count($value_lines) > 1 ? '…' : '');
+      $more = $this->unicode ? '…' : '...';
+      $value = $value_lines[0] . (count($value_lines) > 1 ? $more : '');
       $lines[] = $indent . '  ' . $this->description(Translator::t($field->label), $selected) . '  ' . $this->value($value, $selected);
     }
 
@@ -1988,7 +1989,15 @@ class DefaultTheme implements ThemeInterface {
    */
   public function renderSummaryLine(string $summary, bool $selected): string {
     $max = max(1, $this->width - 4);
-    $clipped = Strings::length($summary) > $max ? Strings::substr($summary, 0, $max - 1) . '…' : $summary;
+
+    if (Strings::length($summary) > $max) {
+      // Only the Unicode marker fits the budget in one column; ASCII clips to
+      // the full width instead, as a table cell does.
+      $clipped = $this->unicode ? Strings::substr($summary, 0, $max - 1) . '…' : Strings::substr($summary, 0, $max);
+    }
+    else {
+      $clipped = $summary;
+    }
 
     return '    ' . $this->value($clipped, $selected);
   }
