@@ -129,7 +129,7 @@ function anatomySpecs(string $tree): array {
         ['label' => 'label', 'side' => 'left', 'cells' => [[7, 4], [10, 4], [12, 4]]],
         ['label' => 'value', 'side' => 'right', 'cells' => [[4, 25], [7, 22], [10, 27], [12, 23]]],
         ['col' => 4, 'row' => 15, 'label' => 'overflow'],
-        ['col' => 2, 'row' => 18, 'label' => 'key legend'],
+        ['col' => 2, 'row' => 18, 'label' => 'key legend', 'side' => 'left'],
       ],
     ],
     'editor' => [
@@ -556,7 +556,9 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
     }
 
     [$row, $column] = $cells[0];
-    $side = leaderSide($lines, $row, $column, $columns);
+    // A declared side wins: the clear sides of a cell are often several, and
+    // which of them reads best is a judgement the frame cannot make.
+    $side = $callout['side'] ?? leaderSide($lines, $row, $column, $columns);
     $plans[$index] = ['single', $side, $text, $cells];
 
     if ($side === 'left' || $side === 'right') {
