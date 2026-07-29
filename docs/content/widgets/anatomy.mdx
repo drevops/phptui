@@ -153,7 +153,7 @@ A constraint describes the field; an error describes your value. That is also wh
 | 2 | marker | `ThemeInterface::marker()`, shared with (11) |
 | 3 | label | `ThemeInterface::label()`, `Field::$label` |
 | 4 | value | `ThemeInterface::value()` |
-| 5 | description | `ThemeInterface::description()`, shared with (13) and (14) |
+| 5 | description | `ThemeInterface::description()`, shared with (14) |
 | 6 | instruction | `Field::$hint`, `DefaultTheme::renderFieldHint()`, `ThemeInterface::hint()` |
 | 7 | overflow | `ThemeInterface::indicator()`, `indicatorUp()`, `indicatorDown()` |
 | 8 | key legend | `WidgetInterface::hints()`, `Hint`, `ThemeInterface::keysHint()` |
@@ -161,7 +161,7 @@ A constraint describes the field; an error describes your value. That is also wh
 | 10 | entry | unnamed |
 | 11 | entry marker | `ThemeInterface::marker()`, shared with (2) |
 | 12 | entry note | `Option::$disabledReason`, concatenated in `OptionsCapableTrait` |
-| 13 | constraint | `SelectionBoundedTrait::selectionHint()`, `FilePickerWidget::constraintHint()`, `NumberBounds::describe()` |
+| 13 | constraint | `SelectionBoundedTrait::selectionHint()`, `FilePickerWidget::constraintHint()`, `NumberBounds::describe()`, drawn with `ThemeInterface::hint()` |
 | 14 | entry detail | `Option::$description` through `ThemeInterface::description()` |
 | 15 | location | unnamed |
 | 16 | buffer | `$buffer`, per widget - not in any shared API |
@@ -173,7 +173,7 @@ A constraint describes the field; an error describes your value. That is also wh
 
 **`hint` names four unrelated things.** `ThemeInterface::hint()` is a text style. `Field::$hint` is the instruction (6). `WidgetInterface::hints()` returns the key legend (8). `SelectionBoundedTrait::selectionHint()` returns the constraint (13). Nothing connects them, and the last one does not even use the `hint()` style - it draws through `description()`.
 
-**`description` names three parts.** The field's description (5), the highlighted entry's detail (14) and the constraint (13) all render through `ThemeInterface::description()`. Restyling one restyles all three.
+**`description` names two parts.** The field's description (5) and the highlighted entry's detail (14) both render through `ThemeInterface::description()`, so restyling one restyles the other. The constraint (13) used to make a third, drawn identically and sitting directly beneath the entry detail; it now draws through `ThemeInterface::hint()`, the guidance voice it shares with the instruction (6).
 
 **The constraint has two names.** `SelectionBoundedTrait::selectionHint()` and `FilePickerWidget::constraintHint()` are the same part in two widgets, with the same body and two different names.
 

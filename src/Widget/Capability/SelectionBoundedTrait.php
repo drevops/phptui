@@ -74,15 +74,18 @@ trait SelectionBoundedTrait {
    *   The theme.
    *
    * @return string
-   *   The dim bound line (e.g. "Select at least 2 items."), or '' when there
-   *   are no bounds or an error is already showing.
+   *   The bound line (e.g. "Select at least 2 items."), or '' when there are
+   *   no bounds or an error is already showing.
    */
   protected function selectionHint(ThemeInterface $theme): string {
     if (!$this->selectionBounds instanceof SelectionBounds || $this->error !== NULL) {
       return '';
     }
 
-    return $theme->description(Translator::t('Select @constraint.', ['@constraint' => $this->selectionBounds->describe()]));
+    // The guidance voice, not the description's: this line states what the
+    // field expects, and drawn as a description it is indistinguishable from
+    // the highlighted option's own text sitting directly above it.
+    return $theme->hint(Translator::t('Select @constraint.', ['@constraint' => $this->selectionBounds->describe()]));
   }
 
   /**

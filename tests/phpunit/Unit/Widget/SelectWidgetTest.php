@@ -486,4 +486,36 @@ final class SelectWidgetTest extends TestCase {
     $this->assertGreaterThan(strpos($view, 'B'), strpos($view, 'Select between 1 and 2 items.'));
   }
 
+  public function testMultipleSelectionHintReadsApartFromAnOptionDescription(): void {
+    $theme = new DefaultTheme();
+    $widget = new SelectWidget([
+      new Option('a', 'A', 'Crisp and sweet, the everyday choice.'),
+      new Option('b', 'B'),
+    ], [], TRUE, selection_bounds: new SelectionBounds(1, 2));
+
+    $view = $widget->view($theme);
+
+    // The two lines sit next to each other, so drawn in one style the limit
+    // the field is stating cannot be told from prose about the highlighted
+    // option.
+    $this->assertStringContainsString($this->styleOf($theme->hint(...)) . 'Select between 1 and 2 items.', $view);
+    $this->assertStringContainsString($this->styleOf($theme->description(...)) . 'Crisp and sweet, the everyday choice.', $view);
+    $this->assertNotSame($this->styleOf($theme->hint(...)), $this->styleOf($theme->description(...)));
+  }
+
+  /**
+   * The escape sequence a theme style opens with.
+   *
+   * @param callable(string): string $style
+   *   The style to sample.
+   *
+   * @return string
+   *   The sequence preceding the styled text.
+   */
+  protected function styleOf(callable $style): string {
+    $sample = $style('@');
+
+    return substr($sample, 0, (int) strpos($sample, '@'));
+  }
+
 }

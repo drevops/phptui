@@ -260,7 +260,7 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
    *   The theme.
    *
    * @return string
-   *   The dim constraint line (e.g. "Files only. Max 2 MB."), or '' when the
+   *   The constraint line (e.g. "Files only. Max 2 MB."), or '' when the
    *   picker is unconstrained or an error is already showing.
    */
   protected function constraintHint(ThemeInterface $theme): string {
@@ -269,7 +269,9 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
       return '';
     }
 
-    return $theme->description($describe);
+    // The guidance voice, not the description's: this line states what the
+    // field expects, and shares its row with the error that replaces it.
+    return $theme->hint($describe);
   }
 
   /**
