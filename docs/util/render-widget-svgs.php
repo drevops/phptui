@@ -238,7 +238,7 @@ function widgetSpecs(string $tree): array {
         $p->note('stock', 'Basket contents')->description('Everything picked so far:')->table(['Fruit', 'Colour', 'In stock'], [
           ['Apple', 'Red', '12'],
           ['Pear', 'Green', '5'],
-          ['Blackberry', 'Purple', '120'],
+          ['Plum', 'Purple', '120'],
         ]);
       }),
       'keys' => [$enter],
