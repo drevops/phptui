@@ -8,6 +8,7 @@ use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Testing\TuiTester;
+use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\ThemeManager;
@@ -22,6 +23,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(DefaultTheme::class)]
 #[Group('theme')]
 final class ScaleRenderTest extends TestCase {
+
+  use BuildsThemesTrait;
 
   public function testScaleFillsUpToTheChosenPoint(): void {
     $line = $this->theme(color: FALSE)->renderScale(3, 1, 5, 'Fair');
@@ -122,21 +125,6 @@ final class ScaleRenderTest extends TestCase {
       ->panel('main', 'Rating', function (PanelBuilder $p): void {
         $p->rating('taste', 'Taste')->default(4)->captions([4 => 'Good']);
       });
-  }
-
-  /**
-   * A default theme in the given display modes, fixed to dark.
-   *
-   * @param bool $color
-   *   Whether colour is on.
-   * @param bool $unicode
-   *   Whether Unicode glyphs are on.
-   *
-   * @return \DrevOps\Tui\Theme\DefaultTheme
-   *   The theme.
-   */
-  protected function theme(bool $color = TRUE, bool $unicode = TRUE): DefaultTheme {
-    return ThemeManager::create('default', DefaultTheme::DEFAULT_WIDTH, ['color' => $color, 'unicode' => $unicode, 'mode' => Mode::Dark]);
   }
 
 }
