@@ -30,10 +30,11 @@ A panel stacks its fields as rows, each one in view mode until you open it. Five
 </p>
 
 - **1** breadcrumb - the trail of panel titles. It's the titles of every panel you've descended through plus the one you're in, so it gains a segment when you open a sub-panel and drops one when you come back.
-- **20** separator - the glyph between **breadcrumb** (1) segments.
+- **20** breadcrumb separator - the glyph between **breadcrumb** (1) segments.
 - **2** field selector - which field has focus. Exactly one row has it at a time, it moves with <kbd>↑</kbd> and <kbd>↓</kbd>, and the row it's on is drawn brighter - the glyph and that emphasis are one signal in two forms.
 - **3** label - the field's name. The one part of a row that never changes while you work.
 - **4** value - the settled answer. It shows what was accepted, so it stays empty until the field is answered and never shows what you're mid-way through typing - that's the **draft** (17).
+- **22** value separator - what stands between the parts of a **value** (4) that has more than one. `Basket contents` holds two, so it reads `apple, carrot`.
 - **5** description - the field's explanatory text, under its row. Declared once on the field and shown whether or not the row has focus, so it never changes while you work.
 - **6** help - the field's long-form text. It's the only part not on screen: press <kbd>?</kbd> and it opens in a popup, which is what lets it run to paragraphs where a **description** (5) has to stay a sentence.
 - **21** help marker - sits after the **label** (3) when a field has **help** (6) to show, in the label's own colour. It hangs off the **label** (3) rather than the **description** (5), because a field can carry **help** (6) without carrying a **description** (5), and a **label** (3) is the one part every row draws.
@@ -143,8 +144,9 @@ A **constraint** (13) describes the field; an **error** (19) describes your valu
 | 17 | draft | The text you are typing, before it is accepted. |
 | 18 | state | What the widget is doing right now. |
 | 19 | error | Why the value was rejected. Replaces the **constraint** (13). |
-| 20 | separator | The glyph between **breadcrumb** (1) segments. |
+| 20 | breadcrumb separator | The glyph between **breadcrumb** (1) segments. |
 | 21 | help marker | The glyph after the **label** (3) when a field has **help** (6). |
+| 22 | value separator | What stands between the parts of a multi-part **value** (4). |
 
 ## What the code calls these today
 
@@ -163,14 +165,15 @@ A **constraint** (13) describes the field; an **error** (19) describes your valu
 | 11 | entry selector | `ThemeInterface::marker()`, shared with the **field selector** (2) |
 | 12 | entry note | `Option::$disabledReason`, concatenated in `OptionsCapableTrait` |
 | 13 | constraint | `SelectionBoundedTrait::selectionHint()`, `FilePickerWidget::constraintHint()`, `NumberBounds::describe()`, drawn with `ThemeInterface::renderGuidance()` |
-| 14 | entry description | `Option::$description` through `ThemeInterface::description()` |
+| 14 | entry description | `Option::$description` through `ThemeInterface::entryDescription()` |
 | 15 | caption | `ThemeInterface::caption()` |
 | 16 | caret | `ThemeInterface::caret()` |
 | 17 | draft | `$buffer`, per widget - not in any shared API |
 | 18 | state | `ThemeInterface::footer()`, used away from the footer |
 | 19 | error | `ThemeInterface::error()`, `WidgetInterface::error()` |
-| 20 | separator | `ThemeInterface::separator()` |
-| 21 | help marker | does not exist yet |
+| 20 | breadcrumb separator | `ThemeInterface::separator()` - to be renamed |
+| 21 | help marker | `ThemeInterface::helpMarker()` |
+| 22 | value separator | hardcoded in `ValueFormatter::format()` - to become an atom |
 
 ## Where the names disagree
 
@@ -180,9 +183,7 @@ A **constraint** (13) describes the field; an **error** (19) describes your valu
 
 **`hint` will name one thing.** `Field::$hint` becomes `Field::$help`, since its text is the **help** (6) and belongs in the popup rather than on a line under the row. That leaves `ThemeInterface::hint()` drawing exactly one part, the **constraint** (13), so the atom takes that name too.
 
-**`description` names two parts.** The **description** (5) and the **entry description** (14) both render through `ThemeInterface::description()`, so restyling one restyles the other. Sharing the word is deliberate - they are the same idea at two levels - but they are still two parts, and a theme should be able to tell them apart.
-
-**The entry description is indented as if it belonged to the list.** The **entry description** (14) starts at the list's left edge, level with the **entry selector** (11), rather than where the entry text starts. It belongs to one **entry** (10), so it should line up under that entry's text.
+**`description` names two parts, and that's fine.** The **description** (5) and the **entry description** (14) share the word deliberately - they are the same idea at two levels - and they now have an atom each, so a theme can tell them apart.
 
 **The constraint has two names.** `SelectionBoundedTrait::selectionHint()` and `FilePickerWidget::constraintHint()` both draw the **constraint** (13), with the same body and two different names.
 
@@ -192,17 +193,19 @@ A **constraint** (13) describes the field; an **error** (19) describes your valu
 
 **`footer` is drawn outside the footer.** The **state** (18) uses `ThemeInterface::footer()`, which otherwise styles the **legend** (8) at the bottom of the frame.
 
-**Two parts have no name at all.** The **entry** (10) and the **entry marker** (9) are drawn inline, with no atom behind them.
+**One part has no name at all.** The **entry** (10) is drawn inline, with no atom behind it.
+
+**The entry marker answers to two names.** The **entry marker** (9) is `ThemeInterface::check()` in a multiple-choice list and `radio()` in a single-choice one, so which atom draws it depends on the widget rather than on the theme.
 
 ## Open questions
 
 Working notes, kept here only until each one is settled. The vocabulary above is decided; these are the edges still being argued.
 
-**Should the entry description be tied to the focused entry by color?** The **entry description** (14) is the one part rewritten every time the **entry selector** (11) moves, and today it borrows `description()` - the same atom as the **description** (5), which never moves. Giving it its own atom in the selector's accent would say "this belongs to the row you're pointing at". The catch: green is already the **value** (4), and the selector's cyan is also the border, so the accent isn't free.
+**Should the entry marker be one atom?** It's two today - `check()` for a multiple-choice list and `radio()` for a single-choice one - picked by the widget rather than by the theme. One `entryMarker()` that flips between the two would put the whole part in a theme's hands at once.
 
 **Should the field selector and the entry selector be separate atoms?** They're one method today, so a theme can't restyle the field cursor without also restyling the one inside every list. They're deliberately named as a parent/child pair, which argues they should be stylable as one.
 
-**Should the entry and the entry marker get atoms of their own?** The **entry** (10) and the **entry marker** (9) are drawn inline today, so neither can be restyled without overriding the whole list renderer.
+**Should the entry get an atom of its own?** The **entry** (10) is drawn inline today, so it can't be restyled without overriding the whole list renderer.
 
 **Should the state stop borrowing `footer()`?** The **state** (18) is drawn with the atom that styles the **legend** (8) at the bottom of the frame, which is a different part in a different place.
 

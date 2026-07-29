@@ -929,12 +929,12 @@ class DefaultTheme implements ThemeInterface {
     // follows, and bolding it on the selected row would have it competing with
     // the label instead of hanging off it.
     //
-    // Deliberately ASCII in both modes. Every circled or enclosed candidate -
-    // ⓘ, ⍰, ℹ - is naturally wider than one cell, and a surface that pins each
-    // cell to a fixed advance squeezes the glyph out of shape rather than
-    // giving it the room. A theme that knows its surface can carry one is free
-    // to override this.
-    return $this->paint('', '(?)');
+    // Bracketed rather than enclosed in a single glyph. Every circled
+    // candidate - ⓘ, ⍰, ℹ - is naturally wider than one cell, and a surface
+    // that pins each cell to a fixed advance squeezes the glyph out of shape
+    // rather than giving it the room. A theme that knows its surface can carry
+    // one is free to override this.
+    return $this->paint('', '[?]');
   }
 
   /**
