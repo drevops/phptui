@@ -5,9 +5,9 @@
  * Renders the annotated widget anatomy diagrams.
  *
  * Each diagram is a real widget frame, driven through the library's own
- * keystroke harness, with vector callouts drawn onto the canvas beside it. The
- * callouts are geometry rather than characters, so nothing is injected into the
- * frame and no font metric can shift a border.
+ * keystroke harness, with vector callouts drawn around it. The callouts are
+ * geometry rather than characters, so nothing is injected into the frame and
+ * no font metric can shift a border.
  *
  * Usage:
  * @code
@@ -27,13 +27,6 @@ use DrevOps\Tui\Theme\Mode;
 
 require dirname(__DIR__, 2) . '/vendor/autoload.php';
 require __DIR__ . '/svg-light-twin.php';
-
-/**
- * The columns reserved on each side of the frame for the callout labels.
- *
- * Wide enough for the longest part name plus the run out to it.
- */
-const MARGIN_COLUMNS = 19;
 
 /**
  * The canonical part names, in reference order.
@@ -64,6 +57,30 @@ const PARTS = [
 ];
 
 /**
+ * The rows reserved above and below the frame for the callout labels.
+ */
+const MARGIN_ROWS = 2.7;
+
+/**
+ * The terminal width the frames are drawn at.
+ *
+ * Narrower than the other assets. The whole canvas is scaled to the width of
+ * the documentation column, and the callout margins take a fixed share of it,
+ * so every column the frame does not need is one the reader gets back as
+ * legible type.
+ */
+const FRAME_COLUMNS = 68;
+
+/**
+ * The label type size, in SVG user units.
+ *
+ * Generous against the frame: the whole canvas is scaled down to the width of
+ * the documentation column, so type sized to look right here lands near body
+ * size on the page.
+ */
+const FONT_SIZE = 20.0;
+
+/**
  * The line height the frames are drawn at.
  *
  * Matches the other terminal assets, and cannot be loosened to give the
@@ -75,12 +92,15 @@ const LINE_HEIGHT = 1.1;
 /**
  * The diagrams to render, keyed by name.
  *
+ * A callout names the cell it points at. The cell is chosen so that one side
+ * of it is clear of text, since that is the side the leader arrives from.
+ *
  * @param string $tree
  *   The sample project directory the file picker browses.
  *
  * @return array<string,array<string,mixed>>
  *   Each spec carries the form, the keystrokes, the row budget and the
- *   callouts, each callout naming the cell it points at.
+ *   callouts.
  */
 function anatomySpecs(string $tree): array {
   $enter = Key::named(KeyName::Enter);
@@ -101,8 +121,8 @@ function anatomySpecs(string $tree): array {
       'callouts' => [
         ['col' => 2, 'row' => 1, 'label' => 'breadcrumb'],
         ['col' => 2, 'row' => 4, 'label' => 'marker'],
-        ['col' => 4, 'row' => 4, 'label' => 'label'],
-        ['col' => 12, 'row' => 4, 'label' => 'value'],
+        ['col' => 5, 'row' => 4, 'label' => 'label'],
+        ['col' => 16, 'row' => 4, 'label' => 'value'],
         ['col' => 6, 'row' => 5, 'label' => 'description'],
         ['col' => 6, 'row' => 6, 'label' => 'instruction'],
         ['col' => 4, 'row' => 7, 'label' => 'overflow'],
@@ -119,10 +139,10 @@ function anatomySpecs(string $tree): array {
       'keys' => [...$open, $space, $down, $space],
       'rows' => 16,
       'callouts' => [
-        ['col' => 14, 'row' => 4, 'label' => 'selector'],
-        ['col' => 16, 'row' => 4, 'label' => 'entry'],
+        ['col' => 20, 'row' => 4, 'label' => 'entry'],
         ['col' => 12, 'row' => 5, 'label' => 'entry marker'],
-        ['col' => 23, 'row' => 6, 'label' => 'entry note'],
+        ['col' => 14, 'row' => 6, 'label' => 'selector'],
+        ['col' => 37, 'row' => 6, 'label' => 'entry note'],
         ['col' => 12, 'row' => 7, 'label' => 'constraint'],
         ['col' => 12, 'row' => 8, 'label' => 'entry detail'],
         ['col' => 6, 'row' => 9, 'label' => 'description'],
@@ -135,7 +155,7 @@ function anatomySpecs(string $tree): array {
       'keys' => [...$open, $down],
       'rows' => 16,
       'callouts' => [
-        ['col' => 16, 'row' => 4, 'label' => 'location'],
+        ['col' => 29, 'row' => 4, 'label' => 'location'],
         ['col' => 18, 'row' => 5, 'label' => 'entry'],
         ['col' => 16, 'row' => 6, 'label' => 'entry marker'],
         ['col' => 16, 'row' => 8, 'label' => 'constraint'],
@@ -148,8 +168,8 @@ function anatomySpecs(string $tree): array {
       'keys' => [...$open, $tab],
       'rows' => 10,
       'callouts' => [
-        ['col' => 17, 'row' => 4, 'label' => 'buffer'],
         ['col' => 28, 'row' => 4, 'label' => 'caret'],
+        ['col' => 30, 'row' => 4, 'label' => 'buffer'],
         ['col' => 17, 'row' => 5, 'label' => 'activity'],
       ],
     ],
@@ -157,11 +177,11 @@ function anatomySpecs(string $tree): array {
       'form' => Form::create('Orchard order')->panel('main', 'Weight', function (PanelBuilder $p): void {
         $p->number('weight', 'Basket weight (g)')->description('Weighed at the packing bench.')->default(1200)->min(200)->max(9000)->step(100);
       }),
-      'keys' => [...$open, $bs, $bs, $bs, $bs, '1', $enter],
+      'keys' => [...$open, $bs, $bs, $bs, $bs, '1', '2', $enter],
       'rows' => 10,
       'callouts' => [
-        ['col' => 23, 'row' => 4, 'label' => 'buffer'],
-        ['col' => 24, 'row' => 4, 'label' => 'caret'],
+        ['col' => 24, 'row' => 4, 'label' => 'buffer'],
+        ['col' => 25, 'row' => 4, 'label' => 'caret'],
         ['col' => 23, 'row' => 5, 'label' => 'error'],
       ],
     ],
@@ -183,7 +203,7 @@ function anatomySpecs(string $tree): array {
  *   The scratch directory for the intermediate cast.
  */
 function renderAnatomy(string $name, array $spec, string $assets_dir, string $util_dir, string $tmp_dir): void {
-  $tester = (new TuiTester($spec['form']))->options(['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark])->rows($spec['rows']);
+  $tester = (new TuiTester($spec['form']))->options(['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark])->rows($spec['rows'])->cols(FRAME_COLUMNS);
   $tester->run(...$spec['keys']);
 
   $clear = Ansi::ESC . '[2J' . Ansi::ESC . '[H';
@@ -221,11 +241,11 @@ function renderAnatomy(string $name, array $spec, string $assets_dir, string $ut
 
   $plain = array_map(static fn(string $line): string => Ansi::strip($line), $lines);
 
-  // Violet reads as annotation rather than as output: the palettes already
-  // spend teal on the frame, green on values and red on errors, so a callout
-  // in any of those would look like something the widget had drawn.
-  annotate($dark_file, $spec['callouts'], $plain, $width, 'rgb(167,139,250)', 'rgb(186,164,255)');
-  annotate($light_file, $spec['callouts'], $plain, $width, 'rgb(124,58,237)', 'rgb(109,40,217)');
+  // Lime reads as annotation rather than as output: the palettes already spend
+  // teal on the frame, green on values and red on errors, so a callout in any
+  // of those would look like something the widget had drawn.
+  annotate($dark_file, $spec['callouts'], $plain, $width, 'rgb(163,230,53)');
+  annotate($light_file, $spec['callouts'], $plain, $width, 'rgb(77,124,15)');
 }
 
 /**
@@ -259,11 +279,78 @@ function crossable(string $line, int $from, int $to): bool {
 }
 
 /**
- * Draw the callouts onto a rendered frame.
+ * Whether a column is clear of text across a range of rows.
  *
- * The canvas gains a margin on both sides and each leader leaves through
- * whichever side of its own row is clear, so the labels sit around the frame
- * and no leader is ever drawn over a letter.
+ * @param array<int,string> $lines
+ *   The frame's rows, without escape sequences.
+ * @param int $column
+ *   The column to test.
+ * @param int $from
+ *   The first row to test.
+ * @param int $to
+ *   The last row to test.
+ *
+ * @return bool
+ *   TRUE when every row in the range is blank or frame at that column.
+ */
+function columnClear(array $lines, int $column, int $from, int $to): bool {
+  for ($row = max(0, $from); $row <= $to; $row++) {
+    if (!crossable($lines[$row] ?? '', $column, $column)) {
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+/**
+ * The side a callout's leader arrives from.
+ *
+ * Vertical exits are preferred near the top and bottom of the frame so the
+ * labels spread around it rather than piling into the two margins.
+ *
+ * @param array<int,string> $lines
+ *   The frame's rows, without escape sequences.
+ * @param int $row
+ *   The callout's row.
+ * @param int $column
+ *   The callout's column.
+ * @param int $columns
+ *   The number of columns the frame holds.
+ *
+ * @return string
+ *   One of 'up', 'down', 'left' or 'right'.
+ */
+function leaderSide(array $lines, int $row, int $column, int $columns): string {
+  $rows = count($lines);
+  $up = columnClear($lines, $column, 0, $row - 1);
+  $down = columnClear($lines, $column, $row + 1, $rows - 1);
+  $left = crossable($lines[$row] ?? '', 0, $column - 1);
+  $right = crossable($lines[$row] ?? '', $column + 1, $columns - 1);
+
+  if ($up && $row <= 2) {
+    return 'up';
+  }
+
+  if ($down && $row >= $rows - 3) {
+    return 'down';
+  }
+
+  return match (TRUE) {
+    $left => 'left',
+    $right => 'right',
+    $up => 'up',
+    $down => 'down',
+    default => 'right',
+  };
+}
+
+/**
+ * Draw the callouts around a rendered frame.
+ *
+ * The canvas gains a margin on all four sides and each leader arrives from
+ * whichever side of its cell is clear, so the labels sit around the frame and
+ * no leader is ever drawn over a letter.
  *
  * @param string $file
  *   The SVG to annotate, rewritten in place.
@@ -273,12 +360,10 @@ function crossable(string $line, int $from, int $to): bool {
  *   The frame's rows, without escape sequences.
  * @param int $columns
  *   The number of columns the frame holds.
- * @param string $leader_color
- *   The stroke colour for the leaders.
- * @param string $label_color
- *   The fill colour for the labels.
+ * @param string $color
+ *   The colour for the leaders and labels.
  */
-function annotate(string $file, array $callouts, array $lines, int $columns, string $leader_color, string $label_color): void {
+function annotate(string $file, array $callouts, array $lines, int $columns, string $color): void {
   $svg = file_get_contents($file);
 
   if ($svg === FALSE || !preg_match('/<svg[^>]*width="([\d.]+)"[^>]*height="([\d.]+)"/', $svg, $m)) {
@@ -292,59 +377,142 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
   // line height moves the callouts with the frame instead of stranding them.
   $cell_width = $frame_width / $columns;
   $cell_height = $frame_height / count($lines);
-  $offset = $cell_width * MARGIN_COLUMNS;
-  $canvas_width = $frame_width + $offset * 2;
 
-  // Labels follow their cells down the frame, so a leader never has to climb
-  // back over one already drawn - that ordering is what keeps them from
-  // crossing. A label only slides further down when the one above crowds it.
   usort($callouts, static fn(array $a, array $b): int => [$a['row'], $a['col']] <=> [$b['row'], $b['col']]);
 
-  $marks = '';
-  $next = ['left' => -$cell_height, 'right' => -$cell_height];
+  // Each side is settled first, then the margins are sized from the labels
+  // that will actually land in them: a fixed margin either clips the longest
+  // part name or pads every diagram out to fit it.
+  $sides = [];
+  $needs = ['left' => 0.0, 'right' => 0.0];
 
-  foreach ($callouts as $callout) {
-    $row = (int) $callout['row'];
-    $column = (int) $callout['col'];
-    $line = $lines[$row] ?? '';
-    $cell_x = $offset + ((float) $column + 0.5) * $cell_width;
-    $cell_y = ((float) $row + 0.5) * $cell_height;
-
-    // The near side wins when it is clear, so a part on the left of the frame
-    // is named on the left. When a row is boxed in on both sides the leader
-    // joins it past the end of its own text, which is always clear.
-    $side = crossable($line, 0, $column - 1) ? 'left' : 'right';
-    $start = $side === 'left' ? $cell_x - $cell_width : $cell_x + $cell_width;
-
-    if ($side === 'right' && !crossable($line, $column + 1, $columns - 1)) {
-      $start = $offset + ((float) Ansi::width(rtrim(mb_substr($line, 0, max(0, mb_strlen($line) - 1)))) + 1.5) * $cell_width;
-    }
-
-    $label_y = max($cell_y, $next[$side] + $cell_height * 0.9);
-    $next[$side] = $label_y;
-
-    $edge_x = $side === 'left' ? $offset - $cell_width * 0.8 : $offset + $frame_width + $cell_width * 0.8;
-    $label_x = $side === 'left' ? $offset - $cell_width * 2.2 : $offset + $frame_width + $cell_width * 2.2;
-    $anchor = $side === 'left' ? 'end' : 'start';
-
+  foreach ($callouts as $index => $callout) {
     $number = array_search($callout['label'], PARTS, TRUE);
 
     if ($number === FALSE) {
       throw new \RuntimeException(sprintf('"%s" is not a named part.', $callout['label']));
     }
 
-    $marks .= sprintf('<circle cx="%.2f" cy="%.2f" r="2.8" fill="none" stroke="%s" stroke-width="1.2"/>', $cell_x, $cell_y, $leader_color);
-    $marks .= sprintf('<path d="M %.2f %.2f L %.2f %.2f L %.2f %.2f" fill="none" stroke="%s" stroke-width="0.9" stroke-linejoin="round" stroke-opacity="0.6" stroke-dasharray="1.5 3"/>', $start, $cell_y, $edge_x, $cell_y, $label_x + ($side === 'left' ? 5.0 : -5.0), $label_y, $leader_color);
-    $marks .= sprintf('<text x="%.2f" y="%.2f" text-anchor="%s" fill="%s" font-family="Consolas, &quot;Courier New&quot;, Courier, monospace" font-size="13"><tspan font-weight="bold">%d</tspan> %s</text>', $label_x, $label_y + 4.5, $anchor, $label_color, $number + 1, htmlspecialchars((string) $callout['label'], ENT_XML1));
+    $text = ($number + 1) . '  ' . $callout['label'];
+    $side = leaderSide($lines, (int) $callout['row'], (int) $callout['col'], $columns);
+    $sides[$index] = [$side, $text];
+    $width = mb_strlen($text) * FONT_SIZE * 0.6;
+
+    if ($side === 'left' || $side === 'right') {
+      $needs[$side] = max($needs[$side], $width + $cell_width * 2.4);
+
+      continue;
+    }
+
+    // A label above or below is centred on its cell, so one near either end of
+    // the frame hangs over that edge and the margin has to take the overhang.
+    $centre = ((float) $callout['col'] + 0.5) * $cell_width;
+    $needs['left'] = max($needs['left'], $width / 2 - $centre);
+    $needs['right'] = max($needs['right'], $width / 2 - ($frame_width - $centre));
   }
 
-  $height = max($frame_height, max($next['left'], $next['right']) + $cell_height);
+  $offset_x = $needs['left'];
+  $offset_y = $cell_height * MARGIN_ROWS;
+  $left_edge = $offset_x;
+  $right_edge = $offset_x + $frame_width;
+  $bottom_edge = $offset_y + $frame_height;
+
+  $marks = '';
+  $stack = ['left' => -$cell_height, 'right' => -$cell_height];
+  $bands = ['up' => [], 'down' => []];
+  $lowest = $bottom_edge;
+
+  foreach ($callouts as $index => $callout) {
+    $row = (int) $callout['row'];
+    $column = (int) $callout['col'];
+    [$side, $text] = $sides[$index];
+    $cell_x = $offset_x + ((float) $column + 0.5) * $cell_width;
+    $cell_y = $offset_y + ((float) $row + 0.5) * $cell_height;
+
+    if ($side === 'up' || $side === 'down') {
+      // A label above or below is centred on its own column, so two of them
+      // collide by overlapping horizontally rather than vertically; the second
+      // one moves out a band instead of sideways, which would break the
+      // straight line down to the cell.
+      $half = mb_strlen($text) * FONT_SIZE * 0.31;
+      $level = 0;
+
+      while (isset($bands[$side][$level]) && overlaps($bands[$side][$level], $cell_x - $half, $cell_x + $half)) {
+        $level++;
+      }
+
+      $bands[$side][$level][] = [$cell_x - $half, $cell_x + $half];
+      $step = (FONT_SIZE * 1.35) * $level;
+      $label_y = $side === 'up' ? $offset_y - FONT_SIZE * 0.5 - $step : $bottom_edge + FONT_SIZE * 1.1 + $step;
+      $tip_y = $side === 'up' ? $cell_y - $cell_height * 0.55 : $cell_y + $cell_height * 0.55;
+      $from_y = $side === 'up' ? $label_y + FONT_SIZE * 0.35 : $label_y - FONT_SIZE * 0.95;
+
+      $marks .= sprintf('<path d="M %.2f %.2f L %.2f %.2f" fill="none" stroke="%s" stroke-width="1.4" marker-end="url(#anatomy-arrow)"/>', $cell_x, $from_y, $cell_x, $tip_y, $color);
+      $marks .= sprintf('<text x="%.2f" y="%.2f" text-anchor="middle" fill="%s" font-family="Consolas, &quot;Courier New&quot;, Courier, monospace" font-size="%.1f">%s</text>', $cell_x, $label_y, $color, FONT_SIZE, label($text));
+      $lowest = max($lowest, $label_y);
+
+      continue;
+    }
+
+    $label_y = max($cell_y, $stack[$side] + FONT_SIZE * 1.4);
+    $stack[$side] = $label_y;
+    $tip_x = $side === 'left' ? $cell_x - $cell_width * 0.7 : $cell_x + $cell_width * 0.7;
+    $bend_x = $side === 'left' ? $left_edge - $cell_width * 0.6 : $right_edge + $cell_width * 0.6;
+    $label_x = $side === 'left' ? $left_edge - $cell_width * 1.4 : $right_edge + $cell_width * 1.4;
+    $anchor = $side === 'left' ? 'end' : 'start';
+    $from_x = $side === 'left' ? $label_x + FONT_SIZE * 0.4 : $label_x - FONT_SIZE * 0.4;
+
+    $marks .= sprintf('<path d="M %.2f %.2f L %.2f %.2f L %.2f %.2f" fill="none" stroke="%s" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#anatomy-arrow)"/>', $from_x, $label_y, $bend_x, $cell_y, $tip_x, $cell_y, $color);
+    $marks .= sprintf('<text x="%.2f" y="%.2f" text-anchor="%s" fill="%s" font-family="Consolas, &quot;Courier New&quot;, Courier, monospace" font-size="%.1f">%s</text>', $label_x, $label_y + FONT_SIZE * 0.35, $anchor, $color, FONT_SIZE, label($text));
+  }
+
+  $canvas_width = $needs['left'] + $frame_width + $needs['right'];
+  $canvas_height = max($lowest, $stack['left'], $stack['right']) + FONT_SIZE;
+  $arrow = sprintf('<defs><marker id="anatomy-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="%s"/></marker></defs>', $color);
 
   // The frame renders inside a nested svg of its own, so wrapping rather than
   // editing it keeps every generated coordinate inside untouched.
-  $wrapped = sprintf('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="%.2f" height="%.2f"><g transform="translate(%.2f,0)">%s</g><g>%s</g></svg>', $canvas_width, $height, $offset, $svg, $marks);
+  $wrapped = sprintf('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="%.2f" height="%.2f">%s<g transform="translate(%.2f,%.2f)">%s</g><g>%s</g></svg>', $canvas_width, $canvas_height, $arrow, $offset_x, $offset_y, $svg, $marks);
 
   file_put_contents($file, $wrapped);
+}
+
+/**
+ * Whether a span overlaps any span already placed in a band.
+ *
+ * @param array<int,array<int,float>> $placed
+ *   The spans already in the band, each a start and an end.
+ * @param float $from
+ *   The span's start.
+ * @param float $to
+ *   The span's end.
+ *
+ * @return bool
+ *   TRUE when the span would collide.
+ */
+function overlaps(array $placed, float $from, float $to): bool {
+  foreach ($placed as $span) {
+    if ($from < $span[1] + 6.0 && $to + 6.0 > $span[0]) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * A label with its number set in bold.
+ *
+ * @param string $text
+ *   The label, its number first.
+ *
+ * @return string
+ *   The label's markup.
+ */
+function label(string $text): string {
+  [$number, $name] = explode('  ', $text, 2);
+
+  return sprintf('<tspan font-weight="bold">%s</tspan>  %s', $number, htmlspecialchars($name, ENT_XML1));
 }
 
 /**
