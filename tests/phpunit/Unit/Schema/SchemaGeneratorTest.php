@@ -12,6 +12,7 @@ use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Model\Weekday;
 use DrevOps\Tui\Schema\SchemaGenerator;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -33,6 +34,8 @@ final class SchemaGeneratorTest extends TestCase {
       })
       ->build();
 
+    // Spelled out in full rather than through prompt(): this is the one place
+    // that documents the complete shape of a generated prompt.
     $expected = [
       'prompts' => [
         [
@@ -167,34 +170,14 @@ final class SchemaGeneratorTest extends TestCase {
     // external tooling can drive the field rather than guess at its shape.
     $expected = [
       'prompts' => [
-        [
+        self::prompt([
           'id' => 'crate',
           'type' => 'template',
           'label' => 'Crate label',
-          'description' => '',
-          'hint' => '',
-          'placeholder' => '',
-          'options' => [],
-          'options_dynamic' => FALSE,
           'default' => 'valley-a',
-          'required' => FALSE,
-          'env' => NULL,
-          'env_aliases' => [],
-          'min' => NULL,
-          'max' => NULL,
-          'step' => NULL,
-          'min_selections' => NULL,
-          'max_selections' => NULL,
-          'min_date' => NULL,
-          'max_date' => NULL,
-          'week_start' => NULL,
           'template' => '{{orchard}}-{{grade}}',
           'placeholders' => ['orchard', 'grade'],
-          'when' => NULL,
-          'derive' => NULL,
-          'discover' => NULL,
-          'depends_on' => [],
-        ],
+        ]),
       ],
     ];
 
@@ -214,112 +197,172 @@ final class SchemaGeneratorTest extends TestCase {
 
     $expected = [
       'prompts' => [
-        [
+        self::prompt([
           'id' => 'profile',
           'type' => 'select',
           'label' => 'Profile',
-          'description' => '',
-          'hint' => '',
-          'placeholder' => '',
           'options' => [
             ['value' => 'standard', 'label' => 'Standard', 'description' => ''],
           ],
-          'options_dynamic' => FALSE,
-          'default' => '',
-          'required' => FALSE,
-          'env' => NULL,
-          'env_aliases' => [],
-          'min' => NULL,
-          'max' => NULL,
-          'step' => NULL,
-          'min_selections' => NULL,
-          'max_selections' => NULL,
-          'min_date' => NULL,
-          'max_date' => NULL,
-          'week_start' => NULL,
-          'template' => NULL,
-          'placeholders' => [],
-          'when' => NULL,
-          'derive' => NULL,
-          'discover' => NULL,
-          'depends_on' => [],
-        ],
+        ]),
       ],
     ];
 
     $this->assertSame($expected, (new SchemaGenerator($form))->generate());
   }
 
-  public function testSelectionBounds(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->select('tags', 'Tags')->multiple()->minSelections(2)->maxSelections(5)->option('a')->option('b');
-      })
-      ->build();
+  #[DataProvider('dataProviderDescribesFieldInJson')]
+  public function testDescribesFieldInJson(\Closure $declare, array $fragments): void {
+    $form = Form::create('T')->panel('p', 'p', $declare)->build();
 
     $json = (string) json_encode((new SchemaGenerator($form))->generate());
 
-    $this->assertStringContainsString('"min_selections":2', $json);
-    $this->assertStringContainsString('"max_selections":5', $json);
+    foreach ($fragments as $fragment) {
+      $this->assertStringContainsString($fragment, $json);
+    }
   }
 
-  public function testDependsOnCollectsNestedFieldRefs(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+  /**
+   * Data provider for testDescribesFieldInJson().
+   *
+   * @return \Iterator<string, array{\Closure, string[]}>
+   *   A panel declaration and the JSON fragments its schema must carry.
+   */
+  public static function dataProviderDescribesFieldInJson(): \Iterator {
+    yield 'selection bounds' => [
+      static function (PanelBuilder $p): void {
+        $p->select('tags', 'Tags')->multiple()->minSelections(2)->maxSelections(5)->option('a')->option('b');
+      },
+      ['"min_selections":2', '"max_selections":5'],
+    ];
+
+    yield 'nested condition field refs' => [
+      static function (PanelBuilder $p): void {
         $p->text('a');
         $p->text('b');
         $p->text('c')->when(Condition::all(new Condition('a', eq: 'x'), new Condition('b', eq: 'y')));
-      })
-      ->build();
+      },
+      ['"depends_on":["a","b"]'],
+    ];
 
-    $json = (string) json_encode((new SchemaGenerator($form))->generate());
-
-    $this->assertStringContainsString('"depends_on":["a","b"]', $json);
-  }
-
-  public function testToggleDescribesBothValues(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+    yield 'toggle carries both values' => [
+      static function (PanelBuilder $p): void {
         $p->toggle('visibility', 'Visibility')->options(['public' => 'Public', 'private' => 'Private'])->default('public');
-      })
-      ->build();
+      },
+      ['"type":"toggle"', '"value":"public"', '"value":"private"'],
+    ];
 
-    $json = (string) json_encode((new SchemaGenerator($form))->generate());
-
-    $this->assertStringContainsString('"type":"toggle"', $json);
-    $this->assertStringContainsString('"value":"public"', $json);
-    $this->assertStringContainsString('"value":"private"', $json);
-  }
-
-  public function testRatingDescribesItsScale(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->rating('taste', 'Taste')->min(0)->max(10);
-      })
-      ->build();
-
-    $json = (string) json_encode((new SchemaGenerator($form))->generate());
-
-    $this->assertStringContainsString('"type":"rating"', $json);
-    $this->assertStringContainsString('"min":0', $json);
-    $this->assertStringContainsString('"max":10', $json);
     // The points are the steps, so a rating never advertises an increment.
-    $this->assertStringContainsString('"step":null', $json);
+    yield 'rating carries its scale' => [
+      static function (PanelBuilder $p): void {
+        $p->rating('taste', 'Taste')->min(0)->max(10);
+      },
+      ['"type":"rating"', '"min":0', '"max":10', '"step":null'],
+    ];
+
+    // The partial default is completed to a full ranking in the schema.
+    yield 'reorder completes its ranking' => [
+      static function (PanelBuilder $p): void {
+        $p->reorder('ranking', 'Ranking')->options(['a' => 'A', 'b' => 'B', 'c' => 'C'])->default(['c']);
+      },
+      ['"type":"reorder"', '"default":["c","a","b"]', '"value":"a"'],
+    ];
   }
 
-  public function testDescribesReorderField(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->reorder('ranking', 'Ranking')->options(['a' => 'A', 'b' => 'B', 'c' => 'C'])->default(['c']);
-      })
-      ->build();
+  #[DataProvider('dataProviderResolvesDefault')]
+  public function testResolvesDefault(\Closure $declare, Context $context, mixed $expected): void {
+    $form = Form::create('T')->panel('p', 'p', $declare)->build();
 
-    $json = (string) json_encode((new SchemaGenerator($form))->generate());
+    $prompts = (new SchemaGenerator($form, $context))->generate()['prompts'];
+    $this->assertIsArray($prompts);
+    $first = $prompts[0];
+    $this->assertIsArray($first);
+    $this->assertSame($expected, $first['default']);
+  }
 
-    $this->assertStringContainsString('"type":"reorder"', $json);
-    // The partial default is completed to a full ranking in the schema.
-    $this->assertStringContainsString('"default":["c","a","b"]', $json);
-    $this->assertStringContainsString('"value":"a"', $json);
+  /**
+   * Data provider for testResolvesDefault().
+   *
+   * @return \Iterator<string, array{\Closure, \DrevOps\Tui\Handler\Context, mixed}>
+   *   A panel declaration, the context it resolves against and the default the
+   *   schema advertises.
+   */
+  public static function dataProviderResolvesDefault(): \Iterator {
+    yield 'closure resolved' => [
+      static function (PanelBuilder $p): void {
+        $p->text('name', 'Name')->default(fn (Context $context): string => 'computed');
+      },
+      new Context(),
+      'computed',
+    ];
+
+    yield 'closure reads the provided context' => [
+      static function (PanelBuilder $p): void {
+        $p->text('version', 'Version')->default(fn (Context $context): string => $context->version);
+      },
+      new Context(version: '9.9.9'),
+      '9.9.9',
+    ];
+
+    yield 'declared schema default stands in' => [
+      static function (PanelBuilder $p): void {
+        $p->text('name', 'Name')->default(fn (Context $context): string => 'live')->schemaDefault('static');
+      },
+      new Context(),
+      'static',
+    ];
+
+    // Unlike the agent help, which omits the key entirely, the machine schema
+    // keeps every key and advertises the unresolvable default as null.
+    yield 'unresolvable closure is null' => [
+      static function (PanelBuilder $p): void {
+        $p->text('name', 'Name')->default(fn (Context $context): string => throw new \RuntimeException('needs answers'));
+      },
+      new Context(),
+      NULL,
+    ];
+  }
+
+  #[DataProvider('dataProviderDescribesEnvironmentVariables')]
+  public function testDescribesEnvironmentVariables(\Closure $declare, string $prefix, int $index, ?string $env, array $aliases): void {
+    $form = Form::create('T')->panel('p', 'p', $declare)->build();
+
+    $prompts = (new SchemaGenerator($form, new Context(), $prefix))->generate()['prompts'];
+    $this->assertIsArray($prompts);
+
+    $prompt = $prompts[$index];
+    $this->assertIsArray($prompt);
+    $this->assertSame($env, $prompt['env']);
+    $this->assertSame($aliases, $prompt['env_aliases']);
+  }
+
+  /**
+   * Data provider for testDescribesEnvironmentVariables().
+   *
+   * @return \Iterator<string, array{\Closure, string, int, string|null, string[]}>
+   *   A panel declaration, the prefix in force, the prompt to read, and the
+   *   variable and aliases that prompt advertises.
+   */
+  public static function dataProviderDescribesEnvironmentVariables(): \Iterator {
+    $named = static function (PanelBuilder $p): void {
+      $p->text('crate_size', 'Crate size');
+      $p->text('grade', 'Grade')->env('LEGACY_GRADE')->envAliases(['OLD_GRADE']);
+    };
+
+    yield 'mechanical name takes the prefix' => [$named, 'APP_', 0, 'APP_CRATE_SIZE', []];
+    yield 'declared name is advertised as given' => [$named, 'APP_', 1, 'LEGACY_GRADE', ['OLD_GRADE']];
+
+    // Without a prefix the mechanical name is not a real variable, so nothing
+    // is advertised for it.
+    yield 'bare mechanical name is not advertised' => [
+      static function (PanelBuilder $p): void {
+        $p->text('crate_size', 'Crate size');
+      },
+      '',
+      0,
+      NULL,
+      [],
+    ];
   }
 
   public function testExcludesPresentationalNote(): void {
@@ -339,98 +382,6 @@ final class SchemaGeneratorTest extends TestCase {
     $this->assertSame(['name'], $ids);
   }
 
-  public function testDescribesTheEnvironmentVariablesAnsweringField(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->text('crate_size', 'Crate size');
-        $p->text('grade', 'Grade')->env('LEGACY_GRADE')->envAliases(['OLD_GRADE']);
-      })
-      ->build();
-
-    $prompts = (new SchemaGenerator($form, new Context(), 'APP_'))->generate()['prompts'];
-    $this->assertIsArray($prompts);
-
-    $mechanical = $prompts[0];
-    $this->assertIsArray($mechanical);
-    $this->assertSame('APP_CRATE_SIZE', $mechanical['env']);
-    $this->assertSame([], $mechanical['env_aliases']);
-
-    $declared = $prompts[1];
-    $this->assertIsArray($declared);
-    $this->assertSame('LEGACY_GRADE', $declared['env']);
-    $this->assertSame(['OLD_GRADE'], $declared['env_aliases']);
-  }
-
-  public function testDescribesNoVariableForBareMechanicalName(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->text('crate_size', 'Crate size');
-      })
-      ->build();
-
-    $prompts = (new SchemaGenerator($form))->generate()['prompts'];
-    $this->assertIsArray($prompts);
-    $first = $prompts[0];
-    $this->assertIsArray($first);
-    $this->assertNull($first['env']);
-  }
-
-  public function testResolvesClosureDefault(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->text('name', 'Name')->default(fn (Context $context): string => 'computed');
-      })
-      ->build();
-
-    $prompts = (new SchemaGenerator($form))->generate()['prompts'];
-    $this->assertIsArray($prompts);
-    $first = $prompts[0];
-    $this->assertIsArray($first);
-    $this->assertSame('computed', $first['default']);
-  }
-
-  public function testClosureDefaultUsesProvidedContext(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->text('version', 'Version')->default(fn (Context $context): string => $context->version);
-      })
-      ->build();
-
-    $prompts = (new SchemaGenerator($form, new Context(version: '9.9.9')))->generate()['prompts'];
-    $this->assertIsArray($prompts);
-    $first = $prompts[0];
-    $this->assertIsArray($first);
-    $this->assertSame('9.9.9', $first['default']);
-  }
-
-  public function testDeclaredSchemaDefaultStandsInForClosure(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->text('name', 'Name')->default(fn (Context $context): string => 'live')->schemaDefault('static');
-      })
-      ->build();
-
-    $prompts = (new SchemaGenerator($form))->generate()['prompts'];
-    $this->assertIsArray($prompts);
-    $first = $prompts[0];
-    $this->assertIsArray($first);
-    $this->assertSame('static', $first['default']);
-  }
-
-  public function testUnresolvableClosureDefaultIsNull(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->text('name', 'Name')->default(fn (Context $context): string => throw new \RuntimeException('needs answers'));
-      })
-      ->build();
-
-    $prompts = (new SchemaGenerator($form))->generate()['prompts'];
-    $this->assertIsArray($prompts);
-    $first = $prompts[0];
-    $this->assertIsArray($first);
-    $this->assertNull($first['default']);
-  }
-
   public function testRoundTripsThroughJson(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
@@ -442,6 +393,49 @@ final class SchemaGeneratorTest extends TestCase {
     $decoded = json_decode((string) json_encode($schema), TRUE);
 
     $this->assertSame($schema, $decoded);
+  }
+
+  /**
+   * A generated prompt, with only the given keys differing from the defaults.
+   *
+   * The generator emits every key on every prompt, so an expectation that
+   * spells them all out buries the handful that carry the point.
+   *
+   * @param array<string,mixed> $overrides
+   *   The keys this prompt declares.
+   *
+   * @return array<string,mixed>
+   *   The prompt, in the generator's own key order.
+   */
+  protected static function prompt(array $overrides): array {
+    return array_merge([
+      'id' => '',
+      'type' => '',
+      'label' => '',
+      'description' => '',
+      'hint' => '',
+      'placeholder' => '',
+      'options' => [],
+      'options_dynamic' => FALSE,
+      'default' => '',
+      'required' => FALSE,
+      'env' => NULL,
+      'env_aliases' => [],
+      'min' => NULL,
+      'max' => NULL,
+      'step' => NULL,
+      'min_selections' => NULL,
+      'max_selections' => NULL,
+      'min_date' => NULL,
+      'max_date' => NULL,
+      'week_start' => NULL,
+      'template' => NULL,
+      'placeholders' => [],
+      'when' => NULL,
+      'derive' => NULL,
+      'discover' => NULL,
+      'depends_on' => [],
+    ], $overrides);
   }
 
 }

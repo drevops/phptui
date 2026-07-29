@@ -9,6 +9,7 @@ use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Schema\AgentHelp;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -40,322 +41,323 @@ final class AgentHelpTest extends TestCase {
     $this->assertMatchesRegularExpression('/"x-precedence":\s*\[\s*"provided",\s*"environment",\s*"discovered",\s*"derived",\s*"default"\s*\]/', $help);
   }
 
-  public function testSelectOptions(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+  #[DataProvider('dataProviderDescribesFieldShape')]
+  public function testDescribesFieldShape(\Closure $declare, array $contains, array $absent, array $matches): void {
+    $form = Form::create('T')->panel('p', 'p', $declare)->build();
+
+    $this->assertHelp((new AgentHelp($form))->generate(), $contains, $absent, $matches);
+  }
+
+  /**
+   * Data provider for testDescribesFieldShape().
+   *
+   * @return \Iterator<string, array{\Closure, string[], string[], string[]}>
+   *   A panel declaration, then the fragments the help must carry, the ones it
+   *   must not, and the patterns it must match.
+   */
+  public static function dataProviderDescribesFieldShape(): \Iterator {
+    yield 'select is an enum' => [
+      static function (PanelBuilder $p): void {
         $p->select('fruit', 'Fruit')->default('banana')->options([
           'apple' => 'Apple',
           'banana' => 'Banana',
           'cherry' => 'Cherry',
         ]);
-      })
-      ->build();
+      },
+      ['"default": "banana"'],
+      [],
+      ['/"enum":\s*\[\s*"apple",\s*"banana",\s*"cherry"\s*\]/'],
+    ];
 
-    $help = (new AgentHelp($form))->generate();
+    yield 'multiple select is an array of options' => [
+      static function (PanelBuilder $p): void {
+        $p->select('veg', 'Vegetables')->multiple()->options(['carrot' => 'Carrot', 'tomato' => 'Tomato']);
+      },
+      ['"type": "array"'],
+      [],
+      ['/"items":\s*\{\s*"enum":\s*\[\s*"carrot",\s*"tomato"\s*\]\s*\}/'],
+    ];
 
-    $this->assertMatchesRegularExpression('/"enum":\s*\[\s*"apple",\s*"banana",\s*"cherry"\s*\]/', $help);
-    $this->assertStringContainsString('"default": "banana"', $help);
-  }
-
-  public function testMultipleSelectIsAnArrayOfOptions(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->select('veg', 'Vegetables')->multiple()->options([
-          'carrot' => 'Carrot',
-          'tomato' => 'Tomato',
-        ]);
-      })
-      ->build();
-
-    $help = (new AgentHelp($form))->generate();
-
-    $this->assertStringContainsString('"type": "array"', $help);
-    $this->assertMatchesRegularExpression('/"items":\s*\{\s*"enum":\s*\[\s*"carrot",\s*"tomato"\s*\]\s*\}/', $help);
-  }
-
-  public function testMultipleSelectionBounds(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+    yield 'selection bounds are item bounds' => [
+      static function (PanelBuilder $p): void {
         $p->select('veg', 'Vegetables')->multiple()->minSelections(2)->maxSelections(4)->options([
           'carrot' => 'Carrot',
           'tomato' => 'Tomato',
           'potato' => 'Potato',
         ]);
-      })
-      ->build();
+      },
+      ['"type": "array"', '"minItems": 2', '"maxItems": 4'],
+      [],
+      [],
+    ];
 
-    $help = (new AgentHelp($form))->generate();
-
-    $this->assertStringContainsString('"type": "array"', $help);
-    $this->assertStringContainsString('"minItems": 2', $help);
-    $this->assertStringContainsString('"maxItems": 4', $help);
-  }
-
-  public function testNumberBounds(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->number('port', 'HTTP port')->min(1)->max(65535)->step(5);
-      })
-      ->build();
-
-    $help = (new AgentHelp($form))->generate();
-
-    $this->assertStringContainsString('"type": "integer"', $help);
-    $this->assertStringContainsString('"minimum": 1', $help);
-    $this->assertStringContainsString('"maximum": 65535', $help);
     // The step is a keyboard increment, not a value constraint: the schema
     // must accept every in-range integer the collection accepts.
-    $this->assertStringNotContainsString('multipleOf', $help);
-  }
-
-  public function testRatingScale(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->rating('taste', 'Taste')->min(1)->max(5)->captions([1 => 'Poor', 5 => 'Excellent']);
-      })
-      ->build();
-
-    $help = (new AgentHelp($form))->generate();
+    yield 'number bounds without the step' => [
+      static function (PanelBuilder $p): void {
+        $p->number('port', 'HTTP port')->min(1)->max(65535)->step(5);
+      },
+      ['"type": "integer"', '"minimum": 1', '"maximum": 65535'],
+      ['multipleOf'],
+      [],
+    ];
 
     // The scale travels as an integer range, so an agent answers with a point.
-    $this->assertStringContainsString('"type": "integer"', $help);
-    $this->assertStringContainsString('"minimum": 1', $help);
-    $this->assertStringContainsString('"maximum": 5', $help);
     // Captions name what the points mean; they are not a closed value set, so
     // they never narrow the answer to an enum.
-    $this->assertStringNotContainsString('enum', $help);
-  }
+    yield 'rating is an integer range' => [
+      static function (PanelBuilder $p): void {
+        $p->rating('taste', 'Taste')->min(1)->max(5)->captions([1 => 'Poor', 5 => 'Excellent']);
+      },
+      ['"type": "integer"', '"minimum": 1', '"maximum": 5'],
+      ['enum'],
+      [],
+    ];
 
-  public function testCalendarFormat(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+    yield 'calendar is a date' => [
+      static function (PanelBuilder $p): void {
         $p->calendar('due', 'Due date');
-      })
-      ->build();
-
-    $help = (new AgentHelp($form))->generate();
-
-    $this->assertStringContainsString('"format": "date"', $help);
-  }
-
-  public function testTemplatePattern(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{grade}}');
-      })
-      ->build();
-
-    $help = (new AgentHelp($form))->generate();
+      },
+      ['"format": "date"'],
+      [],
+      [],
+    ];
 
     // The answer is the assembled string, described by the expression it must
     // match rather than by the pattern's own slot syntax.
-    $this->assertStringContainsString('"type": "string"', $help);
-    $this->assertStringContainsString('"pattern": "^(.*?)-(.*?)$"', $help);
-    $this->assertStringNotContainsString('{{orchard}}', $help);
-  }
+    yield 'template is a matched string' => [
+      static function (PanelBuilder $p): void {
+        $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{grade}}');
+      },
+      ['"type": "string"', '"pattern": "^(.*?)-(.*?)$"'],
+      ['{{orchard}}'],
+      [],
+    ];
 
-  public function testFieldDescription(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+    yield 'description travels' => [
+      static function (PanelBuilder $p): void {
         $p->text('name', 'Site name')->description('The public name');
-      })
-      ->build();
+      },
+      ['"description": "The public name"'],
+      [],
+      [],
+    ];
 
-    $help = (new AgentHelp($form))->generate();
-
-    $this->assertStringContainsString('"description": "The public name"', $help);
-  }
-
-  public function testFieldHintAndPlaceholderTravelAsExtensionKeys(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+    // Each text keeps its own key, so an agent reads the same three guidance
+    // texts a human does rather than one merged description.
+    yield 'hint and placeholder travel as extension keys' => [
+      static function (PanelBuilder $p): void {
         $p->text('name', 'Site name')
           ->description('The public name')
           ->hint('Type a few letters to filter.')
           ->placeholder('E.g. Golden Beetroot');
-      })
-      ->build();
+      },
+      ['"description": "The public name"', '"x-hint": "Type a few letters to filter."', '"x-placeholder": "E.g. Golden Beetroot"'],
+      [],
+      [],
+    ];
 
-    $help = (new AgentHelp($form))->generate();
-
-    // Each text keeps its own key, so an agent reads the same three guidance
-    // texts a human does rather than one merged description.
-    $this->assertStringContainsString('"description": "The public name"', $help);
-    $this->assertStringContainsString('"x-hint": "Type a few letters to filter."', $help);
-    $this->assertStringContainsString('"x-placeholder": "E.g. Golden Beetroot"', $help);
-  }
-
-  public function testUndeclaredHintAndPlaceholderAreOmitted(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+    yield 'undeclared hint and placeholder are omitted' => [
+      static function (PanelBuilder $p): void {
         $p->text('name', 'Site name');
-      })
-      ->build();
-
-    $help = (new AgentHelp($form))->generate();
-
-    $this->assertStringNotContainsString('"x-hint"', $help);
-    $this->assertStringNotContainsString('"x-placeholder"', $help);
+      },
+      [],
+      ['"x-hint"', '"x-placeholder"'],
+      [],
+    ];
   }
 
-  public function testNoEnvPrefixOmitsEnv(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+  #[DataProvider('dataProviderAdvertisesEnvironmentVariables')]
+  public function testAdvertisesEnvironmentVariables(\Closure $declare, string $prefix, array $contains, array $absent, array $matches): void {
+    $form = Form::create('T')->panel('p', 'p', $declare)->build();
+
+    $this->assertHelp((new AgentHelp($form, $prefix))->generate(), $contains, $absent, $matches);
+  }
+
+  /**
+   * Data provider for testAdvertisesEnvironmentVariables().
+   *
+   * @return \Iterator<string, array{\Closure, string, string[], string[], string[]}>
+   *   A panel declaration and the prefix in force, then the fragments the help
+   *   must carry, the ones it must not, and the patterns it must match.
+   */
+  public static function dataProviderAdvertisesEnvironmentVariables(): \Iterator {
+    yield 'no prefix advertises nothing' => [
+      static function (PanelBuilder $p): void {
         $p->text('x', 'X');
-      })
-      ->build();
+      },
+      '',
+      [],
+      ['"env"'],
+      [],
+    ];
 
-    $help = (new AgentHelp($form))->generate();
-
-    $this->assertStringNotContainsString('"env"', $help);
-  }
-
-  public function testDeclaredEnvNameIsAdvertisedInsteadOfTheMechanicalOne(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+    yield 'declared name replaces the mechanical one' => [
+      static function (PanelBuilder $p): void {
         $p->text('crate_size', 'Crate size')->env('LEGACY_CRATE');
-      })
-      ->build();
-
-    $help = (new AgentHelp($form, 'APP_'))->generate();
-
-    $this->assertStringContainsString('"env": "LEGACY_CRATE"', $help);
-    $this->assertStringNotContainsString('APP_CRATE_SIZE', $help);
-  }
-
-  public function testDeclaredEnvNameIsAdvertisedWithoutPrefix(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->text('crate_size', 'Crate size')->env('LEGACY_CRATE');
-        $p->text('grade', 'Grade');
-      })
-      ->build();
-
-    $help = (new AgentHelp($form))->generate();
+      },
+      'APP_',
+      ['"env": "LEGACY_CRATE"'],
+      ['APP_CRATE_SIZE'],
+      [],
+    ];
 
     // The named field advertises itself; its unnamed neighbour has no
     // namespaced variable to offer, so it stays absent.
-    $this->assertStringContainsString('"env": "LEGACY_CRATE"', $help);
-    $this->assertStringNotContainsString('"env": "GRADE"', $help);
-  }
+    yield 'declared name is advertised without a prefix' => [
+      static function (PanelBuilder $p): void {
+        $p->text('crate_size', 'Crate size')->env('LEGACY_CRATE');
+        $p->text('grade', 'Grade');
+      },
+      '',
+      ['"env": "LEGACY_CRATE"'],
+      ['"env": "GRADE"'],
+      [],
+    ];
 
-  public function testEnvAliasesAreAdvertisedInDeclarationOrder(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+    yield 'aliases keep their declaration order' => [
+      static function (PanelBuilder $p): void {
         $p->text('crate_size', 'Crate size')->envAliases(['OLD_CRATE', 'OLDER_CRATE']);
-      })
-      ->build();
-
-    $help = (new AgentHelp($form, 'APP_'))->generate();
-
-    $this->assertStringContainsString('"env": "APP_CRATE_SIZE"', $help);
-    $this->assertMatchesRegularExpression('/"x-env-aliases":\s*\[\s*"OLD_CRATE",\s*"OLDER_CRATE"\s*\]/', $help);
-  }
-
-  public function testEnvAliasesAreAdvertisedWithoutAdvertisableCanonicalName(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->text('crate_size', 'Crate size')->envAliases(['OLD_CRATE']);
-      })
-      ->build();
-
-    $help = (new AgentHelp($form))->generate();
+      },
+      'APP_',
+      ['"env": "APP_CRATE_SIZE"'],
+      [],
+      ['/"x-env-aliases":\s*\[\s*"OLD_CRATE",\s*"OLDER_CRATE"\s*\]/'],
+    ];
 
     // The bare mechanical name stays hidden, but the alias answers the field
     // either way, so withholding it would advertise less than is honoured.
-    $this->assertStringNotContainsString('"env":', $help);
-    $this->assertMatchesRegularExpression('/"x-env-aliases":\s*\[\s*"OLD_CRATE"\s*\]/', $help);
-  }
+    yield 'aliases show without an advertisable canonical name' => [
+      static function (PanelBuilder $p): void {
+        $p->text('crate_size', 'Crate size')->envAliases(['OLD_CRATE']);
+      },
+      '',
+      [],
+      ['"env":'],
+      ['/"x-env-aliases":\s*\[\s*"OLD_CRATE"\s*\]/'],
+    ];
 
-  public function testNoEnvAliasesOmitsTheAnnotation(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+    yield 'no aliases omits the annotation' => [
+      static function (PanelBuilder $p): void {
         $p->text('crate_size', 'Crate size');
-      })
-      ->build();
-
-    $this->assertStringNotContainsString('x-env-aliases', (new AgentHelp($form, 'APP_'))->generate());
+      },
+      'APP_',
+      [],
+      ['x-env-aliases'],
+      [],
+    ];
   }
 
-  public function testResolvesClosureDefault(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+  #[DataProvider('dataProviderResolvesDefault')]
+  public function testResolvesDefault(\Closure $declare, Context $context, array $contains, array $absent): void {
+    $form = Form::create('T')->panel('p', 'p', $declare)->build();
+
+    $this->assertHelp((new AgentHelp($form, '', $context))->generate(), $contains, $absent, []);
+  }
+
+  /**
+   * Data provider for testResolvesDefault().
+   *
+   * @return \Iterator<string, array{\Closure, \DrevOps\Tui\Handler\Context, string[], string[]}>
+   *   A panel declaration and the context it resolves against, then the
+   *   fragments the help must carry and the ones it must not.
+   */
+  public static function dataProviderResolvesDefault(): \Iterator {
+    yield 'closure resolved' => [
+      static function (PanelBuilder $p): void {
         $p->text('name', 'Name')->default(fn (Context $context): string => 'computed');
-      })
-      ->build();
+      },
+      new Context(),
+      ['"default": "computed"'],
+      [],
+    ];
 
-    $help = (new AgentHelp($form))->generate();
-
-    $this->assertStringContainsString('"default": "computed"', $help);
-  }
-
-  public function testClosureDefaultUsesProvidedContext(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+    yield 'closure reads the provided context' => [
+      static function (PanelBuilder $p): void {
         $p->text('version', 'Version')->default(fn (Context $context): string => $context->version);
-      })
-      ->build();
+      },
+      new Context(version: '7.7.7'),
+      ['"default": "7.7.7"'],
+      [],
+    ];
 
-    $help = (new AgentHelp($form, '', new Context(version: '7.7.7')))->generate();
-
-    $this->assertStringContainsString('"default": "7.7.7"', $help);
-  }
-
-  public function testDeclaredSchemaDefaultStandsInForClosure(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+    yield 'declared schema default stands in' => [
+      static function (PanelBuilder $p): void {
         $p->text('name', 'Name')->default(fn (Context $context): string => 'live')->schemaDefault('static');
-      })
-      ->build();
-
-    $help = (new AgentHelp($form))->generate();
-
-    $this->assertStringContainsString('"default": "static"', $help);
-    $this->assertStringNotContainsString('live', $help);
-  }
-
-  public function testUnresolvableClosureDefaultOmitsDefault(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->text('name', 'Name')->default(fn (Context $context): string => throw new \RuntimeException('needs answers'));
-      })
-      ->build();
-
-    $help = (new AgentHelp($form))->generate();
+      },
+      new Context(),
+      ['"default": "static"'],
+      ['live'],
+    ];
 
     // The unresolvable closure emits no `default` key; `"default"` still occurs
     // in the x-precedence list, so match the key form with its colon.
-    $this->assertStringContainsString('"name"', $help);
-    $this->assertStringNotContainsString('"default":', $help);
+    yield 'unresolvable closure omits the key' => [
+      static function (PanelBuilder $p): void {
+        $p->text('name', 'Name')->default(fn (Context $context): string => throw new \RuntimeException('needs answers'));
+      },
+      new Context(),
+      ['"name"'],
+      ['"default":'],
+    ];
   }
 
-  public function testPauseIsSkipped(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+  #[DataProvider('dataProviderSkipsNonAnsweringField')]
+  public function testSkipsNonAnsweringField(\Closure $declare, string $absent): void {
+    $form = Form::create('T')->panel('p', 'p', $declare)->build();
+
+    // A field that carries no answer is not one an agent is asked to provide.
+    $this->assertHelp((new AgentHelp($form, 'APP_'))->generate(), ['"name"'], [$absent], []);
+  }
+
+  /**
+   * Data provider for testSkipsNonAnsweringField().
+   *
+   * @return \Iterator<string, array{\Closure, string}>
+   *   A panel declaration and the id of the field the help must leave out.
+   */
+  public static function dataProviderSkipsNonAnsweringField(): \Iterator {
+    yield 'pause' => [
+      static function (PanelBuilder $p): void {
         $p->text('name', 'Name')->required();
         $p->pause('ready', 'Review');
-      })
-      ->build();
+      },
+      'ready',
+    ];
 
-    $help = (new AgentHelp($form, 'APP_'))->generate();
-
-    $this->assertStringContainsString('"name"', $help);
-    $this->assertStringNotContainsString('ready', $help);
-  }
-
-  public function testNoteIsSkipped(): void {
-    $form = Form::create('T')
-      ->panel('p', 'p', function (PanelBuilder $p): void {
+    yield 'note' => [
+      static function (PanelBuilder $p): void {
         $p->text('name', 'Name')->required();
         $p->note('intro', 'Intro')->description('Welcome.');
-      })
-      ->build();
+      },
+      'intro',
+    ];
+  }
 
-    $help = (new AgentHelp($form, 'APP_'))->generate();
+  /**
+   * Assert what the generated help does and does not say.
+   *
+   * @param string $help
+   *   The generated help.
+   * @param string[] $contains
+   *   Fragments the help must carry.
+   * @param string[] $absent
+   *   Fragments the help must not carry.
+   * @param string[] $matches
+   *   Patterns the help must match, for fragments whose whitespace varies.
+   */
+  protected function assertHelp(string $help, array $contains, array $absent, array $matches): void {
+    foreach ($contains as $fragment) {
+      $this->assertStringContainsString($fragment, $help);
+    }
 
-    // A note carries no answer, so an agent is not asked to provide one.
-    $this->assertStringContainsString('"name"', $help);
-    $this->assertStringNotContainsString('intro', $help);
+    foreach ($absent as $fragment) {
+      $this->assertStringNotContainsString($fragment, $help);
+    }
+
+    foreach ($matches as $pattern) {
+      $this->assertMatchesRegularExpression($pattern, $help);
+    }
   }
 
 }

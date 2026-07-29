@@ -34,6 +34,7 @@ use DrevOps\Tui\Widget\TextareaWidget;
 use DrevOps\Tui\Widget\TextWidget;
 use DrevOps\Tui\Widget\ToggleWidget;
 use DrevOps\Tui\Widget\WidgetFactory;
+use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -46,38 +47,102 @@ use PHPUnit\Framework\TestCase;
 #[Group('widget')]
 final class WidgetFactoryTest extends TestCase {
 
-  public function testCreatesByType(): void {
-    $factory = new WidgetFactory();
-
-    $this->assertInstanceOf(TextWidget::class, $factory->create($this->field(FieldType::Text), 'x'));
-    $this->assertInstanceOf(ConfirmWidget::class, $factory->create($this->field(FieldType::Confirm), TRUE));
-    $this->assertInstanceOf(ToggleWidget::class, $factory->create($this->fieldWithOptions(FieldType::Toggle), 'a'));
-    $this->assertInstanceOf(SelectWidget::class, $factory->create($this->fieldWithOptions(FieldType::Select), 'a'));
-    $this->assertInstanceOf(SelectWidget::class, $factory->create($this->multiFieldWithOptions(FieldType::Select), ['a']));
-    $this->assertInstanceOf(SuggestWidget::class, $factory->create($this->fieldWithOptions(FieldType::Suggest), 'a'));
-    $this->assertInstanceOf(NumberWidget::class, $factory->create($this->field(FieldType::Number), 42));
-    $this->assertInstanceOf(RatingWidget::class, $factory->create($this->ratingField(), 3));
-    $this->assertInstanceOf(CalendarWidget::class, $factory->create($this->field(FieldType::Calendar), '2026-07-15'));
-    $this->assertInstanceOf(TextareaWidget::class, $factory->create($this->field(FieldType::Textarea), 'x'));
-    $this->assertInstanceOf(PasswordWidget::class, $factory->create($this->field(FieldType::Password), 'x'));
-    $this->assertInstanceOf(SearchWidget::class, $factory->create($this->fieldWithOptions(FieldType::Search), 'a'));
-    $this->assertInstanceOf(SearchWidget::class, $factory->create($this->multiFieldWithOptions(FieldType::Search), ['a']));
-    $this->assertInstanceOf(ReorderWidget::class, $factory->create($this->fieldWithOptions(FieldType::Reorder), ['a']));
-    $this->assertInstanceOf(FilePickerWidget::class, $factory->create($this->field(FieldType::FilePicker), '/tmp'));
-    $this->assertInstanceOf(PauseWidget::class, $factory->create($this->field(FieldType::Pause), TRUE));
-    $this->assertInstanceOf(TemplateWidget::class, $factory->create($this->templateField(), 'one-two'));
+  /**
+   * Tests the widget each field type builds an editor from.
+   *
+   * @param \DrevOps\Tui\Model\Field $field
+   *   The field to build an editor for.
+   * @param mixed $current
+   *   The value the widget opens on.
+   * @param class-string $expected
+   *   The widget the factory builds.
+   */
+  #[DataProvider('dataProviderCreatesByType')]
+  public function testCreatesByType(Field $field, mixed $current, string $expected): void {
+    $this->assertInstanceOf($expected, (new WidgetFactory())->create($field, $current));
   }
 
-  public function testTemplateSeededFromTheAssembledValue(): void {
-    $widget = (new WidgetFactory())->create($this->templateField(), 'one-two');
-
-    $this->assertSame('one-two', $widget->value());
+  /**
+   * Data provider for testCreatesByType().
+   *
+   * @return \Iterator<string, array{\DrevOps\Tui\Model\Field, mixed, class-string}>
+   *   The field, the value it opens on and the widget class it builds.
+   */
+  public static function dataProviderCreatesByType(): \Iterator {
+    yield 'text' => [self::field(FieldType::Text), 'x', TextWidget::class];
+    yield 'confirm' => [self::field(FieldType::Confirm), TRUE, ConfirmWidget::class];
+    yield 'toggle' => [self::fieldWithOptions(FieldType::Toggle), 'a', ToggleWidget::class];
+    yield 'select' => [self::fieldWithOptions(FieldType::Select), 'a', SelectWidget::class];
+    yield 'multiple select' => [self::multiFieldWithOptions(FieldType::Select), ['a'], SelectWidget::class];
+    yield 'suggest' => [self::fieldWithOptions(FieldType::Suggest), 'a', SuggestWidget::class];
+    yield 'number' => [self::field(FieldType::Number), 42, NumberWidget::class];
+    yield 'rating' => [self::ratingField(), 3, RatingWidget::class];
+    yield 'calendar' => [self::field(FieldType::Calendar), '2026-07-15', CalendarWidget::class];
+    yield 'textarea' => [self::field(FieldType::Textarea), 'x', TextareaWidget::class];
+    yield 'password' => [self::field(FieldType::Password), 'x', PasswordWidget::class];
+    yield 'search' => [self::fieldWithOptions(FieldType::Search), 'a', SearchWidget::class];
+    yield 'multiple search' => [self::multiFieldWithOptions(FieldType::Search), ['a'], SearchWidget::class];
+    yield 'reorder' => [self::fieldWithOptions(FieldType::Reorder), ['a'], ReorderWidget::class];
+    yield 'file picker' => [self::field(FieldType::FilePicker), '/nonexistent', FilePickerWidget::class];
+    yield 'pause' => [self::field(FieldType::Pause), TRUE, PauseWidget::class];
+    yield 'template' => [self::templateField(), 'one-two', TemplateWidget::class];
   }
 
-  public function testTemplateWithNonStringCurrentStartsEmpty(): void {
-    $widget = (new WidgetFactory())->create($this->templateField(), 42);
+  #[DataProvider('dataProviderSeedsValueFromCurrent')]
+  public function testSeedsValueFromCurrent(Field $field, mixed $current, mixed $expected): void {
+    $this->assertSame($expected, (new WidgetFactory())->create($field, $current)->value());
+  }
 
-    $this->assertSame('-', $widget->value());
+  /**
+   * Data provider for testSeedsValueFromCurrent().
+   *
+   * @return \Iterator<string, array{\DrevOps\Tui\Model\Field, mixed, mixed}>
+   *   The field, the value it is handed and the value the widget opens on.
+   */
+  public static function dataProviderSeedsValueFromCurrent(): \Iterator {
+    yield 'text' => [self::field(FieldType::Text), 'Acme', 'Acme'];
+    yield 'number from an integer' => [self::field(FieldType::Number), 8080, 8080];
+    yield 'number from a non-numeric' => [self::field(FieldType::Number), 'oops', 0];
+    yield 'rating from a non-numeric' => [self::ratingField(), 'oops', 1];
+    yield 'template from the assembled value' => [self::templateField(), 'one-two', 'one-two'];
+    yield 'template from a non-string' => [self::templateField(), 42, '-'];
+    // The seed order flows through: the given value first, the remaining
+    // option appended to complete the ranking.
+    yield 'reorder completes the ranking' => [self::fieldWithOptions(FieldType::Reorder), ['b'], ['b', 'a']];
+    yield 'multiple from a non-list' => [self::multiFieldWithOptions(FieldType::Select), 'notalist', []];
+    // A multiple choice field seeds from the list value, proving the multiple
+    // flag reaches the select and search widgets.
+    yield 'multiple select' => [self::multiFieldWithOptions(FieldType::Select), ['a', 'b'], ['a', 'b']];
+    yield 'multiple search' => [self::multiFieldWithOptions(FieldType::Search), ['a'], ['a']];
+  }
+
+  public function testFilePickerSeedsValueFromCurrent(): void {
+    // Kept out of the seeding provider: the picker reads a directory, and a
+    // virtual one lists nothing without depending on what the host happens to
+    // have on disk.
+    vfsStream::setup('crates');
+    $start = vfsStream::url('crates');
+
+    // A current path outside the start is ignored and the empty directory
+    // lists nothing, so the value is empty.
+    $single = new Field('f', 'F', '', FieldType::FilePicker, '', pickerStart: $start);
+    $this->assertSame('', (new WidgetFactory())->create($single, 'x')->value());
+
+    // The multiple picker yields a list seeded from the current value, proving
+    // the multiple flag is threaded through.
+    $multi = new Field('g', 'G', '', FieldType::FilePicker, [], pickerStart: $start, multiple: TRUE);
+    $this->assertSame(['/a', '/b'], (new WidgetFactory())->create($multi, ['/a', '/b'])->value());
+  }
+
+  public function testDateWithNonStringCurrentOpensOnToday(): void {
+    // Kept out of the seeding provider: a static provider would fix "today" at
+    // collection time. Bracketing the call keeps a midnight rollover between
+    // the two reads from failing the run.
+    $before = (new \DateTimeImmutable('today'))->format('Y-m-d');
+    $widget = (new WidgetFactory())->create(self::field(FieldType::Calendar), 42);
+    $after = (new \DateTimeImmutable('today'))->format('Y-m-d');
+
+    $this->assertContains($widget->value(), [$before, $after]);
   }
 
   public function testNoteHasNoEditorWidget(): void {
@@ -86,29 +151,7 @@ final class WidgetFactoryTest extends TestCase {
     $this->expectException(\LogicException::class);
     $this->expectExceptionMessage('Note fields are presentational and have no editor widget.');
 
-    (new WidgetFactory())->create($this->field(FieldType::Note), NULL);
-  }
-
-  public function testFilePickerFlagsPassedThrough(): void {
-    $single = new Field('f', 'F', '', FieldType::FilePicker, '', pickerStart: '/nonexistent');
-    $multi = new Field('g', 'G', '', FieldType::FilePicker, [], pickerStart: '/nonexistent', multiple: TRUE);
-
-    // The single picker yields a string; a current path outside the start is
-    // ignored and the missing directory lists nothing, so the value is empty.
-    $this->assertSame('', (new WidgetFactory())->create($single, 'x')->value());
-
-    // The multiple picker yields a list seeded from the current value, proving
-    // the multiple flag is threaded through.
-    $this->assertSame(['/a', '/b'], (new WidgetFactory())->create($multi, ['/a', '/b'])->value());
-  }
-
-  public function testMultipleChoiceThreadsTheFlag(): void {
-    $factory = new WidgetFactory();
-
-    // A multiple choice field yields a widget seeded from the list value,
-    // proving the multiple flag reaches the select and search widgets.
-    $this->assertSame(['a', 'b'], $factory->create($this->multiFieldWithOptions(FieldType::Select), ['a', 'b'])->value());
-    $this->assertSame(['a'], $factory->create($this->multiFieldWithOptions(FieldType::Search), ['a'])->value());
+    (new WidgetFactory())->create(self::field(FieldType::Note), NULL);
   }
 
   public function testPasswordFlagsPassedThrough(): void {
@@ -125,26 +168,6 @@ final class WidgetFactoryTest extends TestCase {
     $this->assertFalse($widget->isComplete());
   }
 
-  public function testReorderSeededFromCurrentValue(): void {
-    $widget = (new WidgetFactory())->create($this->fieldWithOptions(FieldType::Reorder), ['b']);
-
-    // The seed order flows through the factory: the given value first, the
-    // remaining option appended to complete the ranking.
-    $this->assertSame(['b', 'a'], $widget->value());
-  }
-
-  public function testNumberSeededFromIntCurrent(): void {
-    $widget = (new WidgetFactory())->create($this->field(FieldType::Number), 8080);
-
-    $this->assertSame(8080, $widget->value());
-  }
-
-  public function testNumberWithNonNumericCurrentIsEmpty(): void {
-    $widget = (new WidgetFactory())->create($this->field(FieldType::Number), 'oops');
-
-    $this->assertSame(0, $widget->value());
-  }
-
   public function testNumberBoundsPassedThrough(): void {
     $field = new Field('f', 'F', '', FieldType::Number, 0, bounds: new NumberBounds(0, 10));
 
@@ -158,15 +181,9 @@ final class WidgetFactoryTest extends TestCase {
   }
 
   public function testRatingScaleAndCaptionsPassedThrough(): void {
-    $widget = (new WidgetFactory())->create($this->ratingField(), 3);
+    $widget = (new WidgetFactory())->create(self::ratingField(), 3);
 
     $this->assertStringContainsString('●●●○○ 3/5 Fair', Ansi::strip($widget->view(new DefaultTheme())));
-  }
-
-  public function testRatingWithNonNumericCurrentStartsAtTheLowestPoint(): void {
-    $widget = (new WidgetFactory())->create($this->ratingField(), 'oops');
-
-    $this->assertSame(1, $widget->value());
   }
 
   public function testDateBoundsPassedThrough(): void {
@@ -178,18 +195,6 @@ final class WidgetFactoryTest extends TestCase {
     $this->assertSame('2026-07-10', $widget->value());
   }
 
-  public function testDateWithNonStringCurrentOpensOnToday(): void {
-    $widget = (new WidgetFactory())->create($this->field(FieldType::Calendar), 42);
-
-    $this->assertSame((new \DateTimeImmutable('today'))->format('Y-m-d'), $widget->value());
-  }
-
-  public function testSeedsCurrentValue(): void {
-    $widget = (new WidgetFactory())->create($this->field(FieldType::Text), 'Acme');
-
-    $this->assertSame('Acme', $widget->value());
-  }
-
   public function testCreatingProgressWidgetThrows(): void {
     // A progress row runs its work on activation; it has no editor to build.
     $field = new Field('p', 'P', '', FieldType::Progress, NULL);
@@ -199,44 +204,34 @@ final class WidgetFactoryTest extends TestCase {
     (new WidgetFactory())->create($field, NULL);
   }
 
-  public function testMultipleWithNonArrayValueHasNoDefaults(): void {
-    $widget = (new WidgetFactory())->create($this->multiFieldWithOptions(FieldType::Select), 'notalist');
+  #[DataProvider('dataProviderTextareaExternalEditorHandoff')]
+  public function testTextareaExternalEditorHandoff(bool $opted_in, bool $available, bool $expected): void {
+    $field = new Field('f', 'F', '', FieldType::Textarea, '', externalEditor: $opted_in);
 
-    $this->assertSame([], $widget->value());
-  }
-
-  public function testTextareaExternalEditorOfferedWhenOptedInAndAvailable(): void {
-    $field = new Field('f', 'F', '', FieldType::Textarea, '', externalEditor: TRUE);
-
-    $widget = (new WidgetFactory(externalEditorAvailable: TRUE))->create($field, 'x');
+    $widget = (new WidgetFactory(externalEditorAvailable: $available))->create($field, 'x');
     $this->assertInstanceOf(TextareaWidget::class, $widget);
 
     $widget->handle(Key::char("\x05"));
-    $this->assertTrue($widget->wantsExternalEdit());
+    $this->assertSame($expected, $widget->wantsExternalEdit());
   }
 
-  public function testTextareaExternalEditorNotOfferedWhenUnavailable(): void {
-    $field = new Field('f', 'F', '', FieldType::Textarea, '', externalEditor: TRUE);
-
-    $widget = (new WidgetFactory(externalEditorAvailable: FALSE))->create($field, 'x');
-    $this->assertInstanceOf(TextareaWidget::class, $widget);
-
-    $widget->handle(Key::char("\x05"));
-    $this->assertFalse($widget->wantsExternalEdit());
-  }
-
-  public function testTextareaExternalEditorNotOfferedWhenNotOptedIn(): void {
-    $widget = (new WidgetFactory(externalEditorAvailable: TRUE))->create($this->field(FieldType::Textarea), 'x');
-    $this->assertInstanceOf(TextareaWidget::class, $widget);
-
-    $widget->handle(Key::char("\x05"));
-    $this->assertFalse($widget->wantsExternalEdit());
+  /**
+   * Data provider for testTextareaExternalEditorHandoff().
+   *
+   * @return \Iterator<string, array{bool, bool, bool}>
+   *   Whether the field opted in, whether an editor is available, and whether
+   *   the handoff is offered.
+   */
+  public static function dataProviderTextareaExternalEditorHandoff(): \Iterator {
+    yield 'opted in and available' => [TRUE, TRUE, TRUE];
+    yield 'opted in but unavailable' => [TRUE, FALSE, FALSE];
+    yield 'available but not opted in' => [FALSE, TRUE, FALSE];
   }
 
   public function testInjectsScopedKeymapIntoWidget(): void {
     // The vim preset binds j to move-down in the select scope, so the injected
     // widget responds to j where a default-preset widget would not.
-    $widget = (new WidgetFactory(KeyMapManager::create('vim')))->create($this->fieldWithOptions(FieldType::Select), 'a');
+    $widget = (new WidgetFactory(KeyMapManager::create('vim')))->create(self::fieldWithOptions(FieldType::Select), 'a');
 
     $widget->handle(Key::char('j'));
 
@@ -477,7 +472,7 @@ final class WidgetFactoryTest extends TestCase {
    * @param \DrevOps\Tui\Model\FieldType $type
    *   The field type.
    */
-  protected function field(FieldType $type): Field {
+  protected static function field(FieldType $type): Field {
     return new Field('f', 'F', '', $type, '');
   }
 
@@ -487,7 +482,7 @@ final class WidgetFactoryTest extends TestCase {
    * @return \DrevOps\Tui\Model\Field
    *   The field.
    */
-  protected function templateField(): Field {
+  protected static function templateField(): Field {
     return new Field('f', 'F', '', FieldType::Template, '', template: new Template('{{a}}-{{b}}'));
   }
 
@@ -497,7 +492,7 @@ final class WidgetFactoryTest extends TestCase {
    * @return \DrevOps\Tui\Model\Field
    *   The field.
    */
-  protected function ratingField(): Field {
+  protected static function ratingField(): Field {
     return new Field('f', 'F', '', FieldType::Rating, 1, bounds: new NumberBounds(1, 5), ratingCaptions: [3 => 'Fair']);
   }
 
@@ -507,7 +502,7 @@ final class WidgetFactoryTest extends TestCase {
    * @param \DrevOps\Tui\Model\FieldType $type
    *   The field type.
    */
-  protected function fieldWithOptions(FieldType $type): Field {
+  protected static function fieldWithOptions(FieldType $type): Field {
     return new Field('f', 'F', '', $type, '', ['a' => new Option('a', 'A'), 'b' => new Option('b', 'B')]);
   }
 
@@ -517,7 +512,7 @@ final class WidgetFactoryTest extends TestCase {
    * @param \DrevOps\Tui\Model\FieldType $type
    *   The field type.
    */
-  protected function multiFieldWithOptions(FieldType $type): Field {
+  protected static function multiFieldWithOptions(FieldType $type): Field {
     return new Field('f', 'F', '', $type, [], ['a' => new Option('a', 'A'), 'b' => new Option('b', 'B')], multiple: TRUE);
   }
 
