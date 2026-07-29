@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Model;
 
 use DrevOps\Tui\Model\Buttons;
+use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\Modal;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -33,7 +34,7 @@ final class ModalTest extends TestCase {
   }
 
   public function testHiddenButtonsRejected(): void {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(FormException::class);
     $this->expectExceptionMessage('A modal dialog must show its buttons.');
 
     new Modal(new Buttons(FALSE));
