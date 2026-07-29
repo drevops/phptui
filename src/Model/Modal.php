@@ -22,6 +22,9 @@ final readonly class Modal {
    *
    * @param \DrevOps\Tui\Model\Buttons $buttons
    *   The dialog's submit/cancel buttons.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the buttons are hidden.
    */
   public function __construct(
     public Buttons $buttons = new Buttons(),
@@ -29,7 +32,7 @@ final readonly class Modal {
     // The buttons are a modal's only on-screen way out, so hiding them would
     // strand the dialog; the constructor rejects that rather than ignoring it.
     if (!$this->buttons->show) {
-      throw new \InvalidArgumentException('A modal dialog must show its buttons.');
+      throw new FormException('A modal dialog must show its buttons.');
     }
   }
 
