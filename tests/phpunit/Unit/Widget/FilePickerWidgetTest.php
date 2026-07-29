@@ -206,6 +206,18 @@ final class FilePickerWidgetTest extends TestCase {
     $this->assertSame($this->root . '/docs', $widget->value());
   }
 
+  public function testTypeToFilterFoldsCaseBeyondAscii(): void {
+    vfsStream::setup('accents', NULL, ['Äpfel.md' => '', 'pears.md' => '']);
+    $widget = new FilePickerWidget(vfsStream::url('accents'));
+
+    $widget->handle(Key::char('ä'));
+
+    // A lowercase non-ASCII query matches its uppercase entry, which a
+    // byte-level fold would miss.
+    $this->assertSame(vfsStream::url('accents') . '/Äpfel.md', $widget->value());
+    $this->assertStringNotContainsString('pears.md', $this->render($widget));
+  }
+
   public function testBackspaceAscendsWhenFilterEmpty(): void {
     $widget = new FilePickerWidget($this->root);
 

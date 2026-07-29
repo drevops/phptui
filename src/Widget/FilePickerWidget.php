@@ -569,11 +569,11 @@ class FilePickerWidget extends AbstractWidget implements FilterCapableInterface,
    */
   protected function sortFilter(array $names): array {
     if ($this->filter !== '') {
-      $needle = strtolower($this->filter);
-      $names = array_filter($names, static fn(string $name): bool => str_contains(strtolower($name), $needle));
+      $needle = Strings::lower($this->filter);
+      $names = array_filter($names, static fn(string $name): bool => str_contains(Strings::lower($name), $needle));
     }
 
-    usort($names, strcasecmp(...));
+    usort($names, static fn(string $a, string $b): int => strcmp(Strings::lower($a), Strings::lower($b)));
 
     return $names;
   }
