@@ -35,13 +35,13 @@ class TextareaWidget extends AbstractWidget implements TextEditCapableInterface,
   /**
    * Construct a textarea widget.
    *
-   * @param string $buffer
+   * @param string $default
    *   The initial value (and live input buffer).
    * @param bool $externalEdit
    *   Whether the external-editor handoff is offered (an available $EDITOR).
    */
-  public function __construct(string $buffer = '', protected bool $externalEdit = FALSE) {
-    $this->initTextBuffer($buffer);
+  public function __construct(string $default = '', protected bool $externalEdit = FALSE) {
+    $this->initTextBuffer($default);
   }
 
   /**

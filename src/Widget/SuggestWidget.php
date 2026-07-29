@@ -41,6 +41,11 @@ class SuggestWidget extends AbstractWidget implements SearchCapableInterface, Te
   protected int $cursor = -1;
 
   /**
+   * The live input buffer.
+   */
+  protected string $buffer = '';
+
+  /**
    * The buffer the memoized ranking was computed for, or NULL for none yet.
    */
   protected ?string $rankedFor = NULL;
@@ -57,7 +62,7 @@ class SuggestWidget extends AbstractWidget implements SearchCapableInterface, Te
    *
    * @param list<string> $values
    *   The suggestion values.
-   * @param string $buffer
+   * @param string $default
    *   The initial input.
    * @param int|null $page_size
    *   The number of suggestions shown at once before the list pages; NULL uses
@@ -69,7 +74,8 @@ class SuggestWidget extends AbstractWidget implements SearchCapableInterface, Te
    *   Whether the leading prefix match is previewed as inline ghost-text after
    *   the caret; FALSE leaves the ranked list as the only completion.
    */
-  public function __construct(protected array $values, protected string $buffer = '', ?int $page_size = NULL, protected array $descriptions = [], protected bool $ghost = FALSE) {
+  public function __construct(protected array $values, string $default = '', ?int $page_size = NULL, protected array $descriptions = [], protected bool $ghost = FALSE) {
+    $this->buffer = $default;
     $this->pageSize = $this->resolvePageSize($page_size);
   }
 

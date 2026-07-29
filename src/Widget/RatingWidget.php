@@ -35,7 +35,7 @@ class RatingWidget extends AbstractWidget implements StepCapableInterface {
   /**
    * Construct a rating widget.
    *
-   * @param int $point
+   * @param int $default
    *   The initially chosen point; clamped onto the scale.
    * @param int $min
    *   The lowest point of the scale.
@@ -44,8 +44,8 @@ class RatingWidget extends AbstractWidget implements StepCapableInterface {
    * @param array<int,string> $captions
    *   The caption of a point, keyed by the point; points may be uncaptioned.
    */
-  public function __construct(int $point, protected int $min = 1, protected int $max = 5, protected array $captions = []) {
-    $this->point = $this->clamp($point);
+  public function __construct(int $default, protected int $min = 1, protected int $max = 5, protected array $captions = []) {
+    $this->point = $this->clamp($default);
   }
 
   /**

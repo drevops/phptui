@@ -38,13 +38,13 @@ class NumberWidget extends AbstractWidget implements TextEditCapableInterface, S
   /**
    * Construct a number widget.
    *
-   * @param string $buffer
+   * @param string $default
    *   The initial value (and live input buffer).
    * @param \DrevOps\Tui\Model\NumberBounds|null $bounds
    *   Optional bounds and step; NULL for a plain integer entry.
    */
-  public function __construct(string $buffer = '', protected ?NumberBounds $bounds = NULL) {
-    $this->initTextBuffer($buffer);
+  public function __construct(string $default = '', protected ?NumberBounds $bounds = NULL) {
+    $this->initTextBuffer($default);
   }
 
   /**
