@@ -915,9 +915,10 @@ class DefaultTheme implements ThemeInterface {
    * {@inheritdoc}
    */
   public function legendKey(string $text): string {
-    // Bolder than what it does, so the eye lands on the key it has to press
-    // first. Uppercased here so a translated key name is uppercased with it.
-    return $this->paint(Sgr::of(Sgr::Bold, Sgr::Grey), Strings::upper($text));
+    // Case is what sets a key apart from what it does, so the legend needs no
+    // weight to carry it. Uppercased here rather than at each source, so a
+    // translated key name is uppercased with the rest.
+    return $this->paint(Sgr::of(Sgr::Grey), Strings::upper($text));
   }
 
   /**
