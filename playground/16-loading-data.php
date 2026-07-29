@@ -44,5 +44,6 @@ try {
   echo (new Tui($form))->run()->toJson() . PHP_EOL;
 }
 catch (InterruptException) {
+  // Leave quietly on Ctrl-C.
   exit(130);
 }
