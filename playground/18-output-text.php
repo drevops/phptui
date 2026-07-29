@@ -45,6 +45,6 @@ $out->text('Every box is picked the morning it ships. Nothing is charged until t
 $out->text('');
 
 // The markdown subset: bold, emphasis, inline code and bullet lists.
-$out->text("**Before you order:**\n\n- Pick a *delivery day* between Monday and Saturday\n- Leave a note if the gate code is not `1234`\n- Cancel any time before seven the evening before");
+$out->text('**Before you order:**' . chr(10) . chr(10) . '- Pick a *delivery day* between Monday and Saturday' . chr(10) . '- Leave a note if the gate code is not `1234`' . chr(10) . '- Cancel any time before seven the evening before');
 
 $out->rule();
