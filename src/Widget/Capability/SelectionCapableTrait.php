@@ -10,6 +10,7 @@ use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\Option;
+use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -328,6 +329,22 @@ trait SelectionCapableTrait {
     }
 
     return $theme->radio($current) . ' ' . $this->renderMatchedLabel($theme, $option->label, $this->matchPositions($option->label), $current);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Measured from the glyphs the row actually draws rather than assumed: the
+   * leading run differs between the two modes, and again between a themed
+   * glyph and its textual stand-in.
+   */
+  #[\Override]
+  protected function entryTextOffset(ThemeInterface $theme): int {
+    $prefix = $this->multiple
+      ? $theme->marker(TRUE) . ' ' . $theme->check(FALSE) . ' '
+      : $theme->radio(FALSE) . ' ';
+
+    return Ansi::width($prefix);
   }
 
   /**

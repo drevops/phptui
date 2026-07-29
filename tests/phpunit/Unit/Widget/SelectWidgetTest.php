@@ -512,8 +512,8 @@ final class SelectWidgetTest extends TestCase {
     // the field is stating cannot be told from prose about the highlighted
     // option.
     $this->assertStringContainsString($this->styleOf($theme->hint(...)) . 'Select between 1 and 2 items.', $view);
-    $this->assertStringContainsString($this->styleOf($theme->description(...)) . 'Crisp and sweet, the everyday choice.', $view);
-    $this->assertNotSame($this->styleOf($theme->hint(...)), $this->styleOf($theme->description(...)));
+    $this->assertStringContainsString($this->styleOf($theme->entryDescription(...)) . 'Crisp and sweet, the everyday choice.', $view);
+    $this->assertNotSame($this->styleOf($theme->hint(...)), $this->styleOf($theme->entryDescription(...)));
   }
 
   /**

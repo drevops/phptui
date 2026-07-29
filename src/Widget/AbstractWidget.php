@@ -394,13 +394,29 @@ abstract class AbstractWidget implements WidgetInterface {
    *   description or the panel is too narrow to show one.
    */
   protected function renderOptionDescription(ThemeInterface $theme, string $description): string {
-    $width = $theme->contentWidth();
+    // Indented to start where an entry's own text starts, so it reads as
+    // belonging to the entry above it rather than to the list as a whole.
+    $indent = str_repeat(' ', $this->entryTextOffset($theme));
+    $width = $theme->contentWidth() - Strings::length($indent);
 
     if ($description === '' || $width < self::MIN_DESCRIPTION_WIDTH) {
       return '';
     }
 
-    return implode("\n", array_map(static fn(string $line): string => $theme->description($line), Strings::wrap($description, $width)));
+    return implode("\n", array_map(static fn(string $line): string => $indent . $theme->entryDescription($line), Strings::wrap($description, $width)));
+  }
+
+  /**
+   * The column an entry's own text starts at, within the widget's view.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   *
+   * @return int
+   *   The offset; zero for a widget whose entries carry no leading glyphs.
+   */
+  protected function entryTextOffset(ThemeInterface $theme): int {
+    return 0;
   }
 
   /**

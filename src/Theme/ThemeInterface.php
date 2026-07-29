@@ -72,6 +72,16 @@ interface ThemeInterface {
   public function hint(string $text, bool $selected = FALSE): string;
 
   /**
+   * The focused entry's own text, drawn beneath it.
+   *
+   * Its own atom rather than a reuse of {@see description()}: a field's
+   * description belongs to the field and never moves, while this is rewritten
+   * every time the focus moves down the list, and the two are drawn a line or
+   * two apart.
+   */
+  public function entryDescription(string $text): string;
+
+  /**
    * The mark beside a label saying the field has help to show.
    *
    * A field's help is only ever drawn on request, so this is the only thing

@@ -153,7 +153,7 @@ final class ThemeRenderTest extends TestCase {
 
     // Help can run to paragraphs, which a row cannot carry, so the row marks
     // that there is something to ask for and the text stays out of the panel.
-    $this->assertStringContainsString('ⓘ', $stripped[0]);
+    $this->assertStringContainsString('(?)', $stripped[0]);
     $this->assertSame('    The grower of record', $stripped[1]);
     $this->assertCount(2, $stripped);
   }
@@ -167,7 +167,7 @@ final class ThemeRenderTest extends TestCase {
 
     // The mark hangs off the label, so a field with help and no description
     // still announces it.
-    $this->assertStringContainsString('ⓘ', $stripped[0]);
+    $this->assertStringContainsString('(?)', $stripped[0]);
     $this->assertCount(1, $stripped);
   }
 
@@ -177,7 +177,7 @@ final class ThemeRenderTest extends TestCase {
 
     [$lines] = $this->plainTheme()->renderBody($panel, new Answers(), 0);
 
-    $this->assertStringNotContainsString('ⓘ', Ansi::strip($lines[0]));
+    $this->assertStringNotContainsString('(?)', Ansi::strip($lines[0]));
   }
 
   public function testBodyDropsHintWhenCompact(): void {

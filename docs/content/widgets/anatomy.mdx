@@ -30,21 +30,21 @@ A panel stacks its fields as rows, each one in view mode until you open it. Five
 </p>
 
 - **1** breadcrumb - the trail of panel titles. It's the titles of every panel you've descended through plus the one you're in, so it gains a segment when you open a sub-panel and drops one when you come back.
-- **20** separator - the glyph between breadcrumb segments. It's drawn by the theme, so it isn't always a chevron.
+- **20** separator - the glyph between **breadcrumb** (1) segments.
 - **2** field selector - which field has focus. Exactly one row has it at a time, it moves with <kbd>↑</kbd> and <kbd>↓</kbd>, and the row it's on is drawn brighter - the glyph and that emphasis are one signal in two forms.
 - **3** label - the field's name. The one part of a row that never changes while you work.
 - **4** value - the settled answer. It shows what was accepted, so it stays empty until the field is answered and never shows what you're mid-way through typing - that's the **draft** (17).
 - **5** description - the field's explanatory text, under its row. Declared once on the field and shown whether or not the row has focus, so it never changes while you work.
 - **6** help - the field's long-form text. It's the only part not on screen: press <kbd>?</kbd> and it opens in a popup, which is what lets it run to paragraphs where a **description** (5) has to stay a sentence.
-- **21** help marker - sits after the **label** (3) when a field has **help** (6) to show. `ⓘ` with Unicode, `(?)` without. It hangs off the **label** (3) rather than the **description** (5), because a field can carry **help** (6) without carrying a **description** (5), and a **label** (3) is the one part every row draws.
+- **21** help marker - sits after the **label** (3) when a field has **help** (6) to show, in the label's own colour. It hangs off the **label** (3) rather than the **description** (5), because a field can carry **help** (6) without carrying a **description** (5), and a **label** (3) is the one part every row draws.
 - **7** overflow marker - content continues above or below. It appears only when the rows don't fit the panel, and points the way there's more.
 - **8** legend - the keys available right now. It rewrites itself as focus moves, so a field in edit mode lists different keys from the panel around it.
 
 **One number, several arrows.** The **label** (3) and the **value** (4) each carry an arrow per row, because every row has one of each - they belong to a row, not to a particular field. A part that occurs several times keeps a single number; numbering each occurrence would read as several different parts.
 
-The **field selector** (2) is the exception. It gets one arrow, because only one field holds focus at a time. That row is drawn differently too: `Basket contents` has a brighter **label** (3) than the rows below it. The glyph and that emphasis are the same signal in two forms, and both come from the theme.
+The **field selector** (2) is the exception. It gets one arrow, because only one field holds focus at a time. That row is drawn differently too: `Basket contents` has a brighter **label** (3) and **value** (4) than the rows below it. The glyph and that emphasis are the same signal in two forms, and both come from the theme.
 
-`Basket contents` is also the only field here carrying **help** (6), which is why it's the only one wearing a **help marker** (21). It has no **value** (4) yet - nothing has been picked - so the **value** (4) is called out on the three rows that do have one.
+`Basket contents` is also the only field here carrying **help** (6), which is why it's the only one wearing a **help marker** (21).
 
 ## Edit mode
 
@@ -64,8 +64,6 @@ Edit mode hands the region right of the label to the widget. A multiple-choice f
 **Selecting and marking are different things.** A selector shows where you are; a marker shows what you've marked. That's why the **field selector** (2) and the **entry selector** (11) are the glyphs that follow your movement, while the **entry marker** (9) is the box that records a decision. Moving a selector chooses nothing.
 
 The pairs are deliberate. The **field selector** (2) shows which field you're on and the **entry selector** (11) which entry within it; the **description** (5) is the field's own text and the **entry description** (14) an entry's. Same idea at two levels, so a parent's name is never reused for its child.
-
-Order matters here too. The **entry description** (14) sits directly under the list and above the **constraint** (13), because it changes as focus moves. A line that follows the cursor belongs against the list it follows; a limit that never moves can wait below it.
 
 ## Edit mode: typing rather than choosing
 

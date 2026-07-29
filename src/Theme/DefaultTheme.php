@@ -648,10 +648,12 @@ class DefaultTheme implements ThemeInterface {
     // Guidance on how to answer is never louder than the question itself, but
     // still reads as its own voice - and a constraint sits directly beneath an
     // option's own description, so the two must not be mistaken for each other
-    // on any surface. Colour carries it where there is colour, italic
-    // reinforces it where the surface honours it, and where neither survives
-    // the voice falls back to a mark, which nothing can strip.
-    return $this->paint($this->emphasize(Sgr::of(Sgr::Italic, Sgr::Steel), $selected), $this->linkify($text));
+    // on any surface. It steps along the grey ramp rather than taking a hue of
+    // its own: a coloured guidance line reads as output the widget produced
+    // rather than as chrome telling you what it expects. Italic reinforces it
+    // where the surface honours it, and where neither survives the voice falls
+    // back to a mark, which nothing can strip.
+    return $this->paint($this->emphasize(Sgr::of(Sgr::Italic, Sgr::Pewter), $selected), $this->linkify($text));
   }
 
   /**
@@ -912,11 +914,27 @@ class DefaultTheme implements ThemeInterface {
   /**
    * {@inheritdoc}
    */
+  public function entryDescription(string $text): string {
+    // Italicized against the description's grey: it says the same kind of thing
+    // about a smaller subject, and the slant marks it as belonging to the entry
+    // above rather than to the field.
+    return $this->paint(Sgr::of(Sgr::Italic, Sgr::Grey), $this->linkify($text));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function helpMarker(bool $selected = FALSE): string {
-    // A circled question mark has no dependable coverage in terminal fonts, so
-    // the information glyph stands in for it: it is the conventional mark for
-    // "there is more to read here", and it is one cell wide everywhere.
-    return $this->paint($this->emphasize(Sgr::of(Sgr::Steel), $selected), $this->unicode ? 'ⓘ' : '(?)');
+    // The label's own colour and never bolded: the mark belongs to the label it
+    // follows, and bolding it on the selected row would have it competing with
+    // the label instead of hanging off it.
+    //
+    // Deliberately ASCII in both modes. Every circled or enclosed candidate -
+    // ⓘ, ⍰, ℹ - is naturally wider than one cell, and a surface that pins each
+    // cell to a fixed advance squeezes the glyph out of shape rather than
+    // giving it the room. A theme that knows its surface can carry one is free
+    // to override this.
+    return $this->paint('', '(?)');
   }
 
   /**

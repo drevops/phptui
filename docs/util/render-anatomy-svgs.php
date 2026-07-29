@@ -114,8 +114,8 @@ function anatomySpecs(string $tree): array {
 
   return [
     'row' => [
-      'form' => Form::create('Orchard order')->panel('main', 'Delivery', function (PanelBuilder $p): void {
-        $p->select('basket', 'Basket contents')->description('Pick the produce for this delivery.')->hint('Every crate is weighed and labelled at the packing bench before it leaves the orchard.')->multiple()->options(['apple' => 'Apple', 'carrot' => 'Carrot']);
+      'form' => Form::create('Orchard')->panel('main', 'Delivery', function (PanelBuilder $p): void {
+        $p->select('basket', 'Basket contents')->description('Pick the produce for this delivery.')->hint('Every crate is weighed and labelled at the packing bench before it leaves the orchard.')->multiple()->default(['apple'])->options(['apple' => 'Apple', 'carrot' => 'Carrot']);
         $p->number('weight', 'Basket weight')->description('Weighed at the packing bench.')->default(1200)->min(200)->max(9000);
         $p->calendar('harvest', 'Harvest date')->default('2026-07-15');
         $p->text('courier', 'Courier')->default('Valley Runs');
@@ -126,18 +126,18 @@ function anatomySpecs(string $tree): array {
       'rows' => 21,
       'callouts' => [
         ['col' => 2, 'row' => 1, 'label' => 'breadcrumb', 'side' => 'left'],
-        ['col' => 16, 'row' => 1, 'label' => 'separator'],
+        ['col' => 10, 'row' => 1, 'label' => 'separator'],
         ['col' => 2, 'row' => 4, 'label' => 'field selector'],
         ['col' => 6, 'row' => 5, 'label' => 'description'],
         ['label' => 'label', 'side' => 'left', 'cells' => [[7, 4], [10, 4], [12, 4]]],
         ['col' => 20, 'row' => 4, 'label' => 'help marker'],
-        ['label' => 'value', 'side' => 'right', 'cells' => [[7, 22], [10, 27], [12, 23]]],
+        ['label' => 'value', 'side' => 'right', 'cells' => [[4, 29], [7, 22], [10, 27], [12, 23]]],
         ['col' => 4, 'row' => 15, 'label' => 'overflow marker'],
         ['col' => 2, 'row' => 18, 'label' => 'legend', 'side' => 'left'],
       ],
     ],
     'editor' => [
-      'form' => Form::create('Orchard order')->panel('main', 'Basket', function (PanelBuilder $p): void {
+      'form' => Form::create('Orchard')->panel('main', 'Basket', function (PanelBuilder $p): void {
         $p->select('basket', 'Basket')->description('Pick the produce for this delivery.')->multiple()->minSelections(2)->maxSelections(3)
           ->option('apple', 'Apple', description: 'Crisp and sweet, the everyday choice.')
           ->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')
@@ -150,13 +150,13 @@ function anatomySpecs(string $tree): array {
         ['col' => 12, 'row' => 5, 'label' => 'entry selector'],
         ['col' => 14, 'row' => 6, 'label' => 'entry marker'],
         ['col' => 37, 'row' => 6, 'label' => 'entry note'],
-        ['col' => 12, 'row' => 7, 'label' => 'entry description'],
+        ['col' => 16, 'row' => 7, 'label' => 'entry description'],
         ['col' => 12, 'row' => 8, 'label' => 'constraint'],
         ['col' => 6, 'row' => 9, 'label' => 'description'],
       ],
     ],
     'filepicker' => [
-      'form' => Form::create('Orchard order')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
+      'form' => Form::create('Orchard')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
         $p->filePicker('price_list', 'Price list')->description('The CSV the orchard sends each week.')->startIn($tree)->filesOnly()->extensions(['csv'])->maxSize(2097152);
       }),
       'keys' => [...$open, $down],
@@ -170,7 +170,7 @@ function anatomySpecs(string $tree): array {
       ],
     ],
     'text' => [
-      'form' => Form::create('Orchard order')->panel('main', 'Crate', function (PanelBuilder $p): void {
+      'form' => Form::create('Orchard')->panel('main', 'Crate', function (PanelBuilder $p): void {
         $p->template('crate', 'Crate label')->description('Identifies the crate on the loading dock.')->pattern('{{orchard}}-{{fruit}}-{{grade}}')->default('valley-pear-a')->slot('orchard', 'Orchard')->slot('fruit', 'Fruit')->slot('grade', 'Grade');
       }),
       'keys' => [...$open, $tab],
@@ -183,7 +183,7 @@ function anatomySpecs(string $tree): array {
       ],
     ],
     'constraint' => [
-      'form' => Form::create('Orchard order')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
+      'form' => Form::create('Orchard')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
         $p->filePicker('price_list', 'Price list')->startIn($tree)->filesOnly()->maxSize(64);
       }),
       'keys' => [...$open],
@@ -195,7 +195,7 @@ function anatomySpecs(string $tree): array {
     // The same picker, after a pick that breaks the size limit the line above
     // announced: one line, the other of its two states.
     'error' => [
-      'form' => Form::create('Orchard order')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
+      'form' => Form::create('Orchard')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
         $p->filePicker('price_list', 'Price list')->startIn($tree)->filesOnly()->maxSize(64);
       }),
       'keys' => [...$open, $down, $down, $down, $enter],
