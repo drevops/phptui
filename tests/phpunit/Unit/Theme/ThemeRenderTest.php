@@ -34,7 +34,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(DefaultTheme::class)]
 #[CoversClass(HelpSection::class)]
-#[Group('tui')]
+#[Group('theme')]
 final class ThemeRenderTest extends TestCase {
 
   public function testFieldLineSelectedRightAlignsBadge(): void {

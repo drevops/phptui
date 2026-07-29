@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the standalone output primitive.
  */
 #[CoversClass(Output::class)]
-#[Group('tui')]
+#[Group('primitive')]
 final class OutputTest extends TestCase {
 
   public function testBoxWritesTheFramedLines(): void {

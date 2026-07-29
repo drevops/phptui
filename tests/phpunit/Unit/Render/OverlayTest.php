@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the line-compositor that overlays a box on a backdrop.
  */
 #[CoversClass(Overlay::class)]
-#[Group('tui')]
+#[Group('render')]
 final class OverlayTest extends TestCase {
 
   public function testCenterPositionsWithEqualPadding(): void {

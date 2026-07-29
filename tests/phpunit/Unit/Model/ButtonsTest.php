@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the submit/cancel button pair value object.
  */
 #[CoversClass(Buttons::class)]
-#[Group('tui')]
+#[Group('model')]
 final class ButtonsTest extends TestCase {
 
   public function testDefaults(): void {

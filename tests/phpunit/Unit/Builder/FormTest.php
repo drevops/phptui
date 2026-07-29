@@ -37,7 +37,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(LayoutGuard::class)]
 #[CoversClass(PanelBuilder::class)]
 #[CoversClass(FieldBuilder::class)]
-#[Group('model')]
+#[Group('builder')]
 final class FormTest extends TestCase {
 
   public function testBuildsExpectedForm(): void {

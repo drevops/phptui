@@ -35,7 +35,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the interactive panel controller.
  */
 #[CoversClass(PanelController::class)]
-#[Group('tui')]
+#[Group('render')]
 final class PanelControllerTest extends TestCase {
 
   public function testDrillIntoPanelAndBack(): void {

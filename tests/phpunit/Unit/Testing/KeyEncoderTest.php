@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
  * Tests encoding a key back into the bytes a parser decodes into it.
  */
 #[CoversClass(KeyEncoder::class)]
-#[Group('input')]
+#[Group('testing')]
 final class KeyEncoderTest extends TestCase {
 
   #[DataProvider('dataProviderRoundTrip')]

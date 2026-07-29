@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the panel navigator.
  */
 #[CoversClass(Navigator::class)]
-#[Group('tui')]
+#[Group('render')]
 final class NavigatorTest extends TestCase {
 
   public function testNavigation(): void {

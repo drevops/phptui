@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(DefaultTheme::class)]
 #[CoversClass(EmberTheme::class)]
-#[Group('tui')]
+#[Group('theme')]
 final class ProgressRenderTest extends TestCase {
 
   public function testSpinnerCyclesFramesInTheAccent(): void {

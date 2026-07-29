@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the translator and its static t() bridge.
  */
 #[CoversClass(Translator::class)]
-#[Group('tui')]
+#[Group('translation')]
 final class TranslatorTest extends TestCase {
 
   use IsolatesEnvTrait;

@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the progress primitive (spinner and determinate bar).
  */
 #[CoversClass(Progress::class)]
-#[Group('tui')]
+#[Group('primitive')]
 final class ProgressTest extends TestCase {
 
   public function testReturnsTheCallbackResult(): void {
