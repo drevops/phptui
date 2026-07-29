@@ -232,7 +232,7 @@ final class OutputRenderTest extends TestCase {
   }
 
   /**
-   * Data provider.
+   * Data provider for testStatusLeadsWithItsOwnGlyph().
    *
    * @return \Iterator<string, array{Status, string, string}>
    *   The status, its Unicode glyph and its ASCII glyph.
@@ -261,7 +261,7 @@ final class OutputRenderTest extends TestCase {
   }
 
   /**
-   * Data provider.
+   * Data provider for testStatusCarriesItsOwnColour().
    *
    * @return \Iterator<string, array{Status, string}>
    *   The status and the SGR the default dark theme paints it with.
