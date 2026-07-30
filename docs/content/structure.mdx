@@ -690,11 +690,66 @@ Both follow the same shape, and so does every other block: an element per distin
 
 It's the only block other than a *field* that refuses anything, and unlike a field it holds no value while doing so.
 
+```php
+interface ActionsElements {
+
+  public function actionButton(string $label): string;
+
+  public function actionSelected(string $label): string;
+
+  public function actionSeparator(): string;
+
+}
+```
+
+```
+  [ Submit ]  [ Cancel ]
+  ─────┬────  ┬ ────┬───
+       │      │     └── actionButton()
+       │      └──────── actionSeparator()
+       └─────────────── actionSelected()
+```
+
+The brackets belong to the element, not the block. A theme that framed a button differently changes `actionButton()` alone, and the block goes on knowing only that it has labels and one of them has focus.
+
 ### Progress
 
-**Progress** runs work when activated, drawing an indicator while the work runs - a spinner when the length is unknown, a bar when it isn't.
+**Progress** runs work when activated, drawing an indicator while the work runs. It's the block that separates *Focus* from *Collect*: the cursor lands on it and activating it does something real, but nothing it does reaches the collected result.
 
-It's the block that separates *Focus* from *Collect*: the cursor lands on it and activating it does something real, but nothing it does reaches the collected result.
+```php
+interface ProgressElements {
+
+  public function progressCaption(string $text): string;
+
+  public function progressSpinner(int $frame): string;
+
+  public function progressTrack(int $filled, int $width): string;
+
+  public function progressCount(int $current, int $total): string;
+
+}
+```
+
+It draws one of two ways, and which one is a fact about the work rather than a setting. Work that reports a total gets a bar:
+
+```
+Packing crates  [██████████░░░░░░]  4/10
+───────┬──────   ───────┬───────    ─┬─
+       │                │            └── progressCount()
+       │                └─────────────── progressTrack()
+       └──────────────────────────────── progressCaption()
+```
+
+Work that can't say how long it will take gets a spinner instead, and the caption is the only element the two forms share:
+
+```
+⠙  Fetching the price list
+┬  ───────────┬───────────
+│             └── progressCaption()
+└──────────────── progressSpinner()
+```
+
+`progressSpinner()` takes the frame number rather than a glyph, so the theme owns both the animation's characters and their count - a Unicode theme can spin through ten frames where an ASCII one cycles four.
 
 ## The theme
 
