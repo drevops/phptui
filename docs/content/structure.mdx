@@ -143,9 +143,9 @@ final class DefaultLayout extends AbstractLayout {
   public function __construct() {
     parent::__construct(Axis::Rows);
 
-    $this->region('header')->fixed(1);
+    $this->region('header')->fixed(1)->add(new Breadcrumb());
     $this->region('content')->scrolls();
-    $this->region('footer')->fixed(1);
+    $this->region('footer')->fixed(1)->add(new Legend());
   }
 
 }
@@ -336,13 +336,35 @@ This is why the axis needs no third value. Any arrangement is rows of columns of
 
 | Name | Axis | Regions |
 |---|---|---|
-| `default` | rows | `header` (fixed 1), `content` (scrolls), `footer` (fixed 1) |
+| `default` | rows | `header` (fixed 1, holds a Breadcrumb), `content` (scrolls), `footer` (fixed 1, holds a Legend) |
 | `two-column` | columns | `left`, `right` |
 
 Two is enough because they cover the two axes. Anything else is those two nested, or a layout you write yourself.
 
 ```php
 (new Tui($form))->layout('two-column')->run();
+```
+
+### Empty and furnished
+
+A layout can arrive with blocks already in its regions, and `DefaultLayout` does - a *breadcrumb* in the header, a *legend* in the footer. That's still a layout, not a new kind of thing. It's a **furnished** one.
+
+| | Declares regions | Places blocks |
+|---|---|---|
+| `TwoColumnLayout` | ✓ | |
+| `DefaultLayout` | ✓ | ✓ |
+
+The furniture can't be a separate thing you bolt on, and the reason is worth knowing: **a block is placed by name, and only the layout knows which names exist.** A breadcrumb goes in `header` because `DefaultLayout` declared a `header`. A `TwoColumnLayout` has `left` and `right`, so the same furniture would have nowhere to go.
+
+So whatever declares a region is what furnishes it, and a furnished layout is the honest name for a layout that does both.
+
+Furnishing is only a default. Anything the layout placed can be moved or joined:
+
+```php
+$layout = new DefaultLayout();
+
+// Keep the breadcrumb, and add a standing warning beside it.
+$layout->in('header')->add(new Markup('preview', 'Read-only preview.'));
 ```
 
 ### Writing one
@@ -490,12 +512,11 @@ $region
 The last four in the list are the ones easily mistaken for chrome. They aren't: a *breadcrumb* is a block in the header region and a *legend* is a block in the footer region, placed exactly as a *field* is placed. Which is why either can be moved, or joined by something else, without a new concept:
 
 ```php
-// A breadcrumb at the bottom, and a standing warning at the top.
+// A standing warning in the header, beside the breadcrumb already there.
 $layout = new DefaultLayout();
 
 $layout->in('header')->add(new Markup('preview', 'Read-only preview.'));
 $layout->in('content')->add($panel);
-$layout->in('footer')->add(new Legend())->add(new Breadcrumb());
 ```
 
 ### Panel
@@ -798,11 +819,10 @@ $form = Form::create('Orchard')
 Every level has a default, and this is what those defaults are:
 
 ```php
+// DefaultLayout arrives furnished: a Breadcrumb in the header,
+// a Legend in the footer. Only the panel and its actions are added.
 $layout = new DefaultLayout();
-
-$layout->in('header')->add(new Breadcrumb());
 $layout->in('content')->add($panel)->add(new Actions());
-$layout->in('footer')->add(new Legend());
 
 (new Screen())->layout($layout);
 ```
