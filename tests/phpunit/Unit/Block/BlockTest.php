@@ -6,12 +6,15 @@ namespace DrevOps\Tui\Tests\Unit\Block;
 
 use DrevOps\Tui\Block\Actions;
 use DrevOps\Tui\Block\Breadcrumb;
+use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\ThemeInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -95,13 +98,25 @@ final class BlockTest extends TestCase {
     $this->assertSame('Packing [██████████] 3/3', $progress->render($this->theme()));
   }
 
-  public function testABlockRefusesAThemeThatCannotDrawIt(): void {
+  #[DataProvider('dataProviderBlocksRefuseAThemeWithoutTheirElements')]
+  public function testEveryBlockRefusesAThemeThatCannotDrawIt(\Closure $make, string $says): void {
     $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('cannot draw a breadcrumb');
+    $this->expectExceptionMessage($says);
 
     // A theme is only required to be a ThemeInterface; the elements a block
-    // needs are declared separately, so one that declares none cannot draw it.
-    (new Breadcrumb('Orchard'))->render($this->createStub(ThemeInterface::class));
+    // needs are declared separately, so one that declares none cannot draw it -
+    // and the failure names both rather than leaving a blank line.
+    $make()->render($this->createStub(ThemeInterface::class));
+  }
+
+  public static function dataProviderBlocksRefuseAThemeWithoutTheirElements(): \Iterator {
+    yield 'breadcrumb' => [static fn(): Breadcrumb => new Breadcrumb('Orchard'), 'cannot draw a breadcrumb'];
+    yield 'legend' => [static fn(): Legend => (new Legend())->entry('↵', 'accept'), 'cannot draw a legend'];
+    yield 'markup' => [static fn(): Markup => new Markup('intro', 'Pick the produce.'), 'cannot draw markup'];
+    yield 'actions' => [static fn(): Actions => (new Actions())->action('submit', 'Submit'), 'cannot draw actions'];
+    yield 'progress' => [static fn(): Progress => new Progress('packing', 'Packing'), 'cannot draw progress'];
+    yield 'panel' => [static fn(): Panel => new Panel('main', 'Delivery'), 'cannot draw a panel'];
+    yield 'field' => [static fn(): Field => new Field('courier', 'Courier'), 'cannot draw a field'];
   }
 
   /**
