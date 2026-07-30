@@ -7,7 +7,7 @@ toc_max_heading_level: 4
 
 # Specification
 
-A screen is built from four kinds of thing - a *screen*, its *layout*, that layout's *regions*, and the *blocks* drawn in them. Each kind owns a fixed set of capabilities, and owns them alone.
+A screen is built from four kinds of thing - a _screen_, its _layout_, that layout's _regions_, and the _blocks_ drawn in them. Each kind owns a fixed set of capabilities, and owns them alone.
 
 That last part is what makes the model useful. When something doesn't obviously fit - a new kind of block, a feature that could live in two places - the question is never "where does this go", it's **which level owns the capability it needs**. The answer follows.
 
@@ -26,7 +26,7 @@ Screen        the root; occupies the terminal, or fits its contents
       └─ Block   drawn in a region
 ```
 
-One kind of block - a *panel* - contains a *layout*, which starts the chain again. That's where depth comes from, rather than from a fifth level:
+One kind of block - a _panel_ - contains a _layout_, which starts the chain again. That's where depth comes from, rather than from a fifth level:
 
 ```
 Screen
@@ -38,20 +38,20 @@ Screen
                └─ Block        a Field
 ```
 
-Nothing holds a *field* except a *region*. A field is a block, so it's placed exactly as any other block is: a panel doesn't contain fields, it contains a layout whose regions do.
+Nothing holds a _field_ except a _region_. A field is a block, so it's placed exactly as any other block is: a panel doesn't contain fields, it contains a layout whose regions do.
 
 ### Levels, kinds and instances
 
-The four levels are what the model is made of. What you actually build with are *kinds* of each, and what ends up on screen are *instances*:
+The four levels are what the model is made of. What you actually build with are _kinds_ of each, and what ends up on screen are _instances_:
 
-| Level | Kinds | Instances, on the screen below |
-|---|---|---|
-| Screen | one | the screen |
-| Layout | `default`, `two-column` | the screen's `default` |
-| Region | none - a layout names its own | `header`, `content`, `footer` |
-| Block | Panel, Field, Markup, Breadcrumb, Legend, Actions, Progress | one Breadcrumb, one Panel, three Fields, one Legend |
+| Level  | Kinds                                                       | Instances, on the screen below                      |
+| ------ | ----------------------------------------------------------- | --------------------------------------------------- |
+| Screen | one                                                         | the screen                                          |
+| Layout | `default`, `two-column`                                     | the screen's `default`                              |
+| Region | none - a layout names its own                               | `header`, `content`, `footer`                       |
+| Block  | Panel, Field, Markup, Breadcrumb, Legend, Actions, Progress | one Breadcrumb, one Panel, three Fields, one Legend |
 
-*Layouts* are the level with reusable named kinds - that's what *Reuse* means in the table below. *Regions* have no kinds at all: a region is a named slot its layout declares, so `header` exists because `default` declares it.
+_Layouts_ are the level with reusable named kinds - that's what _Reuse_ means in the table below. _Regions_ have no kinds at all: a region is a named slot its layout declares, so `header` exists because `default` declares it.
 
 The rows in the next table mix the two: the first three are levels, and the seven after them are kinds of block.
 
@@ -59,42 +59,42 @@ The rows in the next table mix the two: the first three are levels, and the seve
 
 Seventeen capabilities cover everything on screen, each described as what you can observe rather than how it's built.
 
-| Capability | What's possible |
-|---|---|
-| **Activate** | Activating it does something, rather than revealing something. |
-| **Arrange** | It decides where the things inside it sit. |
-| **Bind** | It says which keys apply while it's in play. |
-| **Capture** | It opens in place to capture something, then closes again. |
-| **Collect** | It holds a value that ends up in the result. |
-| **Constrain** | It says what it will accept, before you act. |
-| **Depend** | It appears or disappears depending on other answers. |
-| **Descend** | You go into it: the screen becomes its contents, the trail grows, and you can come back. |
-| **Flow** | The things inside it run in one direction - down, or across. |
-| **Focus** | You can move onto it, and your keys then act on it. |
-| **Nest** | Other things appear inside it. |
-| **Occupy** | It expands to the whole terminal, instead of fitting its contents. |
-| **Overlay** | It draws over everything else. |
-| **Reject** | It can reject what you gave it, and say why. |
-| **Reuse** | One definition, used in more than one place. |
-| **Scroll** | Its contents can outrun its space, and you can move through them. |
-| **Show** | It draws something you can read. |
+| Capability    | What's possible                                                                          |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| **Activate**  | Activating it does something, rather than revealing something.                           |
+| **Arrange**   | It decides where the things inside it sit.                                               |
+| **Bind**      | It says which keys apply while it's in play.                                             |
+| **Capture**   | It opens in place to capture something, then closes again.                               |
+| **Collect**   | It holds a value that ends up in the result.                                             |
+| **Constrain** | It says what it will accept, before you act.                                             |
+| **Depend**    | It appears or disappears depending on other answers.                                     |
+| **Descend**   | You go into it: the screen becomes its contents, the trail grows, and you can come back. |
+| **Flow**      | The things inside it run in one direction - down, or across.                             |
+| **Focus**     | You can move onto it, and your keys then act on it.                                      |
+| **Nest**      | Other things appear inside it.                                                           |
+| **Occupy**    | It expands to the whole terminal, instead of fitting its contents.                       |
+| **Overlay**   | It draws over everything else.                                                           |
+| **Reject**    | It can reject what you gave it, and say why.                                             |
+| **Reuse**     | One definition, used in more than one place.                                             |
+| **Scroll**    | Its contents can outrun its space, and you can move through them.                        |
+| **Show**      | It draws something you can read.                                                         |
 
 ### What claims what
 
 <div className="table-scroll">
 
-| | Activate | Arrange | Bind | Capture | Collect | Constrain | Depend | Descend | Flow | Focus | Nest | Occupy | Overlay | Reject | Reuse | Scroll | Show |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Screen | | | | | | | | | | | ✓ | ✓ | | | | | |
-| Layout | | ✓ | | | | | | | ✓ | | ✓ | | | | ✓ | | |
-| Region | | | | | | | | | ✓ | | ✓ | | | | | ✓ | |
-| Panel | | | ✓ | | | | | ✓ | | ✓ | ✓ | | ✓ | | | | ✓ |
-| Field | | | ✓ | ✓ | ✓ | ✓ | ✓ | | | ✓ | | | | ✓ | | | ✓ |
-| Markup | | | | | | | ✓ | | | | | | | | | | ✓ |
-| Breadcrumb | | | | | | | | | | | | | | | | | ✓ |
-| Legend | | | | | | | | | | | | | | | | | ✓ |
-| Actions | ✓ | | | | | | | | | ✓ | | | | ✓ | | | ✓ |
-| Progress | ✓ | | | | | | ✓ | | | ✓ | | | | | | | ✓ |
+|            | Activate | Arrange | Bind | Capture | Collect | Constrain | Depend | Descend | Flow | Focus | Nest | Occupy | Overlay | Reject | Reuse | Scroll | Show |
+| ---------- | -------- | ------- | ---- | ------- | ------- | --------- | ------ | ------- | ---- | ----- | ---- | ------ | ------- | ------ | ----- | ------ | ---- |
+| Screen     |          |         |      |         |         |           |        |         |      |       | ✓    | ✓      |         |        |       |        |      |
+| Layout     |          | ✓       |      |         |         |           |        |         | ✓    |       | ✓    |        |         |        | ✓     |        |      |
+| Region     |          |         |      |         |         |           |        |         | ✓    |       | ✓    |        |         |        |       | ✓      |      |
+| Panel      |          |         | ✓    |         |         |           |        | ✓       |      | ✓     | ✓    |        | ✓       |        |       |        | ✓    |
+| Field      |          |         | ✓    | ✓       | ✓       | ✓         | ✓      |         |      | ✓     |      |        |         | ✓      |       |        | ✓    |
+| Markup     |          |         |      |         |         |           | ✓      |         |      |       |      |        |         |        |       |        | ✓    |
+| Breadcrumb |          |         |      |         |         |           |        |         |      |       |      |        |         |        |       |        | ✓    |
+| Legend     |          |         |      |         |         |           |        |         |      |       |      |        |         |        |       |        | ✓    |
+| Actions    | ✓        |         |      |         |         |           |        |         |      | ✓     |      |        |         | ✓      |       |        | ✓    |
+| Progress   | ✓        |         |      |         |         |           | ✓      |         |      | ✓     |      |        |         |        |       |        | ✓    |
 
 </div>
 
@@ -102,9 +102,9 @@ Nine readings of that table are worth stating outright, because they're the ones
 
 **Only a field collects.** Everything else on screen shows, focuses or activates, and none of it reaches the collected result.
 
-**Focus and Activate come apart.** A *progress* block takes the cursor and runs work while collecting nothing. *Markup* does neither. A *field* focuses and collects but never activates.
+**Focus and Activate come apart.** A _progress_ block takes the cursor and runs work while collecting nothing. _Markup_ does neither. A _field_ focuses and collects but never activates.
 
-**Arrange is Flow plus sizing.** Both a *layout* and a *region* run what is inside them in one direction, so both claim *Flow*. Only the layout also apportions space between them, which is *Arrange*, and only the layout claims that. A *panel* arranges nothing at all - it *nests* a layout and the layout arranges, which is what lets one layout serve a panel and a screen without either knowing about the other.
+**Arrange is Flow plus sizing.** Both a _layout_ and a _region_ run what is inside them in one direction, so both claim _Flow_. Only the layout also apportions space between them, which is _Arrange_, and only the layout claims that. A _panel_ arranges nothing at all - it _nests_ a layout and the layout arranges, which is what lets one layout serve a panel and a screen without either knowing about the other.
 
 **Scroll belongs to the region.** A layout is composed of region instances, and each declares whether it scrolls - so one layout can pin a column and scroll its neighbor, and two rows can scroll independently. The layout is only where the declaration is made, since that is where regions come into being.
 
@@ -112,33 +112,33 @@ Nine readings of that table are worth stating outright, because they're the ones
 
 **A panel shows and focuses only when nested.** A sub-panel is a row you select to enter. The panel currently filling the screen draws no row of its own and takes no cursor; its blocks do.
 
-**Reject does not imply Collect.** A *field* claims both: it holds a value and refuses one it will not take. *Actions* claims Reject alone - submit is withheld while a required field is empty, and it says why - while holding no value of its own. Refusing and holding are separate jobs, and only one of them reaches the result.
+**Reject does not imply Collect.** A _field_ claims both: it holds a value and refuses one it will not take. _Actions_ claims Reject alone - submit is withheld while a required field is empty, and it says why - while holding no value of its own. Refusing and holding are separate jobs, and only one of them reaches the result.
 
-**Formatting is not a capability.** *Markup* renders as plain lines, as a bordered card, or as a table of rows and headers, and none of that changes what it can do. A table is markup laid out as a table, so it needs no row of its own. Capabilities say what a block can do; the theme says what it looks like doing it.
+**Formatting is not a capability.** _Markup_ renders as plain lines, as a bordered card, or as a table of rows and headers, and none of that changes what it can do. A table is markup laid out as a table, so it needs no row of its own. Capabilities say what a block can do; the theme says what it looks like doing it.
 
-A note on the code below. The sections that follow build each level directly, because that's what each level *is*. Declaring a form rarely needs that: the builder wraps the same objects, and `$p` in these examples is a panel builder handed to you by `Form::panel()`. [Building one](#building-one) shows how little of this a three-field form has to name.
+A note on the code below. The sections that follow build each level directly, because that's what each level _is_. Declaring a form rarely needs that: the builder wraps the same objects, and `$p` in these examples is a panel builder handed to you by `Form::panel()`. [Building one](#building-one) shows how little of this a three-field form has to name.
 
 ### Screen
 
-The **screen** is the root. It *Nests* one *layout*, and claims one capability of its own - *Occupy*:
+The **screen** is the root. It _Nests_ one _layout_, and claims one capability of its own - _Occupy_:
 
 ```php
 $screen = (new Screen())->layout($layout);
 ```
 
-Without *Occupy* the frame shrinks to fit its contents. With it, the frame takes the whole terminal however little there is to show:
+Without _Occupy_ the frame shrinks to fit its contents. With it, the frame takes the whole terminal however little there is to show:
 
 ```php
 $screen->fullscreen();
 ```
 
-The capability and the method that turns it on are named separately on purpose. *Occupy* is what this page calls the behaviour; `fullscreen()` is what a consumer types. A capability describes what is possible, so it stays the same however the API spells it.
+The capability and the method that turns it on are named separately on purpose. _Occupy_ is what this page calls the behaviour; `fullscreen()` is what a consumer types. A capability describes what is possible, so it stays the same however the API spells it.
 
-*Occupy* sits here rather than on a layout because it's a fact about the terminal, not about any arrangement inside it. A layout behaves identically whether the frame stretches to the terminal or shrinks to its contents, which is what makes a layout portable between the two.
+_Occupy_ sits here rather than on a layout because it's a fact about the terminal, not about any arrangement inside it. A layout behaves identically whether the frame stretches to the terminal or shrinks to its contents, which is what makes a layout portable between the two.
 
 ### Layout
 
-A **layout** is composed of *region* instances and decides where they sit. It claims *Arrange*, *Flow*, *Nest* and *Reuse*.
+A **layout** is composed of _region_ instances and decides where they sit. It claims _Arrange_, _Flow_, _Nest_ and _Reuse_.
 
 Every layout is a class extending `AbstractLayout`, which carries the sizing arithmetic. A subclass declares its **axis** - whether its regions run top to bottom or left to right - and names them:
 
@@ -165,9 +165,9 @@ $layout = new DefaultLayout();
 $layout->in('header')->add(new Breadcrumb());
 ```
 
-Sizes and scrolling are stated where the regions are declared, because that's where regions come into being. The *region* still owns *Scroll*; the layout is only where it's written down.
+Sizes and scrolling are stated where the regions are declared, because that's where regions come into being. The _region_ still owns _Scroll_; the layout is only where it's written down.
 
-A layout draws nothing itself - neither it nor a *region* claims *Show*. And a layout with no regions renders nothing at all, because there is nowhere for a block to go.
+A layout draws nothing itself - neither it nor a _region_ claims _Show_. And a layout with no regions renders nothing at all, because there is nowhere for a block to go.
 
 The variations below show only the constructor body, since that's the part that differs.
 
@@ -211,7 +211,7 @@ $this->region('content')->scrolls();
 ╰─────────────────────────╯
 ```
 
-Put a *breadcrumb* or a *legend* block in that one region and it renders inline with everything else. There's no rule that says a breadcrumb belongs at the top - only the default layout says so.
+Put a _breadcrumb_ or a _legend_ block in that one region and it renders inline with everything else. There's no rule that says a breadcrumb belongs at the top - only the default layout says so.
 
 #### Two columns
 
@@ -231,7 +231,7 @@ $this->region('right');
 ╰────────────┴────────────╯
 ```
 
-*Scroll* is per region, on either axis, and any number of regions can claim it. Two columns can scroll independently of each other:
+_Scroll_ is per region, on either axis, and any number of regions can claim it. Two columns can scroll independently of each other:
 
 ```php
 parent::__construct(Axis::Columns);
@@ -299,9 +299,9 @@ The two mix without negotiating: fixed regions are subtracted first, then what r
 
 Sizing and scrolling are two calculations, and each can only be done by one level.
 
-**The layout sizes.** "How many rows does `content` get" can't be answered by `content` alone - its fixed siblings have to come off the top first, and the remainder split by flex. Only the thing that sees every region can do that arithmetic, which is why *Arrange* is the layout's capability.
+**The layout sizes.** "How many rows does `content` get" can't be answered by `content` alone - its fixed siblings have to come off the top first, and the remainder split by flex. Only the thing that sees every region can do that arithmetic, which is why _Arrange_ is the layout's capability.
 
-**The region scrolls.** Given the one number the layout hands it, everything else is its own: how tall its blocks are, where its viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved, which is why *Scroll* is the region's.
+**The region scrolls.** Given the one number the layout hands it, everything else is its own: how tall its blocks are, where its viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved, which is why _Scroll_ is the region's.
 
 ```
 Layout   ──▸  each Region is given a size
@@ -312,7 +312,7 @@ Character cells don't divide evenly, so the layout rounds: it takes the fixed si
 
 #### Both axes at once
 
-A *panel* is a *block* that contains a layout, so nesting one inside a region gives you rows and columns together:
+A _panel_ is a _block_ that contains a layout, so nesting one inside a region gives you rows and columns together:
 
 ```php
 $layout = new DefaultLayout();
@@ -337,12 +337,12 @@ This is why the axis needs no third value. Any arrangement is rows of columns of
 
 #### Shipped layouts
 
-*Reuse* means a layout is named and reusable, so the same one serves a *screen* and a *panel*. Two ship, and a form picks one by name rather than describing an arrangement inline:
+_Reuse_ means a layout is named and reusable, so the same one serves a _screen_ and a _panel_. Two ship, and a form picks one by name rather than describing an arrangement inline:
 
-| Name | Axis | Regions |
-|---|---|---|
-| `default` | rows | `header` (fixed 1), `content` (scrolls), `footer` (fixed 1) |
-| `two-column` | columns | `left`, `right` |
+| Name         | Axis    | Regions                                                     |
+| ------------ | ------- | ----------------------------------------------------------- |
+| `default`    | rows    | `header` (fixed 1), `content` (scrolls), `footer` (fixed 1) |
+| `two-column` | columns | `left`, `right`                                             |
 
 Two is enough because they cover the two axes. Anything else is those two nested, or a layout you write yourself.
 
@@ -352,13 +352,13 @@ Two is enough because they cover the two axes. Anything else is those two nested
 
 #### A layout knows nothing about blocks
 
-A layout class declares arrangement and stops there. It never names a *breadcrumb*, a *panel* or anything else that might be drawn in it - which is what *Reuse* actually costs. A layout carrying content opinions is a layout exactly one form can use.
+A layout class declares arrangement and stops there. It never names a _breadcrumb_, a _panel_ or anything else that might be drawn in it - which is what _Reuse_ actually costs. A layout carrying content opinions is a layout exactly one form can use.
 
 The line is between the class and the instance:
 
-| | Knows about |
-|---|---|
-| the layout **class** | its regions: names, sizes, scrolling |
+|                       | Knows about                              |
+| --------------------- | ---------------------------------------- |
+| the layout **class**  | its regions: names, sizes, scrolling     |
 | a layout **instance** | the blocks somebody put in those regions |
 
 ```php
@@ -366,7 +366,7 @@ $layout = new DefaultLayout();                  // arrangement, reusable
 $layout->in('header')->add(new Breadcrumb());   // this instance, this form
 ```
 
-It's tempting to let a layout furnish itself, on the grounds that only it knows a `header` exists. That confuses two things. Whatever places a block does need to know the region names, but it doesn't need to *be* the layout - it only needs to be written against one that has them. Placing the breadcrumb inside `DefaultLayout` would buy one line and cost the class every reuse.
+It's tempting to let a layout furnish itself, on the grounds that only it knows a `header` exists. That confuses two things. Whatever places a block does need to know the region names, but it doesn't need to _be_ the layout - it only needs to be written against one that has them. Placing the breadcrumb inside `DefaultLayout` would buy one line and cost the class every reuse.
 
 For the same reason there's no separate object that furnishes a layout from outside. It would have to assume a `header` and a `footer`, and `TwoColumnLayout` has `left` and `right`, so it could only ever work with the layout it was written for.
 
@@ -409,7 +409,7 @@ Most subclasses only declare regions, and inherit every line of the arithmetic. 
 
 ### Region
 
-A **region** is a named container inside a *layout*. It claims *Flow*, *Nest* and *Scroll*.
+A **region** is a named container inside a _layout_. It claims _Flow_, _Nest_ and _Scroll_.
 
 It's a class, and its layout builds one by name and hands it back to be configured. Every capability it claims is a method, so nothing piles up as arguments:
 
@@ -420,15 +420,15 @@ $this->region('sidebar')
   ->scrolls();
 ```
 
-| Call | Declares |
-|---|---|
-| `->fixed(24)` | 24 cells of the axis, whatever the terminal size |
-| `->flex(2)` | twice the share of the remainder that `flex(1)` gets |
-| `->flow(Axis::Columns)` | its blocks run across it rather than down |
-| `->scrolls()` | its contents may outrun it, and you can move through them |
-| `->add($block)` | a block goes in it |
+| Call                    | Declares                                                  |
+| ----------------------- | --------------------------------------------------------- |
+| `->fixed(24)`           | 24 cells of the axis, whatever the terminal size          |
+| `->flex(2)`             | twice the share of the remainder that `flex(1)` gets      |
+| `->flow(Axis::Columns)` | its blocks run across it rather than down                 |
+| `->scrolls()`           | its contents may outrun it, and you can move through them |
+| `->add($block)`         | a block goes in it                                        |
 
-`fixed()` and `flex()` are the odd pair out: they *declare* a size but don't compute one, because *Arrange* is the layout's. The region states what it wants and the layout does the arithmetic.
+`fixed()` and `flex()` are the odd pair out: they _declare_ a size but don't compute one, because _Arrange_ is the layout's. The region states what it wants and the layout does the arithmetic.
 
 The name is the whole point of a region: it's how a block says where it goes, so nothing depends on the order things were declared in.
 
@@ -437,7 +437,7 @@ $layout->in('content')->add($panel);
 $layout->in('footer')->add(new Legend());
 ```
 
-*Nest* is the region taking blocks, and it takes every kind the same way:
+_Nest_ is the region taking blocks, and it takes every kind the same way:
 
 ```php
 $layout->in('content')
@@ -446,11 +446,11 @@ $layout->in('content')
   ->add(new Actions());
 ```
 
-*Scroll* is per region instance rather than per layout, which is why a two-column layout can pin one column while its neighbor scrolls, and why two rows can scroll independently of each other. The region owns it; the layout is only where it's declared, since that's where regions come into being.
+_Scroll_ is per region instance rather than per layout, which is why a two-column layout can pin one column while its neighbor scrolls, and why two rows can scroll independently of each other. The region owns it; the layout is only where it's declared, since that's where regions come into being.
 
-The region also *does* the scrolling. Its layout hands it one number - the size it was given - and everything after that is the region's own work: how tall its blocks add up to, where the viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved in any of that, which is what makes *Scroll* the region's capability rather than the layout's.
+The region also _does_ the scrolling. Its layout hands it one number - the size it was given - and everything after that is the region's own work: how tall its blocks add up to, where the viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved in any of that, which is what makes _Scroll_ the region's capability rather than the layout's.
 
-A region knows only that it holds blocks. It never knows which kinds - which is why the three calls above are indistinguishable to it, and why a *breadcrumb* can go wherever a *field* can.
+A region knows only that it holds blocks. It never knows which kinds - which is why the three calls above are indistinguishable to it, and why a _breadcrumb_ can go wherever a _field_ can.
 
 #### How blocks stack
 
@@ -472,35 +472,35 @@ flow: Axis::Rows            flow: Axis::Columns
 
 This is what saves you from nesting a layout every time two things belong side by side. A breadcrumb and a clock in one header is a flow, not a second layout.
 
-**Flow is what a layout and a region share; sizing is what only a layout does.** Both run their contents in one direction, so both claim *Flow*. Only a layout also apportions space between them - naming the areas, sizing them, letting each scroll on its own - and that's *Arrange*. A region's blocks take their natural size and sit in the order they were added.
+**Flow is what a layout and a region share; sizing is what only a layout does.** Both run their contents in one direction, so both claim _Flow_. Only a layout also apportions space between them - naming the areas, sizing them, letting each scroll on its own - and that's _Arrange_. A region's blocks take their natural size and sit in the order they were added.
 
-It's the difference between a grid and the text flow inside one of its cells, and you don't nest a grid to put two words on one line. So nesting a *layout* is for when you need what a flow can't give:
+It's the difference between a grid and the text flow inside one of its cells, and you don't nest a grid to put two words on one line. So nesting a _layout_ is for when you need what a flow can't give:
 
-| You need | Use |
-|---|---|
-| Two blocks side by side | a flow |
-| Areas you can address by name | a layout |
-| Areas at declared sizes or shares | a layout |
-| Areas that scroll independently | a layout |
-| Somewhere you can navigate into | a *panel*, which nests a layout |
+| You need                          | Use                             |
+| --------------------------------- | ------------------------------- |
+| Two blocks side by side           | a flow                          |
+| Areas you can address by name     | a layout                        |
+| Areas at declared sizes or shares | a layout                        |
+| Areas that scroll independently   | a layout                        |
+| Somewhere you can navigate into   | a _panel_, which nests a layout |
 
-Blocks that outrun the region are the region's problem, not the flow's - it *Scrolls* if it was declared to, and clips if it wasn't.
+Blocks that outrun the region are the region's problem, not the flow's - it _Scrolls_ if it was declared to, and clips if it wasn't.
 
 ### Block
 
-A **block** is anything drawn in a *region*. That's the whole definition: it fills the space it's given, and the region knows nothing else about it.
+A **block** is anything drawn in a _region_. That's the whole definition: it fills the space it's given, and the region knows nothing else about it.
 
-Every block claims *Show*, and only a *panel* nests anything - and what it nests is a *layout*, never blocks directly. So no block ever contains a field or another block. Seven kinds exist, and each has a section of its own below:
+Every block claims _Show_, and only a _panel_ nests anything - and what it nests is a _layout_, never blocks directly. So no block ever contains a field or another block. Seven kinds exist, and each has a section of its own below:
 
-| Block | Beyond *Show*, it claims |
-|---|---|
-| [Panel](#panel) | *Bind*, *Descend*, *Focus*, *Nest*, *Overlay* |
-| [Field](#field) | *Bind*, *Capture*, *Collect*, *Constrain*, *Depend*, *Focus*, *Reject* |
-| [Markup](#markup) | *Depend* |
-| [Breadcrumb](#breadcrumb) | nothing |
-| [Legend](#legend) | nothing |
-| [Actions](#actions) | *Activate*, *Focus*, *Reject* |
-| [Progress](#progress) | *Activate*, *Depend*, *Focus* |
+| Block                     | Beyond _Show_, it claims                                               |
+| ------------------------- | ---------------------------------------------------------------------- |
+| [Panel](#panel)           | _Bind_, _Descend_, _Focus_, _Nest_, _Overlay_                          |
+| [Field](#field)           | _Bind_, _Capture_, _Collect_, _Constrain_, _Depend_, _Focus_, _Reject_ |
+| [Markup](#markup)         | _Depend_                                                               |
+| [Breadcrumb](#breadcrumb) | nothing                                                                |
+| [Legend](#legend)         | nothing                                                                |
+| [Actions](#actions)       | _Activate_, _Focus_, _Reject_                                          |
+| [Progress](#progress)     | _Activate_, _Depend_, _Focus_                                          |
 
 Every one of them is constructed and added the same way:
 
@@ -514,7 +514,7 @@ $region
   ->add($field);
 ```
 
-The last four in the list are the ones easily mistaken for chrome. They aren't: a *breadcrumb* is a block in the header region and a *legend* is a block in the footer region, placed exactly as a *field* is placed. Which is why either can be moved, or joined by something else, without a new concept:
+The last four in the list are the ones easily mistaken for chrome. They aren't: a _breadcrumb_ is a block in the header region and a _legend_ is a block in the footer region, placed exactly as a _field_ is placed. Which is why either can be moved, or joined by something else, without a new concept:
 
 ```php
 // A breadcrumb at the bottom, and a standing warning at the top.
@@ -527,7 +527,7 @@ $layout->in('footer')->add(new Legend())->add(new Breadcrumb());
 
 #### Panel
 
-A **panel** is the busiest *block*:
+A **panel** is the busiest _block_:
 
 ```
 Panel  "Delivery"
@@ -539,7 +539,7 @@ Panel  "Delivery"
 └─ Bind       its keys are the ones that apply while you are in it
 ```
 
-*Nest* is the panel taking a layout, which is what makes it the only block that can hold anything:
+_Nest_ is the panel taking a layout, which is what makes it the only block that can hold anything:
 
 ```php
 $columns = new TwoColumnLayout();
@@ -558,7 +558,7 @@ $rows->in('content')->add($courier)->add($weight);
 (new Panel('delivery', 'Delivery'))->layout($rows);
 ```
 
-*Descend* is a panel added to another panel's region. The nested one draws as a row you select, and selecting it replaces the screen:
+_Descend_ is a panel added to another panel's region. The nested one draws as a row you select, and selecting it replaces the screen:
 
 ```php
 $layout->in('content')
@@ -566,9 +566,9 @@ $layout->in('content')
   ->add($advanced);   // a Panel: a row here, the whole screen once entered
 ```
 
-**Descend is the capability nothing else has**, and it's what makes a panel more than a container. A *region* can hold blocks and a *layout* can arrange them, but neither is somewhere you go.
+**Descend is the capability nothing else has**, and it's what makes a panel more than a container. A _region_ can hold blocks and a _layout_ can arrange them, but neither is somewhere you go.
 
-One panel fills the screen at a time. A **modal** is the same block that *Overlays* instead of replacing what's behind it - nothing else about the panel changes:
+One panel fills the screen at a time. A **modal** is the same block that _Overlays_ instead of replacing what's behind it - nothing else about the panel changes:
 
 ```php
 (new Panel('confirm', 'Confirm delivery'))->modal();
@@ -576,7 +576,7 @@ One panel fills the screen at a time. A **modal** is the same block that *Overla
 
 #### Field
 
-A **field** is the *block* that collects. It's the only kind that contributes to the collected result, and the only kind that captures.
+A **field** is the _block_ that collects. It's the only kind that contributes to the collected result, and the only kind that captures.
 
 A field claims eight capabilities, more than any other block. Seven of them show up in one declaration:
 
@@ -592,11 +592,11 @@ $p->select('basket', 'Basket contents')       // Show, Focus
   ->when(new Condition('organic', eq: TRUE)); // Depend
 ```
 
-The entries are what *edit* mode opens onto, the default is what reaches the result until you change it, the bounds are stated before you act and the validator explains itself after, and the condition decides whether the field is there at all.
+The entries are what _edit_ mode opens onto, the default is what reaches the result until you change it, the bounds are stated before you act and the validator explains itself after, and the condition decides whether the field is there at all.
 
-The eighth is *Bind*, and the field doesn't declare it - it comes from the field's kind. A `select` binds <kbd>Space</kbd> because it offers a list; a `text` field binds no printable key at all, because every one of them is something you're typing.
+The eighth is _Bind_, and the field doesn't declare it - it comes from the field's kind. A `select` binds <kbd>Space</kbd> because it offers a list; a `text` field binds no printable key at all, because every one of them is something you're typing.
 
-One field owns both modes. In **view** mode it's one line, drawing every part of that line itself. Open it and it switches to **edit** mode, taking over the region right of its *label*:
+One field owns both modes. In **view** mode it's one line, drawing every part of that line itself. Open it and it switches to **edit** mode, taking over the region right of its _label_:
 
 ```
 view mode    ❯ Basket contents ⁱ  apple, carrot
@@ -609,9 +609,9 @@ edit mode    ❯ Basket contents    ● Apple
                                     the field collecting it
 ```
 
-The *label* and the *selector* stay put across both. Only the *value* region changes shape, which is why a field in *edit* mode is still one row of its *panel* rather than something new on the screen. [Anatomy](/widgets/anatomy) names every piece of both.
+The _label_ and the _selector_ stay put across both. Only the _value_ region changes shape, which is why a field in _edit_ mode is still one row of its _panel_ rather than something new on the screen. [Anatomy](/widgets/anatomy) names every piece of both.
 
-*Constrain* and *Reject* are two capabilities rather than one because they answer different questions. *Constrain* states what the field will accept before you act; *Reject* explains why what you did was refused. They share one line on screen and never appear together - which is why [Anatomy](/widgets/anatomy) names that line's two states the **constraint** and the **error**.
+_Constrain_ and _Reject_ are two capabilities rather than one because they answer different questions. _Constrain_ states what the field will accept before you act; _Reject_ explains why what you did was refused. They share one line on screen and never appear together - which is why [Anatomy](/widgets/anatomy) names that line's two states the **constraint** and the **error**.
 
 Between the field and the theme sit its **capabilities** - the shared behaviour a field draws on rather than reimplements. The chain runs one way and never doubles back:
 
@@ -621,7 +621,7 @@ Field  ──▸  capabilities  ──▸  render()  ──▸  theme elements
 
 #### Markup
 
-**Markup** renders formatted content and does nothing else. It takes plain text or the [markdown subset](/markdown), and it claims *Show* and *Depend*. How it's laid out on the page is a presentation choice rather than a capability:
+**Markup** renders formatted content and does nothing else. It takes plain text or the [markdown subset](/markdown), and it claims _Show_ and _Depend_. How it's laid out on the page is a presentation choice rather than a capability:
 
 ```php
 // Prose.
@@ -635,7 +635,7 @@ $p->markup('yields', 'Yields per crate')
   ->table(['Produce', 'Crates'], [['Apple', '12'], ['Carrot', '8']]);
 ```
 
-Prose, a bordered card and a table are the same block laid out three ways. *Depend* is what lets a warning appear only when an earlier answer calls for it:
+Prose, a bordered card and a table are the same block laid out three ways. _Depend_ is what lets a warning appear only when an earlier answer calls for it:
 
 ```php
 $p->markup('certified', 'Organic crates need current certification.')
@@ -644,7 +644,7 @@ $p->markup('certified', 'Organic crates need current certification.')
 
 #### Breadcrumb
 
-**Breadcrumb** renders the trail of *panels* you've entered, gaining a segment as you *Descend* and losing one as you come back. It declares two elements:
+**Breadcrumb** renders the trail of _panels_ you've entered, gaining a segment as you _Descend_ and losing one as you come back. It declares two elements:
 
 ```php
 interface BreadcrumbElementsInterface {
@@ -666,7 +666,7 @@ Orchard  ›  Delivery
 
 #### Legend
 
-**Legend** renders the keys that apply right now, rewriting itself as focus moves - so an open *field* lists different keys from the *panel* around it. It declares three, and composes them per key:
+**Legend** renders the keys that apply right now, rewriting itself as focus moves - so an open _field_ lists different keys from the _panel_ around it. It declares three, and composes them per key:
 
 ```php
 interface LegendElementsInterface {
@@ -692,9 +692,9 @@ Both follow the same shape, and so does every other block: an element per distin
 
 #### Actions
 
-**Actions** is the set of buttons that end the form - submit, cancel, and any the form declares. It claims *Activate* because pressing one does something rather than revealing something, and *Reject* because it withholds the submit with a message while a required field is empty.
+**Actions** is the set of buttons that end the form - submit, cancel, and any the form declares. It claims _Activate_ because pressing one does something rather than revealing something, and _Reject_ because it withholds the submit with a message while a required field is empty.
 
-It's the only block other than a *field* that refuses anything, and unlike a field it holds no value while doing so.
+It's the only block other than a _field_ that refuses anything, and unlike a field it holds no value while doing so.
 
 ```php
 interface ActionsElementsInterface {
@@ -720,7 +720,7 @@ The brackets belong to the element, not the block. A theme that framed a button 
 
 #### Progress
 
-**Progress** runs work when activated, drawing an indicator while the work runs. It's the block that separates *Focus* from *Collect*: the cursor lands on it and activating it does something real, but nothing it does reaches the collected result.
+**Progress** runs work when activated, drawing an indicator while the work runs. It's the block that separates _Focus_ from _Collect_: the cursor lands on it and activating it does something real, but nothing it does reaches the collected result.
 
 ```php
 interface ProgressElementsInterface {
@@ -759,7 +759,7 @@ Work that can't say how long it will take gets a spinner instead, and the captio
 
 ### On screen
 
-Here it is on a real screen, each level labelled on the row it owns - the *region*, the *block* in it, then the *panel*'s *fields* and the *mode* each is drawing:
+Here it is on a real screen, each level labelled on the row it owns - the _region_, the _block_ in it, then the _panel_'s _fields_ and the _mode_ each is drawing:
 
 ```
                               ╭──────────────────────────────────────────────────────╮
@@ -781,13 +781,13 @@ footer  ▸ Legend              │ ↑/↓ to move · ↵ to accept · ESC to c
                               ╰──────────────────────────────────────────────────────╯
 ```
 
-The `header` and `footer` *regions* declare no *Scroll*, so they're pinned; `content` declares it, which is why the mark under `Harvest date` belongs to that region rather than to the frame. The `Basket` *field* is open, so it's in *edit* mode: its two *entries* and its *description* all belong to that one *field*.
+The `header` and `footer` _regions_ declare no _Scroll_, so they're pinned; `content` declares it, which is why the mark under `Harvest date` belongs to that region rather than to the frame. The `Basket` _field_ is open, so it's in _edit_ mode: its two _entries_ and its _description_ all belong to that one _field_.
 
-The labels skip a level between `Panel` and `Field`, because the *panel* has a *layout* of its own and the fields sit in that layout's single region. It is elided here for the same reason it is invisible on screen: a one-region layout adds a level without adding anything to see.
+The labels skip a level between `Panel` and `Field`, because the _panel_ has a _layout_ of its own and the fields sit in that layout's single region. It is elided here for the same reason it is invisible on screen: a one-region layout adds a level without adding anything to see.
 
 ## Theme
 
-A **block** draws itself - that's *Show*, and it arrives as a `render()` method. What a block never does is choose a colour or a glyph. For those it reaches into the theme for **elements**:
+A **block** draws itself - that's _Show_, and it arrives as a `render()` method. What a block never does is choose a colour or a glyph. For those it reaches into the theme for **elements**:
 
 ```php
 final class Breadcrumb extends AbstractBlock {
@@ -830,11 +830,11 @@ final class OrchardTheme extends DefaultTheme implements SchemeCapableInterface,
 }
 ```
 
-| Declaration | Grants | For |
-|---|---|---|
-| `SchemeCapableInterface` | `isDark()` | picking a palette for a dark or light terminal |
-| `ColorCapableInterface` | `paint()` | any colour at all; without it every element returns plain text |
-| `UnicodeCapableInterface` | `hasUnicode()` | choosing between a glyph and its ASCII stand-in |
+| Declaration               | Grants         | For                                                            |
+| ------------------------- | -------------- | -------------------------------------------------------------- |
+| `SchemeCapableInterface`  | `isDark()`     | picking a palette for a dark or light terminal                 |
+| `ColorCapableInterface`   | `paint()`      | any colour at all; without it every element returns plain text |
+| `UnicodeCapableInterface` | `hasUnicode()` | choosing between a glyph and its ASCII stand-in                |
 
 A theme that declares none of them still works - it returns the strings it was handed. That's the floor, and it's why a form renders in a terminal that supports nothing.
 
@@ -869,7 +869,7 @@ How a screen moves, and what happens when there is not one.
 
 Everything above describes a screen at rest. What moves it is one key at a time, and the two directions are worth seeing together: **keys travel inward, drawing travels outward.**
 
-A key goes to the innermost thing that *Binds* it, and only outward from there:
+A key goes to the innermost thing that _Binds_ it, and only outward from there:
 
 ```
 key ──▸ the focused block, if it binds that key
@@ -877,9 +877,9 @@ key ──▸ the focused block, if it binds that key
     ──▸ else the screen
 ```
 
-That one rule explains a behaviour that otherwise looks like a special case. An open *text* field binds every printable key, because each is something you're typing - so <kbd>?</kbd> reaches it and becomes a character. Close the field and it binds nothing printable, so the same <kbd>?</kbd> travels outward to the panel and opens help. Nobody wrote an exception; the key simply stopped at a different level.
+That one rule explains a behaviour that otherwise looks like a special case. An open _text_ field binds every printable key, because each is something you're typing - so <kbd>?</kbd> reaches it and becomes a character. Close the field and it binds nothing printable, so the same <kbd>?</kbd> travels outward to the panel and opens help. Nobody wrote an exception; the key simply stopped at a different level.
 
-*Focus* decides which block is innermost. It moves with <kbd>↑</kbd> and <kbd>↓</kbd> between the blocks that claim it, skipping the ones that don't - so a *markup* block sits between two *fields* without ever being landed on.
+_Focus_ decides which block is innermost. It moves with <kbd>↑</kbd> and <kbd>↓</kbd> between the blocks that claim it, skipping the ones that don't - so a _markup_ block sits between two _fields_ without ever being landed on.
 
 Drawing runs the other way, outward from the root:
 
@@ -897,18 +897,18 @@ Each step hands down exactly one thing and knows nothing of the step after it. A
 
 The same form can collect with no screen at all - from a JSON payload, from environment variables, from an agent. Nothing is drawn, and the capabilities split cleanly in two:
 
-| Capability | Headless | |
-|---|---|---|
-| *Collect* | ✓ | the whole point |
-| *Constrain* | ✓ | a bound is a fact about the answer, not the display |
-| *Reject* | ✓ | so is a refusal |
-| *Depend* | ✓ | a field its condition hides is never asked for |
-| *Activate*, *Bind*, *Capture*, *Descend*, *Focus*, *Show* | | nothing draws and no key arrives |
-| *Arrange*, *Flow*, *Nest*, *Occupy*, *Overlay*, *Reuse*, *Scroll* | | there is no screen to arrange |
+| Capability                                                        | Headless |                                                     |
+| ----------------------------------------------------------------- | -------- | --------------------------------------------------- |
+| _Collect_                                                         | ✓        | the whole point                                     |
+| _Constrain_                                                       | ✓        | a bound is a fact about the answer, not the display |
+| _Reject_                                                          | ✓        | so is a refusal                                     |
+| _Depend_                                                          | ✓        | a field its condition hides is never asked for      |
+| _Activate_, _Bind_, _Capture_, _Descend_, _Focus_, _Show_         |          | nothing draws and no key arrives                    |
+| _Arrange_, _Flow_, _Nest_, _Occupy_, _Overlay_, _Reuse_, _Scroll_ |          | there is no screen to arrange                       |
 
-Four survive, thirteen don't, and the line between them is the useful part: **the four are the form's meaning, and the rest is how it looks.** A *screen*, a *layout* and a *region* are never built headlessly, because they exist only to arrange drawing. Neither is a *breadcrumb*, a *legend* or *markup* - a block that only *Shows* has nothing to contribute when nothing is shown.
+Four survive, thirteen don't, and the line between them is the useful part: **the four are the form's meaning, and the rest is how it looks.** A _screen_, a _layout_ and a _region_ are never built headlessly, because they exist only to arrange drawing. Neither is a _breadcrumb_, a _legend_ or _markup_ - a block that only _Shows_ has nothing to contribute when nothing is shown.
 
-*Fields* are built, because they're the blocks that *Collect*. They're built without their modes: no *view*, no *edit*, no *Capture*, since there's no cursor to open anything. What runs is the part that was never about the screen - the value arrives, its bounds are checked, its validator is asked, and its condition decides whether it was asked for at all.
+_Fields_ are built, because they're the blocks that _Collect_. They're built without their modes: no _view_, no _edit_, no _Capture_, since there's no cursor to open anything. What runs is the part that was never about the screen - the value arrives, its bounds are checked, its validator is asked, and its condition decides whether it was asked for at all.
 
 That's why the same declaration serves both. A form doesn't say how to draw itself; it says what it collects, and the drawing is a separate set of capabilities layered on top.
 
@@ -944,7 +944,7 @@ $layout->in('footer')->add(new Legend());
 (new Screen())->layout($layout);
 ```
 
-Adding *markup* between two *fields* doesn't change the shape of the code, because markup and a number are both blocks in the same region. Only one of them answers:
+Adding _markup_ between two _fields_ doesn't change the shape of the code, because markup and a number are both blocks in the same region. Only one of them answers:
 
 ```php
 ->panel('main', 'Delivery', function (PanelBuilder $p): void {
@@ -954,7 +954,7 @@ Adding *markup* between two *fields* doesn't change the shape of the code, becau
 })
 ```
 
-Two columns is the first thing that needs a *layout*, so it's the first thing that names one:
+Two columns is the first thing that needs a _layout_, so it's the first thing that names one:
 
 ```php
 ->panel('main', 'Delivery', function (PanelBuilder $p): void {
@@ -970,17 +970,17 @@ Named regions mean a block says where it goes, rather than depending on the orde
 
 When something doesn't fit, don't argue about where it goes. Name the capability it needs, and whichever level owns that capability is the answer. Five that have already been settled this way:
 
-| Question | Capability | Owned by | Answer |
-|---|---|---|---|
-| Can *markup* sit in the footer? | *Show* | every *block* | Yes. A placement, not a feature. |
-| Should a *progress* row reach the result? | *Collect* | *field* | No. It *Activates*, which is a different thing. |
-| Can a *panel* scroll one column and pin the other? | *Scroll* | *region* | Yes. The left *region* declares it; no *block* changes. |
-| Who works out how tall `content` is? | *Arrange* | *layout* | The *layout*. Only it sees the fixed siblings that come off first. |
-| Can two *blocks* sit side by side? | *Flow* | *region* | Yes, and without nesting a *layout*. |
+| Question                                           | Capability | Owned by      | Answer                                                             |
+| -------------------------------------------------- | ---------- | ------------- | ------------------------------------------------------------------ |
+| Can _markup_ sit in the footer?                    | _Show_     | every _block_ | Yes. A placement, not a feature.                                   |
+| Should a _progress_ row reach the result?          | _Collect_  | _field_       | No. It _Activates_, which is a different thing.                    |
+| Can a _panel_ scroll one column and pin the other? | _Scroll_   | _region_      | Yes. The left _region_ declares it; no _block_ changes.            |
+| Who works out how tall `content` is?               | _Arrange_  | _layout_      | The _layout_. Only it sees the fixed siblings that come off first. |
+| Can two _blocks_ sit side by side?                 | _Flow_     | _region_      | Yes, and without nesting a _layout_.                               |
 
 The last two were decided while this page was being written, and both turned on the same test: **which level can see what the job needs?** A region can't size itself, because its siblings' fixed cells come off the top before the remainder is divided. A layout can't furnish itself and stay reusable, because it would have to know what a breadcrumb is.
 
-That's the whole point of the split. A *region* that knew what a breadcrumb was would need to know what every block is; instead a region knows only that it holds blocks, a block knows only how to fill the space it's given, and a theme knows only how to style what it's handed.
+That's the whole point of the split. A _region_ that knew what a breadcrumb was would need to know what every block is; instead a region knows only that it holds blocks, a block knows only how to fill the space it's given, and a theme knows only how to style what it's handed.
 
 It's also what makes an element reusable. Because `breadcrumbSeparator()` receives no field, no panel and no answers, the same element draws the separator inside a form and inside a standalone line of output. An element that reached for form state could only ever be used from inside a form.
 
@@ -988,16 +988,16 @@ It's also what makes an element reusable. Because `breadcrumbSeparator()` receiv
 
 The model above is implemented and tested. Two parts of it are not, and the page names both rather than reading as though they were.
 
-| Level | Class |
-|---|---|
-| Screen | `Screen`, and `ScreenRenderer` to draw one |
-| Layout | `AbstractLayout`, `DefaultLayout`, `TwoColumnLayout`, `PanelLayout`, `LayoutManager` |
-| Region | `Region` |
-| Block | `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions`, `Progress` |
-| Elements | one `*ElementsInterface` per block, implemented by `DefaultTheme` |
-| Support | `ColorCapableInterface`, `UnicodeCapableInterface`, `SchemeCapableInterface` |
-| Behaviour | `Router` for keys, `Collector` for the headless path |
-| Building | `PanelBuilder`, `FieldBuilder`, `Assembler` |
+| Level     | Class                                                                                |
+| --------- | ------------------------------------------------------------------------------------ |
+| Screen    | `Screen`, and `ScreenRenderer` to draw one                                           |
+| Layout    | `AbstractLayout`, `DefaultLayout`, `TwoColumnLayout`, `PanelLayout`, `LayoutManager` |
+| Region    | `Region`                                                                             |
+| Block     | `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions`, `Progress`            |
+| Elements  | one `*ElementsInterface` per block, implemented by `DefaultTheme`                    |
+| Support   | `ColorCapableInterface`, `UnicodeCapableInterface`, `SchemeCapableInterface`         |
+| Behaviour | `Router` for keys, `Collector` for the headless path                                 |
+| Building  | `PanelBuilder`, `FieldBuilder`, `Assembler`                                          |
 
 [`playground/12-specification-screen.php`](https://github.com/drevops/tui/blob/main/playground/12-specification-screen.php) draws a form from these, opens a field, collects the same panel headlessly, and shows a refused value naming the field and the reason.
 
@@ -1005,6 +1005,6 @@ The model above is implemented and tested. Two parts of it are not, and the page
 
 ## Open questions
 
-**Can anything but a field depend on an answer?** *Depend* is declared on a field alone, so a whole *panel* cannot appear or disappear on an earlier answer - only the fields inside it can, one at a time.
+**Can anything but a field depend on an answer?** _Depend_ is declared on a field alone, so a whole _panel_ cannot appear or disappear on an earlier answer - only the fields inside it can, one at a time.
 
-**Can a flow align what it holds?** Blocks in a region take their natural size in the order they were added, and there is no way to say a *legend* sits left while a version string sits right. Every side-by-side arrangement is packed from the start of the axis.
+**Can a flow align what it holds?** Blocks in a region take their natural size in the order they were added, and there is no way to say a _legend_ sits left while a version string sits right. Every side-by-side arrangement is packed from the start of the axis.
