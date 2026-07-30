@@ -12,22 +12,43 @@ That last part is what makes the model useful. When something doesn't obviously 
 
 ## The hierarchy
 
+Four levels, and nothing else:
+
 ```
-Screen                 the root; fills the terminal, or fits its contents
-└─ Layout              arranges; reusable by name
-   └─ Region           holds blocks; declares whether it scrolls
-      └─ Block         drawn in a region
-         ├─ Panel      contains a layout of its own; entered and left
-         ├─ Field      answers; expands into an editor
-         ├─ Note       renders content
-         ├─ Table      renders content
-         ├─ Breadcrumb renders content
-         ├─ KeyHints   renders content
-         ├─ Buttons    acts
-         └─ Progress   acts
+Screen        the root; fills the terminal, or fits its contents
+└─ Layout     arranges; reusable by name
+   └─ Region  holds blocks; declares whether it scrolls
+      └─ Block   drawn in a region
 ```
 
-The chain repeats. A *panel* is a *block* that contains a *layout*, whose *regions* hold *blocks* of their own - so depth comes from the same four kinds rather than from a fifth.
+One kind of block - a *panel* - contains a *layout*, which starts the chain again. That's where depth comes from, rather than from a fifth level:
+
+```
+Screen
+└─ Layout                      'three-region'
+   └─ Region                   'content'
+      └─ Block                 a Panel
+         └─ Layout             'two-column'
+            └─ Region          'left'
+               └─ Block        a Field
+```
+
+Nothing holds a *field* except a *region*. A field is a block, so it's placed exactly as any other block is: a panel doesn't contain fields, it contains a layout whose regions do.
+
+## Levels, kinds and instances
+
+The four levels are what the model is made of. What you actually build with are *kinds* of each, and what ends up on screen are *instances*:
+
+| Level | Kinds | Instances, on the screen below |
+|---|---|---|
+| Screen | one | the screen |
+| Layout | `three-region`, `two-column`, … | the screen's `three-region` |
+| Region | none - a layout names its own | `header`, `content`, `footer` |
+| Block | Panel, Field, Markup, Breadcrumb, KeyHints, Buttons, Progress | one Breadcrumb, one Panel, three Fields, one KeyHints |
+
+*Layouts* are the level with reusable named kinds - that's what *Reuse* means in the table below. *Regions* have no kinds at all: a region is a named slot its layout declares, so `header` exists because `three-region` says so.
+
+The rows in the next table mix the two: the first three are levels, and the seven after them are kinds of block.
 
 ## Capabilities
 
@@ -35,48 +56,47 @@ Sixteen capabilities cover everything on screen, each described as what you can 
 
 | Capability | What's possible |
 |---|---|
-| **Show** | It draws something you can read. |
-| **Focus** | You can move onto it, and your keys then act on it. |
-| **Expand** | It opens in place to collect something, then closes again. |
-| **Enter** | You go into it: the screen becomes its contents, the trail grows, and you can come back. |
-| **Answer** | It holds a value that ends up in the result. |
-| **Expect** | It says what it will accept, before you act. |
-| **Refuse** | It can reject what you gave it, and say why. |
 | **Act** | Activating it does something, rather than revealing something. |
-| **Contain** | Other things appear inside it. |
+| **Advertise** | It says which keys apply while it's in play. |
+| **Answer** | It holds a value that ends up in the result. |
 | **Arrange** | It decides where the things inside it sit. |
-| **Scroll** | Its contents can outrun its space, and you can move through them. |
+| **Contain** | Other things appear inside it. |
+| **Enter** | You go into it: the screen becomes its contents, the trail grows, and you can come back. |
+| **Expand** | It opens in place to collect something, then closes again. |
+| **Expect** | It says what it will accept, before you act. |
 | **Fill** | It expands to the whole terminal, instead of fitting its contents. |
 | **Float** | It draws over everything else. |
-| **Advertise** | It says which keys apply while it's in play. |
-| **Vary** | It appears or disappears depending on other answers. |
+| **Focus** | You can move onto it, and your keys then act on it. |
+| **Refuse** | It can reject what you gave it, and say why. |
 | **Reuse** | One definition, used in more than one place. |
+| **Scroll** | Its contents can outrun its space, and you can move through them. |
+| **Show** | It draws something you can read. |
+| **Vary** | It appears or disappears depending on other answers. |
 
 ## What claims what
 
 <div className="table-scroll">
 
-| | Show | Focus | Expand | Enter | Answer | Expect | Refuse | Act | Contain | Arrange | Scroll | Fill | Float | Advertise | Vary | Reuse |
+| | Act | Advertise | Answer | Arrange | Contain | Enter | Expand | Expect | Fill | Float | Focus | Refuse | Reuse | Scroll | Show | Vary |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Screen | | | | | | | | | ✓ | | | ✓ | | | | |
-| Layout | | | | | | | | | ✓ | ✓ | | | | | | ✓ |
-| Region | | | | | | | | | ✓ | | ✓ | | | | | |
-| Panel | ✓ | ✓ | | ✓ | | | | | ✓ | | | | ✓ | ✓ | | |
-| Field | ✓ | ✓ | ✓ | | ✓ | ✓ | ✓ | | | | | | | ✓ | ✓ | |
-| Note | ✓ | | | | | | | | | | | | | | ✓ | |
-| Table | ✓ | | | | | | | | | | | | | | ✓ | |
-| Breadcrumb | ✓ | | | | | | | | | | | | | | | |
-| KeyHints | ✓ | | | | | | | | | | | | | | | |
-| Buttons | ✓ | ✓ | | | | | | ✓ | | | | | | | | |
-| Progress | ✓ | ✓ | | | | | | ✓ | | | | | | | ✓ | |
+| Screen | | | | | ✓ | | | | ✓ | | | | | | | |
+| Layout | | | | ✓ | ✓ | | | | | | | | ✓ | | | |
+| Region | | | | | ✓ | | | | | | | | | ✓ | | |
+| Panel | | ✓ | | | ✓ | ✓ | | | | ✓ | ✓ | | | | ✓ | |
+| Field | | ✓ | ✓ | | | | ✓ | ✓ | | | ✓ | ✓ | | | ✓ | ✓ |
+| Markup | | | | | | | | | | | | | | | ✓ | ✓ |
+| Breadcrumb | | | | | | | | | | | | | | | ✓ | |
+| KeyHints | | | | | | | | | | | | | | | ✓ | |
+| Buttons | ✓ | | | | | | | | | | ✓ | | | | ✓ | |
+| Progress | ✓ | | | | | | | | | | ✓ | | | | ✓ | ✓ |
 
 </div>
 
-Six readings of that table are worth stating outright, because they're the ones a new block will test.
+Seven readings of that table are worth stating outright, because they're the ones a new block will test.
 
 **Only a field answers.** Everything else on screen shows, focuses or acts, and none of it reaches the collected result.
 
-**Focus and Act come apart.** A *progress* block takes the cursor and runs work while answering nothing. A *note* does neither. A *field* focuses and answers but never acts.
+**Focus and Act come apart.** A *progress* block takes the cursor and runs work while answering nothing. *Markup* does neither. A *field* focuses and answers but never acts.
 
 **Arrange belongs to the layout alone.** A *panel* doesn't arrange anything - it *contains* a layout, and the layout arranges. That's what lets one layout serve a panel and a screen without either knowing about the other.
 
@@ -86,9 +106,53 @@ Six readings of that table are worth stating outright, because they're the ones 
 
 **A panel shows and focuses only when nested.** A sub-panel is a row you select to enter. The panel currently filling the screen draws no row of its own and takes no cursor; its blocks do.
 
+**Formatting is not a capability.** *Markup* renders as plain lines, as a bordered card, or as a table of rows and headers, and none of that changes what it can do. A table is markup laid out as a table, so it needs no row of its own. Capabilities say what a block can do; the theme says what it looks like doing it.
+
+## Screen
+
+The **screen** is the root. It holds one *layout* and claims one capability of its own - *Fill*:
+
+```php
+(new Tui($form))->fullscreen()->run();
+```
+
+*Fill* sits here rather than on a layout because it's a fact about the terminal, not about any arrangement inside it. A layout behaves identically whether the frame stretches to the terminal or shrinks to its contents, which is what makes a layout portable between the two.
+
+## Layout
+
+A **layout** is composed of *region* instances, and it decides where they sit. It claims *Arrange*, *Contain* and *Reuse*.
+
+*Reuse* is the point: a layout is named and reusable, so the same one serves a *screen* and a *panel*. The library ships several, and a form picks one rather than describing an arrangement inline.
+
+A layout draws nothing. That's what separates it and *region* from every *block*: neither claims *Show*.
+
+## Region
+
+A **region** is a named area of a *layout*. It claims *Contain* and *Scroll*.
+
+*Scroll* is declared per region instance, not per layout, which is why a two-column layout can pin one column while its neighbour scrolls. The region declares it and the region is where you see it.
+
+A region knows only that it holds blocks. It never knows which kinds.
+
+## Block
+
+A **block** is anything drawn in a *region*. That's the whole definition: it fills the space it's given, and the region knows nothing else about it.
+
+Every block claims *Show*, and only a *panel* holds anything - so a block never contains a field, or another block. Seven kinds exist:
+
+- **Panel** - contains a layout; entered and left. The only block you navigate into.
+- **Field** - answers. The only block that reaches the collected result.
+- **Markup** - renders formatted content: prose, a bordered card, or a table.
+- **Breadcrumb** - renders the trail of panels you've entered.
+- **KeyHints** - renders the keys that apply right now, rewriting itself as focus moves.
+- **Buttons** - submits or cancels the form.
+- **Progress** - runs work when activated, showing an indicator while it runs.
+
+The last four are the ones easily mistaken for chrome. They aren't: a *breadcrumb* is a block in the header region and a *KeyHints* is a block in the footer region, placed exactly as a *field* is placed. Which is why either can be moved, or joined by something else, without a new concept.
+
 ## Panel
 
-A **panel** is the busiest *block*, so it's worth naming its capabilities exactly:
+A **panel** is the busiest *block*:
 
 ```
 Panel  "Delivery"
@@ -130,6 +194,17 @@ Between the field and the theme sit its **capabilities** - the shared behaviour 
 ```
 Field  ──▸  capabilities  ──▸  theme templates  ──▸  theme elements
 ```
+
+## Markup
+
+**Markup** renders formatted content and does nothing else. It takes plain text or the [markdown subset](/markdown), and it claims *Show* and *Vary*. How it's laid out on the page is a presentation choice rather than a capability:
+
+```php
+$p->markup('weighing', 'Every crate is weighed at the packing bench.');
+$p->markup('yields', 'Yields per crate')->table(['Produce', 'Crates'], [['Apple', '12'], ['Carrot', '8']]);
+```
+
+Prose, a bordered card and a table are the same block laid out three ways. *Vary* is what lets a warning appear only when an earlier answer calls for it.
 
 ## The theme's two tiers
 
@@ -214,12 +289,12 @@ Screen::create()
     ->region('footer', fn(RegionBuilder $r) => $r->add(new KeyHints())));
 ```
 
-Adding a *note* between two *fields* doesn't change the shape of the code, because a note and a number are both blocks in the same region. Only one of them answers:
+Adding *markup* between two *fields* doesn't change the shape of the code, because markup and a number are both blocks in the same region. Only one of them answers:
 
 ```php
 ->panel('main', 'Delivery', function (PanelBuilder $p): void {
   $p->text('courier', 'Courier');
-  $p->note('weighing', 'Every crate is weighed at the packing bench.');
+  $p->markup('weighing', 'Every crate is weighed at the packing bench.');
   $p->number('weight', 'Basket weight')->min(200)->max(9000);
 })
 ```
@@ -235,19 +310,13 @@ Two columns is the first thing that needs a *layout*, so it's the first thing th
 
 Named regions mean a block says where it goes, rather than depending on the order it was declared in.
 
-*Fill* sits on the screen, and nothing below it changes when you turn it on:
-
-```php
-(new Tui($form))->fullscreen()->run();
-```
-
 ## Resolving a tension
 
 When something doesn't fit, name the capability it needs and the level that owns it. Three worked examples:
 
-**"Should a note be able to sit in the footer?"** A note *Shows*, and every block is drawn in a region. Yes - and it needs no new feature, only a placement.
+**"Should markup be able to sit in the footer?"** The footer is a *region* of a *layout*, markup is a kind of *block*, and blocks are placed in regions. So yes - add the markup block to that region. It's a placement, not a feature.
 
-**"Should a progress row appear in the result?"** It would need *Answer*, which only a field has. No - it *Acts*, which is a different capability.
+**"Should a progress row appear in the result?"** It would need *Answer*, which only a field claims. No - progress *Acts*, which is a different capability.
 
 **"Should a panel scroll its left column but not its right?"** *Scroll* belongs to the region, and a layout is composed of region instances. Yes - the left region declares it, the right doesn't, and no block changes.
 
