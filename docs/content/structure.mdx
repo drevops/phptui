@@ -100,7 +100,7 @@ Seven readings of that table are worth stating outright, because they're the one
 
 **Arrange belongs to the layout alone.** A *panel* doesn't arrange anything - it *nests* a layout, and the layout arranges. That's what lets one layout serve a panel and a screen without either knowing about the other.
 
-**Scroll belongs to the region.** A layout is composed of region instances, and each declares whether it scrolls. So one layout can pin a column and scroll its neighbour, with the decision sitting where the scrolling is seen.
+**Scroll belongs to the region.** A layout is composed of region instances, and each declares whether it scrolls - so one layout can pin a column and scroll its neighbour, and two rows can scroll independently. The layout is only where the declaration is made, since that is where regions come into being.
 
 **Occupy belongs to the screen.** Whether the frame takes the whole terminal or shrinks to its contents is a property of the root, not of any layout inside it - so a layout behaves the same either way.
 
@@ -108,12 +108,20 @@ Seven readings of that table are worth stating outright, because they're the one
 
 **Formatting is not a capability.** *Markup* renders as plain lines, as a bordered card, or as a table of rows and headers, and none of that changes what it can do. A table is markup laid out as a table, so it needs no row of its own. Capabilities say what a block can do; the theme says what it looks like doing it.
 
+A note on the code below. The sections that follow build each level directly, because that's what each level *is*. Declaring a form rarely needs that: the builder wraps the same objects, and `$p` in these examples is a panel builder handed to you by `Form::panel()`. [Building one](#building-one) shows how little of this a three-field form has to name.
+
 ## Screen
 
-The **screen** is the root. It holds one *layout* and claims one capability of its own - *Occupy*:
+The **screen** is the root. It *Nests* one *layout*, and claims one capability of its own - *Occupy*:
 
 ```php
-(new Tui($form))->fullscreen()->run();
+$screen = (new Screen())->layout($layout);
+```
+
+Without *Occupy* the frame shrinks to fit its contents. With it, the frame takes the whole terminal however little there is to show:
+
+```php
+$screen->occupy();
 ```
 
 *Occupy* sits here rather than on a layout because it's a fact about the terminal, not about any arrangement inside it. A layout behaves identically whether the frame stretches to the terminal or shrinks to its contents, which is what makes a layout portable between the two.
@@ -129,12 +137,18 @@ new Layout(Axis::Rows);         // regions run top to bottom
 new Layout(Axis::Columns);      // regions run left to right
 ```
 
-You build one by adding regions to it, and a region takes its blocks the same way. Two levels, one verb:
+A layout declares its regions, and each one is named. Blocks go in by that name, so nothing depends on declaration order:
 
 ```php
-(new Layout(Axis::Rows))
-  ->add((new Region('header'))->add(new Breadcrumb()));
+$layout = (new Layout(Axis::Rows))
+  ->region('header')
+  ->region('content', scrolls: TRUE)
+  ->region('footer');
+
+$layout->in('header')->add(new Breadcrumb());
 ```
+
+Arrangement is stated here rather than on the region itself, because arrangement is what a *layout* claims. The region still owns *Scroll* - the layout is only where regions come into being, so it's where their sizes and scrolling are declared.
 
 A layout draws nothing itself - neither it nor a *region* claims *Show*. And a layout with no regions renders nothing at all, because there is nowhere for a block to go.
 
@@ -144,9 +158,9 @@ Three regions stacked, with the middle one scrolling. This is what a form gets w
 
 ```php
 (new Layout(Axis::Rows))
-  ->add(new Region('header'))
-  ->add(new Region('content', scrolls: TRUE))
-  ->add(new Region('footer'));
+  ->region('header', size: 1)
+  ->region('content', scrolls: TRUE)
+  ->region('footer', size: 1);
 ```
 
 ```
@@ -166,7 +180,7 @@ Nothing ships as one region, but nothing stops you writing it either - a single-
 
 ```php
 (new Layout(Axis::Rows))
-  ->add(new Region('content', scrolls: TRUE));
+  ->region('content', scrolls: TRUE);
 ```
 
 ```
@@ -184,8 +198,8 @@ The other axis. Neither region scrolls here, so both are pinned:
 
 ```php
 (new Layout(Axis::Columns))
-  ->add(new Region('left'))
-  ->add(new Region('right'));
+  ->region('left')
+  ->region('right');
 ```
 
 ```
@@ -195,46 +209,66 @@ The other axis. Neither region scrolls here, so both are pinned:
 ╰────────────┴────────────╯
 ```
 
-Scrolling is per region, so one column can scroll while its neighbour stays put:
+*Scroll* is per region, on either axis, and any number of regions can claim it. Two columns can scroll independently of each other:
 
 ```php
 (new Layout(Axis::Columns))
-  ->add(new Region('left', scrolls: TRUE))
-  ->add(new Region('right'));
+  ->region('left', scrolls: TRUE)
+  ->region('right', scrolls: TRUE);
 ```
 
-### Proportional columns
+Two rows can too, which is the same statement with the axis turned:
 
-Columns divide the width on a twelve-unit grid. A region declares how many units it takes, so `6` and `6` splits evenly and `4` and `8` gives a third to one and two thirds to the other:
+```php
+(new Layout(Axis::Rows))
+  ->region('top', span: 50, scrolls: TRUE)
+  ->region('bottom', span: 50, scrolls: TRUE);
+```
+
+### Sizing a region
+
+A region takes its share of the axis in one of three ways, and both axes work the same:
+
+```php
+->region('sidebar', span: 30)     // 30% of the axis
+->region('header', size: 1)       // exactly one row (or column)
+->region('content')               // whatever is left
+```
+
+**`span` is a percentage.** It reads the same on either axis - 30% of the width in a columns layout, 30% of the height in a rows layout:
 
 ```php
 (new Layout(Axis::Columns))
-  ->add(new Region('left', span: 4))
-  ->add(new Region('right', span: 8));
+  ->region('left', span: 30)
+  ->region('right', span: 70);
 ```
 
 ```
-├───────────────── 12 units ─────────────────┤
+├──────────────── 100% ──────────────────────┤
 ╭───────────────┬────────────────────────────╮
 │ left          │ right                      │
-│ span: 4       │ span: 8                    │
+│ span: 30      │ span: 70                   │
 ╰───────────────┴────────────────────────────╯
 ```
 
-Omit the spans and the width divides evenly, so two regions are `6` and `6` and three are `4`, `4` and `4`. Twelve is chosen because it divides by two, three, four and six, which covers every split you'd reach for without fractions.
+**`size` is fixed cells**, and rows are why it exists. A header is one line whatever the terminal height, and a percentage can't say that - 4% of a 24-row terminal is one row, of a 50-row terminal is two. Columns rarely need it; rows almost always do at the edges.
 
-Spans belong to the *columns* axis only. On the *rows* axis a region is as tall as its blocks, and the region that *Scrolls* takes whatever height is left - which is why a header and footer sit tight against their content while the middle stretches.
+**Neither means "what's left"**, shared equally between the regions that declare nothing. That's how the default layout works: the header and footer are one row each, and content takes the rest without having to name a number.
+
+Percentages of a character grid always round, so a layout resolves fixed sizes first, then divides what remains by the declared percentages, then hands any leftover cell to the last region that asked for a share. The arithmetic is the layout's, which is why *Arrange* is the capability it claims.
 
 ### Both axes at once
 
 A *panel* is a *block* that contains a layout, so nesting one inside a region gives you rows and columns together:
 
 ```php
-// The Panel in 'content' carries a Layout(Axis::Columns) of its own.
-(new Layout(Axis::Rows))
-  ->add(new Region('header'))
-  ->add((new Region('content', scrolls: TRUE))->add($panel))
-  ->add(new Region('footer'));
+$layout = (new Layout(Axis::Rows))
+  ->region('header', size: 1)
+  ->region('content', scrolls: TRUE)
+  ->region('footer', size: 1);
+
+// The Panel carries a Layout(Axis::Columns) of its own.
+$layout->in('content')->add($panel);
 ```
 
 ```
@@ -258,7 +292,7 @@ This is why the axis needs no third value. Any arrangement is rows of columns of
 | Name | Axis | Regions |
 |---|---|---|
 | `default` | rows | `header`, `content` (scrolls), `footer` |
-| `two-column` | columns | `left` (span 6), `right` (span 6) |
+| `two-column` | columns | `left` (span 50), `right` (span 50) |
 
 Two is enough because they cover the two axes. Anything else is those two nested, or a layout you write yourself.
 
@@ -268,11 +302,27 @@ Two is enough because they cover the two axes. Anything else is those two nested
 
 ## Region
 
-A **region** is a named area of a *layout*. It claims *Nest* and *Scroll*.
+A **region** is a named container inside a *layout*. It claims *Nest* and *Scroll*, and that's all it is - a name, some blocks, and whether you can scroll them.
 
-*Scroll* is declared per region instance, not per layout, which is why a two-column layout can pin one column while its neighbour scrolls. The region declares it and the region is where you see it.
+Its name is the whole point: it's how a block says where it goes, so nothing depends on the order things were declared in.
 
-A region knows only that it holds blocks. It never knows which kinds.
+```php
+$layout->in('content')->add($panel);
+$layout->in('footer')->add(new KeyHints());
+```
+
+*Nest* is the region taking blocks, and it takes every kind the same way:
+
+```php
+$layout->in('content')
+  ->add(new Markup('intro', 'Pick the produce for this delivery.'))
+  ->add($panel)
+  ->add(new Buttons());
+```
+
+*Scroll* is per region instance rather than per layout, which is why a two-column layout can pin one column while its neighbour scrolls, and why two rows can scroll independently of each other. The region owns it; the layout is only where it's declared, since that's where regions come into being.
+
+A region knows only that it holds blocks. It never knows which kinds - which is why the three calls above are indistinguishable to it, and why a *breadcrumb* can go wherever a *field* can.
 
 ## Block
 
@@ -288,7 +338,31 @@ Every block claims *Show*, and only a *panel* holds anything - so a block never 
 - **Buttons** - submits or cancels the form.
 - **Progress** - runs work when activated, showing an indicator while it runs.
 
-The last four are the ones easily mistaken for chrome. They aren't: a *breadcrumb* is a block in the header region and a *KeyHints* is a block in the footer region, placed exactly as a *field* is placed. Which is why either can be moved, or joined by something else, without a new concept.
+Every one of them is constructed and added the same way:
+
+```php
+$region
+  ->add(new Breadcrumb())
+  ->add(new KeyHints())
+  ->add(new Markup('intro', 'Weighed at the packing bench.'))
+  ->add(new Buttons())
+  ->add($panel)
+  ->add($field);
+```
+
+The last four in the list are the ones easily mistaken for chrome. They aren't: a *breadcrumb* is a block in the header region and a *KeyHints* is a block in the footer region, placed exactly as a *field* is placed. Which is why either can be moved, or joined by something else, without a new concept:
+
+```php
+// A breadcrumb at the bottom, and a standing warning at the top.
+$layout = (new Layout(Axis::Rows))
+  ->region('header', size: 1)
+  ->region('content', scrolls: TRUE)
+  ->region('footer', size: 1);
+
+$layout->in('header')->add(new Markup('preview', 'Read-only preview.'));
+$layout->in('content')->add($panel);
+$layout->in('footer')->add(new KeyHints())->add(new Breadcrumb());
+```
 
 ## Panel
 
@@ -304,13 +378,65 @@ Panel  "Delivery"
 └─ Bind       its keys are the ones that apply while you are in it
 ```
 
+*Nest* is the panel taking a layout, which is what makes it the only block that can hold anything:
+
+```php
+$columns = (new Layout(Axis::Columns))
+  ->region('left', span: 30)
+  ->region('right', span: 70);
+
+$columns->in('left')->add($courier);
+$columns->in('right')->add($weight);
+
+$panel = (new Panel('delivery', 'Delivery'))->layout($columns);
+```
+
+Give it a single-region layout and it reads as an ordinary list of fields, which is what a panel is most of the time:
+
+```php
+$rows = (new Layout(Axis::Rows))->region('content', scrolls: TRUE);
+$rows->in('content')->add($courier)->add($weight);
+
+(new Panel('delivery', 'Delivery'))->layout($rows);
+```
+
+*Descend* is a panel added to another panel's region. The nested one draws as a row you select, and selecting it replaces the screen:
+
+```php
+$layout->in('content')
+  ->add($courier)
+  ->add($advanced);   // a Panel: a row here, the whole screen once entered
+```
+
 **Descend is the capability nothing else has**, and it's what makes a panel more than a container. A *region* can hold blocks and a *layout* can arrange them, but neither is somewhere you go.
 
-One panel fills the screen at a time. A **modal** is the same block that *Overlays* instead of replacing what's behind it - nothing else about the panel changes.
+One panel fills the screen at a time. A **modal** is the same block that *Overlays* instead of replacing what's behind it - nothing else about the panel changes:
+
+```php
+(new Panel('confirm', 'Confirm delivery'))->overlay();
+```
 
 ## Field
 
 A **field** is the *block* that collects. It's the only kind that contributes to the collected result, and the only kind that captures.
+
+Six of its seven capabilities are declared on the field itself, and each has its own call:
+
+```php
+$p->select('basket', 'Basket contents')       // Show, Focus
+  ->description('Pick the produce.')
+  ->entry('apple', 'Apple')                   // Capture
+  ->entry('carrot', 'Carrot')
+  ->multiple()
+  ->default(['apple'])                        // Collect
+  ->minSelections(2)->maxSelections(3)        // Constrain
+  ->validate($ripeness)                       // Reject
+  ->when(new Condition('organic', eq: TRUE)); // Depend
+```
+
+The entries are what *edit* mode opens onto, the default is what reaches the result until you change it, the bounds are stated before you act and the validator explains itself after, and the condition decides whether the field is there at all.
+
+The seventh capability is *Bind*, which the field doesn't declare - it comes from the field's kind. A `select` binds <kbd>Space</kbd> because it offers a list; a `text` field binds no printable key at all, because every one of them is something you're typing.
 
 One field owns both modes. In **view** mode it's one line, drawing every part of that line itself. Open it and it switches to **edit** mode, taking over the region right of its *label*:
 
@@ -340,11 +466,23 @@ Field  ──▸  capabilities  ──▸  theme templates  ──▸  theme ele
 **Markup** renders formatted content and does nothing else. It takes plain text or the [markdown subset](/markdown), and it claims *Show* and *Depend*. How it's laid out on the page is a presentation choice rather than a capability:
 
 ```php
+// Prose.
 $p->markup('weighing', 'Every crate is weighed at the packing bench.');
-$p->markup('yields', 'Yields per crate')->table(['Produce', 'Crates'], [['Apple', '12'], ['Carrot', '8']]);
+
+// The same block in a bordered card.
+$p->markup('notice', 'Deliveries leave at dawn.')->bordered();
+
+// The same block again, laid out as a table.
+$p->markup('yields', 'Yields per crate')
+  ->table(['Produce', 'Crates'], [['Apple', '12'], ['Carrot', '8']]);
 ```
 
-Prose, a bordered card and a table are the same block laid out three ways. *Depend* is what lets a warning appear only when an earlier answer calls for it.
+Prose, a bordered card and a table are the same block laid out three ways. *Depend* is what lets a warning appear only when an earlier answer calls for it:
+
+```php
+$p->markup('certified', 'Organic crates need current certification.')
+  ->when(new Condition('organic', eq: TRUE));
+```
 
 ## The theme's two tiers
 
@@ -423,9 +561,13 @@ Every level has a default, and this is what those defaults are:
 
 ```php
 $layout = (new Layout(Axis::Rows))
-  ->add((new Region('header'))->add(new Breadcrumb()))
-  ->add((new Region('content', scrolls: TRUE))->add($panel)->add(new Buttons()))
-  ->add((new Region('footer'))->add(new KeyHints()));
+  ->region('header', size: 1)
+  ->region('content', scrolls: TRUE)
+  ->region('footer', size: 1);
+
+$layout->in('header')->add(new Breadcrumb());
+$layout->in('content')->add($panel)->add(new Buttons());
+$layout->in('footer')->add(new KeyHints());
 
 (new Screen())->layout($layout);
 ```
