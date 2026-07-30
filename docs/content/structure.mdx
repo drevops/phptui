@@ -44,7 +44,7 @@ The four levels are what the model is made of. What you actually build with are 
 | Screen | one | the screen |
 | Layout | `default`, `two-column` | the screen's `default` |
 | Region | none - a layout names its own | `header`, `content`, `footer` |
-| Block | Panel, Field, Markup, Breadcrumb, KeyHints, Actions, Progress | one Breadcrumb, one Panel, three Fields, one KeyHints |
+| Block | Panel, Field, Markup, Breadcrumb, Legend, Actions, Progress | one Breadcrumb, one Panel, three Fields, one Legend |
 
 *Layouts* are the level with reusable named kinds - that's what *Reuse* means in the table below. *Regions* have no kinds at all: a region is a named slot its layout declares, so `header` exists because `default` declares it.
 
@@ -87,7 +87,7 @@ Seventeen capabilities cover everything on screen, each described as what you ca
 | Field | | | ✓ | ✓ | ✓ | ✓ | ✓ | | | ✓ | | | | ✓ | | | ✓ |
 | Markup | | | | | | | ✓ | | | | | | | | | | ✓ |
 | Breadcrumb | | | | | | | | | | | | | | | | | ✓ |
-| KeyHints | | | | | | | | | | | | | | | | | ✓ |
+| Legend | | | | | | | | | | | | | | | | | ✓ |
 | Actions | ✓ | | | | | | | | | ✓ | | | | ✓ | | | ✓ |
 | Progress | ✓ | | | | | | ✓ | | | ✓ | | | | | | | ✓ |
 
@@ -206,7 +206,7 @@ $this->region('content')->scrolls();
 ╰─────────────────────────╯
 ```
 
-Put a *breadcrumb* or a *KeyHints* block in that one region and it renders inline with everything else. There's no rule that says a breadcrumb belongs at the top - only the default layout says so.
+Put a *breadcrumb* or a *legend* block in that one region and it renders inline with everything else. There's no rule that says a breadcrumb belongs at the top - only the default layout says so.
 
 ### Two columns
 
@@ -407,7 +407,7 @@ The name is the whole point of a region: it's how a block says where it goes, so
 
 ```php
 $layout->in('content')->add($panel);
-$layout->in('footer')->add(new KeyHints());
+$layout->in('footer')->add(new Legend());
 ```
 
 *Nest* is the region taking blocks, and it takes every kind the same way:
@@ -469,7 +469,7 @@ Every block claims *Show*, and only a *panel* nests anything - and what it nests
 - **Field** - answers. The only block that reaches the collected result.
 - **Markup** - renders formatted content: prose, a bordered card, or a table.
 - **Breadcrumb** - renders the trail of panels you've entered.
-- **KeyHints** - renders the keys that apply right now, rewriting itself as focus moves.
+- **Legend** - renders the keys that apply right now, rewriting itself as focus moves.
 - **Actions** - the buttons that end the form: submit, cancel, and any the form declares. Withholds the submit with a message while a required field is empty.
 - **Progress** - runs work when activated, showing an indicator while it runs.
 
@@ -478,14 +478,14 @@ Every one of them is constructed and added the same way:
 ```php
 $region
   ->add(new Breadcrumb())
-  ->add(new KeyHints())
+  ->add(new Legend())
   ->add(new Markup('intro', 'Weighed at the packing bench.'))
   ->add(new Actions())
   ->add($panel)
   ->add($field);
 ```
 
-The last four in the list are the ones easily mistaken for chrome. They aren't: a *breadcrumb* is a block in the header region and a *KeyHints* is a block in the footer region, placed exactly as a *field* is placed. Which is why either can be moved, or joined by something else, without a new concept:
+The last four in the list are the ones easily mistaken for chrome. They aren't: a *breadcrumb* is a block in the header region and a *legend* is a block in the footer region, placed exactly as a *field* is placed. Which is why either can be moved, or joined by something else, without a new concept:
 
 ```php
 // A breadcrumb at the bottom, and a standing warning at the top.
@@ -493,7 +493,7 @@ $layout = new DefaultLayout();
 
 $layout->in('header')->add(new Markup('preview', 'Read-only preview.'));
 $layout->in('content')->add($panel);
-$layout->in('footer')->add(new KeyHints())->add(new Breadcrumb());
+$layout->in('footer')->add(new Legend())->add(new Breadcrumb());
 ```
 
 ## Panel
@@ -704,7 +704,7 @@ content ▸ Panel               │                                             
                               │   ▼                                                  │
                               │                                                      │
                               ├──────────────────────────────────────────────────────┤
-footer  ▸ KeyHints            │ ↑/↓ to move · ↵ to accept · ESC to cancel             │
+footer  ▸ Legend              │ ↑/↓ to move · ↵ to accept · ESC to cancel             │
                               ╰──────────────────────────────────────────────────────╯
 ```
 
@@ -735,7 +735,7 @@ $layout = new DefaultLayout();
 
 $layout->in('header')->add(new Breadcrumb());
 $layout->in('content')->add($panel)->add(new Actions());
-$layout->in('footer')->add(new KeyHints());
+$layout->in('footer')->add(new Legend());
 
 (new Screen())->layout($layout);
 ```
