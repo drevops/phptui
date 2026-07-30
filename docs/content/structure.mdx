@@ -143,9 +143,9 @@ final class DefaultLayout extends AbstractLayout {
   public function __construct() {
     parent::__construct(Axis::Rows);
 
-    $this->region('header')->fixed(1)->add(new Breadcrumb());
+    $this->region('header')->fixed(1);
     $this->region('content')->scrolls();
-    $this->region('footer')->fixed(1)->add(new Legend());
+    $this->region('footer')->fixed(1);
   }
 
 }
@@ -336,7 +336,7 @@ This is why the axis needs no third value. Any arrangement is rows of columns of
 
 | Name | Axis | Regions |
 |---|---|---|
-| `default` | rows | `header` (fixed 1, holds a Breadcrumb), `content` (scrolls), `footer` (fixed 1, holds a Legend) |
+| `default` | rows | `header` (fixed 1), `content` (scrolls), `footer` (fixed 1) |
 | `two-column` | columns | `left`, `right` |
 
 Two is enough because they cover the two axes. Anything else is those two nested, or a layout you write yourself.
@@ -345,27 +345,27 @@ Two is enough because they cover the two axes. Anything else is those two nested
 (new Tui($form))->layout('two-column')->run();
 ```
 
-### Empty and furnished
+### A layout knows nothing about blocks
 
-A layout can arrive with blocks already in its regions, and `DefaultLayout` does - a *breadcrumb* in the header, a *legend* in the footer. That's still a layout, not a new kind of thing. It's a **furnished** one.
+A layout class declares arrangement and stops there. It never names a *breadcrumb*, a *panel* or anything else that might be drawn in it - which is what *Reuse* actually costs. A layout carrying content opinions is a layout exactly one form can use.
 
-| | Declares regions | Places blocks |
-|---|---|---|
-| `TwoColumnLayout` | ✓ | |
-| `DefaultLayout` | ✓ | ✓ |
+The line is between the class and the instance:
 
-The furniture can't be a separate thing you bolt on, and the reason is worth knowing: **a block is placed by name, and only the layout knows which names exist.** A breadcrumb goes in `header` because `DefaultLayout` declared a `header`. A `TwoColumnLayout` has `left` and `right`, so the same furniture would have nowhere to go.
-
-So whatever declares a region is what furnishes it, and a furnished layout is the honest name for a layout that does both.
-
-Furnishing is only a default. Anything the layout placed can be moved or joined:
+| | Knows about |
+|---|---|
+| the layout **class** | its regions: names, sizes, scrolling |
+| a layout **instance** | the blocks somebody put in those regions |
 
 ```php
-$layout = new DefaultLayout();
-
-// Keep the breadcrumb, and add a standing warning beside it.
-$layout->in('header')->add(new Markup('preview', 'Read-only preview.'));
+$layout = new DefaultLayout();                  // arrangement, reusable
+$layout->in('header')->add(new Breadcrumb());   // this instance, this form
 ```
+
+It's tempting to let a layout furnish itself, on the grounds that only it knows a `header` exists. That confuses two things. Whatever places a block does need to know the region names, but it doesn't need to *be* the layout - it only needs to be written against one that has them. Placing the breadcrumb inside `DefaultLayout` would buy one line and cost the class every reuse.
+
+For the same reason there's no separate object that furnishes a layout from outside. It would have to assume a `header` and a `footer`, and `TwoColumnLayout` has `left` and `right`, so it could only ever work with the layout it was written for.
+
+**The standard furniture is assembled by the facade**, which is where the form's other defaults already come from - its theme, its key bindings, its controller. Declare a screen yourself and the facade assembles nothing; declare nothing and it gives you a breadcrumb, the panel, its actions, and a legend.
 
 ### Writing one
 
@@ -512,11 +512,12 @@ $region
 The last four in the list are the ones easily mistaken for chrome. They aren't: a *breadcrumb* is a block in the header region and a *legend* is a block in the footer region, placed exactly as a *field* is placed. Which is why either can be moved, or joined by something else, without a new concept:
 
 ```php
-// A standing warning in the header, beside the breadcrumb already there.
+// A breadcrumb at the bottom, and a standing warning at the top.
 $layout = new DefaultLayout();
 
 $layout->in('header')->add(new Markup('preview', 'Read-only preview.'));
 $layout->in('content')->add($panel);
+$layout->in('footer')->add(new Legend())->add(new Breadcrumb());
 ```
 
 ### Panel
@@ -874,10 +875,11 @@ $form = Form::create('Orchard')
 Every level has a default, and this is what those defaults are:
 
 ```php
-// DefaultLayout arrives furnished: a Breadcrumb in the header,
-// a Legend in the footer. Only the panel and its actions are added.
 $layout = new DefaultLayout();
+
+$layout->in('header')->add(new Breadcrumb());
 $layout->in('content')->add($panel)->add(new Actions());
+$layout->in('footer')->add(new Legend());
 
 (new Screen())->layout($layout);
 ```
