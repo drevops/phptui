@@ -106,7 +106,7 @@ interface ThemeInterface {
    * announcing it. It marks the label rather than the description, because a
    * field can carry help without carrying a description at all.
    */
-  public function helpMarker(bool $selected = FALSE): string;
+  public function helpMarker(): string;
 
   /**
    * The line that captions a browsable list, saying what is being shown.

@@ -27,16 +27,20 @@ The chrome is the same whatever the form asks. You declare it once - the form's 
   <ThemedImage sources={{light: useBaseUrl('/anatomy-chrome-light-static.svg'), dark: useBaseUrl('/anatomy-chrome-dark-static.svg')}} alt="A form's window chrome with its atoms named" width="100%" />
 </p>
 
+<div className="table-scroll" tabIndex={0}>
+
 | #   | Atom                 | What it does                                                                                                          | Set with                                                        | Theme atom              |
 | --- | -------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ----------------------- |
 | 1   | border               | The frame around everything. One of `Border::None`, `Border::Line`, `Border::Rounded` or `Border::Double`, form-wide. | `Tui::theme(..., ['border' => Border::Rounded])`                | `border()`              |
 | 2   | breadcrumb           | The trail of panel titles: every panel you've descended through, plus the one you're in.                              | `Form::create('Orchard')`, `->panel('main', 'Delivery', ...)`   | `breadcrumb()`          |
 | 3   | breadcrumb separator | Stands between **breadcrumb** (2) segments.                                                                           | Not declared                                                    | `breadcrumbSeparator()` |
 | 4   | overflow marker      | Points at content past the top or bottom edge. Drawn only when the rows outgrow the frame.                            | Not declared                                                    | `overflowMarker()`      |
-| 5   | legend               | The keys live right now.                                                                                              | `Tui::footer(FALSE)` hides it; the entries come from the widget | `renderLegend()`        |
+| 5   | legend               | The keys bound right now.                                                                                             | `Tui::footer(FALSE)` hides it; the entries come from the widget | `renderLegend()`        |
 | 6   | legend key           | One key in the **legend** (5). Worded keys are uppercased: <kbd>ESC</kbd>, <kbd>TAB</kbd>, <kbd>SPACE</kbd>.          | `Tui::keys(...)` rebinds which key it shows                     | `legendKey()`           |
 | 7   | legend description   | What that key does. Reads as `KEY to action`.                                                                         | Not declared; comes from the widget                             | `legendDescription()`   |
 | 8   | legend separator     | Stands between **legend** (5) entries.                                                                                | Not declared                                                    | `legendSeparator()`     |
+
+</div>
 
 The **legend** (5) is the one atom of the chrome that changes as you work: it lists the keys that apply where you are, so an open field advertises different keys from the panel around it. That's also why a **legend key** (6) needs no weight of its own. Case alone tells <kbd>ESC</kbd> from the words beside it, and the `KEY to action` wording of a **legend description** (7) makes an entry read as a sentence rather than two words abutted.
 
@@ -48,6 +52,8 @@ A panel stacks its fields as rows, each one in view mode until you open it. A ro
   <ThemedImage sources={{light: useBaseUrl('/anatomy-row-light-static.svg'), dark: useBaseUrl('/anatomy-row-dark-static.svg')}} alt="Five rows of a form with their atoms named" width="100%" />
 </p>
 
+<div className="table-scroll" tabIndex={0}>
+
 | #   | Atom            | What it does                                                                                                            | Set with                                                    | Theme atom         |
 | --- | --------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------ |
 | 1   | field selector  | Which field has focus. Moves with <kbd>↑</kbd> and <kbd>↓</kbd>.                                                        | Not declared; follows focus                                 | `fieldSelector()`  |
@@ -57,6 +63,8 @@ A panel stacks its fields as rows, each one in view mode until you open it. A ro
 | 5   | value separator | Stands between the parts of a **value** (4) that has more than one, so `Basket contents` reads `apple, carrot`.         | Not declared                                                | `valueSeparator()` |
 | 6   | description     | The field's explanatory text, under its row.                                                                            | `->description('Pick the produce for this delivery.')`      | `description()`    |
 | 7   | help            | The field's long-form text. Never drawn in the panel: <kbd>?</kbd> opens it on a page of its own.                       | `->help('Every crate is weighed at the packing bench.')`    | `renderHelp()`     |
+
+</div>
 
 Only one field holds focus at a time. The row the **field selector** (1) sits on is drawn brighter too, so the glyph and that emphasis are one signal in two forms.
 
@@ -76,6 +84,8 @@ A multiple-choice field with bounds and per-entry text draws the fullest set of 
   <ThemedImage sources={{light: useBaseUrl('/anatomy-editor-light-static.svg'), dark: useBaseUrl('/anatomy-editor-dark-static.svg')}} alt="A multiple-choice field in edit mode with its atoms named" width="100%" />
 </p>
 
+<div className="table-scroll" tabIndex={0}>
+
 | #   | Atom              | What it does                                                                                            | Set with                                                                             | Theme atom           |
 | --- | ----------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------- |
 | 1   | entry             | One line of the list the widget offers.                                                                 | `->option('apple', 'Apple')`, `->options([...])`                                     | `entry()`            |
@@ -84,6 +94,8 @@ A multiple-choice field with bounds and per-entry text draws the fullest set of 
 | 4   | entry note        | A qualifier on an **entry** (1), such as why it's unavailable. Drawn only on entries carrying a reason. | `->option('tomato', 'Tomato', disabled: TRUE, disabled_reason: 'out of season')`     | `entryNote()`        |
 | 5   | entry description | The focused **entry** (1)'s own explanatory text. Indented to start where the entry text starts.        | `->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')` | `entryDescription()` |
 | 6   | constraint        | What the field expects, before anything is rejected.                                                    | `->minSelections(2)->maxSelections(3)`, `->maxSize(64)`, `->min()`/`->max()`         | `constraint()`       |
+
+</div>
 
 What fills the list varies by widget: a fixed set, a set filtered as you type, or one fetched by a query. An **entry description** (5) is rewritten every time the **entry selector** (2) moves, and is absent for entries that declare none - which is why it's indented to the entry text rather than to the list, so it reads as belonging to the entry above it.
 
@@ -99,11 +111,15 @@ Some widgets collect an answer by typing instead of by choosing from a list, so 
   <ThemedImage sources={{light: useBaseUrl('/anatomy-text-light-static.svg'), dark: useBaseUrl('/anatomy-text-dark-static.svg')}} alt="A Template field in edit mode with its atoms named" width="100%" />
 </p>
 
+<div className="table-scroll" tabIndex={0}>
+
 | #   | Atom  | What it does                                                                          | Set with                                                 | Theme atom |
 | --- | ----- | ------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------- |
 | 8   | caret | The insertion point within the **draft** (9), showing where the next keystroke lands. | Not declared; follows what you type                      | `caret()`  |
 | 9   | draft | The text you're typing, before it's accepted.                                         | `->default('valley-pear-a')` seeds it; typing changes it | `draft()`  |
 | 10  | state | What the widget is doing right now.                                                   | `->slot('fruit', 'Fruit')` names what it reports         | `state()`  |
+
+</div>
 
 The **draft** (9) and the **value** (view 4) are the same answer at two moments: what you're typing, and what was accepted. Accepting promotes one to the other; canceling discards the **draft** (9). In the [Template](/widgets/template) widget the **caret** (8) is also what moves between slots as you fill them.
 
@@ -117,9 +133,13 @@ The [FilePicker](/widgets/filepicker) widget draws the same skeleton over a dire
   <ThemedImage sources={{light: useBaseUrl('/anatomy-filepicker-light-static.svg'), dark: useBaseUrl('/anatomy-filepicker-dark-static.svg')}} alt="An open file picker with its atoms named" width="100%" />
 </p>
 
+<div className="table-scroll" tabIndex={0}>
+
 | #   | Atom    | What it does                                                                       | Set with                                     | Theme atom  |
 | --- | ------- | ---------------------------------------------------------------------------------- | -------------------------------------------- | ----------- |
 | 11  | caption | What the list below is showing. Rewritten whenever the list changes underneath it. | `->startIn($directory)` sets where it begins | `caption()` |
+
+</div>
 
 The lines in the list are files and directories rather than options, and they're still **entries** (1): the name describes the line the widget offers, not where its content came from. The **caption** (11) names a directory in this widget because that's what a file browser browses, but the atom - and the theme method that draws it - stays generic.
 
@@ -139,9 +159,13 @@ Now `harvest.csv` is picked, and at 88 bytes it breaks that limit. The same line
   <ThemedImage sources={{light: useBaseUrl('/anatomy-error-light-static.svg'), dark: useBaseUrl('/anatomy-error-dark-static.svg')}} alt="The same file picker showing an error in place of its constraint" width="100%" />
 </p>
 
+<div className="table-scroll" tabIndex={0}>
+
 | #   | Atom  | What it does                                                                                                        | Set with                                  | Theme atom |
 | --- | ----- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ---------- |
 | 7   | error | Why the value was rejected. Drawn only after a refused accept, and cleared the moment the value becomes acceptable. | The declared bounds, or `->validate(...)` | `error()`  |
+
+</div>
 
 The two lines say different kinds of thing:
 
@@ -157,6 +181,8 @@ That's also why they're built differently. The first is an unframed phrase - `a 
 ## What the code calls these today
 
 Every atom has two public surfaces. **Theme** is the `ThemeInterface` method that styles it. **Owner** is the call a consumer makes to set it - run-wide through the group's own fluent builder for a glyph, or on the field for content. Where the source disagrees with the atom's name, the source is what moves.
+
+<div className="table-scroll" tabIndex={0}>
 
 | Atom                                | Today                                                                                 | Theme                         | Owner                                                                                                            |
 | ----------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -186,6 +212,8 @@ Every atom has two public surfaces. **Theme** is the `ThemeInterface` method tha
 | **draft** (edit 9)                  | `$buffer`, per widget, no theme method                                                | `editDraft()`                 | `->default($value)`, `->placeholder($text)`                                                                      |
 | **state** (edit 10)                 | `footer()`                                                                            | `editState()`                 | `edit()->state(FALSE)`, `->slot($name, $label)` labels it                                                        |
 | **caption** (edit 11)               | `caption()`                                                                           | `editCaption()`               | `edit()->caption(FALSE)`, `->startIn($directory)` fills it                                                       |
+
+</div>
 
 Each group's glyphs are set through one closure, the way `Form::panel()` already reads:
 

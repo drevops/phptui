@@ -12,7 +12,7 @@ use DrevOps\Tui\Theme\ThemeInterface;
  *
  * Submit, cancel, and any the form declares. It is the only block other than a
  * field that refuses anything - the submit is withheld while a required field
- * empty - and unlike a field it holds no value while doing so.
+ * is empty - and unlike a field it holds no value while doing so.
  *
  * @package DrevOps\Tui\Block
  */

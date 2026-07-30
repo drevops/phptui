@@ -41,6 +41,15 @@
   overflow-x: auto;
 }
 
+/**
+ * A scroller only answers the arrow keys once it can hold focus, so every
+ * container carries tabIndex={0} and this gives that focus somewhere to show.
+ */
+.table-scroll:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
 .table-scroll table {
   display: table;
   width: max-content;

@@ -59,7 +59,9 @@ final class Markup implements BlockInterface {
       $lines[] = $theme->markupTitle($this->title);
     }
 
-    foreach (explode("\n", $this->body) as $line) {
+    // A Windows-authored body carries CRLF endings, and a surviving carriage
+    // return would send the cursor back to column 0 and overprint the row.
+    foreach (explode("\n", str_replace(["\r\n", "\r"], "\n", $this->body)) as $line) {
       $lines[] = $theme->markupLine($line);
     }
 

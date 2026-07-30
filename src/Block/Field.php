@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Block;
 
 use DrevOps\Tui\Block\Element\FieldElementsInterface;
+use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -354,7 +355,10 @@ final class Field implements BlockInterface {
    */
   protected function openLines(FieldElementsInterface $theme, string $label): string {
     $lines = [];
-    $indent = str_repeat(' ', mb_strlen($this->label) + 2);
+    // Measured from the label as it was drawn, not from its source text: it may
+    // carry a help marker and styling, and only its visible width lines the
+    // entries up under it.
+    $indent = str_repeat(' ', Ansi::width($label) + 2);
 
     foreach ($this->entries as $value => $entry) {
       $lines[] = ($lines === [] ? $label . '  ' : $indent) . $theme->fieldEntry($entry, $value === $this->draft);

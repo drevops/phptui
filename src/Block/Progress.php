@@ -90,8 +90,11 @@ final class Progress implements BlockInterface {
    *   The block.
    */
   public function advance(int $steps = 1): self {
-    $this->current += $steps;
-    $this->frame += $steps;
+    // Work can report a step backwards, and a spinner frame is an index: both
+    // are clamped here so no caller can drive the block into a state it could
+    // not draw.
+    $this->current = max(0, $this->current + $steps);
+    $this->frame = max(0, $this->frame + $steps);
 
     if ($this->total !== NULL) {
       $this->current = min($this->current, $this->total);

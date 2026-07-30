@@ -10,6 +10,8 @@ use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
+use DrevOps\Tui\Screen\AbstractLayout;
+use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\DefaultLayout;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -91,12 +93,35 @@ final class CollectorTest extends TestCase {
   }
 
   public function testCollectingBuildsNoScreenAtAll(): void {
-    // A layout arranges drawing, so headlessly there is nothing for it to do:
-    // the collector never asks a panel for its layout's sizes.
-    $panel = $this->panel((new Field('courier', 'Courier'))->default('Valley Runs'));
+    // A layout arranges drawing, so headlessly there is nothing for it to do.
+    // The layout answers by recording the question rather than by staying
+    // empty: an empty region would read the same whether it was consulted or
+    // not, and what is being claimed is that it never was.
+    $layout = new class(Axis::Rows) extends AbstractLayout {
+
+      /**
+       * How many times the sizes were asked for.
+       */
+      public int $arranged = 0;
+
+      public function __construct(Axis $axis) {
+        parent::__construct($axis);
+        $this->region('content')->flex(1);
+      }
+
+      public function arrange(int $available): array {
+        $this->arranged++;
+
+        return parent::arrange($available);
+      }
+
+    };
+
+    $panel = (new Panel('main', 'Delivery'))->layout($layout);
+    $panel->in('content')->add((new Field('courier', 'Courier'))->default('Valley Runs'));
 
     $this->assertSame(['courier' => 'Valley Runs'], (new Collector())->collect($panel));
-    $this->assertSame([], $panel->currentLayout()->in('header')->blocks());
+    $this->assertSame(0, $layout->arranged);
   }
 
   /**

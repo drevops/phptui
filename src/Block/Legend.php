@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Block;
 
 use DrevOps\Tui\Block\Element\LegendElementsInterface;
 use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\Tui\Translation\Translator;
 
 /**
  * The keys that apply right now.
@@ -64,7 +65,7 @@ final class Legend implements BlockInterface {
     $parts = [];
 
     foreach ($this->entries as $entry) {
-      $parts[] = $theme->legendKey($entry['key']) . ' ' . $theme->legendDescription('to ' . $entry['does']);
+      $parts[] = $theme->legendKey($entry['key']) . ' ' . $theme->legendDescription(Translator::t('to @action', ['@action' => Translator::t($entry['does'])]));
     }
 
     return implode(' ' . $theme->legendSeparator() . ' ', $parts);

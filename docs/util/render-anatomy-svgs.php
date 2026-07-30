@@ -78,22 +78,54 @@ const EDIT_PARTS = [
 ];
 
 /**
+ * A group of parts, numbered on its own.
+ */
+enum AnatomyGroup: string {
+
+  case Chrome = 'chrome';
+  case View = 'view';
+  case Edit = 'edit';
+
+}
+
+/**
+ * The side of a cell a callout reaches it from.
+ */
+enum Side: string {
+
+  case Up = 'up';
+  case Down = 'down';
+  case Left = 'left';
+  case Right = 'right';
+
+  /**
+   * Whether the label sits beside the frame rather than above or below it.
+   *
+   * The two axes are laid out differently - one takes a margin and stacks,
+   * the other takes a band - so most of the placement branches on this alone.
+   */
+  public function isHorizontal(): bool {
+    return $this === self::Left || $this === self::Right;
+  }
+
+}
+
+/**
  * The number a part carries within its group.
  *
  * @param string $label
  *   The part name.
- * @param string $group
- *   The group the diagram belongs to, 'chrome', 'view' or 'edit'.
+ * @param \AnatomyGroup $group
+ *   The group the diagram belongs to.
  *
  * @return int
  *   The part's number.
  */
-function numberOf(string $label, string $group): int {
+function numberOf(string $label, AnatomyGroup $group): int {
   $parts = match ($group) {
-    'chrome' => CHROME_PARTS,
-    'view' => VIEW_PARTS,
-    'edit' => EDIT_PARTS,
-    default => throw new \RuntimeException(sprintf('"%s" is not a group of parts.', $group)),
+    AnatomyGroup::Chrome => CHROME_PARTS,
+    AnatomyGroup::View => VIEW_PARTS,
+    AnatomyGroup::Edit => EDIT_PARTS,
   };
   $index = array_search($label, $parts, TRUE);
 
@@ -155,7 +187,6 @@ function anatomySpecs(string $tree): array {
   $down = Key::named(KeyName::Down);
   $space = Key::named(KeyName::Space);
   $tab = Key::named(KeyName::Tab);
-  Key::named(KeyName::Backspace);
   $open = [$enter, $enter];
 
   // The window and the rows inside it are photographed from the same panel, so
@@ -173,38 +204,38 @@ function anatomySpecs(string $tree): array {
   return [
     'chrome' => [
       'form' => $delivery(),
-      'group' => 'chrome',
+      'group' => AnatomyGroup::Chrome,
       'keys' => [$enter],
       'rows' => 21,
       // The panel's own legend is the longest line any diagram carries, and a
       // truncated legend is the one thing this frame must not show.
       'cols' => 78,
       'callouts' => [
-        ['col' => 0, 'row' => 0, 'label' => 'border', 'side' => 'left'],
-        ['col' => 2, 'row' => 1, 'label' => 'breadcrumb', 'side' => 'left'],
+        ['col' => 0, 'row' => 0, 'label' => 'border', 'side' => Side::Left],
+        ['col' => 2, 'row' => 1, 'label' => 'breadcrumb', 'side' => Side::Left],
         ['col' => 10, 'row' => 1, 'label' => 'breadcrumb separator'],
         ['col' => 4, 'row' => 15, 'label' => 'overflow marker'],
-        ['col' => 2, 'row' => 18, 'label' => 'legend', 'side' => 'left'],
-        ['col' => 2, 'row' => 18, 'label' => 'legend key', 'side' => 'down'],
+        ['col' => 2, 'row' => 18, 'label' => 'legend', 'side' => Side::Left],
+        ['col' => 2, 'row' => 18, 'label' => 'legend key', 'side' => Side::Down],
         // Each points at the far end of its part rather than the near one, so a
         // riser clears the label of the band above instead of crossing it.
-        ['col' => 12, 'row' => 18, 'label' => 'legend description', 'side' => 'down'],
-        ['col' => 28, 'row' => 18, 'label' => 'legend separator', 'side' => 'down'],
+        ['col' => 12, 'row' => 18, 'label' => 'legend description', 'side' => Side::Down],
+        ['col' => 28, 'row' => 18, 'label' => 'legend separator', 'side' => Side::Down],
       ],
     ],
     'row' => [
       'form' => $delivery(),
-      'group' => 'view',
+      'group' => AnatomyGroup::View,
       'keys' => [$enter],
       'rows' => 21,
       'cols' => 78,
       'callouts' => [
         ['col' => 2, 'row' => 4, 'label' => 'field selector'],
         ['col' => 6, 'row' => 5, 'label' => 'description'],
-        ['label' => 'label', 'side' => 'left', 'cells' => [[7, 4], [10, 4], [12, 4]]],
+        ['label' => 'label', 'side' => Side::Left, 'cells' => [[7, 4], [10, 4], [12, 4]]],
         ['col' => 20, 'row' => 4, 'label' => 'help marker'],
         ['col' => 28, 'row' => 4, 'label' => 'value separator'],
-        ['label' => 'value', 'side' => 'right', 'cells' => [[4, 35], [7, 22], [10, 27], [12, 23]]],
+        ['label' => 'value', 'side' => Side::Right, 'cells' => [[4, 35], [7, 22], [10, 27], [12, 23]]],
       ],
     ],
     'editor' => [
@@ -214,7 +245,7 @@ function anatomySpecs(string $tree): array {
           ->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')
           ->option('tomato', 'Tomato', disabled: TRUE, disabled_reason: 'out of season');
       }),
-      'group' => 'edit',
+      'group' => AnatomyGroup::Edit,
       'keys' => [...$open, $space, $down, $space],
       'rows' => 16,
       'callouts' => [
@@ -230,7 +261,7 @@ function anatomySpecs(string $tree): array {
       'form' => Form::create('Orchard')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
         $p->filePicker('price_list', 'Price list')->description('The CSV the orchard sends each week.')->startIn($tree)->filesOnly()->extensions(['csv'])->maxSize(2097152);
       }),
-      'group' => 'edit',
+      'group' => AnatomyGroup::Edit,
       'keys' => [...$open, $down],
       'rows' => 16,
       'callouts' => [
@@ -244,20 +275,20 @@ function anatomySpecs(string $tree): array {
       'form' => Form::create('Orchard')->panel('main', 'Crate', function (PanelBuilder $p): void {
         $p->template('crate', 'Crate label')->description('Identifies the crate on the loading dock.')->pattern('{{orchard}}-{{fruit}}-{{grade}}')->default('valley-pear-a')->slot('orchard', 'Orchard')->slot('fruit', 'Fruit')->slot('grade', 'Grade');
       }),
-      'group' => 'edit',
+      'group' => AnatomyGroup::Edit,
       'keys' => [...$open, $tab],
       'rows' => 10,
       'callouts' => [
         ['col' => 28, 'row' => 4, 'label' => 'caret'],
         ['col' => 30, 'row' => 4, 'label' => 'draft'],
-        ['col' => 32, 'row' => 5, 'label' => 'state', 'side' => 'right'],
+        ['col' => 32, 'row' => 5, 'label' => 'state', 'side' => Side::Right],
       ],
     ],
     'constraint' => [
       'form' => Form::create('Orchard')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
         $p->filePicker('price_list', 'Price list')->startIn($tree)->filesOnly()->maxSize(64);
       }),
-      'group' => 'edit',
+      'group' => AnatomyGroup::Edit,
       'keys' => [...$open],
       'rows' => 20,
       'callouts' => [
@@ -270,7 +301,7 @@ function anatomySpecs(string $tree): array {
       'form' => Form::create('Orchard')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
         $p->filePicker('price_list', 'Price list')->startIn($tree)->filesOnly()->maxSize(64);
       }),
-      'group' => 'edit',
+      'group' => AnatomyGroup::Edit,
       'keys' => [...$open, $down, $down, $down, $enter],
       'rows' => 20,
       'callouts' => [
@@ -420,22 +451,22 @@ function cellsOf(array $callout): array {
  *   The frame's rows, without escape sequences.
  * @param array<int,array<int,int>> $cells
  *   The cells, each a row and a column.
- * @param string $side
- *   The side the bracket stands on, 'left' or 'right'.
+ * @param \Side $side
+ *   The side the bracket stands on.
  * @param int $columns
  *   The number of columns the frame holds.
  *
  * @return int|null
  *   The column, or NULL when no column on that side is clear.
  */
-function bracketColumn(array $lines, array $cells, string $side, int $columns): ?int {
+function bracketColumn(array $lines, array $cells, Side $side, int $columns): ?int {
   $rows = array_column($cells, 0);
   $cols = array_column($cells, 1);
   $first = min($rows);
   $last = max($rows);
   // The frame's own border occupies the outermost column, and a bracket laid
   // against it reads as part of the frame rather than as an annotation of it.
-  $range = $side === 'left' ? range(min($cols) - 1, 2) : range(max($cols) + 1, $columns - 3);
+  $range = $side === Side::Left ? range(min($cols) - 1, 2) : range(max($cols) + 1, $columns - 3);
   $clear = [];
 
   foreach ($range as $offset => $column) {
@@ -444,8 +475,8 @@ function bracketColumn(array $lines, array $cells, string $side, int $columns): 
     }
 
     foreach ($cells as [$row, $cell]) {
-      $from = $side === 'left' ? $column + 1 : $cell + 1;
-      $to = $side === 'left' ? $cell - 1 : $column - 1;
+      $from = $side === Side::Left ? $column + 1 : $cell + 1;
+      $to = $side === Side::Left ? $cell - 1 : $column - 1;
 
       if (!crossable($lines[$row] ?? '', $from, $to)) {
         continue 2;
@@ -472,8 +503,8 @@ function bracketColumn(array $lines, array $cells, string $side, int $columns): 
  *   The frame's rows, without escape sequences.
  * @param int $bracket
  *   The bracket's column.
- * @param string $side
- *   The side the bracket stands on, 'left' or 'right'.
+ * @param \Side $side
+ *   The side the bracket stands on.
  * @param int $first
  *   The first row the bracket spans.
  * @param int $last
@@ -484,15 +515,15 @@ function bracketColumn(array $lines, array $cells, string $side, int $columns): 
  * @return int
  *   The row, closest to the bracket's middle that the label can reach along.
  */
-function connectorRow(array $lines, int $bracket, string $side, int $first, int $last, int $columns): int {
+function connectorRow(array $lines, int $bracket, Side $side, int $first, int $last, int $columns): int {
   $middle = (int) round(($first + $last) / 2);
   $rows = range($first, $last);
 
   usort($rows, static fn(int $a, int $b): int => abs($a - $middle) <=> abs($b - $middle));
 
   foreach ($rows as $row) {
-    $from = $side === 'left' ? 0 : $bracket + 1;
-    $to = $side === 'left' ? $bracket - 1 : $columns - 1;
+    $from = $side === Side::Left ? 0 : $bracket + 1;
+    $to = $side === Side::Left ? $bracket - 1 : $columns - 1;
 
     if (crossable($lines[$row] ?? '', $from, $to)) {
       return $row;
@@ -517,10 +548,10 @@ function connectorRow(array $lines, int $bracket, string $side, int $first, int 
  * @param int $columns
  *   The number of columns the frame holds.
  *
- * @return string
- *   One of 'up', 'down', 'left' or 'right'.
+ * @return \Side
+ *   The side the leader reaches the cell from.
  */
-function leaderSide(array $lines, int $row, int $column, int $columns): string {
+function leaderSide(array $lines, int $row, int $column, int $columns): Side {
   $rows = count($lines);
   $up = columnClear($lines, $column, 0, $row - 1);
   $down = columnClear($lines, $column, $row + 1, $rows - 1);
@@ -528,19 +559,19 @@ function leaderSide(array $lines, int $row, int $column, int $columns): string {
   $right = crossable($lines[$row] ?? '', $column + 1, $columns - 1);
 
   if ($up && $row <= 2) {
-    return 'up';
+    return Side::Up;
   }
 
   if ($down && $row >= $rows - 3) {
-    return 'down';
+    return Side::Down;
   }
 
   return match (TRUE) {
-    $left => 'left',
-    $right => 'right',
-    $up => 'up',
-    $down => 'down',
-    default => 'right',
+    $left => Side::Left,
+    $right => Side::Right,
+    $up => Side::Up,
+    $down => Side::Down,
+    default => Side::Right,
   };
 }
 
@@ -559,12 +590,12 @@ function leaderSide(array $lines, int $row, int $column, int $columns): string {
  *   The frame's rows, without escape sequences.
  * @param int $columns
  *   The number of columns the frame holds.
- * @param string $group
+ * @param \AnatomyGroup $group
  *   The group the diagram belongs to, which its numbering runs within.
  * @param string $color
  *   The colour for the leaders and labels.
  */
-function annotate(string $file, array $callouts, array $lines, int $columns, string $group, string $color): void {
+function annotate(string $file, array $callouts, array $lines, int $columns, AnatomyGroup $group, string $color): void {
   $svg = file_get_contents($file);
 
   if ($svg === FALSE || !preg_match('/<svg[^>]*width="([\d.]+)"[^>]*height="([\d.]+)"/', $svg, $m)) {
@@ -586,7 +617,7 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
   // part name or pads every diagram out to fit it.
   $plans = [];
   $levels = [];
-  $needs = ['left' => 0.0, 'right' => 0.0];
+  $needs = [Side::Left->value => 0.0, Side::Right->value => 0.0];
 
   foreach ($callouts as $index => $callout) {
     $text = numberOf($callout['label'], $group) . '  ' . $callout['label'];
@@ -597,16 +628,16 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
     // occurrence, gathered on a bracket - three numbers for one part would
     // read as three parts.
     if (count($cells) > 1) {
-      $side = $callout['side'] ?? 'right';
+      $side = $callout['side'] ?? Side::Right;
       $bracket = bracketColumn($lines, $cells, $side, $columns);
 
       if ($bracket === NULL) {
-        throw new \RuntimeException(sprintf('No clear %s bracket for "%s".', $side, $callout['label']));
+        throw new \RuntimeException(sprintf('No clear %s bracket for "%s".', $side->value, $callout['label']));
       }
 
       $rows = array_column($cells, 0);
       $plans[$index] = ['bracket', $side, $text, $cells, $bracket, connectorRow($lines, $bracket, $side, min($rows), max($rows), $columns)];
-      $needs[$side] = max($needs[$side], $width + $cell_width * 2.4);
+      $needs[$side->value] = max($needs[$side->value], $width + $cell_width * 2.4);
 
       continue;
     }
@@ -617,8 +648,8 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
     $side = $callout['side'] ?? leaderSide($lines, $row, $column, $columns);
     $plans[$index] = ['single', $side, $text, $cells];
 
-    if ($side === 'left' || $side === 'right') {
-      $needs[$side] = max($needs[$side], $width + $cell_width * 2.4);
+    if ($side->isHorizontal()) {
+      $needs[$side->value] = max($needs[$side->value], $width + $cell_width * 2.4);
 
       continue;
     }
@@ -629,33 +660,33 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
     // what the room above has to be measured from - a fixed allowance clips the
     // outermost one the moment a second band is needed.
     $centre = ((float) $column + 0.5) * $cell_width;
-    $needs['left'] = max($needs['left'], $width / 2 - $centre);
-    $needs['right'] = max($needs['right'], $width / 2 - ($frame_width - $centre));
+    $needs[Side::Left->value] = max($needs[Side::Left->value], $width / 2 - $centre);
+    $needs[Side::Right->value] = max($needs[Side::Right->value], $width / 2 - ($frame_width - $centre));
 
     $level = 0;
 
-    while (isset($levels[$side][$level]) && overlaps($levels[$side][$level], $centre - $width / 2, $centre + $width / 2)) {
+    while (isset($levels[$side->value][$level]) && overlaps($levels[$side->value][$level], $centre - $width / 2, $centre + $width / 2)) {
       $level++;
     }
 
-    $levels[$side][$level][] = [$centre - $width / 2, $centre + $width / 2];
+    $levels[$side->value][$level][] = [$centre - $width / 2, $centre + $width / 2];
     $plans[$index][4] = $level;
   }
 
-  $offset_x = $needs['left'];
+  $offset_x = $needs[Side::Left->value];
 
   // The bands above are only worth their room when something lands in them; a
   // diagram labelled entirely from the sides would otherwise open with a strip
   // of empty canvas.
-  $offset_y = isset($levels['up'])
-    ? FONT_SIZE * (1.35 * count($levels['up']) + 0.4)
+  $offset_y = isset($levels[Side::Up->value])
+    ? FONT_SIZE * (1.35 * count($levels[Side::Up->value]) + 0.4)
     : $cell_height * 0.4;
   $left_edge = $offset_x;
   $right_edge = $offset_x + $frame_width;
   $bottom_edge = $offset_y + $frame_height;
 
   $marks = '';
-  $stack = ['left' => -$cell_height, 'right' => -$cell_height];
+  $stack = [Side::Left->value => -$cell_height, Side::Right->value => -$cell_height];
   $lowest = $bottom_edge;
 
   foreach ($plans as $plan) {
@@ -668,20 +699,19 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
       $rows = array_column($cells, 0);
       $top = $offset_y + ((float) min($rows) + 0.5) * $cell_height;
       $foot = $offset_y + ((float) max($rows) + 0.5) * $cell_height;
-      $edge = $side === 'left' ? $left_edge - $cell_width * 0.6 : $right_edge + $cell_width * 0.6;
-      $label_x = $side === 'left' ? $left_edge - $cell_width * 1.4 : $right_edge + $cell_width * 1.4;
+      $label_x = $side === Side::Left ? $left_edge - $cell_width * 1.4 : $right_edge + $cell_width * 1.4;
 
       $marks .= sprintf('<path d="M %.2f %.2f L %.2f %.2f" fill="none" stroke="%s" stroke-width="1.4"/>', $bracket_x, $top, $bracket_x, $foot, $color);
-      $marks .= sprintf('<path d="M %.2f %.2f L %.2f %.2f" fill="none" stroke="%s" stroke-width="1.4"/>', $side === 'left' ? $label_x + FONT_SIZE * 0.4 : $label_x - FONT_SIZE * 0.4, $connector_y, $bracket_x, $connector_y, $color);
+      $marks .= sprintf('<path d="M %.2f %.2f L %.2f %.2f" fill="none" stroke="%s" stroke-width="1.4"/>', $side === Side::Left ? $label_x + FONT_SIZE * 0.4 : $label_x - FONT_SIZE * 0.4, $connector_y, $bracket_x, $connector_y, $color);
 
       foreach ($cells as [$cell_row, $cell_col]) {
         $to_x = $offset_x + ((float) $cell_col + 0.5) * $cell_width;
-        $tip = $side === 'left' ? $to_x - $cell_width * 0.7 : $to_x + $cell_width * 0.7;
+        $tip = $side === Side::Left ? $to_x - $cell_width * 0.7 : $to_x + $cell_width * 0.7;
         $marks .= sprintf('<path d="M %.2f %.2f L %.2f %.2f" fill="none" stroke="%s" stroke-width="1.4" marker-end="url(#anatomy-arrow)"/>', $bracket_x, $offset_y + ((float) $cell_row + 0.5) * $cell_height, $tip, $offset_y + ((float) $cell_row + 0.5) * $cell_height, $color);
       }
 
-      $marks .= sprintf('<text x="%.2f" y="%.2f" text-anchor="%s" fill="%s" font-family="Consolas, &quot;Courier New&quot;, Courier, monospace" font-size="%.1f">%s</text>', $label_x, $connector_y + FONT_SIZE * 0.35, $side === 'left' ? 'end' : 'start', $color, FONT_SIZE, label($text));
-      $stack[$side] = max($stack[$side], $foot);
+      $marks .= sprintf('<text x="%.2f" y="%.2f" text-anchor="%s" fill="%s" font-family="Consolas, &quot;Courier New&quot;, Courier, monospace" font-size="%.1f">%s</text>', $label_x, $connector_y + FONT_SIZE * 0.35, $side === Side::Left ? 'end' : 'start', $color, FONT_SIZE, label($text));
+      $stack[$side->value] = max($stack[$side->value], $foot);
 
       continue;
     }
@@ -690,13 +720,13 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
     $cell_x = $offset_x + ((float) $column + 0.5) * $cell_width;
     $cell_y = $offset_y + ((float) $row + 0.5) * $cell_height;
 
-    if ($side === 'up' || $side === 'down') {
+    if (!$side->isHorizontal()) {
       // The band was settled while the margins were being measured, so the room
       // above the frame already accounts for however many bands are in use.
       $step = (FONT_SIZE * 1.35) * $plan[4];
-      $label_y = $side === 'up' ? $offset_y - FONT_SIZE * 0.5 - $step : $bottom_edge + FONT_SIZE * 1.1 + $step;
-      $tip_y = $side === 'up' ? $cell_y - $cell_height * 0.55 : $cell_y + $cell_height * 0.55;
-      $from_y = $side === 'up' ? $label_y + FONT_SIZE * 0.35 : $label_y - FONT_SIZE * 0.95;
+      $label_y = $side === Side::Up ? $offset_y - FONT_SIZE * 0.5 - $step : $bottom_edge + FONT_SIZE * 1.1 + $step;
+      $tip_y = $side === Side::Up ? $cell_y - $cell_height * 0.55 : $cell_y + $cell_height * 0.55;
+      $from_y = $side === Side::Up ? $label_y + FONT_SIZE * 0.35 : $label_y - FONT_SIZE * 0.95;
 
       $marks .= sprintf('<path d="M %.2f %.2f L %.2f %.2f" fill="none" stroke="%s" stroke-width="1.4" marker-end="url(#anatomy-arrow)"/>', $cell_x, $from_y, $cell_x, $tip_y, $color);
       $marks .= sprintf('<text x="%.2f" y="%.2f" text-anchor="middle" fill="%s" font-family="Consolas, &quot;Courier New&quot;, Courier, monospace" font-size="%.1f">%s</text>', $cell_x, $label_y, $color, FONT_SIZE, label($text));
@@ -708,20 +738,20 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
     // One row of separation is enough, and it is what keeps a leader straight:
     // a label that fits its own row sits level with the cell it names, so the
     // leader is a horizontal line and can cross nothing on the way.
-    $label_y = max($cell_y, $stack[$side] + max($cell_height, FONT_SIZE * 1.15));
-    $stack[$side] = $label_y;
-    $tip_x = $side === 'left' ? $cell_x - $cell_width * 0.7 : $cell_x + $cell_width * 0.7;
-    $bend_x = $side === 'left' ? $left_edge - $cell_width * 0.6 : $right_edge + $cell_width * 0.6;
-    $label_x = $side === 'left' ? $left_edge - $cell_width * 1.4 : $right_edge + $cell_width * 1.4;
-    $anchor = $side === 'left' ? 'end' : 'start';
-    $from_x = $side === 'left' ? $label_x + FONT_SIZE * 0.4 : $label_x - FONT_SIZE * 0.4;
+    $label_y = max($cell_y, $stack[$side->value] + max($cell_height, FONT_SIZE * 1.15));
+    $stack[$side->value] = $label_y;
+    $tip_x = $side === Side::Left ? $cell_x - $cell_width * 0.7 : $cell_x + $cell_width * 0.7;
+    $bend_x = $side === Side::Left ? $left_edge - $cell_width * 0.6 : $right_edge + $cell_width * 0.6;
+    $label_x = $side === Side::Left ? $left_edge - $cell_width * 1.4 : $right_edge + $cell_width * 1.4;
+    $anchor = $side === Side::Left ? 'end' : 'start';
+    $from_x = $side === Side::Left ? $label_x + FONT_SIZE * 0.4 : $label_x - FONT_SIZE * 0.4;
 
     $marks .= sprintf('<path d="M %.2f %.2f L %.2f %.2f L %.2f %.2f" fill="none" stroke="%s" stroke-width="1.4" stroke-linejoin="round" marker-end="url(#anatomy-arrow)"/>', $from_x, $label_y, $bend_x, $cell_y, $tip_x, $cell_y, $color);
     $marks .= sprintf('<text x="%.2f" y="%.2f" text-anchor="%s" fill="%s" font-family="Consolas, &quot;Courier New&quot;, Courier, monospace" font-size="%.1f">%s</text>', $label_x, $label_y + FONT_SIZE * 0.35, $anchor, $color, FONT_SIZE, label($text));
   }
 
-  $canvas_width = $needs['left'] + $frame_width + $needs['right'];
-  $canvas_height = max($lowest, $stack['left'], $stack['right']) + FONT_SIZE;
+  $canvas_width = $needs[Side::Left->value] + $frame_width + $needs[Side::Right->value];
+  $canvas_height = max($lowest, $stack[Side::Left->value], $stack[Side::Right->value]) + FONT_SIZE;
   $arrow = sprintf('<defs><marker id="anatomy-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="%s"/></marker></defs>', $color);
 
   // The frame renders inside a nested svg of its own, so wrapping rather than

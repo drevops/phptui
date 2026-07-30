@@ -44,6 +44,12 @@ final class LayoutManager {
       throw new \InvalidArgumentException(sprintf('Layout class "%s" must extend %s.', $class, AbstractLayout::class));
     }
 
+    // An abstract subclass passes the type check and then fatals on the first
+    // create(): refusing it here names the class rather than the call site.
+    if (!(new \ReflectionClass($class))->isInstantiable()) {
+      throw new \InvalidArgumentException(sprintf('Layout class "%s" cannot be instantiated.', $class));
+    }
+
     self::$registry[$name] = $class;
   }
 

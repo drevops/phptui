@@ -1113,7 +1113,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
-  public function helpMarker(bool $selected = FALSE): string {
+  public function helpMarker(): string {
     // The label's own colour and never bolded: the mark belongs to the label it
     // follows, and bolding it on the selected row would have it competing with
     // the label instead of hanging off it.
@@ -1252,12 +1252,10 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
    * {@inheritdoc}
    */
   public function renderSpinner(int $frame, string $caption): string {
-    // The glyph carries the theme's accent through highlight(), so every theme
-    // spins in its own palette with no per-theme override. This method is
-    // public, so a direct call may pass a negative frame; fold it into range.
-    $frames = $this->unicode ? self::SPINNER_FRAMES : self::SPINNER_ASCII;
-    $glyph = $this->highlight($frames[abs($frame) % count($frames)]);
-    $caption = $this->oneLine($caption);
+    // Composed from the same atoms the standalone spinner draws, so a theme
+    // that restyles the glyph restyles it everywhere it turns up.
+    $glyph = $this->progressSpinner($frame);
+    $caption = $this->progressCaption($caption);
 
     return $caption === '' ? $glyph : $glyph . ' ' . $caption;
   }
@@ -1266,20 +1264,16 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
    * {@inheritdoc}
    */
   public function renderProgressBar(int $current, int $total, string $caption, string $label): string {
-    // The filled run carries the theme's accent through highlight(); the empty
-    // track and the count stay plain, so the bar reads with colour off and in
-    // ASCII alike.
-    [$fill, $track] = $this->unicode ? ['█', '░'] : ['#', '-'];
-    $caption = $this->oneLine($caption);
+    // Composed from the same atoms the standalone bar draws, so a theme that
+    // restyles the track or the count restyles both places it appears.
+    $caption = $this->progressCaption($caption);
     $label = $this->oneLine($label);
 
-    // Clamp to the bar width: this method is public, so a direct call with
-    // current past total must not hand str_repeat() a negative track length.
+    // A total of zero has no ratio to take, and the bar reads as finished
+    // rather than as empty: there was nothing left to do.
     $ratio = $total > 0 ? $current / $total : 1.0;
-    $filled = max(0, min(self::PROGRESS_WIDTH, (int) round($ratio * self::PROGRESS_WIDTH)));
-
-    $bar = ($filled > 0 ? $this->highlight(str_repeat($fill, $filled)) : '') . str_repeat($track, self::PROGRESS_WIDTH - $filled);
-    $line = ($caption === '' ? '' : $caption . ' ') . '[' . $bar . '] ' . $current . '/' . $total;
+    $bar = $this->progressTrack((int) round($ratio * self::PROGRESS_WIDTH), self::PROGRESS_WIDTH);
+    $line = ($caption === '' ? '' : $caption . ' ') . $bar . ' ' . $this->progressCount($current, $total);
 
     return $label === '' ? $line : $line . ' ' . $label;
   }
@@ -1888,7 +1882,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
     // only thing telling the reader there is anything to ask for. It hangs off
     // the label because a field can carry help without carrying a description,
     // and the label is the one part every row draws.
-    $help = $field->help === '' ? '' : ' ' . $this->helpMarker($selected);
+    $help = $field->help === '' ? '' : ' ' . $this->helpMarker();
     $prefix = $this->fieldIndent($field) . $this->marker($selected) . ' ' . $this->label(Translator::t($field->label), $selected) . $help . '  ';
     $indent = str_repeat(' ', Ansi::width($prefix));
 
@@ -2331,7 +2325,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
       // value column, so the widest single line is what the row needs. Help
       // costs the row its marker and its leading space - never its own length,
       // which is spent on a page of its own.
-      $marker = $field->help === '' ? 0 : 1 + Ansi::width($this->helpMarker(FALSE));
+      $marker = $field->help === '' ? 0 : 1 + Ansi::width($this->helpMarker());
       $row = $indent + 4 + Markup::width(Translator::t($field->label), FALSE, $this->color) + $marker + $this->measureValueWidth($field, $answers);
 
       $provenance = $answers->provenanceOf($field->id);
