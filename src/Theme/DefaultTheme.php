@@ -62,7 +62,7 @@ use DrevOps\Tui\Utils\Strings;
  *
  * @package DrevOps\Tui\Theme
  */
-class DefaultTheme implements ThemeInterface, ActionsElements, BreadcrumbElements, LegendElements, MarkupElements, ProgressElements {
+class DefaultTheme implements ThemeInterface, SupportsColor, SupportsScheme, SupportsUnicode, ActionsElements, BreadcrumbElements, LegendElements, MarkupElements, ProgressElements {
 
   /**
    * The default frame width, used when a caller does not specify one.
@@ -560,6 +560,13 @@ class DefaultTheme implements ThemeInterface, ActionsElements, BreadcrumbElement
    * @return bool
    *   TRUE when colour is enabled.
    */
+  /**
+   * {@inheritdoc}
+   */
+  public function isDark(): bool {
+    return $this->mode() === Mode::Dark;
+  }
+
   public function hasColor(): bool {
     return $this->color;
   }
