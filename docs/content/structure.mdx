@@ -463,15 +463,17 @@ Blocks that outrun the region are the region's problem, not the flow's - it *Scr
 
 A **block** is anything drawn in a *region*. That's the whole definition: it fills the space it's given, and the region knows nothing else about it.
 
-Every block claims *Show*, and only a *panel* nests anything - and what it nests is a *layout*, never blocks directly. So no block ever contains a field or another block. Seven kinds exist:
+Every block claims *Show*, and only a *panel* nests anything - and what it nests is a *layout*, never blocks directly. So no block ever contains a field or another block. Seven kinds exist, and each has a section of its own below:
 
-- **Panel** - contains a layout; entered and left. The only block you navigate into.
-- **Field** - answers. The only block that reaches the collected result.
-- **Markup** - renders formatted content: prose, a bordered card, or a table.
-- **Breadcrumb** - renders the trail of panels you've entered.
-- **Legend** - renders the keys that apply right now, rewriting itself as focus moves.
-- **Actions** - the buttons that end the form: submit, cancel, and any the form declares. Withholds the submit with a message while a required field is empty.
-- **Progress** - runs work when activated, showing an indicator while it runs.
+| Block | Beyond *Show*, it claims |
+|---|---|
+| [Panel](#panel) | *Bind*, *Descend*, *Focus*, *Nest*, *Overlay* |
+| [Field](#field) | *Bind*, *Capture*, *Collect*, *Constrain*, *Depend*, *Focus*, *Reject* |
+| [Markup](#markup) | *Depend* |
+| [Breadcrumb](#breadcrumb) | nothing |
+| [Legend](#legend) | nothing |
+| [Actions](#actions) | *Activate*, *Focus*, *Reject* |
+| [Progress](#progress) | *Activate*, *Depend*, *Focus* |
 
 Every one of them is constructed and added the same way:
 
@@ -496,7 +498,7 @@ $layout->in('content')->add($panel);
 $layout->in('footer')->add(new Legend())->add(new Breadcrumb());
 ```
 
-## Panel
+### Panel
 
 A **panel** is the busiest *block*:
 
@@ -545,7 +547,7 @@ One panel fills the screen at a time. A **modal** is the same block that *Overla
 (new Panel('confirm', 'Confirm delivery'))->modal();
 ```
 
-## Field
+### Field
 
 A **field** is the *block* that collects. It's the only kind that contributes to the collected result, and the only kind that captures.
 
@@ -590,7 +592,7 @@ Between the field and the theme sit its **capabilities** - the shared behaviour 
 Field  ──▸  capabilities  ──▸  render()  ──▸  theme elements
 ```
 
-## Markup
+### Markup
 
 **Markup** renders formatted content and does nothing else. It takes plain text or the [markdown subset](/markdown), and it claims *Show* and *Depend*. How it's laid out on the page is a presentation choice rather than a capability:
 
@@ -612,6 +614,66 @@ Prose, a bordered card and a table are the same block laid out three ways. *Depe
 $p->markup('certified', 'Organic crates need current certification.')
   ->when(new Condition('organic', eq: TRUE));
 ```
+
+### Breadcrumb
+
+**Breadcrumb** renders the trail of *panels* you've entered, gaining a segment as you *Descend* and losing one as you come back. It declares two elements:
+
+```php
+interface BreadcrumbElements {
+
+  public function breadcrumbLabel(string $text): string;
+
+  public function breadcrumbSeparator(): string;
+
+}
+```
+
+```
+Orchard  ›  Delivery
+───┬───  ┬  ────┬───
+   │     │      └── breadcrumbLabel()
+   │     └───────── breadcrumbSeparator()
+   └─────────────── breadcrumbLabel()
+```
+
+### Legend
+
+**Legend** renders the keys that apply right now, rewriting itself as focus moves - so an open *field* lists different keys from the *panel* around it. It declares three, and composes them per key:
+
+```php
+interface LegendElements {
+
+  public function legendKey(string $text): string;
+
+  public function legendDescription(string $text): string;
+
+  public function legendSeparator(): string;
+
+}
+```
+
+```
+↑/↓ to move  ·  ↵ to accept
+─┬─ ───┬───  ┬
+ │     │     └── legendSeparator()
+ │     └──────── legendDescription()
+ └────────────── legendKey()
+```
+
+Both follow the same shape, and so does every other block: an element per distinct thing it styles, prefixed with the block's name so a theme can implement every interface on one class without collisions.
+
+### Actions
+
+**Actions** is the set of buttons that end the form - submit, cancel, and any the form declares. It claims *Activate* because pressing one does something rather than revealing something, and *Reject* because it withholds the submit with a message while a required field is empty.
+
+It's the only block other than a *field* that refuses anything, and unlike a field it holds no value while doing so.
+
+### Progress
+
+**Progress** runs work when activated, drawing an indicator while the work runs - a spinner when the length is unknown, a bar when it isn't.
+
+It's the block that separates *Focus* from *Collect*: the cursor lands on it and activating it does something real, but nothing it does reaches the collected result.
 
 ## The theme
 
@@ -635,17 +697,7 @@ That's the whole division of labour. **Order, spacing and how many elements ther
 
 ### A block declares the elements it needs
 
-A block names its elements in an interface, and a theme implements it:
-
-```php
-interface BreadcrumbElements {
-
-  public function breadcrumbLabel(string $text): string;
-
-  public function breadcrumbSeparator(): string;
-
-}
-```
+A block names its elements in an interface, and a theme implements it - [Breadcrumb](#breadcrumb) and [Legend](#legend) above show both the interface and what each element draws.
 
 Two things follow. A theme that doesn't implement the interface can't draw that block, and the failure is a type error rather than a blank line. And adding a block to the library adds one interface instead of growing a single theme class that already knows about everything.
 
@@ -675,54 +727,6 @@ final class OrchardTheme extends AbstractTheme implements SupportsScheme, Breadc
 | `SupportsUnicode` | `hasUnicode()` | choosing between a glyph and its ASCII stand-in |
 
 A theme that declares none of them still works - it returns the strings it was handed. That's the floor, and it's why a form renders in a terminal that supports nothing.
-
-### Two blocks, in full
-
-*Breadcrumb* and *Legend* are the smallest complete examples, so here they are end to end - the elements each declares, and what each one draws.
-
-**Breadcrumb** needs two:
-
-```php
-interface BreadcrumbElements {
-
-  public function breadcrumbLabel(string $text): string;
-
-  public function breadcrumbSeparator(): string;
-
-}
-```
-
-```
-Orchard  ›  Delivery
-───┬───  ┬  ────┬───
-   │     │      └── breadcrumbLabel()
-   │     └───────── breadcrumbSeparator()
-   └─────────────── breadcrumbLabel()
-```
-
-**Legend** needs three, and composes them per key:
-
-```php
-interface LegendElements {
-
-  public function legendKey(string $text): string;
-
-  public function legendDescription(string $text): string;
-
-  public function legendSeparator(): string;
-
-}
-```
-
-```
-↑/↓ to move  ·  ↵ to accept
-─┬─ ───┬───  ┬
- │     │     └── legendSeparator()
- │     └──────── legendDescription()
- └────────────── legendKey()
-```
-
-Both follow the same shape: an element per distinct thing the block styles, prefixed with the block's name so a theme can implement every interface on one class without collisions.
 
 ### Overriding an element
 
