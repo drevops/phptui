@@ -816,7 +816,7 @@ Two things follow. A theme that doesn't implement the interface can't draw that 
 A terminal may have no colour, no Unicode, or a background the theme should read. A theme declares which of those it handles, and declaring one is what grants the facility that goes with it:
 
 ```php
-final class OrchardTheme extends AbstractTheme implements SchemeCapableInterface, BreadcrumbElementsInterface {
+final class OrchardTheme extends DefaultTheme implements SchemeCapableInterface, BreadcrumbElementsInterface {
 
   public function breadcrumbLabel(string $text): string {
     // isDark() exists because the theme declared SchemeCapableInterface.
@@ -983,3 +983,28 @@ The last two were decided while this page was being written, and both turned on 
 That's the whole point of the split. A *region* that knew what a breadcrumb was would need to know what every block is; instead a region knows only that it holds blocks, a block knows only how to fill the space it's given, and a theme knows only how to style what it's handed.
 
 It's also what makes an element reusable. Because `breadcrumbSeparator()` receives no field, no panel and no answers, the same element draws the separator inside a form and inside a standalone line of output. An element that reached for form state could only ever be used from inside a form.
+
+## What is built
+
+The model above is implemented and tested. Two parts of it are not, and the page names both rather than reading as though they were.
+
+| Level | Class |
+|---|---|
+| Screen | `Screen`, and `ScreenRenderer` to draw one |
+| Layout | `AbstractLayout`, `DefaultLayout`, `TwoColumnLayout`, `PanelLayout`, `LayoutManager` |
+| Region | `Region` |
+| Block | `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions`, `Progress` |
+| Elements | one `*ElementsInterface` per block, implemented by `DefaultTheme` |
+| Support | `ColorCapableInterface`, `UnicodeCapableInterface`, `SchemeCapableInterface` |
+| Behaviour | `Router` for keys, `Collector` for the headless path |
+| Building | `PanelBuilder`, `FieldBuilder`, `Assembler` |
+
+[`playground/12-specification-screen.php`](https://github.com/drevops/tui/blob/main/playground/12-specification-screen.php) draws a form from these, opens a field, collects the same panel headlessly, and shows a refused value naming the field and the reason.
+
+**Not built yet.** The element override DSL - `$tui->theme(fn(ThemeBuilder $t) => ...)` - describes an API that does not exist; overriding an element today means subclassing the theme. And the theme a custom one extends is `DefaultTheme` rather than an `AbstractTheme`, which is the older name the rest of the library still uses.
+
+## Open questions
+
+**Can anything but a field depend on an answer?** *Depend* is declared on a field alone, so a whole *panel* cannot appear or disappear on an earlier answer - only the fields inside it can, one at a time.
+
+**Can a flow align what it holds?** Blocks in a region take their natural size in the order they were added, and there is no way to say a *legend* sits left while a version string sits right. Every side-by-side arrangement is packed from the start of the axis.
