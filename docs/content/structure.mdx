@@ -17,7 +17,7 @@ Four levels, and nothing else:
 ```
 Screen        the root; occupies the terminal, or fits its contents
 └─ Layout     arranges; reusable by name
-   └─ Region  holds blocks; declares whether it scrolls
+   └─ Region  holds blocks and flows them; declares whether it scrolls
       └─ Block   drawn in a region
 ```
 
@@ -52,7 +52,7 @@ The rows in the next table mix the two: the first three are levels, and the seve
 
 ## Capabilities
 
-Sixteen capabilities cover everything on screen, each described as what you can observe rather than how it's built.
+Seventeen capabilities cover everything on screen, each described as what you can observe rather than how it's built.
 
 | Capability | What's possible |
 |---|---|
@@ -64,6 +64,7 @@ Sixteen capabilities cover everything on screen, each described as what you can 
 | **Constrain** | It says what it will accept, before you act. |
 | **Depend** | It appears or disappears depending on other answers. |
 | **Descend** | You go into it: the screen becomes its contents, the trail grows, and you can come back. |
+| **Flow** | The things inside it run in one direction - down, or across. |
 | **Focus** | You can move onto it, and your keys then act on it. |
 | **Nest** | Other things appear inside it. |
 | **Occupy** | It expands to the whole terminal, instead of fitting its contents. |
@@ -77,28 +78,28 @@ Sixteen capabilities cover everything on screen, each described as what you can 
 
 <div className="table-scroll">
 
-| | Activate | Arrange | Bind | Capture | Collect | Constrain | Depend | Descend | Focus | Nest | Occupy | Overlay | Reject | Reuse | Scroll | Show |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Screen | | | | | | | | | | ✓ | ✓ | | | | | |
-| Layout | | ✓ | | | | | | | | ✓ | | | | ✓ | | |
-| Region | | | | | | | | | | ✓ | | | | | ✓ | |
-| Panel | | | ✓ | | | | | ✓ | ✓ | ✓ | | ✓ | | | | ✓ |
-| Field | | | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | | | | ✓ | | | ✓ |
-| Markup | | | | | | | ✓ | | | | | | | | | ✓ |
-| Breadcrumb | | | | | | | | | | | | | | | | ✓ |
-| KeyHints | | | | | | | | | | | | | | | | ✓ |
-| Buttons | ✓ | | | | | | | | ✓ | | | | | | | ✓ |
-| Progress | ✓ | | | | | | ✓ | | ✓ | | | | | | | ✓ |
+| | Activate | Arrange | Bind | Capture | Collect | Constrain | Depend | Descend | Flow | Focus | Nest | Occupy | Overlay | Reject | Reuse | Scroll | Show |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Screen | | | | | | | | | | | ✓ | ✓ | | | | | |
+| Layout | | ✓ | | | | | | | ✓ | | ✓ | | | | ✓ | | |
+| Region | | | | | | | | | ✓ | | ✓ | | | | | ✓ | |
+| Panel | | | ✓ | | | | | ✓ | | ✓ | ✓ | | ✓ | | | | ✓ |
+| Field | | | ✓ | ✓ | ✓ | ✓ | ✓ | | | ✓ | | | | ✓ | | | ✓ |
+| Markup | | | | | | | ✓ | | | | | | | | | | ✓ |
+| Breadcrumb | | | | | | | | | | | | | | | | | ✓ |
+| KeyHints | | | | | | | | | | | | | | | | | ✓ |
+| Buttons | ✓ | | | | | | | | | ✓ | | | | | | | ✓ |
+| Progress | ✓ | | | | | | ✓ | | | ✓ | | | | | | | ✓ |
 
 </div>
 
-Seven readings of that table are worth stating outright, because they're the ones a new block will test.
+Eight readings of that table are worth stating outright, because they're the ones a new block will test.
 
 **Only a field collects.** Everything else on screen shows, focuses or activates, and none of it reaches the collected result.
 
 **Focus and Activate come apart.** A *progress* block takes the cursor and runs work while collecting nothing. *Markup* does neither. A *field* focuses and collects but never activates.
 
-**Arrange belongs to the layout alone.** A *panel* doesn't arrange anything - it *nests* a layout, and the layout arranges. That's what lets one layout serve a panel and a screen without either knowing about the other.
+**Arrange is Flow plus sizing.** Both a *layout* and a *region* run what is inside them in one direction, so both claim *Flow*. Only the layout also apportions space between them, which is *Arrange*, and only the layout claims that. A *panel* arranges nothing at all - it *nests* a layout and the layout arranges, which is what lets one layout serve a panel and a screen without either knowing about the other.
 
 **Scroll belongs to the region.** A layout is composed of region instances, and each declares whether it scrolls - so one layout can pin a column and scroll its neighbour, and two rows can scroll independently. The layout is only where the declaration is made, since that is where regions come into being.
 
@@ -140,9 +141,9 @@ final class DefaultLayout extends AbstractLayout {
   public function __construct() {
     parent::__construct(Axis::Rows);
 
-    $this->region('header', fixed: 1);
-    $this->region('content', scrolls: TRUE);
-    $this->region('footer', fixed: 1);
+    $this->region('header')->fixed(1);
+    $this->region('content')->scrolls();
+    $this->region('footer')->fixed(1);
   }
 
 }
@@ -170,9 +171,9 @@ Three regions stacked, with the middle one scrolling. This is what a form gets w
 ```php
 parent::__construct(Axis::Rows);
 
-$this->region('header', fixed: 1);
-$this->region('content', scrolls: TRUE);
-$this->region('footer', fixed: 1);
+$this->region('header')->fixed(1);
+$this->region('content')->scrolls();
+$this->region('footer')->fixed(1);
 ```
 
 ```
@@ -193,7 +194,7 @@ Nothing ships as one region, but nothing stops you writing it either - a single-
 ```php
 parent::__construct(Axis::Rows);
 
-$this->region('content', scrolls: TRUE);
+$this->region('content')->scrolls();
 ```
 
 ```
@@ -228,8 +229,8 @@ $this->region('right');
 ```php
 parent::__construct(Axis::Columns);
 
-$this->region('left', scrolls: TRUE);
-$this->region('right', scrolls: TRUE);
+$this->region('left')->scrolls();
+$this->region('right')->scrolls();
 ```
 
 Two rows can too, which is the same statement with the axis turned:
@@ -237,8 +238,8 @@ Two rows can too, which is the same statement with the axis turned:
 ```php
 parent::__construct(Axis::Rows);
 
-$this->region('top', weight: 1, scrolls: TRUE);
-$this->region('bottom', weight: 1, scrolls: TRUE);
+$this->region('top')->weight(1)->scrolls();
+$this->region('bottom')->weight(1)->scrolls();
 ```
 
 ### Sizing a region
@@ -246,8 +247,8 @@ $this->region('bottom', weight: 1, scrolls: TRUE);
 A region takes its share of the axis one of two ways, and both axes work the same:
 
 ```php
-->region('header', fixed: 1)      // exactly one row (or column)
-->region('content', weight: 1)    // a share of whatever is left
+$this->region('header')->fixed(1);    // exactly one row (or column)
+$this->region('content')->weight(1);  // a share of whatever is left
 ```
 
 **`fixed` is cells**, and rows are why it exists. A header is one line whatever the terminal height, and no proportion can say that - 4% of a 24-row terminal is one row, of a 50-row terminal is two. Columns rarely need it; rows almost always do at their edges.
@@ -257,9 +258,9 @@ A region takes its share of the axis one of two ways, and both axes work the sam
 ```php
 parent::__construct(Axis::Rows);
 
-$this->region('top', weight: 30, scrolls: TRUE);
-$this->region('middle', weight: 40, scrolls: TRUE);
-$this->region('bottom', weight: 30, scrolls: TRUE);
+$this->region('top')->weight(30)->scrolls();
+$this->region('middle')->weight(40)->scrolls();
+$this->region('bottom')->weight(30)->scrolls();
 ```
 
 ```
@@ -280,9 +281,9 @@ Declaring neither is `weight: 1`, which is why the default layout can leave its 
 ```php
 parent::__construct(Axis::Rows);
 
-$this->region('header', fixed: 1);
-$this->region('content', scrolls: TRUE);
-$this->region('footer', fixed: 1);
+$this->region('header')->fixed(1);
+$this->region('content')->scrolls();
+$this->region('footer')->fixed(1);
 ```
 
 The two mix without negotiating: fixed regions are subtracted first, then what remains is divided by the weights. A header stays one row however tall the terminal, and the weighted regions share the rest between them.
@@ -352,8 +353,8 @@ final class SidebarLayout extends AbstractLayout {
   public function __construct() {
     parent::__construct(Axis::Columns);
 
-    $this->region('sidebar', fixed: 24);
-    $this->region('main', weight: 1, scrolls: TRUE);
+    $this->region('sidebar')->fixed(24);
+    $this->region('main')->weight(1)->scrolls();
   }
 
 }
@@ -379,9 +380,28 @@ Most subclasses only declare regions, and inherit every line of the arithmetic. 
 
 ## Region
 
-A **region** is a named container inside a *layout*. It claims *Nest* and *Scroll*, and that's all it is - a name, some blocks, and whether you can scroll them.
+A **region** is a named container inside a *layout*. It claims *Flow*, *Nest* and *Scroll*.
 
-Its name is the whole point: it's how a block says where it goes, so nothing depends on the order things were declared in.
+It's a class, and its layout builds one by name and hands it back to be configured. Every capability it claims is a method, so nothing piles up as arguments:
+
+```php
+$this->region('sidebar')
+  ->fixed(24)
+  ->flow(Axis::Rows)
+  ->scrolls();
+```
+
+| Call | Declares |
+|---|---|
+| `->fixed(24)` | 24 cells of the axis, whatever the terminal size |
+| `->weight(2)` | twice the share of the remainder that `weight(1)` gets |
+| `->flow(Axis::Columns)` | its blocks run across it rather than down |
+| `->scrolls()` | its contents may outrun it, and you can move through them |
+| `->add($block)` | a block goes in it |
+
+`fixed()` and `weight()` are the odd pair out: they *declare* a size but don't compute one, because *Arrange* is the layout's. The region states what it wants and the layout does the arithmetic.
+
+The name is the whole point of a region: it's how a block says where it goes, so nothing depends on the order things were declared in.
 
 ```php
 $layout->in('content')->add($panel);
@@ -408,7 +428,7 @@ A region knows only that it holds blocks. It never knows which kinds - which is 
 A region **flows** its blocks: down the region by default, or across it if you say so.
 
 ```php
-$this->region('header', flow: Axis::Columns);
+$this->region('header')->flow(Axis::Columns);
 ```
 
 ```
@@ -423,9 +443,9 @@ flow: Axis::Rows            flow: Axis::Columns
 
 This is what saves you from nesting a layout every time two things belong side by side. A breadcrumb and a clock in one header is a flow, not a second layout.
 
-**Flow is not arrangement.** A *layout* apportions space between named areas that can be addressed, weighted and scrolled independently - that's *Arrange*, and only a layout claims it. A flow does none of that: blocks take their natural size and sit in the order they were added. It's the difference between a grid and the text flow inside one of its cells, and you don't nest a grid to put two words on one line.
+**Flow is what a layout and a region share; sizing is what only a layout does.** Both run their contents in one direction, so both claim *Flow*. Only a layout also apportions space between them - naming the areas, weighting them, letting each scroll on its own - and that's *Arrange*. A region's blocks take their natural size and sit in the order they were added.
 
-So nesting a *layout* is for when you need what a flow can't give:
+It's the difference between a grid and the text flow inside one of its cells, and you don't nest a grid to put two words on one line. So nesting a *layout* is for when you need what a flow can't give:
 
 | You need | Use |
 |---|---|
