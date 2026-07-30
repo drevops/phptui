@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Tests\Unit\Screen;
 use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
+use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Screen\AbstractLayout;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\DefaultLayout;
@@ -125,6 +126,30 @@ final class ScreenRenderTest extends TestCase {
 
     $this->assertSame('left one    right one', rtrim($lines[0]));
     $this->assertSame('left two', rtrim($lines[1]));
+  }
+
+  public function testAnEnteredPanelDrawsItsOwnLayoutIntoTheRegion(): void {
+    $inner = (new Panel('main', 'Delivery'))->layout(new TwoColumnLayout())->enter();
+    $inner->in('left')->add(new Markup('l', 'left'));
+    $inner->in('right')->add(new Markup('r', 'right'));
+
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('content')->add($inner);
+
+    $lines = $this->render($screen, 4, 20);
+
+    // The panel is where the second layout starts, which is where depth comes
+    // from rather than a fifth level.
+    $this->assertSame('left      right', $lines[1]);
+  }
+
+  public function testANestedPanelDrawsARowYouSelect(): void {
+    $child = (new Panel('advanced', 'Advanced'))->layout(new DefaultLayout());
+
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('content')->add($child);
+
+    $this->assertSame('Advanced', $this->render($screen, 4, 20)[1]);
   }
 
   public function testAnEmptyLayoutDrawsNothingAtAll(): void {

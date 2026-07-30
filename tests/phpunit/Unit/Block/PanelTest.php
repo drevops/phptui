@@ -50,6 +50,20 @@ final class PanelTest extends TestCase {
     $this->assertSame('Advanced', $child->render($theme));
   }
 
+  public function testAPanelYouAreInDrawsNoRowOfItsOwn(): void {
+    $panel = (new Panel('delivery', 'Delivery'))->layout(new DefaultLayout());
+
+    $this->assertFalse($panel->isEntered());
+    $this->assertTrue($panel->enter()->isEntered());
+
+    // Its blocks draw instead, so asking it to draw a row is a mistake worth
+    // catching rather than a title nobody asked for.
+    $this->expectException(\LogicException::class);
+    $this->expectExceptionMessage('Panel "delivery" is entered, so its blocks draw rather than the panel itself.');
+
+    $panel->render(new DefaultTheme(40, ['color' => FALSE]));
+  }
+
   public function testAPanelCarriesItsTitleIntoTheTrail(): void {
     $panel = new Panel('delivery', 'Delivery');
 

@@ -35,6 +35,11 @@ final class Panel implements BlockInterface {
   protected bool $modal = FALSE;
 
   /**
+   * Whether this is the panel you are currently in.
+   */
+  protected bool $entered = FALSE;
+
+  /**
    * Construct a panel.
    *
    * @param string $id
@@ -111,6 +116,40 @@ final class Panel implements BlockInterface {
   }
 
   /**
+   * Mark this as the panel you are currently in.
+   *
+   * @return $this
+   *   The panel.
+   */
+  public function enter(): self {
+    $this->entered = TRUE;
+
+    return $this;
+  }
+
+  /**
+   * Leave this panel, so it draws as a row again.
+   *
+   * @return $this
+   *   The panel.
+   */
+  public function leave(): self {
+    $this->entered = FALSE;
+
+    return $this;
+  }
+
+  /**
+   * Whether this is the panel you are currently in.
+   *
+   * @return bool
+   *   TRUE when it is.
+   */
+  public function isEntered(): bool {
+    return $this->entered;
+  }
+
+  /**
    * Draw over what is behind rather than replacing it.
    *
    * @return $this
@@ -160,6 +199,12 @@ final class Panel implements BlockInterface {
    * {@inheritdoc}
    */
   public function render(ThemeInterface $theme): string {
+    // Show and Focus are a nested panel's, not an entered one's: once you are
+    // in it, its blocks draw and it draws nothing of its own.
+    if ($this->entered) {
+      throw new \LogicException(sprintf('Panel "%s" is entered, so its blocks draw rather than the panel itself.', $this->id));
+    }
+
     if (!$theme instanceof PanelElements) {
       throw new \InvalidArgumentException(sprintf('%s cannot draw a panel: it does not implement %s.', $theme::class, PanelElements::class));
     }

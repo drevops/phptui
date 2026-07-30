@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Screen;
 
+use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\Box;
 use DrevOps\Tui\Theme\ThemeInterface;
@@ -108,7 +109,17 @@ final class ScreenRenderer {
    *   Exactly $rows rows, padded or clipped to fit.
    */
   protected function fill(Region $region, int $rows, int $columns): array {
-    $drawn = array_map(fn($block): string => $block->render($this->theme), $region->blocks());
+    $drawn = [];
+
+    foreach ($region->blocks() as $block) {
+      // An entered panel is where the next layout starts, which is where depth
+      // comes from rather than a fifth level. Only the renderer knows the box
+      // it has to fit into, so the recursion happens here.
+      $drawn[] = $block instanceof Panel && $block->isEntered()
+        ? implode("\n", $this->lay($block->currentLayout(), $rows, $columns))
+        : $block->render($this->theme);
+    }
+
     $lines = $region->flowAxis() === Axis::Columns
       ? $this->across($drawn)
       : $this->down($drawn);
