@@ -2903,7 +2903,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * Compose a field's help as a full-screen page.
    *
-   * The text is markup-formatted and wrapped like a description, since it is the
+   * The text is markup-formatted and wrapped like a description, since it is
    * same voice at greater length, and takes the whole screen because that is
    * what lets it run to paragraphs.
    *

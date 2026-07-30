@@ -13,7 +13,7 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * A destination you can go into and come back from.
  *
  * It is the only block that nests a layout, and the only one you navigate into:
- * entering it replaces the screen and grows the trail, leaving it restores both.
+ * entering it replaces the screen and grows the trail; leaving restores both.
  * A region can hold blocks and a layout can arrange them, but neither is
  * somewhere you go.
  *

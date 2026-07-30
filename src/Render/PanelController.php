@@ -264,7 +264,7 @@ class PanelController {
    */
   public function handle(Key $key): void {
     if ($this->help instanceof Field) {
-      // Any key dismisses the help, so the reader never has to find the way out.
+      // Any key dismisses the help, so the reader never has to find a way out.
       $this->help = NULL;
 
       return;
@@ -1007,7 +1007,7 @@ class PanelController {
    *
    * An open field answers to its widget's bindings, the panel to the navigation
    * ones, and the help key is bound in each scope that has it free - so asking
-   * the map in force is what makes a scope without the binding a scope where the
+   * the map in force is what makes a scope without the binding one where the
    * key does nothing and nothing is advertised.
    *
    * @return \DrevOps\Tui\Input\ScopedKeyMap
@@ -1379,7 +1379,7 @@ class PanelController {
   /**
    * The hint fragments while a field is edited, in display order.
    *
-   * The widget's own hints, then the help hint when the field carries help: help
+   * The widget's own hints, then the help hint when the field has help: help
    * is a property of the question rather than of the widget collecting it, so
    * the widget cannot advertise it and the controller appends it.
    *

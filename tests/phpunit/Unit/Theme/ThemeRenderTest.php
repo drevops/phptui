@@ -601,7 +601,7 @@ final class ThemeRenderTest extends TestCase {
     $this->assertStringContainsString('Basket contents', $help);
     $this->assertStringContainsString('Every crate is weighed at the packing bench.', $help);
 
-    // The paragraph break survives, which is the whole reason help has a page of
+    // The paragraph break survives, which is the whole reason help has a page
     // its own rather than a row under the field.
     $this->assertStringContainsString("\n\nLabelled before it leaves.", $help);
     $this->assertStringContainsString('? to close', $help);

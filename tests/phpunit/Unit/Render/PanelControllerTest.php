@@ -550,7 +550,7 @@ final class PanelControllerTest extends TestCase {
     $this->assertTrue($controller->isEditing());
 
     // A text widget takes '?' as a character it is being given, so while it is
-    // open the key cannot double as the help key - and is not advertised as one.
+    // open the key cannot double as the help key, nor be advertised as one.
     $this->assertStringNotContainsString('to show help', Ansi::strip($controller->frame(12)));
 
     $controller->handle(Key::char('?'));

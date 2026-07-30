@@ -334,7 +334,7 @@ final class FieldBuilder {
   /**
    * Set the help: the long-form text behind the field's help key.
    *
-   * Where a description has to fit under the row, help opens on its own page, so
+   * Where a description has to fit under the row, help opens on its own page,
    * it can run to paragraphs and carry the detail a row has no space for.
    *
    * @param string $help

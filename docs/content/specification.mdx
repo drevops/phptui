@@ -106,7 +106,7 @@ Nine readings of that table are worth stating outright, because they're the ones
 
 **Arrange is Flow plus sizing.** Both a *layout* and a *region* run what is inside them in one direction, so both claim *Flow*. Only the layout also apportions space between them, which is *Arrange*, and only the layout claims that. A *panel* arranges nothing at all - it *nests* a layout and the layout arranges, which is what lets one layout serve a panel and a screen without either knowing about the other.
 
-**Scroll belongs to the region.** A layout is composed of region instances, and each declares whether it scrolls - so one layout can pin a column and scroll its neighbour, and two rows can scroll independently. The layout is only where the declaration is made, since that is where regions come into being.
+**Scroll belongs to the region.** A layout is composed of region instances, and each declares whether it scrolls - so one layout can pin a column and scroll its neighbor, and two rows can scroll independently. The layout is only where the declaration is made, since that is where regions come into being.
 
 **Occupy belongs to the screen.** Whether the frame takes the whole terminal or shrinks to its contents is a property of the root, not of any layout inside it - so a layout behaves the same either way.
 
@@ -446,7 +446,7 @@ $layout->in('content')
   ->add(new Actions());
 ```
 
-*Scroll* is per region instance rather than per layout, which is why a two-column layout can pin one column while its neighbour scrolls, and why two rows can scroll independently of each other. The region owns it; the layout is only where it's declared, since that's where regions come into being.
+*Scroll* is per region instance rather than per layout, which is why a two-column layout can pin one column while its neighbor scrolls, and why two rows can scroll independently of each other. The region owns it; the layout is only where it's declared, since that's where regions come into being.
 
 The region also *does* the scrolling. Its layout hands it one number - the size it was given - and everything after that is the region's own work: how tall its blocks add up to, where the viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved in any of that, which is what makes *Scroll* the region's capability rather than the layout's.
 
