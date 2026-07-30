@@ -48,6 +48,11 @@ final class Region {
   protected array $blocks = [];
 
   /**
+   * The first row of its contents that is visible.
+   */
+  protected int $offset = 0;
+
+  /**
    * Construct a region.
    *
    * @param string $name
@@ -207,6 +212,40 @@ final class Region {
    */
   public function blocks(): array {
     return $this->blocks;
+  }
+
+  /**
+   * Move the window onto this region's contents.
+   *
+   * @param int $row
+   *   The first row of the contents to show.
+   *
+   * @return $this
+   *   The region.
+   */
+  public function scrollTo(int $row): self {
+    if (!$this->scrolls) {
+      throw new \LogicException(sprintf('Region "%s" does not scroll, so it cannot be scrolled to row %d.', $this->name, $row));
+    }
+
+    $this->offset = max(0, $row);
+
+    return $this;
+  }
+
+  /**
+   * The first row of this region's contents that is visible.
+   *
+   * @param int $content
+   *   The rows its contents come to.
+   * @param int $visible
+   *   The rows it was given.
+   *
+   * @return int
+   *   The offset, never far enough to scroll the contents off their own end.
+   */
+  public function offset(int $content, int $visible): int {
+    return min($this->offset, max(0, $content - $visible));
   }
 
 }
