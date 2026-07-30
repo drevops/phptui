@@ -132,37 +132,47 @@ The capability and the method that turns it on are named separately on purpose. 
 
 A **layout** is composed of *region* instances and decides where they sit. It claims *Arrange*, *Nest* and *Reuse*.
 
-A layout has one **axis**: its regions run either top to bottom or left to right. Two axes cover every arrangement, because the second dimension comes from nesting rather than from a grid:
+Every layout is a class extending `AbstractLayout`, which carries the sizing arithmetic. A subclass declares its **axis** - whether its regions run top to bottom or left to right - and names them:
 
 ```php
-new Layout(Axis::Rows);         // regions run top to bottom
-new Layout(Axis::Columns);      // regions run left to right
+final class DefaultLayout extends AbstractLayout {
+
+  public function __construct() {
+    parent::__construct(Axis::Rows);
+
+    $this->region('header', fixed: 1);
+    $this->region('content', scrolls: TRUE);
+    $this->region('footer', fixed: 1);
+  }
+
+}
 ```
 
-A layout declares its regions, and each one is named. Blocks go in by that name, so nothing depends on declaration order:
+Two axes cover every arrangement, because the second dimension comes from nesting rather than from a grid.
+
+Regions are named, so blocks go in by name and nothing depends on declaration order:
 
 ```php
-$layout = (new Layout(Axis::Rows))
-  ->region('header')
-  ->region('content', scrolls: TRUE)
-  ->region('footer');
-
+$layout = new DefaultLayout();
 $layout->in('header')->add(new Breadcrumb());
 ```
 
-Arrangement is stated here rather than on the region itself, because arrangement is what a *layout* claims. The region still owns *Scroll* - the layout is only where regions come into being, so it's where their sizes and scrolling are declared.
+Sizes and scrolling are stated where the regions are declared, because that's where regions come into being. The *region* still owns *Scroll*; the layout is only where it's written down.
 
 A layout draws nothing itself - neither it nor a *region* claims *Show*. And a layout with no regions renders nothing at all, because there is nowhere for a block to go.
+
+The variations below show only the constructor body, since that's the part that differs.
 
 ### The default layout
 
 Three regions stacked, with the middle one scrolling. This is what a form gets without asking:
 
 ```php
-(new Layout(Axis::Rows))
-  ->region('header', fixed: 1)
-  ->region('content', scrolls: TRUE)
-  ->region('footer', fixed: 1);
+parent::__construct(Axis::Rows);
+
+$this->region('header', fixed: 1);
+$this->region('content', scrolls: TRUE);
+$this->region('footer', fixed: 1);
 ```
 
 ```
@@ -181,8 +191,9 @@ Three regions stacked, with the middle one scrolling. This is what a form gets w
 Nothing ships as one region, but nothing stops you writing it either - a single-region layout needs no special axis, because it is `Axis::Rows` that happens to declare one:
 
 ```php
-(new Layout(Axis::Rows))
-  ->region('content', scrolls: TRUE);
+parent::__construct(Axis::Rows);
+
+$this->region('content', scrolls: TRUE);
 ```
 
 ```
@@ -199,9 +210,10 @@ Put a *breadcrumb* or a *KeyHints* block in that one region and it renders inlin
 The other axis. Neither region scrolls here, so both are pinned:
 
 ```php
-(new Layout(Axis::Columns))
-  ->region('left')
-  ->region('right');
+parent::__construct(Axis::Columns);
+
+$this->region('left');
+$this->region('right');
 ```
 
 ```
@@ -214,17 +226,19 @@ The other axis. Neither region scrolls here, so both are pinned:
 *Scroll* is per region, on either axis, and any number of regions can claim it. Two columns can scroll independently of each other:
 
 ```php
-(new Layout(Axis::Columns))
-  ->region('left', scrolls: TRUE)
-  ->region('right', scrolls: TRUE);
+parent::__construct(Axis::Columns);
+
+$this->region('left', scrolls: TRUE);
+$this->region('right', scrolls: TRUE);
 ```
 
 Two rows can too, which is the same statement with the axis turned:
 
 ```php
-(new Layout(Axis::Rows))
-  ->region('top', weight: 1, scrolls: TRUE)
-  ->region('bottom', weight: 1, scrolls: TRUE);
+parent::__construct(Axis::Rows);
+
+$this->region('top', weight: 1, scrolls: TRUE);
+$this->region('bottom', weight: 1, scrolls: TRUE);
 ```
 
 ### Sizing a region
@@ -241,10 +255,11 @@ A region takes its share of the axis one of two ways, and both axes work the sam
 **`weight` is a proportion of the remainder.** Weights don't sum to anything in particular, so `30`, `40`, `30` and `3`, `4`, `3` mean the same thing:
 
 ```php
-(new Layout(Axis::Rows))
-  ->region('top', weight: 30, scrolls: TRUE)
-  ->region('middle', weight: 40, scrolls: TRUE)
-  ->region('bottom', weight: 30, scrolls: TRUE);
+parent::__construct(Axis::Rows);
+
+$this->region('top', weight: 30, scrolls: TRUE);
+$this->region('middle', weight: 40, scrolls: TRUE);
+$this->region('bottom', weight: 30, scrolls: TRUE);
 ```
 
 ```
@@ -263,10 +278,11 @@ A region takes its share of the axis one of two ways, and both axes work the sam
 Declaring neither is `weight: 1`, which is why the default layout can leave its middle region bare:
 
 ```php
-(new Layout(Axis::Rows))
-  ->region('header', fixed: 1)
-  ->region('content', scrolls: TRUE)
-  ->region('footer', fixed: 1);
+parent::__construct(Axis::Rows);
+
+$this->region('header', fixed: 1);
+$this->region('content', scrolls: TRUE);
+$this->region('footer', fixed: 1);
 ```
 
 The two mix without negotiating: fixed regions are subtracted first, then what remains is divided by the weights. A header stays one row however tall the terminal, and the weighted regions share the rest between them.
@@ -291,12 +307,9 @@ Character cells don't divide evenly, so the layout rounds: it takes the fixed si
 A *panel* is a *block* that contains a layout, so nesting one inside a region gives you rows and columns together:
 
 ```php
-$layout = (new Layout(Axis::Rows))
-  ->region('header', fixed: 1)
-  ->region('content', scrolls: TRUE)
-  ->region('footer', fixed: 1);
+$layout = new DefaultLayout();
 
-// The Panel carries a Layout(Axis::Columns) of its own.
+// The Panel carries a TwoColumnLayout of its own.
 $layout->in('content')->add($panel);
 ```
 
@@ -331,10 +344,10 @@ Two is enough because they cover the two axes. Anything else is those two nested
 
 ### Writing one
 
-A layout is a class, because a layout *does* something - it works out how big each region is. A subclass inherits that arithmetic and declares its regions:
+Every layout is a class, shipped ones included. `AbstractLayout` carries the sizing arithmetic; a subclass declares an axis and its regions:
 
 ```php
-final class SidebarLayout extends Layout {
+final class SidebarLayout extends AbstractLayout {
 
   public function __construct() {
     parent::__construct(Axis::Columns);
@@ -362,7 +375,7 @@ LayoutManager::create('sidebar');             // registered
 LayoutManager::create(SidebarLayout::class);  // the class, unregistered
 ```
 
-Subclassing earns its keep when a layout arranges *differently* rather than merely declaring different regions - one that packs regions to fit, or gives the focused region extra room. A layout that only names regions can skip the class and be built inline.
+Most subclasses only declare regions, and inherit every line of the arithmetic. Overriding that arithmetic is the other reason to subclass - a layout that packs regions to fit, or gives the focused one extra room - and it is the same door `AbstractLayout` already holds open.
 
 ## Region
 
@@ -389,6 +402,40 @@ $layout->in('content')
 The region also *does* the scrolling. Its layout hands it one number - the size it was given - and everything after that is the region's own work: how tall its blocks add up to, where the viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved in any of that, which is what makes *Scroll* the region's capability rather than the layout's.
 
 A region knows only that it holds blocks. It never knows which kinds - which is why the three calls above are indistinguishable to it, and why a *breadcrumb* can go wherever a *field* can.
+
+### How blocks stack
+
+A region **flows** its blocks: down the region by default, or across it if you say so.
+
+```php
+$this->region('header', flow: Axis::Columns);
+```
+
+```
+flow: Axis::Rows            flow: Axis::Columns
+(the default)
+
+╭──────────────────╮        ╭──────────────────╮
+│ Breadcrumb       │        │ Breadcrumb Clock │
+│ Markup           │        ╰──────────────────╯
+╰──────────────────╯
+```
+
+This is what saves you from nesting a layout every time two things belong side by side. A breadcrumb and a clock in one header is a flow, not a second layout.
+
+**Flow is not arrangement.** A *layout* apportions space between named areas that can be addressed, weighted and scrolled independently - that's *Arrange*, and only a layout claims it. A flow does none of that: blocks take their natural size and sit in the order they were added. It's the difference between a grid and the text flow inside one of its cells, and you don't nest a grid to put two words on one line.
+
+So nesting a *layout* is for when you need what a flow can't give:
+
+| You need | Use |
+|---|---|
+| Two blocks side by side | a flow |
+| Areas you can address by name | a layout |
+| Areas at declared sizes or weights | a layout |
+| Areas that scroll independently | a layout |
+| Somewhere you can navigate into | a *panel*, which nests a layout |
+
+Blocks that outrun the region are the region's problem, not the flow's - it *Scrolls* if it was declared to, and clips if it wasn't.
 
 ## Block
 
@@ -420,10 +467,7 @@ The last four in the list are the ones easily mistaken for chrome. They aren't: 
 
 ```php
 // A breadcrumb at the bottom, and a standing warning at the top.
-$layout = (new Layout(Axis::Rows))
-  ->region('header', fixed: 1)
-  ->region('content', scrolls: TRUE)
-  ->region('footer', fixed: 1);
+$layout = new DefaultLayout();
 
 $layout->in('header')->add(new Markup('preview', 'Read-only preview.'));
 $layout->in('content')->add($panel);
@@ -447,10 +491,7 @@ Panel  "Delivery"
 *Nest* is the panel taking a layout, which is what makes it the only block that can hold anything:
 
 ```php
-$columns = (new Layout(Axis::Columns))
-  ->region('left', weight: 1)
-  ->region('right', weight: 2);
-
+$columns = new TwoColumnLayout();
 $columns->in('left')->add($courier);
 $columns->in('right')->add($weight);
 
@@ -460,7 +501,7 @@ $panel = (new Panel('delivery', 'Delivery'))->layout($columns);
 Give it a single-region layout and it reads as an ordinary list of fields, which is what a panel is most of the time:
 
 ```php
-$rows = (new Layout(Axis::Rows))->region('content', scrolls: TRUE);
+$rows = new DefaultLayout();
 $rows->in('content')->add($courier)->add($weight);
 
 (new Panel('delivery', 'Delivery'))->layout($rows);
@@ -626,10 +667,7 @@ $form = Form::create('Orchard')
 Every level has a default, and this is what those defaults are:
 
 ```php
-$layout = (new Layout(Axis::Rows))
-  ->region('header', fixed: 1)
-  ->region('content', scrolls: TRUE)
-  ->region('footer', fixed: 1);
+$layout = new DefaultLayout();
 
 $layout->in('header')->add(new Breadcrumb());
 $layout->in('content')->add($panel)->add(new Buttons());
