@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\Tui\Screen\Layout;
+
+use DrevOps\Tui\Screen\Axis;
 
 /**
  * Three regions stacked, with the middle one scrolling.
@@ -10,7 +12,7 @@ namespace DrevOps\Tui\Screen;
  * The header and the footer are one row each whatever the terminal height,
  * which no share can say, and the content takes whatever is left.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\Tui\Screen\Layout
  */
 final class DefaultLayout extends AbstractLayout {
 

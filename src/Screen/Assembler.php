@@ -8,6 +8,7 @@ use DrevOps\Tui\Block\Actions;
 use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Screen\Layout\LayoutManager;
 
 /**
  * Puts the standard furniture into a screen.

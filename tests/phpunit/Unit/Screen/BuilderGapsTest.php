@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Screen;
 
-use DrevOps\Tui\Screen\AbstractLayout;
-use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Block\Actions;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
@@ -13,9 +11,11 @@ use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Screen\Assembler;
+use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Collector;
+use DrevOps\Tui\Screen\Layout\AbstractLayout;
+use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Screen\PanelBuilder;
-use DrevOps\Tui\Screen\TwoColumnLayout;
 use DrevOps\Tui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -34,24 +34,24 @@ use PHPUnit\Framework\TestCase;
 #[Group('screen')]
 final class BuilderGapsTest extends TestCase {
 
-  public function testTheFirstActionDeclaredTakesFocusUntilAnotherIsGiven(): void {
-    // Drawn with colour, since focused and unfocused differ by style alone.
+  public function testTheFirstActionDeclaredIsSelectedUntilAnotherIsGiven(): void {
+    // Drawn with colour, since selected and unselected differ by style alone.
     $theme = new DefaultTheme(80);
     $actions = (new Actions())->action('submit', 'Submit')->action('cancel', 'Cancel');
 
     $first = $actions->render($theme);
-    $second = $actions->focus('cancel')->render($theme);
+    $second = $actions->select('cancel')->render($theme);
 
     $this->assertNotSame($first, $second);
     $this->assertSame('[ Submit ]  [ Cancel ]', Ansi::strip($second));
     $this->assertStringContainsString($theme->actionSelected('Cancel'), $second);
   }
 
-  public function testFocusingAnActionThatWasNeverDeclaredSaysWhichExist(): void {
+  public function testSelectingAnActionThatWasNeverDeclaredSaysWhichExist(): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage('Unknown action "save". This block declares: submit, cancel.');
 
-    (new Actions())->action('submit', 'Submit')->action('cancel', 'Cancel')->focus('save');
+    (new Actions())->action('submit', 'Submit')->action('cancel', 'Cancel')->select('save');
   }
 
   public function testActionsWithholdTheEndOfTheFormAndSayWhy(): void {

@@ -9,8 +9,8 @@ use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Screen\DefaultLayout;
-use DrevOps\Tui\Screen\Router;
+use DrevOps\Tui\Screen\KeyRouter;
+use DrevOps\Tui\Screen\Layout\DefaultLayout;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -18,9 +18,9 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests key routing: a key stops at the innermost thing that binds it.
  */
-#[CoversClass(Router::class)]
+#[CoversClass(KeyRouter::class)]
 #[Group('screen')]
-final class RouterTest extends TestCase {
+final class KeyRouterTest extends TestCase {
 
   public function testFocusLandsOnTheFirstBlockThatTakesIt(): void {
     $courier = new Field('courier', 'Courier');
@@ -116,9 +116,9 @@ final class RouterTest extends TestCase {
   }
 
   /**
-   * A router over a panel holding the given blocks.
+   * A key router over a panel holding the given blocks.
    */
-  protected function router(object ...$blocks): Router {
+  protected function router(object ...$blocks): KeyRouter {
     $panel = (new Panel('main', 'Delivery'))->layout(new DefaultLayout());
 
     foreach ($blocks as $block) {
@@ -126,7 +126,7 @@ final class RouterTest extends TestCase {
       $panel->in('content')->add($block);
     }
 
-    return new Router($panel);
+    return new KeyRouter($panel);
   }
 
 }

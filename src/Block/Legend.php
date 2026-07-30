@@ -16,7 +16,7 @@ use DrevOps\Tui\Translation\Translator;
  *
  * @package DrevOps\Tui\Block
  */
-final class Legend implements BlockInterface {
+final class Legend extends AbstractBlock {
 
   /**
    * The entries, each a key and what it does.
@@ -58,17 +58,15 @@ final class Legend implements BlockInterface {
    * {@inheritdoc}
    */
   public function render(ThemeInterface $theme): string {
-    if (!$theme instanceof LegendElementsInterface) {
-      throw new \InvalidArgumentException(sprintf('%s cannot draw a legend: it does not implement %s.', $theme::class, LegendElementsInterface::class));
-    }
-
+    $elements = $this->elements($theme, LegendElementsInterface::class, 'a legend');
     $parts = [];
 
     foreach ($this->entries as $entry) {
-      $parts[] = $theme->legendKey($entry['key']) . ' ' . $theme->legendDescription(Translator::t('to @action', ['@action' => Translator::t($entry['does'])]));
+      $does = Translator::t('to @action', ['@action' => Translator::t($entry['does'])]);
+      $parts[] = $elements->legendKey($entry['key']) . ' ' . $elements->legendDescription($does);
     }
 
-    return implode(' ' . $theme->legendSeparator() . ' ', $parts);
+    return implode(' ' . $elements->legendSeparator() . ' ', $parts);
   }
 
 }

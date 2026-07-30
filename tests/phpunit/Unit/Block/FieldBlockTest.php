@@ -81,7 +81,7 @@ final class FieldBlockTest extends TestCase {
     $field = (new Field('weight', 'Weight'))->constrain('a number between 200 and 9000');
 
     $this->assertSame('a number between 200 and 9000', $field->constraint());
-    $this->assertNull($field->error());
+    $this->assertNull($field->refusal());
   }
 
   public function testRefusedValueIsExplainedAndDoesNotBecomeTheValue(): void {
@@ -90,19 +90,19 @@ final class FieldBlockTest extends TestCase {
       ->validate(static fn(mixed $value): ?string => is_int($value) && $value >= 200 ? NULL : 'Enter at least 200.');
 
     $this->assertFalse($field->accept(10));
-    $this->assertSame('Enter at least 200.', $field->error());
+    $this->assertSame('Enter at least 200.', $field->refusal());
     $this->assertSame(1200, $field->value());
   }
 
-  public function testAnErrorClearsAsSoonAsValueIsAcceptable(): void {
+  public function testRefusalClearsAsSoonAsValueIsAcceptable(): void {
     $field = (new Field('weight', 'Weight'))
       ->validate(static fn(mixed $value): ?string => is_int($value) && $value >= 200 ? NULL : 'Enter at least 200.');
 
     $field->accept(10);
-    $this->assertNotNull($field->error());
+    $this->assertNotNull($field->refusal());
 
     $this->assertTrue($field->accept(400));
-    $this->assertNull($field->error());
+    $this->assertNull($field->refusal());
   }
 
   public function testFieldIsAskedForUnlessItsConditionSaysOtherwise(): void {

@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Block;
 
+use DrevOps\Tui\Block\AbstractBlock;
 use DrevOps\Tui\Block\Actions;
 use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
+use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\ThemeInterface;
@@ -21,6 +22,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests the blocks: each composes the theme's elements into its own output.
  */
+#[CoversClass(AbstractBlock::class)]
 #[CoversClass(Breadcrumb::class)]
 #[CoversClass(Legend::class)]
 #[CoversClass(Markup::class)]

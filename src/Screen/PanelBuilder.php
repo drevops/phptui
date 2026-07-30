@@ -8,6 +8,8 @@ use DrevOps\Tui\Block\BlockInterface;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Screen\Layout\LayoutInterface;
+use DrevOps\Tui\Screen\Layout\PanelLayout;
 
 /**
  * Declares a panel without naming a level of the hierarchy.
@@ -37,11 +39,11 @@ final class PanelBuilder {
    *   The panel id.
    * @param string $title
    *   The panel title.
-   * @param \DrevOps\Tui\Screen\AbstractLayout|null $layout
+   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface|null $layout
    *   The layout it is arranged by; NULL gives it the one region a panel wants
    *   most of the time.
    */
-  public function __construct(string $id, string $title, ?AbstractLayout $layout = NULL) {
+  public function __construct(string $id, string $title, ?LayoutInterface $layout = NULL) {
     $this->panel = (new Panel($id, $title))->layout($layout ?? new PanelLayout());
   }
 

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Screen;
+namespace DrevOps\Tui\Tests\Unit\Screen\Layout;
 
-use DrevOps\Tui\Screen\AbstractLayout;
 use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\DefaultLayout;
+use DrevOps\Tui\Screen\Layout\AbstractLayout;
+use DrevOps\Tui\Screen\Layout\DefaultLayout;
+use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Screen\Region;
-use DrevOps\Tui\Screen\TwoColumnLayout;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;

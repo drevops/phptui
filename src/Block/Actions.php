@@ -4,19 +4,27 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
+use DrevOps\Tui\Block\Capability\ActivateCapableInterface;
+use DrevOps\Tui\Block\Capability\FocusCapableInterface;
+use DrevOps\Tui\Block\Capability\FocusCapableTrait;
+use DrevOps\Tui\Block\Capability\RejectCapableInterface;
 use DrevOps\Tui\Block\Element\ActionsElementsInterface;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
  * The buttons that end the form.
  *
- * Submit, cancel, and any the form declares. It is the only block other than a
- * field that refuses anything - the submit is withheld while a required field
- * is empty - and unlike a field it holds no value while doing so.
+ * Submit, cancel, and any the form declares. Pressing one does something rather
+ * than reveals something, which is what it activates for. It is the only block
+ * other than a field that refuses anything - the submit is withheld while a
+ * required field is empty - and unlike a field it holds no value while doing
+ * so.
  *
  * @package DrevOps\Tui\Block
  */
-final class Actions implements BlockInterface {
+final class Actions extends AbstractBlock implements ActivateCapableInterface, FocusCapableInterface, RejectCapableInterface {
+
+  use FocusCapableTrait;
 
   /**
    * The buttons, keyed by name, in declaration order.
@@ -26,9 +34,14 @@ final class Actions implements BlockInterface {
   protected array $buttons = [];
 
   /**
-   * The name of the button with focus, if any has it.
+   * The name of the button the cursor rests on, if any does.
    */
-  protected ?string $focused = NULL;
+  protected ?string $selected = NULL;
+
+  /**
+   * The name of the button that was pressed, if one was.
+   */
+  protected ?string $activated = NULL;
 
   /**
    * The reason the form cannot be ended yet, if there is one.
@@ -43,12 +56,12 @@ final class Actions implements BlockInterface {
    * @param string $label
    *   The label it draws.
    *
-   * @return $this
+   * @return static
    *   The block.
    */
-  public function action(string $name, string $label): self {
+  public function action(string $name, string $label): static {
     $this->buttons[$name] = $label;
-    $this->focused ??= $name;
+    $this->selected ??= $name;
 
     return $this;
   }
@@ -64,22 +77,32 @@ final class Actions implements BlockInterface {
   }
 
   /**
-   * Give a button focus.
+   * Rest the cursor on a button.
    *
    * @param string $name
    *   The button name.
    *
-   * @return $this
+   * @return static
    *   The block.
    */
-  public function focus(string $name): self {
+  public function select(string $name): static {
     if (!isset($this->buttons[$name])) {
       throw new \InvalidArgumentException(sprintf('Unknown action "%s". This block declares: %s.', $name, implode(', ', $this->names())));
     }
 
-    $this->focused = $name;
+    $this->selected = $name;
 
     return $this;
+  }
+
+  /**
+   * The button the cursor rests on.
+   *
+   * @return string|null
+   *   The name, or NULL while no button is declared.
+   */
+  public function selected(): ?string {
+    return $this->selected;
   }
 
   /**
@@ -88,20 +111,17 @@ final class Actions implements BlockInterface {
    * @param string|null $reason
    *   The reason, or NULL to allow it again.
    *
-   * @return $this
+   * @return static
    *   The block.
    */
-  public function refuse(?string $reason): self {
+  public function refuse(?string $reason): static {
     $this->refusal = $reason;
 
     return $this;
   }
 
   /**
-   * The reason the form cannot be ended yet.
-   *
-   * @return string|null
-   *   The reason, or NULL when nothing is withheld.
+   * {@inheritdoc}
    */
   public function refusal(): ?string {
     return $this->refusal;
@@ -110,18 +130,40 @@ final class Actions implements BlockInterface {
   /**
    * {@inheritdoc}
    */
-  public function render(ThemeInterface $theme): string {
-    if (!$theme instanceof ActionsElementsInterface) {
-      throw new \InvalidArgumentException(sprintf('%s cannot draw actions: it does not implement %s.', $theme::class, ActionsElementsInterface::class));
+  public function activate(): bool {
+    // Refusing is the whole point of withholding the submit: the button stays
+    // unpressed and the reason stands until whatever it names is answered.
+    if ($this->refusal !== NULL || $this->selected === NULL) {
+      return FALSE;
     }
 
+    $this->activated = $this->selected;
+
+    return TRUE;
+  }
+
+  /**
+   * The button that was pressed.
+   *
+   * @return string|null
+   *   The name, or NULL while none was.
+   */
+  public function activated(): ?string {
+    return $this->activated;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function render(ThemeInterface $theme): string {
+    $elements = $this->elements($theme, ActionsElementsInterface::class, 'actions');
     $parts = [];
 
     foreach ($this->buttons as $name => $label) {
-      $parts[] = $name === $this->focused ? $theme->actionSelected($label) : $theme->actionButton($label);
+      $parts[] = $name === $this->selected ? $elements->actionSelected($label) : $elements->actionButton($label);
     }
 
-    return implode($theme->actionSeparator(), $parts);
+    return implode($elements->actionSeparator(), $parts);
   }
 
 }

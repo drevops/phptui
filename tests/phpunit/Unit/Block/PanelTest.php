@@ -6,8 +6,8 @@ namespace DrevOps\Tui\Tests\Unit\Block;
 
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Screen\DefaultLayout;
-use DrevOps\Tui\Screen\TwoColumnLayout;
+use DrevOps\Tui\Screen\Layout\DefaultLayout;
+use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;

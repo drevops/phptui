@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
+use DrevOps\Tui\Block\Capability\BindCapableInterface;
+use DrevOps\Tui\Block\Capability\BindCapableTrait;
+use DrevOps\Tui\Block\Capability\DescendCapableInterface;
+use DrevOps\Tui\Block\Capability\FocusCapableInterface;
+use DrevOps\Tui\Block\Capability\FocusCapableTrait;
+use DrevOps\Tui\Block\Capability\OverlayCapableInterface;
 use DrevOps\Tui\Block\Element\PanelElementsInterface;
-use DrevOps\Tui\Screen\AbstractLayout;
+use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Region;
 use DrevOps\Tui\Theme\ThemeInterface;
 
@@ -22,12 +28,15 @@ use DrevOps\Tui\Theme\ThemeInterface;
  *
  * @package DrevOps\Tui\Block
  */
-final class Panel implements BlockInterface {
+final class Panel extends AbstractBlock implements BindCapableInterface, DescendCapableInterface, FocusCapableInterface, OverlayCapableInterface {
+
+  use BindCapableTrait;
+  use FocusCapableTrait;
 
   /**
    * The layout arranging this panel's blocks, once one is given.
    */
-  protected ?AbstractLayout $layout = NULL;
+  protected ?LayoutInterface $layout = NULL;
 
   /**
    * Whether it draws over what is behind it rather than replacing it.
@@ -76,13 +85,13 @@ final class Panel implements BlockInterface {
   /**
    * Arrange this panel's blocks with a layout.
    *
-   * @param \DrevOps\Tui\Screen\AbstractLayout $layout
+   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
    *   The layout.
    *
-   * @return $this
+   * @return static
    *   The panel.
    */
-  public function layout(AbstractLayout $layout): self {
+  public function layout(LayoutInterface $layout): static {
     $this->layout = $layout;
 
     return $this;
@@ -91,11 +100,11 @@ final class Panel implements BlockInterface {
   /**
    * The layout arranging this panel's blocks.
    *
-   * @return \DrevOps\Tui\Screen\AbstractLayout
+   * @return \DrevOps\Tui\Screen\Layout\LayoutInterface
    *   The layout.
    */
-  public function currentLayout(): AbstractLayout {
-    if (!$this->layout instanceof AbstractLayout) {
+  public function currentLayout(): LayoutInterface {
+    if (!$this->layout instanceof LayoutInterface) {
       throw new \LogicException(sprintf('Panel "%s" has no layout, so it has no regions to place a block in.', $this->id));
     }
 
@@ -116,56 +125,41 @@ final class Panel implements BlockInterface {
   }
 
   /**
-   * Mark this as the panel you are currently in.
-   *
-   * @return $this
-   *   The panel.
+   * {@inheritdoc}
    */
-  public function enter(): self {
+  public function enter(): static {
     $this->entered = TRUE;
 
     return $this;
   }
 
   /**
-   * Leave this panel, so it draws as a row again.
-   *
-   * @return $this
-   *   The panel.
+   * {@inheritdoc}
    */
-  public function leave(): self {
+  public function leave(): static {
     $this->entered = FALSE;
 
     return $this;
   }
 
   /**
-   * Whether this is the panel you are currently in.
-   *
-   * @return bool
-   *   TRUE when it is.
+   * {@inheritdoc}
    */
   public function isEntered(): bool {
     return $this->entered;
   }
 
   /**
-   * Draw over what is behind rather than replacing it.
-   *
-   * @return $this
-   *   The panel.
+   * {@inheritdoc}
    */
-  public function modal(): self {
+  public function modal(): static {
     $this->modal = TRUE;
 
     return $this;
   }
 
   /**
-   * Whether this panel draws over what is behind it.
-   *
-   * @return bool
-   *   TRUE when it does.
+   * {@inheritdoc}
    */
   public function isModal(): bool {
     return $this->modal;
@@ -178,7 +172,7 @@ final class Panel implements BlockInterface {
    *   The sub-panels, in the order they were placed.
    */
   public function children(): array {
-    if (!$this->layout instanceof AbstractLayout) {
+    if (!$this->layout instanceof LayoutInterface) {
       return [];
     }
 
@@ -205,11 +199,7 @@ final class Panel implements BlockInterface {
       throw new \LogicException(sprintf('Panel "%s" is entered, so its blocks draw rather than the panel itself.', $this->id));
     }
 
-    if (!$theme instanceof PanelElementsInterface) {
-      throw new \InvalidArgumentException(sprintf('%s cannot draw a panel: it does not implement %s.', $theme::class, PanelElementsInterface::class));
-    }
-
-    return $theme->panelTitle($this->title);
+    return $this->elements($theme, PanelElementsInterface::class, 'a panel')->panelTitle($this->title);
   }
 
 }

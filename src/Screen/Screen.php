@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Screen;
 
+use DrevOps\Tui\Screen\Layout\LayoutInterface;
+
 /**
  * The root: one layout, and whether the frame takes the whole terminal.
  *
@@ -18,7 +20,7 @@ final class Screen {
   /**
    * The layout arranging this screen, once one is given.
    */
-  protected ?AbstractLayout $layout = NULL;
+  protected ?LayoutInterface $layout = NULL;
 
   /**
    * Whether the frame takes the whole terminal.
@@ -28,13 +30,13 @@ final class Screen {
   /**
    * Arrange this screen with a layout.
    *
-   * @param \DrevOps\Tui\Screen\AbstractLayout $layout
+   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
    *   The layout.
    *
    * @return $this
    *   The screen.
    */
-  public function layout(AbstractLayout $layout): self {
+  public function layout(LayoutInterface $layout): self {
     $this->layout = $layout;
 
     return $this;
@@ -43,11 +45,11 @@ final class Screen {
   /**
    * The layout arranging this screen.
    *
-   * @return \DrevOps\Tui\Screen\AbstractLayout
+   * @return \DrevOps\Tui\Screen\Layout\LayoutInterface
    *   The layout.
    */
-  public function currentLayout(): AbstractLayout {
-    if (!$this->layout instanceof AbstractLayout) {
+  public function currentLayout(): LayoutInterface {
+    if (!$this->layout instanceof LayoutInterface) {
       throw new \LogicException('This screen has no layout, so it has no regions to place a block in.');
     }
 

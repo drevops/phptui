@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
+use DrevOps\Tui\Block\Capability\ActivateCapableInterface;
+use DrevOps\Tui\Block\Capability\DependCapableInterface;
+use DrevOps\Tui\Block\Capability\DependCapableTrait;
+use DrevOps\Tui\Block\Capability\FocusCapableInterface;
+use DrevOps\Tui\Block\Capability\FocusCapableTrait;
 use DrevOps\Tui\Block\Element\ProgressElementsInterface;
 use DrevOps\Tui\Theme\ThemeInterface;
 
@@ -15,7 +20,10 @@ use DrevOps\Tui\Theme\ThemeInterface;
  *
  * @package DrevOps\Tui\Block
  */
-final class Progress implements BlockInterface {
+final class Progress extends AbstractBlock implements ActivateCapableInterface, DependCapableInterface, FocusCapableInterface {
+
+  use DependCapableTrait;
+  use FocusCapableTrait;
 
   /**
    * The cells a bar's run takes.
@@ -36,6 +44,13 @@ final class Progress implements BlockInterface {
    * The spinner frame, when the length is unknown.
    */
   protected int $frame = 0;
+
+  /**
+   * The work activating this block runs, or NULL when it has none.
+   *
+   * @var \Closure(self): void|null
+   */
+  protected ?\Closure $work = NULL;
 
   /**
    * Construct a progress block.
@@ -67,10 +82,10 @@ final class Progress implements BlockInterface {
    * @param int $total
    *   The steps.
    *
-   * @return $this
+   * @return static
    *   The block.
    */
-  public function steps(int $total): self {
+  public function steps(int $total): static {
     if ($total < 1) {
       throw new \InvalidArgumentException('Work with no steps cannot report progress; leave the total unset for a spinner.');
     }
@@ -81,15 +96,31 @@ final class Progress implements BlockInterface {
   }
 
   /**
+   * Set the work this block runs.
+   *
+   * @param \Closure $work
+   *   An `fn(\DrevOps\Tui\Block\Progress $progress): void` doing the work and
+   *   advancing the block as it goes.
+   *
+   * @return static
+   *   The block.
+   */
+  public function work(\Closure $work): static {
+    $this->work = $work;
+
+    return $this;
+  }
+
+  /**
    * Report progress.
    *
    * @param int $steps
    *   The steps done since the last report.
    *
-   * @return $this
+   * @return static
    *   The block.
    */
-  public function advance(int $steps = 1): self {
+  public function advance(int $steps = 1): static {
     // Work can report a step backwards, and a spinner frame is an index: both
     // are clamped here so no caller can drive the block into a state it could
     // not draw.
@@ -106,20 +137,30 @@ final class Progress implements BlockInterface {
   /**
    * {@inheritdoc}
    */
-  public function render(ThemeInterface $theme): string {
-    if (!$theme instanceof ProgressElementsInterface) {
-      throw new \InvalidArgumentException(sprintf('%s cannot draw progress: it does not implement %s.', $theme::class, ProgressElementsInterface::class));
+  public function activate(): bool {
+    if (!$this->work instanceof \Closure) {
+      return FALSE;
     }
 
-    $caption = $theme->progressCaption($this->caption);
+    ($this->work)($this);
+
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function render(ThemeInterface $theme): string {
+    $elements = $this->elements($theme, ProgressElementsInterface::class, 'progress');
+    $caption = $elements->progressCaption($this->caption);
 
     if ($this->total === NULL) {
-      return $theme->progressSpinner($this->frame) . ' ' . $caption;
+      return $elements->progressSpinner($this->frame) . ' ' . $caption;
     }
 
     $filled = (int) round($this->current / $this->total * self::TRACK_WIDTH);
 
-    return $caption . ' ' . $theme->progressTrack($filled, self::TRACK_WIDTH) . ' ' . $theme->progressCount($this->current, $this->total);
+    return $caption . ' ' . $elements->progressTrack($filled, self::TRACK_WIDTH) . ' ' . $elements->progressCount($this->current, $this->total);
   }
 
 }

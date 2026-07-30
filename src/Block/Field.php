@@ -4,7 +4,18 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
+use DrevOps\Tui\Block\Capability\BindCapableInterface;
+use DrevOps\Tui\Block\Capability\BindCapableTrait;
+use DrevOps\Tui\Block\Capability\CaptureCapableInterface;
+use DrevOps\Tui\Block\Capability\CollectCapableInterface;
+use DrevOps\Tui\Block\Capability\ConstrainCapableInterface;
+use DrevOps\Tui\Block\Capability\DependCapableInterface;
+use DrevOps\Tui\Block\Capability\DependCapableTrait;
+use DrevOps\Tui\Block\Capability\FocusCapableInterface;
+use DrevOps\Tui\Block\Capability\FocusCapableTrait;
+use DrevOps\Tui\Block\Capability\RejectCapableInterface;
 use DrevOps\Tui\Block\Element\FieldElementsInterface;
+use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Theme\ThemeInterface;
 
@@ -21,7 +32,18 @@ use DrevOps\Tui\Theme\ThemeInterface;
  *
  * @package DrevOps\Tui\Block
  */
-final class Field implements BlockInterface {
+final class Field extends AbstractBlock implements
+  BindCapableInterface,
+  CaptureCapableInterface,
+  CollectCapableInterface,
+  ConstrainCapableInterface,
+  DependCapableInterface,
+  FocusCapableInterface,
+  RejectCapableInterface {
+
+  use BindCapableTrait;
+  use DependCapableTrait;
+  use FocusCapableTrait;
 
   /**
    * Which of its two shapes it is drawing.
@@ -53,19 +75,12 @@ final class Field implements BlockInterface {
   /**
    * Why the last value was refused, until one is acceptable again.
    */
-  protected ?string $error = NULL;
+  protected ?string $refusal = NULL;
 
   /**
    * The long-form text behind its help key.
    */
   protected string $help = '';
-
-  /**
-   * What decides whether it is asked for at all.
-   *
-   * @var \Closure(): bool|null
-   */
-  protected ?\Closure $when = NULL;
 
   /**
    * What refuses a value, and says why.
@@ -89,32 +104,23 @@ final class Field implements BlockInterface {
   }
 
   /**
-   * The id this field is addressed by.
-   *
-   * @return string
-   *   The id.
+   * {@inheritdoc}
    */
   public function id(): string {
     return $this->id;
   }
 
   /**
-   * Which of its two shapes this field is drawing.
-   *
-   * @return \DrevOps\Tui\Block\Mode
-   *   The mode.
+   * {@inheritdoc}
    */
   public function mode(): Mode {
     return $this->mode;
   }
 
   /**
-   * Open this field to collect an answer.
-   *
-   * @return $this
-   *   The field.
+   * {@inheritdoc}
    */
-  public function open(): self {
+  public function open(): static {
     $this->mode = Mode::Edit;
     $this->draft = $this->value;
 
@@ -122,12 +128,9 @@ final class Field implements BlockInterface {
   }
 
   /**
-   * Close this field, discarding whatever was being typed.
-   *
-   * @return $this
-   *   The field.
+   * {@inheritdoc}
    */
-  public function close(): self {
+  public function close(): static {
     $this->mode = Mode::View;
     $this->draft = NULL;
 
@@ -135,47 +138,31 @@ final class Field implements BlockInterface {
   }
 
   /**
-   * Set what is being typed, before it is accepted.
-   *
-   * @param mixed $draft
-   *   The draft.
-   *
-   * @return $this
-   *   The field.
+   * {@inheritdoc}
    */
-  public function draft(mixed $draft): self {
+  public function draft(mixed $draft): static {
     $this->draft = $draft;
 
     return $this;
   }
 
   /**
-   * Seed the answer this field starts with.
+   * {@inheritdoc}
    *
    * Declaring a starting point is not offering a value, so nothing is refused
    * here: a default the form author wrote is not a value a person typed.
-   *
-   * @param mixed $value
-   *   The value.
-   *
-   * @return $this
-   *   The field.
    */
-  public function default(mixed $value): self {
+  public function default(mixed $value): static {
     $this->value = $value;
 
     return $this;
   }
 
   /**
-   * Offer a value, or the draft when none is given.
+   * {@inheritdoc}
    *
-   * @param mixed $value
-   *   The value, or omitted to offer whatever is being typed.
-   *
-   * @return bool
-   *   Whether it was accepted. A refused value leaves the answer where it was
-   *   and the field open, with the reason on its error line.
+   * A refused value leaves the answer where it was and the field open, with the
+   * reason on its error line.
    */
   public function accept(mixed $value = NULL): bool {
     $offered = func_num_args() === 0 ? $this->draft : $value;
@@ -184,13 +171,13 @@ final class Field implements BlockInterface {
       $refusal = ($this->validate)($offered);
 
       if ($refusal !== NULL) {
-        $this->error = $refusal;
+        $this->refusal = $refusal;
 
         return FALSE;
       }
     }
 
-    $this->error = NULL;
+    $this->refusal = NULL;
     $this->value = $offered;
     $this->draft = NULL;
     $this->mode = Mode::View;
@@ -199,13 +186,24 @@ final class Field implements BlockInterface {
   }
 
   /**
-   * The answer this field contributes to the result.
-   *
-   * @return mixed
-   *   The value, or NULL until one is accepted.
+   * {@inheritdoc}
    */
   public function value(): mixed {
     return $this->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function binds(Key $key): bool {
+    // Every printable key is something being typed while it is open, which is
+    // why the help key reaches an open field and travels outward from a closed
+    // one without either being written as an exception.
+    if ($this->mode === Mode::Edit && $key->isChar()) {
+      return TRUE;
+    }
+
+    return in_array($key->name, $this->bindings, TRUE);
   }
 
   /**
@@ -216,35 +214,26 @@ final class Field implements BlockInterface {
    * @param string $label
    *   The label it draws.
    *
-   * @return $this
+   * @return static
    *   The field.
    */
-  public function entry(string $value, string $label): self {
+  public function entry(string $value, string $label): static {
     $this->entries[$value] = $label;
 
     return $this;
   }
 
   /**
-   * State what this field will accept, before anything is refused.
-   *
-   * @param string $constraint
-   *   The constraint, as an unframed phrase its caller wraps.
-   *
-   * @return $this
-   *   The field.
+   * {@inheritdoc}
    */
-  public function constrain(string $constraint): self {
+  public function constrain(string $constraint): static {
     $this->constraint = $constraint;
 
     return $this;
   }
 
   /**
-   * What this field will accept.
-   *
-   * @return string|null
-   *   The constraint, or NULL when it states none.
+   * {@inheritdoc}
    */
   public function constraint(): ?string {
     return $this->constraint;
@@ -256,48 +245,20 @@ final class Field implements BlockInterface {
    * @param \Closure $validate
    *   Given the offered value, returns the reason it is refused or NULL.
    *
-   * @return $this
+   * @return static
    *   The field.
    */
-  public function validate(\Closure $validate): self {
+  public function validate(\Closure $validate): static {
     $this->validate = $validate;
 
     return $this;
   }
 
   /**
-   * Why the last value was refused.
-   *
-   * @return string|null
-   *   The message, or NULL when nothing is refused.
+   * {@inheritdoc}
    */
-  public function error(): ?string {
-    return $this->error;
-  }
-
-  /**
-   * Decide whether this field is asked for at all.
-   *
-   * @param \Closure $when
-   *   Returns whether it is.
-   *
-   * @return $this
-   *   The field.
-   */
-  public function when(\Closure $when): self {
-    $this->when = $when;
-
-    return $this;
-  }
-
-  /**
-   * Whether this field is asked for.
-   *
-   * @return bool
-   *   TRUE when it is.
-   */
-  public function isActive(): bool {
-    return !$this->when instanceof \Closure || ($this->when)();
+  public function refusal(): ?string {
+    return $this->refusal;
   }
 
   /**
@@ -306,10 +267,10 @@ final class Field implements BlockInterface {
    * @param string $help
    *   The help.
    *
-   * @return $this
+   * @return static
    *   The field.
    */
-  public function help(string $help): self {
+  public function help(string $help): static {
     $this->help = $help;
 
     return $this;
@@ -329,17 +290,15 @@ final class Field implements BlockInterface {
    * {@inheritdoc}
    */
   public function render(ThemeInterface $theme): string {
-    if (!$theme instanceof FieldElementsInterface) {
-      throw new \InvalidArgumentException(sprintf('%s cannot draw a field: it does not implement %s.', $theme::class, FieldElementsInterface::class));
-    }
+    $elements = $this->elements($theme, FieldElementsInterface::class, 'a field');
 
     // Help is never drawn in the row that offers it: it can run to paragraphs,
     // so the row marks that there is something to ask for and nothing more.
-    $label = $theme->fieldLabel($this->label) . ($this->help === '' ? '' : ' ' . $theme->fieldHelpMarker());
+    $label = $elements->fieldLabel($this->label) . ($this->help === '' ? '' : ' ' . $elements->fieldHelpMarker());
 
     return $this->mode === Mode::View
-      ? rtrim($label . '  ' . $theme->fieldValue($this->readable()))
-      : $this->openLines($theme, $label);
+      ? rtrim($label . '  ' . $elements->fieldValue($this->readable()))
+      : $this->openLines($elements, $label);
   }
 
   /**
@@ -370,8 +329,8 @@ final class Field implements BlockInterface {
 
     // The two share one line and never appear together: a constraint says what
     // is acceptable, and an error replaces it the instant something is not.
-    if ($this->error !== NULL) {
-      $lines[] = $indent . $theme->fieldError($this->error);
+    if ($this->refusal !== NULL) {
+      $lines[] = $indent . $theme->fieldError($this->refusal);
     }
     elseif ($this->constraint !== NULL) {
       $lines[] = $indent . $theme->fieldConstraint($this->constraint);

@@ -45,7 +45,7 @@ final class Collector {
       }
 
       if (array_key_exists($field->id(), $supplied) && !$field->accept($supplied[$field->id()])) {
-        throw new \InvalidArgumentException(sprintf('Cannot collect "%s": %s', $field->id(), $field->error()));
+        throw new \InvalidArgumentException(sprintf('Cannot collect "%s": %s', $field->id(), $field->refusal()));
       }
 
       $answers[$field->id()] = $field->value();

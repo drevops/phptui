@@ -15,7 +15,7 @@ use DrevOps\Tui\Theme\ThemeInterface;
  *
  * @package DrevOps\Tui\Block
  */
-final class Breadcrumb implements BlockInterface {
+final class Breadcrumb extends AbstractBlock {
 
   /**
    * The segments, from the root to where you are.
@@ -53,13 +53,10 @@ final class Breadcrumb implements BlockInterface {
    * {@inheritdoc}
    */
   public function render(ThemeInterface $theme): string {
-    if (!$theme instanceof BreadcrumbElementsInterface) {
-      throw new \InvalidArgumentException(sprintf('%s cannot draw a breadcrumb: it does not implement %s.', $theme::class, BreadcrumbElementsInterface::class));
-    }
+    $elements = $this->elements($theme, BreadcrumbElementsInterface::class, 'a breadcrumb');
+    $labels = array_map($elements->breadcrumbLabel(...), $this->segments);
 
-    $labels = array_map(static fn(string $segment): string => $theme->breadcrumbLabel($segment), $this->segments);
-
-    return implode(' ' . $theme->breadcrumbSeparator() . ' ', $labels);
+    return implode(' ' . $elements->breadcrumbSeparator() . ' ', $labels);
   }
 
 }

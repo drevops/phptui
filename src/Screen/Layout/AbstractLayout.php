@@ -2,22 +2,25 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\Tui\Screen\Layout;
+
+use DrevOps\Tui\Screen\Axis;
+use DrevOps\Tui\Screen\Region;
 
 /**
- * An arrangement of named regions along one axis.
+ * The sizing arithmetic every layout inherits.
  *
- * A layout declares regions and works out how big each one is. It never names a
- * block: a layout carrying content opinions is a layout exactly one form can
- * use, and reuse is the whole reason it is a class of its own.
+ * A subclass declares an axis and its regions and inherits every line of this,
+ * which is what makes writing a layout a matter of saying where things go
+ * rather than working out how big they are.
  *
  * Sizing belongs here rather than on a region because a region cannot answer
  * how big it is - its siblings' fixed cells come off the top before the
  * remainder is divided, and only the layout sees them all.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\Tui\Screen\Layout
  */
-abstract class AbstractLayout {
+abstract class AbstractLayout implements LayoutInterface {
 
   /**
    * The regions, keyed by name, in declaration order.
@@ -38,33 +41,21 @@ abstract class AbstractLayout {
   }
 
   /**
-   * The direction this layout's regions run.
-   *
-   * @return \DrevOps\Tui\Screen\Axis
-   *   The axis.
+   * {@inheritdoc}
    */
   public function axis(): Axis {
     return $this->axis;
   }
 
   /**
-   * The names of the regions this layout declares, in declaration order.
-   *
-   * @return list<string>
-   *   The names.
+   * {@inheritdoc}
    */
   public function names(): array {
     return array_keys($this->regions);
   }
 
   /**
-   * The region of a given name.
-   *
-   * @param string $name
-   *   The region name.
-   *
-   * @return \DrevOps\Tui\Screen\Region
-   *   The region.
+   * {@inheritdoc}
    */
   public function in(string $name): Region {
     if (!isset($this->regions[$name])) {
@@ -75,17 +66,11 @@ abstract class AbstractLayout {
   }
 
   /**
-   * Work out how much of the axis each region gets.
+   * {@inheritdoc}
    *
    * Fixed regions come off the top, what remains is divided by the declared
    * shares, and any cell left over by the rounding goes to the last region
    * taking a share - so the sizes always add up to what was available.
-   *
-   * @param int $available
-   *   The cells to divide.
-   *
-   * @return array<string,int>
-   *   The cells each region gets, keyed by name.
    */
   public function arrange(int $available): array {
     if ($this->regions === []) {

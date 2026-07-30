@@ -24,7 +24,7 @@ use DrevOps\Tui\Input\KeyName;
  *
  * @package DrevOps\Tui\Screen
  */
-final class Router {
+final class KeyRouter {
 
   /**
    * Which of the focusable blocks has the cursor.
@@ -37,7 +37,7 @@ final class Router {
   protected ?Field $help = NULL;
 
   /**
-   * Construct a router.
+   * Construct a key router.
    *
    * @param \DrevOps\Tui\Block\Panel $panel
    *   The panel it moves around.

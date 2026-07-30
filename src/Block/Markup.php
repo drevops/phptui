@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
+use DrevOps\Tui\Block\Capability\DependCapableInterface;
+use DrevOps\Tui\Block\Capability\DependCapableTrait;
 use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Theme\ThemeInterface;
 
@@ -12,11 +14,14 @@ use DrevOps\Tui\Theme\ThemeInterface;
  *
  * How it is laid out on the page - prose, a bordered card, a table - is a
  * presentation choice rather than a capability, so all three are this one block
- * drawn three ways.
+ * drawn three ways. What an earlier answer can change is whether it is there at
+ * all, which is why a standing warning needs no block of its own.
  *
  * @package DrevOps\Tui\Block
  */
-final class Markup implements BlockInterface {
+final class Markup extends AbstractBlock implements DependCapableInterface {
+
+  use DependCapableTrait;
 
   /**
    * Construct a markup block.
@@ -49,20 +54,17 @@ final class Markup implements BlockInterface {
    * {@inheritdoc}
    */
   public function render(ThemeInterface $theme): string {
-    if (!$theme instanceof MarkupElementsInterface) {
-      throw new \InvalidArgumentException(sprintf('%s cannot draw markup: it does not implement %s.', $theme::class, MarkupElementsInterface::class));
-    }
-
+    $elements = $this->elements($theme, MarkupElementsInterface::class, 'markup');
     $lines = [];
 
     if ($this->title !== '') {
-      $lines[] = $theme->markupTitle($this->title);
+      $lines[] = $elements->markupTitle($this->title);
     }
 
     // A Windows-authored body carries CRLF endings, and a surviving carriage
     // return would send the cursor back to column 0 and overprint the row.
     foreach (explode("\n", str_replace(["\r\n", "\r"], "\n", $this->body)) as $line) {
-      $lines[] = $theme->markupLine($line);
+      $lines[] = $elements->markupLine($line);
     }
 
     return implode("\n", $lines);

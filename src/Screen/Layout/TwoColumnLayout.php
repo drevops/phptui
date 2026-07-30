@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\Tui\Screen\Layout;
+
+use DrevOps\Tui\Screen\Axis;
 
 /**
  * Two regions side by side, sharing the width evenly.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\Tui\Screen\Layout
  */
 final class TwoColumnLayout extends AbstractLayout {
 

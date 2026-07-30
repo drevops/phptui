@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Screen;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\Box;
+use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -52,7 +53,7 @@ final class ScreenRenderer {
   /**
    * Draw a layout into a space.
    *
-   * @param \DrevOps\Tui\Screen\AbstractLayout $layout
+   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
    *   The layout.
    * @param int $rows
    *   The rows it may fill.
@@ -62,7 +63,7 @@ final class ScreenRenderer {
    * @return list<string>
    *   The rows.
    */
-  protected function lay(AbstractLayout $layout, int $rows, int $columns): array {
+  protected function lay(LayoutInterface $layout, int $rows, int $columns): array {
     $names = $layout->names();
 
     if ($names === []) {
