@@ -6,7 +6,27 @@ keywords: ['structure', 'layout', 'sections', 'widgets', 'atoms', 'molecules', '
 
 # Structure
 
-A screen is three sections deep, and every section holds widgets. That's the whole layout model. What varies between one screen and the next is which widgets are in which section, never the sections themselves.
+Everything on screen sits at one of four levels, and each level knows only about the one below it. Learn these four words and the rest of the page is a tour.
+
+## The hierarchy
+
+```
+Screen
+└─ Section     Header | Content | Footer      fixed; there are three
+   └─ Widget   Breadcrumb, Panel, KeyHint     whatever a section holds
+      └─ Field   (Panel only)                 a question in a panel
+         └─ Mode   view | edit                how the field draws itself
+```
+
+A **section** is a fixed region of the screen. There are three and they never change: what varies between one screen and the next is which widgets are in which section.
+
+A **widget** is anything a section holds. That's the whole definition: it owns a region and knows how to fill it, and the section knows nothing else about it. A breadcrumb is one, a key-hint line is one, a panel is one.
+
+A **field** is not a widget. A Select, a Calendar, a Text field - none of them can sit in a section on their own, because each needs a label, a row and a panel around it. They're tenants of a Panel, which is the widget that holds them.
+
+The test is worth keeping: if a section could hold the thing by itself, it's a widget. If it needs a panel around it, it's a field.
+
+A **mode** is which of its two shapes a field is drawing - one line carrying the answer, or the open editor collecting it.
 
 ## Three sections
 
@@ -35,40 +55,33 @@ A screen is three sections deep, and every section holds widgets. That's the who
 
 **Header** and **Footer** are pinned: they hold their ground while you move around. **Content** is the only section that scrolls, which is why the marks that say "there's more above" and "more below" belong to it rather than to the frame.
 
-Here it is on a real screen:
-
-```
-         ╭────────────────────────────────────────────────╮
-header   │ Orchard › Delivery                             │
-         ├────────────────────────────────────────────────┤
-         │                                                │
-content  │ ❯ Basket contents ⁱ  apple, carrot             │
-         │     Pick the produce for this delivery.        │
-         │                                                │
-         │   Basket weight  1200                          │
-         │   ▼                                            │
-         ├────────────────────────────────────────────────┤
-footer   │ ↑/↓ to move · ↵ to select · ESC to go back      │
-         ╰────────────────────────────────────────────────╯
-```
-
-## Four levels, and what each one means
-
-```
-Screen
-└─ Section     Header | Content | Footer      fixed; there are three
-   └─ Widget   Breadcrumb, Panel, KeyHint     whatever a section holds
-      └─ Field   (Panel only)                 a question in a panel
-         └─ Mode   view | edit                how the field draws itself
-```
-
-A **widget** is anything a section holds. That's the whole definition: it owns a region and knows how to fill it, and the section knows nothing else about it. A breadcrumb is one, a key-hint line is one, a panel is one.
-
-A **field** is not a widget. A Select, a Calendar, a Text field - none of them can sit in a section on their own, because each needs a label, a row and a panel around it. They're tenants of a Panel, which is the widget that holds them.
-
-The test is worth keeping: if a section could hold it by itself, it's a widget. If it needs a panel around it, it's a field.
-
 A section can hold more than one widget. Header holds the breadcrumb today and Footer the key hints, and both have room for whatever else belongs at the top or bottom of a screen.
+
+Here it is on a real screen, with each level of the hierarchy labelled on the row it owns - section, the widget inside it, then the panel's fields and the mode each is drawing:
+
+```
+                      ╭──────────────────────────────────────────────────────╮
+Header ▸ Breadcrumb   │ Orchard › Delivery                                   │
+                      ├──────────────────────────────────────────────────────┤
+Content ▸ Panel       │                                                      │
+    Field  edit mode  │ ❯ Basket  ● Apple                                    │
+                      │           ○ Carrot                                   │
+                      │     Pick the produce.                                │
+                      │                                                      │
+    Field  view mode  │   Basket weight  1200                                │
+                      │                                                      │
+    Field  view mode  │   Harvest date  2026-07-15                           │
+                      │                                                      │
+                      │   ▼                                                  │
+                      │                                                      │
+                      ├──────────────────────────────────────────────────────┤
+Footer ▸ KeyHint      │ ↑/↓ to move · ↵ to accept · ESC to cancel             │
+                      ╰──────────────────────────────────────────────────────╯
+```
+
+The `Basket` field is open, so it's in edit mode: its two entries and its description all belong to that one field. Everything below it is a field in view mode, one line each. A fourth field continues past the bottom edge, which is what the mark under `Harvest date` is for.
+
+Read the labels as a chain. `Header ▸ Breadcrumb` is a section holding a widget. `Content ▸ Panel` is a section holding the widget that holds fields, and each `Field` beneath it is one level deeper again.
 
 ## A field has two modes
 
