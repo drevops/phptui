@@ -463,7 +463,7 @@ Blocks that outrun the region are the region's problem, not the flow's - it *Scr
 
 A **block** is anything drawn in a *region*. That's the whole definition: it fills the space it's given, and the region knows nothing else about it.
 
-Every block claims *Show*, and only a *panel* holds anything - so a block never contains a field, or another block. Seven kinds exist:
+Every block claims *Show*, and only a *panel* nests anything - and what it nests is a *layout*, never blocks directly. So no block ever contains a field or another block. Seven kinds exist:
 
 - **Panel** - contains a layout; entered and left. The only block you navigate into.
 - **Field** - answers. The only block that reaches the collected result.
