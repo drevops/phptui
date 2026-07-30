@@ -15,7 +15,7 @@ That last part is what makes the model useful. When something doesn't obviously 
 Four levels, and nothing else:
 
 ```
-Screen        the root; fills the terminal, or fits its contents
+Screen        the root; occupies the terminal, or fits its contents
 └─ Layout     arranges; reusable by name
    └─ Region  holds blocks; declares whether it scrolls
       └─ Block   drawn in a region
@@ -64,9 +64,9 @@ Sixteen capabilities cover everything on screen, each described as what you can 
 | **Constrain** | It says what it will accept, before you act. |
 | **Depend** | It appears or disappears depending on other answers. |
 | **Descend** | You go into it: the screen becomes its contents, the trail grows, and you can come back. |
-| **Fill** | It expands to the whole terminal, instead of fitting its contents. |
 | **Focus** | You can move onto it, and your keys then act on it. |
 | **Nest** | Other things appear inside it. |
+| **Occupy** | It expands to the whole terminal, instead of fitting its contents. |
 | **Overlay** | It draws over everything else. |
 | **Reject** | It can reject what you gave it, and say why. |
 | **Reuse** | One definition, used in more than one place. |
@@ -77,18 +77,18 @@ Sixteen capabilities cover everything on screen, each described as what you can 
 
 <div className="table-scroll">
 
-| | Activate | Arrange | Bind | Capture | Collect | Constrain | Depend | Descend | Fill | Focus | Nest | Overlay | Reject | Reuse | Scroll | Show |
+| | Activate | Arrange | Bind | Capture | Collect | Constrain | Depend | Descend | Focus | Nest | Occupy | Overlay | Reject | Reuse | Scroll | Show |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Screen | | | | | | | | | ✓ | | ✓ | | | | | |
-| Layout | | ✓ | | | | | | | | | ✓ | | | ✓ | | |
-| Region | | | | | | | | | | | ✓ | | | | ✓ | |
-| Panel | | | ✓ | | | | | ✓ | | ✓ | ✓ | ✓ | | | | ✓ |
-| Field | | | ✓ | ✓ | ✓ | ✓ | ✓ | | | ✓ | | | ✓ | | | ✓ |
+| Screen | | | | | | | | | | ✓ | ✓ | | | | | |
+| Layout | | ✓ | | | | | | | | ✓ | | | | ✓ | | |
+| Region | | | | | | | | | | ✓ | | | | | ✓ | |
+| Panel | | | ✓ | | | | | ✓ | ✓ | ✓ | | ✓ | | | | ✓ |
+| Field | | | ✓ | ✓ | ✓ | ✓ | ✓ | | ✓ | | | | ✓ | | | ✓ |
 | Markup | | | | | | | ✓ | | | | | | | | | ✓ |
 | Breadcrumb | | | | | | | | | | | | | | | | ✓ |
 | KeyHints | | | | | | | | | | | | | | | | ✓ |
-| Buttons | ✓ | | | | | | | | | ✓ | | | | | | ✓ |
-| Progress | ✓ | | | | | | ✓ | | | ✓ | | | | | | ✓ |
+| Buttons | ✓ | | | | | | | | ✓ | | | | | | | ✓ |
+| Progress | ✓ | | | | | | ✓ | | ✓ | | | | | | | ✓ |
 
 </div>
 
@@ -102,7 +102,7 @@ Seven readings of that table are worth stating outright, because they're the one
 
 **Scroll belongs to the region.** A layout is composed of region instances, and each declares whether it scrolls. So one layout can pin a column and scroll its neighbour, with the decision sitting where the scrolling is seen.
 
-**Fill belongs to the screen.** Whether the frame takes the whole terminal or shrinks to its contents is a property of the root, not of any layout inside it - so a layout behaves the same either way.
+**Occupy belongs to the screen.** Whether the frame takes the whole terminal or shrinks to its contents is a property of the root, not of any layout inside it - so a layout behaves the same either way.
 
 **A panel shows and focuses only when nested.** A sub-panel is a row you select to enter. The panel currently filling the screen draws no row of its own and takes no cursor; its blocks do.
 
@@ -110,13 +110,13 @@ Seven readings of that table are worth stating outright, because they're the one
 
 ## Screen
 
-The **screen** is the root. It holds one *layout* and claims one capability of its own - *Fill*:
+The **screen** is the root. It holds one *layout* and claims one capability of its own - *Occupy*:
 
 ```php
 (new Tui($form))->fullscreen()->run();
 ```
 
-*Fill* sits here rather than on a layout because it's a fact about the terminal, not about any arrangement inside it. A layout behaves identically whether the frame stretches to the terminal or shrinks to its contents, which is what makes a layout portable between the two.
+*Occupy* sits here rather than on a layout because it's a fact about the terminal, not about any arrangement inside it. A layout behaves identically whether the frame stretches to the terminal or shrinks to its contents, which is what makes a layout portable between the two.
 
 ## Layout
 
