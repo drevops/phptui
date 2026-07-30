@@ -121,8 +121,10 @@ $screen = (new Screen())->layout($layout);
 Without *Occupy* the frame shrinks to fit its contents. With it, the frame takes the whole terminal however little there is to show:
 
 ```php
-$screen->occupy();
+$screen->fullscreen();
 ```
+
+The capability and the method that turns it on are named separately on purpose. *Occupy* is what this page calls the behaviour; `fullscreen()` is what a consumer types. A capability describes what is possible, so it stays the same however the API spells it.
 
 *Occupy* sits here rather than on a layout because it's a fact about the terminal, not about any arrangement inside it. A layout behaves identically whether the frame stretches to the terminal or shrinks to its contents, which is what makes a layout portable between the two.
 
@@ -158,9 +160,9 @@ Three regions stacked, with the middle one scrolling. This is what a form gets w
 
 ```php
 (new Layout(Axis::Rows))
-  ->region('header', size: 1)
+  ->region('header', fixed: 1)
   ->region('content', scrolls: TRUE)
-  ->region('footer', size: 1);
+  ->region('footer', fixed: 1);
 ```
 
 ```
@@ -221,41 +223,68 @@ Two rows can too, which is the same statement with the axis turned:
 
 ```php
 (new Layout(Axis::Rows))
-  ->region('top', span: 50, scrolls: TRUE)
-  ->region('bottom', span: 50, scrolls: TRUE);
+  ->region('top', weight: 1, scrolls: TRUE)
+  ->region('bottom', weight: 1, scrolls: TRUE);
 ```
 
 ### Sizing a region
 
-A region takes its share of the axis in one of three ways, and both axes work the same:
+A region takes its share of the axis one of two ways, and both axes work the same:
 
 ```php
-->region('sidebar', span: 30)     // 30% of the axis
-->region('header', size: 1)       // exactly one row (or column)
-->region('content')               // whatever is left
+->region('header', fixed: 1)      // exactly one row (or column)
+->region('content', weight: 1)    // a share of whatever is left
 ```
 
-**`span` is a percentage.** It reads the same on either axis - 30% of the width in a columns layout, 30% of the height in a rows layout:
+**`fixed` is cells**, and rows are why it exists. A header is one line whatever the terminal height, and no proportion can say that - 4% of a 24-row terminal is one row, of a 50-row terminal is two. Columns rarely need it; rows almost always do at their edges.
+
+**`weight` is a proportion of the remainder.** Weights don't sum to anything in particular, so `30`, `40`, `30` and `3`, `4`, `3` mean the same thing:
 
 ```php
-(new Layout(Axis::Columns))
-  ->region('left', span: 30)
-  ->region('right', span: 70);
+(new Layout(Axis::Rows))
+  ->region('top', weight: 30, scrolls: TRUE)
+  ->region('middle', weight: 40, scrolls: TRUE)
+  ->region('bottom', weight: 30, scrolls: TRUE);
 ```
 
 ```
-├──────────────── 100% ──────────────────────┤
-╭───────────────┬────────────────────────────╮
-│ left          │ right                      │
-│ span: 30      │ span: 70                   │
-╰───────────────┴────────────────────────────╯
+╭─────────────────────────╮
+│ top                   ▲ │   30
+│                       ▼ │
+├─────────────────────────┤
+│ middle                ▲ │   40
+│                       ▼ │
+├─────────────────────────┤
+│ bottom                ▲ │   30
+│                       ▼ │
+╰─────────────────────────╯
 ```
 
-**`size` is fixed cells**, and rows are why it exists. A header is one line whatever the terminal height, and a percentage can't say that - 4% of a 24-row terminal is one row, of a 50-row terminal is two. Columns rarely need it; rows almost always do at the edges.
+Declaring neither is `weight: 1`, which is why the default layout can leave its middle region bare:
 
-**Neither means "what's left"**, shared equally between the regions that declare nothing. That's how the default layout works: the header and footer are one row each, and content takes the rest without having to name a number.
+```php
+(new Layout(Axis::Rows))
+  ->region('header', fixed: 1)
+  ->region('content', scrolls: TRUE)
+  ->region('footer', fixed: 1);
+```
 
-Percentages of a character grid always round, so a layout resolves fixed sizes first, then divides what remains by the declared percentages, then hands any leftover cell to the last region that asked for a share. The arithmetic is the layout's, which is why *Arrange* is the capability it claims.
+The two mix without negotiating: fixed regions are subtracted first, then what remains is divided by the weights. A header stays one row however tall the terminal, and the weighted regions share the rest between them.
+
+### Who calculates what
+
+Sizing and scrolling are two calculations, and each can only be done by one level.
+
+**The layout sizes.** "How many rows does `content` get" can't be answered by `content` alone - its fixed siblings have to come off the top first, and the remainder split by weight. Only the thing that sees every region can do that arithmetic, which is why *Arrange* is the layout's capability.
+
+**The region scrolls.** Given the one number the layout hands it, everything else is its own: how tall its blocks are, where its viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved, which is why *Scroll* is the region's.
+
+```
+Layout   ──▸  each Region is given a size
+Region   ──▸  offset, visible rows, overflow markers
+```
+
+Character cells don't divide evenly, so the layout rounds: it takes the fixed sizes off, divides the remainder by the weights, and hands any leftover cell to the last weighted region. A region never sees that arithmetic - it's told a number and gets on with it.
 
 ### Both axes at once
 
@@ -263,9 +292,9 @@ A *panel* is a *block* that contains a layout, so nesting one inside a region gi
 
 ```php
 $layout = (new Layout(Axis::Rows))
-  ->region('header', size: 1)
+  ->region('header', fixed: 1)
   ->region('content', scrolls: TRUE)
-  ->region('footer', size: 1);
+  ->region('footer', fixed: 1);
 
 // The Panel carries a Layout(Axis::Columns) of its own.
 $layout->in('content')->add($panel);
@@ -291,14 +320,49 @@ This is why the axis needs no third value. Any arrangement is rows of columns of
 
 | Name | Axis | Regions |
 |---|---|---|
-| `default` | rows | `header`, `content` (scrolls), `footer` |
-| `two-column` | columns | `left` (span 50), `right` (span 50) |
+| `default` | rows | `header` (fixed 1), `content` (scrolls), `footer` (fixed 1) |
+| `two-column` | columns | `left`, `right` |
 
 Two is enough because they cover the two axes. Anything else is those two nested, or a layout you write yourself.
 
 ```php
 (new Tui($form))->layout('two-column')->run();
 ```
+
+### Writing one
+
+A layout is a class, because a layout *does* something - it works out how big each region is. A subclass inherits that arithmetic and declares its regions:
+
+```php
+final class SidebarLayout extends Layout {
+
+  public function __construct() {
+    parent::__construct(Axis::Columns);
+
+    $this->region('sidebar', fixed: 24);
+    $this->region('main', weight: 1, scrolls: TRUE);
+  }
+
+}
+```
+
+Register it under a short name and it's available everywhere a shipped one is:
+
+```php
+LayoutManager::register('sidebar', SidebarLayout::class);
+
+(new Tui($form))->layout('sidebar')->run();
+```
+
+Three ways to reach one, which is the same set a [theme](/themes) offers: by shipped name, by registered name, or by passing the class itself.
+
+```php
+LayoutManager::create('two-column');          // shipped
+LayoutManager::create('sidebar');             // registered
+LayoutManager::create(SidebarLayout::class);  // the class, unregistered
+```
+
+Subclassing earns its keep when a layout arranges *differently* rather than merely declaring different regions - one that packs regions to fit, or gives the focused region extra room. A layout that only names regions can skip the class and be built inline.
 
 ## Region
 
@@ -321,6 +385,8 @@ $layout->in('content')
 ```
 
 *Scroll* is per region instance rather than per layout, which is why a two-column layout can pin one column while its neighbour scrolls, and why two rows can scroll independently of each other. The region owns it; the layout is only where it's declared, since that's where regions come into being.
+
+The region also *does* the scrolling. Its layout hands it one number - the size it was given - and everything after that is the region's own work: how tall its blocks add up to, where the viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved in any of that, which is what makes *Scroll* the region's capability rather than the layout's.
 
 A region knows only that it holds blocks. It never knows which kinds - which is why the three calls above are indistinguishable to it, and why a *breadcrumb* can go wherever a *field* can.
 
@@ -355,9 +421,9 @@ The last four in the list are the ones easily mistaken for chrome. They aren't: 
 ```php
 // A breadcrumb at the bottom, and a standing warning at the top.
 $layout = (new Layout(Axis::Rows))
-  ->region('header', size: 1)
+  ->region('header', fixed: 1)
   ->region('content', scrolls: TRUE)
-  ->region('footer', size: 1);
+  ->region('footer', fixed: 1);
 
 $layout->in('header')->add(new Markup('preview', 'Read-only preview.'));
 $layout->in('content')->add($panel);
@@ -382,8 +448,8 @@ Panel  "Delivery"
 
 ```php
 $columns = (new Layout(Axis::Columns))
-  ->region('left', span: 30)
-  ->region('right', span: 70);
+  ->region('left', weight: 1)
+  ->region('right', weight: 2);
 
 $columns->in('left')->add($courier);
 $columns->in('right')->add($weight);
@@ -413,7 +479,7 @@ $layout->in('content')
 One panel fills the screen at a time. A **modal** is the same block that *Overlays* instead of replacing what's behind it - nothing else about the panel changes:
 
 ```php
-(new Panel('confirm', 'Confirm delivery'))->overlay();
+(new Panel('confirm', 'Confirm delivery'))->modal();
 ```
 
 ## Field
@@ -561,9 +627,9 @@ Every level has a default, and this is what those defaults are:
 
 ```php
 $layout = (new Layout(Axis::Rows))
-  ->region('header', size: 1)
+  ->region('header', fixed: 1)
   ->region('content', scrolls: TRUE)
-  ->region('footer', size: 1);
+  ->region('footer', fixed: 1);
 
 $layout->in('header')->add(new Breadcrumb());
 $layout->in('content')->add($panel)->add(new Buttons());
