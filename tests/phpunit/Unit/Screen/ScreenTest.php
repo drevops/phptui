@@ -34,20 +34,20 @@ final class ScreenTest extends TestCase {
     LayoutManager::reset();
   }
 
-  public function testAScreenNestsOneLayout(): void {
+  public function testScreenNestsOneLayout(): void {
     $layout = new DefaultLayout();
 
     $this->assertSame($layout, (new Screen())->layout($layout)->currentLayout());
   }
 
-  public function testAScreenFitsItsContentsUntilToldToOccupyTheTerminal(): void {
+  public function testScreenFitsItsContentsUntilToldToOccupyTheTerminal(): void {
     $screen = (new Screen())->layout(new DefaultLayout());
 
     $this->assertFalse($screen->isFullscreen());
     $this->assertTrue($screen->fullscreen()->isFullscreen());
   }
 
-  public function testABlockGoesInByRegionName(): void {
+  public function testBlockGoesInByRegionName(): void {
     $screen = (new Screen())->layout(new DefaultLayout());
     $breadcrumb = new Breadcrumb('Orchard');
 
@@ -56,7 +56,7 @@ final class ScreenTest extends TestCase {
     $this->assertSame([$breadcrumb], $screen->currentLayout()->in('header')->blocks());
   }
 
-  public function testAScreenWithoutALayoutHasNowhereToPutABlock(): void {
+  public function testScreenWithoutLayoutHasNowhereToPutBlock(): void {
     $this->expectException(\LogicException::class);
     $this->expectExceptionMessage('This screen has no layout, so it has no regions to place a block in.');
 
@@ -68,19 +68,19 @@ final class ScreenTest extends TestCase {
     $this->assertInstanceOf(TwoColumnLayout::class, LayoutManager::create('two-column'));
   }
 
-  public function testEachCallHandsBackALayoutOfItsOwn(): void {
+  public function testEachCallHandsBackLayoutOfItsOwn(): void {
     // Two forms picking the same layout must not share its regions, or one
     // would see the other's blocks.
     $this->assertNotSame(LayoutManager::create('default'), LayoutManager::create('default'));
   }
 
-  public function testAConsumerRegistersItsOwnUnderAShortName(): void {
+  public function testConsumerRegistersItsOwnUnderShortName(): void {
     LayoutManager::register('sidebar', SidebarLayoutFixture::class);
 
     $this->assertInstanceOf(SidebarLayoutFixture::class, LayoutManager::create('sidebar'));
   }
 
-  public function testAClassNameWorksWithoutRegistering(): void {
+  public function testClassNameWorksWithoutRegistering(): void {
     $this->assertInstanceOf(SidebarLayoutFixture::class, LayoutManager::create(SidebarLayoutFixture::class));
   }
 
@@ -91,7 +91,7 @@ final class ScreenTest extends TestCase {
     LayoutManager::create('sidebar');
   }
 
-  public function testRegisteringSomethingThatIsNotALayoutIsRefused(): void {
+  public function testRegisteringSomethingThatIsNotLayoutIsRefused(): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage('Layout class "stdClass" must extend ' . AbstractLayout::class . '.');
 

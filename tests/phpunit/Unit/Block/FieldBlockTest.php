@@ -18,14 +18,14 @@ use PHPUnit\Framework\TestCase;
 #[Group('block')]
 final class FieldBlockTest extends TestCase {
 
-  public function testAFieldStartsInViewModeShowingWhatWasAccepted(): void {
+  public function testFieldStartsInViewModeShowingWhatWasAccepted(): void {
     $field = (new Field('courier', 'Courier'))->default('Valley Runs');
 
     $this->assertSame(Mode::View, $field->mode());
     $this->assertSame('Courier  Valley Runs', $field->render($this->theme()));
   }
 
-  public function testOpeningAFieldSwitchesItToEditMode(): void {
+  public function testOpeningFieldSwitchesItToEditMode(): void {
     $field = new Field('courier', 'Courier');
 
     $this->assertSame(Mode::Edit, $field->open()->mode());
@@ -57,7 +57,7 @@ final class FieldBlockTest extends TestCase {
     $this->assertSame('Valley Runs', $field->value());
   }
 
-  public function testADraftIsDiscardedUnlessItIsAccepted(): void {
+  public function testDraftIsDiscardedUnlessItIsAccepted(): void {
     $field = (new Field('courier', 'Courier'))->default('Valley Runs');
 
     $field->open()->draft('Coast Runs');
@@ -67,7 +67,7 @@ final class FieldBlockTest extends TestCase {
     $this->assertSame('Valley Runs', $field->value());
   }
 
-  public function testAcceptingADraftMakesItTheValue(): void {
+  public function testAcceptingDraftMakesItTheValue(): void {
     $field = (new Field('courier', 'Courier'))->default('Valley Runs');
 
     $field->open()->draft('Coast Runs');
@@ -77,14 +77,14 @@ final class FieldBlockTest extends TestCase {
     $this->assertSame(Mode::View, $field->mode());
   }
 
-  public function testAConstraintSaysWhatIsAcceptableBeforeYouAct(): void {
+  public function testConstraintSaysWhatIsAcceptableBeforeYouAct(): void {
     $field = (new Field('weight', 'Weight'))->constrain('a number between 200 and 9000');
 
     $this->assertSame('a number between 200 and 9000', $field->constraint());
     $this->assertNull($field->error());
   }
 
-  public function testARefusedValueIsExplainedAndDoesNotBecomeTheValue(): void {
+  public function testRefusedValueIsExplainedAndDoesNotBecomeTheValue(): void {
     $field = (new Field('weight', 'Weight'))
       ->default(1200)
       ->validate(static fn(mixed $value): ?string => is_int($value) && $value >= 200 ? NULL : 'Enter at least 200.');
@@ -94,7 +94,7 @@ final class FieldBlockTest extends TestCase {
     $this->assertSame(1200, $field->value());
   }
 
-  public function testAnErrorClearsAsSoonAsAValueIsAcceptable(): void {
+  public function testAnErrorClearsAsSoonAsValueIsAcceptable(): void {
     $field = (new Field('weight', 'Weight'))
       ->validate(static fn(mixed $value): ?string => is_int($value) && $value >= 200 ? NULL : 'Enter at least 200.');
 
@@ -105,7 +105,7 @@ final class FieldBlockTest extends TestCase {
     $this->assertNull($field->error());
   }
 
-  public function testAFieldIsAskedForUnlessItsConditionSaysOtherwise(): void {
+  public function testFieldIsAskedForUnlessItsConditionSaysOtherwise(): void {
     $field = new Field('organic', 'Organic only?');
 
     $this->assertTrue($field->isActive());

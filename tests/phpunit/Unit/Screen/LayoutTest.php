@@ -29,7 +29,7 @@ final class LayoutTest extends TestCase {
     $this->assertSame('content', $layout->in('content')->name());
   }
 
-  public function testReachingForARegionThatWasNeverDeclaredSaysWhichExist(): void {
+  public function testReachingForRegionThatWasNeverDeclaredSaysWhichExist(): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage('Unknown region "sidebar". This layout declares: header, content, footer.');
 
@@ -85,7 +85,7 @@ final class LayoutTest extends TestCase {
     $this->assertSame($percent->arrange(37), $ratio->arrange(37));
   }
 
-  public function testTheLeftoverCellGoesToTheLastRegionTakingAShare(): void {
+  public function testTheLeftoverCellGoesToTheLastRegionTakingShare(): void {
     $layout = new TwoColumnLayout();
 
     // 81 does not halve, so one column carries the odd cell rather than the
@@ -95,7 +95,7 @@ final class LayoutTest extends TestCase {
     $this->assertSame(['left' => 40, 'right' => 41], $sizes);
   }
 
-  public function testAFixedRegionKeepsItsSizeHoweverLargeTheTerminal(): void {
+  public function testFixedRegionKeepsItsSizeHoweverLargeTheTerminal(): void {
     $layout = new DefaultLayout();
 
     $this->assertSame(1, $layout->arrange(24)['header']);
@@ -114,7 +114,7 @@ final class LayoutTest extends TestCase {
     $this->assertSame(0, $sizes['content']);
   }
 
-  public function testALayoutWithNoRegionsArrangesNothing(): void {
+  public function testLayoutWithNoRegionsArrangesNothing(): void {
     $layout = new class() extends AbstractLayout {
 
       public function __construct() {
@@ -158,7 +158,7 @@ final class LayoutTest extends TestCase {
     $this->assertSame(['left', 'right'], $layout->names());
   }
 
-  public function testALayoutNamesNoBlockItMightHold(): void {
+  public function testLayoutNamesNoBlockItMightHold(): void {
     // Reuse is what a layout would lose by knowing its content: it declares
     // arrangement and nothing else, so its regions arrive empty.
     foreach ([new DefaultLayout(), new TwoColumnLayout()] as $layout) {

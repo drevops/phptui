@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Screen;
 
+use DrevOps\Tui\Screen\AbstractLayout;
+use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Block\Actions;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
@@ -60,7 +62,7 @@ final class BuilderGapsTest extends TestCase {
     $this->assertNull($actions->refuse(NULL)->refusal());
   }
 
-  public function testALegendForgetsWhatNoLongerApplies(): void {
+  public function testLegendForgetsWhatNoLongerApplies(): void {
     $legend = (new Legend())->entry('↵', 'accept');
 
     $this->assertSame('', $legend->clear()->render($this->theme()));
@@ -78,13 +80,13 @@ final class BuilderGapsTest extends TestCase {
     (new Progress('packing', 'Packing'))->steps(0);
   }
 
-  public function testLeavingAPanelMakesItDrawAsARowAgain(): void {
+  public function testLeavingPanelMakesItDrawAsRowAgain(): void {
     $panel = (new Panel('advanced', 'Advanced'))->layout(new TwoColumnLayout())->enter();
 
     $this->assertSame('Advanced', $panel->leave()->render($this->theme()));
   }
 
-  public function testABuilderPlacesBlocksInWhicheverRegionWasNamed(): void {
+  public function testBuilderPlacesBlocksInWhicheverRegionWasNamed(): void {
     $panel = (new PanelBuilder('main', 'Delivery', new TwoColumnLayout()))
       ->in('left')->field('courier', 'Courier')->done()
       ->in('right')->markup('note', 'Weighed at the bench.')
@@ -94,39 +96,39 @@ final class BuilderGapsTest extends TestCase {
     $this->assertCount(1, $panel->in('right')->blocks());
   }
 
-  public function testNamingARegionTheLayoutNeverDeclaredIsCaughtWhereItIsWritten(): void {
+  public function testNamingRegionTheLayoutNeverDeclaredIsCaughtWhereItIsWritten(): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage('Unknown region "sidebar".');
 
     (new PanelBuilder('main', 'Delivery', new TwoColumnLayout()))->in('sidebar');
   }
 
-  public function testABuilderTakesABlockItWasHandedReadyMade(): void {
+  public function testBuilderTakesBlockItWasHandedReadyMade(): void {
     $panel = (new PanelBuilder('main', 'Delivery'))->add(new Markup('intro', 'Pick the produce.'))->build();
 
     $this->assertCount(1, $panel->in('content')->blocks());
   }
 
-  public function testAFieldDeclaresEveryCapabilityItClaimsThroughItsBuilder(): void {
+  public function testFieldDeclaresEveryCapabilityItClaimsThroughItsBuilder(): void {
     $panel = (new PanelBuilder('main', 'Delivery'))
       ->field('basket', 'Basket contents')
-        ->entry('apple', 'Apple')
-        ->default('apple')
-        ->constrain('one of the produce listed')
-        ->validate(static fn(mixed $value): ?string => $value === 'apple' ? NULL : 'Pick apple.')
-        ->when(static fn(): bool => TRUE)
-        ->help('Every crate is weighed at the packing bench.')
+      ->entry('apple', 'Apple')
+      ->default('apple')
+      ->constrain('one of the produce listed')
+      ->validate(static fn(mixed $value): ?string => $value === 'apple' ? NULL : 'Pick apple.')
+      ->when(static fn(): bool => TRUE)
+      ->help('Every crate is weighed at the packing bench.')
       ->done()
       ->build();
 
     $this->assertSame(['basket' => 'apple'], (new Collector())->collect($panel));
   }
 
-  public function testAColumnsLayoutTrimsWhenItsFixedRegionsCannotAllFit(): void {
-    $layout = new class() extends \DrevOps\Tui\Screen\AbstractLayout {
+  public function testColumnsLayoutTrimsWhenItsFixedRegionsCannotAllFit(): void {
+    $layout = new class() extends AbstractLayout {
 
       public function __construct() {
-        parent::__construct(\DrevOps\Tui\Screen\Axis::Columns);
+        parent::__construct(Axis::Columns);
 
         $this->region('sidebar')->fixed(24);
         $this->region('main')->fixed(20);
@@ -142,11 +144,11 @@ final class BuilderGapsTest extends TestCase {
     $this->assertSame(['sidebar' => 12, 'main' => 0], $sizes);
   }
 
-  public function testALayoutOfFixedRegionsAloneNeedsNoRemainderDivided(): void {
-    $layout = new class() extends \DrevOps\Tui\Screen\AbstractLayout {
+  public function testLayoutOfFixedRegionsAloneNeedsNoRemainderDivided(): void {
+    $layout = new class() extends AbstractLayout {
 
       public function __construct() {
-        parent::__construct(\DrevOps\Tui\Screen\Axis::Rows);
+        parent::__construct(Axis::Rows);
 
         $this->region('top')->fixed(2);
         $this->region('bottom')->fixed(3);
@@ -157,11 +159,11 @@ final class BuilderGapsTest extends TestCase {
     $this->assertSame(['top' => 2, 'bottom' => 3], $layout->arrange(40));
   }
 
-  public function testAMarkupBlockDrawsItsTitleAboveItsBody(): void {
+  public function testMarkupBlockDrawsItsTitleAboveItsBody(): void {
     $this->assertSame("Yields\nTwelve crates.", (new Markup('yields', 'Twelve crates.', 'Yields'))->render($this->theme()));
   }
 
-  public function testSpinningWorkAdvancesItsFrameRatherThanACount(): void {
+  public function testSpinningWorkAdvancesItsFrameRatherThanCount(): void {
     $progress = new Progress('fetching', 'Fetching');
 
     $first = $progress->render($this->theme());
@@ -170,7 +172,7 @@ final class BuilderGapsTest extends TestCase {
     $this->assertNotSame($first, $second);
   }
 
-  public function testTheAssemblerOffersTheButtonsThatEndAForm(): void {
+  public function testTheAssemblerOffersTheButtonsThatEndForm(): void {
     $this->assertSame(['submit', 'cancel'], (new Assembler())->actions()->names());
   }
 

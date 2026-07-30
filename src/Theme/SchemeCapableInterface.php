@@ -12,7 +12,7 @@ namespace DrevOps\Tui\Theme;
  *
  * @package DrevOps\Tui\Theme
  */
-interface SupportsScheme {
+interface SchemeCapableInterface {
 
   /**
    * Whether the terminal's background is dark.

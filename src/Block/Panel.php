@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
-use DrevOps\Tui\Block\Element\PanelElements;
+use DrevOps\Tui\Block\Element\PanelElementsInterface;
 use DrevOps\Tui\Screen\AbstractLayout;
 use DrevOps\Tui\Screen\Region;
 use DrevOps\Tui\Theme\ThemeInterface;
@@ -205,8 +205,8 @@ final class Panel implements BlockInterface {
       throw new \LogicException(sprintf('Panel "%s" is entered, so its blocks draw rather than the panel itself.', $this->id));
     }
 
-    if (!$theme instanceof PanelElements) {
-      throw new \InvalidArgumentException(sprintf('%s cannot draw a panel: it does not implement %s.', $theme::class, PanelElements::class));
+    if (!$theme instanceof PanelElementsInterface) {
+      throw new \InvalidArgumentException(sprintf('%s cannot draw a panel: it does not implement %s.', $theme::class, PanelElementsInterface::class));
     }
 
     return $theme->panelTitle($this->title);

@@ -15,14 +15,10 @@ namespace DrevOps\Tui\Block;
  */
 enum Mode: string {
 
-  /**
-   * One line, carrying the answer.
-   */
+  // One line, carrying the answer.
   case View = 'view';
 
-  /**
-   * Open, collecting the answer.
-   */
+  // Open, collecting the answer.
   case Edit = 'edit';
 
 }

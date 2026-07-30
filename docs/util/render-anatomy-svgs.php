@@ -155,7 +155,7 @@ function anatomySpecs(string $tree): array {
   $down = Key::named(KeyName::Down);
   $space = Key::named(KeyName::Space);
   $tab = Key::named(KeyName::Tab);
-  $bs = Key::named(KeyName::Backspace);
+  Key::named(KeyName::Backspace);
   $open = [$enter, $enter];
 
   // The window and the rows inside it are photographed from the same panel, so
@@ -331,7 +331,7 @@ function renderAnatomy(string $name, array $spec, string $assets_dir, string $ut
   renderCast($cast_file, $dark_file, $util_dir);
   $light_file = deriveLightTwin($dark_file);
 
-  $plain = array_map(static fn(string $line): string => Ansi::strip($line), $lines);
+  $plain = array_map(Ansi::strip(...), $lines);
 
   // A callout must read as annotation rather than as output, so it takes a hue
   // the palettes do not spend on the frame, on values or on errors - and one
@@ -579,12 +579,7 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
   $cell_width = $frame_width / $columns;
   $cell_height = $frame_height / count($lines);
 
-  usort($callouts, static function (array $a, array $b): int {
-    $first = cellsOf($a)[0];
-    $second = cellsOf($b)[0];
-
-    return $first <=> $second;
-  });
+  usort($callouts, static fn(array $a, array $b): int => cellsOf($a)[0] <=> cellsOf($b)[0]);
 
   // Each side is settled first, then the margins are sized from the labels
   // that will actually land in them: a fixed margin either clips the longest

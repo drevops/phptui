@@ -107,7 +107,11 @@ class ConfirmWidget extends AbstractWidget implements StepCapableInterface {
    */
   #[\Override]
   public function hints(): array {
-    return [new Hint('answer yes or no', Action::Yes, Action::No), new Hint('toggle', Action::Toggle), ...parent::hints()];
+    return [
+      new Hint('answer yes or no', Action::Yes, Action::No),
+      new Hint('toggle', Action::Toggle),
+      ...parent::hints(),
+    ];
   }
 
 }

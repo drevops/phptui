@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
-use DrevOps\Tui\Block\Element\ProgressElements;
+use DrevOps\Tui\Block\Element\ProgressElementsInterface;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -104,8 +104,8 @@ final class Progress implements BlockInterface {
    * {@inheritdoc}
    */
   public function render(ThemeInterface $theme): string {
-    if (!$theme instanceof ProgressElements) {
-      throw new \InvalidArgumentException(sprintf('%s cannot draw progress: it does not implement %s.', $theme::class, ProgressElements::class));
+    if (!$theme instanceof ProgressElementsInterface) {
+      throw new \InvalidArgumentException(sprintf('%s cannot draw progress: it does not implement %s.', $theme::class, ProgressElementsInterface::class));
     }
 
     $caption = $theme->progressCaption($this->caption);

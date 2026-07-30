@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Theme;
 
-use DrevOps\Tui\Block\Element\ActionsElements;
-use DrevOps\Tui\Block\Element\BreadcrumbElements;
-use DrevOps\Tui\Block\Element\FieldElements;
-use DrevOps\Tui\Block\Element\LegendElements;
-use DrevOps\Tui\Block\Element\MarkupElements;
-use DrevOps\Tui\Block\Element\PanelElements;
-use DrevOps\Tui\Block\Element\ProgressElements;
+use DrevOps\Tui\Block\Element\ActionsElementsInterface;
+use DrevOps\Tui\Block\Element\BreadcrumbElementsInterface;
+use DrevOps\Tui\Block\Element\FieldElementsInterface;
+use DrevOps\Tui\Block\Element\LegendElementsInterface;
+use DrevOps\Tui\Block\Element\MarkupElementsInterface;
+use DrevOps\Tui\Block\Element\PanelElementsInterface;
+use DrevOps\Tui\Block\Element\ProgressElementsInterface;
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Answers\ValueFormatter;
@@ -64,7 +64,7 @@ use DrevOps\Tui\Utils\Strings;
  *
  * @package DrevOps\Tui\Theme
  */
-class DefaultTheme implements ThemeInterface, SupportsColor, SupportsScheme, SupportsUnicode, ActionsElements, BreadcrumbElements, FieldElements, PanelElements, LegendElements, MarkupElements, ProgressElements {
+class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapableInterface, UnicodeCapableInterface, ActionsElementsInterface, BreadcrumbElementsInterface, FieldElementsInterface, PanelElementsInterface, LegendElementsInterface, MarkupElementsInterface, ProgressElementsInterface {
 
   /**
    * The default frame width, used when a caller does not specify one.
@@ -562,6 +562,7 @@ class DefaultTheme implements ThemeInterface, SupportsColor, SupportsScheme, Sup
    * @return bool
    *   TRUE when colour is enabled.
    */
+
   /**
    * {@inheritdoc}
    */
@@ -569,6 +570,9 @@ class DefaultTheme implements ThemeInterface, SupportsColor, SupportsScheme, Sup
     return $this->mode() === Mode::Dark;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function hasColor(): bool {
     return $this->color;
   }

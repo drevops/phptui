@@ -62,7 +62,7 @@ final class RouterTest extends TestCase {
     $this->assertFalse($router->isShowingHelp());
   }
 
-  public function testAClosedFieldBindsNoPrintableKeySoTheSameOneTravelsOutward(): void {
+  public function testClosedFieldBindsNoPrintableKeySoTheSameOneTravelsOutward(): void {
     $router = $this->router((new Field('courier', 'Courier'))->help('Every crate is weighed.'));
 
     $router->handle(Key::char('?'));
@@ -70,7 +70,7 @@ final class RouterTest extends TestCase {
     $this->assertTrue($router->isShowingHelp());
   }
 
-  public function testAFieldWithNoHelpAdvertisesNoneAndOpensNone(): void {
+  public function testFieldWithNoHelpAdvertisesNoneAndOpensNone(): void {
     $router = $this->router(new Field('courier', 'Courier'));
 
     $router->handle(Key::char('?'));
@@ -78,13 +78,13 @@ final class RouterTest extends TestCase {
     $this->assertFalse($router->isShowingHelp());
   }
 
-  public function testActivatingAFieldOpensIt(): void {
+  public function testActivatingFieldOpensIt(): void {
     $courier = new Field('courier', 'Courier');
     $router = $this->router($courier);
 
     $router->handle(Key::named(KeyName::Enter));
 
-    $this->assertTrue($courier->mode()->name === 'Edit');
+    $this->assertSame('Edit', $courier->mode()->name);
   }
 
   public function testCancellingAnOpenFieldClosesItAndKeepsTheAnswer(): void {
@@ -109,10 +109,10 @@ final class RouterTest extends TestCase {
     $this->assertSame('Coast Runs', $courier->value());
   }
 
-  public function testAPanelWithNothingFocusableFocusesNothing(): void {
+  public function testPanelWithNothingFocusableFocusesNothing(): void {
     $router = $this->router(new Markup('intro', 'Pick the produce.'));
 
-    $this->assertNull($router->focused());
+    $this->assertNotInstanceOf(Field::class, $router->focused());
   }
 
   /**

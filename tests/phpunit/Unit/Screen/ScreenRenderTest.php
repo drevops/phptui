@@ -39,7 +39,7 @@ final class ScreenRenderTest extends TestCase {
     $this->assertSame('↵ to accept', $lines[5]);
   }
 
-  public function testARegionIsGivenExactlyTheRowsItsLayoutAllowed(): void {
+  public function testRegionIsGivenExactlyTheRowsItsLayoutAllowed(): void {
     $screen = (new Screen())->layout(new DefaultLayout());
     $screen->in('content')->add(new Markup('long', implode("\n", array_fill(0, 20, 'row'))));
 
@@ -50,7 +50,7 @@ final class ScreenRenderTest extends TestCase {
     $this->assertSame(['', 'row', 'row', 'row', 'row', ''], $lines);
   }
 
-  public function testAPinnedRegionClipsWhereAScrollingOneWouldNot(): void {
+  public function testPinnedRegionClipsWhereScrollingOneWouldNot(): void {
     $screen = (new Screen())->layout(new DefaultLayout());
     $screen->in('header')->add(new Markup('over', "one\ntwo\nthree"));
 
@@ -61,7 +61,7 @@ final class ScreenRenderTest extends TestCase {
     $this->assertSame('', $lines[1]);
   }
 
-  public function testAScrollingRegionShowsALaterWindowOnceScrolled(): void {
+  public function testScrollingRegionShowsLaterWindowOnceScrolled(): void {
     $screen = (new Screen())->layout(new DefaultLayout());
     $screen->in('content')->add(new Markup('rows', "one\ntwo\nthree\nfour\nfive\nsix"));
 
@@ -72,7 +72,7 @@ final class ScreenRenderTest extends TestCase {
     $this->assertSame(['', 'three', 'four', 'five', 'six', ''], $lines);
   }
 
-  public function testAPinnedRegionCannotBeScrolled(): void {
+  public function testPinnedRegionCannotBeScrolled(): void {
     $this->expectException(\LogicException::class);
     $this->expectExceptionMessage('Region "header" does not scroll, so it cannot be scrolled to row 2.');
 
@@ -102,7 +102,7 @@ final class ScreenRenderTest extends TestCase {
     $this->assertSame('Second.', $lines[2]);
   }
 
-  public function testBlocksRunAcrossARegionThatFlowsThatWay(): void {
+  public function testBlocksRunAcrossRegionThatFlowsThatWay(): void {
     $layout = new DefaultLayout();
     $layout->in('header')->flow(Axis::Columns);
 
@@ -143,7 +143,7 @@ final class ScreenRenderTest extends TestCase {
     $this->assertSame('left      right', $lines[1]);
   }
 
-  public function testANestedPanelDrawsARowYouSelect(): void {
+  public function testNestedPanelDrawsRowYouSelect(): void {
     $child = (new Panel('advanced', 'Advanced'))->layout(new DefaultLayout());
 
     $screen = (new Screen())->layout(new DefaultLayout());

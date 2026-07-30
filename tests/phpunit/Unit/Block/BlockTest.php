@@ -29,29 +29,29 @@ use PHPUnit\Framework\TestCase;
 #[Group('block')]
 final class BlockTest extends TestCase {
 
-  public function testABreadcrumbJoinsItsSegments(): void {
+  public function testBreadcrumbJoinsItsSegments(): void {
     $theme = $this->theme();
 
     $this->assertSame('Orchard › Delivery', (new Breadcrumb('Orchard', 'Delivery'))->render($theme));
   }
 
-  public function testABreadcrumbOfOneSegmentDrawsNoSeparator(): void {
+  public function testBreadcrumbOfOneSegmentDrawsNoSeparator(): void {
     $this->assertSame('Orchard', (new Breadcrumb('Orchard'))->render($this->theme()));
   }
 
-  public function testABreadcrumbRedrawsItselfAsTheTrailChanges(): void {
+  public function testBreadcrumbRedrawsItselfAsTheTrailChanges(): void {
     $breadcrumb = new Breadcrumb('Orchard');
 
     $this->assertSame('Orchard › Delivery', $breadcrumb->trail('Orchard', 'Delivery')->render($this->theme()));
   }
 
-  public function testALegendReadsAsKeyThenWhatItDoes(): void {
+  public function testLegendReadsAsKeyThenWhatItDoes(): void {
     $legend = (new Legend())->entry('↵', 'accept')->entry('ESC', 'cancel');
 
     $this->assertSame('↵ to accept · ESC to cancel', $legend->render($this->theme()));
   }
 
-  public function testALegendWithNoKeysDrawsNothing(): void {
+  public function testLegendWithNoKeysDrawsNothing(): void {
     $this->assertSame('', (new Legend())->render($this->theme()));
   }
 
@@ -80,13 +80,13 @@ final class BlockTest extends TestCase {
     $this->assertSame(['save', 'submit'], $actions->names());
   }
 
-  public function testProgressDrawsABarWhenTheWorkReportsATotal(): void {
+  public function testProgressDrawsBarWhenTheWorkReportsTotal(): void {
     $progress = (new Progress('packing', 'Packing crates'))->steps(10)->advance(4);
 
     $this->assertSame('Packing crates [████░░░░░░] 4/10', $progress->render($this->theme()));
   }
 
-  public function testProgressDrawsASpinnerWhenTheLengthIsUnknown(): void {
+  public function testProgressDrawsSpinnerWhenTheLengthIsUnknown(): void {
     $progress = new Progress('fetching', 'Fetching the price list');
 
     $this->assertSame('⠋ Fetching the price list', $progress->render($this->theme()));
@@ -98,8 +98,8 @@ final class BlockTest extends TestCase {
     $this->assertSame('Packing [██████████] 3/3', $progress->render($this->theme()));
   }
 
-  #[DataProvider('dataProviderBlocksRefuseAThemeWithoutTheirElements')]
-  public function testEveryBlockRefusesAThemeThatCannotDrawIt(\Closure $make, string $says): void {
+  #[DataProvider('dataProviderEveryBlockRefusesThemeThatCannotDrawIt')]
+  public function testEveryBlockRefusesThemeThatCannotDrawIt(\Closure $make, string $says): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage($says);
 
@@ -109,7 +109,7 @@ final class BlockTest extends TestCase {
     $make()->render($this->createStub(ThemeInterface::class));
   }
 
-  public static function dataProviderBlocksRefuseAThemeWithoutTheirElements(): \Iterator {
+  public static function dataProviderEveryBlockRefusesThemeThatCannotDrawIt(): \Iterator {
     yield 'breadcrumb' => [static fn(): Breadcrumb => new Breadcrumb('Orchard'), 'cannot draw a breadcrumb'];
     yield 'legend' => [static fn(): Legend => (new Legend())->entry('↵', 'accept'), 'cannot draw a legend'];
     yield 'markup' => [static fn(): Markup => new Markup('intro', 'Pick the produce.'), 'cannot draw markup'];

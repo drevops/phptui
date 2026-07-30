@@ -6,9 +6,9 @@ namespace DrevOps\Tui\Tests\Unit\Theme;
 
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\SupportsColor;
-use DrevOps\Tui\Theme\SupportsScheme;
-use DrevOps\Tui\Theme\SupportsUnicode;
+use DrevOps\Tui\Theme\ColorCapableInterface;
+use DrevOps\Tui\Theme\SchemeCapableInterface;
+use DrevOps\Tui\Theme\UnicodeCapableInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -20,23 +20,23 @@ use PHPUnit\Framework\TestCase;
 #[Group('theme')]
 final class SupportTest extends TestCase {
 
-  public function testATerminalsColourSchemeIsReadableOnlyWhereItIsDeclared(): void {
+  public function testTerminalsColourSchemeIsReadableOnlyWhereItIsDeclared(): void {
     $dark = new DefaultTheme(80, ['mode' => Mode::Dark]);
     $light = new DefaultTheme(80, ['mode' => Mode::Light]);
 
-    $this->assertInstanceOf(SupportsScheme::class, $dark);
+    $this->assertInstanceOf(SchemeCapableInterface::class, $dark);
     $this->assertTrue($dark->isDark());
     $this->assertFalse($light->isDark());
   }
 
   public function testColourIsDeclaredAndCanBeTurnedOff(): void {
-    $this->assertInstanceOf(SupportsColor::class, new DefaultTheme());
+    $this->assertInstanceOf(ColorCapableInterface::class, new DefaultTheme());
     $this->assertTrue((new DefaultTheme(80, ['color' => TRUE]))->hasColor());
     $this->assertFalse((new DefaultTheme(80, ['color' => FALSE]))->hasColor());
   }
 
   public function testUnicodeIsDeclaredAndCanBeTurnedOff(): void {
-    $this->assertInstanceOf(SupportsUnicode::class, new DefaultTheme());
+    $this->assertInstanceOf(UnicodeCapableInterface::class, new DefaultTheme());
     $this->assertTrue((new DefaultTheme(80, ['unicode' => TRUE]))->hasUnicode());
     $this->assertFalse((new DefaultTheme(80, ['unicode' => FALSE]))->hasUnicode());
   }
@@ -58,7 +58,7 @@ final class SupportTest extends TestCase {
     $this->assertSame('4/10', $plain->progressCount(4, 10));
   }
 
-  public function testAThemeSpinsThroughItsOwnFramesAndWrapsAtTheEnd(): void {
+  public function testThemeSpinsThroughItsOwnFramesAndWrapsAtTheEnd(): void {
     $unicode = new DefaultTheme(80, ['color' => FALSE, 'unicode' => TRUE]);
     $ascii = new DefaultTheme(80, ['color' => FALSE, 'unicode' => FALSE]);
 
@@ -69,7 +69,7 @@ final class SupportTest extends TestCase {
     $this->assertNotSame($unicode->progressSpinner(4), $ascii->progressSpinner(4));
   }
 
-  public function testABarFillsInProportionAndNeverPastItsWidth(): void {
+  public function testBarFillsInProportionAndNeverPastItsWidth(): void {
     $theme = new DefaultTheme(80, ['color' => FALSE, 'unicode' => TRUE]);
 
     $this->assertSame('[████░░░░░░]', $theme->progressTrack(4, 10));

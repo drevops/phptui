@@ -9,7 +9,7 @@ namespace DrevOps\Tui\Block\Element;
  *
  * @package DrevOps\Tui\Block\Element
  */
-interface LegendElements {
+interface LegendElementsInterface {
 
   /**
    * Style one key.

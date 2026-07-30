@@ -19,11 +19,11 @@ use PHPUnit\Framework\TestCase;
 #[Group('screen')]
 final class RegionTest extends TestCase {
 
-  public function testNameIsHowABlockSaysWhereItGoes(): void {
+  public function testNameIsHowBlockSaysWhereItGoes(): void {
     $this->assertSame('header', (new Region('header'))->name());
   }
 
-  public function testDeclaringNeitherSizeIsAWeightOfOne(): void {
+  public function testDeclaringNeitherSizeIsWeightOfOne(): void {
     $region = new Region('content');
 
     $this->assertNull($region->fixedSize());
@@ -37,7 +37,7 @@ final class RegionTest extends TestCase {
     $this->assertNull($region->flexShare());
   }
 
-  public function testFlexTakesAShareAndClearsAnyFixedSize(): void {
+  public function testFlexTakesShareAndClearsAnyFixedSize(): void {
     $region = (new Region('content'))->fixed(1)->flex(3);
 
     $this->assertNull($region->fixedSize());
@@ -49,7 +49,7 @@ final class RegionTest extends TestCase {
     $this->assertSame(Axis::Columns, (new Region('header'))->flow(Axis::Columns)->flowAxis());
   }
 
-  public function testARegionIsPinnedUntilItDeclaresItScrolls(): void {
+  public function testRegionIsPinnedUntilItDeclaresItScrolls(): void {
     $this->assertFalse((new Region('header'))->isScrolling());
     $this->assertTrue((new Region('content'))->scrolls()->isScrolling());
   }
@@ -63,11 +63,11 @@ final class RegionTest extends TestCase {
     $this->assertSame($region, $region->scrolls());
   }
 
-  public function testARegionArrivesEmpty(): void {
+  public function testRegionArrivesEmpty(): void {
     $this->assertSame([], (new Region('content'))->blocks());
   }
 
-  public function testARegionTakesEveryKindOfBlockTheSameWay(): void {
+  public function testRegionTakesEveryKindOfBlockTheSameWay(): void {
     $region = new Region('content');
     $first = new Markup('intro', 'Pick the produce.');
     $second = new Breadcrumb();
@@ -77,20 +77,20 @@ final class RegionTest extends TestCase {
     $this->assertSame([$first, $second], $region->blocks());
   }
 
-  public function testAddingABlockChainsBackToTheRegion(): void {
+  public function testAddingBlockChainsBackToTheRegion(): void {
     $region = new Region('content');
 
     $this->assertSame($region, $region->add(new Breadcrumb()));
   }
 
-  public function testFixedRejectsASizeNoRegionCouldHave(): void {
+  public function testFixedRejectsSizeNoRegionCouldHave(): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage('A fixed size is a count of cells, so it cannot be 0.');
 
     (new Region('header'))->fixed(0);
   }
 
-  public function testFlexRejectsAShareThatWouldTakeNothing(): void {
+  public function testFlexRejectsShareThatWouldTakeNothing(): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage('A flex share divides the remainder, so it cannot be 0.');
 

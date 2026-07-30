@@ -86,13 +86,13 @@ final class ScreenRenderer {
       return $out;
     }
 
-    $columnsOut = [];
+    $columns_out = [];
 
     foreach ($sizes as $name => $size) {
-      $columnsOut[] = $this->fill($layout->in($name), $rows, $size);
+      $columns_out[] = $this->fill($layout->in($name), $rows, $size);
     }
 
-    return $this->paste($columnsOut, $sizes, $rows);
+    return $this->paste($columns_out, $sizes, $rows);
   }
 
   /**

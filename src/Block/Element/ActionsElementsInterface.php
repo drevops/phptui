@@ -13,7 +13,7 @@ namespace DrevOps\Tui\Block\Element;
  *
  * @package DrevOps\Tui\Block\Element
  */
-interface ActionsElements {
+interface ActionsElementsInterface {
 
   /**
    * Style a button that does not have focus.

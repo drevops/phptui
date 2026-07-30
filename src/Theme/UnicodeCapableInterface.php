@@ -12,7 +12,7 @@ namespace DrevOps\Tui\Theme;
  *
  * @package DrevOps\Tui\Theme
  */
-interface SupportsUnicode {
+interface UnicodeCapableInterface {
 
   /**
    * Whether the terminal draws glyphs outside ASCII.

@@ -13,7 +13,7 @@ namespace DrevOps\Tui\Theme;
  *
  * @package DrevOps\Tui\Theme
  */
-interface SupportsColor {
+interface ColorCapableInterface {
 
   /**
    * Whether colour reaches the terminal.

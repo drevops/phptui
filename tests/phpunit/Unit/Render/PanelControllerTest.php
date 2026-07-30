@@ -514,7 +514,7 @@ final class PanelControllerTest extends TestCase {
     $this->assertStringContainsString('Grower', Ansi::strip($controller->frame(12)));
   }
 
-  public function testHelpIgnoredOnAFieldWithNone(): void {
+  public function testHelpIgnoredOnFieldWithNone(): void {
     $controller = $this->helpController();
     $controller->handle(Key::named(KeyName::Enter));
     $controller->handle(Key::named(KeyName::Down));
@@ -544,7 +544,7 @@ final class PanelControllerTest extends TestCase {
     $this->assertStringContainsString('current certification', Ansi::strip($controller->frame(12)));
   }
 
-  public function testHelpStandsAsideForAFieldThatTypesCharacters(): void {
+  public function testHelpStandsAsideForFieldThatTypesCharacters(): void {
     $controller = $this->helpController();
     $this->drillAndEdit($controller);
     $this->assertTrue($controller->isEditing());

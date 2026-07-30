@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
-use DrevOps\Tui\Block\Element\MarkupElements;
+use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -49,8 +49,8 @@ final class Markup implements BlockInterface {
    * {@inheritdoc}
    */
   public function render(ThemeInterface $theme): string {
-    if (!$theme instanceof MarkupElements) {
-      throw new \InvalidArgumentException(sprintf('%s cannot draw markup: it does not implement %s.', $theme::class, MarkupElements::class));
+    if (!$theme instanceof MarkupElementsInterface) {
+      throw new \InvalidArgumentException(sprintf('%s cannot draw markup: it does not implement %s.', $theme::class, MarkupElementsInterface::class));
     }
 
     $lines = [];

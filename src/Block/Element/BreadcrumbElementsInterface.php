@@ -13,7 +13,7 @@ namespace DrevOps\Tui\Block\Element;
  *
  * @package DrevOps\Tui\Block\Element
  */
-interface BreadcrumbElements {
+interface BreadcrumbElementsInterface {
 
   /**
    * Style one segment of the trail.

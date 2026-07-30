@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
-use DrevOps\Tui\Block\Element\BreadcrumbElements;
+use DrevOps\Tui\Block\Element\BreadcrumbElementsInterface;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -53,8 +53,8 @@ final class Breadcrumb implements BlockInterface {
    * {@inheritdoc}
    */
   public function render(ThemeInterface $theme): string {
-    if (!$theme instanceof BreadcrumbElements) {
-      throw new \InvalidArgumentException(sprintf('%s cannot draw a breadcrumb: it does not implement %s.', $theme::class, BreadcrumbElements::class));
+    if (!$theme instanceof BreadcrumbElementsInterface) {
+      throw new \InvalidArgumentException(sprintf('%s cannot draw a breadcrumb: it does not implement %s.', $theme::class, BreadcrumbElementsInterface::class));
     }
 
     $labels = array_map(static fn(string $segment): string => $theme->breadcrumbLabel($segment), $this->segments);

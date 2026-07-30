@@ -159,7 +159,7 @@ final class ThemeRenderTest extends TestCase {
     $this->assertCount(2, $stripped);
   }
 
-  public function testBodyMarksHelpWithoutADescription(): void {
+  public function testBodyMarksHelpWithoutDescription(): void {
     $theme = $this->plainTheme();
     $field = new Field('name', 'Name', '', FieldType::Text, '', help: 'Type a few letters to filter.');
     $panel = new Panel('p', 'P', '', [$field]);
@@ -173,7 +173,7 @@ final class ThemeRenderTest extends TestCase {
     $this->assertCount(1, $stripped);
   }
 
-  public function testBodyLeavesTheHelpMarkOffAFieldWithoutHelp(): void {
+  public function testBodyLeavesTheHelpMarkOffFieldWithoutHelp(): void {
     $theme = $this->plainTheme();
     $field = new Field('name', 'Name', 'The grower of record', FieldType::Text, '');
     $panel = new Panel('p', 'P', '', [$field]);
@@ -593,7 +593,7 @@ final class ThemeRenderTest extends TestCase {
     $this->assertSame('', (new DefaultTheme())->renderHints($nav, new Hint('newline', Action::NewLine)));
   }
 
-  public function testRenderHelpTitlesTheFieldAndOffersAWayOut(): void {
+  public function testRenderHelpTitlesTheFieldAndOffersWayOut(): void {
     $nav = KeyMapManager::create()->navigation();
 
     $help = Ansi::strip((new DefaultTheme())->renderHelp('Basket contents', "Every crate is weighed at the packing bench.\n\nLabelled before it leaves.", $nav));

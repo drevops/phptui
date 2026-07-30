@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
+use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Builder\Form;
@@ -158,7 +159,7 @@ final class ThemeFullscreenTest extends TestCase {
   }
 
   public function testMeasureContentWidthCoversTheHelpMarkerButNotTheHelp(): void {
-    $build = static fn(string $help) => Form::create('T')
+    $build = static fn(string $help): FormDefinition => Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $p) use ($help): void {
         $p->text('a', 'A rather long label that outruns the button bar')->help($help);
       })

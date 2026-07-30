@@ -52,7 +52,7 @@ final class CollectorTest extends TestCase {
     $this->assertSame(['courier' => 'Valley Runs'], (new Collector())->collect($panel));
   }
 
-  public function testAFieldItsConditionHidesIsNeverAskedFor(): void {
+  public function testFieldItsConditionHidesIsNeverAskedFor(): void {
     $panel = $this->panel(
       (new Field('organic', 'Organic only?'))->default(TRUE),
       (new Field('certifier', 'Certifier'))->default('Soil Board')->when(static fn(): bool => FALSE),
@@ -71,7 +71,7 @@ final class CollectorTest extends TestCase {
     $this->assertSame(['weight' => 4000], (new Collector())->collect($panel, ['weight' => 4000]));
   }
 
-  public function testARefusedSuppliedValueSaysWhichFieldAndWhy(): void {
+  public function testRefusedSuppliedValueSaysWhichFieldAndWhy(): void {
     $panel = $this->panel(
       (new Field('weight', 'Weight'))
         ->validate(static fn(mixed $value): ?string => is_int($value) && $value >= 200 ? NULL : 'Enter at least 200.'),

@@ -19,13 +19,13 @@ final class FieldBuilder {
   /**
    * Construct a field builder.
    *
-   * @param \DrevOps\Tui\Screen\PanelBuilder $panel
+   * @param \DrevOps\Tui\Screen\PanelBuilder $panelBuilder
    *   The panel to hand back.
    * @param \DrevOps\Tui\Block\Field $field
    *   The field being declared.
    */
   public function __construct(
-    protected PanelBuilder $panel,
+    protected PanelBuilder $panelBuilder,
     protected Field $field,
   ) {
   }
@@ -129,7 +129,7 @@ final class FieldBuilder {
    *   The panel builder.
    */
   public function done(): PanelBuilder {
-    return $this->panel;
+    return $this->panelBuilder;
   }
 
 }

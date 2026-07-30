@@ -25,7 +25,7 @@ use PHPUnit\Framework\TestCase;
 #[Group('screen')]
 final class BuilderTest extends TestCase {
 
-  public function testAThreeFieldFormNamesNoneOfTheHierarchy(): void {
+  public function testThreeFieldFormNamesNoneOfTheHierarchy(): void {
     $panel = (new PanelBuilder('main', 'Delivery'))
       ->field('courier', 'Courier')->default('Valley Runs')->done()
       ->field('weight', 'Basket weight')->default(1200)->done()
@@ -78,7 +78,7 @@ final class BuilderTest extends TestCase {
     $this->assertStringContainsString('to move', $lines[5]);
   }
 
-  public function testAFieldBuilderHandsBackThePanelItCameFrom(): void {
+  public function testFieldBuilderHandsBackThePanelItCameFrom(): void {
     $builder = new PanelBuilder('main', 'Delivery');
 
     $this->assertSame($builder, $builder->field('courier', 'Courier')->done());

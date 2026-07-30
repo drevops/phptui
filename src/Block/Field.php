@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
-use DrevOps\Tui\Block\Element\FieldElements;
+use DrevOps\Tui\Block\Element\FieldElementsInterface;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -328,8 +328,8 @@ final class Field implements BlockInterface {
    * {@inheritdoc}
    */
   public function render(ThemeInterface $theme): string {
-    if (!$theme instanceof FieldElements) {
-      throw new \InvalidArgumentException(sprintf('%s cannot draw a field: it does not implement %s.', $theme::class, FieldElements::class));
+    if (!$theme instanceof FieldElementsInterface) {
+      throw new \InvalidArgumentException(sprintf('%s cannot draw a field: it does not implement %s.', $theme::class, FieldElementsInterface::class));
     }
 
     // Help is never drawn in the row that offers it: it can run to paragraphs,
@@ -344,7 +344,7 @@ final class Field implements BlockInterface {
   /**
    * The rows this field draws while it is open.
    *
-   * @param \DrevOps\Tui\Block\Element\FieldElements $theme
+   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $theme
    *   The theme.
    * @param string $label
    *   The already-styled label.
@@ -352,7 +352,7 @@ final class Field implements BlockInterface {
    * @return string
    *   The rows.
    */
-  protected function openLines(FieldElements $theme, string $label): string {
+  protected function openLines(FieldElementsInterface $theme, string $label): string {
     $lines = [];
     $indent = str_repeat(' ', mb_strlen($this->label) + 2);
 

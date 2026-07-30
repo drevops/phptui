@@ -15,14 +15,10 @@ namespace DrevOps\Tui\Screen;
  */
 enum Axis: string {
 
-  /**
-   * Top to bottom.
-   */
+  // Top to bottom.
   case Rows = 'rows';
 
-  /**
-   * Left to right.
-   */
+  // Left to right.
   case Columns = 'columns';
 
 }

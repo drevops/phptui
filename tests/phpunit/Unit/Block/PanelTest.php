@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
 #[Group('block')]
 final class PanelTest extends TestCase {
 
-  public function testAPanelNestsALayoutRatherThanHoldingBlocks(): void {
+  public function testPanelNestsLayoutRatherThanHoldingBlocks(): void {
     $layout = new TwoColumnLayout();
     $panel = (new Panel('delivery', 'Delivery'))->layout($layout);
 
@@ -36,21 +36,21 @@ final class PanelTest extends TestCase {
     $this->assertSame([$courier], $panel->currentLayout()->in('left')->blocks());
   }
 
-  public function testAPanelWithoutALayoutHasNowhereToPutABlock(): void {
+  public function testPanelWithoutLayoutHasNowhereToPutBlock(): void {
     $this->expectException(\LogicException::class);
     $this->expectExceptionMessage('Panel "delivery" has no layout, so it has no regions to place a block in.');
 
     (new Panel('delivery', 'Delivery'))->in('left');
   }
 
-  public function testANestedPanelDrawsItsTitleAsARowYouSelect(): void {
+  public function testNestedPanelDrawsItsTitleAsRowYouSelect(): void {
     $child = (new Panel('advanced', 'Advanced'))->layout(new DefaultLayout());
     $theme = new DefaultTheme(40, ['color' => FALSE]);
 
     $this->assertSame('Advanced', $child->render($theme));
   }
 
-  public function testAPanelYouAreInDrawsNoRowOfItsOwn(): void {
+  public function testPanelYouAreInDrawsNoRowOfItsOwn(): void {
     $panel = (new Panel('delivery', 'Delivery'))->layout(new DefaultLayout());
 
     $this->assertFalse($panel->isEntered());
@@ -64,21 +64,21 @@ final class PanelTest extends TestCase {
     $panel->render(new DefaultTheme(40, ['color' => FALSE]));
   }
 
-  public function testAPanelCarriesItsTitleIntoTheTrail(): void {
+  public function testPanelCarriesItsTitleIntoTheTrail(): void {
     $panel = new Panel('delivery', 'Delivery');
 
     $this->assertSame('delivery', $panel->id());
     $this->assertSame('Delivery', $panel->title());
   }
 
-  public function testAModalIsTheSamePanelDrawnOverWhatIsBehindIt(): void {
+  public function testModalIsTheSamePanelDrawnOverWhatIsBehindIt(): void {
     $panel = new Panel('confirm', 'Confirm delivery');
 
     $this->assertFalse($panel->isModal());
     $this->assertTrue($panel->modal()->isModal());
   }
 
-  public function testAPanelHoldsTheSubPanelsYouCanDescendInto(): void {
+  public function testPanelHoldsTheSubPanelsYouCanDescendInto(): void {
     $parent = (new Panel('main', 'Delivery'))->layout(new DefaultLayout());
     $child = new Panel('advanced', 'Advanced');
 
@@ -87,7 +87,7 @@ final class PanelTest extends TestCase {
     $this->assertSame([$child], $parent->children());
   }
 
-  public function testABlockThatIsNotAPanelIsNoDestination(): void {
+  public function testBlockThatIsNotPanelIsNoDestination(): void {
     $parent = (new Panel('main', 'Delivery'))->layout(new DefaultLayout());
     $parent->in('content')->add(new Markup('intro', 'Pick the produce.'));
 

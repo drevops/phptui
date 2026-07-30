@@ -4,9 +4,10 @@
  * @file
  * Draws a screen from the levels the specification describes.
  *
- * A layout declares regions and names no block; the assembler puts the standard
- * furniture in them; each block reaches the theme for its own elements. The same
- * panel collects with no screen at all, which is the point of the split.
+ * A layout declares regions and names no block; the assembler puts the
+ * standard furniture in them; each block reaches the theme for its own
+ * elements. The same panel collects with no screen at all, which is the
+ * point of the split.
  *
  * Usage:
  * @code
@@ -29,19 +30,19 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $panel = (new PanelBuilder('delivery', 'Delivery'))
   ->field('courier', 'Courier')
-    ->default('Valley Runs')
-    ->help('Every crate is weighed and labelled at the packing bench.')
+  ->default('Valley Runs')
+  ->help('Every crate is weighed and labelled at the packing bench.')
   ->done()
   ->markup('weighing', 'Weighed at the packing bench.')
   ->field('weight', 'Basket weight')
-    ->default(1200)
-    ->constrain('a weight between 200 and 9000')
-    ->validate(static fn(mixed $value): ?string => is_int($value) && $value >= 200 && $value <= 9000 ? NULL : 'Enter a weight between 200 and 9000.')
+  ->default(1200)
+  ->constrain('a weight between 200 and 9000')
+  ->validate(static fn(mixed $value): ?string => is_int($value) && $value >= 200 && $value <= 9000 ? NULL : 'Enter a weight between 200 and 9000.')
   ->done()
   ->field('basket', 'Basket contents')
-    ->entry('apple', 'Apple')
-    ->entry('carrot', 'Carrot')
-    ->default('apple')
+  ->entry('apple', 'Apple')
+  ->entry('carrot', 'Carrot')
+  ->default('apple')
   ->done()
   ->build();
 

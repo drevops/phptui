@@ -12,7 +12,7 @@ namespace DrevOps\Tui\Block\Element;
  *
  * @package DrevOps\Tui\Block\Element
  */
-interface PanelElements {
+interface PanelElementsInterface {
 
   /**
    * Style a nested panel's title.

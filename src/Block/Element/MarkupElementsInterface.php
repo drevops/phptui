@@ -9,7 +9,7 @@ namespace DrevOps\Tui\Block\Element;
  *
  * @package DrevOps\Tui\Block\Element
  */
-interface MarkupElements {
+interface MarkupElementsInterface {
 
   /**
    * Style the title above a body of markup.

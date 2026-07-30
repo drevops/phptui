@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
-use DrevOps\Tui\Block\Element\ActionsElements;
+use DrevOps\Tui\Block\Element\ActionsElementsInterface;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -111,8 +111,8 @@ final class Actions implements BlockInterface {
    * {@inheritdoc}
    */
   public function render(ThemeInterface $theme): string {
-    if (!$theme instanceof ActionsElements) {
-      throw new \InvalidArgumentException(sprintf('%s cannot draw actions: it does not implement %s.', $theme::class, ActionsElements::class));
+    if (!$theme instanceof ActionsElementsInterface) {
+      throw new \InvalidArgumentException(sprintf('%s cannot draw actions: it does not implement %s.', $theme::class, ActionsElementsInterface::class));
     }
 
     $parts = [];

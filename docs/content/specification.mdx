@@ -647,7 +647,7 @@ $p->markup('certified', 'Organic crates need current certification.')
 **Breadcrumb** renders the trail of *panels* you've entered, gaining a segment as you *Descend* and losing one as you come back. It declares two elements:
 
 ```php
-interface BreadcrumbElements {
+interface BreadcrumbElementsInterface {
 
   public function breadcrumbLabel(string $text): string;
 
@@ -669,7 +669,7 @@ Orchard  ›  Delivery
 **Legend** renders the keys that apply right now, rewriting itself as focus moves - so an open *field* lists different keys from the *panel* around it. It declares three, and composes them per key:
 
 ```php
-interface LegendElements {
+interface LegendElementsInterface {
 
   public function legendKey(string $text): string;
 
@@ -697,7 +697,7 @@ Both follow the same shape, and so does every other block: an element per distin
 It's the only block other than a *field* that refuses anything, and unlike a field it holds no value while doing so.
 
 ```php
-interface ActionsElements {
+interface ActionsElementsInterface {
 
   public function actionButton(string $label): string;
 
@@ -723,7 +723,7 @@ The brackets belong to the element, not the block. A theme that framed a button 
 **Progress** runs work when activated, drawing an indicator while the work runs. It's the block that separates *Focus* from *Collect*: the cursor lands on it and activating it does something real, but nothing it does reaches the collected result.
 
 ```php
-interface ProgressElements {
+interface ProgressElementsInterface {
 
   public function progressCaption(string $text): string;
 
@@ -816,10 +816,10 @@ Two things follow. A theme that doesn't implement the interface can't draw that 
 A terminal may have no colour, no Unicode, or a background the theme should read. A theme declares which of those it handles, and declaring one is what grants the facility that goes with it:
 
 ```php
-final class OrchardTheme extends AbstractTheme implements SupportsScheme, BreadcrumbElements {
+final class OrchardTheme extends AbstractTheme implements SchemeCapableInterface, BreadcrumbElementsInterface {
 
   public function breadcrumbLabel(string $text): string {
-    // isDark() exists because the theme declared SupportsScheme.
+    // isDark() exists because the theme declared SchemeCapableInterface.
     return $this->isDark() ? $this->paint('dark-green', $text) : $this->paint('light-green', $text);
   }
 
@@ -832,9 +832,9 @@ final class OrchardTheme extends AbstractTheme implements SupportsScheme, Breadc
 
 | Declaration | Grants | For |
 |---|---|---|
-| `SupportsScheme` | `isDark()` | picking a palette for a dark or light terminal |
-| `SupportsColor` | `paint()` | any colour at all; without it every element returns plain text |
-| `SupportsUnicode` | `hasUnicode()` | choosing between a glyph and its ASCII stand-in |
+| `SchemeCapableInterface` | `isDark()` | picking a palette for a dark or light terminal |
+| `ColorCapableInterface` | `paint()` | any colour at all; without it every element returns plain text |
+| `UnicodeCapableInterface` | `hasUnicode()` | choosing between a glyph and its ASCII stand-in |
 
 A theme that declares none of them still works - it returns the strings it was handed. That's the floor, and it's why a form renders in a terminal that supports nothing.
 
@@ -844,12 +844,12 @@ Subclassing a theme is the full answer, and overkill when all you want is a diff
 
 ```php
 $tui->theme(fn(ThemeBuilder $t) => $t
-  ->breadcrumb(fn(BreadcrumbElements $b) => $b
+  ->breadcrumb(fn(BreadcrumbElementsInterface $b) => $b
     ->separator('›', '>'))
-  ->legend(fn(LegendElements $l) => $l
+  ->legend(fn(LegendElementsInterface $l) => $l
     ->separator('·', '|')
     ->key(Sgr::Bold))
-  ->field(fn(FieldElements $f) => $f
+  ->field(fn(FieldElementsInterface $f) => $f
     ->selector('❯', '>')
     ->helpMarker('ⁱ', '[?]')
     ->valueSeparator(', ')
