@@ -8,6 +8,7 @@ use DrevOps\Tui\Block\Element\ActionsElements;
 use DrevOps\Tui\Block\Element\BreadcrumbElements;
 use DrevOps\Tui\Block\Element\LegendElements;
 use DrevOps\Tui\Block\Element\MarkupElements;
+use DrevOps\Tui\Block\Element\PanelElements;
 use DrevOps\Tui\Block\Element\ProgressElements;
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Answers\Provenance;
@@ -62,7 +63,7 @@ use DrevOps\Tui\Utils\Strings;
  *
  * @package DrevOps\Tui\Theme
  */
-class DefaultTheme implements ThemeInterface, SupportsColor, SupportsScheme, SupportsUnicode, ActionsElements, BreadcrumbElements, LegendElements, MarkupElements, ProgressElements {
+class DefaultTheme implements ThemeInterface, SupportsColor, SupportsScheme, SupportsUnicode, ActionsElements, BreadcrumbElements, PanelElements, LegendElements, MarkupElements, ProgressElements {
 
   /**
    * The default frame width, used when a caller does not specify one.
@@ -958,6 +959,13 @@ class DefaultTheme implements ThemeInterface, SupportsColor, SupportsScheme, Sup
    */
   public function breadcrumbSeparator(): string {
     return $this->separator();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function panelTitle(string $text): string {
+    return $this->title($text);
   }
 
   /**
