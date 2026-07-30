@@ -29,3 +29,39 @@
 .theme-doc-sidebar-item-category-level-1:not(:first-child) {
   margin-top: 1.5rem;
 }
+
+/**
+ * A table with more columns than the content column fits.
+ *
+ * Markdown tables are not wrapped, so a wide one is clipped at the column edge
+ * and its rightmost columns cannot be reached at all. Wrapping it in this class
+ * gives it a scroller of its own without the page itself scrolling sideways.
+ */
+.table-scroll {
+  overflow-x: auto;
+}
+
+.table-scroll table {
+  display: table;
+  width: max-content;
+  min-width: 100%;
+}
+
+/**
+ * The row label stays put while the columns scroll under it.
+ *
+ * Without this a reader who scrolls to the far columns sees ticks with nothing
+ * to attribute them to. The stripe is restated because a sticky cell needs an
+ * opaque background of its own, and would otherwise show the row beneath it.
+ */
+.table-scroll th:first-child,
+.table-scroll td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--ifm-background-color);
+}
+
+.table-scroll tr:nth-child(2n) td:first-child {
+  background: var(--ifm-table-stripe-background);
+}

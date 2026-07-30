@@ -1,0 +1,256 @@
+---
+title: Structure
+description: 'The levels a screen is built from, and the capability each one owns: screens, layouts, regions, blocks, and the two tiers a theme draws with.'
+keywords: ['structure', 'screen', 'layout', 'region', 'block', 'field', 'panel', 'capability', 'theme']
+---
+
+# Structure
+
+A screen is built from four kinds of thing - a *screen*, its *layout*, that layout's *regions*, and the *blocks* drawn in them. Each kind owns a fixed set of capabilities, and owns them alone.
+
+That last part is what makes the model useful. When something doesn't obviously fit - a new kind of block, a feature that could live in two places - the question is never "where does this go", it's **which level owns the capability it needs**. The answer follows.
+
+## The hierarchy
+
+```
+Screen                 the root; fills the terminal, or fits its contents
+└─ Layout              arranges; reusable by name
+   └─ Region           holds blocks; declares whether it scrolls
+      └─ Block         drawn in a region
+         ├─ Panel      contains a layout of its own; entered and left
+         ├─ Field      answers; expands into an editor
+         ├─ Note       renders content
+         ├─ Table      renders content
+         ├─ Breadcrumb renders content
+         ├─ KeyHints   renders content
+         ├─ Buttons    acts
+         └─ Progress   acts
+```
+
+The chain repeats. A *panel* is a *block* that contains a *layout*, whose *regions* hold *blocks* of their own - so depth comes from the same four kinds rather than from a fifth.
+
+## Capabilities
+
+Sixteen capabilities cover everything on screen, each described as what you can observe rather than how it's built.
+
+| Capability | What's possible |
+|---|---|
+| **Show** | It draws something you can read. |
+| **Focus** | You can move onto it, and your keys then act on it. |
+| **Expand** | It opens in place to collect something, then closes again. |
+| **Enter** | You go into it: the screen becomes its contents, the trail grows, and you can come back. |
+| **Answer** | It holds a value that ends up in the result. |
+| **Expect** | It says what it will accept, before you act. |
+| **Refuse** | It can reject what you gave it, and say why. |
+| **Act** | Activating it does something, rather than revealing something. |
+| **Contain** | Other things appear inside it. |
+| **Arrange** | It decides where the things inside it sit. |
+| **Scroll** | Its contents can outrun its space, and you can move through them. |
+| **Fill** | It expands to the whole terminal, instead of fitting its contents. |
+| **Float** | It draws over everything else. |
+| **Advertise** | It says which keys apply while it's in play. |
+| **Vary** | It appears or disappears depending on other answers. |
+| **Reuse** | One definition, used in more than one place. |
+
+## What claims what
+
+<div className="table-scroll">
+
+| | Show | Focus | Expand | Enter | Answer | Expect | Refuse | Act | Contain | Arrange | Scroll | Fill | Float | Advertise | Vary | Reuse |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Screen | | | | | | | | | ✓ | | | ✓ | | | | |
+| Layout | | | | | | | | | ✓ | ✓ | | | | | | ✓ |
+| Region | | | | | | | | | ✓ | | ✓ | | | | | |
+| Panel | ✓ | ✓ | | ✓ | | | | | ✓ | | | | ✓ | ✓ | | |
+| Field | ✓ | ✓ | ✓ | | ✓ | ✓ | ✓ | | | | | | | ✓ | ✓ | |
+| Note | ✓ | | | | | | | | | | | | | | ✓ | |
+| Table | ✓ | | | | | | | | | | | | | | ✓ | |
+| Breadcrumb | ✓ | | | | | | | | | | | | | | | |
+| KeyHints | ✓ | | | | | | | | | | | | | | | |
+| Buttons | ✓ | ✓ | | | | | | ✓ | | | | | | | | |
+| Progress | ✓ | ✓ | | | | | | ✓ | | | | | | | ✓ | |
+
+</div>
+
+Six readings of that table are worth stating outright, because they're the ones a new block will test.
+
+**Only a field answers.** Everything else on screen shows, focuses or acts, and none of it reaches the collected result.
+
+**Focus and Act come apart.** A *progress* block takes the cursor and runs work while answering nothing. A *note* does neither. A *field* focuses and answers but never acts.
+
+**Arrange belongs to the layout alone.** A *panel* doesn't arrange anything - it *contains* a layout, and the layout arranges. That's what lets one layout serve a panel and a screen without either knowing about the other.
+
+**Scroll belongs to the region.** A layout is composed of region instances, and each declares whether it scrolls. So one layout can pin a column and scroll its neighbour, with the decision sitting where the scrolling is seen.
+
+**Fill belongs to the screen.** Whether the frame takes the whole terminal or shrinks to its contents is a property of the root, not of any layout inside it - so a layout behaves the same either way.
+
+**A panel shows and focuses only when nested.** A sub-panel is a row you select to enter. The panel currently filling the screen draws no row of its own and takes no cursor; its blocks do.
+
+## Panel
+
+A **panel** is the busiest *block*, so it's worth naming its capabilities exactly:
+
+```
+Panel  "Delivery"
+├─ Show       as a nested row: its title and a summary of its contents
+├─ Focus      as a nested row: the cursor lands on it
+├─ Enter      going in replaces the screen and grows the trail; leaving restores both
+├─ Contain    it holds a layout, whose regions hold its blocks
+├─ Float      as a modal, it draws over the dimmed screen behind it
+└─ Advertise  its keys fill the legend while you're in it
+```
+
+**Enter is the capability nothing else has**, and it's what makes a panel more than a container. A *region* can hold blocks and a *layout* can arrange them, but neither is somewhere you go.
+
+One panel fills the screen at a time. A **modal** is the same block that *Floats* instead of replacing what's behind it - nothing else about the panel changes.
+
+## Field
+
+A **field** is the *block* that answers. It's the only kind that contributes to the collected result, and the only kind that expands.
+
+One field owns both modes. In **view** mode it's one line, drawing every part of that line itself. Open it and it switches to **edit** mode, taking over the region right of its *label*:
+
+```
+view mode    ❯ Basket contents ⁱ  apple, carrot
+                                  └─────┬─────┘
+                                    the settled value
+
+edit mode    ❯ Basket contents    ● Apple
+                                  ○ Carrot
+                                  └───┬───┘
+                                    the field collecting it
+```
+
+The *label* and the *selector* stay put across both. Only the *value* region changes shape, which is why a field in *edit* mode is still one row of its *panel* rather than something new on the screen. [Anatomy](/widgets/anatomy) names every piece of both.
+
+*Expect* and *Refuse* are two capabilities rather than one because they answer different questions. *Expect* states what the field will accept before you act; *Refuse* explains why what you did was rejected. They share one line on screen and never appear together.
+
+Between the field and the theme sit its **capabilities** - the shared behaviour a field draws on rather than reimplements. The chain runs one way and never doubles back:
+
+```
+Field  ──▸  capabilities  ──▸  theme templates  ──▸  theme elements
+```
+
+## The theme's two tiers
+
+An **element** is the smallest styled piece. It takes a plain string, returns a styled one, and knows nothing about what surrounds it:
+
+```
+Orchard  ›  Delivery
+───┬───  ┬  ────┬───
+   │     │      └── breadcrumbLabel()
+   │     └───────── breadcrumbSeparator()
+   └─────────────── breadcrumbLabel()
+```
+
+A **template** composes elements into a block's output, deciding order, spacing and how many elements there are:
+
+```
+renderBreadcrumb(['Orchard', 'Delivery'])
+        │
+        ├── breadcrumbLabel('Orchard')
+        ├── breadcrumbSeparator()
+        └── breadcrumbLabel('Delivery')
+```
+
+Both are public, and the split tells you which to override:
+
+| Tier | Shape | Override to |
+|---|---|---|
+| Element | `breadcrumbLabel(string $text): string` | change color, weight or glyph |
+| Template | `renderBreadcrumb(array $segments): string` | change layout, order or what's included |
+
+Templates are implemented on the abstract theme, so a custom theme inherits working layout and touches only the elements it wants repainted. Overriding a template is the rare case: it means changing the shape of something, not its palette.
+
+## On screen
+
+Here it is on a real screen, each level labelled on the row it owns - the *region*, the *block* in it, then the *panel*'s *fields* and the *mode* each is drawing:
+
+```
+                              ╭──────────────────────────────────────────────────────╮
+header  ▸ Breadcrumb          │ Orchard › Delivery                                   │
+                              ├──────────────────────────────────────────────────────┤
+content ▸ Panel               │                                                      │
+          ▸ Field  edit mode  │ ❯ Basket  ● Apple                                    │
+                              │           ○ Carrot                                   │
+                              │     Pick the produce.                                │
+                              │                                                      │
+          ▸ Field  view mode  │   Basket weight  1200                                │
+                              │                                                      │
+          ▸ Field  view mode  │   Harvest date  2026-07-15                           │
+                              │                                                      │
+                              │   ▼                                                  │
+                              │                                                      │
+                              ├──────────────────────────────────────────────────────┤
+footer  ▸ KeyHints            │ ↑/↓ to move · ↵ to accept · ESC to cancel             │
+                              ╰──────────────────────────────────────────────────────╯
+```
+
+The `header` and `footer` *regions* declare no *Scroll*, so they're pinned; `content` declares it, which is why the mark under `Harvest date` belongs to that region rather than to the frame. The `Basket` *field* is open, so it's in *edit* mode: its two *entries* and its *description* all belong to that one *field*.
+
+## Building one
+
+The hierarchy is what's there, not what you have to type. A three-field form names none of it:
+
+```php
+$form = Form::create('Orchard')
+  ->panel('main', 'Delivery', function (PanelBuilder $p): void {
+    $p->text('courier', 'Courier');
+    $p->number('weight', 'Basket weight')->min(200)->max(9000);
+    $p->confirm('organic', 'Organic only?');
+  })
+  ->build();
+
+(new Tui($form))->run();
+```
+
+Every level has a default, and this is what those defaults are:
+
+```php
+Screen::create()
+  ->layout('three-region', fn(LayoutBuilder $l) => $l
+    ->region('header', fn(RegionBuilder $r) => $r->add(new Breadcrumb()))
+    ->region('content', fn(RegionBuilder $r) => $r->add($panel)->add(new Buttons()), scrolls: TRUE)
+    ->region('footer', fn(RegionBuilder $r) => $r->add(new KeyHints())));
+```
+
+Adding a *note* between two *fields* doesn't change the shape of the code, because a note and a number are both blocks in the same region. Only one of them answers:
+
+```php
+->panel('main', 'Delivery', function (PanelBuilder $p): void {
+  $p->text('courier', 'Courier');
+  $p->note('weighing', 'Every crate is weighed at the packing bench.');
+  $p->number('weight', 'Basket weight')->min(200)->max(9000);
+})
+```
+
+Two columns is the first thing that needs a *layout*, so it's the first thing that names one:
+
+```php
+->panel('main', 'Delivery', fn(PanelBuilder $p) => $p
+  ->layout('two-column')
+  ->in('left',  fn(RegionBuilder $r) => $r->text('courier', 'Courier'))
+  ->in('right', fn(RegionBuilder $r) => $r->number('weight', 'Basket weight')))
+```
+
+Named regions mean a block says where it goes, rather than depending on the order it was declared in.
+
+*Fill* sits on the screen, and nothing below it changes when you turn it on:
+
+```php
+(new Tui($form))->fullscreen()->run();
+```
+
+## Resolving a tension
+
+When something doesn't fit, name the capability it needs and the level that owns it. Three worked examples:
+
+**"Should a note be able to sit in the footer?"** A note *Shows*, and every block is drawn in a region. Yes - and it needs no new feature, only a placement.
+
+**"Should a progress row appear in the result?"** It would need *Answer*, which only a field has. No - it *Acts*, which is a different capability.
+
+**"Should a panel scroll its left column but not its right?"** *Scroll* belongs to the region, and a layout is composed of region instances. Yes - the left region declares it, the right doesn't, and no block changes.
+
+The point of the split is that each of those has one answer rather than an argument. A *region* that knew what a breadcrumb was would need to know what every block is; instead a region knows only that it holds blocks, a block knows only how to fill the space it's given, and a theme knows only how to style what it's handed.
+
+That's also what makes an element reusable. Because `breadcrumbSeparator()` receives no field, no panel and no answers, the same element draws the separator inside a form and inside a standalone line of output. An element that reached for form state could only ever be used from inside a form.
