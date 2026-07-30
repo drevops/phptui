@@ -25,7 +25,7 @@ One kind of block - a *panel* - contains a *layout*, which starts the chain agai
 
 ```
 Screen
-└─ Layout                      'three-region'
+└─ Layout                      'default'
    └─ Region                   'content'
       └─ Block                 a Panel
          └─ Layout             'two-column'
@@ -42,11 +42,11 @@ The four levels are what the model is made of. What you actually build with are 
 | Level | Kinds | Instances, on the screen below |
 |---|---|---|
 | Screen | one | the screen |
-| Layout | `three-region`, `two-column`, … | the screen's `three-region` |
+| Layout | `default`, `plain`, `two-column` | the screen's `default` |
 | Region | none - a layout names its own | `header`, `content`, `footer` |
 | Block | Panel, Field, Markup, Breadcrumb, KeyHints, Buttons, Progress | one Breadcrumb, one Panel, three Fields, one KeyHints |
 
-*Layouts* are the level with reusable named kinds - that's what *Reuse* means in the table below. *Regions* have no kinds at all: a region is a named slot its layout declares, so `header` exists because `three-region` says so.
+*Layouts* are the level with reusable named kinds - that's what *Reuse* means in the table below. *Regions* have no kinds at all: a region is a named slot its layout declares, so `header` exists because `default` declares it.
 
 The rows in the next table mix the two: the first three are levels, and the seven after them are kinds of block.
 
@@ -57,38 +57,38 @@ Sixteen capabilities cover everything on screen, each described as what you can 
 | Capability | What's possible |
 |---|---|
 | **Act** | Activating it does something, rather than revealing something. |
-| **Advertise** | It says which keys apply while it's in play. |
 | **Answer** | It holds a value that ends up in the result. |
 | **Arrange** | It decides where the things inside it sit. |
+| **Bind** | It owns keystrokes while it's in play, and says which. |
+| **Constrain** | It says what it will accept, before you act. |
 | **Contain** | Other things appear inside it. |
+| **Depend** | It appears or disappears depending on other answers. |
 | **Enter** | You go into it: the screen becomes its contents, the trail grows, and you can come back. |
 | **Expand** | It opens in place to collect something, then closes again. |
-| **Expect** | It says what it will accept, before you act. |
 | **Fill** | It expands to the whole terminal, instead of fitting its contents. |
 | **Float** | It draws over everything else. |
 | **Focus** | You can move onto it, and your keys then act on it. |
-| **Refuse** | It can reject what you gave it, and say why. |
+| **Reject** | It can refuse what you gave it, and say why. |
 | **Reuse** | One definition, used in more than one place. |
 | **Scroll** | Its contents can outrun its space, and you can move through them. |
 | **Show** | It draws something you can read. |
-| **Vary** | It appears or disappears depending on other answers. |
 
 ## What claims what
 
 <div className="table-scroll">
 
-| | Act | Advertise | Answer | Arrange | Contain | Enter | Expand | Expect | Fill | Float | Focus | Refuse | Reuse | Scroll | Show | Vary |
+| | Act | Answer | Arrange | Bind | Constrain | Contain | Depend | Enter | Expand | Fill | Float | Focus | Reject | Reuse | Scroll | Show |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Screen | | | | | ✓ | | | | ✓ | | | | | | | |
-| Layout | | | | ✓ | ✓ | | | | | | | | ✓ | | | |
-| Region | | | | | ✓ | | | | | | | | | ✓ | | |
-| Panel | | ✓ | | | ✓ | ✓ | | | | ✓ | ✓ | | | | ✓ | |
-| Field | | ✓ | ✓ | | | | ✓ | ✓ | | | ✓ | ✓ | | | ✓ | ✓ |
-| Markup | | | | | | | | | | | | | | | ✓ | ✓ |
-| Breadcrumb | | | | | | | | | | | | | | | ✓ | |
-| KeyHints | | | | | | | | | | | | | | | ✓ | |
-| Buttons | ✓ | | | | | | | | | | ✓ | | | | ✓ | |
-| Progress | ✓ | | | | | | | | | | ✓ | | | | ✓ | ✓ |
+| Screen | | | | | | ✓ | | | | ✓ | | | | | | |
+| Layout | | | ✓ | | | ✓ | | | | | | | | ✓ | | |
+| Region | | | | | | ✓ | | | | | | | | | ✓ | |
+| Panel | | | | ✓ | | ✓ | | ✓ | | | ✓ | ✓ | | | | ✓ |
+| Field | | ✓ | | ✓ | ✓ | | ✓ | | ✓ | | | ✓ | ✓ | | | ✓ |
+| Markup | | | | | | | ✓ | | | | | | | | | ✓ |
+| Breadcrumb | | | | | | | | | | | | | | | | ✓ |
+| KeyHints | | | | | | | | | | | | | | | | ✓ |
+| Buttons | ✓ | | | | | | | | | | | ✓ | | | | ✓ |
+| Progress | ✓ | | | | | | ✓ | | | | | ✓ | | | | ✓ |
 
 </div>
 
@@ -120,11 +120,121 @@ The **screen** is the root. It holds one *layout* and claims one capability of i
 
 ## Layout
 
-A **layout** is composed of *region* instances, and it decides where they sit. It claims *Arrange*, *Contain* and *Reuse*.
+A **layout** is composed of *region* instances and decides where they sit. It claims *Arrange*, *Contain* and *Reuse*.
 
-*Reuse* is the point: a layout is named and reusable, so the same one serves a *screen* and a *panel*. The library ships several, and a form picks one rather than describing an arrangement inline.
+A layout has one **axis**: its regions run either top to bottom or left to right. Two axes cover every arrangement, because the second dimension comes from nesting rather than from a grid:
 
-A layout draws nothing. That's what separates it and *region* from every *block*: neither claims *Show*.
+```php
+Layout::rows()                  // regions run top to bottom
+Layout::columns()               // regions run left to right
+```
+
+A layout draws nothing itself - neither it nor a *region* claims *Show*. And a layout with no regions renders nothing at all, because there is nowhere for a block to go.
+
+### The default layout
+
+Three regions stacked, with the middle one scrolling. This is what a form gets without asking:
+
+```php
+Layout::rows()
+  ->region('header')
+  ->region('content', scrolls: TRUE)
+  ->region('footer');
+```
+
+```
+╭─────────────────────────╮
+│ header                  │   pinned
+├─────────────────────────┤
+│ content               ▲ │
+│                       ▼ │   scrolls
+├─────────────────────────┤
+│ footer                  │   pinned
+╰─────────────────────────╯
+```
+
+### One region
+
+The degenerate case, and a useful one: no chrome, just the content. It needs no special axis - it's `rows()` with a single region:
+
+```php
+Layout::rows()
+  ->region('content', scrolls: TRUE);
+```
+
+```
+╭─────────────────────────╮
+│ content               ▲ │
+│                       ▼ │   scrolls
+╰─────────────────────────╯
+```
+
+Put a *breadcrumb* or a *KeyHints* block in that one region and it renders inline with everything else. There's no rule that says a breadcrumb belongs at the top - only the default layout says so.
+
+### Two columns
+
+The other axis. Neither region scrolls here, so both are pinned:
+
+```php
+Layout::columns()
+  ->region('left')
+  ->region('right');
+```
+
+```
+╭────────────┬────────────╮
+│ left       │ right      │
+│            │            │
+╰────────────┴────────────╯
+```
+
+Scrolling is per region, so one column can scroll while its neighbour stays put:
+
+```php
+Layout::columns()
+  ->region('left', scrolls: TRUE)
+  ->region('right');
+```
+
+### Both axes at once
+
+A *panel* is a *block* that contains a layout, so nesting one inside a region gives you rows and columns together:
+
+```php
+// 'content' holds a Panel, and that Panel's own layout is columns().
+Layout::rows()
+  ->region('header')
+  ->region('content', scrolls: TRUE)
+  ->region('footer');
+```
+
+```
+╭─────────────────────────╮
+│ header                  │
+├─────────────────────────┤
+│ ╭──────────┬──────────╮ │
+│ │ left     │ right    │ │   a Panel in 'content',
+│ ╰──────────┴──────────╯ │   laid out in columns
+├─────────────────────────┤
+│ footer                  │
+╰─────────────────────────╯
+```
+
+This is why the axis needs no third value. Any arrangement is rows of columns of rows, as deep as it needs to be, from two primitives.
+
+### Shipped layouts
+
+*Reuse* means a layout is named and reusable, so the same one serves a *screen* and a *panel*. Three ship, and a form picks one rather than describing an arrangement inline:
+
+| Name | Axis | Regions |
+|---|---|---|
+| `default` | rows | `header`, `content` (scrolls), `footer` |
+| `plain` | rows | `content` (scrolls) |
+| `two-column` | columns | `left`, `right` |
+
+```php
+(new Tui($form))->layout('two-column')->run();
+```
 
 ## Region
 
@@ -161,7 +271,7 @@ Panel  "Delivery"
 ├─ Enter      going in replaces the screen and grows the trail; leaving restores both
 ├─ Contain    it holds a layout, whose regions hold its blocks
 ├─ Float      as a modal, it draws over the dimmed screen behind it
-└─ Advertise  its keys fill the legend while you're in it
+└─ Bind       it owns the keystrokes while you're in it, and its keys fill the legend
 ```
 
 **Enter is the capability nothing else has**, and it's what makes a panel more than a container. A *region* can hold blocks and a *layout* can arrange them, but neither is somewhere you go.
@@ -187,7 +297,7 @@ edit mode    ❯ Basket contents    ● Apple
 
 The *label* and the *selector* stay put across both. Only the *value* region changes shape, which is why a field in *edit* mode is still one row of its *panel* rather than something new on the screen. [Anatomy](/widgets/anatomy) names every piece of both.
 
-*Expect* and *Refuse* are two capabilities rather than one because they answer different questions. *Expect* states what the field will accept before you act; *Refuse* explains why what you did was rejected. They share one line on screen and never appear together.
+*Constrain* and *Reject* are two capabilities rather than one because they answer different questions. *Constrain* states what the field will accept before you act; *Reject* explains why what you did was refused. They share one line on screen and never appear together - which is why [Anatomy](/widgets/anatomy) names that line's two states the **constraint** and the **error**.
 
 Between the field and the theme sit its **capabilities** - the shared behaviour a field draws on rather than reimplements. The chain runs one way and never doubles back:
 
@@ -197,14 +307,14 @@ Field  ──▸  capabilities  ──▸  theme templates  ──▸  theme ele
 
 ## Markup
 
-**Markup** renders formatted content and does nothing else. It takes plain text or the [markdown subset](/markdown), and it claims *Show* and *Vary*. How it's laid out on the page is a presentation choice rather than a capability:
+**Markup** renders formatted content and does nothing else. It takes plain text or the [markdown subset](/markdown), and it claims *Show* and *Depend*. How it's laid out on the page is a presentation choice rather than a capability:
 
 ```php
 $p->markup('weighing', 'Every crate is weighed at the packing bench.');
 $p->markup('yields', 'Yields per crate')->table(['Produce', 'Crates'], [['Apple', '12'], ['Carrot', '8']]);
 ```
 
-Prose, a bordered card and a table are the same block laid out three ways. *Vary* is what lets a warning appear only when an earlier answer calls for it.
+Prose, a bordered card and a table are the same block laid out three ways. *Depend* is what lets a warning appear only when an earlier answer calls for it.
 
 ## The theme's two tiers
 
@@ -283,7 +393,7 @@ Every level has a default, and this is what those defaults are:
 
 ```php
 Screen::create()
-  ->layout('three-region', fn(LayoutBuilder $l) => $l
+  ->layout('default', fn(LayoutBuilder $l) => $l
     ->region('header', fn(RegionBuilder $r) => $r->add(new Breadcrumb()))
     ->region('content', fn(RegionBuilder $r) => $r->add($panel)->add(new Buttons()), scrolls: TRUE)
     ->region('footer', fn(RegionBuilder $r) => $r->add(new KeyHints())));
