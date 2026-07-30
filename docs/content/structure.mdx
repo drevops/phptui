@@ -856,6 +856,53 @@ The `header` and `footer` *regions* declare no *Scroll*, so they're pinned; `con
 
 The labels skip a level between `Panel` and `Field`, because the *panel* has a *layout* of its own and the fields sit in that layout's single region. It is elided here for the same reason it is invisible on screen: a one-region layout adds a level without adding anything to see.
 
+## Driving a screen
+
+Everything above describes a screen at rest. What moves it is one key at a time, and the two directions are worth seeing together: **keys travel inward, drawing travels outward.**
+
+A key goes to the innermost thing that *Binds* it, and only outward from there:
+
+```
+key ──▸ the focused block, if it binds that key
+    ──▸ else the panel the block sits in
+    ──▸ else the screen
+```
+
+That one rule explains a behaviour that otherwise looks like a special case. An open *text* field binds every printable key, because each is something you're typing - so <kbd>?</kbd> reaches it and becomes a character. Close the field and it binds nothing printable, so the same <kbd>?</kbd> travels outward to the panel and opens help. Nobody wrote an exception; the key simply stopped at a different level.
+
+*Focus* decides which block is innermost. It moves with <kbd>↑</kbd> and <kbd>↓</kbd> between the blocks that claim it, skipping the ones that don't - so a *markup* block sits between two *fields* without ever being landed on.
+
+Drawing runs the other way, outward from the root:
+
+```
+Screen  ──▸ gives the Layout the terminal, or as much as it needs
+Layout  ──▸ works out a size for each Region
+Region  ──▸ flows its Blocks, and scrolls them if it has to
+Block   ──▸ render()s, reaching the Theme for elements
+Theme   ──▸ returns styled strings
+```
+
+Each step hands down exactly one thing and knows nothing of the step after it. A layout hands a region a number; a region hands a block a space; a block hands the theme a string. Nothing reaches back up.
+
+## Collecting headlessly
+
+The same form can collect with no screen at all - from a JSON payload, from environment variables, from an agent. Nothing is drawn, and the capabilities split cleanly in two:
+
+| Capability | Headless | |
+|---|---|---|
+| *Collect* | ✓ | the whole point |
+| *Constrain* | ✓ | a bound is a fact about the answer, not the display |
+| *Reject* | ✓ | so is a refusal |
+| *Depend* | ✓ | a field its condition hides is never asked for |
+| *Activate*, *Bind*, *Capture*, *Descend*, *Focus*, *Show* | | nothing draws and no key arrives |
+| *Arrange*, *Flow*, *Nest*, *Occupy*, *Overlay*, *Reuse*, *Scroll* | | there is no screen to arrange |
+
+Four survive, thirteen don't, and the line between them is the useful part: **the four are the form's meaning, and the rest is how it looks.** A *screen*, a *layout* and a *region* are never built headlessly, because they exist only to arrange drawing. Neither is a *breadcrumb*, a *legend* or *markup* - a block that only *Shows* has nothing to contribute when nothing is shown.
+
+*Fields* are built, because they're the blocks that *Collect*. They're built without their modes: no *view*, no *edit*, no *Capture*, since there's no cursor to open anything. What runs is the part that was never about the screen - the value arrives, its bounds are checked, its validator is asked, and its condition decides whether it was asked for at all.
+
+That's why the same declaration serves both. A form doesn't say how to draw itself; it says what it collects, and the drawing is a separate set of capabilities layered on top.
+
 ## Building one
 
 The hierarchy is what's there, not what you have to type. A three-field form names none of it:
