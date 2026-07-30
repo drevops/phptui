@@ -16,6 +16,7 @@
 
 declare(strict_types=1);
 
+use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Screen\Assembler;
 use DrevOps\Tui\Screen\Axis;
@@ -50,12 +51,18 @@ print "On screen\n\n";
 print (new ScreenRenderer($theme))->render((new Assembler())->assemble($panel), 10, 56) . "\n\n";
 
 print "The same panel, with a field open\n\n";
-$panel->in('content')->blocks()[3]->open();
+
+foreach ($panel->in('content')->blocks() as $block) {
+  if ($block instanceof Field && $block->id() === 'basket') {
+    $block->open();
+  }
+}
+
 print (new ScreenRenderer($theme))->render((new Assembler())->assemble($panel), 10, 56) . "\n\n";
 
 print "Collected headlessly, with no screen at all\n\n";
 foreach ((new Collector())->collect($panel) as $id => $value) {
-  printf("  %-8s %s\n", $id, is_array($value) ? implode(', ', $value) : var_export($value, TRUE));
+  printf("  %-8s %s\n", $id, var_export($value, TRUE));
 }
 
 print "\nA value the field refuses\n\n";
