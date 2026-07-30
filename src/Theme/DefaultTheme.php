@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Theme;
 
 use DrevOps\Tui\Block\Element\ActionsElements;
 use DrevOps\Tui\Block\Element\BreadcrumbElements;
+use DrevOps\Tui\Block\Element\FieldElements;
 use DrevOps\Tui\Block\Element\LegendElements;
 use DrevOps\Tui\Block\Element\MarkupElements;
 use DrevOps\Tui\Block\Element\PanelElements;
@@ -63,7 +64,7 @@ use DrevOps\Tui\Utils\Strings;
  *
  * @package DrevOps\Tui\Theme
  */
-class DefaultTheme implements ThemeInterface, SupportsColor, SupportsScheme, SupportsUnicode, ActionsElements, BreadcrumbElements, PanelElements, LegendElements, MarkupElements, ProgressElements {
+class DefaultTheme implements ThemeInterface, SupportsColor, SupportsScheme, SupportsUnicode, ActionsElements, BreadcrumbElements, FieldElements, PanelElements, LegendElements, MarkupElements, ProgressElements {
 
   /**
    * The default frame width, used when a caller does not specify one.
@@ -959,6 +960,48 @@ class DefaultTheme implements ThemeInterface, SupportsColor, SupportsScheme, Sup
    */
   public function breadcrumbSeparator(): string {
     return $this->separator();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldLabel(string $text): string {
+    return $this->label($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldValue(string $text): string {
+    return $this->value($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldHelpMarker(): string {
+    return $this->helpMarker();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldEntry(string $text, bool $chosen): string {
+    return $this->check($chosen) . ' ' . $this->label($text, $chosen);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldConstraint(string $text): string {
+    return $this->hint($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldError(string $text): string {
+    return $this->error($text);
   }
 
   /**
