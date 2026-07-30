@@ -125,8 +125,15 @@ A **layout** is composed of *region* instances and decides where they sit. It cl
 A layout has one **axis**: its regions run either top to bottom or left to right. Two axes cover every arrangement, because the second dimension comes from nesting rather than from a grid:
 
 ```php
-Layout::rows()                  // regions run top to bottom
-Layout::columns()               // regions run left to right
+new Layout(Axis::Rows);         // regions run top to bottom
+new Layout(Axis::Columns);      // regions run left to right
+```
+
+You build one by adding regions to it, and a region takes its blocks the same way. Two levels, one verb:
+
+```php
+(new Layout(Axis::Rows))
+  ->add((new Region('header'))->add(new Breadcrumb()));
 ```
 
 A layout draws nothing itself - neither it nor a *region* claims *Show*. And a layout with no regions renders nothing at all, because there is nowhere for a block to go.
@@ -136,10 +143,10 @@ A layout draws nothing itself - neither it nor a *region* claims *Show*. And a l
 Three regions stacked, with the middle one scrolling. This is what a form gets without asking:
 
 ```php
-Layout::rows()
-  ->region('header')
-  ->region('content', scrolls: TRUE)
-  ->region('footer');
+(new Layout(Axis::Rows))
+  ->add(new Region('header'))
+  ->add(new Region('content', scrolls: TRUE))
+  ->add(new Region('footer'));
 ```
 
 ```
@@ -155,11 +162,11 @@ Layout::rows()
 
 ### One region
 
-Nothing ships as one region, but nothing stops you writing it either - a single-region layout needs no special axis, because it's `rows()` that happens to declare one:
+Nothing ships as one region, but nothing stops you writing it either - a single-region layout needs no special axis, because it is `Axis::Rows` that happens to declare one:
 
 ```php
-Layout::rows()
-  ->region('content', scrolls: TRUE);
+(new Layout(Axis::Rows))
+  ->add(new Region('content', scrolls: TRUE));
 ```
 
 ```
@@ -176,9 +183,9 @@ Put a *breadcrumb* or a *KeyHints* block in that one region and it renders inlin
 The other axis. Neither region scrolls here, so both are pinned:
 
 ```php
-Layout::columns()
-  ->region('left')
-  ->region('right');
+(new Layout(Axis::Columns))
+  ->add(new Region('left'))
+  ->add(new Region('right'));
 ```
 
 ```
@@ -191,21 +198,43 @@ Layout::columns()
 Scrolling is per region, so one column can scroll while its neighbour stays put:
 
 ```php
-Layout::columns()
-  ->region('left', scrolls: TRUE)
-  ->region('right');
+(new Layout(Axis::Columns))
+  ->add(new Region('left', scrolls: TRUE))
+  ->add(new Region('right'));
 ```
+
+### Proportional columns
+
+Columns divide the width on a twelve-unit grid. A region declares how many units it takes, so `6` and `6` splits evenly and `4` and `8` gives a third to one and two thirds to the other:
+
+```php
+(new Layout(Axis::Columns))
+  ->add(new Region('left', span: 4))
+  ->add(new Region('right', span: 8));
+```
+
+```
+├───────────────── 12 units ─────────────────┤
+╭───────────────┬────────────────────────────╮
+│ left          │ right                      │
+│ span: 4       │ span: 8                    │
+╰───────────────┴────────────────────────────╯
+```
+
+Omit the spans and the width divides evenly, so two regions are `6` and `6` and three are `4`, `4` and `4`. Twelve is chosen because it divides by two, three, four and six, which covers every split you'd reach for without fractions.
+
+Spans belong to the *columns* axis only. On the *rows* axis a region is as tall as its blocks, and the region that *Scrolls* takes whatever height is left - which is why a header and footer sit tight against their content while the middle stretches.
 
 ### Both axes at once
 
 A *panel* is a *block* that contains a layout, so nesting one inside a region gives you rows and columns together:
 
 ```php
-// 'content' holds a Panel, and that Panel's own layout is columns().
-Layout::rows()
-  ->region('header')
-  ->region('content', scrolls: TRUE)
-  ->region('footer');
+// The Panel in 'content' carries a Layout(Axis::Columns) of its own.
+(new Layout(Axis::Rows))
+  ->add(new Region('header'))
+  ->add((new Region('content', scrolls: TRUE))->add($panel))
+  ->add(new Region('footer'));
 ```
 
 ```
@@ -229,7 +258,7 @@ This is why the axis needs no third value. Any arrangement is rows of columns of
 | Name | Axis | Regions |
 |---|---|---|
 | `default` | rows | `header`, `content` (scrolls), `footer` |
-| `two-column` | columns | `left`, `right` |
+| `two-column` | columns | `left` (span 6), `right` (span 6) |
 
 Two is enough because they cover the two axes. Anything else is those two nested, or a layout you write yourself.
 
@@ -393,11 +422,12 @@ $form = Form::create('Orchard')
 Every level has a default, and this is what those defaults are:
 
 ```php
-Screen::create()
-  ->layout('default', fn(LayoutBuilder $l) => $l
-    ->region('header', fn(RegionBuilder $r) => $r->add(new Breadcrumb()))
-    ->region('content', fn(RegionBuilder $r) => $r->add($panel)->add(new Buttons()), scrolls: TRUE)
-    ->region('footer', fn(RegionBuilder $r) => $r->add(new KeyHints())));
+$layout = (new Layout(Axis::Rows))
+  ->add((new Region('header'))->add(new Breadcrumb()))
+  ->add((new Region('content', scrolls: TRUE))->add($panel)->add(new Buttons()))
+  ->add((new Region('footer'))->add(new KeyHints()));
+
+(new Screen())->layout($layout);
 ```
 
 Adding *markup* between two *fields* doesn't change the shape of the code, because markup and a number are both blocks in the same region. Only one of them answers:
@@ -413,10 +443,11 @@ Adding *markup* between two *fields* doesn't change the shape of the code, becau
 Two columns is the first thing that needs a *layout*, so it's the first thing that names one:
 
 ```php
-->panel('main', 'Delivery', fn(PanelBuilder $p) => $p
-  ->layout('two-column')
-  ->in('left',  fn(RegionBuilder $r) => $r->text('courier', 'Courier'))
-  ->in('right', fn(RegionBuilder $r) => $r->number('weight', 'Basket weight')))
+->panel('main', 'Delivery', function (PanelBuilder $p): void {
+  $p->layout('two-column');
+  $p->in('left')->text('courier', 'Courier');
+  $p->in('right')->number('weight', 'Basket weight');
+})
 ```
 
 Named regions mean a block says where it goes, rather than depending on the order it was declared in.
