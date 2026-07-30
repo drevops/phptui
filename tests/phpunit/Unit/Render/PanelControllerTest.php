@@ -470,36 +470,92 @@ final class PanelControllerTest extends TestCase {
     $this->assertTrue($controller->isDone());
   }
 
-  public function testHubFooterShowsQuitAndHelp(): void {
+  public function testHubFooterShowsQuitAndOffersHelpOnlyWhereThereIsSome(): void {
     $controller = $this->controller();
 
-    // The hub footer is complete: it surfaces quit and the help toggle, not
-    // just the move/select/back subset.
+    // The hub footer is complete: it surfaces quit, not just the
+    // move/select/back subset.
     $footer = Ansi::strip($controller->frame(12));
     $this->assertStringContainsString('Q to quit', $footer);
-    $this->assertStringContainsString('? to show help', $footer);
+
+    // Nothing in focus carries help, so the key that would show it goes
+    // unadvertised: a legend lists only keys that do something.
+    $this->assertStringNotContainsString('to show help', $footer);
   }
 
-  public function testHelpOverlayTogglesAndCloses(): void {
-    $controller = $this->controller();
+  public function testHubFooterFollowsFocusInAdvertisingHelp(): void {
+    $controller = $this->helpController();
+    $controller->handle(Key::named(KeyName::Enter));
 
-    // '?' opens the overlay; the frame becomes the help screen listing the hub
-    // and each widget type the form uses (here Text and Confirm).
+    $this->assertStringContainsString('? to show help', Ansi::strip($controller->frame(12)));
+
+    // The legend rewrites itself as focus moves, so the next field - which
+    // declares no help - retires the key.
+    $controller->handle(Key::named(KeyName::Down));
+    $this->assertStringNotContainsString('to show help', Ansi::strip($controller->frame(12)));
+  }
+
+  public function testHelpShowsTheFieldsOwnTextAndAnyKeyCloses(): void {
+    $controller = $this->helpController();
+    $controller->handle(Key::named(KeyName::Enter));
+
     $controller->handle(Key::char('?'));
     $this->assertTrue($controller->isShowingHelp());
 
     $help = Ansi::strip($controller->frame(12));
-    $this->assertStringContainsString('Keyboard help', $help);
-    $this->assertStringContainsString('Navigation', $help);
-    $this->assertStringContainsString('Text', $help);
-    $this->assertStringContainsString('Confirm', $help);
+    $this->assertStringContainsString('Grower', $help);
+    $this->assertStringContainsString('Every crate is weighed at the packing bench.', $help);
     $this->assertStringContainsString('? to close', $help);
 
     // Any key dismisses it, and that key does nothing else (the cursor stays).
     $controller->handle(Key::named(KeyName::Down));
     $this->assertFalse($controller->isShowingHelp());
     $this->assertSame(0, $controller->cursor());
-    $this->assertStringContainsString('Demo', Ansi::strip($controller->frame(12)));
+    $this->assertStringContainsString('Grower', Ansi::strip($controller->frame(12)));
+  }
+
+  public function testHelpIgnoredOnAFieldWithNone(): void {
+    $controller = $this->helpController();
+    $controller->handle(Key::named(KeyName::Enter));
+    $controller->handle(Key::named(KeyName::Down));
+
+    $controller->handle(Key::char('?'));
+
+    $this->assertFalse($controller->isShowingHelp());
+  }
+
+  public function testHelpReachesAnOpenFieldThatDoesNotTypeCharacters(): void {
+    $builder = Form::create('Demo')
+      ->buttons(FALSE)
+      ->panel('p', 'P', function (PanelBuilder $p): void {
+        $p->confirm('organic', 'Organic only?')->help('Only orchards with current certification.');
+        $p->text('grower', 'Grower')->help('Every crate is weighed at the packing bench.');
+      });
+    $controller = new PanelController($builder->build(), $this->plainTheme(), []);
+    $this->drillAndEdit($controller);
+    $this->assertTrue($controller->isEditing());
+
+    // A confirm widget spends no printable character, so the help key is free
+    // and the editor's own legend advertises it.
+    $this->assertStringContainsString('? to show help', Ansi::strip($controller->frame(12)));
+
+    $controller->handle(Key::char('?'));
+    $this->assertTrue($controller->isShowingHelp());
+    $this->assertStringContainsString('current certification', Ansi::strip($controller->frame(12)));
+  }
+
+  public function testHelpStandsAsideForAFieldThatTypesCharacters(): void {
+    $controller = $this->helpController();
+    $this->drillAndEdit($controller);
+    $this->assertTrue($controller->isEditing());
+
+    // A text widget takes '?' as a character it is being given, so while it is
+    // open the key cannot double as the help key - and is not advertised as one.
+    $this->assertStringNotContainsString('to show help', Ansi::strip($controller->frame(12)));
+
+    $controller->handle(Key::char('?'));
+    $this->assertFalse($controller->isShowingHelp());
+    $this->assertStringContainsString('?', Ansi::strip($controller->frame(12)));
   }
 
   public function testFooterHiddenWhenTurnedOff(): void {
@@ -1600,6 +1656,17 @@ final class PanelControllerTest extends TestCase {
   protected function drillAndEdit(PanelController $controller): void {
     $controller->handle(Key::named(KeyName::Enter));
     $controller->handle(Key::named(KeyName::Enter));
+  }
+
+  protected function helpController(): PanelController {
+    $builder = Form::create('Demo')
+      ->buttons(FALSE)
+      ->panel('p', 'P', function (PanelBuilder $p): void {
+        $p->text('grower', 'Grower')->help('Every crate is weighed at the packing bench.');
+        $p->text('crate', 'Crate');
+      });
+
+    return new PanelController($builder->build(), $this->plainTheme(), []);
   }
 
   protected function controller(): PanelController {

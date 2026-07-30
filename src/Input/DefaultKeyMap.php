@@ -105,6 +105,20 @@ class DefaultKeyMap {
     // Up and Down (inherited from the base) move the cursor, or the held item.
     $bindings[] = new Binding(Scope::field(FieldType::Reorder), Action::Grab, KeyName::Space);
 
+    // A field stays reachable by its help key while it is open, wherever the
+    // key is free to mean that. Where the widget takes typed characters the key
+    // is one of them, and the scope is skipped rather than fought over - which
+    // is also what {@see KeyMap::guard()} would insist on.
+    foreach (FieldType::cases() as $type) {
+      foreach ([FALSE, TRUE] as $multiple) {
+        $scope = Scope::field($type, $multiple);
+
+        if (!$scope->consumesText()) {
+          $bindings[] = new Binding($scope, Action::Help, '?');
+        }
+      }
+    }
+
     return $bindings;
   }
 

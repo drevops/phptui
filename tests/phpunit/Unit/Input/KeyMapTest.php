@@ -123,8 +123,9 @@ final class KeyMapTest extends TestCase {
   public function testForFieldFallsBackToBaseInstance(): void {
     $map = KeyMapManager::create();
 
-    // Select has no overrides, so it is the very same base instance.
-    $this->assertSame($map->scope(Scope::base()), $map->forField(FieldType::Select));
+    // A single search filters by typed text, so it neither overrides a base
+    // binding nor takes the help key: it is the very same base instance.
+    $this->assertSame($map->scope(Scope::base()), $map->forField(FieldType::Search));
   }
 
   #[DataProvider('dataProviderVimPreset')]

@@ -145,24 +145,24 @@ final class AgentHelpTest extends TestCase {
 
     // Each text keeps its own key, so an agent reads the same three guidance
     // texts a human does rather than one merged description.
-    yield 'hint and placeholder travel as extension keys' => [
+    yield 'help and placeholder travel as extension keys' => [
       static function (PanelBuilder $p): void {
         $p->text('name', 'Site name')
           ->description('The public name')
-          ->hint('Type a few letters to filter.')
+          ->help('Type a few letters to filter.')
           ->placeholder('E.g. Golden Beetroot');
       },
-      ['"description": "The public name"', '"x-hint": "Type a few letters to filter."', '"x-placeholder": "E.g. Golden Beetroot"'],
+      ['"description": "The public name"', '"x-help": "Type a few letters to filter."', '"x-placeholder": "E.g. Golden Beetroot"'],
       [],
       [],
     ];
 
-    yield 'undeclared hint and placeholder are omitted' => [
+    yield 'undeclared help and placeholder are omitted' => [
       static function (PanelBuilder $p): void {
         $p->text('name', 'Site name');
       },
       [],
-      ['"x-hint"', '"x-placeholder"'],
+      ['"x-help"', '"x-placeholder"'],
       [],
     ];
   }

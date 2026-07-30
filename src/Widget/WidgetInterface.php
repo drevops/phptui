@@ -98,4 +98,16 @@ interface WidgetInterface {
    */
   public function hints(): array;
 
+  /**
+   * The bindings the widget answers to.
+   *
+   * The same map that resolves a keystroke also resolves a hint into the key
+   * that illustrates it, so the two can never disagree about which keys are
+   * live.
+   *
+   * @return \DrevOps\Tui\Input\ScopedKeyMap
+   *   The scoped bindings.
+   */
+  public function keys(): ScopedKeyMap;
+
 }

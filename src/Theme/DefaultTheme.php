@@ -21,7 +21,6 @@ use DrevOps\Tui\Model\TableSpec;
 use DrevOps\Tui\Primitive\Status;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\Box;
-use DrevOps\Tui\Render\HelpSection;
 use DrevOps\Tui\Render\Markup;
 use DrevOps\Tui\Render\MarkupKind;
 use DrevOps\Tui\Render\MarkupSegment;
@@ -1723,7 +1722,7 @@ class DefaultTheme implements ThemeInterface {
     // only thing telling the reader there is anything to ask for. It hangs off
     // the label because a field can carry help without carrying a description,
     // and the label is the one part every row draws.
-    $help = $field->hint === '' ? '' : ' ' . $this->helpMarker($selected);
+    $help = $field->help === '' ? '' : ' ' . $this->helpMarker($selected);
     $prefix = $this->fieldIndent($field) . $this->marker($selected) . ' ' . $this->label(Translator::t($field->label), $selected) . $help . '  ';
     $indent = str_repeat(' ', Ansi::width($prefix));
 
@@ -2022,32 +2021,6 @@ class DefaultTheme implements ThemeInterface {
   }
 
   /**
-   * Render a field's hint as indented lines, in the hint style.
-   *
-   * Plain text rather than the description's markup subset: a hint is one short
-   * instruction, so it carries no formatting of its own and reads uniformly
-   * against the description above it.
-   *
-   * @param string $hint
-   *   The hint source; newlines separate physical lines.
-   * @param bool $selected
-   *   Whether the owning row is selected.
-   *
-   * @return list<string>
-   *   The indented hint lines.
-   */
-  public function renderFieldHint(string $hint, bool $selected): array {
-    // Fold CRLF and lone-CR endings the way the markup parser does for a
-    // description: a surviving carriage return would send the cursor back to
-    // column 0 mid-frame and overwrite the row it sits on.
-    $lines = explode("\n", $this->normalizeLines($hint));
-
-    // Only the opening line is guidance rendered as such: a mark repeated down
-    // every wrapped line would read as a list rather than as one instruction.
-    return array_map(fn(string $line, int $index): string => '    ' . ($index === 0 ? $this->renderGuidance($line, $selected) : $this->hint($line, $selected)), $lines, array_keys($lines));
-  }
-
-  /**
    * Summarize a sub-panel's active field values into one line, for the hub.
    *
    * @param \DrevOps\Tui\Model\Panel $panel
@@ -2189,8 +2162,11 @@ class DefaultTheme implements ThemeInterface {
       $indent = Ansi::width($this->fieldIndent($field));
 
       // A multi-line value renders one physical row per line, all under the
-      // value column, so the widest single line is what the row needs.
-      $row = $indent + 4 + Markup::width(Translator::t($field->label), FALSE, $this->color) + $this->measureValueWidth($field, $answers);
+      // value column, so the widest single line is what the row needs. Help
+      // costs the row its marker and its leading space - never its own length,
+      // which is spent on a page of its own.
+      $marker = $field->help === '' ? 0 : 1 + Ansi::width($this->helpMarker(FALSE));
+      $row = $indent + 4 + Markup::width(Translator::t($field->label), FALSE, $this->color) + $marker + $this->measureValueWidth($field, $answers);
 
       $provenance = $answers->provenanceOf($field->id);
       if ($provenance !== Provenance::Default) {
@@ -2207,9 +2183,6 @@ class DefaultTheme implements ThemeInterface {
         $width = max($width, $indent + 4 + Markup::width(Translator::t($field->description), $this->markdown, $this->color));
       }
 
-      if ($field->hint !== '') {
-        $width = max($width, $indent + 4 + Markup::width(Translator::t($field->hint), FALSE, $this->color));
-      }
     }
 
     if ($panel->layout !== []) {
@@ -2762,31 +2735,31 @@ class DefaultTheme implements ThemeInterface {
   }
 
   /**
-   * Compose the full-screen key-binding help overlay.
+   * Compose a field's help as a full-screen page.
    *
-   * @param \DrevOps\Tui\Input\ScopedKeyMap $nav
-   *   The navigation bindings, for the close hint.
-   * @param \DrevOps\Tui\Render\HelpSection ...$sections
-   *   The contexts to list, each a heading with its bindings and hints.
+   * The text is markup-formatted and wrapped like a description, since it is the
+   * same voice at greater length, and takes the whole screen because that is
+   * what lets it run to paragraphs.
+   *
+   * @param string $label
+   *   The label of the field the help belongs to.
+   * @param string $help
+   *   The help text; blank lines separate paragraphs.
+   * @param \DrevOps\Tui\Input\ScopedKeyMap $keys
+   *   The bindings the close hint is resolved against.
    *
    * @return string
-   *   The rendered overlay.
+   *   The rendered page.
    */
-  public function renderHelp(ScopedKeyMap $nav, HelpSection ...$sections): string {
-    $lines = [$this->title(Translator::t('Keyboard help')), ''];
+  public function renderHelp(string $label, string $help, ScopedKeyMap $keys): string {
+    $lines = [$this->title($label), ''];
 
-    foreach ($sections as $section) {
-      $lines[] = $this->label($section->title);
-      $hint = $this->renderHints($section->keys, ...$section->hints);
-
-      if ($hint !== '') {
-        $lines[] = $hint;
-      }
-
-      $lines[] = '';
+    foreach ($this->markupBody($help, FALSE) as $line) {
+      $lines[] = $line;
     }
 
-    $lines[] = $this->renderHints($nav, new Hint('close', Action::Help));
+    $lines[] = '';
+    $lines[] = $this->renderHints($keys, new Hint('close', Action::Help));
 
     return implode("\n", $lines);
   }

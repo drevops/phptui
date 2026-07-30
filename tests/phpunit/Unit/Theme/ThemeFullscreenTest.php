@@ -157,18 +157,25 @@ final class ThemeFullscreenTest extends TestCase {
     $this->assertSame(35, (new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Compact]))->measureContentWidth($form, $answers));
   }
 
-  public function testMeasureContentWidthCoversHints(): void {
-    $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $p): void {
-        $p->text('a', 'A')->hint('a rather long field hint row that outruns every other');
+  public function testMeasureContentWidthCoversTheHelpMarkerButNotTheHelp(): void {
+    $build = static fn(string $help) => Form::create('T')
+      ->panel('p', 'P', function (PanelBuilder $p) use ($help): void {
+        $p->text('a', 'A rather long label that outruns the button bar')->help($help);
       })
       ->build();
 
-    // The hint row (4 + 53) is the widest, so the frame fits it unclipped.
-    $this->assertSame(57, (new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None]))->measureContentWidth($form, new Answers()));
+    $theme = new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None]);
+    $bare = $theme->measureContentWidth($build(''), new Answers());
+    $short = $theme->measureContentWidth($build('Help.'), new Answers());
 
-    // Compact spacing drops the hint with the rest of the guidance rows.
-    $this->assertSame(24, (new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Compact]))->measureContentWidth($form, new Answers()));
+    // The marker announcing help costs the row its own width and a space, so a
+    // measured frame has room for it.
+    $this->assertGreaterThan($bare, $short);
+    $this->assertLessThanOrEqual($bare + 4, $short);
+
+    // That is all help ever costs the row, however far the help itself runs: it
+    // opens on a page of its own and never draws in the panel.
+    $this->assertSame($short, $theme->measureContentWidth($build(str_repeat('a rather long paragraph of help. ', 8)), new Answers()));
   }
 
   public function testMeasureContentWidthFloorsAtTheButtonBar(): void {

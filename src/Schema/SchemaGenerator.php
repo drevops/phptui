@@ -13,7 +13,7 @@ use DrevOps\Tui\Resolver\EnvNameResolver;
 /**
  * Generates a machine-readable schema of every configured question.
  *
- * Each prompt entry carries `{id, type, label, description, hint, placeholder,
+ * Each prompt entry carries `{id, type, label, description, help, placeholder,
  * options, default, required}` plus the declared bounds, the environment
  * variables that answer it and the `when`, `derive` and `discover` rules, so
  * external tooling can drive or validate the form without loading the PHP
@@ -64,7 +64,7 @@ class SchemaGenerator {
         'type' => $field->type->value,
         'label' => $field->label,
         'description' => $field->description,
-        'hint' => $field->hint,
+        'help' => $field->help,
         'placeholder' => $field->placeholder,
         'options' => $this->options($field),
         'options_dynamic' => $field->hasDynamicOptions(),

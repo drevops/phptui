@@ -142,12 +142,9 @@ abstract class AbstractWidget implements WidgetInterface {
   }
 
   /**
-   * The resolved bindings for this widget, defaulting to the built-in preset.
-   *
-   * @return \DrevOps\Tui\Input\ScopedKeyMap
-   *   The scoped bindings.
+   * {@inheritdoc}
    */
-  protected function keys(): ScopedKeyMap {
+  public function keys(): ScopedKeyMap {
     return $this->scoped ??= KeyMapManager::create()->scope($this->keyScope());
   }
 

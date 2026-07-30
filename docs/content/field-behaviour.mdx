@@ -1,7 +1,7 @@
 ---
 title: Field behavior
-description: 'Guide an answer with a description, a hint and a placeholder; mark fields required, narrow one field options by another answer, and declare dynamic defaults, validation and transforms as closures on the field - or in handler classes - and detect defaults with discovery rules.'
-keywords: ['description', 'hint', 'placeholder', 'required', 'validation', 'transform', 'dynamic default', 'dynamic options', 'discovery', 'handler']
+description: 'Guide an answer with a description, help and a placeholder; mark fields required, narrow one field options by another answer, and declare dynamic defaults, validation and transforms as closures on the field - or in handler classes - and detect defaults with discovery rules.'
+keywords: ['description', 'help', 'placeholder', 'required', 'validation', 'transform', 'dynamic default', 'dynamic options', 'discovery', 'handler']
 ---
 
 import ThemedImage from '@theme/ThemedImage';
@@ -41,17 +41,17 @@ Three texts guide an answer, each declared on its own so a form never has to mer
 ```php
 $p->text('crop', 'Crop')
   ->description('The crop this basket was picked from.') // What is being asked.
-  ->hint('Type a few letters to filter.')                // How to answer it.
+  ->help('Every crate is weighed at the packing bench.') // The long version, on request.
   ->placeholder('E.g. Golden Beetroot');                 // Ghost text, empty input only.
 ```
 
 `description()` says what the question is. It renders under the field row, carries the [markdown subset](/markdown), and widens the panel to fit.
 
-`hint()` says how to answer it. It renders beneath the description in a style of its own, so guidance never reads as part of the question - the default theme italicizes it, and a theme sets its own (the dos theme colors it instead, since CGA had no italic). It stays plain text either way, because one short instruction carries no formatting of its own.
+`help()` is the long version. It never renders in the panel - the row wears a [help marker](/widgets/anatomy) instead, and <kbd>?</kbd> opens the text on a page of its own. That is what lets it run to paragraphs where a description has to stay a sentence, and it is why a long help never widens the panel it was declared on.
 
 `placeholder()` is the ghost text an empty editor shows. It never becomes a value: it disappears at the first keystroke, and it is suppressed when color is off, where it could not be told apart from something typed. Available on the `text`, `number`, `textarea`, `password`, `suggest` and `search` types - the ones with a [draft](/widgets/anatomy) to ghost. Declaring one on any other type raises a `FormException` when the form is built, rather than being quietly ignored.
 
-The description and hint rows are secondary chrome, so compact [spacing](/themes) drops both; a placeholder belongs to the editor and shows whatever the spacing. All three reach machine-readable output, so an agent reads the same guidance a person does - see [AI agents](/ai-agents).
+The description row is secondary chrome, so compact [spacing](/themes) drops it; a placeholder belongs to the editor and shows whatever the spacing. All three reach machine-readable output, so an agent reads the same guidance a person does - see [AI agents](/ai-agents).
 
 ## Required fields
 

@@ -178,9 +178,10 @@ final class Field {
    *   The number of query characters below which a query source is not called
    *   at all, so a remote backend is not asked to list everything; zero calls
    *   it for the empty query too.
-   * @param string $hint
-   *   How to answer the question (e.g. "Use arrows and Space to select"), shown
-   *   beneath the description and styled apart from it. Empty shows no hint.
+   * @param string $help
+   *   The long-form text behind the field's help key, opened on its own page so
+   *   it can run to paragraphs. Empty offers no help, and the row then draws no
+   *   help marker and the legend advertises no help key.
    * @param string $placeholder
    *   The ghost text shown inside the editor while its buffer is empty (e.g.
    *   "E.g. Golden Beetroot"). Never becomes a value: it disappears as soon as
@@ -250,7 +251,7 @@ final class Field {
     public readonly ?Template $template = NULL,
     public readonly ?\Closure $optionsSource = NULL,
     public readonly int $queryMinLength = 0,
-    public readonly string $hint = '',
+    public readonly string $help = '',
     public readonly string $placeholder = '',
     public readonly string $envName = '',
     public readonly array $envAliases = [],

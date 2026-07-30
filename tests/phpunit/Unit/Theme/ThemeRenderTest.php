@@ -18,7 +18,6 @@ use DrevOps\Tui\Model\Modal;
 use DrevOps\Tui\Model\Panel;
 use DrevOps\Tui\Model\TableSpec;
 use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Render\HelpSection;
 use DrevOps\Tui\Render\Navigator;
 use DrevOps\Tui\Render\Viewport;
 use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
@@ -34,7 +33,6 @@ use PHPUnit\Framework\TestCase;
  * Tests the theme's rendering via headless frame probes.
  */
 #[CoversClass(DefaultTheme::class)]
-#[CoversClass(HelpSection::class)]
 #[Group('theme')]
 final class ThemeRenderTest extends TestCase {
 
@@ -146,7 +144,7 @@ final class ThemeRenderTest extends TestCase {
 
   public function testBodyMarksHelpBesideTheLabelRatherThanPrintingIt(): void {
     $theme = $this->plainTheme();
-    $field = new Field('name', 'Name', 'The grower of record', FieldType::Text, '', hint: 'Type a few letters to filter.');
+    $field = new Field('name', 'Name', 'The grower of record', FieldType::Text, '', help: 'Type a few letters to filter.');
     $panel = new Panel('p', 'P', '', [$field]);
 
     [$lines] = $theme->renderBody($panel, new Answers(), 0);
@@ -163,7 +161,7 @@ final class ThemeRenderTest extends TestCase {
 
   public function testBodyMarksHelpWithoutADescription(): void {
     $theme = $this->plainTheme();
-    $field = new Field('name', 'Name', '', FieldType::Text, '', hint: 'Type a few letters to filter.');
+    $field = new Field('name', 'Name', '', FieldType::Text, '', help: 'Type a few letters to filter.');
     $panel = new Panel('p', 'P', '', [$field]);
 
     [$lines] = $theme->renderBody($panel, new Answers(), 0);
@@ -192,50 +190,14 @@ final class ThemeRenderTest extends TestCase {
     $this->assertSame('[?]', Ansi::strip((new DefaultTheme(40, ['color' => FALSE, 'unicode' => FALSE]))->helpMarker()));
   }
 
-  public function testBodyDropsHintWhenCompact(): void {
-    $field = new Field('name', 'Name', '', FieldType::Text, '', hint: 'Type a few letters to filter.');
+  public function testBodyDropsTheDescriptionWhenCompact(): void {
+    $field = new Field('name', 'Name', 'The grower of record', FieldType::Text, '');
     $panel = new Panel('p', 'P', '', [$field]);
     $theme = new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Compact]);
 
     [$lines] = $theme->renderBody($panel, new Answers(), 0);
 
     $this->assertCount(1, $lines);
-  }
-
-  public function testFieldHintStylesEachLineApartFromTheDescription(): void {
-    $theme = new DefaultTheme(40, ['border' => Border::None, 'spacing' => Spacing::Normal]);
-
-    $lines = $theme->renderFieldHint("Pick a date\nin the season", FALSE);
-
-    $this->assertCount(2, $lines);
-    $this->assertSame('    Pick a date', Ansi::strip($lines[0]));
-    $this->assertSame('    in the season', Ansi::strip($lines[1]));
-    $this->assertSame('    ' . $theme->hint('Pick a date'), $lines[0]);
-    $this->assertNotSame($theme->description('Pick a date'), $theme->hint('Pick a date'));
-  }
-
-  public function testFieldHintFoldsCarriageReturns(): void {
-    $theme = new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None]);
-
-    // A Windows-authored hint splits on its line breaks like any other, and no
-    // carriage return survives into a row to reposition the cursor.
-    $lines = $theme->renderFieldHint("Pick a date\r\nin the season\rthis year", FALSE);
-
-    // Only the opening line is marked; a mark down every line would read as a
-    // list rather than as one instruction.
-    $this->assertSame(['    › Pick a date', '    in the season', '    this year'], array_map(Ansi::strip(...), $lines));
-
-    foreach ($lines as $line) {
-      $this->assertStringNotContainsString("\r", $line);
-    }
-  }
-
-  public function testFieldHintRendersMarkupLiterally(): void {
-    $theme = new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'markdown' => TRUE]);
-
-    // A hint is one short instruction, so it carries no formatting of its own -
-    // unlike the description above it, which expands its markdown.
-    $this->assertSame('    › Use a **short** name', Ansi::strip($theme->renderFieldHint('Use a **short** name', FALSE)[0]));
   }
 
   public function testPanelSummaryCollapsesMultiLineValue(): void {
@@ -631,24 +593,27 @@ final class ThemeRenderTest extends TestCase {
     $this->assertSame('', (new DefaultTheme())->renderHints($nav, new Hint('newline', Action::NewLine)));
   }
 
-  public function testRenderHelpListsSectionsAndCloseHint(): void {
+  public function testRenderHelpTitlesTheFieldAndOffersAWayOut(): void {
     $nav = KeyMapManager::create()->navigation();
-    $text = KeyMapManager::create()->forField(FieldType::Text);
 
-    $help = Ansi::strip((new DefaultTheme())->renderHelp(
-      $nav,
-      new HelpSection('Navigation', $nav, new Hint('move', Action::MoveUp, Action::MoveDown)),
-      new HelpSection('Text', $text, new Hint('accept', Action::Accept)),
-      // A section whose hints resolve to nothing lists its heading only.
-      new HelpSection('Empty', $nav, new Hint('newline', Action::NewLine)),
-    ));
+    $help = Ansi::strip((new DefaultTheme())->renderHelp('Basket contents', "Every crate is weighed at the packing bench.\n\nLabelled before it leaves.", $nav));
 
-    $this->assertStringContainsString('Keyboard help', $help);
-    $this->assertStringContainsString('Navigation', $help);
-    $this->assertStringContainsString('↑/↓ to move', $help);
-    $this->assertStringContainsString('Text', $help);
-    $this->assertStringContainsString('Empty', $help);
+    $this->assertStringContainsString('Basket contents', $help);
+    $this->assertStringContainsString('Every crate is weighed at the packing bench.', $help);
+
+    // The paragraph break survives, which is the whole reason help has a page of
+    // its own rather than a row under the field.
+    $this->assertStringContainsString("\n\nLabelled before it leaves.", $help);
     $this->assertStringContainsString('? to close', $help);
+  }
+
+  public function testRenderHelpExpandsMarkup(): void {
+    $theme = new DefaultTheme(40, ['color' => FALSE, 'markdown' => TRUE]);
+
+    // Help is the description's voice at greater length, so it takes the same
+    // markup subset rather than reading as literal source.
+    $this->assertStringContainsString('Use a short name', Ansi::strip($theme->renderHelp('Name', 'Use a **short** name', KeyMapManager::create()->navigation())));
+    $this->assertStringNotContainsString('**', Ansi::strip($theme->renderHelp('Name', 'Use a **short** name', KeyMapManager::create()->navigation())));
   }
 
   #[DataProvider('dataProviderKeyHint')]

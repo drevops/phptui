@@ -138,9 +138,9 @@ class PanelController {
   protected bool $interrupted = FALSE;
 
   /**
-   * Whether the help overlay is showing.
+   * The field whose help is showing, or NULL when none is.
    */
-  protected bool $help = FALSE;
+  protected ?Field $help = NULL;
 
   /**
    * The answer values snapshot taken when the current modal dialog opened.
@@ -263,9 +263,9 @@ class PanelController {
    *   The key.
    */
   public function handle(Key $key): void {
-    if ($this->help) {
-      // Any key dismisses the help overlay.
-      $this->help = FALSE;
+    if ($this->help instanceof Field) {
+      // Any key dismisses the help, so the reader never has to find the way out.
+      $this->help = NULL;
 
       return;
     }
@@ -320,13 +320,13 @@ class PanelController {
   }
 
   /**
-   * Whether the help overlay is showing.
+   * Whether a field's help is showing.
    *
    * @return bool
-   *   TRUE when the overlay is open.
+   *   TRUE when help is open.
    */
   public function isShowingHelp(): bool {
-    return $this->help;
+    return $this->help instanceof Field;
   }
 
   /**
@@ -482,7 +482,7 @@ class PanelController {
   }
 
   /**
-   * Render the current frame: the help overlay, the editor or the panel hub.
+   * Render the current frame: a field's help, the editor or the panel hub.
    *
    * @param int $rows
    *   The screen rows the frame may fill.
@@ -491,8 +491,8 @@ class PanelController {
    *   The frame.
    */
   public function frame(int $rows): string {
-    if ($this->help) {
-      return $this->theme->renderHelp($this->nav, ...$this->helpSections());
+    if ($this->help instanceof Field) {
+      return $this->theme->renderHelp(Translator::t($this->help->label), Translator::t($this->help->help), $this->nav);
     }
 
     // A standalone field takes the whole screen; an inline field expands inside
@@ -521,10 +521,9 @@ class PanelController {
    */
   protected function editorFrame(WidgetInterface $editor, int $rows): string {
     $label = $this->editing instanceof Field ? Translator::t($this->editing->label) : '';
-    $keys = $this->editing instanceof Field ? $this->keymap->forField($this->editing->type) : $this->nav;
-    $hints = $this->footer ? $editor->hints() : [];
+    $hints = $this->footer ? $this->editorHints() : [];
 
-    return $this->theme->renderEditor($label, $editor->view($this->theme), $hints, $keys, $rows);
+    return $this->theme->renderEditor($label, $editor->view($this->theme), $hints, $editor->keys(), $rows);
   }
 
   /**
@@ -838,6 +837,10 @@ class PanelController {
       // @codeCoverageIgnoreEnd
     }
 
+    if ($this->openHelp($key)) {
+      return;
+    }
+
     $this->editor->handle($key);
 
     if ($this->editor instanceof ExternalEditCapableInterface && $this->editor->wantsExternalEdit()) {
@@ -932,6 +935,19 @@ class PanelController {
   }
 
   /**
+   * The field the cursor is on, when it is on a field at all.
+   *
+   * The cursor runs past the fields into the sub-panels and the buttons, so on
+   * a panel with either of those it is often on neither.
+   *
+   * @return \DrevOps\Tui\Model\Field|null
+   *   The field, or NULL when the cursor is elsewhere.
+   */
+  protected function activeField(): ?Field {
+    return $this->navigableFields($this->navigator->current())[$this->cursor] ?? NULL;
+  }
+
+  /**
    * The number of navigable items on a panel: navigable fields plus sub-panels.
    *
    * @param \DrevOps\Tui\Model\Panel $panel
@@ -963,15 +979,52 @@ class PanelController {
   }
 
   /**
+   * Show the field in focus's help when the key asks for it.
+   *
+   * A field the key cannot reach does not advertise it, so the key does nothing
+   * there rather than opening a blank page.
+   *
+   * @param \DrevOps\Tui\Input\Key $key
+   *   The key.
+   *
+   * @return bool
+   *   TRUE when help opened, and the key is spent.
+   */
+  protected function openHelp(Key $key): bool {
+    $field = $this->helpField();
+
+    if (!$field instanceof Field || !$this->helpKeys()->matches($key, Action::Help)) {
+      return FALSE;
+    }
+
+    $this->help = $field;
+
+    return TRUE;
+  }
+
+  /**
+   * The bindings in force for the help key.
+   *
+   * An open field answers to its widget's bindings, the panel to the navigation
+   * ones, and the help key is bound in each scope that has it free - so asking
+   * the map in force is what makes a scope without the binding a scope where the
+   * key does nothing and nothing is advertised.
+   *
+   * @return \DrevOps\Tui\Input\ScopedKeyMap
+   *   The bindings.
+   */
+  protected function helpKeys(): ScopedKeyMap {
+    return $this->editor instanceof WidgetInterface ? $this->editor->keys() : $this->nav;
+  }
+
+  /**
    * Handle a key while navigating a panel.
    *
    * @param \DrevOps\Tui\Input\Key $key
    *   The key.
    */
   protected function handleNavigation(Key $key): void {
-    if ($this->nav->matches($key, Action::Help)) {
-      $this->help = TRUE;
-
+    if ($this->openHelp($key)) {
       return;
     }
 
@@ -1309,8 +1362,8 @@ class PanelController {
    * The footer while a field is edited inline: the active widget's own hints.
    *
    * The keys in play are the widget's, not the hub's, so the footer switches to
-   * the widget's hints against its field-scope bindings - the same line the
-   * standalone editor would show.
+   * the widget's hints against its own bindings - the same line the standalone
+   * editor would show.
    *
    * @return list<string>
    *   The widget's hint line, or none when the footer is turned off.
@@ -1320,7 +1373,49 @@ class PanelController {
       return [];
     }
 
-    return [$this->theme->renderHints($this->keymap->forField($this->editing->type), ...$this->editor->hints())];
+    return [$this->theme->renderHints($this->editor->keys(), ...$this->editorHints())];
+  }
+
+  /**
+   * The hint fragments while a field is edited, in display order.
+   *
+   * The widget's own hints, then the help hint when the field carries help: help
+   * is a property of the question rather than of the widget collecting it, so
+   * the widget cannot advertise it and the controller appends it.
+   *
+   * @return list<\DrevOps\Tui\Input\Hint>
+   *   The hints, or none when there is no active widget.
+   */
+  protected function editorHints(): array {
+    if (!$this->editor instanceof WidgetInterface) {
+      return [];
+    }
+
+    return [...$this->editor->hints(), ...$this->helpHints()];
+  }
+
+  /**
+   * The help hint, when the field in focus has help the help key can reach.
+   *
+   * @return list<\DrevOps\Tui\Input\Hint>
+   *   The single help hint, or none when there is nothing to show.
+   */
+  protected function helpHints(): array {
+    return $this->helpField() instanceof Field ? [new Hint('show help', Action::Help)] : [];
+  }
+
+  /**
+   * The field whose help the help key would show right now.
+   *
+   * The field in focus, whether the panel is browsing it or has it open.
+   *
+   * @return \DrevOps\Tui\Model\Field|null
+   *   The field, or NULL when nothing in focus offers help.
+   */
+  protected function helpField(): ?Field {
+    $field = $this->editing instanceof Field ? $this->editing : $this->activeField();
+
+    return $field instanceof Field && $field->help !== '' ? $field : NULL;
   }
 
   /**
@@ -1340,37 +1435,8 @@ class PanelController {
       new Hint('select', Action::Activate),
       new Hint('go back', Action::Back),
       new Hint('quit', Action::Quit),
-      new Hint('show help', Action::Help),
+      ...$this->helpHints(),
     ];
-  }
-
-  /**
-   * The help-overlay sections: the hub, then each widget type the form uses.
-   *
-   * Field types are listed once, in first-seen order, so the overlay teaches
-   * every widget the form can show without repeating a type.
-   *
-   * @return list<\DrevOps\Tui\Render\HelpSection>
-   *   The sections.
-   */
-  protected function helpSections(): array {
-    $sections = [new HelpSection(Translator::t('Navigation'), $this->nav, ...$this->navigationHints())];
-
-    $seen = [];
-    foreach ($this->form->fields() as $field) {
-      // A display-only field has no editor, so no key hints to teach.
-      if ($field->type->isDisplayOnly()) {
-        continue;
-      }
-      if (in_array($field->type, $seen, TRUE)) {
-        continue;
-      }
-      $seen[] = $field->type;
-      $widget = $this->widgets->create($field, $this->values[$field->id] ?? $field->default);
-      $sections[] = new HelpSection($field->type->label(), $this->keymap->forField($field->type), ...$widget->hints());
-    }
-
-    return $sections;
   }
 
   /**

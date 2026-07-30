@@ -325,14 +325,14 @@ final class BuiltModelTest extends TestCase {
     }
   }
 
-  #[DataProvider('dataProviderHintIsAcceptedOnEveryType')]
-  public function testHintIsAcceptedOnEveryType(FieldType $type): void {
-    $field = new Field('f', 'F', '', $type, '', template: $type === FieldType::Template ? new Template('{{a}}-{{b}}') : NULL, hint: 'Use the arrows.');
+  #[DataProvider('dataProviderHelpIsAcceptedOnEveryType')]
+  public function testHelpIsAcceptedOnEveryType(FieldType $type): void {
+    $field = new Field('f', 'F', '', $type, '', template: $type === FieldType::Template ? new Template('{{a}}-{{b}}') : NULL, help: 'Use the arrows.');
 
-    $this->assertSame('Use the arrows.', $field->hint);
+    $this->assertSame('Use the arrows.', $field->help);
   }
 
-  public static function dataProviderHintIsAcceptedOnEveryType(): \Iterator {
+  public static function dataProviderHelpIsAcceptedOnEveryType(): \Iterator {
     foreach (FieldType::cases() as $type) {
       yield $type->value => [$type];
     }

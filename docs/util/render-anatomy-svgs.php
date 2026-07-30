@@ -29,16 +29,28 @@ require dirname(__DIR__, 2) . '/vendor/autoload.php';
 require __DIR__ . '/svg-light-twin.php';
 
 /**
- * The parts a field draws in view mode, in reading order.
+ * The parts the window draws around the fields, in reading order.
  *
- * A part's number is its position here. The two modes are numbered separately,
- * because a reader looking at one is not looking at the other, and a single run
- * of numbers across both would make every reference in the smaller list start
- * at some arbitrary offset.
+ * A part's number is its position here. Each group is numbered separately,
+ * because a reader looking at one is not looking at the others, and a single run
+ * of numbers across all three would make every reference in the smaller lists
+ * start at some arbitrary offset.
  */
-const VIEW_PARTS = [
+const CHROME_PARTS = [
+  'border',
   'breadcrumb',
   'breadcrumb separator',
+  'overflow marker',
+  'legend',
+  'legend key',
+  'legend description',
+  'legend separator',
+];
+
+/**
+ * The parts a field draws in view mode, in reading order.
+ */
+const VIEW_PARTS = [
   'field selector',
   'label',
   'help marker',
@@ -46,11 +58,6 @@ const VIEW_PARTS = [
   'value separator',
   'description',
   'help',
-  'overflow marker',
-  'legend',
-  'legend key',
-  'legend description',
-  'legend separator',
 ];
 
 /**
@@ -71,22 +78,27 @@ const EDIT_PARTS = [
 ];
 
 /**
- * The number a part carries within its mode.
+ * The number a part carries within its group.
  *
  * @param string $label
  *   The part name.
- * @param string $mode
- *   The mode the diagram belongs to, 'view' or 'edit'.
+ * @param string $group
+ *   The group the diagram belongs to, 'chrome', 'view' or 'edit'.
  *
  * @return int
  *   The part's number.
  */
-function numberOf(string $label, string $mode): int {
-  $parts = $mode === 'view' ? VIEW_PARTS : EDIT_PARTS;
+function numberOf(string $label, string $group): int {
+  $parts = match ($group) {
+    'chrome' => CHROME_PARTS,
+    'view' => VIEW_PARTS,
+    'edit' => EDIT_PARTS,
+    default => throw new \RuntimeException(sprintf('"%s" is not a group of parts.', $group)),
+  };
   $index = array_search($label, $parts, TRUE);
 
   if ($index === FALSE) {
-    throw new \RuntimeException(sprintf('"%s" is not a named part of %s mode.', $label, $mode));
+    throw new \RuntimeException(sprintf('"%s" is not a named part of the %s group.', $label, $group));
   }
 
   return $index + 1;
@@ -146,31 +158,31 @@ function anatomySpecs(string $tree): array {
   $bs = Key::named(KeyName::Backspace);
   $open = [$enter, $enter];
 
+  // The window and the rows inside it are photographed from the same panel, so
+  // a reader moving between the two diagrams is looking at one screen twice
+  // rather than at two screens that happen to resemble each other.
+  $delivery = static fn(): Form => Form::create('Orchard')->panel('main', 'Delivery', function (PanelBuilder $p): void {
+    $p->select('basket', 'Basket contents')->description('Pick the produce for this delivery.')->help('Every crate is weighed and labelled at the packing bench before it leaves the orchard.')->multiple()->default(['apple', 'carrot'])->options(['apple' => 'Apple', 'carrot' => 'Carrot']);
+    $p->number('weight', 'Basket weight')->description('Weighed at the packing bench.')->default(1200)->min(200)->max(9000);
+    $p->calendar('harvest', 'Harvest date')->default('2026-07-15');
+    $p->text('courier', 'Courier')->default('Valley Runs');
+    $p->confirm('organic', 'Organic only?')->default(TRUE);
+    $p->text('notes', 'Notes')->default('Leave at the gate');
+  });
+
   return [
-    'row' => [
-      'form' => Form::create('Orchard')->panel('main', 'Delivery', function (PanelBuilder $p): void {
-        $p->select('basket', 'Basket contents')->description('Pick the produce for this delivery.')->hint('Every crate is weighed and labelled at the packing bench before it leaves the orchard.')->multiple()->default(['apple', 'carrot'])->options(['apple' => 'Apple', 'carrot' => 'Carrot']);
-        $p->number('weight', 'Basket weight')->description('Weighed at the packing bench.')->default(1200)->min(200)->max(9000);
-        $p->calendar('harvest', 'Harvest date')->default('2026-07-15');
-        $p->text('courier', 'Courier')->default('Valley Runs');
-        $p->confirm('organic', 'Organic only?')->default(TRUE);
-        $p->text('notes', 'Notes')->default('Leave at the gate');
-      }),
-      'mode' => 'view',
+    'chrome' => [
+      'form' => $delivery(),
+      'group' => 'chrome',
       'keys' => [$enter],
       'rows' => 21,
       // The panel's own legend is the longest line any diagram carries, and a
       // truncated legend is the one thing this frame must not show.
       'cols' => 78,
       'callouts' => [
+        ['col' => 0, 'row' => 0, 'label' => 'border', 'side' => 'left'],
         ['col' => 2, 'row' => 1, 'label' => 'breadcrumb', 'side' => 'left'],
         ['col' => 10, 'row' => 1, 'label' => 'breadcrumb separator'],
-        ['col' => 2, 'row' => 4, 'label' => 'field selector'],
-        ['col' => 6, 'row' => 5, 'label' => 'description'],
-        ['label' => 'label', 'side' => 'left', 'cells' => [[7, 4], [10, 4], [12, 4]]],
-        ['col' => 20, 'row' => 4, 'label' => 'help marker'],
-        ['col' => 28, 'row' => 4, 'label' => 'value separator'],
-        ['label' => 'value', 'side' => 'right', 'cells' => [[4, 35], [7, 22], [10, 27], [12, 23]]],
         ['col' => 4, 'row' => 15, 'label' => 'overflow marker'],
         ['col' => 2, 'row' => 18, 'label' => 'legend', 'side' => 'left'],
         ['col' => 2, 'row' => 18, 'label' => 'legend key', 'side' => 'down'],
@@ -180,6 +192,21 @@ function anatomySpecs(string $tree): array {
         ['col' => 28, 'row' => 18, 'label' => 'legend separator', 'side' => 'down'],
       ],
     ],
+    'row' => [
+      'form' => $delivery(),
+      'group' => 'view',
+      'keys' => [$enter],
+      'rows' => 21,
+      'cols' => 78,
+      'callouts' => [
+        ['col' => 2, 'row' => 4, 'label' => 'field selector'],
+        ['col' => 6, 'row' => 5, 'label' => 'description'],
+        ['label' => 'label', 'side' => 'left', 'cells' => [[7, 4], [10, 4], [12, 4]]],
+        ['col' => 20, 'row' => 4, 'label' => 'help marker'],
+        ['col' => 28, 'row' => 4, 'label' => 'value separator'],
+        ['label' => 'value', 'side' => 'right', 'cells' => [[4, 35], [7, 22], [10, 27], [12, 23]]],
+      ],
+    ],
     'editor' => [
       'form' => Form::create('Orchard')->panel('main', 'Basket', function (PanelBuilder $p): void {
         $p->select('basket', 'Basket')->description('Pick the produce for this delivery.')->multiple()->minSelections(2)->maxSelections(3)
@@ -187,7 +214,7 @@ function anatomySpecs(string $tree): array {
           ->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')
           ->option('tomato', 'Tomato', disabled: TRUE, disabled_reason: 'out of season');
       }),
-      'mode' => 'edit',
+      'group' => 'edit',
       'keys' => [...$open, $space, $down, $space],
       'rows' => 16,
       'callouts' => [
@@ -203,7 +230,7 @@ function anatomySpecs(string $tree): array {
       'form' => Form::create('Orchard')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
         $p->filePicker('price_list', 'Price list')->description('The CSV the orchard sends each week.')->startIn($tree)->filesOnly()->extensions(['csv'])->maxSize(2097152);
       }),
-      'mode' => 'edit',
+      'group' => 'edit',
       'keys' => [...$open, $down],
       'rows' => 16,
       'callouts' => [
@@ -217,7 +244,7 @@ function anatomySpecs(string $tree): array {
       'form' => Form::create('Orchard')->panel('main', 'Crate', function (PanelBuilder $p): void {
         $p->template('crate', 'Crate label')->description('Identifies the crate on the loading dock.')->pattern('{{orchard}}-{{fruit}}-{{grade}}')->default('valley-pear-a')->slot('orchard', 'Orchard')->slot('fruit', 'Fruit')->slot('grade', 'Grade');
       }),
-      'mode' => 'edit',
+      'group' => 'edit',
       'keys' => [...$open, $tab],
       'rows' => 10,
       'callouts' => [
@@ -230,7 +257,7 @@ function anatomySpecs(string $tree): array {
       'form' => Form::create('Orchard')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
         $p->filePicker('price_list', 'Price list')->startIn($tree)->filesOnly()->maxSize(64);
       }),
-      'mode' => 'edit',
+      'group' => 'edit',
       'keys' => [...$open],
       'rows' => 20,
       'callouts' => [
@@ -243,7 +270,7 @@ function anatomySpecs(string $tree): array {
       'form' => Form::create('Orchard')->panel('main', 'Price list', function (PanelBuilder $p) use ($tree): void {
         $p->filePicker('price_list', 'Price list')->startIn($tree)->filesOnly()->maxSize(64);
       }),
-      'mode' => 'edit',
+      'group' => 'edit',
       'keys' => [...$open, $down, $down, $down, $enter],
       'rows' => 20,
       'callouts' => [
@@ -310,8 +337,8 @@ function renderAnatomy(string $name, array $spec, string $assets_dir, string $ut
   // the palettes do not spend on the frame, on values or on errors - and one
   // that stays legible against its own surface, which is why the two modes do
   // not share it.
-  annotate($dark_file, $spec['callouts'], $plain, $width, $spec['mode'], 'rgb(163,230,53)');
-  annotate($light_file, $spec['callouts'], $plain, $width, $spec['mode'], 'rgb(124,45,190)');
+  annotate($dark_file, $spec['callouts'], $plain, $width, $spec['group'], 'rgb(163,230,53)');
+  annotate($light_file, $spec['callouts'], $plain, $width, $spec['group'], 'rgb(124,45,190)');
 }
 
 /**
@@ -532,12 +559,12 @@ function leaderSide(array $lines, int $row, int $column, int $columns): string {
  *   The frame's rows, without escape sequences.
  * @param int $columns
  *   The number of columns the frame holds.
- * @param string $mode
- *   The mode the diagram belongs to, which its numbering runs within.
+ * @param string $group
+ *   The group the diagram belongs to, which its numbering runs within.
  * @param string $color
  *   The colour for the leaders and labels.
  */
-function annotate(string $file, array $callouts, array $lines, int $columns, string $mode, string $color): void {
+function annotate(string $file, array $callouts, array $lines, int $columns, string $group, string $color): void {
   $svg = file_get_contents($file);
 
   if ($svg === FALSE || !preg_match('/<svg[^>]*width="([\d.]+)"[^>]*height="([\d.]+)"/', $svg, $m)) {
@@ -567,7 +594,7 @@ function annotate(string $file, array $callouts, array $lines, int $columns, str
   $needs = ['left' => 0.0, 'right' => 0.0];
 
   foreach ($callouts as $index => $callout) {
-    $text = numberOf($callout['label'], $mode) . '  ' . $callout['label'];
+    $text = numberOf($callout['label'], $group) . '  ' . $callout['label'];
     $width = mb_strlen($text) * FONT_SIZE * 0.6;
     $cells = cellsOf($callout);
 

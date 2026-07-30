@@ -411,12 +411,12 @@ final class FormTest extends TestCase {
     $this->assertNotInstanceOf(\Closure::class, $template->validatorOf('a'));
   }
 
-  public function testHintAndPlaceholderCarryOntoTheField(): void {
+  public function testHelpAndPlaceholderCarryOntoTheField(): void {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $panel): void {
         $panel->text('crop', 'Crop')
           ->description('The crop being logged.')
-          ->hint('Type a few letters to filter.')
+          ->help('Type a few letters to filter.')
           ->placeholder('E.g. Golden Beetroot');
       })
       ->build();
@@ -424,11 +424,11 @@ final class FormTest extends TestCase {
     $crop = $form->field('crop');
     $this->assertInstanceOf(Field::class, $crop);
     $this->assertSame('The crop being logged.', $crop->description);
-    $this->assertSame('Type a few letters to filter.', $crop->hint);
+    $this->assertSame('Type a few letters to filter.', $crop->help);
     $this->assertSame('E.g. Golden Beetroot', $crop->placeholder);
   }
 
-  public function testHintAndPlaceholderDefaultToEmpty(): void {
+  public function testHelpAndPlaceholderDefaultToEmpty(): void {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $panel): void {
         $panel->text('crop', 'Crop');
@@ -437,7 +437,7 @@ final class FormTest extends TestCase {
 
     $crop = $form->field('crop');
     $this->assertInstanceOf(Field::class, $crop);
-    $this->assertSame('', $crop->hint);
+    $this->assertSame('', $crop->help);
     $this->assertSame('', $crop->placeholder);
   }
 

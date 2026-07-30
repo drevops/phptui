@@ -45,9 +45,9 @@ final class FieldBuilder {
   protected string $description = '';
 
   /**
-   * How to answer the question.
+   * The long-form text behind the field's help key.
    */
-  protected string $hint = '';
+  protected string $help = '';
 
   /**
    * The ghost text shown while the editor's buffer is empty.
@@ -332,19 +332,19 @@ final class FieldBuilder {
   }
 
   /**
-   * Set the hint: how to answer the question.
+   * Set the help: the long-form text behind the field's help key.
    *
-   * Sits beneath the description and is styled apart from it, so "what is being
-   * asked" and "how to answer it" stay two separate texts.
+   * Where a description has to fit under the row, help opens on its own page, so
+   * it can run to paragraphs and carry the detail a row has no space for.
    *
-   * @param string $hint
-   *   The hint (e.g. "Use arrows and Space to select").
+   * @param string $help
+   *   The help text; blank lines separate paragraphs.
    *
    * @return $this
    *   The builder.
    */
-  public function hint(string $hint): self {
-    $this->hint = $hint;
+  public function help(string $help): self {
+    $this->help = $help;
 
     return $this;
   }
@@ -1276,7 +1276,7 @@ final class FieldBuilder {
       template: $this->buildTemplate(),
       optionsSource: $this->optionsSource,
       queryMinLength: $this->queryMinLength,
-      hint: $this->hint,
+      help: $this->help,
       placeholder: $this->placeholder,
       envName: $this->envName,
       envAliases: $this->envAliases,
