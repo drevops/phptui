@@ -1,6 +1,6 @@
 ---
 title: Structure
-description: 'The levels a screen is built from, and the capability each one owns: screens, layouts, regions, blocks, and the two tiers a theme draws with.'
+description: 'The levels a screen is built from, the capability each one owns, and how a block reaches the theme to draw itself.'
 keywords: ['structure', 'screen', 'layout', 'region', 'block', 'field', 'panel', 'capability', 'theme']
 ---
 
@@ -587,7 +587,7 @@ The *label* and the *selector* stay put across both. Only the *value* region cha
 Between the field and the theme sit its **capabilities** - the shared behaviour a field draws on rather than reimplements. The chain runs one way and never doubles back:
 
 ```
-Field  ──▸  capabilities  ──▸  theme templates  ──▸  theme elements
+Field  ──▸  capabilities  ──▸  render()  ──▸  theme elements
 ```
 
 ## Markup
@@ -613,9 +613,23 @@ $p->markup('certified', 'Organic crates need current certification.')
   ->when(new Condition('organic', eq: TRUE));
 ```
 
-## The theme's two tiers
+## The theme
 
-An **element** is the smallest styled piece. It takes a plain string, returns a styled one, and knows nothing about what surrounds it:
+A **block** draws itself - that's *Show*, and it arrives as a `render()` method. What a block never does is choose a colour or a glyph. For those it reaches into the theme for **elements**:
+
+```php
+final class Breadcrumb extends AbstractBlock {
+
+  public function render(ThemeInterface $theme): string {
+    $labels = array_map($theme->breadcrumbLabel(...), $this->segments);
+
+    return implode($theme->breadcrumbSeparator(), $labels);
+  }
+
+}
+```
+
+An **element** takes a plain string and returns a styled one. It knows nothing about what surrounds it, which is what lets the same element draw a separator inside a form and inside a standalone line of output:
 
 ```
 Orchard  ›  Delivery
@@ -625,24 +639,50 @@ Orchard  ›  Delivery
    └─────────────── breadcrumbLabel()
 ```
 
-A **template** composes elements into a block's output, deciding order, spacing and how many elements there are:
+That's the whole division of labour. **Order, spacing and how many elements there are belong to the block; colour and glyph belong to the theme.** A theme can repaint a breadcrumb but can't reorder one, because reordering isn't styling.
 
+### A block declares the elements it needs
+
+A block names its elements in an interface, and a theme implements it:
+
+```php
+interface BreadcrumbElements {
+
+  public function breadcrumbLabel(string $text): string;
+
+  public function breadcrumbSeparator(): string;
+
+}
 ```
-renderBreadcrumb(['Orchard', 'Delivery'])
-        │
-        ├── breadcrumbLabel('Orchard')
-        ├── breadcrumbSeparator()
-        └── breadcrumbLabel('Delivery')
+
+Two things follow. A theme that doesn't implement the interface can't draw that block, and the failure is a type error rather than a blank line. And adding a block to the library adds one interface instead of growing a single theme class that already knows about everything.
+
+### A theme declares what it supports
+
+A terminal may have no colour, no Unicode, or a background the theme should read. A theme declares which of those it handles, and declaring one is what grants the facility that goes with it:
+
+```php
+final class OrchardTheme extends AbstractTheme implements SupportsScheme, BreadcrumbElements {
+
+  public function breadcrumbLabel(string $text): string {
+    // isDark() exists because the theme declared SupportsScheme.
+    return $this->isDark() ? $this->paint('dark-green', $text) : $this->paint('light-green', $text);
+  }
+
+  public function breadcrumbSeparator(): string {
+    return $this->hasUnicode() ? '›' : '>';
+  }
+
+}
 ```
 
-Both are public, and the split tells you which to override:
-
-| Tier | Shape | Override to |
+| Declaration | Grants | For |
 |---|---|---|
-| Element | `breadcrumbLabel(string $text): string` | change color, weight or glyph |
-| Template | `renderBreadcrumb(array $segments): string` | change layout, order or what's included |
+| `SupportsScheme` | `isDark()` | picking a palette for a dark or light terminal |
+| `SupportsColor` | `paint()` | any colour at all; without it every element returns plain text |
+| `SupportsUnicode` | `hasUnicode()` | choosing between a glyph and its ASCII stand-in |
 
-Templates are implemented on the abstract theme, so a custom theme inherits working layout and touches only the elements it wants repainted. Overriding a template is the rare case: it means changing the shape of something, not its palette.
+A theme that declares none of them still works - it returns the strings it was handed. That's the floor, and it's why a form renders in a terminal that supports nothing.
 
 ## On screen
 
