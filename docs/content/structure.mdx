@@ -238,8 +238,8 @@ Two rows can too, which is the same statement with the axis turned:
 ```php
 parent::__construct(Axis::Rows);
 
-$this->region('top')->weight(1)->scrolls();
-$this->region('bottom')->weight(1)->scrolls();
+$this->region('top')->flex(1)->scrolls();
+$this->region('bottom')->flex(1)->scrolls();
 ```
 
 ### Sizing a region
@@ -248,19 +248,19 @@ A region takes its share of the axis one of two ways, and both axes work the sam
 
 ```php
 $this->region('header')->fixed(1);    // exactly one row (or column)
-$this->region('content')->weight(1);  // a share of whatever is left
+$this->region('content')->flex(1);   // a share of whatever is left
 ```
 
 **`fixed` is cells**, and rows are why it exists. A header is one line whatever the terminal height, and no proportion can say that - 4% of a 24-row terminal is one row, of a 50-row terminal is two. Columns rarely need it; rows almost always do at their edges.
 
-**`weight` is a proportion of the remainder.** Weights don't sum to anything in particular, so `30`, `40`, `30` and `3`, `4`, `3` mean the same thing:
+**`flex` is a share of the remainder.** Shares don't sum to anything in particular, so `30`, `40`, `30` and `3`, `4`, `3` mean the same thing:
 
 ```php
 parent::__construct(Axis::Rows);
 
-$this->region('top')->weight(30)->scrolls();
-$this->region('middle')->weight(40)->scrolls();
-$this->region('bottom')->weight(30)->scrolls();
+$this->region('top')->flex(30)->scrolls();
+$this->region('middle')->flex(40)->scrolls();
+$this->region('bottom')->flex(30)->scrolls();
 ```
 
 ```
@@ -276,7 +276,7 @@ $this->region('bottom')->weight(30)->scrolls();
 ╰─────────────────────────╯
 ```
 
-Declaring neither is `weight: 1`, which is why the default layout can leave its middle region bare:
+Declaring neither is `flex(1)`, which is why the default layout can leave its middle region bare:
 
 ```php
 parent::__construct(Axis::Rows);
@@ -286,13 +286,13 @@ $this->region('content')->scrolls();
 $this->region('footer')->fixed(1);
 ```
 
-The two mix without negotiating: fixed regions are subtracted first, then what remains is divided by the weights. A header stays one row however tall the terminal, and the weighted regions share the rest between them.
+The two mix without negotiating: fixed regions are subtracted first, then what remains is divided by the flex values. A header stays one row however tall the terminal, and the flexible regions share the rest between them.
 
 ### Who calculates what
 
 Sizing and scrolling are two calculations, and each can only be done by one level.
 
-**The layout sizes.** "How many rows does `content` get" can't be answered by `content` alone - its fixed siblings have to come off the top first, and the remainder split by weight. Only the thing that sees every region can do that arithmetic, which is why *Arrange* is the layout's capability.
+**The layout sizes.** "How many rows does `content` get" can't be answered by `content` alone - its fixed siblings have to come off the top first, and the remainder split by flex. Only the thing that sees every region can do that arithmetic, which is why *Arrange* is the layout's capability.
 
 **The region scrolls.** Given the one number the layout hands it, everything else is its own: how tall its blocks are, where its viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved, which is why *Scroll* is the region's.
 
@@ -301,7 +301,7 @@ Layout   ──▸  each Region is given a size
 Region   ──▸  offset, visible rows, overflow markers
 ```
 
-Character cells don't divide evenly, so the layout rounds: it takes the fixed sizes off, divides the remainder by the weights, and hands any leftover cell to the last weighted region. A region never sees that arithmetic - it's told a number and gets on with it.
+Character cells don't divide evenly, so the layout rounds: it takes the fixed sizes off, divides the remainder by the flex values, and hands any leftover cell to the last flexible region. A region never sees that arithmetic - it's told a number and gets on with it.
 
 ### Both axes at once
 
@@ -354,7 +354,7 @@ final class SidebarLayout extends AbstractLayout {
     parent::__construct(Axis::Columns);
 
     $this->region('sidebar')->fixed(24);
-    $this->region('main')->weight(1)->scrolls();
+    $this->region('main')->flex(1)->scrolls();
   }
 
 }
@@ -394,12 +394,12 @@ $this->region('sidebar')
 | Call | Declares |
 |---|---|
 | `->fixed(24)` | 24 cells of the axis, whatever the terminal size |
-| `->weight(2)` | twice the share of the remainder that `weight(1)` gets |
+| `->flex(2)` | twice the share of the remainder that `flex(1)` gets |
 | `->flow(Axis::Columns)` | its blocks run across it rather than down |
 | `->scrolls()` | its contents may outrun it, and you can move through them |
 | `->add($block)` | a block goes in it |
 
-`fixed()` and `weight()` are the odd pair out: they *declare* a size but don't compute one, because *Arrange* is the layout's. The region states what it wants and the layout does the arithmetic.
+`fixed()` and `flex()` are the odd pair out: they *declare* a size but don't compute one, because *Arrange* is the layout's. The region states what it wants and the layout does the arithmetic.
 
 The name is the whole point of a region: it's how a block says where it goes, so nothing depends on the order things were declared in.
 
@@ -443,7 +443,7 @@ flow: Axis::Rows            flow: Axis::Columns
 
 This is what saves you from nesting a layout every time two things belong side by side. A breadcrumb and a clock in one header is a flow, not a second layout.
 
-**Flow is what a layout and a region share; sizing is what only a layout does.** Both run their contents in one direction, so both claim *Flow*. Only a layout also apportions space between them - naming the areas, weighting them, letting each scroll on its own - and that's *Arrange*. A region's blocks take their natural size and sit in the order they were added.
+**Flow is what a layout and a region share; sizing is what only a layout does.** Both run their contents in one direction, so both claim *Flow*. Only a layout also apportions space between them - naming the areas, sizing them, letting each scroll on its own - and that's *Arrange*. A region's blocks take their natural size and sit in the order they were added.
 
 It's the difference between a grid and the text flow inside one of its cells, and you don't nest a grid to put two words on one line. So nesting a *layout* is for when you need what a flow can't give:
 
@@ -451,7 +451,7 @@ It's the difference between a grid and the text flow inside one of its cells, an
 |---|---|
 | Two blocks side by side | a flow |
 | Areas you can address by name | a layout |
-| Areas at declared sizes or weights | a layout |
+| Areas at declared sizes or shares | a layout |
 | Areas that scroll independently | a layout |
 | Somewhere you can navigate into | a *panel*, which nests a layout |
 
