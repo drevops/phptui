@@ -1,7 +1,7 @@
 ---
 title: Anatomy
-description: 'The parts of a widget, named: the window chrome, view mode, edit mode, and every line each of them draws.'
-keywords: ['anatomy', 'nomenclature', 'parts', 'widgets', 'tui']
+description: 'The atoms of a widget, named: the window chrome, view mode, edit mode, and every line each of them draws.'
+keywords: ['anatomy', 'nomenclature', 'atoms', 'widgets', 'tui']
 ---
 
 import ThemedImage from '@theme/ThemedImage';
@@ -9,56 +9,60 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Anatomy of a widget
 
-A screen has two layers. The **window chrome** frames the whole form and belongs to no field in particular: the border, the trail of panel titles, the key legend. Inside it, each field draws itself in one of two modes - in **view mode** it's a single line carrying the answer, and opening it switches to **edit mode**, where the widget takes over the space to the right of the label.
+A screen has two layers. The **window chrome** frames the whole form and belongs to no field in particular: the border, the trail of panel titles, the key legend. Inside it, each field draws itself in one of two modes. In **view mode** it's a single line carrying the answer. Open it and it switches to **edit mode**, where the widget takes over the space right of the label.
 
-This page names each part, so a bug report can say "the constraint line is wrong" and mean exactly one thing. Each of the three groups numbers its own parts from one, because a reader looking at one isn't looking at the others. Where this page crosses between them it says which - the **value** (view 4) rather than a bare number.
-
-The names describe what you see, never how it's built. A file browser's list is captioned with the directory you're in, but the part is a **caption** (edit 11) rather than a "directory line", because the next browser to caption its list won't be showing you a directory.
-
-Every part is drawn by a theme method - an [atom](/themes) - named after the part it draws. The tables below are the contract: override the atom and you restyle the part, everywhere that part appears. The [renames](#what-the-code-calls-these-today) list where the source hasn't caught up yet.
+An **atom** is one named piece of that interface - the smallest thing worth naming on its own, and the unit a [theme](/themes) restyles.
 
 :::note
 
-The frames are real captured output. The vocabulary is settled; [open questions](#open-questions) tracks what isn't.
+The vocabulary is settled; [open questions](#open-questions) tracks what isn't.
 
 :::
 
 ## Window chrome
 
-The chrome is the same whatever the form asks. It's declared once - the form's title and its panels' titles feed the trail, the theme picks the border - and after that it maintains itself: the trail gains a segment as you descend, the legend rewrites itself as focus moves, the overflow marker appears when the rows outgrow the frame.
+The chrome is the same whatever the form asks. You declare it once - the form's title and its panels' titles feed the trail, the theme picks the border - and it maintains itself from there. The trail gains a segment as you descend, the legend rewrites itself as focus moves, the overflow marker appears when the rows outgrow the frame.
 
 <p align="center">
-  <ThemedImage sources={{light: useBaseUrl('/anatomy-chrome-light-static.svg'), dark: useBaseUrl('/anatomy-chrome-dark-static.svg')}} alt="A form's window chrome with its parts named" width="100%" />
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-chrome-light-static.svg'), dark: useBaseUrl('/anatomy-chrome-dark-static.svg')}} alt="A form's window chrome with its atoms named" width="100%" />
 </p>
 
-| # | Part | What it does | Set with | Theme atom |
+| # | Atom | What it does | Set with | Theme atom |
 |---|---|---|---|---|
-| 1 | border | The frame around everything. One of four styles, or none at all, chosen form-wide. | `Tui::theme(..., ['border' => Border::Rounded])` | `border()` |
-| 2 | breadcrumb | The trail of panel titles. It's every panel you've descended through plus the one you're in, so it gains a segment when you open a sub-panel and drops one when you come back. | `Form::create('Orchard')`, `->panel('main', 'Delivery', ...)` | `breadcrumb()` |
-| 3 | breadcrumb separator | Stands between the segments of the **breadcrumb** (2). | Not declared; the theme's own | `breadcrumbSeparator()` |
-| 4 | overflow marker | Content continues above or below. It appears only when the rows don't fit the frame, and points the way there's more. | Not declared; appears when the content outgrows the frame | `overflowMarker()` |
-| 5 | legend | The keys available right now. It rewrites itself as focus moves, so a field in edit mode lists different keys from the panel around it. | `Tui::footer(FALSE)` hides it; each widget contributes its own entries | `renderLegend()` |
-| 6 | legend key | One key in the **legend** (5). Worded keys are uppercased - <kbd>ESC</kbd>, <kbd>TAB</kbd>, <kbd>SPACE</kbd> - which is enough to tell a key from what it does, without needing weight as well. | `Tui::keys(...)` rebinds which key appears | `legendKey()` |
-| 7 | legend description | What that key does, reading as `KEY to action` so an entry is a sentence rather than two words abutted. | The widget's own `legend()` entries | `legendDescription()` |
-| 8 | legend separator | Stands between one **legend** (5) entry and the next. | Not declared; the theme's own | `legendSeparator()` |
+| 1 | border | The frame around everything. One of `Border::None`, `Border::Line`, `Border::Rounded` or `Border::Double`, form-wide. | `Tui::theme(..., ['border' => Border::Rounded])` | `border()` |
+| 2 | breadcrumb | The trail of panel titles: every panel you've descended through, plus the one you're in. | `Form::create('Orchard')`, `->panel('main', 'Delivery', ...)` | `breadcrumb()` |
+| 3 | breadcrumb separator | Stands between **breadcrumb** (2) segments. | Not declared | `breadcrumbSeparator()` |
+| 4 | overflow marker | Points at content past the top or bottom edge. Drawn only when the rows outgrow the frame. | Not declared | `overflowMarker()` |
+| 5 | legend | The keys live right now. | `Tui::footer(FALSE)` hides it; the entries come from the widget | `renderLegend()` |
+| 6 | legend key | One key in the **legend** (5). Worded keys are uppercased: <kbd>ESC</kbd>, <kbd>TAB</kbd>, <kbd>SPACE</kbd>. | `Tui::keys(...)` rebinds which key it shows | `legendKey()` |
+| 7 | legend description | What that key does. Reads as `KEY to action`. | Not declared; comes from the widget | `legendDescription()` |
+| 8 | legend separator | Stands between **legend** (5) entries. | Not declared | `legendSeparator()` |
+
+The **legend** (5) is the one atom of the chrome that changes as you work: it lists the keys that apply where you are, so an open field advertises different keys from the panel around it. That's also why a **legend key** (6) needs no weight of its own. Case alone tells <kbd>ESC</kbd> from the words beside it, and the `KEY to action` wording of a **legend description** (7) makes an entry read as a sentence rather than two words abutted.
 
 ## View mode
 
-A panel stacks its fields as rows, each one in view mode until you open it. Five fields of a delivery form are visible here, inside the same chrome as above.
+A panel stacks its fields as rows, each one in view mode until you open it. A row is a single line: the field's name, its answer, and the marks that say where focus is and whether there's more to read.
 
 <p align="center">
-  <ThemedImage sources={{light: useBaseUrl('/anatomy-row-light-static.svg'), dark: useBaseUrl('/anatomy-row-dark-static.svg')}} alt="Five rows of a form with their parts named" width="100%" />
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-row-light-static.svg'), dark: useBaseUrl('/anatomy-row-dark-static.svg')}} alt="Five rows of a form with their atoms named" width="100%" />
 </p>
 
-| # | Part | What it does | Set with | Theme atom |
+| # | Atom | What it does | Set with | Theme atom |
 |---|---|---|---|---|
-| 1 | field selector | Which field has focus. Only one field holds focus at a time - which is why this is the one part here with a single arrow - and it moves with <kbd>↑</kbd> and <kbd>↓</kbd>; the row it's on is drawn brighter, so the glyph and that emphasis are one signal in two forms. | Not declared; follows focus | `fieldSelector()` |
-| 2 | label | The field's name, and the one part of a row that never changes while you work. Every row has one, so the number carries an arrow per row: a part that occurs several times keeps a single number, since numbering each occurrence would read as several different parts. | `$p->select('basket', 'Basket contents')` | `label()` |
-| 3 | help marker | Sits after the **label** (2) when a field has **help** (7) to show, in the label's own colour. `Basket contents` is the only field here carrying **help** (7), so it's the only one wearing one. It hangs off the **label** (2) rather than the **description** (6), because a field can carry **help** (7) without carrying a **description** (6), and a **label** (2) is the one part every row draws. | Not declared; appears when the field has **help** (7) | `helpMarker()` |
-| 4 | value | The settled answer. It shows what was accepted, so it stays empty until the field is answered and never shows what you're mid-way through typing - that's the **draft** (edit 9). Like the **label** (2), every row has one, so its number carries an arrow per row. | `->default(['apple', 'carrot'])`, then whatever is answered | `value()` |
-| 5 | value separator | Stands between the parts of a **value** (4) that has more than one. `Basket contents` holds two, so it reads `apple, carrot`. | Not declared; the theme's own | `valueSeparator()` |
-| 6 | description | The field's explanatory text, under its row. Declared once on the field and shown whether or not the row has focus, so it never changes while you work. | `->description('Pick the produce for this delivery.')` | `description()` |
-| 7 | help | The field's long-form text. It's the only part not on screen: press <kbd>?</kbd> and it opens on a page of its own, which is what lets it run to paragraphs where a **description** (6) has to stay a sentence. | `->help('Every crate is weighed at the packing bench.')` | `renderHelp()` |
+| 1 | field selector | Which field has focus. Moves with <kbd>↑</kbd> and <kbd>↓</kbd>. | Not declared; follows focus | `fieldSelector()` |
+| 2 | label | The field's name. Every row has one. | `$p->select('basket', 'Basket contents')` | `label()` |
+| 3 | help marker | Marks a field carrying **help** (7). Sits after the **label** (2), in the label's own color and never bolded. | Not declared; appears when the field has **help** (7) | `helpMarker()` |
+| 4 | value | The settled answer. Empty until the field is answered, and never what you're mid-way through typing. Every row has one. | `->default(['apple', 'carrot'])`, then whatever is answered | `value()` |
+| 5 | value separator | Stands between the parts of a **value** (4) that has more than one, so `Basket contents` reads `apple, carrot`. | Not declared | `valueSeparator()` |
+| 6 | description | The field's explanatory text, under its row. | `->description('Pick the produce for this delivery.')` | `description()` |
+| 7 | help | The field's long-form text. Never drawn in the panel: <kbd>?</kbd> opens it on a page of its own. | `->help('Every crate is weighed at the packing bench.')` | `renderHelp()` |
+
+Only one field holds focus at a time. The row the **field selector** (1) sits on is drawn brighter too, so the glyph and that emphasis are one signal in two forms.
+
+The **label** (2) is the one atom every row draws, and the only one that never changes while you work. That's why the **help marker** (3) hangs off it rather than off the **description** (6): a field can carry **help** (7) without carrying a **description** (6).
+
+Two pairs are easy to confuse, and both come down to length or timing. A **description** (6) has to fit under the row, so it stays a sentence; **help** (7) opens on a page and can run to paragraphs, which is why a long help never widens the panel it was declared on. A **value** (4) is what was accepted; the **draft** (edit 9) is what you're typing.
 
 ## Edit mode
 
@@ -66,60 +70,62 @@ Edit mode hands the region right of the label to the widget, and what the widget
 
 ### Choosing from a list
 
-A multiple-choice field with bounds and per-entry text draws the fullest set of parts.
+A multiple-choice field with bounds and per-entry text draws the fullest set of atoms.
 
 <p align="center">
-  <ThemedImage sources={{light: useBaseUrl('/anatomy-editor-light-static.svg'), dark: useBaseUrl('/anatomy-editor-dark-static.svg')}} alt="A multiple-choice field in edit mode with its parts named" width="100%" />
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-editor-light-static.svg'), dark: useBaseUrl('/anatomy-editor-dark-static.svg')}} alt="A multiple-choice field in edit mode with its atoms named" width="100%" />
 </p>
 
-| # | Part | What it does | Set with | Theme atom |
+| # | Atom | What it does | Set with | Theme atom |
 |---|---|---|---|---|
-| 1 | entry | One line of the list the widget offers. What fills the list varies by widget: a fixed set, a set filtered as you type, or one fetched by a query. | `->option('apple', 'Apple')`, `->options([...])` | `entry()` |
-| 2 | entry selector | Which **entry** (1) has focus. It moves with <kbd>↑</kbd> and <kbd>↓</kbd>, and moving it chooses nothing on its own. | Not declared; follows focus | `entrySelector()` |
-| 3 | entry marker | The per-entry chosen-state glyph. It shows what's chosen, not what has focus, so it only changes when you actually pick something - <kbd>Space</kbd> in a multiple-choice list. | `->multiple()` picks which pair of glyphs | `entryMarker()` |
-| 4 | entry note | A qualifier on an **entry** (1), such as why it's unavailable. It appears only on entries that carry a reason. | `->option('tomato', 'Tomato', disabled: TRUE, disabled_reason: 'out of season')` | `entryNote()` |
-| 5 | entry description | The focused **entry** (1)'s own explanatory text. It's rewritten every time the **entry selector** (2) moves, and is absent for entries that declare none. Indented to start where the entry text starts, so it reads as belonging to the entry above it rather than to the list. | `->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')` | `entryDescription()` |
-| 6 | constraint | What the field expects, before anything is rejected. It's there from the moment edit mode opens, and the **error** (7) replaces it the instant a value is refused. | `->minSelections(2)->maxSelections(3)`, `->maxSize(64)`, `->min()`/`->max()` | `constraint()` |
+| 1 | entry | One line of the list the widget offers. | `->option('apple', 'Apple')`, `->options([...])` | `entry()` |
+| 2 | entry selector | Which **entry** (1) has focus. Moves with <kbd>↑</kbd> and <kbd>↓</kbd>. | Not declared; follows focus | `entrySelector()` |
+| 3 | entry marker | The per-entry chosen-state glyph. | `->multiple()` picks which pair of glyphs | `entryMarker()` |
+| 4 | entry note | A qualifier on an **entry** (1), such as why it's unavailable. Drawn only on entries carrying a reason. | `->option('tomato', 'Tomato', disabled: TRUE, disabled_reason: 'out of season')` | `entryNote()` |
+| 5 | entry description | The focused **entry** (1)'s own explanatory text. Indented to start where the entry text starts. | `->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')` | `entryDescription()` |
+| 6 | constraint | What the field expects, before anything is rejected. | `->minSelections(2)->maxSelections(3)`, `->maxSize(64)`, `->min()`/`->max()` | `constraint()` |
 
-**Selecting and marking are different things.** A selector shows where you are; a marker shows what you've marked. That's why the **entry selector** (2) and the **field selector** (view 1) are the glyphs that follow your movement, while the **entry marker** (3) is the box that records a decision. Moving a selector chooses nothing.
+What fills the list varies by widget: a fixed set, a set filtered as you type, or one fetched by a query. An **entry description** (5) is rewritten every time the **entry selector** (2) moves, and is absent for entries that declare none - which is why it's indented to the entry text rather than to the list, so it reads as belonging to the entry above it.
+
+**Selecting and marking are different things.** A selector shows where you are; a marker shows what you've marked. That's why the **entry selector** (2) and the **field selector** (view 1) are the glyphs that follow your movement, while the **entry marker** (3) is the box that records a decision. Moving a selector chooses nothing. The **entry marker** (3) only changes when you pick something, which in a multiple-choice list is <kbd>Space</kbd>.
 
 The pairs are deliberate. The **field selector** (view 1) shows which field you're on and the **entry selector** (2) which entry within it; the **description** (view 6) is the field's own text and the **entry description** (5) an entry's. Same idea at two levels, so a parent's name is never reused for its child.
 
 ### Typing rather than choosing
 
-Some widgets collect an answer by typing instead of by choosing from a list, so they have no **entry** (1) at all. The [Template](/widgets/template) widget shown here fills the named slots of a fixed pattern.
+Some widgets collect an answer by typing instead of by choosing from a list, so they have no **entry** (1) at all. The [Template](/widgets/template) widget fills the named slots of a fixed pattern.
 
 <p align="center">
-  <ThemedImage sources={{light: useBaseUrl('/anatomy-text-light-static.svg'), dark: useBaseUrl('/anatomy-text-dark-static.svg')}} alt="A Template field in edit mode with its parts named" width="100%" />
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-text-light-static.svg'), dark: useBaseUrl('/anatomy-text-dark-static.svg')}} alt="A Template field in edit mode with its atoms named" width="100%" />
 </p>
 
-| # | Part | What it does | Set with | Theme atom |
+| # | Atom | What it does | Set with | Theme atom |
 |---|---|---|---|---|
-| 8 | caret | The insertion point within the **draft** (9). It shows where the next keystroke lands, and in the [Template](/widgets/template) widget it's what moves between slots as you fill them. | Not declared; follows what you type | `caret()` |
-| 9 | draft | The text you're typing, before it's accepted. It becomes the **value** (view 4) when you accept, and is discarded if you cancel. | `->default('valley-pear-a')` seeds it; typing changes it | `draft()` |
-| 10 | state | What the widget is doing right now. It tracks the widget rather than the field, so it changes as you work - here it names the slot you're filling. | `->slot('fruit', 'Fruit')` names what it reports | `state()` |
+| 8 | caret | The insertion point within the **draft** (9), showing where the next keystroke lands. | Not declared; follows what you type | `caret()` |
+| 9 | draft | The text you're typing, before it's accepted. | `->default('valley-pear-a')` seeds it; typing changes it | `draft()` |
+| 10 | state | What the widget is doing right now. | `->slot('fruit', 'Fruit')` names what it reports | `state()` |
 
-The **draft** (9) and the **value** (view 4) are the same answer at two moments: what you're typing, and what was accepted.
+The **draft** (9) and the **value** (view 4) are the same answer at two moments: what you're typing, and what was accepted. Accepting promotes one to the other; canceling discards the **draft** (9). In the [Template](/widgets/template) widget the **caret** (8) is also what moves between slots as you fill them.
 
-The **state** (10) is easy to confuse with the **description** (view 6), so it's worth being precise. The first tracks the widget and changes while you work; the second belongs to the field and never moves.
+The **state** (10) is easy to confuse with the **description** (view 6), so it's worth being precise. The first tracks the widget and changes while you work - here it names the slot you're filling. The second belongs to the field and never moves.
 
 ### Browsing a list
 
 The [FilePicker](/widgets/filepicker) widget draws the same skeleton over a directory listing, and adds a **caption** (11) above it.
 
 <p align="center">
-  <ThemedImage sources={{light: useBaseUrl('/anatomy-filepicker-light-static.svg'), dark: useBaseUrl('/anatomy-filepicker-dark-static.svg')}} alt="An open file picker with its parts named" width="100%" />
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-filepicker-light-static.svg'), dark: useBaseUrl('/anatomy-filepicker-dark-static.svg')}} alt="An open file picker with its atoms named" width="100%" />
 </p>
 
-| # | Part | What it does | Set with | Theme atom |
+| # | Atom | What it does | Set with | Theme atom |
 |---|---|---|---|---|
-| 11 | caption | What the list below is showing. It's rewritten whenever the list changes underneath it, so here it names the directory you've navigated into. | `->startIn($directory)` sets where it begins | `caption()` |
+| 11 | caption | What the list below is showing. Rewritten whenever the list changes underneath it. | `->startIn($directory)` sets where it begins | `caption()` |
 
-The lines in the list are files and directories rather than options, and they're still **entries** (1): the name describes the line the widget offers, not where its content came from. The **caption** (11) names a directory in this widget because that's what a file browser browses, but the part - and the atom that draws it - stays generic.
+The lines in the list are files and directories rather than options, and they're still **entries** (1): the name describes the line the widget offers, not where its content came from. The **caption** (11) names a directory in this widget because that's what a file browser browses, but the atom - and the theme method that draws it - stays generic.
 
 ### Constraint and error: one line, two states
 
-The **constraint** (6) and the **error** (7) share a single physical line. Below is one [FilePicker](/widgets/filepicker) field, limited to files of at most 64 bytes, photographed twice.
+The **constraint** (6) and the **error** (7) share a single physical line. A [FilePicker](/widgets/filepicker) field limited to files of at most 64 bytes shows both states of it.
 
 Nothing has been picked yet, so the line states what the field expects:
 
@@ -133,48 +139,50 @@ Now `harvest.csv` is picked, and at 88 bytes it breaks that limit. The same line
   <ThemedImage sources={{light: useBaseUrl('/anatomy-error-light-static.svg'), dark: useBaseUrl('/anatomy-error-dark-static.svg')}} alt="The same file picker showing an error in place of its constraint" width="100%" />
 </p>
 
-| # | Part | What it does | Set with | Theme atom |
+| # | Atom | What it does | Set with | Theme atom |
 |---|---|---|---|---|
-| 7 | error | Why the value was rejected. It appears only after a refused accept, and clears the moment the value becomes acceptable, handing the line back to the **constraint** (6). | The declared bounds, or `->validate(...)` | `error()` |
+| 7 | error | Why the value was rejected. Drawn only after a refused accept, and cleared the moment the value becomes acceptable. | The declared bounds, or `->validate(...)` | `error()` |
 
-Read the two lines side by side and the distinction is the whole point:
+The two lines say different kinds of thing:
 
 | | Line | Says |
 |---|---|---|
 | **constraint** (6) | `Files only. Max 64 B.` | what the field will accept, before you act |
 | **error** (7) | `Choose a file no larger than 64 B.` | why what you just did was refused |
 
-A **constraint** (6) describes the field; an **error** (7) describes your value. That's also why they're built differently. The first is an unframed phrase - `a file no larger than 64 B` - that its caller wraps, so the same phrase becomes `Choose ...` in the picker, `Select ...` in a bounded list and `must be ...` headlessly. The second is already a whole message, and is shown as it stands.
+A **constraint** (6) describes the field; an **error** (7) describes your value. A **constraint** (6) is there from the moment edit mode opens, and hands the line over the instant a value is refused; the **error** (7) hands it back as soon as the value is acceptable again.
+
+That's also why they're built differently. The first is an unframed phrase - `a file no larger than 64 B` - that its caller wraps, so the same phrase becomes `Choose ...` in the picker, `Select ...` in a bounded list and `must be ...` headlessly. The second is already a whole message, and is shown as it stands.
 
 ## What the code calls these today
 
-The atom column above is the target. Where the source disagrees, the source is what moves - a theme's vocabulary should be the vocabulary a reader uses for what's on screen.
+The theme-atom column above is the target. Where the source disagrees, the source is what moves - a theme's vocabulary should be the vocabulary a reader uses for what's on screen.
 
-| Part | Today | Becomes |
+| Atom | Today | Becomes |
 |---|---|---|
 | **breadcrumb separator** (chrome 3) | `separator()` | `breadcrumbSeparator()` |
 | **overflow marker** (chrome 4) | `indicator()`, `indicatorUp()`, `indicatorDown()` | `overflowMarker()` |
 | **legend** (chrome 5) | `WidgetInterface::hints()`, `renderHintLine()` | `WidgetInterface::legend()`, `renderLegend()` |
 | **field selector** (view 1) | `marker()`, shared with the **entry selector** (edit 2) | `fieldSelector()` |
 | **value separator** (view 5) | hardcoded in `ValueFormatter::format()` | `valueSeparator()` |
-| **entry** (edit 1) | drawn inline, no atom | `entry()` |
+| **entry** (edit 1) | drawn inline, no theme method | `entry()` |
 | **entry selector** (edit 2) | `marker()`, shared with the **field selector** (view 1) | `entrySelector()` |
 | **entry marker** (edit 3) | `check()` when multiple-choice, `radio()` when single | `entryMarker()` |
-| **entry note** (edit 4) | concatenated in `OptionsCapableTrait`, no atom | `entryNote()` |
+| **entry note** (edit 4) | concatenated in `OptionsCapableTrait`, no theme method | `entryNote()` |
 | **constraint** (edit 6) | `hint()` via `renderGuidance()`; produced by `selectionHint()` and `constraintHint()` | `constraint()`, from one producer |
-| **draft** (edit 9) | `$buffer`, per widget, no atom | `draft()` |
+| **draft** (edit 9) | `$buffer`, per widget, no theme method | `draft()` |
 | **state** (edit 10) | `footer()` | `state()` |
 
 Three of those need more than a rename.
 
-**`hint` names two things, and used to name three.** `WidgetInterface::hints()` returns the **legend** (chrome 5) and `ThemeInterface::hint()` draws the **constraint** (edit 6). Nothing connects them. Renaming each to the part it serves leaves `hint` naming nothing, which is the point.
+**`hint` names two things, and used to name three.** `WidgetInterface::hints()` returns the **legend** (chrome 5) and `ThemeInterface::hint()` draws the **constraint** (edit 6). Nothing connects them. Renaming each to the atom it serves leaves `hint` naming nothing, which is the point.
 
-**Two atoms are shared by parts that aren't the same part.** `marker()` draws both selectors, so a theme can't restyle the field cursor without restyling the one inside every list. `description()` draws the **description** (view 6) and, until recently, the **entry description** (edit 5) - the second now has its own atom, and the first keeps `description()`.
+**Two theme methods are shared by atoms that aren't the same atom.** `marker()` draws both selectors, so a theme can't restyle the field cursor without restyling the one inside every list. `description()` draws the **description** (view 6) and, until recently, the **entry description** (edit 5) - the second now has its own method, and the first keeps `description()`.
 
-**Two atoms have other legitimate users, so they can't simply be renamed.** `footer()` also draws the calendar's weekday header, the password confirm prompt and the version line, so the **state** (edit 10) needs its own atom rather than a rename of that one. `indicator()` also draws a warning status line, so the **overflow marker** (chrome 4) is the same story.
+**Two theme methods have other legitimate users, so they can't simply be renamed.** `footer()` also draws the calendar's weekday header, the password confirm prompt and the version line, so the **state** (edit 10) needs a method of its own rather than a rename of that one. `indicator()` also draws a warning status line, so the **overflow marker** (chrome 4) is the same story.
 
-**`error` names four things**, and only one of them is an atom. `ThemeInterface::error()` draws the **error** (edit 7) and keeps the name; `WidgetInterface::error()` is widget state; `Field::templateError()` and friends produce a message; `Engine::optionsError()` builds an exception. The last three are the subject of the naming work this page came out of.
+**`error` names four things**, and only one of them draws an atom. `ThemeInterface::error()` draws the **error** (edit 7) and keeps the name; `WidgetInterface::error()` is widget state; `Field::templateError()` and friends produce a message; `Engine::optionsError()` builds an exception. Only the first draws anything, and the other three need names that say what they do instead.
 
 ## Open questions
 
-**Can the widest legend fit the frame?** A multiple-choice list advertises five entries - `SPACE to select · ↑/↓ to move · ←/→ to select none or all · ↵ to accept · ESC to cancel` - which is 87 columns. A non-fullscreen frame is 76, and `measureContentWidth()` sizes it from the rows and the button bar without ever measuring the **legend** (chrome 5), so the line is drawn and then clipped by the box that was measured without it. Either the box has to account for the legend, or the legend has to wrap, or it has to shed its lowest-priority entries as the room runs out.
+**Can the widest legend fit the frame?** A multiple-choice list advertises five entries - `SPACE to select · ↑/↓ to move · ←/→ to select none or all · ↵ to accept · ESC to cancel` - which is 87 columns. A non-fullscreen frame is 76. `measureContentWidth()` sizes the frame from the rows and the button bar without ever measuring the **legend** (chrome 5), so the line is drawn and then clipped by a box measured without it. Either the box accounts for the legend, or the legend wraps, or it sheds its lowest-priority entries as the room runs out.
