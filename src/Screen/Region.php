@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Screen;
 
+use DrevOps\Tui\Block\BlockInterface;
+
 /**
  * A named container inside a layout.
  *
@@ -37,6 +39,13 @@ final class Region {
    * Whether its contents may outrun it.
    */
   protected bool $scrolls = FALSE;
+
+  /**
+   * The blocks drawn in it, in the order they were added.
+   *
+   * @var list<\DrevOps\Tui\Block\BlockInterface>
+   */
+  protected array $blocks = [];
 
   /**
    * Construct a region.
@@ -170,6 +179,34 @@ final class Region {
    */
   public function isScrolling(): bool {
     return $this->scrolls;
+  }
+
+  /**
+   * Draw a block in this region.
+   *
+   * A region never knows which kind it was given, which is why a breadcrumb can
+   * go wherever a field can.
+   *
+   * @param \DrevOps\Tui\Block\BlockInterface $block
+   *   The block.
+   *
+   * @return $this
+   *   The region.
+   */
+  public function add(BlockInterface $block): self {
+    $this->blocks[] = $block;
+
+    return $this;
+  }
+
+  /**
+   * The blocks drawn in this region, in the order they were added.
+   *
+   * @return list<\DrevOps\Tui\Block\BlockInterface>
+   *   The blocks.
+   */
+  public function blocks(): array {
+    return $this->blocks;
   }
 
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Screen;
 
+use DrevOps\Tui\Block\Breadcrumb;
+use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Region;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -59,6 +61,26 @@ final class RegionTest extends TestCase {
     $this->assertSame($region, $region->flex(2));
     $this->assertSame($region, $region->flow(Axis::Columns));
     $this->assertSame($region, $region->scrolls());
+  }
+
+  public function testARegionArrivesEmpty(): void {
+    $this->assertSame([], (new Region('content'))->blocks());
+  }
+
+  public function testARegionTakesEveryKindOfBlockTheSameWay(): void {
+    $region = new Region('content');
+    $first = new Markup('intro', 'Pick the produce.');
+    $second = new Breadcrumb();
+
+    $region->add($first)->add($second);
+
+    $this->assertSame([$first, $second], $region->blocks());
+  }
+
+  public function testAddingABlockChainsBackToTheRegion(): void {
+    $region = new Region('content');
+
+    $this->assertSame($region, $region->add(new Breadcrumb()));
   }
 
   public function testFixedRejectsASizeNoRegionCouldHave(): void {
