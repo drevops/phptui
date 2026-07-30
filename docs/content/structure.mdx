@@ -44,7 +44,7 @@ The four levels are what the model is made of. What you actually build with are 
 | Screen | one | the screen |
 | Layout | `default`, `two-column` | the screen's `default` |
 | Region | none - a layout names its own | `header`, `content`, `footer` |
-| Block | Panel, Field, Markup, Breadcrumb, KeyHints, Buttons, Progress | one Breadcrumb, one Panel, three Fields, one KeyHints |
+| Block | Panel, Field, Markup, Breadcrumb, KeyHints, Actions, Progress | one Breadcrumb, one Panel, three Fields, one KeyHints |
 
 *Layouts* are the level with reusable named kinds - that's what *Reuse* means in the table below. *Regions* have no kinds at all: a region is a named slot its layout declares, so `header` exists because `default` declares it.
 
@@ -88,12 +88,12 @@ Seventeen capabilities cover everything on screen, each described as what you ca
 | Markup | | | | | | | ✓ | | | | | | | | | | ✓ |
 | Breadcrumb | | | | | | | | | | | | | | | | | ✓ |
 | KeyHints | | | | | | | | | | | | | | | | | ✓ |
-| Buttons | ✓ | | | | | | | | | ✓ | | | | | | | ✓ |
+| Actions | ✓ | | | | | | | | | ✓ | | | | ✓ | | | ✓ |
 | Progress | ✓ | | | | | | ✓ | | | ✓ | | | | | | | ✓ |
 
 </div>
 
-Eight readings of that table are worth stating outright, because they're the ones a new block will test.
+Nine readings of that table are worth stating outright, because they're the ones a new block will test.
 
 **Only a field collects.** Everything else on screen shows, focuses or activates, and none of it reaches the collected result.
 
@@ -106,6 +106,8 @@ Eight readings of that table are worth stating outright, because they're the one
 **Occupy belongs to the screen.** Whether the frame takes the whole terminal or shrinks to its contents is a property of the root, not of any layout inside it - so a layout behaves the same either way.
 
 **A panel shows and focuses only when nested.** A sub-panel is a row you select to enter. The panel currently filling the screen draws no row of its own and takes no cursor; its blocks do.
+
+**Reject does not imply Collect.** A *field* claims both: it holds a value and refuses one it will not take. *Actions* claims Reject alone - submit is withheld while a required field is empty, and it says why - while holding no value of its own. Refusing and holding are separate jobs, and only one of them reaches the result.
 
 **Formatting is not a capability.** *Markup* renders as plain lines, as a bordered card, or as a table of rows and headers, and none of that changes what it can do. A table is markup laid out as a table, so it needs no row of its own. Capabilities say what a block can do; the theme says what it looks like doing it.
 
@@ -414,7 +416,7 @@ $layout->in('footer')->add(new KeyHints());
 $layout->in('content')
   ->add(new Markup('intro', 'Pick the produce for this delivery.'))
   ->add($panel)
-  ->add(new Buttons());
+  ->add(new Actions());
 ```
 
 *Scroll* is per region instance rather than per layout, which is why a two-column layout can pin one column while its neighbour scrolls, and why two rows can scroll independently of each other. The region owns it; the layout is only where it's declared, since that's where regions come into being.
@@ -468,7 +470,7 @@ Every block claims *Show*, and only a *panel* holds anything - so a block never 
 - **Markup** - renders formatted content: prose, a bordered card, or a table.
 - **Breadcrumb** - renders the trail of panels you've entered.
 - **KeyHints** - renders the keys that apply right now, rewriting itself as focus moves.
-- **Buttons** - submits or cancels the form.
+- **Actions** - the buttons that end the form: submit, cancel, and any the form declares. Withholds the submit with a message while a required field is empty.
 - **Progress** - runs work when activated, showing an indicator while it runs.
 
 Every one of them is constructed and added the same way:
@@ -478,7 +480,7 @@ $region
   ->add(new Breadcrumb())
   ->add(new KeyHints())
   ->add(new Markup('intro', 'Weighed at the packing bench.'))
-  ->add(new Buttons())
+  ->add(new Actions())
   ->add($panel)
   ->add($field);
 ```
@@ -690,7 +692,7 @@ Every level has a default, and this is what those defaults are:
 $layout = new DefaultLayout();
 
 $layout->in('header')->add(new Breadcrumb());
-$layout->in('content')->add($panel)->add(new Buttons());
+$layout->in('content')->add($panel)->add(new Actions());
 $layout->in('footer')->add(new KeyHints());
 
 (new Screen())->layout($layout);
