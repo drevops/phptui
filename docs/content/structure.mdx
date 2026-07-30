@@ -42,7 +42,7 @@ The four levels are what the model is made of. What you actually build with are 
 | Level | Kinds | Instances, on the screen below |
 |---|---|---|
 | Screen | one | the screen |
-| Layout | `default`, `plain`, `two-column` | the screen's `default` |
+| Layout | `default`, `two-column` | the screen's `default` |
 | Region | none - a layout names its own | `header`, `content`, `footer` |
 | Block | Panel, Field, Markup, Breadcrumb, KeyHints, Buttons, Progress | one Breadcrumb, one Panel, three Fields, one KeyHints |
 
@@ -56,19 +56,19 @@ Sixteen capabilities cover everything on screen, each described as what you can 
 
 | Capability | What's possible |
 |---|---|
-| **Act** | Activating it does something, rather than revealing something. |
-| **Answer** | It holds a value that ends up in the result. |
+| **Activate** | Activating it does something, rather than revealing something. |
 | **Arrange** | It decides where the things inside it sit. |
-| **Bind** | It owns keystrokes while it's in play, and says which. |
+| **Bind** | It says which keys apply while it's in play. |
+| **Capture** | It opens in place to capture something, then closes again. |
+| **Collect** | It holds a value that ends up in the result. |
 | **Constrain** | It says what it will accept, before you act. |
-| **Contain** | Other things appear inside it. |
 | **Depend** | It appears or disappears depending on other answers. |
-| **Enter** | You go into it: the screen becomes its contents, the trail grows, and you can come back. |
-| **Expand** | It opens in place to collect something, then closes again. |
+| **Descend** | You go into it: the screen becomes its contents, the trail grows, and you can come back. |
 | **Fill** | It expands to the whole terminal, instead of fitting its contents. |
-| **Float** | It draws over everything else. |
 | **Focus** | You can move onto it, and your keys then act on it. |
-| **Reject** | It can refuse what you gave it, and say why. |
+| **Nest** | Other things appear inside it. |
+| **Overlay** | It draws over everything else. |
+| **Reject** | It can reject what you gave it, and say why. |
 | **Reuse** | One definition, used in more than one place. |
 | **Scroll** | Its contents can outrun its space, and you can move through them. |
 | **Show** | It draws something you can read. |
@@ -77,28 +77,28 @@ Sixteen capabilities cover everything on screen, each described as what you can 
 
 <div className="table-scroll">
 
-| | Act | Answer | Arrange | Bind | Constrain | Contain | Depend | Enter | Expand | Fill | Float | Focus | Reject | Reuse | Scroll | Show |
+| | Activate | Arrange | Bind | Capture | Collect | Constrain | Depend | Descend | Fill | Focus | Nest | Overlay | Reject | Reuse | Scroll | Show |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Screen | | | | | | ✓ | | | | ✓ | | | | | | |
-| Layout | | | ✓ | | | ✓ | | | | | | | | ✓ | | |
-| Region | | | | | | ✓ | | | | | | | | | ✓ | |
-| Panel | | | | ✓ | | ✓ | | ✓ | | | ✓ | ✓ | | | | ✓ |
-| Field | | ✓ | | ✓ | ✓ | | ✓ | | ✓ | | | ✓ | ✓ | | | ✓ |
+| Screen | | | | | | | | | ✓ | | ✓ | | | | | |
+| Layout | | ✓ | | | | | | | | | ✓ | | | ✓ | | |
+| Region | | | | | | | | | | | ✓ | | | | ✓ | |
+| Panel | | | ✓ | | | | | ✓ | | ✓ | ✓ | ✓ | | | | ✓ |
+| Field | | | ✓ | ✓ | ✓ | ✓ | ✓ | | | ✓ | | | ✓ | | | ✓ |
 | Markup | | | | | | | ✓ | | | | | | | | | ✓ |
 | Breadcrumb | | | | | | | | | | | | | | | | ✓ |
 | KeyHints | | | | | | | | | | | | | | | | ✓ |
-| Buttons | ✓ | | | | | | | | | | | ✓ | | | | ✓ |
-| Progress | ✓ | | | | | | ✓ | | | | | ✓ | | | | ✓ |
+| Buttons | ✓ | | | | | | | | | ✓ | | | | | | ✓ |
+| Progress | ✓ | | | | | | ✓ | | | ✓ | | | | | | ✓ |
 
 </div>
 
 Seven readings of that table are worth stating outright, because they're the ones a new block will test.
 
-**Only a field answers.** Everything else on screen shows, focuses or acts, and none of it reaches the collected result.
+**Only a field collects.** Everything else on screen shows, focuses or activates, and none of it reaches the collected result.
 
-**Focus and Act come apart.** A *progress* block takes the cursor and runs work while answering nothing. *Markup* does neither. A *field* focuses and answers but never acts.
+**Focus and Activate come apart.** A *progress* block takes the cursor and runs work while collecting nothing. *Markup* does neither. A *field* focuses and collects but never activates.
 
-**Arrange belongs to the layout alone.** A *panel* doesn't arrange anything - it *contains* a layout, and the layout arranges. That's what lets one layout serve a panel and a screen without either knowing about the other.
+**Arrange belongs to the layout alone.** A *panel* doesn't arrange anything - it *nests* a layout, and the layout arranges. That's what lets one layout serve a panel and a screen without either knowing about the other.
 
 **Scroll belongs to the region.** A layout is composed of region instances, and each declares whether it scrolls. So one layout can pin a column and scroll its neighbour, with the decision sitting where the scrolling is seen.
 
@@ -120,7 +120,7 @@ The **screen** is the root. It holds one *layout* and claims one capability of i
 
 ## Layout
 
-A **layout** is composed of *region* instances and decides where they sit. It claims *Arrange*, *Contain* and *Reuse*.
+A **layout** is composed of *region* instances and decides where they sit. It claims *Arrange*, *Nest* and *Reuse*.
 
 A layout has one **axis**: its regions run either top to bottom or left to right. Two axes cover every arrangement, because the second dimension comes from nesting rather than from a grid:
 
@@ -155,7 +155,7 @@ Layout::rows()
 
 ### One region
 
-The degenerate case, and a useful one: no chrome, just the content. It needs no special axis - it's `rows()` with a single region:
+Nothing ships as one region, but nothing stops you writing it either - a single-region layout needs no special axis, because it's `rows()` that happens to declare one:
 
 ```php
 Layout::rows()
@@ -224,13 +224,14 @@ This is why the axis needs no third value. Any arrangement is rows of columns of
 
 ### Shipped layouts
 
-*Reuse* means a layout is named and reusable, so the same one serves a *screen* and a *panel*. Three ship, and a form picks one rather than describing an arrangement inline:
+*Reuse* means a layout is named and reusable, so the same one serves a *screen* and a *panel*. Two ship, and a form picks one by name rather than describing an arrangement inline:
 
 | Name | Axis | Regions |
 |---|---|---|
 | `default` | rows | `header`, `content` (scrolls), `footer` |
-| `plain` | rows | `content` (scrolls) |
 | `two-column` | columns | `left`, `right` |
+
+Two is enough because they cover the two axes. Anything else is those two nested, or a layout you write yourself.
 
 ```php
 (new Tui($form))->layout('two-column')->run();
@@ -238,7 +239,7 @@ This is why the axis needs no third value. Any arrangement is rows of columns of
 
 ## Region
 
-A **region** is a named area of a *layout*. It claims *Contain* and *Scroll*.
+A **region** is a named area of a *layout*. It claims *Nest* and *Scroll*.
 
 *Scroll* is declared per region instance, not per layout, which is why a two-column layout can pin one column while its neighbour scrolls. The region declares it and the region is where you see it.
 
@@ -268,19 +269,19 @@ A **panel** is the busiest *block*:
 Panel  "Delivery"
 ├─ Show       as a nested row: its title and a summary of its contents
 ├─ Focus      as a nested row: the cursor lands on it
-├─ Enter      going in replaces the screen and grows the trail; leaving restores both
-├─ Contain    it holds a layout, whose regions hold its blocks
-├─ Float      as a modal, it draws over the dimmed screen behind it
-└─ Bind       it owns the keystrokes while you're in it, and its keys fill the legend
+├─ Descend    going in replaces the screen and grows the trail; leaving restores both
+├─ Nest       it holds a layout, whose regions hold its blocks
+├─ Overlay    as a modal, it draws over the dimmed screen behind it
+└─ Bind       its keys are the ones that apply while you are in it
 ```
 
-**Enter is the capability nothing else has**, and it's what makes a panel more than a container. A *region* can hold blocks and a *layout* can arrange them, but neither is somewhere you go.
+**Descend is the capability nothing else has**, and it's what makes a panel more than a container. A *region* can hold blocks and a *layout* can arrange them, but neither is somewhere you go.
 
-One panel fills the screen at a time. A **modal** is the same block that *Floats* instead of replacing what's behind it - nothing else about the panel changes.
+One panel fills the screen at a time. A **modal** is the same block that *Overlays* instead of replacing what's behind it - nothing else about the panel changes.
 
 ## Field
 
-A **field** is the *block* that answers. It's the only kind that contributes to the collected result, and the only kind that expands.
+A **field** is the *block* that collects. It's the only kind that contributes to the collected result, and the only kind that captures.
 
 One field owns both modes. In **view** mode it's one line, drawing every part of that line itself. Open it and it switches to **edit** mode, taking over the region right of its *label*:
 
@@ -426,7 +427,7 @@ When something doesn't fit, name the capability it needs and the level that owns
 
 **"Should markup be able to sit in the footer?"** The footer is a *region* of a *layout*, markup is a kind of *block*, and blocks are placed in regions. So yes - add the markup block to that region. It's a placement, not a feature.
 
-**"Should a progress row appear in the result?"** It would need *Answer*, which only a field claims. No - progress *Acts*, which is a different capability.
+**"Should a progress row appear in the result?"** It would need *Collect*, which only a field claims. No - progress *Activates*, which is a different capability.
 
 **"Should a panel scroll its left column but not its right?"** *Scroll* belongs to the region, and a layout is composed of region instances. Yes - the left region declares it, the right doesn't, and no block changes.
 
