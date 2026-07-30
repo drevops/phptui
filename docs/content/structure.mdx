@@ -912,11 +912,11 @@ When something doesn't fit, don't argue about where it goes. Name the capability
 
 | Question | Capability | Owned by | Answer |
 |---|---|---|---|
-| Can markup sit in the footer? | *Show* | every block | Yes. A placement, not a feature. |
-| Should a progress row reach the result? | *Collect* | Field | No. Progress *Activates*, which is a different thing. |
-| Can a panel scroll one column and pin the other? | *Scroll* | Region | Yes. The left region declares it; no block changes. |
-| Who works out how tall `content` is? | *Arrange* | Layout | The layout. Only it sees the fixed siblings that come off first. |
-| Can two blocks sit side by side? | *Flow* | Region | Yes, and without nesting a layout. |
+| Can *markup* sit in the footer? | *Show* | every *block* | Yes. A placement, not a feature. |
+| Should a *progress* row reach the result? | *Collect* | *field* | No. It *Activates*, which is a different thing. |
+| Can a *panel* scroll one column and pin the other? | *Scroll* | *region* | Yes. The left *region* declares it; no *block* changes. |
+| Who works out how tall `content` is? | *Arrange* | *layout* | The *layout*. Only it sees the fixed siblings that come off first. |
+| Can two *blocks* sit side by side? | *Flow* | *region* | Yes, and without nesting a *layout*. |
 
 The last two were decided while this page was being written, and both turned on the same test: **which level can see what the job needs?** A region can't size itself, because its siblings' fixed cells come off the top before the remainder is divided. A layout can't furnish itself and stay reusable, because it would have to know what a breadcrumb is.
 
