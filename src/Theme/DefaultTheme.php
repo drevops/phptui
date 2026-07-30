@@ -4,13 +4,6 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Theme;
 
-use DrevOps\Tui\Block\Element\ActionsElementsInterface;
-use DrevOps\Tui\Block\Element\BreadcrumbElementsInterface;
-use DrevOps\Tui\Block\Element\FieldElementsInterface;
-use DrevOps\Tui\Block\Element\LegendElementsInterface;
-use DrevOps\Tui\Block\Element\MarkupElementsInterface;
-use DrevOps\Tui\Block\Element\PanelElementsInterface;
-use DrevOps\Tui\Block\Element\ProgressElementsInterface;
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Answers\ValueFormatter;
@@ -36,6 +29,13 @@ use DrevOps\Tui\Render\Overlay;
 use DrevOps\Tui\Render\Scroller;
 use DrevOps\Tui\Render\Table;
 use DrevOps\Tui\Render\Viewport;
+use DrevOps\Tui\Theme\Capability\ColorSchemeCapableInterface;
+use DrevOps\Tui\Theme\Capability\ColorSchemeCapableTrait;
+use DrevOps\Tui\Theme\Capability\UnicodeCapableInterface;
+use DrevOps\Tui\Theme\Capability\UnicodeCapableTrait;
+use DrevOps\Tui\Theme\Override\Glyph;
+use DrevOps\Tui\Theme\Override\Overrides;
+use DrevOps\Tui\Theme\Override\ThemeElement;
 use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Utils\Strings;
 
@@ -49,6 +49,12 @@ use DrevOps\Tui\Utils\Strings;
  * atoms into field rows, the scrolled frame and the editor. Pure box geometry
  * (character sets, width fitting) lives in {@see Box}; everything visual routes
  * through the atoms.
+ *
+ * It raises {@see AbstractTheme}'s floor by declaring colour, a scheme and
+ * Unicode, so every element it inherits is answered with a palette and a glyph
+ * instead of the plain string the floor hands back. Each element delegates to
+ * the atom that draws it, which is what keeps a subclass's palette effective:
+ * override the atom and every element drawn from it follows.
  *
  * A consumer theme extends this and overrides just what it wants - usually an
  * atom, occasionally a render method for a layout tweak:
@@ -64,7 +70,10 @@ use DrevOps\Tui\Utils\Strings;
  *
  * @package DrevOps\Tui\Theme
  */
-class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapableInterface, UnicodeCapableInterface, ActionsElementsInterface, BreadcrumbElementsInterface, FieldElementsInterface, PanelElementsInterface, LegendElementsInterface, MarkupElementsInterface, ProgressElementsInterface {
+class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeCapableInterface, UnicodeCapableInterface {
+
+  use ColorSchemeCapableTrait;
+  use UnicodeCapableTrait;
 
   /**
    * The default frame width, used when a caller does not specify one.
@@ -103,11 +112,6 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   protected const array SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
   /**
-   * The ASCII spinner animation frames used when Unicode is off.
-   */
-  protected const array SPINNER_ASCII = ['|', '/', '-', '\\'];
-
-  /**
    * The determinate progress bar's width in cells.
    */
   protected const int PROGRESS_WIDTH = 24;
@@ -141,16 +145,6 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   protected const int CARD_INDENT = 2;
 
   /**
-   * Whether colour (ANSI) is enabled, resolved from the "color" option.
-   */
-  protected bool $color;
-
-  /**
-   * Whether Unicode glyphs are used, resolved from the "unicode" option.
-   */
-  protected bool $unicode;
-
-  /**
    * Whether markdown in descriptions and notes is rendered, from "markdown".
    */
   protected bool $markdown;
@@ -161,14 +155,14 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   protected bool $indentConditional;
 
   /**
-   * Whether the dark palette is used, resolved from the "mode" option.
-   */
-  protected bool $isDark;
-
-  /**
    * The outer frame width, including the border when one is drawn.
    */
   protected int $outerWidth;
+
+  /**
+   * What a consumer states differently, consulted before every element.
+   */
+  protected Overrides $overrides;
 
   /**
    * Construct a theme.
@@ -184,6 +178,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   public function __construct(protected int $width = self::DEFAULT_WIDTH, protected array $options = []) {
     $this->validateOptions();
 
+    $this->overrides = new Overrides();
     $this->color = is_bool($this->options['color'] ?? NULL) ? $this->options['color'] : TRUE;
     $this->unicode = is_bool($this->options['unicode'] ?? NULL) ? $this->options['unicode'] : TRUE;
     $this->markdown = is_bool($this->options['markdown'] ?? NULL) && $this->options['markdown'];
@@ -557,74 +552,33 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   }
 
   /**
-   * Whether colour is enabled.
+   * Take the elements a consumer states differently.
    *
-   * @return bool
-   *   TRUE when colour is enabled.
+   * @param \DrevOps\Tui\Theme\Override\Overrides $overrides
+   *   The patch; anything it does not name keeps the theme's own answer.
+   *
+   * @return static
+   *   The theme.
    */
+  public function overrides(Overrides $overrides): static {
+    $this->overrides = $overrides;
 
-  /**
-   * {@inheritdoc}
-   */
-  public function isDark(): bool {
-    return $this->mode() === Mode::Dark;
+    return $this;
   }
 
   /**
-   * {@inheritdoc}
+   * The glyph a consumer stated for an element, resolved for the display mode.
+   *
+   * @param \DrevOps\Tui\Theme\Override\ThemeElement $element
+   *   The element.
+   *
+   * @return string|null
+   *   The glyph, or NULL when nobody stated one.
    */
-  public function hasColor(): bool {
-    return $this->color;
-  }
+  protected function overriddenGlyph(ThemeElement $element): ?string {
+    $override = $this->overrides->glyph($element);
 
-  /**
-   * Whether Unicode glyphs are enabled.
-   *
-   * @return bool
-   *   TRUE when Unicode glyphs are used, FALSE for the ASCII fallback.
-   */
-  public function hasUnicode(): bool {
-    return $this->unicode;
-  }
-
-  /**
-   * Wrap text in an SGR code, honouring colour-off.
-   *
-   * The single low-level helper every styler builds on.
-   *
-   * @param string $sgr
-   *   The SGR parameters (e.g. "1;36"); empty leaves the text unstyled.
-   * @param string $text
-   *   The text.
-   *
-   * @return string
-   *   The styled text (unchanged when colour is off).
-   */
-  protected function paint(string $sgr, string $text): string {
-    return Ansi::style($text, $this->color ? $sgr : '');
-  }
-
-  /**
-   * Add bold to an SGR code when an item is selected.
-   *
-   * @param string $sgr
-   *   The base SGR code.
-   * @param bool $selected
-   *   Whether the item is the selected (cursor) one.
-   *
-   * @return string
-   *   The code, made bold when selected.
-   */
-  protected function emphasize(string $sgr, bool $selected): string {
-    if (!$selected) {
-      return $sgr;
-    }
-
-    $drop = ['', Sgr::Bold->value, Sgr::Dim->value];
-    $parts = array_values(array_filter(explode(';', $sgr), static fn(string $part): bool => !in_array($part, $drop, TRUE)));
-    array_unshift($parts, Sgr::Bold->value);
-
-    return implode(';', $parts);
+    return $override instanceof Glyph ? $this->glyph($override->glyph, $override->ascii) : NULL;
   }
 
   /**
@@ -931,16 +885,18 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function legendKey(string $text): string {
     // Case is what sets a key apart from what it does, so the legend needs no
     // weight to carry it. Uppercased here rather than at each source, so a
     // translated key name is uppercased with the rest.
-    return $this->paint(Sgr::of(Sgr::Grey), Strings::upper($text));
+    return $this->paint($this->overrides->style(ThemeElement::LegendKey) ?? Sgr::of(Sgr::Grey), Strings::upper($text));
   }
 
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function legendDescription(string $text): string {
     return $this->paint(Sgr::of(Sgr::Grey), $text);
   }
@@ -948,13 +904,31 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function legendSeparator(): string {
-    return $this->paint(Sgr::of(Sgr::Ash), $this->dot());
+    return $this->paint(Sgr::of(Sgr::Ash), $this->overriddenGlyph(ThemeElement::LegendSeparator) ?? $this->dot());
   }
 
   /**
    * {@inheritdoc}
    */
+  #[\Override]
+  public function chromeBorder(string $text): string {
+    return $this->border($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function chromeOverflowMarker(bool $above): string {
+    return $this->indicator($above ? $this->indicatorUp() : $this->indicatorDown());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
   public function breadcrumbLabel(string $text): string {
     return $this->breadcrumb($text);
   }
@@ -962,13 +936,31 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function breadcrumbSeparator(): string {
-    return $this->separator();
+    return $this->overriddenGlyph(ThemeElement::BreadcrumbSeparator) ?? $this->separator();
   }
 
   /**
    * {@inheritdoc}
    */
+  #[\Override]
+  public function fieldSelector(bool $selected): string {
+    $glyph = $this->overriddenGlyph(ThemeElement::FieldSelector);
+
+    // An override names the mark, not the palette: the cursor and everything
+    // else the theme accents stay one signal, whichever glyph carries it.
+    if ($glyph === NULL || !$selected) {
+      return $this->marker($selected);
+    }
+
+    return $this->highlight($glyph);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
   public function fieldLabel(string $text): string {
     return $this->label($text);
   }
@@ -976,6 +968,15 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
+  #[\Override]
+  public function fieldHelpMarker(): string {
+    return $this->overriddenGlyph(ThemeElement::FieldHelpMarker) ?? $this->helpMarker();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
   public function fieldValue(string $text): string {
     return $this->value($text);
   }
@@ -983,20 +984,85 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
-  public function fieldHelpMarker(): string {
-    return $this->helpMarker();
+  #[\Override]
+  public function fieldValueSeparator(): string {
+    return $this->overrides->text(ThemeElement::FieldValueSeparator) ?? ', ';
   }
 
   /**
    * {@inheritdoc}
    */
+  #[\Override]
+  public function fieldBadge(string $text): string {
+    return $this->badge($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldDescription(string $text): string {
+    return $this->description($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
   public function fieldEntry(string $text, bool $chosen): string {
-    return $this->check($chosen) . ' ' . $this->label($text, $chosen);
+    return $this->label($text, $chosen);
   }
 
   /**
    * {@inheritdoc}
    */
+  #[\Override]
+  public function fieldEntrySelector(bool $selected): string {
+    $glyph = $this->overriddenGlyph(ThemeElement::FieldEntrySelector);
+
+    if ($glyph === NULL || !$selected) {
+      return $this->marker($selected);
+    }
+
+    return $this->highlight($glyph);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldEntryMarker(bool $chosen): string {
+    $glyph = $this->overriddenGlyph(ThemeElement::FieldEntryMarker);
+
+    // Only the picked state is stated, so an entry nobody picked keeps the
+    // mark the theme draws for it and the patch stays a patch.
+    if ($glyph === NULL || !$chosen) {
+      return $this->check($chosen);
+    }
+
+    return $this->value($glyph);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldEntryNote(string $text): string {
+    return $this->disabled($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldEntryDescription(string $text): string {
+    return $this->entryDescription($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
   public function fieldConstraint(string $text): string {
     return $this->hint($text);
   }
@@ -1004,6 +1070,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function fieldError(string $text): string {
     return $this->error($text);
   }
@@ -1011,6 +1078,43 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
+  #[\Override]
+  public function fieldCaret(): string {
+    $glyph = $this->overriddenGlyph(ThemeElement::FieldCaret);
+
+    return $glyph === NULL ? $this->caret() : $this->highlight($glyph);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldDraft(string $text): string {
+    // What is being typed takes no colour of its own: the caret is what says
+    // where you are in it, and painting it would read as an accepted answer.
+    return $text;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldState(string $text): string {
+    return $this->footer($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldCaption(string $text): string {
+    return $this->caption($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
   public function panelTitle(string $text): string {
     return $this->title($text);
   }
@@ -1018,6 +1122,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function markupTitle(string $text): string {
     return $this->title($text);
   }
@@ -1025,6 +1130,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function markupLine(string $text): string {
     return $this->description($text);
   }
@@ -1032,6 +1138,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function actionButton(string $label): string {
     return $this->value($this->frameAction($label));
   }
@@ -1039,6 +1146,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function actionSelected(string $label): string {
     return $this->cursor($this->frameAction($label));
   }
@@ -1046,6 +1154,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function actionSeparator(): string {
     return '  ';
   }
@@ -1053,6 +1162,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function progressCaption(string $text): string {
     return $this->oneLine($text);
   }
@@ -1060,6 +1170,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function progressSpinner(int $frame): string {
     $frames = $this->unicode ? self::SPINNER_FRAMES : self::SPINNER_ASCII;
 
@@ -1069,6 +1180,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function progressTrack(int $filled, int $width): string {
     [$fill, $track] = $this->unicode ? ['█', '░'] : ['#', '-'];
     $filled = max(0, min($width, $filled));
@@ -1079,6 +1191,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function progressCount(int $current, int $total): string {
     return $current . '/' . $total;
   }

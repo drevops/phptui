@@ -297,7 +297,7 @@ final class Field extends AbstractBlock implements
     $label = $elements->fieldLabel($this->label) . ($this->help === '' ? '' : ' ' . $elements->fieldHelpMarker());
 
     return $this->mode === Mode::View
-      ? rtrim($label . '  ' . $elements->fieldValue($this->readable()))
+      ? rtrim($label . '  ' . $elements->fieldValue($this->readable($elements)))
       : $this->openLines($elements, $label);
   }
 
@@ -320,11 +320,14 @@ final class Field extends AbstractBlock implements
     $indent = str_repeat(' ', Ansi::width($label) + 2);
 
     foreach ($this->entries as $value => $entry) {
-      $lines[] = ($lines === [] ? $label . '  ' : $indent) . $theme->fieldEntry($entry, $value === $this->draft);
+      // Marking and naming are two elements: the mark records what was picked
+      // and the text says what it was, so a theme can restyle either alone.
+      $chosen = $value === $this->draft;
+      $lines[] = ($lines === [] ? $label . '  ' : $indent) . $theme->fieldEntryMarker($chosen) . ' ' . $theme->fieldEntry($entry, $chosen);
     }
 
     if ($lines === []) {
-      $lines[] = rtrim($label . '  ' . $theme->fieldValue($this->readable()));
+      $lines[] = rtrim($label . '  ' . $theme->fieldValue($this->readable($theme)));
     }
 
     // The two share one line and never appear together: a constraint says what
@@ -342,14 +345,17 @@ final class Field extends AbstractBlock implements
   /**
    * The answer as it reads on one line.
    *
+   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $theme
+   *   The theme.
+   *
    * @return string
    *   The value, or the draft while one is being typed.
    */
-  protected function readable(): string {
+  protected function readable(FieldElementsInterface $theme): string {
     $shown = $this->mode === Mode::Edit ? $this->draft : $this->value;
 
     if (is_array($shown)) {
-      return implode(', ', array_map(static fn(mixed $part): string => is_scalar($part) ? (string) $part : '', $shown));
+      return implode($theme->fieldValueSeparator(), array_map(static fn(mixed $part): string => is_scalar($part) ? (string) $part : '', $shown));
     }
 
     return $shown === NULL ? '' : (is_scalar($shown) ? (string) $shown : '');
