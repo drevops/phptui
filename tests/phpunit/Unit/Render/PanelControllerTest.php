@@ -138,7 +138,7 @@ final class PanelControllerTest extends TestCase {
     $this->assertStringContainsString('[ Submit ]', Ansi::strip($controller->frame(12)));
   }
 
-  public function testInlineEditExpandsWidgetInsideThePanel(): void {
+  public function testInlineEditExpandsFieldInsideThePanel(): void {
     $controller = $this->controller();
     $this->drillAndEdit($controller);
     $this->assertTrue($controller->isEditing());
@@ -147,7 +147,7 @@ final class PanelControllerTest extends TestCase {
 
     // The editor expands in place: the breadcrumb and the sibling row stay
     // visible, the field's view (its caret input) shows under the label, and
-    // the footer switches to the widget's hints - no full-screen editor header.
+    // the footer switches to the field's hints - no full-screen editor header.
     $this->assertStringContainsString('General', $frame);
     $this->assertStringContainsString('❯ Name', $frame);
     $this->assertStringContainsString('Acme', $frame);
@@ -169,7 +169,7 @@ final class PanelControllerTest extends TestCase {
 
     $frame = Ansi::strip($controller->frame(12));
 
-    // A multi-line widget view renders inline too: the select's own radio list
+    // A multi-line field view renders inline too: the select's own radio list
     // shows in the panel, with the sibling field still visible below it.
     $this->assertStringContainsString('Development', $frame);
     $this->assertStringContainsString('Production', $frame);
@@ -205,7 +205,7 @@ final class PanelControllerTest extends TestCase {
     $frame = Ansi::strip($controller->frame(12));
 
     // A standalone field opens full-screen: the underlined label header and the
-    // widget's hints, with none of the other panel rows around it.
+    // field's hints, with none of the other panel rows around it.
     $this->assertStringContainsString("Name\n────", $frame);
     $this->assertStringContainsString('accept', $frame);
     $this->assertStringContainsString('ESC to cancel', $frame);
@@ -316,7 +316,7 @@ final class PanelControllerTest extends TestCase {
     $this->assertStringContainsString('Acme', $frame);
   }
 
-  public function testEditingFrameShowsWidget(): void {
+  public function testEditingFrameShowsField(): void {
     $controller = $this->controller();
     $this->drillAndEdit($controller);
 
@@ -535,7 +535,7 @@ final class PanelControllerTest extends TestCase {
     $this->drillAndEdit($controller);
     $this->assertTrue($controller->isEditing());
 
-    // A confirm widget spends no printable character, so the help key is free
+    // A confirm field spends no printable character, so the help key is free
     // and the editor's own legend advertises it.
     $this->assertStringContainsString('? to show help', Ansi::strip($controller->frame(12)));
 
@@ -549,7 +549,7 @@ final class PanelControllerTest extends TestCase {
     $this->drillAndEdit($controller);
     $this->assertTrue($controller->isEditing());
 
-    // A text widget takes '?' as a character it is being given, so while it is
+    // A text field takes '?' as a character it is being given, so while it is
     // open the key cannot double as the help key, nor be advertised as one.
     $this->assertStringNotContainsString('to show help', Ansi::strip($controller->frame(12)));
 

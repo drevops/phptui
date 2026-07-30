@@ -47,9 +47,9 @@ $p->text('crop', 'Crop')
 
 `description()` says what the question is. It renders under the field row, carries the [markdown subset](/markdown), and widens the panel to fit.
 
-`help()` is the long version. It never renders in the panel - the row wears a [help marker](/widgets/anatomy) instead, and <kbd>?</kbd> opens the text on a page of its own. That is what lets it run to paragraphs where a description has to stay a sentence, and it is why a long help never widens the panel it was declared on.
+`help()` is the long version. It never renders in the panel - the row wears a [help marker](/fields/anatomy) instead, and <kbd>?</kbd> opens the text on a page of its own. That is what lets it run to paragraphs where a description has to stay a sentence, and it is why a long help never widens the panel it was declared on.
 
-`placeholder()` is the ghost text an empty editor shows. It never becomes a value: it disappears at the first keystroke, and it is suppressed when color is off, where it could not be told apart from something typed. Available on the `text`, `number`, `textarea`, `password`, `suggest` and `search` types - the ones with a [draft](/widgets/anatomy) to ghost. Declaring one on any other type raises a `FormException` when the form is built, rather than being quietly ignored.
+`placeholder()` is the ghost text an empty editor shows. It never becomes a value: it disappears at the first keystroke, and it is suppressed when color is off, where it could not be told apart from something typed. Available on the `text`, `number`, `textarea`, `password`, `suggest` and `search` types - the ones with a [draft](/fields/anatomy) to ghost. Declaring one on any other type raises a `FormException` when the form is built, rather than being quietly ignored.
 
 The description row is secondary chrome, so compact [spacing](/themes) drops it; a placeholder belongs to the editor and shows whatever the spacing. All three reach machine-readable output, so an agent reads the same guidance a person does - see [AI agents](/ai-agents).
 

@@ -8,16 +8,16 @@ use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Widget\Capability\PagingCapableInterface;
-use DrevOps\Tui\Widget\WidgetInterface;
+use DrevOps\Tui\Field\Capability\PagingCapableInterface;
+use DrevOps\Tui\Field\FieldInterface;
 
 /**
- * Shared paging assertions for the list widgets.
+ * Shared paging assertions for the list fields.
  *
- * Every paged widget honours the same contract: a non-positive page size is
+ * Every paged field honours the same contract: a non-positive page size is
  * rejected at construction, a long list clips to the page with a "more below"
  * indicator, and the window follows the cursor down. A test supplies a factory
- * closure building its widget at a given page size.
+ * closure building its field at a given page size.
  */
 trait AssertsPagingTrait {
 
@@ -35,7 +35,7 @@ trait AssertsPagingTrait {
    * A non-positive page size is rejected at construction.
    *
    * @param \Closure $factory
-   *   Builds the widget: `fn (int $page_size): WidgetInterface`.
+   *   Builds the field: `fn (int $page_size): FieldInterface`.
    * @param int $page_size
    *   The invalid page size to pass.
    */
@@ -50,18 +50,18 @@ trait AssertsPagingTrait {
    * A long list clips to the page and the window follows the cursor down.
    *
    * @param \Closure $factory
-   *   Builds the widget over the paging fixture at a page size of two:
-   *   `fn (int $page_size): WidgetInterface`.
+   *   Builds the field over the paging fixture at a page size of two:
+   *   `fn (int $page_size): FieldInterface`.
    * @param int $downs
    *   The Down presses that carry the cursor onto the third item.
    */
   protected function assertPagesAndFollowsCursor(\Closure $factory, int $downs = 2): void {
-    $widget = $factory(2);
-    $this->assertInstanceOf(WidgetInterface::class, $widget);
-    $this->assertInstanceOf(PagingCapableInterface::class, $widget);
-    $this->assertSame(2, $widget->pageSize());
+    $field = $factory(2);
+    $this->assertInstanceOf(FieldInterface::class, $field);
+    $this->assertInstanceOf(PagingCapableInterface::class, $field);
+    $this->assertSame(2, $field->pageSize());
 
-    $view = Ansi::strip($widget->view(new DefaultTheme()));
+    $view = Ansi::strip($field->view(new DefaultTheme()));
 
     $this->assertStringContainsString('Apple', $view);
     $this->assertStringContainsString('Banana', $view);
@@ -69,10 +69,10 @@ trait AssertsPagingTrait {
     $this->assertStringContainsString('▼', $view);
 
     for ($i = 0; $i < $downs; $i++) {
-      $widget->handle(Key::named(KeyName::Down));
+      $field->handle(Key::named(KeyName::Down));
     }
 
-    $scrolled = Ansi::strip($widget->view(new DefaultTheme()));
+    $scrolled = Ansi::strip($field->view(new DefaultTheme()));
 
     // The window followed the cursor: the "more above" indicator shows and
     // the first option has scrolled off.

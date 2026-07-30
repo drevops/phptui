@@ -6,11 +6,11 @@
  * Generate every terminal SVG asset - the single entry point.
  *
  * Records terminal sessions for the playground panel demos (the panel TUI
- * runners) and the widget montage, then converts the recordings to animated
+ * runners) and the field montage, then converts the recordings to animated
  * SVGs; it also renders the option-group, password-reveal and discovery static
- * frames. Every per-widget card - both its animations and its static
+ * frames. Every per-field card - both its animations and its static
  * display-mode screenshots - is rendered deterministically by
- * render-widget-svgs.php, the built-in theme previews by render-theme-svgs.php,
+ * render-field-svgs.php, the built-in theme previews by render-theme-svgs.php,
  * the progress primitive by render-progress-svgs.php and the output primitives
  * by render-output-svgs.php; a no-argument run spawns all four alongside the
  * recording workers, so one command regenerates the whole set. Each dark SVG
@@ -36,7 +36,7 @@
  * Usage:
  * @code
  * php docs/util/update-assets.php
- * php docs/util/update-assets.php --record widget-select
+ * php docs/util/update-assets.php --record field-select
  * @endcode
  */
 
@@ -58,16 +58,16 @@ define('END_PAUSE', 10);
 define('FRAME_SETTLE_MS', 500);
 
 // The playback-speed factor (ANIMATION_SLOWDOWN) and the slowAnimation() scaler
-// are shared with render-widget-svgs.php, as is the light-twin derivation.
+// are shared with render-field-svgs.php, as is the light-twin derivation.
 require_once __DIR__ . '/svg-slowdown.php';
 require_once __DIR__ . '/svg-light-twin.php';
 
 /**
- * The expect body walking the all-widgets montage field by field.
+ * The expect body walking the all-fields montage field by field.
  *
- * The montage form (playground/02-widgets-all-widgets.php) is one panel with
- * every widget type. Fields edit inline and accepting keeps the cursor on
- * the field, so each step is: open with Enter, drive the widget with its own
+ * The montage form (playground/02-fields-all-fields.php) is one panel with
+ * every field type. Fields edit inline and accepting keeps the cursor on
+ * the field, so each step is: open with Enter, drive the field with its own
  * keys, accept, then arrow down to the next field. The calendar is the one
  * standalone field - its month grid takes the whole screen and returns to
  * the panel on accept.
@@ -75,10 +75,10 @@ require_once __DIR__ . '/svg-light-twin.php';
  * @return string
  *   The expect script body.
  */
-function allWidgetsInteraction(): string {
+function allFieldsInteraction(): string {
   return <<<'EXPECT'
 # Wait for the hub, then drill into the montage panel.
-expect "Widgets" {
+expect "Fields" {
     pause 2000
     safe_send "\r"
 }
@@ -1030,7 +1030,7 @@ function getJobs(string $project_dir): array {
   // colour follows the NO_COLOR convention.
   $env_variants = ['' => '', '-ascii' => 'LC_ALL=C ', '-no-ansi' => 'NO_COLOR=1 ', '-ascii-no-ansi' => 'LC_ALL=C NO_COLOR=1 '];
 
-  // The all-widgets montage: every widget on one panel, walked field by
+  // The all-fields montage: every field on one panel, walked field by
   // field, in all display modes. "Pause" is the last field walked, so its
   // label proves the whole sequence was recorded. The screen is sized for
   // the content: all sixteen fields fit without scrolling, and the rows
@@ -1038,9 +1038,9 @@ function getJobs(string $project_dir): array {
   // narrower terminal a badged row overflows, wraps, and every frame below
   // it renders torn.
   foreach ($env_variants as $suffix => $env) {
-    $jobs['widgets' . $suffix] = [
-      'command' => 'env LINES=25 COLUMNS=80 ' . $env . 'php ' . $project_dir . '/playground/02-widgets-all-widgets.php',
-      'interact' => allWidgetsInteraction(),
+    $jobs['fields' . $suffix] = [
+      'command' => 'env LINES=25 COLUMNS=80 ' . $env . 'php ' . $project_dir . '/playground/02-fields-all-fields.php',
+      'interact' => allFieldsInteraction(),
       'rows' => 25,
       'cols' => 80,
       'verify' => 'Pause',
@@ -1252,11 +1252,11 @@ function getJobs(string $project_dir): array {
   // the reveal hint, anchored to the moment Tab flips the display to plaintext.
   // The masked value hides "melon7", so the plaintext only appears once
   // revealed - anchoring on it captures the revealed frame, not the initial one.
-  $jobs['widget-password-reveal'] = [
-    'command' => 'php ' . $project_dir . '/playground/02-widgets-password-reveal.php',
+  $jobs['field-password-reveal'] = [
+    'command' => 'php ' . $project_dir . '/playground/02-fields-password-reveal.php',
     'interact' => <<<'EXPECT'
 # Drill into the field, reveal the value with Tab, hold the plaintext frame, then accept.
-expect "Password widget" {
+expect "Password field" {
     pause 1000
     safe_send "\r"
     pause 800
@@ -1272,9 +1272,9 @@ EXPECT,
     'at_needle' => 'melon7',
   ];
 
-  // Every per-widget card - the animated unicode-colour hero README.md embeds
+  // Every per-field card - the animated unicode-colour hero README.md embeds
   // and all four static display-mode screenshots the documentation pages show -
-  // is rendered deterministically by render-widget-svgs.php, so no per-widget
+  // is rendered deterministically by render-field-svgs.php, so no per-field
   // recordings run here.
 
   // Option-kind demos: a select and a multiselect showing group headings,
@@ -1291,8 +1291,8 @@ EXPECT,
 
     foreach ($env_variants as $suffix => $env) {
       // spawn does not parse VAR=value prefixes, so route them through env.
-      $jobs['widget-' . $demo . $suffix] = [
-        'command' => 'env ' . $env . 'php ' . $project_dir . '/playground/02-widgets-' . $demo . '.php',
+      $jobs['field-' . $demo . $suffix] = [
+        'command' => 'env ' . $env . 'php ' . $project_dir . '/playground/02-fields-' . $demo . '.php',
         'interact' => $interact,
         'rows' => $meta['rows'],
         'cols' => 44,
@@ -1343,7 +1343,7 @@ function main(): void {
     $workers[$name] = sprintf('php %s --record %s', escapeshellarg($script_path), escapeshellarg($name));
   }
 
-  $workers['widget-svgs'] = sprintf('php %s', escapeshellarg($script_dir . '/render-widget-svgs.php'));
+  $workers['field-svgs'] = sprintf('php %s', escapeshellarg($script_dir . '/render-field-svgs.php'));
   $workers['theme-svgs'] = sprintf('php %s', escapeshellarg($script_dir . '/render-theme-svgs.php'));
   $workers['progress-svgs'] = sprintf('php %s', escapeshellarg($script_dir . '/render-progress-svgs.php'));
   $workers['output-svgs'] = sprintf('php %s', escapeshellarg($script_dir . '/render-output-svgs.php'));

@@ -666,7 +666,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
     // still reads as its own voice - and a constraint sits directly beneath an
     // option's own description, so the two must not be mistaken for each other
     // on any surface. It steps along the grey ramp rather than taking a hue of
-    // its own: a coloured guidance line reads as output the widget produced
+    // its own: a coloured guidance line reads as output the field produced
     // rather than as chrome telling you what it expects. Italic reinforces it
     // where the surface honours it, and where neither survives the voice falls
     // back to a mark, which nothing can strip.
@@ -678,7 +678,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
    */
   public function caption(string $text): string {
     // The guidance hue at a different weight: a caption and a constraint are
-    // both the widget speaking about the list rather than listing it, so they
+    // both the field speaking about the list rather than listing it, so they
     // read as a pair - but bold against italic keeps them apart, and keeps the
     // caption from being read as the panel's own trail.
     return $this->paint(Sgr::of(Sgr::Bold, Sgr::Steel), $text);
@@ -1904,7 +1904,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   /**
    * Render a field's editor in place of its value: the label, then the view.
    *
-   * The field keeps its label and marker; the widget's own rendered view takes
+   * The field keeps its label and marker; the field's own rendered view takes
    * the place of the summary value, on the label row and, when it spans
    * several lines, aligning the rest under that value column - so the field
    * reads as its editor opened in place, the rest of the panel still around it.
@@ -1912,7 +1912,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
    * @param \DrevOps\Tui\Model\Field $field
    *   The field being edited.
    * @param string $view
-   *   The widget's rendered view.
+   *   The field's rendered view.
    * @param bool $selected
    *   Whether the field's row holds the cursor (it does while editing).
    *
@@ -2847,14 +2847,14 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
   }
 
   /**
-   * Compose a field's editor screen: the label, the widget view and its hints.
+   * Compose a field's editor screen: the label, the field view and its hints.
    *
    * @param string $label
    *   The field label.
    * @param string $view
-   *   The widget's rendered view.
+   *   The field's rendered view.
    * @param list<\DrevOps\Tui\Input\Hint> $hints
-   *   The widget's hint fragments; an empty list draws no hint line, so the
+   *   The field's hint fragments; an empty list draws no hint line, so the
    *   footer can be turned off form-wide.
    * @param \DrevOps\Tui\Input\ScopedKeyMap|null $keys
    *   The editor's scope bindings, so the hint glyphs reflect the active keys.
@@ -2880,7 +2880,7 @@ class DefaultTheme implements ThemeInterface, ColorCapableInterface, SchemeCapab
 
       // A fullscreen editor stretches its frame like the hub does - the hint
       // footer pins to the bottom row. A view taller than the budget keeps
-      // its full height - widgets page inside themselves, so slicing here
+      // its full height - fields page inside themselves, so slicing here
       // would hide rows they expect to show.
       if ($stretch) {
         $height = max($height, $rows - count($header) - count($footer) - $this->chromeHeight($footer !== []));

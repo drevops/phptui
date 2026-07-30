@@ -11,7 +11,7 @@ use DrevOps\Tui\Model\FieldType;
  *
  * Built from a flat list of {@see Binding}s - a preset's defaults followed by
  * any consumer overrides - it layers them into one {@see ScopedKeyMap} per
- * scope: the base defaults, panel navigation, and each widget type that
+ * scope: the base defaults, panel navigation, and each field type that
  * overrides the base. Later bindings win, so a consumer replaces a default by
  * re-declaring it, and a scope override reassigns a key without disturbing the
  * base for other scopes.
@@ -19,7 +19,7 @@ use DrevOps\Tui\Model\FieldType;
  * Resolution validates eagerly and fails loudly, so a bad declaration is caught
  * when the form is built rather than mid-session:
  * - a key bound to two different actions in the same scope is a conflict;
- * - a printable character bound in the base scope, or in a scope whose widget
+ * - a printable character bound in the base scope, or in a scope whose field
  *   consumes typed input, would be un-typeable and is rejected;
  * - a character binding that is not exactly one character is rejected.
  *
@@ -28,7 +28,7 @@ use DrevOps\Tui\Model\FieldType;
 final class KeyMap {
 
   /**
-   * The base scope: the defaults shared by every widget.
+   * The base scope: the defaults shared by every field.
    */
   protected ScopedKeyMap $base;
 
@@ -82,7 +82,7 @@ final class KeyMap {
   }
 
   /**
-   * The scope for a widget type, or the base when the type has no overrides.
+   * The scope for a field type, or the base when the type has no overrides.
    *
    * @param \DrevOps\Tui\Model\FieldType $type
    *   The field type.
@@ -90,7 +90,7 @@ final class KeyMap {
    *   Whether the multiple-collecting variant of the type is targeted.
    *
    * @return \DrevOps\Tui\Input\ScopedKeyMap
-   *   The bindings for that widget type.
+   *   The bindings for that field type.
    */
   public function forField(FieldType $type, bool $multiple = FALSE): ScopedKeyMap {
     return $this->fields[Scope::field($type, $multiple)->token()] ?? $this->base;
@@ -243,7 +243,7 @@ final class KeyMap {
         throw new \InvalidArgumentException(sprintf('The %s scope consumes typed characters, so the printable character "%s" cannot be bound to an action there.', $scope->label(), $entry['key']->label()));
       }
 
-      throw new \InvalidArgumentException(sprintf('The base scope may not bind the printable character "%s"; it would be un-typeable in text widgets. Bind it in a specific non-text scope instead.', $entry['key']->label()));
+      throw new \InvalidArgumentException(sprintf('The base scope may not bind the printable character "%s"; it would be un-typeable in text fields. Bind it in a specific non-text scope instead.', $entry['key']->label()));
     }
   }
 

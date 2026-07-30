@@ -11,7 +11,7 @@ vocabulary below so the docs, the playground scripts, and the screenshots all
 read as one consistent world.
 
 Why: the engine is application-agnostic. A neutral, friendly theme keeps the
-examples about the *widgets* rather than any particular software stack, and
+examples about the *fields* rather than any particular software stack, and
 avoids dating the docs to a specific toolchain.
 
 ## The scenario
@@ -26,12 +26,12 @@ fruit, adding vegetables, choosing a quantity, and confirming.
 - **Categories**: Fruit, Vegetable, Herb.
 - **States**: Ripe / Unripe, Organic / Conventional.
 
-## Canonical widget values
+## Canonical field values
 
 Use these exact ids, labels, options and defaults so the code and its screenshot
 always match.
 
-| Widget | Label | Default | Options / bounds |
+| Field | Label | Default | Options / bounds |
 | --- | --- | --- | --- |
 | text | `Item` | `Pear` | complete: `Pear`, `Peach`, `Plum` |
 | template | `Crate label` | `valley-pear-a` | pattern `{{orchard}}-{{fruit}}-{{grade}}`; slots Orchard, Fruit, Grade (a single letter a-c) |

@@ -238,7 +238,7 @@ final class FieldBuilder {
   protected ?int $pickerMaxSize = NULL;
 
   /**
-   * Choice widgets only: the visible page size, when declared.
+   * Choice fields only: the visible page size, when declared.
    */
   protected ?int $pageSize = NULL;
 
@@ -311,7 +311,7 @@ final class FieldBuilder {
    * @param string $label
    *   The human-readable label.
    * @param \DrevOps\Tui\Model\FieldType $fieldType
-   *   The widget type.
+   *   The field type.
    */
   public function __construct(protected string $id, protected string $label, protected FieldType $fieldType) {
   }
@@ -523,7 +523,7 @@ final class FieldBuilder {
   /**
    * Allow the field to hand off to the user's $EDITOR.
    *
-   * Honoured by the textarea widget: an available $EDITOR (or $VISUAL) can be
+   * Honoured by the textarea field: an available $EDITOR (or $VISUAL) can be
    * launched to compose the value, falling back to inline editing otherwise.
    *
    * @param bool $enabled
@@ -544,7 +544,7 @@ final class FieldBuilder {
    * A field is edited inline by default - its editor expands in place on the
    * panel when activated, and collapses back on accept or cancel. Declaring it
    * standalone opens that same editor full-screen instead: the better fit for a
-   * widget that wants the whole viewport, such as a long option list, a month
+   * field that wants the whole viewport, such as a long option list, a month
    * calendar or a multi-line textarea.
    *
    * @param bool $standalone
@@ -793,10 +793,10 @@ final class FieldBuilder {
   }
 
   /**
-   * List widgets only: bound the visible option list to a page size.
+   * List fields only: bound the visible option list to a page size.
    *
    * Longer lists page around the cursor rather than overflowing the viewport.
-   * Honoured by the select, suggest, search, reorder and file picker widgets;
+   * Honoured by the select, suggest, search, reorder and file picker fields;
    * ignored by other types.
    *
    * @param int $size

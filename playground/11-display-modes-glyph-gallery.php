@@ -2,12 +2,12 @@
 
 /**
  * @file
- * Glyph gallery: every widget rendered in Unicode and ASCII, side by side.
+ * Glyph gallery: every field rendered in Unicode and ASCII, side by side.
  *
- * Widgets pull their glyphs from the theme, so the same widget renders with
+ * Fields pull their glyphs from the theme, so the same field renders with
  * Unicode glyphs under a Unicode theme and ASCII glyphs under an ASCII one -
  * exactly how the TUI adapts to the terminal locale. This is a static
- * render, not an interactive form: each widget's view() is captured under
+ * render, not an interactive form: each field's view() is captured under
  * both themes so the difference is visible in one screen.
  *
  * Usage:
@@ -18,19 +18,19 @@ declare(strict_types=1);
 
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Utils\Strings;
-use DrevOps\Tui\Widget\CalendarWidget;
-use DrevOps\Tui\Widget\ConfirmWidget;
-use DrevOps\Tui\Widget\NumberWidget;
-use DrevOps\Tui\Widget\PasswordWidget;
-use DrevOps\Tui\Widget\PauseWidget;
-use DrevOps\Tui\Widget\ReorderWidget;
-use DrevOps\Tui\Widget\SearchWidget;
-use DrevOps\Tui\Widget\SelectWidget;
-use DrevOps\Tui\Widget\SuggestWidget;
-use DrevOps\Tui\Widget\TextareaWidget;
-use DrevOps\Tui\Widget\TextWidget;
-use DrevOps\Tui\Widget\ToggleWidget;
-use DrevOps\Tui\Widget\WidgetInterface;
+use DrevOps\Tui\Field\Calendar;
+use DrevOps\Tui\Field\Confirm;
+use DrevOps\Tui\Field\Number;
+use DrevOps\Tui\Field\Password;
+use DrevOps\Tui\Field\Pause;
+use DrevOps\Tui\Field\Reorder;
+use DrevOps\Tui\Field\Search;
+use DrevOps\Tui\Field\Select;
+use DrevOps\Tui\Field\Suggest;
+use DrevOps\Tui\Field\Textarea;
+use DrevOps\Tui\Field\Text;
+use DrevOps\Tui\Field\Toggle;
+use DrevOps\Tui\Field\FieldInterface;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -39,56 +39,56 @@ $unicode = new DefaultTheme(76, ['color' => FALSE]);
 $ascii = new DefaultTheme(76, ['color' => FALSE, 'unicode' => FALSE]);
 
 /**
- * The widgets to showcase, each built freshly (widgets are stateful).
+ * The fields to showcase, each built freshly (fields are stateful).
  *
- * @var array<string,callable():\DrevOps\Tui\Widget\WidgetInterface>
+ * @var array<string,callable():\DrevOps\Tui\Field\FieldInterface>
  */
-$widgets = [
-  'Text' => static fn(): WidgetInterface => new TextWidget('Pear'),
-  'Number' => static fn(): WidgetInterface => new NumberWidget('1200'),
-  'Calendar' => static fn(): WidgetInterface => new CalendarWidget('2026-07-15'),
-  'Textarea' => static fn(): WidgetInterface => new TextareaWidget('Crisp and sweet' . chr(10) . 'Hint of citrus'),
-  'Password' => static fn(): WidgetInterface => new PasswordWidget('melon7'),
-  'Select' => static fn(): WidgetInterface => new SelectWidget([
+$fields = [
+  'Text' => static fn(): FieldInterface => new Text('Pear'),
+  'Number' => static fn(): FieldInterface => new Number('1200'),
+  'Calendar' => static fn(): FieldInterface => new Calendar('2026-07-15'),
+  'Textarea' => static fn(): FieldInterface => new Textarea('Crisp and sweet' . chr(10) . 'Hint of citrus'),
+  'Password' => static fn(): FieldInterface => new Password('melon7'),
+  'Select' => static fn(): FieldInterface => new Select([
     'apple' => 'Apple',
     'banana' => 'Banana',
     'cherry' => 'Cherry',
   ], 'apple'),
-  'MultiSelect' => static fn(): WidgetInterface => new SelectWidget([
+  'MultiSelect' => static fn(): FieldInterface => new Select([
     'apple' => 'Apple',
     'carrot' => 'Carrot',
     'tomato' => 'Tomato',
   ], ['apple', 'carrot'], TRUE),
-  'Reorder' => static fn(): WidgetInterface => new ReorderWidget([
+  'Reorder' => static fn(): FieldInterface => new Reorder([
     'apple' => 'Apple',
     'carrot' => 'Carrot',
     'tomato' => 'Tomato',
   ]),
-  'Suggest' => static fn(): WidgetInterface => new SuggestWidget([
+  'Suggest' => static fn(): FieldInterface => new Suggest([
     'Apple',
     'Apricot',
     'Banana',
     'Cherry',
     'Mango',
   ], 'Ap'),
-  'Search' => static fn(): WidgetInterface => new SearchWidget([
+  'Search' => static fn(): FieldInterface => new Search([
     'carrot' => 'Carrot',
     'potato' => 'Potato',
     'onion' => 'Onion',
     'pepper' => 'Pepper',
   ], 'carrot'),
-  'MultiSearch' => static fn(): WidgetInterface => new SearchWidget([
+  'MultiSearch' => static fn(): FieldInterface => new Search([
     'apple' => 'Apple',
     'banana' => 'Banana',
     'carrot' => 'Carrot',
     'tomato' => 'Tomato',
   ], ['apple'], TRUE),
-  'Confirm' => static fn(): WidgetInterface => new ConfirmWidget(TRUE),
-  'Toggle' => static fn(): WidgetInterface => new ToggleWidget([
+  'Confirm' => static fn(): FieldInterface => new Confirm(TRUE),
+  'Toggle' => static fn(): FieldInterface => new Toggle([
     'ripe' => 'Ripe',
     'unripe' => 'Unripe',
   ], 'ripe'),
-  'Pause' => static fn(): WidgetInterface => new PauseWidget(),
+  'Pause' => static fn(): FieldInterface => new Pause(),
 ];
 
 // Lay two rendered views out as columns, the left one padded to align.
@@ -114,7 +114,7 @@ echo PHP_EOL;
 echo $columns('UNICODE', 'TEXTUAL (ASCII)') . PHP_EOL;
 echo str_repeat('-', 60) . PHP_EOL . PHP_EOL;
 
-foreach ($widgets as $name => $make) {
+foreach ($fields as $name => $make) {
   echo $name . PHP_EOL;
   echo $columns($make()->view($unicode), $make()->view($ascii)) . PHP_EOL . PHP_EOL;
 }

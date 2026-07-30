@@ -7,7 +7,7 @@ namespace DrevOps\Tui\Testing;
 use DrevOps\Tui\Input\Key;
 
 /**
- * A source of key presses consumed by the widgets.
+ * A source of key presses consumed by the fields.
  *
  * @package DrevOps\Tui\Testing
  */

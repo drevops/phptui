@@ -1,0 +1,74 @@
+---
+title: Number
+description: 'Integer input with optional bounds and step keys, collected as an int.'
+keywords: ['number', 'integer', 'bounds', 'field']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Number
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/field-number-light-animated.svg'), dark: useBaseUrl('/field-number-dark-animated.svg')}} alt="Number field" />
+</p>
+
+Integer input - digits with an optional leading minus. It collects an **`int`**.
+
+```php
+$p->number('weight', 'Basket weight (g)')
+  ->min(200)       // Lowest accepted value, inclusive.
+  ->max(9000)      // Highest accepted value, inclusive.
+  ->step(100)      // Amount the Up/Down keys adjust by.
+  ->default(1200); // Initial value.
+```
+
+Runnable script: [`playground/02-fields-number.php`](https://github.com/drevops/tui/blob/main/playground/02-fields-number.php).
+
+## Options
+
+| Name        | Description                                                                | Required | Default   |
+| ----------- | -------------------------------------------------------------------------- | -------- | --------- |
+| `min()`     | Lowest accepted value, inclusive.                                          | No       | Unbounded |
+| `max()`     | Highest accepted value, inclusive.                                         | No       | Unbounded |
+| `step()`    | Amount the <kbd>Up</kbd>/<kbd>Down</kbd> keys adjust by; must be positive. | No       | `1`       |
+| `default()` | Initial value.                                                             | No       | `0`       |
+
+With no bounds declared, the field is a plain integer entry and the arrow keys are inert. Declare `min()`, `max()` or `step()` and <kbd>Up</kbd>/<kbd>Down</kbd> adjustment turns on; the value is clamped only when a range (`min()` / `max()`) is set.
+
+## Keyboard
+
+| Key                         | Action                                                     |
+| --------------------------- | ---------------------------------------------------------- |
+| digits                      | Insert a digit                                             |
+| <kbd>-</kbd>                | Leading minus (once, at the start)                         |
+| <kbd>←</kbd> / <kbd>→</kbd> | Move the caret                                             |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Increment / decrement by `step` (only when bounds are set) |
+| <kbd>Enter</kbd>            | Accept (an out-of-range value is rejected inline)          |
+| <kbd>Esc</kbd>              | Cancel                                                     |
+
+## Headless behavior
+
+The bounds are enforced when the form runs [headlessly](/headless-collection) too - a value outside the range is rejected - and they surface in the JSON schema as `min`, `max` and `step` on the prompt.
+
+## Display modes
+
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-number-light-static.svg'), dark: useBaseUrl('/field-number-dark-static.svg')}} alt="Number: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-number-light-static-no-ansi.svg'), dark: useBaseUrl('/field-number-dark-static-no-ansi.svg')}} alt="Number: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-number-light-static-ascii.svg'), dark: useBaseUrl('/field-number-dark-static-ascii.svg')}} alt="Number: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-number-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/field-number-dark-static-ascii-no-ansi.svg')}} alt="Number: ASCII + No ANSI" /></td>
+  </tr>
+</table>

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Input;
 
 /**
- * The resolved bindings for one scope, narrowed for a single widget.
+ * The resolved bindings for one scope, narrowed for a single field.
  *
- * A widget (or the panel controller) holds one of these and asks it whether a
+ * A field (or the panel controller) holds one of these and asks it whether a
  * key press means an action - {@see matches()} - instead of testing raw key
  * names. It also answers the reverse question - {@see keysFor()} and
  * {@see primary()} - so key hints can be rendered from the same source of

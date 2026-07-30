@@ -275,7 +275,7 @@ final class Form {
 
       // A dynamic default is a closure resolved at runtime; every literal
       // default - whatever its type - must be one of the two option values,
-      // otherwise the widget would silently coerce it and select the first.
+      // otherwise the field would silently coerce it and select the first.
       if ($field->default instanceof \Closure) {
         continue;
       }

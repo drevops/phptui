@@ -67,7 +67,7 @@ final class Field {
    * @param string $description
    *   The help text.
    * @param \DrevOps\Tui\Model\FieldType $type
-   *   The widget type.
+   *   The field type.
    * @param mixed $default
    *   The declared default value, or a `fn (Context): mixed` closure computing
    *   a dynamic default from the run context.
@@ -100,7 +100,7 @@ final class Field {
    *   a mismatch before accepting.
    * @param bool $externalEditor
    *   Whether the field may hand off to the user's $EDITOR for composing its
-   *   value. Honoured by the textarea widget; ignored by other types.
+   *   value. Honoured by the textarea field; ignored by other types.
    * @param \DrevOps\Tui\Model\NumberBounds|null $bounds
    *   Number only: optional min/max/step bounds; NULL for a plain integer
    *   entry with no range or keyboard stepping.
@@ -114,8 +114,8 @@ final class Field {
    * @param bool $pickerShowHidden
    *   File picker only: whether dot-entries are shown when the browser opens.
    * @param int|null $pageSize
-   *   Choice widgets only: how many option rows show at once before the list
-   *   pages; NULL uses the widget default. A purely visual bound - it does not
+   *   Choice fields only: how many option rows show at once before the list
+   *   pages; NULL uses the field default. A purely visual bound - it does not
    *   constrain a headless value, so it is absent from the machine schema.
    * @param list<string>|\Closure $completion
    *   Text only: the inline ghost-text completion source - a list of candidate

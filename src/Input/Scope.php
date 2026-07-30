@@ -7,10 +7,10 @@ namespace DrevOps\Tui\Input;
 use DrevOps\Tui\Model\FieldType;
 
 /**
- * The binding context a key resolves in: base, navigation, or one widget type.
+ * The binding context a key resolves in: base, navigation, or one field type.
  *
  * Bindings are layered. The base scope holds the defaults shared by every
- * widget; navigation and per-field-type scopes override the base for the few
+ * field; navigation and per-field-type scopes override the base for the few
  * keys that mean something different there (Enter inserts a newline in a
  * textarea, Space toggles an option in a checkbox list, and so on). A scope is
  * a value, not an enum, so it can wrap a {@see FieldType} without duplicating
@@ -24,7 +24,7 @@ use DrevOps\Tui\Model\FieldType;
 final readonly class Scope {
 
   /**
-   * The field types whose widgets consume printable characters as input.
+   * The field types whose fields consume printable characters as input.
    *
    * In these scopes a letter or digit is the value the user is typing, so a
    * binding may not claim a printable character for an action - that would make
@@ -73,7 +73,7 @@ final readonly class Scope {
    * Construct a scope.
    *
    * @param \DrevOps\Tui\Model\FieldType|null $fieldType
-   *   The widget type this scope targets, or NULL for the base and navigation
+   *   The field type this scope targets, or NULL for the base and navigation
    *   scopes.
    * @param bool $navigation
    *   Whether this is the navigation scope.
@@ -88,7 +88,7 @@ final readonly class Scope {
   }
 
   /**
-   * The base scope holding the defaults shared by every widget.
+   * The base scope holding the defaults shared by every field.
    *
    * @return self
    *   The base scope.
@@ -108,7 +108,7 @@ final readonly class Scope {
   }
 
   /**
-   * The scope for a single widget type.
+   * The scope for a single field type.
    *
    * @param \DrevOps\Tui\Model\FieldType $type
    *   The field type.
@@ -141,7 +141,7 @@ final readonly class Scope {
   }
 
   /**
-   * Whether this scope's widget consumes printable characters as typed input.
+   * Whether this scope's field consumes printable characters as typed input.
    *
    * @return bool
    *   TRUE when a printable character is reserved for typing and may not be

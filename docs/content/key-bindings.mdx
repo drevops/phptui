@@ -1,12 +1,12 @@
 ---
 title: Key bindings
-description: 'Remap navigation, edit, accept and cancel keys per widget type; a default and a vim preset ship, and conflicting bindings fail at setup.'
+description: 'Remap navigation, edit, accept and cancel keys per field type; a default and a vim preset ship, and conflicting bindings fail at setup.'
 keywords: ['key bindings', 'keyboard', 'vim', 'shortcuts', 'remap']
 ---
 
 # Key bindings
 
-Navigation, edit, accept and cancel keys are all configurable. A widget never asks for a fixed key - it asks for a semantic **action** (`MoveUp`, `Accept`, `Toggle` - the full set is listed below), and a **key map** binds each action to one or more keys. Key bindings describe the terminal, not the questionnaire, so you set them on the `Tui` facade with `->keys(...)`, mirroring `->theme(...)`:
+Navigation, edit, accept and cancel keys are all configurable. A field never asks for a fixed key - it asks for a semantic **action** (`MoveUp`, `Accept`, `Toggle` - the full set is listed below), and a **key map** binds each action to one or more keys. Key bindings describe the terminal, not the questionnaire, so you set them on the `Tui` facade with `->keys(...)`, mirroring `->theme(...)`:
 
 ```php
 $tui = (new Tui($form))->keys('vim');   // built-in vim navigation (h/j/k/l)
@@ -16,7 +16,7 @@ Two presets ship: `default` (every binding it declares is listed below) and `vim
 
 ## Actions
 
-The actions are the fixed set of intents the widgets understand - the bindings behind them are configurable, the intents are not. Every `Action` case:
+The actions are the fixed set of intents the fields understand - the bindings behind them are configurable, the intents are not. Every `Action` case:
 
 | Action                                           | Meaning                                                        |
 | ------------------------------------------------ | -------------------------------------------------------------- |
@@ -44,11 +44,11 @@ The named keys a binding can use - every `KeyName` case: `Up`, `Down`, `Left`, `
 
 ## The default bindings
 
-What `default` actually declares, scope by scope. Every widget inherits the base layer and overrides only what differs:
+What `default` actually declares, scope by scope. Every field inherits the base layer and overrides only what differs:
 
 | Scope                                | Keys                                                                         | Action                                           |
 | ------------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------ |
-| base (every widget)                  | <kbd>↑</kbd> / <kbd>↓</kbd> / <kbd>←</kbd> / <kbd>→</kbd>                    | `MoveUp` / `MoveDown` / `MoveLeft` / `MoveRight` |
+| base (every field)                  | <kbd>↑</kbd> / <kbd>↓</kbd> / <kbd>←</kbd> / <kbd>→</kbd>                    | `MoveUp` / `MoveDown` / `MoveLeft` / `MoveRight` |
 | base                                 | <kbd>Enter</kbd>                                                             | `Accept`                                         |
 | base                                 | <kbd>Esc</kbd>                                                               | `Cancel`                                         |
 | base                                 | <kbd>Backspace</kbd>                                                         | `DeleteBack`                                     |
@@ -77,11 +77,11 @@ What `default` actually declares, scope by scope. Every widget inherits the base
 
 `vim` inherits all of it and adds letters where typing can't swallow them: the panel browser and the single-choice select gain <kbd>k</kbd>/<kbd>j</kbd> for up/down, and the calendar gains <kbd>k</kbd>/<kbd>j</kbd>/<kbd>h</kbd>/<kbd>l</kbd> for week and day movement - each alongside the arrow keys, never replacing them.
 
-Not everything on the keyboard routes through the map: a few widget keys are fixed. The calendar's month and edge jumps (<kbd>PageUp</kbd>/<kbd>PageDown</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>) have no action behind them and always keep their keys.
+Not everything on the keyboard routes through the map: a few field keys are fixed. The calendar's month and edge jumps (<kbd>PageUp</kbd>/<kbd>PageDown</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>) have no action behind them and always keep their keys.
 
-## Per-widget-type overrides
+## Per-field-type overrides
 
-Bindings are layered by **scope**: a base layer shared by every widget, a navigation layer for the panel browser, and one layer per widget type that overrides the base only where it differs (<kbd>Enter</kbd> inserts a newline in a textarea, <kbd>Space</kbd> toggles a checkbox option). To retune individual bindings, pass overrides on top of a preset - each names a scope, an action and its keys. Later bindings win, so re-declaring a scope-and-action pair replaces the preset's keys for it:
+Bindings are layered by **scope**: a base layer shared by every field, a navigation layer for the panel browser, and one layer per field type that overrides the base only where it differs (<kbd>Enter</kbd> inserts a newline in a textarea, <kbd>Space</kbd> toggles a checkbox option). To retune individual bindings, pass overrides on top of a preset - each names a scope, an action and its keys. Later bindings win, so re-declaring a scope-and-action pair replaces the preset's keys for it:
 
 ```php
 use DrevOps\Tui\Model\FieldType;
@@ -98,7 +98,7 @@ $tui = (new Tui($form))->keys('default', [
 ]);
 ```
 
-A binding's keys take three forms: a `KeyName` case for a named key, a single-character string for a printable one, or a `Key` for anything else - `Key::char("\x05")` is how the default preset binds <kbd>Ctrl-E</kbd>. A scope takes three forms too: `Scope::base()` (shared by every widget), `Scope::navigation()` (the panel browser), and `Scope::field(FieldType::X)` - with `Scope::field(FieldType::X, multiple: TRUE)` targeting the multiple-collecting variant of a choice or file-picker widget, which carries its own binding set (that's where <kbd>Space</kbd>-to-toggle lives).
+A binding's keys take three forms: a `KeyName` case for a named key, a single-character string for a printable one, or a `Key` for anything else - `Key::char("\x05")` is how the default preset binds <kbd>Ctrl-E</kbd>. A scope takes three forms too: `Scope::base()` (shared by every field), `Scope::navigation()` (the panel browser), and `Scope::field(FieldType::X)` - with `Scope::field(FieldType::X, multiple: TRUE)` targeting the multiple-collecting variant of a choice or file-picker field, which carries its own binding set (that's where <kbd>Space</kbd>-to-toggle lives).
 
 The panel and editor hints are drawn from the live bindings, so they always reflect the active keys - remap quit to <kbd>x</kbd> and the footer says so.
 
@@ -109,7 +109,7 @@ A preset is a class listing its bindings. Subclass `DefaultKeyMap` to ship your 
 Bindings are validated the moment they're set, so a bad key map is caught at configuration time, not mid-session:
 
 - a key bound to two different actions in the same scope is a conflict;
-- a printable character bound in the base scope, or in a scope whose widget consumes typed input (text, template, number, rating, password, textarea, search, suggest, toggle, file picker, and the multiple select), would be un-typeable and is rejected - control characters like <kbd>Ctrl-E</kbd> are exempt, since they're command keys, never typed content;
+- a printable character bound in the base scope, or in a scope whose field consumes typed input (text, template, number, rating, password, textarea, search, suggest, toggle, file picker, and the multiple select), would be un-typeable and is rejected - control characters like <kbd>Ctrl-E</kbd> are exempt, since they're command keys, never typed content;
 - an unknown preset name, or a character binding that is not exactly one character, is rejected.
 
 See [`playground/10-key-bindings-*`](https://github.com/drevops/tui/tree/main/playground) for the default map, the vim preset and a custom override side by side.

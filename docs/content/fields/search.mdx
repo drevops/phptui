@@ -1,0 +1,181 @@
+---
+title: Search
+description: 'Single or multiple choice with a fuzzy filter line that ranks the options and highlights the matched characters.'
+keywords: ['search', 'fuzzy filter', 'choice', 'field']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Search
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/field-search-light-animated.svg'), dark: useBaseUrl('/field-search-dark-animated.svg')}} alt="Search field" />
+</p>
+
+Single choice with a filter line above the options. Typing fuzzy-matches and ranks the labels - exact and prefix matches lead, looser subsequence matches follow - and highlights the matched characters. It collects the **selected option value** (a `string`).
+
+```php
+$p->search('vegetable', 'Vegetable')
+  ->options([
+    'carrot' => 'Carrot',
+    'potato' => 'Potato',
+    'onion' => 'Onion',
+    'pepper' => 'Pepper',
+  ])
+  ->default('carrot') // Which option starts highlighted.
+  ->pageSize(8);      // Matches visible before the list pages around the cursor.
+```
+
+Runnable scripts: [`playground/02-fields-search.php`](https://github.com/drevops/tui/blob/main/playground/02-fields-search.php) and [`search-multiple.php`](https://github.com/drevops/tui/blob/main/playground/02-fields-search-multiple.php).
+
+## Options
+
+| Name         | Description                                                                      | Required | Default      |
+| ------------ | -------------------------------------------------------------------------------- | -------- | ------------ |
+| `options()`  | The choices, as a `value => label` map (or added one at a time with `option()`). | Yes      | -            |
+| `default()`  | Which option starts highlighted, by value.                                       | No       | First option |
+| `pageSize()` | Matches shown before the list pages around the cursor.                           | No       | `10`         |
+
+For headings, separators and disabled options, see [Option groups](/fields/option-groups). For a per-option [description line](/fields/select#option-descriptions) shown beneath the highlighted match, declare it with `->option(..., description: ...)`.
+
+## Keyboard
+
+| Key                         | Action                                    |
+| --------------------------- | ----------------------------------------- |
+| printable keys              | Type to fuzzy-filter and rank the options |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Move over the matches                     |
+| <kbd>Backspace</kbd>        | Delete a filter character                 |
+| <kbd>Enter</kbd>            | Accept the highlighted option             |
+| <kbd>Esc</kbd>              | Cancel                                    |
+
+## Display modes
+
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-light-static.svg'), dark: useBaseUrl('/field-search-dark-static.svg')}} alt="Search: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-light-static-no-ansi.svg'), dark: useBaseUrl('/field-search-dark-static-no-ansi.svg')}} alt="Search: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-light-static-ascii.svg'), dark: useBaseUrl('/field-search-dark-static-ascii.svg')}} alt="Search: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/field-search-dark-static-ascii-no-ansi.svg')}} alt="Search: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+## Multiple selection
+
+Add `->multiple()` to collect a **`list<string>`** of checked values under the filter line. Typing fuzzy-matches and ranks with the matched characters highlighted, <kbd>Space</kbd> toggles, <kbd>→</kbd> / <kbd>←</kbd> select or deselect all visible, and <kbd>Enter</kbd> accepts the checked set.
+
+```php
+$p->search('basket', 'Basket')
+  ->multiple()
+  ->options([
+    'apple' => 'Apple',
+    'banana' => 'Banana',
+    'carrot' => 'Carrot',
+    'tomato' => 'Tomato',
+  ])
+  ->default(['apple']);
+```
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/field-search-multiple-light-animated.svg'), dark: useBaseUrl('/field-search-multiple-dark-animated.svg')}} alt="Search field in multiple mode" />
+</p>
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-multiple-light-static.svg'), dark: useBaseUrl('/field-search-multiple-dark-static.svg')}} alt="Search (multiple): Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-multiple-light-static-no-ansi.svg'), dark: useBaseUrl('/field-search-multiple-dark-static-no-ansi.svg')}} alt="Search (multiple): Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-multiple-light-static-ascii.svg'), dark: useBaseUrl('/field-search-multiple-dark-static-ascii.svg')}} alt="Search (multiple): ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-multiple-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/field-search-multiple-dark-static-ascii-no-ansi.svg')}} alt="Search (multiple): ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+## Selection limits
+
+Bound how many values a multiple field collects with `->minSelections()` and `->maxSelections()`. The active limit shows as a hint below the list, an out-of-range selection is rejected inline when you accept, and the same bounds are enforced in [headless collection](/headless-collection).
+
+```php
+$p->search('basket', 'Basket')
+  ->multiple()
+  ->minSelections(2) // Reject fewer than two checked.
+  ->maxSelections(3) // Reject more than three checked.
+  ->options([
+    'apple' => 'Apple',
+    'banana' => 'Banana',
+    'carrot' => 'Carrot',
+    'tomato' => 'Tomato',
+  ]);
+```
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/field-search-multiple-limited-light-animated.svg'), dark: useBaseUrl('/field-search-multiple-limited-dark-animated.svg')}} alt="Search in multiple mode with selection limits" />
+</p>
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-multiple-limited-light-static.svg'), dark: useBaseUrl('/field-search-multiple-limited-dark-static.svg')}} alt="Selection limits: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-multiple-limited-light-static-no-ansi.svg'), dark: useBaseUrl('/field-search-multiple-limited-dark-static-no-ansi.svg')}} alt="Selection limits: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-multiple-limited-light-static-ascii.svg'), dark: useBaseUrl('/field-search-multiple-limited-dark-static-ascii.svg')}} alt="Selection limits: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-multiple-limited-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/field-search-multiple-limited-dark-static-ascii-no-ansi.svg')}} alt="Selection limits: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+Runnable script: [`playground/02-fields-search-multiple-limited.php`](https://github.com/drevops/tui/blob/main/playground/02-fields-search-multiple-limited.php).
+
+## Option descriptions
+
+The highlighted match's [description](/fields/select#option-descriptions), in every display mode:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-descriptions-light-static.svg'), dark: useBaseUrl('/field-search-descriptions-dark-static.svg')}} alt="Search option descriptions: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-descriptions-light-static-no-ansi.svg'), dark: useBaseUrl('/field-search-descriptions-dark-static-no-ansi.svg')}} alt="Search option descriptions: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-descriptions-light-static-ascii.svg'), dark: useBaseUrl('/field-search-descriptions-dark-static-ascii.svg')}} alt="Search option descriptions: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-search-descriptions-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/field-search-descriptions-dark-static-ascii-no-ansi.svg')}} alt="Search option descriptions: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+## Options from a query
+
+The options can come from the query itself rather than a fixed list, for a catalog too large to hold - see [options from a query](/progress#options-from-a-query):
+
+```php
+$p->search('veg', 'Vegetable')->optionsFrom(fn(string $query): array => $pantry->search($query));
+```

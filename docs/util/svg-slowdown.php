@@ -4,7 +4,7 @@
  * @file
  * Shared playback-speed helper for the SVG generators.
  *
- * Both update-assets.php and render-widget-svgs.php emit animated SVGs and slow
+ * Both update-assets.php and render-field-svgs.php emit animated SVGs and slow
  * them to the same factor, so the constant and the scaler live here and are
  * required by both.
  */

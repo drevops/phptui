@@ -7,7 +7,7 @@ namespace DrevOps\Tui\Model;
 use DrevOps\Tui\Translation\Translator;
 
 /**
- * The set of supported field (widget) types.
+ * The set of supported field (field) types.
  *
  * @package DrevOps\Tui\Model
  */

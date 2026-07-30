@@ -1,0 +1,263 @@
+---
+title: Anatomy
+description: 'The atoms of a field, named: the window chrome, view mode, edit mode, and every line each of them draws.'
+keywords: ['anatomy', 'nomenclature', 'atoms', 'fields', 'tui']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Anatomy of a field
+
+A screen has two layers. The **window chrome** frames the whole form and belongs to no field in particular: the border, the trail of panel titles, the key legend. Inside it, each field draws itself in one of two modes. In **view mode** it's a single line carrying the answer. Open it and it switches to **edit mode**, where the field takes over the space right of the label.
+
+An **atom** is one named piece of that interface - the smallest thing worth naming on its own, and the unit a [theme](/themes) restyles.
+
+:::note
+
+The vocabulary is settled; [open questions](#open-questions) tracks what isn't.
+
+:::
+
+## Window chrome
+
+The chrome is the same whatever the form asks. You declare it once - the form's title and its panels' titles feed the trail, the theme picks the border - and it maintains itself from there. The trail gains a segment as you descend, the legend rewrites itself as focus moves, the overflow marker appears when the rows outgrow the frame.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-chrome-light-static.svg'), dark: useBaseUrl('/anatomy-chrome-dark-static.svg')}} alt="A form's window chrome with its atoms named" width="100%" />
+</p>
+
+<div className="table-scroll" tabIndex={0}>
+
+| #   | Atom                 | What it does                                                                                                          | Set with                                                        | Theme atom              |
+| --- | -------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ----------------------- |
+| 1   | border               | The frame around everything. One of `Border::None`, `Border::Line`, `Border::Rounded` or `Border::Double`, form-wide. | `Tui::theme(..., ['border' => Border::Rounded])`                | `border()`              |
+| 2   | breadcrumb           | The trail of panel titles: every panel you've descended through, plus the one you're in.                              | `Form::create('Orchard')`, `->panel('main', 'Delivery', ...)`   | `breadcrumb()`          |
+| 3   | breadcrumb separator | Stands between **breadcrumb** (2) segments.                                                                           | Not declared                                                    | `breadcrumbSeparator()` |
+| 4   | overflow marker      | Points at content past the top or bottom edge. Drawn only when the rows outgrow the frame.                            | Not declared                                                    | `overflowMarker()`      |
+| 5   | legend               | The keys bound right now.                                                                                             | `Tui::footer(FALSE)` hides it; the entries come from the field | `renderLegend()`        |
+| 6   | legend key           | One key in the **legend** (5). Worded keys are uppercased: <kbd>ESC</kbd>, <kbd>TAB</kbd>, <kbd>SPACE</kbd>.          | `Tui::keys(...)` rebinds which key it shows                     | `legendKey()`           |
+| 7   | legend description   | What that key does. Reads as `KEY to action`.                                                                         | Not declared; comes from the field                             | `legendDescription()`   |
+| 8   | legend separator     | Stands between **legend** (5) entries.                                                                                | Not declared                                                    | `legendSeparator()`     |
+
+</div>
+
+The **legend** (5) is the one atom of the chrome that changes as you work: it lists the keys that apply where you are, so an open field advertises different keys from the panel around it. That's also why a **legend key** (6) needs no weight of its own. Case alone tells <kbd>ESC</kbd> from the words beside it, and the `KEY to action` wording of a **legend description** (7) makes an entry read as a sentence rather than two words abutted.
+
+## View mode
+
+A panel stacks its fields as rows, each one in view mode until you open it. A row is a single line: the field's name, its answer, and the marks that say where focus is and whether there's more to read.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-row-light-static.svg'), dark: useBaseUrl('/anatomy-row-dark-static.svg')}} alt="Five rows of a form with their atoms named" width="100%" />
+</p>
+
+<div className="table-scroll" tabIndex={0}>
+
+| #   | Atom            | What it does                                                                                                            | Set with                                                    | Theme atom         |
+| --- | --------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------ |
+| 1   | field selector  | Which field has focus. Moves with <kbd>↑</kbd> and <kbd>↓</kbd>.                                                        | Not declared; follows focus                                 | `fieldSelector()`  |
+| 2   | label           | The field's name. Every row has one.                                                                                    | `$p->select('basket', 'Basket contents')`                   | `label()`          |
+| 3   | help marker     | Marks a field carrying **help** (7). Sits after the **label** (2), in the label's own color and never bolded.           | Not declared; appears when the field has **help** (7)       | `helpMarker()`     |
+| 4   | value           | The settled answer. Empty until the field is answered, and never what you're mid-way through typing. Every row has one. | `->default(['apple', 'carrot'])`, then whatever is answered | `value()`          |
+| 5   | value separator | Stands between the parts of a **value** (4) that has more than one, so `Basket contents` reads `apple, carrot`.         | Not declared                                                | `valueSeparator()` |
+| 6   | description     | The field's explanatory text, under its row.                                                                            | `->description('Pick the produce for this delivery.')`      | `description()`    |
+| 7   | help            | The field's long-form text. Never drawn in the panel: <kbd>?</kbd> opens it on a page of its own.                       | `->help('Every crate is weighed at the packing bench.')`    | `renderHelp()`     |
+
+</div>
+
+Only one field holds focus at a time. The row the **field selector** (1) sits on is drawn brighter too, so the glyph and that emphasis are one signal in two forms.
+
+The **label** (2) is the one atom every row draws, and the only one that never changes while you work. That's why the **help marker** (3) hangs off it rather than off the **description** (6): a field can carry **help** (7) without carrying a **description** (6).
+
+Two pairs are easy to confuse, and both come down to length or timing. A **description** (6) has to fit under the row, so it stays a sentence; **help** (7) opens on a page and can run to paragraphs, which is why a long help never widens the panel it was declared on. A **value** (4) is what was accepted; the **draft** (edit 9) is what you're typing.
+
+## Edit mode
+
+Edit mode hands the region right of the label to the field, and what the field draws there depends on how it collects an answer. The three shapes below cover it: choosing from a list, typing, and browsing.
+
+### Choosing from a list
+
+A multiple-choice field with bounds and per-entry text draws the fullest set of atoms.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-editor-light-static.svg'), dark: useBaseUrl('/anatomy-editor-dark-static.svg')}} alt="A multiple-choice field in edit mode with its atoms named" width="100%" />
+</p>
+
+<div className="table-scroll" tabIndex={0}>
+
+| #   | Atom              | What it does                                                                                            | Set with                                                                             | Theme atom           |
+| --- | ----------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------- |
+| 1   | entry             | One line of the list the field offers.                                                                 | `->option('apple', 'Apple')`, `->options([...])`                                     | `entry()`            |
+| 2   | entry selector    | Which **entry** (1) has focus. Moves with <kbd>↑</kbd> and <kbd>↓</kbd>.                                | Not declared; follows focus                                                          | `entrySelector()`    |
+| 3   | entry marker      | The per-entry chosen-state glyph.                                                                       | `->multiple()` picks which pair of glyphs                                            | `entryMarker()`      |
+| 4   | entry note        | A qualifier on an **entry** (1), such as why it's unavailable. Drawn only on entries carrying a reason. | `->option('tomato', 'Tomato', disabled: TRUE, disabled_reason: 'out of season')`     | `entryNote()`        |
+| 5   | entry description | The focused **entry** (1)'s own explanatory text. Indented to start where the entry text starts.        | `->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')` | `entryDescription()` |
+| 6   | constraint        | What the field expects, before anything is rejected.                                                    | `->minSelections(2)->maxSelections(3)`, `->maxSize(64)`, `->min()`/`->max()`         | `constraint()`       |
+
+</div>
+
+What fills the list varies by field: a fixed set, a set filtered as you type, or one fetched by a query. An **entry description** (5) is rewritten every time the **entry selector** (2) moves, and is absent for entries that declare none - which is why it's indented to the entry text rather than to the list, so it reads as belonging to the entry above it.
+
+**Selecting and marking are different things.** A selector shows where you are; a marker shows what you've marked. That's why the **entry selector** (2) and the **field selector** (view 1) are the glyphs that follow your movement, while the **entry marker** (3) is the box that records a decision. Moving a selector chooses nothing. The **entry marker** (3) only changes when you pick something, which in a multiple-choice list is <kbd>Space</kbd>.
+
+The pairs are deliberate. The **field selector** (view 1) shows which field you're on and the **entry selector** (2) which entry within it; the **description** (view 6) is the field's own text and the **entry description** (5) an entry's. Same idea at two levels, so a parent's name is never reused for its child.
+
+### Typing rather than choosing
+
+Some fields collect an answer by typing instead of by choosing from a list, so they have no **entry** (1) at all. The [Template](/fields/template) field fills the named slots of a fixed pattern.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-text-light-static.svg'), dark: useBaseUrl('/anatomy-text-dark-static.svg')}} alt="A Template field in edit mode with its atoms named" width="100%" />
+</p>
+
+<div className="table-scroll" tabIndex={0}>
+
+| #   | Atom  | What it does                                                                          | Set with                                                 | Theme atom |
+| --- | ----- | ------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------- |
+| 8   | caret | The insertion point within the **draft** (9), showing where the next keystroke lands. | Not declared; follows what you type                      | `caret()`  |
+| 9   | draft | The text you're typing, before it's accepted.                                         | `->default('valley-pear-a')` seeds it; typing changes it | `draft()`  |
+| 10  | state | What the field is doing right now.                                                   | `->slot('fruit', 'Fruit')` names what it reports         | `state()`  |
+
+</div>
+
+The **draft** (9) and the **value** (view 4) are the same answer at two moments: what you're typing, and what was accepted. Accepting promotes one to the other; canceling discards the **draft** (9). In the [Template](/fields/template) field the **caret** (8) is also what moves between slots as you fill them.
+
+The **state** (10) is easy to confuse with the **description** (view 6), so it's worth being precise. The first tracks the field and changes while you work - here it names the slot you're filling. The second belongs to the field and never moves.
+
+### Browsing a list
+
+The [FilePicker](/fields/filepicker) field draws the same skeleton over a directory listing, and adds a **caption** (11) above it.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-filepicker-light-static.svg'), dark: useBaseUrl('/anatomy-filepicker-dark-static.svg')}} alt="An open file picker with its atoms named" width="100%" />
+</p>
+
+<div className="table-scroll" tabIndex={0}>
+
+| #   | Atom    | What it does                                                                       | Set with                                     | Theme atom  |
+| --- | ------- | ---------------------------------------------------------------------------------- | -------------------------------------------- | ----------- |
+| 11  | caption | What the list below is showing. Rewritten whenever the list changes underneath it. | `->startIn($directory)` sets where it begins | `caption()` |
+
+</div>
+
+The lines in the list are files and directories rather than options, and they're still **entries** (1): the name describes the line the field offers, not where its content came from. The **caption** (11) names a directory in this field because that's what a file browser browses, but the atom - and the theme method that draws it - stays generic.
+
+### Constraint and error: one line, two states
+
+The **constraint** (6) and the **error** (7) share a single physical line. A [FilePicker](/fields/filepicker) field limited to files of at most 64 bytes shows both states of it.
+
+Nothing has been picked yet, so the line states what the field expects:
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-constraint-light-static.svg'), dark: useBaseUrl('/anatomy-constraint-dark-static.svg')}} alt="A file picker showing its constraint before anything is rejected" width="100%" />
+</p>
+
+Now `harvest.csv` is picked, and at 88 bytes it breaks that limit. The same line, in the same place, turns into the **error** (7). The **constraint** (6) doesn't move down or stay above it - it's replaced:
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/anatomy-error-light-static.svg'), dark: useBaseUrl('/anatomy-error-dark-static.svg')}} alt="The same file picker showing an error in place of its constraint" width="100%" />
+</p>
+
+<div className="table-scroll" tabIndex={0}>
+
+| #   | Atom  | What it does                                                                                                        | Set with                                  | Theme atom |
+| --- | ----- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ---------- |
+| 7   | error | Why the value was rejected. Drawn only after a refused accept, and cleared the moment the value becomes acceptable. | The declared bounds, or `->validate(...)` | `error()`  |
+
+</div>
+
+The two lines say different kinds of thing:
+
+|                    | Line                                 | Says                                       |
+| ------------------ | ------------------------------------ | ------------------------------------------ |
+| **constraint** (6) | `Files only. Max 64 B.`              | what the field will accept, before you act |
+| **error** (7)      | `Choose a file no larger than 64 B.` | why what you just did was refused          |
+
+A **constraint** (6) describes the field; an **error** (7) describes your value. A **constraint** (6) is there from the moment edit mode opens, and hands the line over the instant a value is refused; the **error** (7) hands it back as soon as the value is acceptable again.
+
+That's also why they're built differently. The first is an unframed phrase - `a file no larger than 64 B` - that its caller wraps, so the same phrase becomes `Choose ...` in the picker, `Select ...` in a bounded list and `must be ...` headlessly. The second is already a whole message, and is shown as it stands.
+
+## What the code calls these today
+
+Every atom has two public surfaces. **Theme** is the `ThemeInterface` method that styles it. **Owner** is the call a consumer makes to set it - run-wide through the group's own fluent builder for a glyph, or on the field for content. Where the source disagrees with the atom's name, the source is what moves.
+
+<div className="table-scroll" tabIndex={0}>
+
+| Atom                                | Today                                                                                 | Theme                         | Owner                                                                                                            |
+| ----------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **border** (chrome 1)               | `border()`                                                                            | `chromeBorder()`              | `chrome()->border(Border::Rounded)`                                                                              |
+| **breadcrumb** (chrome 2)           | `breadcrumb()`                                                                        | `chromeBreadcrumb()`          | `Form::create($title)`, `->panel($id, $title, ...)`                                                              |
+| **breadcrumb separator** (chrome 3) | `separator()`                                                                         | `chromeBreadcrumbSeparator()` | `chrome()->breadcrumbSeparator('›')`                                                                             |
+| **overflow marker** (chrome 4)      | `indicator()`, `indicatorUp()`, `indicatorDown()`                                     | `chromeOverflowMarker()`      | `chrome()->overflowMarker('▲', '▼')`                                                                             |
+| **legend** (chrome 5)               | `FieldInterface::hints()`, `renderHintLine()`                                        | `chromeLegend()`              | `chrome()->legend(TRUE)`                                                                                         |
+| **legend key** (chrome 6)           | `legendKey()`                                                                         | `chromeLegendKey()`           | `chrome()->legendKeys($preset, $overrides)`                                                                      |
+| **legend description** (chrome 7)   | `legendDescription()`                                                                 | `chromeLegendDescription()`   | `chrome()->legendLabel(Action::Toggle, 'pick')`                                                                  |
+| **legend separator** (chrome 8)     | `legendSeparator()`                                                                   | `chromeLegendSeparator()`     | `chrome()->legendSeparator('·')`                                                                                 |
+| **field selector** (view 1)         | `marker()`, shared with the **entry selector** (edit 2)                               | `viewSelector()`              | `view()->selector('❯')`                                                                                          |
+| **label** (view 2)                  | `label()`                                                                             | `viewLabel()`                 | `->label($text)`                                                                                                 |
+| **help marker** (view 3)            | `helpMarker()`                                                                        | `viewHelpMarker()`            | `view()->helpMarker('ⁱ', '[?]')`                                                                                 |
+| **value** (view 4)                  | `value()`                                                                             | `viewValue()`                 | `->default($value)`                                                                                              |
+| **value separator** (view 5)        | hardcoded in `ValueFormatter::format()`                                               | `viewValueSeparator()`        | `view()->valueSeparator(', ')`                                                                                   |
+| **description** (view 6)            | `description()`                                                                       | `viewDescription()`           | `->description($text)`                                                                                           |
+| **help** (view 7)                   | `renderHelp()`                                                                        | `viewHelp()`                  | `->help($text)`                                                                                                  |
+| **entry** (edit 1)                  | drawn inline, no theme method                                                         | `editEntry()`                 | `->entry($value, $label)`, `->entries($map)`                                                                     |
+| **entry selector** (edit 2)         | `marker()`, shared with the **field selector** (view 1)                               | `editEntrySelector()`         | `edit()->entrySelector('❯')`                                                                                     |
+| **entry marker** (edit 3)           | `check()` when multiple-choice, `radio()` when single                                 | `editEntryMarker()`           | `edit()->entryMarker('◼', '◻')`, `->multiple()` picks the pair                                                   |
+| **entry note** (edit 4)             | concatenated in `OptionsCapableTrait`, no theme method                                | `editEntryNote()`             | `->entry(..., note: $text)`                                                                                      |
+| **entry description** (edit 5)      | `entryDescription()`                                                                  | `editEntryDescription()`      | `->entry(..., description: $text)`                                                                               |
+| **constraint** (edit 6)             | `hint()` via `renderGuidance()`; produced by `selectionHint()` and `constraintHint()` | `editConstraint()`            | `->min()`, `->max()`, `->minSelections()`, `->maxSelections()`, `->maxSize()`, `->extensions()`, `->filesOnly()` |
+| **error** (edit 7)                  | `error()`                                                                             | `editError()`                 | `->validate($closure)`, `->required(message: $text)`                                                             |
+| **caret** (edit 8)                  | `caret()`                                                                             | `editCaret()`                 | `edit()->caret('█')`                                                                                             |
+| **draft** (edit 9)                  | `$buffer`, per field, no theme method                                                | `editDraft()`                 | `->default($value)`, `->placeholder($text)`                                                                      |
+| **state** (edit 10)                 | `footer()`                                                                            | `editState()`                 | `edit()->state(FALSE)`, `->slot($name, $label)` labels it                                                        |
+| **caption** (edit 11)               | `caption()`                                                                           | `editCaption()`               | `edit()->caption(FALSE)`, `->startIn($directory)` fills it                                                       |
+
+</div>
+
+Each group's glyphs are set through one closure, the way `Form::panel()` already reads:
+
+```php
+$tui
+  ->chrome(fn(Chrome $c) => $c
+    ->border(Border::Rounded)
+    ->breadcrumbSeparator('›')
+    ->overflowMarker('▲', '▼')
+    ->legend(TRUE)
+    ->legendSeparator('·'))
+  ->view(fn(View $v) => $v
+    ->selector('❯')
+    ->helpMarker('ⁱ', '[?]')
+    ->valueSeparator(', '))
+  ->edit(fn(Edit $e) => $e
+    ->entrySelector('❯')
+    ->entryMarker('◼', '◻')
+    ->caret('█'));
+```
+
+Every glyph setter takes the Unicode form first and the ASCII fallback second, so a consumer can't set one and silently leave the other display mode broken.
+
+Four owner-side calls don't name the atom they set:
+
+| Today                                   | Becomes                             |
+| --------------------------------------- | ----------------------------------- |
+| `Tui::footer(bool)`                     | `chrome()->legend(bool)`            |
+| `Tui::theme('x', ['border' => ...])`    | `chrome()->border(Border::Rounded)` |
+| `->option()`, `->options()`             | `->entry()`, `->entries()`          |
+| `->option(..., disabled_reason: $text)` | `->entry(..., note: $text)`         |
+
+`->label()` doesn't exist at all: the label is the second argument to `$p->select('basket', 'Basket contents')`. Every other settable atom gets a call named after it, so this one should too.
+
+Three of the theme renames need more than a rename.
+
+**`hint` names two things, and used to name three.** `FieldInterface::hints()` returns the **legend** (chrome 5) and `ThemeInterface::hint()` draws the **constraint** (edit 6). Nothing connects them. Renaming each to the atom it serves leaves `hint` naming nothing, which is the point.
+
+**Two theme methods are shared by atoms that aren't the same atom.** `marker()` draws both selectors, so a theme can't restyle the field cursor without restyling the one inside every list. `description()` draws the **description** (view 6) and, until recently, the **entry description** (edit 5) - the second now has its own method, and the first keeps `description()`.
+
+**Two theme methods have other legitimate users, so they can't simply be renamed.** `footer()` also draws the calendar's weekday header, the password confirm prompt and the version line, so the **state** (edit 10) needs a method of its own rather than a rename of that one. `indicator()` also draws a warning status line, so the **overflow marker** (chrome 4) is the same story.
+
+**`error` names four things**, and only one of them draws an atom. `ThemeInterface::error()` draws the **error** (edit 7) and keeps the name; `FieldInterface::error()` is field state; `Field::templateError()` and friends produce a message; `Engine::optionsError()` builds an exception. Only the first draws anything, and the other three need names that say what they do instead.
+
+## Open questions
+
+**Can the widest legend fit the frame?** A multiple-choice list advertises five entries - `SPACE to select · ↑/↓ to move · ←/→ to select none or all · ↵ to accept · ESC to cancel` - which is 87 columns. A non-fullscreen frame is 76. `measureContentWidth()` sizes the frame from the rows and the button bar without ever measuring the **legend** (chrome 5), so the line is drawn and then clipped by a box measured without it. Either the box accounts for the legend, or the legend wraps, or it sheds its lowest-priority entries as the room runs out.

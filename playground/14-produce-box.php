@@ -6,7 +6,7 @@
  *
  * The capstone example - each numbered playground directory shows one
  * feature in isolation; this walkthrough combines them the way a real
- * consumer would: two panels of mixed widgets, a derived-value chain,
+ * consumer would: two panels of mixed fields, a derived-value chain,
  * conditional fields, declared behaviour closures, and the bordered panel
  * TUI, collected through the one facade call.
  *

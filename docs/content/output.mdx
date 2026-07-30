@@ -67,7 +67,7 @@ In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off
 
 ## Table
 
-`table()` lays headers and rows into a bordered grid, sizing each column to its widest cell and capping the whole thing at the terminal. It is the same renderer a [note field's grid](/widgets/table) uses, so a standalone table matches the ones inside the panel.
+`table()` lays headers and rows into a bordered grid, sizing each column to its widest cell and capping the whole thing at the terminal. It is the same renderer a [note field's grid](/fields/table) uses, so a standalone table matches the ones inside the panel.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/output-table-light-static.svg'), dark: useBaseUrl('/output-table-dark-static.svg')}} alt="Output table" />
@@ -105,7 +105,7 @@ Runnable in [`playground/18-output-table.php`](https://github.com/drevops/tui/bl
 
 ## Card
 
-`card()` is the full form of `box()`: a title, a body and a grid, boxed together when the three belong to one another. It is the same renderer behind a [note field's card](/widgets/note), so a standalone card and a note card are the same object drawn twice.
+`card()` is the full form of `box()`: a title, a body and a grid, boxed together when the three belong to one another. It is the same renderer behind a [note field's card](/fields/note), so a standalone card and a note card are the same object drawn twice.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/output-card-light-static.svg'), dark: useBaseUrl('/output-card-dark-static.svg')}} alt="Output card" />
@@ -230,7 +230,7 @@ Runnable in [`playground/18-output-text.php`](https://github.com/drevops/tui/blo
 
 ## Theme-drawn
 
-The colours and glyphs come from the active [theme](/themes), the same way every widget does, and the pieces reuse the atoms the panel already styles: a box takes the frame's border and heading, a success line the value colour, an info line the theme's accent. So `->theme('ember')` prints info lines in ember's orange and `->theme('frost')` in frost's blue, with no extra configuration and nothing a custom theme has to override to inherit its own palette.
+The colours and glyphs come from the active [theme](/themes), the same way every field does, and the pieces reuse the atoms the panel already styles: a box takes the frame's border and heading, a success line the value colour, an info line the theme's accent. So `->theme('ember')` prints info lines in ember's orange and `->theme('frost')` in frost's blue, with no extra configuration and nothing a custom theme has to override to inherit its own palette.
 
 To go further and restyle one piece outright, override its `render*()` method on your theme - `renderCard()`, `renderTable()`, `renderStatus()`, `renderDefinitions()`, `renderText()` or `renderBanner()`.
 

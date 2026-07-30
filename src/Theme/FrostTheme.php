@@ -9,7 +9,7 @@ namespace DrevOps\Tui\Theme;
  *
  * A curated 256-colour palette selectable by name ("frost"). It declares its
  * colours by overriding the appearance atoms directly and inherits the default
- * theme's layout, glyphs and dark/light mode, so it renders across every widget
+ * theme's layout, glyphs and dark/light mode, so it renders across every field
  * and degrades to plain text when colour is off.
  *
  * @package DrevOps\Tui\Theme

@@ -474,7 +474,7 @@ final class PanelBuilder {
    * @param string $label
    *   The label (defaults to the id).
    * @param \DrevOps\Tui\Model\FieldType $type
-   *   The widget type.
+   *   The field type.
    * @param bool $label_fallback
    *   Whether an empty label falls back to the id (the default); FALSE keeps an
    *   empty label empty, for a note whose title is optional.

@@ -61,7 +61,7 @@ return RectorConfig::configure()
     // the two are named for different things here: the parameter for the seed
     // value a caller passes, the property for the live answer it becomes.
     ClassPropertyAssignToConstructorPromotionRector::class => [
-      __DIR__ . '/src/Widget/ConfirmWidget.php',
+      __DIR__ . '/src/Field/Confirm.php',
     ],
     CompleteDynamicPropertiesRector::class,
     CountArrayToEmptyArrayComparisonRector::class,
@@ -81,7 +81,7 @@ return RectorConfig::configure()
     // Rector analyses a trait file on its own, so it cannot see the composing
     // class's list<string> property type and would cast strings to string.
     NullToStrictStringFuncCallArgRector::class => [
-      __DIR__ . '/src/Widget/Capability/CompletionCapableTrait.php',
+      __DIR__ . '/src/Field/Capability/CompletionCapableTrait.php',
     ],
     RenameVariableToMatchMethodCallReturnTypeRector::class,
     RenameVariableToMatchNewTypeRector::class,

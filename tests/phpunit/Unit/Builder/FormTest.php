@@ -165,7 +165,7 @@ final class FormTest extends TestCase {
     $this->assertFalse($form->field('c')?->default);
     $this->assertSame('', $form->field('g')?->default);
     $this->assertSame(0, $form->field('n')?->default);
-    // A date with no explicit default is empty; the widget opens on today.
+    // A date with no explicit default is empty; the field opens on today.
     $this->assertSame('', $form->field('dt')?->default);
     $this->assertSame('', $form->field('ta')?->default);
     $this->assertSame('', $form->field('pw')?->default);

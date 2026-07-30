@@ -6,9 +6,9 @@
  *
  * Press Enter on a field and the editor appears where the value sits - the
  * confirm's Yes/No, the number's input, the select's option list - driven by
- * the widget's own keys and collapsing back on accept or cancel. Inline is
+ * the field's own keys and collapsing back on accept or cancel. Inline is
  * the default for every field; ->standalone() opts a field out to a
- * full-screen editor, which suits large widgets like the calendar's month
+ * full-screen editor, which suits large fields like the calendar's month
  * grid.
  *
  * Usage:

@@ -20,7 +20,7 @@ use DrevOps\Tui\Schema\SchemaValidator;
 use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Translation\Translator;
-use DrevOps\Tui\Widget\WidgetFactory;
+use DrevOps\Tui\Field\FieldFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -30,7 +30,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(PanelController::class)]
 #[CoversClass(DefaultTheme::class)]
-#[CoversClass(WidgetFactory::class)]
+#[CoversClass(FieldFactory::class)]
 #[CoversClass(SummaryFormatter::class)]
 #[CoversClass(SchemaValidator::class)]
 #[CoversClass(AgentHelp::class)]
@@ -78,9 +78,9 @@ final class TranslationRenderTest extends TestCase {
     $field = $this->form()->field('plan');
     $this->assertInstanceOf(Field::class, $field);
 
-    $widget = (new WidgetFactory())->create($field, 'basic');
+    $field = (new FieldFactory())->create($field, 'basic');
 
-    $this->assertStringContainsString('Nivel basico', Ansi::strip($widget->view(new DefaultTheme(60, ['color' => FALSE]))));
+    $this->assertStringContainsString('Nivel basico', Ansi::strip($field->view(new DefaultTheme(60, ['color' => FALSE]))));
   }
 
   public function testRatingCaptionsTranslated(): void {
@@ -89,8 +89,8 @@ final class TranslationRenderTest extends TestCase {
     $theme = new DefaultTheme(60, ['color' => FALSE]);
 
     // The caption localizes in the editor and in the collapsed panel row alike.
-    $widget = (new WidgetFactory())->create($field, 5);
-    $this->assertStringContainsString('Excelente', Ansi::strip($widget->view($theme)));
+    $field = (new FieldFactory())->create($field, 5);
+    $this->assertStringContainsString('Excelente', Ansi::strip($field->view($theme)));
 
     $controller = new PanelController($this->form(), $theme, ['grade' => 5]);
     $controller->handle(Key::named(KeyName::Enter));

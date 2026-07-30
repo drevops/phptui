@@ -186,33 +186,33 @@ After a structural change, update them with the `render-tui-diagrams` skill.
 
 ### Terminal SVG assets
 
-Every widget and every primitive carries a full set of terminal SVGs under
+Every field and every primitive carries a full set of terminal SVGs under
 `docs/assets/` - light and dark, in all four display modes (Unicode/ASCII,
 colour on/off) - embedded in the README and the docs pages. Anything that
 moves also carries an animated variant beside its static one; a subject with
 no motion to record (the output primitives, which write finished lines and
 return) is static-only by design. They render deterministically (no pty) from
 the scripts in `docs/util/`:
-`render-widget-svgs.php` for widgets, `render-progress-svgs.php` for the
+`render-field-svgs.php` for fields, `render-progress-svgs.php` for the
 progress primitive, `render-output-svgs.php` for the output primitives (static
 only - they write finished lines, so there is no motion to record), and
 `render-theme-svgs.php` for theme previews, all run by `update-assets.php`. The
 naming convention lives in `docs/assets/README.md`.
 
-Whenever you add a widget or a primitive, do all of the following before
+Whenever you add a field or a primitive, do all of the following before
 opening a PR:
 
 - Add a spec to the matching renderer and generate its variants with it: a
-  widget's spec (form, keystrokes, rows) goes in `widgetSpecs()` in
-  `render-widget-svgs.php` for 16 variants; a primitive's goes in the renderer
+  field's spec (form, keystrokes, rows) goes in `fieldSpecs()` in
+  `render-field-svgs.php` for 16 variants; a primitive's goes in the renderer
   that suits how it draws - `progressSpecs()` in `render-progress-svgs.php`
   when it animates, `outputSpecs()` in `render-output-svgs.php` when it does
   not. Run `php docs/util/render-<kind>-svgs.php <name>` to generate them.
-- For a widget only, regenerate the all-widgets montage so the gallery includes
-  it: `php docs/util/update-assets.php --record widgets`. A primitive is not in
+- For a field only, regenerate the all-fields montage so the gallery includes
+  it: `php docs/util/update-assets.php --record fields`. A primitive is not in
   the montage, so it skips this step.
-- Add its documentation page and a `docs/sidebars.js` entry: a widget goes in
-  `docs/content/widgets/<name>.mdx` (mirror `pause.mdx`), a primitive at the
+- Add its documentation page and a `docs/sidebars.js` entry: a field goes in
+  `docs/content/fields/<name>.mdx` (mirror `pause.mdx`), a primitive at the
   top level in `docs/content/<name>.mdx` (mirror `progress.mdx`).
 - Run `php docs/util/audit-svgs.php` - it must stay green, and every dark asset
   needs its light twin.

@@ -28,7 +28,7 @@ $tui = (new Tui(Form::create('My form')))->theme('midnight');
 | `mono`     | Hue-free - bold weight, gray levels and reverse video, for maximum compatibility.                                |
 | `dos`      | Retro MS-DOS - the bright white/cyan/yellow CGA palette in a double-line window, painted on its own blue screen. |
 
-The colorful themes use 256-color palettes, `mono` the grayscale ramp and `dos` the classic 16-color CGA set. Every one renders across all widgets and degrades to plain text when color is off. An unknown theme name fails loudly, so a typo never silently lands you back on the default.
+The colorful themes use 256-color palettes, `mono` the grayscale ramp and `dos` the classic 16-color CGA set. Every one renders across all fields and degrades to plain text when color is off. An unknown theme name fails loudly, so a typo never silently lands you back on the default.
 
 Each adaptive theme below is shown in four looks: the dark and light palettes, each rendered once inside the default rounded [border](/panels#bordered-panels) and once with the frame explicitly stripped (`['border' => 'none']`). Every adaptive theme has a runnable script in [`playground/09-themes-*`](https://github.com/drevops/tui/tree/main/playground).
 

@@ -16,7 +16,7 @@ Every interactive script also runs unattended: pipe stdin (or run it from CI) an
 | Group | Feature | Scripts |
 |---|---|---|
 | `01-quickstart` | The documentation's quick-start form: the fluent builder, one panel, five fields, `run()` picking interactive or unattended. | [`01-quickstart.php`](01-quickstart.php) |
-| `02-widgets-*` | Every widget as a one-field form, plus the whole gallery on one panel. | one script per widget (`02-widgets-<name>.php`), plus [`02-widgets-all-widgets.php`](02-widgets-all-widgets.php) |
+| `02-fields-*` | Every field as a one-field form, plus the whole gallery on one panel. | one script per field (`02-fields-<name>.php`), plus [`02-fields-all-fields.php`](02-fields-all-fields.php) |
 | `03-panels-*` | The full-screen panel browser: drill-in hubs, modal dialogs, the border frame, side-by-side panel grids, the fullscreen stretch with its alignment flags. | [`03-panels-nested.php`](03-panels-nested.php), [`03-panels-modal.php`](03-panels-modal.php), [`03-panels-bordered.php`](03-panels-bordered.php), [`03-panels-borderless.php`](03-panels-borderless.php), [`03-panels-layout.php`](03-panels-layout.php), [`03-panels-fullscreen.php`](03-panels-fullscreen.php) |
 | `04-inline-editing` | Editors opening in place on the panel row; `->standalone()` opting a field out to full-screen. | [`04-inline-editing.php`](04-inline-editing.php) |
 | `05-form-logic-*` | Answers that react to other answers, settling to a fixpoint. | [`05-form-logic-derived-values.php`](05-form-logic-derived-values.php), [`05-form-logic-conditional-fields.php`](05-form-logic-conditional-fields.php), [`05-form-logic-conditional-indent.php`](05-form-logic-conditional-indent.php), [`05-form-logic-fixup-rules.php`](05-form-logic-fixup-rules.php) |
@@ -28,7 +28,7 @@ Every interactive script also runs unattended: pipe stdin (or run it from CI) an
 | `11-display-modes-*` | Dark/light detection and forcing, ASCII glyphs, colour off, a static Unicode-vs-ASCII gallery, and rich text (markdown and clickable links) degrading with the display switches. | [`11-display-modes-mode-auto.php`](11-display-modes-mode-auto.php), [`11-display-modes-mode-forced.php`](11-display-modes-mode-forced.php), [`11-display-modes-ascii.php`](11-display-modes-ascii.php), [`11-display-modes-no-color.php`](11-display-modes-no-color.php), [`11-display-modes-glyph-gallery.php`](11-display-modes-glyph-gallery.php), [`11-display-modes-markdown.php`](11-display-modes-markdown.php) |
 | `12-translations` | Chrome and questions localized through a consumer catalog, English fallback. | [`12-translations.php`](12-translations.php), `translations/es.php`, `translations/uk.php` |
 | `13-testing` | The scripted-keystroke harness: drive the real TUI without a terminal, read back answers and rendered frames. | [`13-testing.php`](13-testing.php) |
-| `14-produce-box` | The capstone: panels, widgets, derivation, conditions and behaviour composed into one real form. | [`14-produce-box.php`](14-produce-box.php) |
+| `14-produce-box` | The capstone: panels, fields, derivation, conditions and behaviour composed into one real form. | [`14-produce-box.php`](14-produce-box.php) |
 | `15-progress-*` | The progress primitive - a spinner when the length is unknown, a determinate bar when it is - theme-drawn, animating on a TTY and degrading to a plain line when piped or headless. | [`15-progress-spinner.php`](15-progress-spinner.php), [`15-progress-bar.php`](15-progress-bar.php) |
 | `16-loading-data` | Loading a panel's data on demand: a field's `->options()` and a panel's `->preload()` taking a callback, resolved the first time the panel opens with a themed `Loading…` on the field. | [`16-loading-data.php`](16-loading-data.php) |
 | `17-query-options` | Options that follow the query: `->optionsFrom()` called again on every query change with a themed `Loading…` while it runs, a per-query cache, and `->minQuery()` holding the call back until the query is long enough. | [`17-query-options.php`](17-query-options.php) |
@@ -53,9 +53,9 @@ BOX_SEASON=winter php playground/07-discovery.php
 Display modes follow the terminal and the standard environment conventions, so no script needs flags for them:
 
 ```bash
-NO_COLOR=1 php playground/02-widgets-select.php       # colour off
-LC_ALL=C php playground/02-widgets-select.php         # ASCII glyphs
-COLORFGBG='0;15' php playground/02-widgets-select.php # hint a light background
+NO_COLOR=1 php playground/02-fields-select.php       # colour off
+LC_ALL=C php playground/02-fields-select.php         # ASCII glyphs
+COLORFGBG='0;15' php playground/02-fields-select.php # hint a light background
 ```
 
 ## How the TUI picks a theme
@@ -73,7 +73,7 @@ Set them on the `Tui` facade with `->keys(...)`, mirroring `->theme(...)`:
 
 1. **A preset name** - `->keys('vim')` for the built-in vim navigation, or a name registered with `KeyMapManager::register('name', MyKeyMap::class)`.
 2. **A preset class** - `->keys('\Your\KeyMapClass')`, instantiated directly with no registration.
-3. **Overrides** - `->keys('default', [new Binding(Scope::field(FieldType::Select), Action::Accept, KeyName::Tab)])` retunes individual bindings on top of a preset. A binding names a scope (the base, navigation, or a widget type), an action and its keys.
+3. **Overrides** - `->keys('default', [new Binding(Scope::field(FieldType::Select), Action::Accept, KeyName::Tab)])` retunes individual bindings on top of a preset. A binding names a scope (the base, navigation, or a field type), an action and its keys.
 4. **Defaults** - leave it unset for the built-in bindings. This is what most examples do.
 
 Conflicting or un-typeable bindings throw when the facade is configured, so a bad key map is caught at declaration time, not mid-session. Both override styles live in [`10-key-bindings-vim.php`](10-key-bindings-vim.php) and [`10-key-bindings-custom.php`](10-key-bindings-custom.php).

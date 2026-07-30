@@ -1,0 +1,78 @@
+---
+title: Calendar
+description: 'A month-grid date picker returning a normalized ISO YYYY-MM-DD string; arrows move by day and week.'
+keywords: ['calendar', 'date picker', 'iso date', 'field']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Calendar
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/field-calendar-light-animated.svg'), dark: useBaseUrl('/field-calendar-dark-animated.svg')}} alt="Calendar field" />
+</p>
+
+A month-grid date picker. It collects a single **normalized ISO `YYYY-MM-DD` string**; give it no default and it opens on today.
+
+```php
+use DrevOps\Tui\Model\Weekday;
+
+$p->calendar('harvest', 'Harvest date')
+  ->default('2026-07-15')       // Date the grid opens on.
+  ->minDate('2026-01-01')       // Earliest selectable date, inclusive.
+  ->maxDate('2026-12-31')       // Latest selectable date, inclusive.
+  ->weekStart(Weekday::Sunday); // Day the week grid starts on.
+```
+
+Runnable script: [`playground/02-fields-calendar.php`](https://github.com/drevops/tui/blob/main/playground/02-fields-calendar.php).
+
+## Options
+
+| Name          | Description                                           | Required | Default           |
+| ------------- | ----------------------------------------------------- | -------- | ----------------- |
+| `default()`   | Date the grid opens on, as `YYYY-MM-DD`.              | No       | Today             |
+| `minDate()`   | Earliest selectable date, inclusive, as `YYYY-MM-DD`. | No       | Unbounded         |
+| `maxDate()`   | Latest selectable date, inclusive, as `YYYY-MM-DD`.   | No       | Unbounded         |
+| `weekStart()` | Day the week grid starts on, a `Weekday` enum case.   | No       | `Weekday::Monday` |
+
+Navigation is clamped to the `minDate()`/`maxDate()` range: the cursor never leaves it, days outside it render dimmed, and an opening date outside the range snaps to the nearest bound. These are the field's own options; the shared field options (`required()`, `when()`, `validate()`, ...) are covered in [Field behavior](/field-behaviour).
+
+## Keyboard
+
+| Key                                     | Action                                           |
+| --------------------------------------- | ------------------------------------------------ |
+| <kbd>←</kbd> / <kbd>→</kbd>             | Move one day (vim: <kbd>h</kbd> / <kbd>l</kbd>)  |
+| <kbd>↑</kbd> / <kbd>↓</kbd>             | Move one week (vim: <kbd>k</kbd> / <kbd>j</kbd>) |
+| <kbd>PageUp</kbd> / <kbd>PageDown</kbd> | Previous / next month                            |
+| <kbd>Home</kbd> / <kbd>End</kbd>        | First / last day of the visible month            |
+| <kbd>Enter</kbd>                        | Accept the highlighted date                      |
+| <kbd>Esc</kbd>                          | Cancel                                           |
+
+The day and week moves resolve through the [key map](/key-bindings), so the arrows and the vim letters can be remapped; the month and edge jumps (<kbd>PageUp</kbd>/<kbd>PageDown</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>) are fixed keys with no action behind them.
+
+## Headless behavior
+
+The bounds are enforced when the form runs [headlessly](/headless-collection) too - a value outside the range is rejected - and they surface in the JSON schema as `min_date`, `max_date` and `week_start` on the prompt.
+
+## Display modes
+
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-calendar-light-static.svg'), dark: useBaseUrl('/field-calendar-dark-static.svg')}} alt="Calendar: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-calendar-light-static-no-ansi.svg'), dark: useBaseUrl('/field-calendar-dark-static-no-ansi.svg')}} alt="Calendar: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-calendar-light-static-ascii.svg'), dark: useBaseUrl('/field-calendar-dark-static-ascii.svg')}} alt="Calendar: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-calendar-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/field-calendar-dark-static-ascii-no-ansi.svg')}} alt="Calendar: ASCII + No ANSI" /></td>
+  </tr>
+</table>

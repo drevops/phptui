@@ -27,10 +27,10 @@ use DrevOps\Tui\Model\RenderMode;
 use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Translation\Translator;
-use DrevOps\Tui\Widget\Capability\ExternalEditCapableInterface;
-use DrevOps\Tui\Widget\Capability\QueryOptionsCapableInterface;
-use DrevOps\Tui\Widget\WidgetFactory;
-use DrevOps\Tui\Widget\WidgetInterface;
+use DrevOps\Tui\Field\Capability\ExternalEditCapableInterface;
+use DrevOps\Tui\Field\Capability\QueryOptionsCapableInterface;
+use DrevOps\Tui\Field\FieldFactory;
+use DrevOps\Tui\Field\FieldInterface;
 
 /**
  * The interactive state machine behind the panel TUI.
@@ -85,7 +85,7 @@ class PanelController {
   /**
    * The active field editor, if any.
    */
-  protected ?WidgetInterface $editor = NULL;
+  protected ?FieldInterface $editor = NULL;
 
   /**
    * The field being edited, if any.
@@ -93,9 +93,9 @@ class PanelController {
   protected ?Field $editing = NULL;
 
   /**
-   * The widget factory.
+   * The field factory.
    */
-  protected WidgetFactory $widgets;
+  protected FieldFactory $fields;
 
   /**
    * The external-editor service.
@@ -245,7 +245,7 @@ class PanelController {
   ) {
     $this->keymap = $keymap ?? KeyMapManager::create();
     $this->externalEditor = $external_editor ?? new ExternalEditor();
-    $this->widgets = new WidgetFactory($this->keymap, $this->externalEditor->isAvailable(), $handlers);
+    $this->fields = new FieldFactory($this->keymap, $this->externalEditor->isAvailable(), $handlers);
     $this->nav = $this->keymap->navigation();
     $this->scroller = new Scroller();
     $this->navigator = new Navigator(new Panel('hub', $form->title, '', panels: $form->panels, layout: $form->layout));
@@ -270,7 +270,7 @@ class PanelController {
       return;
     }
 
-    if ($this->editor instanceof WidgetInterface) {
+    if ($this->editor instanceof FieldInterface) {
       $this->handleEditing($key);
 
       return;
@@ -286,7 +286,7 @@ class PanelController {
    *   TRUE when editing.
    */
   public function isEditing(): bool {
-    return $this->editor instanceof WidgetInterface;
+    return $this->editor instanceof FieldInterface;
   }
 
   /**
@@ -370,7 +370,7 @@ class PanelController {
         }
 
         foreach ($parser->parse($bytes) as $key) {
-          // Ctrl-C aborts from anywhere - including mid-widget - so catch it
+          // Ctrl-C aborts from anywhere - including mid-field - so catch it
           // above handle() and drop straight out of the read loop to the
           // teardown, leaving the collected answers as they stand.
           if ($this->consumeInterrupt($key)) {
@@ -497,7 +497,7 @@ class PanelController {
 
     // A standalone field takes the whole screen; an inline field expands inside
     // the hub, which hubFrame() splices in.
-    if ($this->editor instanceof WidgetInterface && $this->editing instanceof Field && $this->editing->render === RenderMode::Standalone) {
+    if ($this->editor instanceof FieldInterface && $this->editing instanceof Field && $this->editing->render === RenderMode::Standalone) {
       return $this->editorFrame($this->editor, $rows);
     }
 
@@ -511,15 +511,15 @@ class PanelController {
   /**
    * Render the editor screen for the field being edited.
    *
-   * @param \DrevOps\Tui\Widget\WidgetInterface $editor
-   *   The active editor widget.
+   * @param \DrevOps\Tui\Field\FieldInterface $editor
+   *   The active editor field.
    * @param int $rows
    *   The screen rows a fullscreen editor stretches to.
    *
    * @return string
    *   The editor frame.
    */
-  protected function editorFrame(WidgetInterface $editor, int $rows): string {
+  protected function editorFrame(FieldInterface $editor, int $rows): string {
     $label = $this->editing instanceof Field ? Translator::t($this->editing->label) : '';
     $hints = $this->footer ? $this->editorHints() : [];
 
@@ -542,7 +542,7 @@ class PanelController {
     // the body so the theme expands the editor in place of the summary row.
     $editing = NULL;
     $view = '';
-    if ($this->editor instanceof WidgetInterface && $this->editing instanceof Field) {
+    if ($this->editor instanceof FieldInterface && $this->editing instanceof Field) {
       $editing = $this->editing;
       $view = $this->editor->view($this->theme);
     }
@@ -631,7 +631,7 @@ class PanelController {
 
     $editing = NULL;
     $view = '';
-    if ($this->editor instanceof WidgetInterface && $this->editing instanceof Field) {
+    if ($this->editor instanceof FieldInterface && $this->editing instanceof Field) {
       $editing = $this->editing;
       $view = $this->editor->view($this->theme);
     }
@@ -831,7 +831,7 @@ class PanelController {
    *   The key.
    */
   protected function handleEditing(Key $key): void {
-    if (!$this->editor instanceof WidgetInterface || !$this->editing instanceof Field) {
+    if (!$this->editor instanceof FieldInterface || !$this->editing instanceof Field) {
       // @codeCoverageIgnoreStart
       return;
       // @codeCoverageIgnoreEnd
@@ -1005,7 +1005,7 @@ class PanelController {
   /**
    * The bindings in force for the help key.
    *
-   * An open field answers to its widget's bindings, the panel to the navigation
+   * An open field answers to its field's bindings, the panel to the navigation
    * ones, and the help key is bound in each scope that has it free - so asking
    * the map in force is what makes a scope without the binding one where the
    * key does nothing and nothing is advertised.
@@ -1014,7 +1014,7 @@ class PanelController {
    *   The bindings.
    */
   protected function helpKeys(): ScopedKeyMap {
-    return $this->editor instanceof WidgetInterface ? $this->editor->keys() : $this->nav;
+    return $this->editor instanceof FieldInterface ? $this->editor->keys() : $this->nav;
   }
 
   /**
@@ -1359,17 +1359,17 @@ class PanelController {
   }
 
   /**
-   * The footer while a field is edited inline: the active widget's own hints.
+   * The footer while a field is edited inline: the active field's own hints.
    *
-   * The keys in play are the widget's, not the hub's, so the footer switches to
-   * the widget's hints against its own bindings - the same line the standalone
+   * The keys in play are the field's, not the hub's, so the footer switches to
+   * the field's hints against its own bindings - the same line the standalone
    * editor would show.
    *
    * @return list<string>
-   *   The widget's hint line, or none when the footer is turned off.
+   *   The field's hint line, or none when the footer is turned off.
    */
   protected function inlineEditFooter(): array {
-    if (!$this->footer || !$this->editor instanceof WidgetInterface || !$this->editing instanceof Field) {
+    if (!$this->footer || !$this->editor instanceof FieldInterface || !$this->editing instanceof Field) {
       return [];
     }
 
@@ -1379,15 +1379,15 @@ class PanelController {
   /**
    * The hint fragments while a field is edited, in display order.
    *
-   * The widget's own hints, then the help hint when the field has help: help
-   * is a property of the question rather than of the widget collecting it, so
-   * the widget cannot advertise it and the controller appends it.
+   * The field's own hints, then the help hint when the field has help: help
+   * is a property of the question rather than of the field collecting it, so
+   * the field cannot advertise it and the controller appends it.
    *
    * @return list<\DrevOps\Tui\Input\Hint>
-   *   The hints, or none when there is no active widget.
+   *   The hints, or none when there is no active field.
    */
   protected function editorHints(): array {
-    if (!$this->editor instanceof WidgetInterface) {
+    if (!$this->editor instanceof FieldInterface) {
       return [];
     }
 
@@ -1488,7 +1488,7 @@ class PanelController {
   /**
    * Whether every active required field holds a value, else refuse the submit.
    *
-   * A field left untouched never opens its editor, so the widget's own guard
+   * A field left untouched never opens its editor, so the field's own guard
    * never runs on it; this is the boundary where an empty required answer is
    * caught instead. The message names the field, which is as far as pointing
    * can go: the buttons live on the root panel and every field lives inside a
@@ -1530,7 +1530,7 @@ class PanelController {
    */
   protected function openEditor(Field $field): void {
     $this->editing = $field;
-    $this->editor = $this->widgets->create($field, $this->values[$field->id] ?? $field->default, $this->values);
+    $this->editor = $this->fields->create($field, $this->values[$field->id] ?? $field->default, $this->values);
   }
 
   /**

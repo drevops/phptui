@@ -11,7 +11,7 @@ use DrevOps\Tui\Translation\Translator;
  *
  * Either bound may be unset (NULL) to leave that side open. The range
  * arithmetic, the strict ISO parsing and the human range phrase live here once,
- * so the interactive widget, the headless engine and the answer-set validator
+ * so the interactive field, the headless engine and the answer-set validator
  * all agree. The week-start day is a display concern that rides along the way
  * the number field's keyboard step rides along in {@see NumberBounds}.
  *

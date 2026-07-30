@@ -7,11 +7,11 @@ namespace DrevOps\Tui\Input;
 /**
  * A semantic input action, decoupled from the physical key that triggers it.
  *
- * Widgets and the panel controller ask a {@see ScopedKeyMap} whether a key
+ * Fields and the panel controller ask a {@see ScopedKeyMap} whether a key
  * press means a given action ("is this Accept?"), rather than testing a raw
  * {@see KeyName}. The map binds each action to one or more keys, per scope, so
  * the same action can be reached by a different key in a different context (or
- * after a consumer remap). These are the fixed set of intents the widgets
+ * after a consumer remap). These are the fixed set of intents the fields
  * understand; the bindings behind them are configurable, the intents are not.
  *
  * @package DrevOps\Tui\Input

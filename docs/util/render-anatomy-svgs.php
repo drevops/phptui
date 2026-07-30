@@ -2,9 +2,9 @@
 
 /**
  * @file
- * Renders the annotated widget anatomy diagrams.
+ * Renders the annotated field anatomy diagrams.
  *
- * Each diagram is a real widget frame, driven through the library's own
+ * Each diagram is a real field frame, driven through the library's own
  * keystroke harness, with vector callouts drawn around it. The callouts are
  * geometry rather than characters, so nothing is injected into the frame and
  * no font metric can shift a border.

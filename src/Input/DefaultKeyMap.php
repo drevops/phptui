@@ -10,8 +10,8 @@ use DrevOps\Tui\Model\FieldType;
  * The built-in key bindings: the defaults every form uses unless it opts out.
  *
  * A preset is a class listing its {@see Binding}s, the way a theme is a class
- * of styling methods. The base bindings are shared by every widget; the
- * navigation and per-widget-type bindings override the base only where a key
+ * of styling methods. The base bindings are shared by every field; the
+ * navigation and per-field-type bindings override the base only where a key
  * means something different (Enter inserts a newline in a textarea, Space
  * toggles a checkbox option, and so on). Subclass this and override
  * {@see bindings()} to ship an alternate preset - {@see VimKeyMap} does exactly
@@ -101,12 +101,12 @@ class DefaultKeyMap {
     $bindings[] = new Binding(Scope::field(FieldType::FilePicker, multiple: TRUE), Action::Reveal, KeyName::Tab);
     $bindings[] = new Binding(Scope::field(FieldType::FilePicker, multiple: TRUE), Action::Toggle, KeyName::Space);
 
-    // The reorder widget picks up and drops the highlighted item on Space;
+    // The reorder field picks up and drops the highlighted item on Space;
     // Up and Down (inherited from the base) move the cursor, or the held item.
     $bindings[] = new Binding(Scope::field(FieldType::Reorder), Action::Grab, KeyName::Space);
 
     // A field stays reachable by its help key while it is open, wherever the
-    // key is free to mean that. Where the widget takes typed characters the key
+    // key is free to mean that. Where the field takes typed characters the key
     // is one of them, and the scope is skipped rather than fought over - which
     // is also what {@see KeyMap::guard()} would insist on.
     foreach (FieldType::cases() as $type) {

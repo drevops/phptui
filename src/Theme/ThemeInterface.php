@@ -114,10 +114,10 @@ interface ThemeInterface {
    * A file browser captions its entries with the directory they are in;
    * another browser captions its own with whatever it is looking at. The atom
    * is named for what the reader sees - a caption over a list - so it does not
-   * bind the theme to any one widget's idea of where it is.
+   * bind the theme to any one field's idea of where it is.
    *
    * Related to {@see hint()} and set apart from it by weight rather than hue:
-   * both are the widget speaking about the list rather than listing it, but a
+   * both are the field speaking about the list rather than listing it, but a
    * caption states where you are and guidance states what is expected.
    */
   public function caption(string $text): string;
@@ -149,9 +149,9 @@ interface ThemeInterface {
   public function footer(string $text): string;
 
   /**
-   * The width, in columns, available for a widget's rendered content.
+   * The width, in columns, available for a field's rendered content.
    *
-   * The frame's inner width, already less any border and gutter. A widget wraps
+   * The frame's inner width, already less any border and gutter. A field wraps
    * or omits its own secondary lines against this so they fit the panel.
    */
   public function contentWidth(): int;
@@ -167,7 +167,7 @@ interface ThemeInterface {
   public function indicator(string $text): string;
 
   /**
-   * The highlighted (cursor) row in a list widget.
+   * The highlighted (cursor) row in a list field.
    */
   public function highlight(string $text): string;
 

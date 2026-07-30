@@ -108,7 +108,7 @@ final readonly class Option {
    * The values of the selectable rows, in display order.
    *
    * The one filtering every collection surface shares, so the field model, the
-   * choice widgets and the schema generators agree on what is selectable.
+   * choice fields and the schema generators agree on what is selectable.
    *
    * @param list<\DrevOps\Tui\Model\Option> $options
    *   The option rows.

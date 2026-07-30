@@ -15,7 +15,7 @@ use DrevOps\Tui\Tui;
 /**
  * Drives a form's interactive panel TUI from scripted keystrokes.
  *
- * The form-level companion to {@see \DrevOps\Tui\Testing\WidgetRunner}: it
+ * The form-level companion to {@see \DrevOps\Tui\Testing\FieldRunner}: it
  * feeds keystrokes through a scripted terminal's read() and runs the real
  * panel loop, so a consumer can assert on the collected answers and on what
  * was rendered - without a real TTY. Keystrokes are supplied as raw byte

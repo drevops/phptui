@@ -22,7 +22,7 @@ The engine doesn't know (or care) what application it serves. It stays generic: 
 
 - 🧭 [**Full-screen TUI**](/panels) - a scrollable, keyboard-driven form: fields group into sections that drill in to any depth (or open as modal dialogs), with a contextual key-hint footer and a <kbd>?</kbd> help overlay
 - ⚡ [**Inline editing**](/panels#inline-editing) - a field's editor opens in place on the panel row; opt a field out to full-screen with `->standalone()`
-- 🧩 [**Widgets**](/widgets) - `calendar`, `confirm`, `filepicker`, `number`, `password`, `pause`, `rating`, `reorder`, `search`, `select`, `suggest`, `template`, `text`, `textarea`, `toggle`
+- 🧩 [**Fields**](/fields) - `calendar`, `confirm`, `filepicker`, `number`, `password`, `pause`, `rating`, `reorder`, `search`, `select`, `suggest`, `template`, `text`, `textarea`, `toggle`
 - 🏗️ [**Builder-driven**](/configuration) - the form is declared in PHP with a fluent builder; the common cases need no code
 - 🎛️ [**Interactive or unattended**](/headless-collection) - answer the form by keyboard, or supply the answers up front as a JSON payload and environment variables so it runs without prompting
 - 🤖 [**AI agents**](/ai-agents) - the form describes itself: `agentHelp()` returns a JSON Schema of the answers and `schema()` the full question metadata - fold them into your tool's help and an agent can answer the form unattended
@@ -32,14 +32,14 @@ The engine doesn't know (or care) what application it serves. It stays generic: 
 - ⚙️ [**Declared behavior**](/field-behaviour) - required fields, validation, transforms and dynamic defaults as closures on the field; per-field handler classes remain as a fallback
 - 📦 [**Self-describing answers**](/headless-collection#self-describing-answers) - each answer carries a snapshot of its question and its provenance; summaries need no form config
 - 🎨 [**Themes**](/themes) - the whole visual representation (colors, glyphs, layout) is a theme class; six ship built-in, each serving dark and light
-- ⌨️ [**Key bindings**](/key-bindings) - remap navigation, edit, accept and cancel keys per widget type; ships a vim-style preset, and a bad binding fails loudly at build time
+- ⌨️ [**Key bindings**](/key-bindings) - remap navigation, edit, accept and cancel keys per field type; ships a vim-style preset, and a bad binding fails loudly at build time
 - ✨ [**Unicode and ASCII**](/display-modes) - glyphs follow the terminal locale and color honors `NO_COLOR`; both can be forced on the `Tui` facade
 - 🧪 [**Test harness**](/testing) - drive the real TUI from scripted keystrokes and assert on the answers and rendered output, no TTY needed
 - 🌍 [**Translations**](/translations) - present chrome and questions in another language through a consumer catalog, falling back to English
 
 ## Quick start
 
-Declare a form with the fluent `Form` builder - a panel of fields, each one a [widget](/widgets) - then hand it to the `Tui` facade, the one class that wires up the engine, resolver, schema tools and TUI for you:
+Declare a form with the fluent `Form` builder - a panel of fields, each one a [field](/fields) - then hand it to the `Tui` facade, the one class that wires up the engine, resolver, schema tools and TUI for you:
 
 ```php
 use DrevOps\Tui\Builder\Form;
