@@ -549,7 +549,7 @@ One panel fills the screen at a time. A **modal** is the same block that *Overla
 
 A **field** is the *block* that collects. It's the only kind that contributes to the collected result, and the only kind that captures.
 
-Six of its seven capabilities are declared on the field itself, and each has its own call:
+A field claims eight capabilities, more than any other block. Seven of them show up in one declaration:
 
 ```php
 $p->select('basket', 'Basket contents')       // Show, Focus
@@ -565,7 +565,7 @@ $p->select('basket', 'Basket contents')       // Show, Focus
 
 The entries are what *edit* mode opens onto, the default is what reaches the result until you change it, the bounds are stated before you act and the validator explains itself after, and the condition decides whether the field is there at all.
 
-The seventh capability is *Bind*, which the field doesn't declare - it comes from the field's kind. A `select` binds <kbd>Space</kbd> because it offers a list; a `text` field binds no printable key at all, because every one of them is something you're typing.
+The eighth is *Bind*, and the field doesn't declare it - it comes from the field's kind. A `select` binds <kbd>Space</kbd> because it offers a list; a `text` field binds no printable key at all, because every one of them is something you're typing.
 
 One field owns both modes. In **view** mode it's one line, drawing every part of that line itself. Open it and it switches to **edit** mode, taking over the region right of its *label*:
 
