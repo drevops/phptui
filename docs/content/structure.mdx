@@ -908,14 +908,18 @@ Named regions mean a block says where it goes, rather than depending on the orde
 
 ## Resolving a tension
 
-When something doesn't fit, name the capability it needs and the level that owns it. Three worked examples:
+When something doesn't fit, don't argue about where it goes. Name the capability it needs, and whichever level owns that capability is the answer. Five that have already been settled this way:
 
-**"Should markup be able to sit in the footer?"** The footer is a *region* of a *layout*, markup is a kind of *block*, and blocks are placed in regions. So yes - add the markup block to that region. It's a placement, not a feature.
+| Question | Capability | Owned by | Answer |
+|---|---|---|---|
+| Can markup sit in the footer? | *Show* | every block | Yes. A placement, not a feature. |
+| Should a progress row reach the result? | *Collect* | Field | No. Progress *Activates*, which is a different thing. |
+| Can a panel scroll one column and pin the other? | *Scroll* | Region | Yes. The left region declares it; no block changes. |
+| Who works out how tall `content` is? | *Arrange* | Layout | The layout. Only it sees the fixed siblings that come off first. |
+| Can two blocks sit side by side? | *Flow* | Region | Yes, and without nesting a layout. |
 
-**"Should a progress row appear in the result?"** It would need *Collect*, which only a field claims. No - progress *Activates*, which is a different capability.
+The last two were decided while this page was being written, and both turned on the same test: **which level can see what the job needs?** A region can't size itself, because its siblings' fixed cells come off the top before the remainder is divided. A layout can't furnish itself and stay reusable, because it would have to know what a breadcrumb is.
 
-**"Should a panel scroll its left column but not its right?"** *Scroll* belongs to the region, and a layout is composed of region instances. Yes - the left region declares it, the right doesn't, and no block changes.
+That's the whole point of the split. A *region* that knew what a breadcrumb was would need to know what every block is; instead a region knows only that it holds blocks, a block knows only how to fill the space it's given, and a theme knows only how to style what it's handed.
 
-The point of the split is that each of those has one answer rather than an argument. A *region* that knew what a breadcrumb was would need to know what every block is; instead a region knows only that it holds blocks, a block knows only how to fill the space it's given, and a theme knows only how to style what it's handed.
-
-That's also what makes an element reusable. Because `breadcrumbSeparator()` receives no field, no panel and no answers, the same element draws the separator inside a form and inside a standalone line of output. An element that reached for form state could only ever be used from inside a form.
+It's also what makes an element reusable. Because `breadcrumbSeparator()` receives no field, no panel and no answers, the same element draws the separator inside a form and inside a standalone line of output. An element that reached for form state could only ever be used from inside a form.
