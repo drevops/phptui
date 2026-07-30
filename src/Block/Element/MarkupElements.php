@@ -31,6 +31,6 @@ interface MarkupElements {
    * @return string
    *   The styled line.
    */
-  public function markupBody(string $text): string;
+  public function markupLine(string $text): string;
 
 }

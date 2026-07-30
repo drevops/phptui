@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Theme;
 
+use DrevOps\Tui\Block\Element\ActionsElements;
+use DrevOps\Tui\Block\Element\BreadcrumbElements;
+use DrevOps\Tui\Block\Element\LegendElements;
+use DrevOps\Tui\Block\Element\MarkupElements;
+use DrevOps\Tui\Block\Element\ProgressElements;
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Answers\ValueFormatter;
@@ -57,7 +62,7 @@ use DrevOps\Tui\Utils\Strings;
  *
  * @package DrevOps\Tui\Theme
  */
-class DefaultTheme implements ThemeInterface {
+class DefaultTheme implements ThemeInterface, ActionsElements, BreadcrumbElements, LegendElements, MarkupElements, ProgressElements {
 
   /**
    * The default frame width, used when a caller does not specify one.
@@ -932,6 +937,105 @@ class DefaultTheme implements ThemeInterface {
    */
   public function legendSeparator(): string {
     return $this->paint(Sgr::of(Sgr::Ash), $this->dot());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function breadcrumbLabel(string $text): string {
+    return $this->breadcrumb($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function breadcrumbSeparator(): string {
+    return $this->separator();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function markupTitle(string $text): string {
+    return $this->title($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function markupLine(string $text): string {
+    return $this->description($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function actionButton(string $label): string {
+    return $this->value($this->frameAction($label));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function actionSelected(string $label): string {
+    return $this->cursor($this->frameAction($label));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function actionSeparator(): string {
+    return '  ';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function progressCaption(string $text): string {
+    return $this->oneLine($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function progressSpinner(int $frame): string {
+    $frames = $this->unicode ? self::SPINNER_FRAMES : self::SPINNER_ASCII;
+
+    return $this->highlight($frames[abs($frame) % count($frames)]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function progressTrack(int $filled, int $width): string {
+    [$fill, $track] = $this->unicode ? ['█', '░'] : ['#', '-'];
+    $filled = max(0, min($width, $filled));
+
+    return '[' . ($filled > 0 ? $this->highlight(str_repeat($fill, $filled)) : '') . str_repeat($track, $width - $filled) . ']';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function progressCount(int $current, int $total): string {
+    return $current . '/' . $total;
+  }
+
+  /**
+   * Frame an action's label.
+   *
+   * The framing is the theme's rather than the block's, so a theme that draws a
+   * button differently changes this alone and the block goes on knowing only
+   * that it has labels.
+   *
+   * @param string $label
+   *   The label.
+   *
+   * @return string
+   *   The framed label.
+   */
+  protected function frameAction(string $label): string {
+    return '[ ' . $label . ' ]';
   }
 
   /**

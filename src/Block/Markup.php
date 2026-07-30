@@ -60,7 +60,7 @@ final class Markup implements BlockInterface {
     }
 
     foreach (explode("\n", $this->body) as $line) {
-      $lines[] = $theme->markupBody($line);
+      $lines[] = $theme->markupLine($line);
     }
 
     return implode("\n", $lines);
