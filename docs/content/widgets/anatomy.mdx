@@ -156,24 +156,71 @@ That's also why they're built differently. The first is an unframed phrase - `a 
 
 ## What the code calls these today
 
-The theme-atom column above is the target. Where the source disagrees, the source is what moves - a theme's vocabulary should be the vocabulary a reader uses for what's on screen.
+Every atom has two public surfaces. **Theme** is the `ThemeInterface` method that styles it. **Owner** is the call a consumer makes to set it - run-wide through the group's own fluent builder for a glyph, or on the field for content. Where the source disagrees with the atom's name, the source is what moves.
 
-| Atom | Today | Becomes |
-|---|---|---|
-| **breadcrumb separator** (chrome 3) | `separator()` | `breadcrumbSeparator()` |
-| **overflow marker** (chrome 4) | `indicator()`, `indicatorUp()`, `indicatorDown()` | `overflowMarker()` |
-| **legend** (chrome 5) | `WidgetInterface::hints()`, `renderHintLine()` | `WidgetInterface::legend()`, `renderLegend()` |
-| **field selector** (view 1) | `marker()`, shared with the **entry selector** (edit 2) | `fieldSelector()` |
-| **value separator** (view 5) | hardcoded in `ValueFormatter::format()` | `valueSeparator()` |
-| **entry** (edit 1) | drawn inline, no theme method | `entry()` |
-| **entry selector** (edit 2) | `marker()`, shared with the **field selector** (view 1) | `entrySelector()` |
-| **entry marker** (edit 3) | `check()` when multiple-choice, `radio()` when single | `entryMarker()` |
-| **entry note** (edit 4) | concatenated in `OptionsCapableTrait`, no theme method | `entryNote()` |
-| **constraint** (edit 6) | `hint()` via `renderGuidance()`; produced by `selectionHint()` and `constraintHint()` | `constraint()`, from one producer |
-| **draft** (edit 9) | `$buffer`, per widget, no theme method | `draft()` |
-| **state** (edit 10) | `footer()` | `state()` |
+| Atom | Today | Theme | Owner |
+|---|---|---|---|
+| **border** (chrome 1) | `border()` | `chromeBorder()` | `chrome()->border(Border::Rounded)` |
+| **breadcrumb** (chrome 2) | `breadcrumb()` | `chromeBreadcrumb()` | `Form::create($title)`, `->panel($id, $title, ...)` |
+| **breadcrumb separator** (chrome 3) | `separator()` | `chromeBreadcrumbSeparator()` | `chrome()->breadcrumbSeparator('›')` |
+| **overflow marker** (chrome 4) | `indicator()`, `indicatorUp()`, `indicatorDown()` | `chromeOverflowMarker()` | `chrome()->overflowMarker('▲', '▼')` |
+| **legend** (chrome 5) | `WidgetInterface::hints()`, `renderHintLine()` | `chromeLegend()` | `chrome()->legend(TRUE)` |
+| **legend key** (chrome 6) | `legendKey()` | `chromeLegendKey()` | `chrome()->legendKeys($preset, $overrides)` |
+| **legend description** (chrome 7) | `legendDescription()` | `chromeLegendDescription()` | `chrome()->legendLabel(Action::Toggle, 'pick')` |
+| **legend separator** (chrome 8) | `legendSeparator()` | `chromeLegendSeparator()` | `chrome()->legendSeparator('·')` |
+| **field selector** (view 1) | `marker()`, shared with the **entry selector** (edit 2) | `viewSelector()` | `view()->selector('❯')` |
+| **label** (view 2) | `label()` | `viewLabel()` | `->label($text)` |
+| **help marker** (view 3) | `helpMarker()` | `viewHelpMarker()` | `view()->helpMarker('ⁱ', '[?]')` |
+| **value** (view 4) | `value()` | `viewValue()` | `->default($value)` |
+| **value separator** (view 5) | hardcoded in `ValueFormatter::format()` | `viewValueSeparator()` | `view()->valueSeparator(', ')` |
+| **description** (view 6) | `description()` | `viewDescription()` | `->description($text)` |
+| **help** (view 7) | `renderHelp()` | `viewHelp()` | `->help($text)` |
+| **entry** (edit 1) | drawn inline, no theme method | `editEntry()` | `->entry($value, $label)`, `->entries($map)` |
+| **entry selector** (edit 2) | `marker()`, shared with the **field selector** (view 1) | `editEntrySelector()` | `edit()->entrySelector('❯')` |
+| **entry marker** (edit 3) | `check()` when multiple-choice, `radio()` when single | `editEntryMarker()` | `edit()->entryMarker('◼', '◻')`, `->multiple()` picks the pair |
+| **entry note** (edit 4) | concatenated in `OptionsCapableTrait`, no theme method | `editEntryNote()` | `->entry(..., note: $text)` |
+| **entry description** (edit 5) | `entryDescription()` | `editEntryDescription()` | `->entry(..., description: $text)` |
+| **constraint** (edit 6) | `hint()` via `renderGuidance()`; produced by `selectionHint()` and `constraintHint()` | `editConstraint()` | `->min()`, `->max()`, `->minSelections()`, `->maxSelections()`, `->maxSize()`, `->extensions()`, `->filesOnly()` |
+| **error** (edit 7) | `error()` | `editError()` | `->validate($closure)`, `->required(message: $text)` |
+| **caret** (edit 8) | `caret()` | `editCaret()` | `edit()->caret('█')` |
+| **draft** (edit 9) | `$buffer`, per widget, no theme method | `editDraft()` | `->default($value)`, `->placeholder($text)` |
+| **state** (edit 10) | `footer()` | `editState()` | `edit()->state(FALSE)`, `->slot($name, $label)` labels it |
+| **caption** (edit 11) | `caption()` | `editCaption()` | `edit()->caption(FALSE)`, `->startIn($directory)` fills it |
 
-Three of those need more than a rename.
+Each group's glyphs are set through one closure, the way `Form::panel()` already reads:
+
+```php
+$tui
+  ->chrome(fn(Chrome $c) => $c
+    ->border(Border::Rounded)
+    ->breadcrumbSeparator('›')
+    ->overflowMarker('▲', '▼')
+    ->legend(TRUE)
+    ->legendSeparator('·'))
+  ->view(fn(View $v) => $v
+    ->selector('❯')
+    ->helpMarker('ⁱ', '[?]')
+    ->valueSeparator(', '))
+  ->edit(fn(Edit $e) => $e
+    ->entrySelector('❯')
+    ->entryMarker('◼', '◻')
+    ->caret('█'));
+```
+
+Every glyph setter takes the Unicode form first and the ASCII fallback second, so a consumer can't set one and silently leave the other display mode broken.
+
+Four owner-side calls don't name the atom they set:
+
+| Today | Becomes |
+|---|---|
+| `Tui::footer(bool)` | `chrome()->legend(bool)` |
+| `Tui::theme('x', ['border' => ...])` | `chrome()->border(Border::Rounded)` |
+| `->option()`, `->options()` | `->entry()`, `->entries()` |
+| `->option(..., disabled_reason: $text)` | `->entry(..., note: $text)` |
+
+`->label()` doesn't exist at all: the label is the second argument to `$p->select('basket', 'Basket contents')`. Every other settable atom gets a call named after it, so this one should too.
+
+Three of the theme renames need more than a rename.
 
 **`hint` names two things, and used to name three.** `WidgetInterface::hints()` returns the **legend** (chrome 5) and `ThemeInterface::hint()` draws the **constraint** (edit 6). Nothing connects them. Renaming each to the atom it serves leaves `hint` naming nothing, which is the point.
 
