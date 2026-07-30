@@ -24,9 +24,6 @@ A screen is three sections deep, and every section holds widgets. That's the who
 │   │   Field   edit mode                             │   │
 │   │   Field   view mode                             │   │
 │   └─────────────────────────────────────────────────┘   │
-│   ┌─────────────────────────────────────────────────┐   │
-│   │ Buttons                                         │   │
-│   └─────────────────────────────────────────────────┘   │
 │                                             ▼ scrolls   │
 ├─────────────────────────────────────────────────────────┤
 │ FOOTER                                                  │
@@ -55,41 +52,41 @@ footer   │ ↑/↓ to move · ↵ to select · ESC to go back      │
          ╰────────────────────────────────────────────────╯
 ```
 
-## Everything in a section is a widget
-
-A **widget** is anything that renders itself into a region. The breadcrumb is one. The key hints are one. A panel is one, and so is each field editor inside it.
+## Four levels, and what each one means
 
 ```
 Screen
-├─ Header    ──▸ Breadcrumb
-├─ Content   ──▸ Panel                    ← the only section that scrolls
-│                  ├─ Field ──▸ view mode
-│                  └─ Field ──▸ edit mode ──▸ Select
-│             ──▸ Buttons
-└─ Footer    ──▸ KeyHint
+└─ Section     Header | Content | Footer      fixed; there are three
+   └─ Widget   Breadcrumb, Panel, KeyHint     whatever a section holds
+      └─ Field   (Panel only)                 a question in a panel
+         └─ Mode   view | edit                how the field draws itself
 ```
 
-That one word covers two things people usually keep apart, and on purpose: a breadcrumb and a select list have nothing in common except the part that matters here, which is that each owns a region and knows how to fill it. A section doesn't care which kind it's holding.
+A **widget** is anything a section holds. That's the whole definition: it owns a region and knows how to fill it, and the section knows nothing else about it. A breadcrumb is one, a key-hint line is one, a panel is one.
 
-A section can hold more than one. Content holds the panel and the button bar. Footer holds the key hints today and has room for whatever else belongs at the bottom of a screen.
+A **field** is not a widget. A Select, a Calendar, a Text field - none of them can sit in a section on their own, because each needs a label, a row and a panel around it. They're tenants of a Panel, which is the widget that holds them.
+
+The test is worth keeping: if a section could hold it by itself, it's a widget. If it needs a panel around it, it's a field.
+
+A section can hold more than one widget. Header holds the breadcrumb today and Footer the key hints, and both have room for whatever else belongs at the top or bottom of a screen.
 
 ## A field has two modes
 
-A field is not a widget itself - it's a question, and it borrows a widget to collect an answer. In **view mode** the field draws its own single line. Open it and it switches to **edit mode**, handing the region right of its label to a widget:
+In **view mode** a field is one line, and it draws every part of that line itself. Open it and it switches to **edit mode**, taking over the region right of its label to collect an answer:
 
 ```
 view mode    ❯ Basket contents ⁱ  apple, carrot
                                   └─────┬─────┘
-                                     the field draws this
+                                    the settled value
 
 edit mode    ❯ Basket contents    ◼ Apple
                                   ◻ Carrot
                                   ◻ Tomato
                                   └───┬───┘
-                                  the Select widget draws this
+                                    the field collecting it
 ```
 
-The label and the selector stay put across both modes. Only the value region changes hands. [Anatomy](/widgets/anatomy) names every piece of both.
+The label and the selector stay put across both modes. Only the value region changes shape, which is why a field in edit mode is still one row of its panel rather than something new on the screen. [Anatomy](/widgets/anatomy) names every piece of both.
 
 ## Atoms and molecules
 
@@ -136,6 +133,6 @@ The same split applies to the key hints. `renderKeyHint()` is the molecule; `key
 
 ## Why it's split this way
 
-A section that knew what a breadcrumb was would need to know what every other widget is too. Instead a section knows only that it holds widgets, a widget knows only how to fill the region it's given, and a theme knows only how to style what it's handed. Nothing reaches past its own layer.
+A section that knew what a breadcrumb was would need to know what every other widget is too. Instead a section knows only that it holds widgets, a widget knows only how to fill the region it's given, a field knows only its own row, and a theme knows only how to style what it's handed. Nothing reaches past its own layer.
 
 That's also what makes an atom reusable. Because `breadcrumbSeparator()` receives no field, no panel and no answers, the same atom can draw the separator inside a form and inside a standalone line of output. An atom that reached for form state could only ever be used from inside a form.
