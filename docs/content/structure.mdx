@@ -670,6 +670,8 @@ footer  ▸ KeyHints            │ ↑/↓ to move · ↵ to accept · ESC to c
 
 The `header` and `footer` *regions* declare no *Scroll*, so they're pinned; `content` declares it, which is why the mark under `Harvest date` belongs to that region rather than to the frame. The `Basket` *field* is open, so it's in *edit* mode: its two *entries* and its *description* all belong to that one *field*.
 
+The labels skip a level between `Panel` and `Field`, because the *panel* has a *layout* of its own and the fields sit in that layout's single region. It is elided here for the same reason it is invisible on screen: a one-region layout adds a level without adding anything to see.
+
 ## Building one
 
 The hierarchy is what's there, not what you have to type. A three-field form names none of it:
