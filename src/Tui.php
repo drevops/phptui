@@ -20,6 +20,7 @@ use DrevOps\Tui\Schema\AgentHelp;
 use DrevOps\Tui\Schema\SchemaGenerator;
 use DrevOps\Tui\Schema\SchemaValidator;
 use DrevOps\Tui\Screen\Collector;
+use DrevOps\Tui\Screen\Layout\LayoutManager;
 use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
@@ -73,6 +74,11 @@ final class Tui {
    * What the consumer states differently, on whatever theme is selected.
    */
   protected ?Overrides $themeOverrides = NULL;
+
+  /**
+   * The layout the screen is arranged by.
+   */
+  protected string $layout = 'default';
 
   /**
    * The resolved key bindings; NULL uses the default preset.
@@ -195,6 +201,27 @@ final class Tui {
     $theme = ThemeManager::create($this->resolveTheme($name), $width, $options);
 
     return $this->themeOverrides instanceof Overrides ? $theme->overrides($this->themeOverrides) : $theme;
+  }
+
+  /**
+   * Set the layout the interactive screen is arranged by.
+   *
+   * The name resolves through the layout manager - a shipped layout, one
+   * registered by the consumer, or a class - and an unknown name throws here
+   * rather than mid-session. Headless collection is unaffected, since a layout
+   * exists only to arrange drawing.
+   *
+   * @param string $layout
+   *   The layout name or class. Empty selects the default layout.
+   *
+   * @return $this
+   *   The facade.
+   */
+  public function layout(string $layout): self {
+    $this->layout = $layout === '' ? 'default' : $layout;
+    LayoutManager::create($this->layout);
+
+    return $this;
   }
 
   /**
@@ -562,6 +589,7 @@ final class Tui {
       // The frame the theme was told to lay its rows out to is the frame that
       // has to be drawn around them, so the border is read back off it rather
       // than resolved a second time here.
+      layout: $this->layout,
       border: $drawn->borderStyle(),
       clearOnExit: $this->clearOnExit,
       footer: $this->footer,

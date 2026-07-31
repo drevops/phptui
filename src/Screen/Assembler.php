@@ -37,11 +37,22 @@ final class Assembler {
    *   The screen.
    */
   public function assemble(Panel $panel, string $layout = 'default'): Screen {
-    $screen = (new Screen())->layout(LayoutManager::create($layout));
+    $arranged = LayoutManager::create($layout);
+    $screen = (new Screen())->layout($arranged);
+    $names = $arranged->names();
 
-    $screen->in('header')->add(new Breadcrumb($panel->title()));
-    $screen->in('content')->add($panel->enter());
-    $screen->in('footer')->add($this->legend($panel));
+    // Furniture goes only where the named layout keeps a place for it: a
+    // layout with no header simply shows no trail, rather than being refused
+    // for not being the default.
+    if (in_array('header', $names, TRUE)) {
+      $screen->in('header')->add(new Breadcrumb($panel->title()));
+    }
+
+    $screen->in(in_array('content', $names, TRUE) ? 'content' : $names[0])->add($panel->enter());
+
+    if (in_array('footer', $names, TRUE)) {
+      $screen->in('footer')->add($this->legend($panel));
+    }
 
     return $screen;
   }

@@ -129,6 +129,21 @@ final class TuiTester {
   }
 
   /**
+   * Set the layout the screen is arranged by.
+   *
+   * @param string $layout
+   *   The layout name or class.
+   *
+   * @return $this
+   *   The tester.
+   */
+  public function layout(string $layout): self {
+    $this->tui->layout($layout);
+
+    return $this;
+  }
+
+  /**
    * Merge theme display options over the deterministic defaults.
    *
    * @param array<string,mixed> $options

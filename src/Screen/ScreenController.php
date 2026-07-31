@@ -42,7 +42,7 @@ use DrevOps\Tui\Render\ExternalEditor;
 use DrevOps\Tui\Render\Overlay;
 use DrevOps\Tui\Render\Scroller;
 use DrevOps\Tui\Render\Terminal;
-use DrevOps\Tui\Screen\Layout\LayoutManager;
+use DrevOps\Tui\Screen\Layout\DefaultLayout;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\Capability\DimCapableInterface;
 use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
@@ -272,8 +272,10 @@ class ScreenController {
 
     $assembler = new Assembler();
     $this->screen = $assembler->assemble($panel, $this->layout);
-    $this->breadcrumb = $this->furniture('header', Breadcrumb::class);
-    $this->legend = $this->furniture('footer', Legend::class);
+    // A layout keeping no place for a piece still gets a live one: the trail
+    // and the keys keep tracking the session, they are just never drawn.
+    $this->breadcrumb = $this->furniture('header', Breadcrumb::class) ?? new Breadcrumb($panel->title());
+    $this->legend = $this->furniture('footer', Legend::class) ?? (new Legend())->advertise($panel->bindings(), ...$panel->hints());
 
     $this->actions = $this->buttons($assembler, $panel);
     // A session opens on a form nobody has been refused yet, so whatever the
@@ -1389,7 +1391,9 @@ class ScreenController {
    *   The screen.
    */
   protected function stage(Field $field): Screen {
-    $screen = (new Screen())->layout(LayoutManager::create($this->layout));
+    // A field with the frame to itself always reads as trail, editor, keys -
+    // whatever arrangement the session behind it uses.
+    $screen = (new Screen())->layout(new DefaultLayout());
 
     $screen->in('header')->add($this->breadcrumb);
     $screen->in(self::CONTENT)->add($field);
@@ -1445,7 +1449,9 @@ class ScreenController {
    *   The dialog.
    */
   protected function dialog(Panel $modal, int $rows, int $columns): string {
-    $screen = (new Screen())->layout(LayoutManager::create($this->layout));
+    // A dialog is one thing to read under its title, whatever arrangement the
+    // session behind it uses.
+    $screen = (new Screen())->layout(new DefaultLayout());
 
     $screen->in('header')->add(new Breadcrumb($modal->title()));
     $screen->in(self::CONTENT)->add($modal);
@@ -1735,7 +1741,9 @@ class ScreenController {
    *   The screen.
    */
   protected function helpScreen(): Screen {
-    $screen = (new Screen())->layout(LayoutManager::create($this->layout));
+    // Help always reads as trail, card, keys - whatever arrangement the
+    // session behind it uses.
+    $screen = (new Screen())->layout(new DefaultLayout());
 
     $screen->in('header')->add($this->breadcrumb);
     $screen->in(self::CONTENT)->add($this->help);
@@ -1760,15 +1768,19 @@ class ScreenController {
    *
    * @template T of \DrevOps\Tui\Block\BlockInterface
    */
-  protected function furniture(string $name, string $kind): object {
+  protected function furniture(string $name, string $kind): ?object {
+    if (!in_array($name, $this->screen->currentLayout()->names(), TRUE)) {
+      return NULL;
+    }
+
     foreach ($this->screen->in($name)->blocks() as $block) {
       if ($block instanceof $kind) {
         return $block;
       }
     }
 
-    // The assembler puts one of each into the screen it builds, so a screen
-    // missing one never reaches a frame.
+    // The assembler puts one of each into every region it furnishes, so a
+    // furnished region missing its piece never reaches a frame.
     // @codeCoverageIgnoreStart
     throw new \LogicException(sprintf('The assembled screen holds no %s in its "%s" region.', $kind, $name));
     // @codeCoverageIgnoreEnd

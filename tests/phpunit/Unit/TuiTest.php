@@ -29,6 +29,7 @@ use DrevOps\Tui\Render\Terminal;
 use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Testing\BufferedTerminal;
 use DrevOps\Tui\Testing\KeyEncoder;
+use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Tests\Traits\IsolatesEnvTrait;
 use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\Tui\Theme\Border;
@@ -223,6 +224,26 @@ final class TuiTest extends TestCase {
     $this->assertInstanceOf(ScreenController::class, $controller);
     // The answers the form opens on seed the session.
     $this->assertSame('', $controller->answers()->value('name'));
+  }
+
+  public function testLayoutArrangesTheSessionItNames(): void {
+    $form = Form::create('Orchard')->panel('main', 'Delivery', function (PanelBuilder $p): void {
+      $p->text('courier', 'Courier')->default('Valley Runs');
+    });
+
+    $tester = (new TuiTester($form))->layout('two-column');
+    $tester->run("\n");
+
+    // A two-column screen has no header region, so the trail that the default
+    // layout pins up top is simply not drawn - which is only true when the
+    // named layout actually reached the session.
+    $this->assertStringNotContainsString('Orchard', $tester->output());
+  }
+
+  public function testLayoutRefusesNameNothingShipsOrRegisters(): void {
+    $this->expectException(\InvalidArgumentException::class);
+
+    $this->tui()->layout('orchard-grid');
   }
 
   public function testEverySessionDrivesTheOneDeclaredTree(): void {
