@@ -96,10 +96,7 @@ class Confirm extends AbstractField implements StepCapableInterface {
    * {@inheritdoc}
    */
   protected function renderBody(ThemeInterface $theme): string {
-    $yes_label = $this->highlightLabel($theme, Translator::t('Yes'), $this->current);
-    $no_label = $this->highlightLabel($theme, Translator::t('No'), !$this->current);
-
-    return $theme->radio($this->current) . ' ' . $yes_label . '  ' . $theme->radio(!$this->current) . ' ' . $no_label;
+    return $this->renderExclusiveRow($theme, Translator::t('Yes'), $this->current) . '  ' . $this->renderExclusiveRow($theme, Translator::t('No'), !$this->current);
   }
 
   /**

@@ -308,7 +308,7 @@ class Suggest extends AbstractField implements SearchCapableInterface, TextEditC
 
     foreach (array_slice($visible, $viewport->offset, $this->pageSize) as $slot => $value) {
       $current = $viewport->offset + $slot === $this->cursor;
-      $rows[] = $theme->marker($current) . ' ' . $this->renderMatchedLabel($theme, $value, $this->matchPositions($value), $current);
+      $rows[] = $this->elements($theme)->fieldEntrySelector($current) . ' ' . $this->renderMatchedLabel($theme, $value, $this->matchPositions($value), $current);
     }
 
     return implode("\n", [$this->queryLine($theme), ...$this->wrapScrolled($theme, $rows, $viewport)]);
@@ -340,8 +340,9 @@ class Suggest extends AbstractField implements SearchCapableInterface, TextEditC
    */
   public function queryLine(ThemeInterface $theme): string {
     $completion = $this->ghostSuffix();
+    $elements = $this->elements($theme);
 
-    return $this->buffer . $theme->caret() . ($completion === '' ? $this->placeholderGhost($theme, $this->buffer) : $theme->ghost($completion));
+    return $elements->fieldDraft($this->buffer) . $elements->fieldCaret() . ($completion === '' ? $this->placeholderGhost($theme, $this->buffer) : $elements->fieldGhost($completion));
   }
 
   /**

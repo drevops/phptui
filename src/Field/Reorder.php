@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Field;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Model\FieldType;
@@ -206,7 +207,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
    *   The rendered row.
    */
   public function renderOptionRow(ThemeInterface $theme, Option $option, bool $current): string {
-    return $this->marker($theme, $current) . ' ' . $this->highlightLabel($theme, $option->label, $current);
+    return $this->marker($theme, $current) . ' ' . $this->entryLabel($theme, $option->label, $current);
   }
 
   /**
@@ -224,11 +225,13 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
    *   The two-column marker cell.
    */
   protected function marker(ThemeInterface $theme, bool $current): string {
+    // The keys that move it, so the mark says what to press rather than
+    // inventing a second vocabulary for the same two directions.
     if ($current && $this->grabbed) {
-      return $theme->arrowUp() . $theme->arrowDown();
+      return $theme->keyGlyph(Key::named(KeyName::Up)) . $theme->keyGlyph(Key::named(KeyName::Down));
     }
 
-    return $theme->marker($current) . ' ';
+    return $this->elements($theme)->fieldEntrySelector($current) . ' ';
   }
 
   /**

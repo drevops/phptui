@@ -176,20 +176,22 @@ trait QueryOptionsCapableTrait {
       return NULL;
     }
 
+    $elements = $this->elements($theme);
+
     if ($this->queryLoading) {
-      // The same indicator a lazily loaded field shows in its panel row, so
-      // waiting reads the same wherever it happens.
-      return $theme->renderLoading('');
+      // The same mark a lazily loaded field shows in its panel row, so waiting
+      // reads the same wherever it happens.
+      return $elements->fieldLoading();
     }
 
     if ($this->queryError !== '') {
-      return $theme->error($this->queryError);
+      return $elements->fieldError($this->queryError);
     }
 
     if (Strings::length($this->query()) < $this->queryMinLength) {
       // The guidance voice, not the description's: this line shares its row
       // with the error above, and states what the field expects.
-      return $theme->renderGuidance(Translator::formatPlural($this->queryMinLength, 'Type 1 character to search.', 'Type @count characters to search.'));
+      return $elements->fieldConstraint(Translator::formatPlural($this->queryMinLength, 'Type 1 character to search.', 'Type @count characters to search.'));
     }
 
     return NULL;

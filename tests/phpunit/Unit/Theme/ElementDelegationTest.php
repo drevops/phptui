@@ -13,161 +13,95 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests that an element draws from the atom it is styled by, and no other.
+ * Tests that elements sharing one hue move together, and only together.
  *
- * One atom, one element: a palette is written once as an atom, and the element
- * that composes it follows - which is what keeps a subclass's colours effective
- * without it knowing an element exists.
+ * An element carries its own styling, and where two of them must agree on a
+ * colour they draw it from the same place - which is what lets a theme repaint
+ * a family in a line without knowing an element exists.
  */
 #[CoversClass(DefaultTheme::class)]
 #[Group('theme')]
 final class ElementDelegationTest extends TestCase {
 
-  #[DataProvider('dataProviderElementDrawsWhatItsAtomDraws')]
-  public function testElementDrawsWhatItsAtomDraws(\Closure $element, \Closure $atom): void {
+  #[DataProvider('dataProviderElementsSharingOneHueAreDrawnAlike')]
+  public function testElementsSharingOneHueAreDrawnAlike(\Closure $one, \Closure $other): void {
     // Colour on, so the assertion compares the painted bytes rather than the
     // plain text both would fall back to.
     $theme = new DefaultTheme(80);
 
-    $this->assertSame($atom($theme), $element($theme));
+    $this->assertSame($other($theme), $one($theme));
   }
 
-  public static function dataProviderElementDrawsWhatItsAtomDraws(): \Iterator {
-    yield 'chrome border' => [
-      static fn(DefaultTheme $t): string => $t->chromeBorder('----'),
-      static fn(DefaultTheme $t): string => $t->border('----'),
-    ];
-    yield 'chrome overflow marker above' => [
-      static fn(DefaultTheme $t): string => $t->chromeOverflowMarker(TRUE),
-      static fn(DefaultTheme $t): string => $t->indicator($t->indicatorUp()),
-    ];
-    yield 'chrome overflow marker below' => [
-      static fn(DefaultTheme $t): string => $t->chromeOverflowMarker(FALSE),
-      static fn(DefaultTheme $t): string => $t->indicator($t->indicatorDown()),
-    ];
-    yield 'breadcrumb label' => [
-      static fn(DefaultTheme $t): string => $t->breadcrumbLabel('Orchard'),
-      static fn(DefaultTheme $t): string => $t->breadcrumb('Orchard'),
-    ];
-    yield 'breadcrumb separator' => [
-      static fn(DefaultTheme $t): string => $t->breadcrumbSeparator(),
-      static fn(DefaultTheme $t): string => $t->separator(),
-    ];
-    yield 'field selector' => [
-      static fn(DefaultTheme $t): string => $t->fieldSelector(TRUE),
-      static fn(DefaultTheme $t): string => $t->marker(TRUE),
-    ];
-    yield 'field label' => [
-      static fn(DefaultTheme $t): string => $t->fieldLabel('Basket'),
-      static fn(DefaultTheme $t): string => $t->label('Basket'),
-    ];
-    yield 'field help marker' => [
-      static fn(DefaultTheme $t): string => $t->fieldHelpMarker(),
-      static fn(DefaultTheme $t): string => $t->helpMarker(),
-    ];
-    yield 'field value' => [
-      static fn(DefaultTheme $t): string => $t->fieldValue('apple'),
-      static fn(DefaultTheme $t): string => $t->value('apple'),
-    ];
-    yield 'field badge' => [
-      static fn(DefaultTheme $t): string => $t->fieldBadge('edited'),
-      static fn(DefaultTheme $t): string => $t->badge('edited'),
-    ];
-    yield 'field description' => [
-      static fn(DefaultTheme $t): string => $t->fieldDescription('Pick the produce.'),
-      static fn(DefaultTheme $t): string => $t->description('Pick the produce.'),
-    ];
-    yield 'field entry' => [
-      static fn(DefaultTheme $t): string => $t->fieldEntry('Apple', TRUE),
-      static fn(DefaultTheme $t): string => $t->label('Apple', TRUE),
-    ];
-    yield 'field entry marker' => [
-      static fn(DefaultTheme $t): string => $t->fieldEntryMarker(TRUE),
-      static fn(DefaultTheme $t): string => $t->check(TRUE),
-    ];
-    yield 'field entry note' => [
-      static fn(DefaultTheme $t): string => $t->fieldEntryNote('out of season'),
-      static fn(DefaultTheme $t): string => $t->disabled('out of season'),
-    ];
-    yield 'field entry description' => [
-      static fn(DefaultTheme $t): string => $t->fieldEntryDescription('Stays crisp for weeks.'),
-      static fn(DefaultTheme $t): string => $t->entryDescription('Stays crisp for weeks.'),
-    ];
-    yield 'field constraint' => [
-      static fn(DefaultTheme $t): string => $t->fieldConstraint('Pick two.'),
-      static fn(DefaultTheme $t): string => $t->hint('Pick two.'),
-    ];
-    yield 'field error' => [
-      static fn(DefaultTheme $t): string => $t->fieldError('Pick at least two.'),
-      static fn(DefaultTheme $t): string => $t->error('Pick at least two.'),
-    ];
-    yield 'field caret' => [
-      static fn(DefaultTheme $t): string => $t->fieldCaret(),
-      static fn(DefaultTheme $t): string => $t->caret(),
-    ];
-    yield 'field state' => [
-      static fn(DefaultTheme $t): string => $t->fieldState('Filling fruit'),
-      static fn(DefaultTheme $t): string => $t->footer('Filling fruit'),
-    ];
-    yield 'field caption' => [
-      static fn(DefaultTheme $t): string => $t->fieldCaption('orchard/harvest'),
-      static fn(DefaultTheme $t): string => $t->caption('orchard/harvest'),
-    ];
-    yield 'panel title' => [
+  public static function dataProviderElementsSharingOneHueAreDrawnAlike(): \Iterator {
+    yield 'the two titles' => [
       static fn(DefaultTheme $t): string => $t->panelTitle('Delivery'),
-      static fn(DefaultTheme $t): string => $t->title('Delivery'),
+      static fn(DefaultTheme $t): string => $t->markupTitle('Delivery'),
     ];
-    yield 'markup title' => [
-      static fn(DefaultTheme $t): string => $t->markupTitle('Yields'),
-      static fn(DefaultTheme $t): string => $t->title('Yields'),
+    yield 'the three selectors' => [
+      static fn(DefaultTheme $t): string => $t->fieldSelector(TRUE),
+      static fn(DefaultTheme $t): string => $t->panelSelector(TRUE),
     ];
-    yield 'markup line' => [
-      static fn(DefaultTheme $t): string => $t->markupLine('Twelve crates.'),
-      static fn(DefaultTheme $t): string => $t->description('Twelve crates.'),
+    yield 'the field and entry selectors' => [
+      static fn(DefaultTheme $t): string => $t->fieldSelector(TRUE),
+      static fn(DefaultTheme $t): string => $t->fieldEntrySelector(TRUE),
     ];
-    yield 'action button' => [
-      static fn(DefaultTheme $t): string => $t->actionButton('Submit'),
-      static fn(DefaultTheme $t): string => $t->value('[ Submit ]'),
+    yield 'a value and a summary of values' => [
+      static fn(DefaultTheme $t): string => $t->fieldValue('apple'),
+      static fn(DefaultTheme $t): string => $t->panelSummary('apple'),
     ];
-    yield 'action selected' => [
-      static fn(DefaultTheme $t): string => $t->actionSelected('Submit'),
-      static fn(DefaultTheme $t): string => $t->cursor('[ Submit ]'),
+    yield 'a field description and a line of markup' => [
+      static fn(DefaultTheme $t): string => $t->fieldDescription('Pick the produce.'),
+      static fn(DefaultTheme $t): string => $t->markupLine('Pick the produce.'),
     ];
-    yield 'progress spinner' => [
-      static fn(DefaultTheme $t): string => $t->progressSpinner(0),
-      static fn(DefaultTheme $t): string => $t->highlight('⠋'),
+    yield 'a panel description and a line of markup' => [
+      static fn(DefaultTheme $t): string => $t->panelDescription('Pick the produce.'),
+      static fn(DefaultTheme $t): string => $t->markupLine('Pick the produce.'),
+    ];
+    yield 'the focused entry and the caret' => [
+      static fn(DefaultTheme $t): string => $t->fieldEntry('█', FALSE, TRUE),
+      static fn(DefaultTheme $t): string => $t->fieldCaret(),
+    ];
+    yield 'the rule and the entry separator' => [
+      static fn(DefaultTheme $t): string => $t->renderRule(),
+      static fn(DefaultTheme $t): string => $t->fieldEntrySeparator(),
     ];
   }
 
-  #[DataProvider('dataProviderRestylingAnAtomRestylesTheElementDrawnFromIt')]
-  public function testRestylingAnAtomRestylesTheElementDrawnFromIt(\Closure $element): void {
-    // A named theme states a palette by overriding atoms and never names an
-    // element, so the delegation is the only thing carrying its colours
-    // through.
+  #[DataProvider('dataProviderRepaintingOneHueMovesEveryElementDrawnFromIt')]
+  public function testRepaintingOneHueMovesEveryElementDrawnFromIt(\Closure $element): void {
+    // A named theme states a palette and never names an element, so the palette
+    // is the only thing carrying its colours through.
     $default = new DefaultTheme(80);
     $mono = new MonoTheme(80);
 
     $this->assertNotSame($element($default), $element($mono));
   }
 
-  public static function dataProviderRestylingAnAtomRestylesTheElementDrawnFromIt(): \Iterator {
+  public static function dataProviderRepaintingOneHueMovesEveryElementDrawnFromIt(): \Iterator {
     yield 'field selector' => [static fn(DefaultTheme $t): string => $t->fieldSelector(TRUE)];
     yield 'field entry selector' => [static fn(DefaultTheme $t): string => $t->fieldEntrySelector(TRUE)];
     yield 'field value' => [static fn(DefaultTheme $t): string => $t->fieldValue('apple')];
     yield 'field caret' => [static fn(DefaultTheme $t): string => $t->fieldCaret()];
-    yield 'field entry marker' => [static fn(DefaultTheme $t): string => $t->fieldEntryMarker(TRUE)];
+    yield 'field entry marker' => [static fn(DefaultTheme $t): string => $t->fieldEntryMarker(TRUE, TRUE)];
     yield 'chrome border' => [static fn(DefaultTheme $t): string => $t->chromeBorder('----')];
+    yield 'chrome overflow marker' => [static fn(DefaultTheme $t): string => $t->chromeOverflowMarker(TRUE)];
     yield 'panel title' => [static fn(DefaultTheme $t): string => $t->panelTitle('Delivery')];
+    yield 'progress spinner' => [static fn(DefaultTheme $t): string => $t->progressSpinner(0)];
   }
 
-  public function testThemeSubclassReachesEveryElementThroughOneOverriddenAtom(): void {
-    // The fixture restyles the title atom alone, and both elements drawn from
-    // it follow without the theme mentioning either.
+  public function testThemeSubclassReachesEveryElementThroughOneRepaintedHue(): void {
+    // The fixture repaints the accent alone, and every element drawn from it
+    // follows without the theme mentioning any of them.
     $ocean = new OceanTheme(80);
+    $default = new DefaultTheme(80);
 
-    $this->assertSame($ocean->title('Delivery'), $ocean->panelTitle('Delivery'));
-    $this->assertSame($ocean->title('Delivery'), $ocean->markupTitle('Delivery'));
-    $this->assertNotSame((new DefaultTheme(80))->panelTitle('Delivery'), $ocean->panelTitle('Delivery'));
+    $this->assertSame($ocean->panelTitle('Delivery'), $ocean->markupTitle('Delivery'));
+    $this->assertNotSame($default->panelTitle('Delivery'), $ocean->panelTitle('Delivery'));
+    $this->assertNotSame($default->fieldSelector(TRUE), $ocean->fieldSelector(TRUE));
+    $this->assertNotSame($default->fieldCaret(), $ocean->fieldCaret());
+
+    // What the accent does not reach is untouched.
+    $this->assertSame($default->fieldValue('apple'), $ocean->fieldValue('apple'));
   }
 
 }

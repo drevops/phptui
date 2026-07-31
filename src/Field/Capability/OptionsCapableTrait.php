@@ -209,7 +209,7 @@ trait OptionsCapableTrait {
    *   The rendered row.
    */
   protected function renderHeadingRow(ThemeInterface $theme, Option $option): string {
-    return $theme->heading($option->label);
+    return $this->elements($theme)->fieldCaption($option->label);
   }
 
   /**
@@ -222,7 +222,7 @@ trait OptionsCapableTrait {
    *   The rendered row.
    */
   protected function renderSeparatorRow(ThemeInterface $theme): string {
-    return $theme->divider();
+    return $this->elements($theme)->fieldEntrySeparator();
   }
 
   /**
@@ -243,7 +243,7 @@ trait OptionsCapableTrait {
       $text .= ' (' . $option->disabledReason . ')';
     }
 
-    return $theme->disabled($text);
+    return $this->elements($theme)->fieldEntryNote($text);
   }
 
 }

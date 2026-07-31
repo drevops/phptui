@@ -21,6 +21,7 @@ use Rector\CodingStyle\Rector\Stmt\NewlineAfterStatementRector;
 use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\If_\RemoveAlwaysTrueIfConditionRector;
 use Rector\Naming\Rector\Assign\RenameVariableToMatchMethodCallReturnTypeRector;
+use Rector\Naming\Rector\Class_\RenamePropertyToMatchTypeRector;
 use Rector\Naming\Rector\ClassMethod\RenameVariableToMatchNewTypeRector;
 use Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchExprVariableRector;
 use Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchMethodCallReturnTypeRector;
@@ -78,6 +79,13 @@ return RectorConfig::configure()
     RenameForeachValueVariableToMatchMethodCallReturnTypeRector::class,
     // Conflicts with Drupal's snake_case parameter naming (enforced by PHPCS).
     RenameParamToMatchTypeRector::class,
+    // A primitive holds the theme and is typed to the narrower set of pieces it
+    // draws through; the property is named for the collaborator rather than for
+    // the narrowing, so a reader sees the theme it is.
+    RenamePropertyToMatchTypeRector::class => [
+      __DIR__ . '/src/Primitive/Output.php',
+      __DIR__ . '/src/Primitive/Progress.php',
+    ],
     // Rector analyses a trait file on its own, so it cannot see the composing
     // class's list<string> property type and would cast strings to string.
     NullToStrictStringFuncCallArgRector::class => [

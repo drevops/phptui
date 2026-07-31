@@ -16,6 +16,7 @@ use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableTrait;
 use DrevOps\Tui\Block\Capability\RejectCapableInterface;
 use DrevOps\Tui\Block\Element\FieldElementsInterface;
+use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\DiscoverInterface;
 use DrevOps\Tui\Field\FieldFactory;
@@ -2279,7 +2280,9 @@ final class Field extends AbstractBlock implements
       return [];
     }
 
-    return Prose::lines(Translator::t($this->description), $theme, $elements->fieldDescription(...));
+    $markup = $this->elements($theme, MarkupElementsInterface::class, 'a description');
+
+    return Prose::lines(Translator::t($this->description), $markup, $elements->fieldDescription(...));
   }
 
   /**
@@ -2324,13 +2327,13 @@ final class Field extends AbstractBlock implements
     }
 
     if ($entry->kind === OptionKind::Separator) {
-      return '';
+      return $theme->fieldEntrySeparator();
     }
 
     // Marking and naming are two elements: the mark records what was picked
     // and the text says what it was, so a theme can restyle either alone.
     $chosen = $this->isChosen($entry);
-    $line = $theme->fieldEntryMarker($chosen) . ' ' . $theme->fieldEntry($entry->label, $chosen);
+    $line = $theme->fieldEntryMarker($chosen, !$this->multiple) . ' ' . $theme->fieldEntry($entry->label, $chosen);
 
     // Why an entry cannot be picked belongs beside it, or a row that is drawn
     // and refuses the cursor reads as a fault rather than a decision.
@@ -2386,19 +2389,19 @@ final class Field extends AbstractBlock implements
     // Rows nobody has resolved yet are not an absent answer: the field says the
     // set is still coming rather than reading as empty until it lands.
     if ($this->loader instanceof \Closure) {
-      return $theme->renderLoading('');
+      return $elements->fieldLoading();
     }
 
     // A secret never prints, and a mask as long as the answer would give its
     // length away, so the run is a fixed one whatever is behind it.
     if ($this->fieldType === FieldType::Password) {
-      return is_string($shown) && $shown !== '' ? ValueFormatter::mask($theme->mask()) : '';
+      return is_string($shown) && $shown !== '' ? ValueFormatter::mask($elements->fieldMask()) : '';
     }
 
     // A grade reads as its scale whether or not the editor is open, so what a
     // settled row says and what opening it shows are the same thing.
     if ($this->fieldType === FieldType::Rating) {
-      return $this->scale($theme, $shown);
+      return $this->scale($elements, $shown);
     }
 
     if (is_bool($shown)) {
@@ -2419,15 +2422,15 @@ final class Field extends AbstractBlock implements
   /**
    * The point a scale is sitting on, drawn as the whole scale.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
-   *   The theme.
+   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   *   The theme, narrowed to the elements a field draws with.
    * @param mixed $value
    *   The chosen point.
    *
    * @return string
    *   The drawn scale.
    */
-  protected function scale(ThemeInterface $theme, mixed $value): string {
+  protected function scale(FieldElementsInterface $elements, mixed $value): string {
     // A declared scale carries both its ends, so the fallbacks only catch one
     // that carries neither: it degrades to a single point rather than taking
     // the frame it is drawn in down with it.
@@ -2435,7 +2438,7 @@ final class Field extends AbstractBlock implements
     $point = is_int($value) || is_float($value) ? (int) $value : $min;
     $caption = $this->captions[$point] ?? '';
 
-    return $theme->renderScale($point, $min, $this->bounds->max ?? 0, $caption === '' ? '' : Translator::t($caption));
+    return $elements->fieldScale($point, $min, $this->bounds->max ?? 0, $caption === '' ? '' : Translator::t($caption));
   }
 
 }

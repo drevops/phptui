@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Primitive;
 
+use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
 use DrevOps\Tui\Render\Terminal;
-use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
  * Static output primitives: a box, a status line, a definition list.
@@ -36,10 +36,10 @@ final class Output {
    *
    * @param \DrevOps\Tui\Render\Terminal $terminal
    *   The terminal the lines are written to.
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface $theme
    *   The theme that draws the box, the status glyphs and the list.
    */
-  public function __construct(protected Terminal $terminal, protected ThemeInterface $theme) {
+  public function __construct(protected Terminal $terminal, protected PrimitiveElementsInterface $theme) {
   }
 
   /**
@@ -115,7 +115,7 @@ final class Output {
    *   The primitive.
    */
   public function rule(): self {
-    return $this->writeLines([$this->theme->divider()]);
+    return $this->writeLines([$this->theme->renderRule()]);
   }
 
   /**

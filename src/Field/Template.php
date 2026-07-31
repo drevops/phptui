@@ -245,7 +245,7 @@ class Template extends AbstractField implements TextEditCapableInterface {
 
     $shape .= $this->renderLiteral($theme, count($this->names));
 
-    return $shape . "\n" . $theme->footer(Translator::t('filling in @label', ['@label' => $this->template->labelOf($this->activeName())]));
+    return $shape . "\n" . $this->elements($theme)->fieldState(Translator::t('filling in @label', ['@label' => $this->template->labelOf($this->activeName())]));
   }
 
   /**
@@ -263,7 +263,7 @@ class Template extends AbstractField implements TextEditCapableInterface {
   protected function renderLiteral(ThemeInterface $theme, int $index): string {
     $literal = $this->template->literalAt($index);
 
-    return $literal === '' ? '' : $theme->description($literal);
+    return $literal === '' ? '' : $this->elements($theme)->fieldDescription($literal);
   }
 
   /**
@@ -288,7 +288,7 @@ class Template extends AbstractField implements TextEditCapableInterface {
 
     // An empty slot would collapse the shape into its fixed text alone, so it
     // shows its label instead - dimmed, to read as a hint and not a value.
-    return $value === '' ? $theme->description($this->template->labelOf($name)) : $value;
+    return $value === '' ? $this->elements($theme)->fieldDescription($this->template->labelOf($name)) : $value;
   }
 
 }

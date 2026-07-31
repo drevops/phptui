@@ -511,9 +511,9 @@ final class SelectTest extends TestCase {
     // The two lines sit next to each other, so drawn in one style the limit
     // the field is stating cannot be told from prose about the highlighted
     // option.
-    $this->assertStringContainsString($this->styleOf($theme->hint(...)) . 'Select between 1 and 2 items.', $view);
-    $this->assertStringContainsString($this->styleOf($theme->entryDescription(...)) . 'Crisp and sweet, the everyday choice.', $view);
-    $this->assertNotSame($this->styleOf($theme->hint(...)), $this->styleOf($theme->entryDescription(...)));
+    $this->assertStringContainsString($this->styleOf($theme->fieldConstraint(...)) . 'Select between 1 and 2 items.', $view);
+    $this->assertStringContainsString($this->styleOf($theme->fieldEntryDescription(...)) . 'Crisp and sweet, the everyday choice.', $view);
+    $this->assertNotSame($this->styleOf($theme->fieldConstraint(...)), $this->styleOf($theme->fieldEntryDescription(...)));
   }
 
   /**

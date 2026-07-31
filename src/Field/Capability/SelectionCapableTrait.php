@@ -316,19 +316,25 @@ trait SelectionCapableTrait {
    *   The rendered row.
    */
   public function renderOptionRow(ThemeInterface $theme, Option $option, bool $current): string {
+    $elements = $this->elements($theme);
+
     if ($this->multiple) {
       if ($option->disabled) {
-        return $theme->marker(FALSE) . ' ' . $theme->check(FALSE) . ' ' . $this->renderDisabledLabel($theme, $option);
+        return $elements->fieldEntrySelector(FALSE) . ' ' . $elements->fieldEntryMarker(FALSE) . ' ' . $this->renderDisabledLabel($theme, $option);
       }
 
-      return $theme->marker($current) . ' ' . $theme->check(isset($this->selected[$option->value])) . ' ' . $this->renderMatchedLabel($theme, $option->label, $this->matchPositions($option->label), $current);
+      $chosen = isset($this->selected[$option->value]);
+
+      return $elements->fieldEntrySelector($current) . ' ' . $elements->fieldEntryMarker($chosen) . ' ' . $this->renderMatchedLabel($theme, $option->label, $this->matchPositions($option->label), $current, $chosen);
     }
 
     if ($option->disabled) {
-      return $theme->radio(FALSE) . ' ' . $this->renderDisabledLabel($theme, $option);
+      return $elements->fieldEntryMarker(FALSE, TRUE) . ' ' . $this->renderDisabledLabel($theme, $option);
     }
 
-    return $theme->radio($current) . ' ' . $this->renderMatchedLabel($theme, $option->label, $this->matchPositions($option->label), $current);
+    // Moving the cursor is what picks in an exclusive list, so the mark and the
+    // cursor say the same thing and the row draws only the mark.
+    return $elements->fieldEntryMarker($current, TRUE) . ' ' . $this->renderMatchedLabel($theme, $option->label, $this->matchPositions($option->label), $current);
   }
 
   /**
@@ -340,9 +346,11 @@ trait SelectionCapableTrait {
    */
   #[\Override]
   protected function entryTextOffset(ThemeInterface $theme): int {
+    $elements = $this->elements($theme);
+
     $prefix = $this->multiple
-      ? $theme->marker(TRUE) . ' ' . $theme->check(FALSE) . ' '
-      : $theme->radio(FALSE) . ' ';
+      ? $elements->fieldEntrySelector(TRUE) . ' ' . $elements->fieldEntryMarker(FALSE) . ' '
+      : $elements->fieldEntryMarker(FALSE, TRUE) . ' ';
 
     return Ansi::width($prefix);
   }

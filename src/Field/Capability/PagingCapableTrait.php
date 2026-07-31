@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field\Capability;
 
+use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Render\Scroller;
 use DrevOps\Tui\Render\Viewport;
 use DrevOps\Tui\Theme\ThemeInterface;
@@ -101,16 +102,40 @@ trait PagingCapableTrait {
     $lines = [];
 
     if ($viewport->hasAbove) {
-      $lines[] = $theme->indicator('  ' . $theme->indicatorUp());
+      $lines[] = '  ' . $this->overflow($theme)->chromeOverflowMarker(TRUE);
     }
 
     $lines = array_merge($lines, $rows);
 
     if ($viewport->hasBelow) {
-      $lines[] = $theme->indicator('  ' . $theme->indicatorDown());
+      $lines[] = '  ' . $this->overflow($theme)->chromeOverflowMarker(FALSE);
     }
 
     return $lines;
+  }
+
+  /**
+   * The theme, narrowed to the mark that says content ran past an edge.
+   *
+   * The chrome's mark rather than one of the field's own: a list that outran
+   * its page and a region that outran the frame are the same fact, and a reader
+   * who learns the mark once should not have to learn it twice.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   *
+   * @return \DrevOps\Tui\Block\Element\ChromeElementsInterface
+   *   The theme, able to draw the mark.
+   *
+   * @throws \InvalidArgumentException
+   *   When the theme does not implement the elements.
+   */
+  protected function overflow(ThemeInterface $theme): ChromeElementsInterface {
+    if (!$theme instanceof ChromeElementsInterface) {
+      throw new \InvalidArgumentException(sprintf('%s cannot draw an overflow mark: it does not implement %s.', $theme::class, ChromeElementsInterface::class));
+    }
+
+    return $theme;
   }
 
 }

@@ -141,7 +141,7 @@ class Rating extends AbstractField implements StepCapableInterface {
    * {@inheritdoc}
    */
   protected function renderBody(ThemeInterface $theme): string {
-    return $theme->renderScale($this->point, $this->min, $this->max, $this->captions[$this->point] ?? '');
+    return $this->elements($theme)->fieldScale($this->point, $this->min, $this->max, $this->captions[$this->point] ?? '');
   }
 
   /**

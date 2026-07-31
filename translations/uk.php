@@ -128,7 +128,6 @@ return [
   'between @min and @max items' => 'від @min до @max елементів',
   'bksp' => 'bksp',
   'cancel' => 'скасувати',
-  'close' => 'закрити',
   'continue' => 'продовжити',
   'ctrl-c' => 'ctrl-c',
   'day' => 'день',

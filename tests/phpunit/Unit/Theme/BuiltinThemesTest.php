@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Block\Prose;
-use DrevOps\Tui\Render\Viewport;
+use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DosTheme;
 use DrevOps\Tui\Theme\EmberTheme;
 use DrevOps\Tui\Theme\FrostTheme;
@@ -39,14 +39,14 @@ final class BuiltinThemesTest extends TestCase {
   public function testPalette(string $name, Mode $mode, array $expected): void {
     $theme = ThemeManager::create($name, 76, ['mode' => $mode]);
 
-    // title, indicator, highlightMatch and border wrap text in the role SGR;
-    // an unselected value carries no added weight, so it is the value SGR too.
-    $this->assertSame(Ansi::style('X', $expected['accent']), $theme->title('X'));
-    $this->assertSame(Ansi::style('X', $expected['accent']), $theme->highlight('X'));
-    $this->assertSame(Ansi::style('X', $expected['value']), $theme->value('X'));
-    $this->assertSame(Ansi::style('X', $expected['indicator']), $theme->indicator('X'));
-    $this->assertSame(Ansi::style('X', $expected['match']), $theme->highlightMatch('X'));
-    $this->assertSame(Ansi::style('X', $expected['border']), $theme->border('X'));
+    // A hue is stated once and every element drawn from it follows, so each
+    // role is read back through an element rather than through the palette.
+    $this->assertSame(Ansi::style('X', $expected['accent']), $theme->markupTitle('X'));
+    $this->assertSame(Ansi::style('X', $expected['accent']), $theme->fieldEntry('X', FALSE, TRUE));
+    $this->assertSame(Ansi::style('X', $expected['value']), $theme->fieldValue('X'));
+    $this->assertSame(Ansi::style('▲', $expected['indicator']), $theme->chromeOverflowMarker(TRUE));
+    $this->assertSame(Ansi::style('X', $expected['match']), $theme->fieldEntryMatch('X'));
+    $this->assertSame(Ansi::style('X', $expected['border']), $theme->chromeBorder('X'));
   }
 
   public static function dataProviderPalette(): \Iterator {
@@ -63,21 +63,21 @@ final class BuiltinThemesTest extends TestCase {
   }
 
   /**
-   * A selected value keeps the palette hue and gains bold weight.
+   * A picked entry keeps the palette hue and gains weight.
    */
-  #[DataProvider('dataProviderSelectedValueIsBold')]
-  public function testSelectedValueIsBold(string $name, string $expected): void {
+  #[DataProvider('dataProviderPickedEntryIsBold')]
+  public function testPickedEntryIsBold(string $name, string $expected): void {
     $theme = ThemeManager::create($name, 76, ['mode' => Mode::Dark]);
 
-    $this->assertSame(Ansi::style('X', $expected), $theme->value('X', TRUE));
+    $this->assertSame(Ansi::style('X', $expected), $theme->panelSummary('X'));
   }
 
-  public static function dataProviderSelectedValueIsBold(): \Iterator {
-    yield 'midnight' => ['midnight', '1;38;5;114'];
-    yield 'frost' => ['frost', '1;38;5;150'];
-    yield 'ember' => ['ember', '1;38;5;142'];
-    yield 'mono' => ['mono', '1;38;5;250'];
-    yield 'dos' => ['dos', '1;96'];
+  public static function dataProviderPickedEntryIsBold(): \Iterator {
+    yield 'midnight' => ['midnight', '38;5;114'];
+    yield 'frost' => ['frost', '38;5;150'];
+    yield 'ember' => ['ember', '38;5;142'];
+    yield 'mono' => ['mono', '38;5;250'];
+    yield 'dos' => ['dos', '96'];
   }
 
   /**
@@ -88,11 +88,11 @@ final class BuiltinThemesTest extends TestCase {
     $theme = ThemeManager::create($name, 76, ['color' => FALSE]);
 
     $this->assertFalse($theme->hasColor());
-    $this->assertSame('Setup', $theme->title('Setup'));
-    $this->assertSame('X', $theme->value('X', TRUE));
-    $this->assertSame('X', $theme->indicator('X'));
-    $this->assertSame('X', $theme->highlightMatch('X'));
-    $this->assertSame('X', $theme->border('X'));
+    $this->assertSame('Setup', $theme->markupTitle('Setup'));
+    $this->assertSame('X', $theme->fieldValue('X'));
+    $this->assertSame('▲', $theme->chromeOverflowMarker(TRUE));
+    $this->assertSame('X', $theme->fieldEntryMatch('X'));
+    $this->assertSame('X', $theme->chromeBorder('X'));
   }
 
   public static function dataProviderColourOffStripsPalette(): \Iterator {
@@ -107,15 +107,11 @@ final class BuiltinThemesTest extends TestCase {
    * The dos theme frames its content in a double-line window by default.
    */
   public function testDosDefaultsToBorderedWindow(): void {
-    $viewport = new Viewport(0, FALSE, FALSE);
-
     // With no border declared, dos draws its double-line MS-DOS window.
-    $bordered = ThemeManager::create('dos', 40, ['color' => FALSE])->renderFrame(['Head'], ['Body'], [], $viewport, 1);
-    $this->assertStringContainsString('═', $bordered);
+    $this->assertSame(Border::Double, ThemeManager::create('dos', 40, ['color' => FALSE])->borderStyle());
 
     // An explicit border option still wins over the theme's default.
-    $plain = ThemeManager::create('dos', 40, ['color' => FALSE, 'border' => 'none'])->renderFrame(['Head'], ['Body'], [], $viewport, 1);
-    $this->assertStringNotContainsString('═', $plain);
+    $this->assertSame(Border::None, ThemeManager::create('dos', 40, ['color' => FALSE, 'border' => 'none'])->borderStyle());
   }
 
   /**
@@ -134,11 +130,10 @@ final class BuiltinThemesTest extends TestCase {
   public function testDosSecondaryTextIsLegibleOnBlue(Mode $mode): void {
     $theme = ThemeManager::create('dos', 76, ['mode' => $mode]);
 
-    $this->assertSame(Ansi::style('X', '37'), $theme->breadcrumb('X'));
-    $this->assertSame(Ansi::style('X', '37'), $theme->footer('X'));
-    $this->assertSame(Ansi::style('X', '37'), $theme->description('X'));
-    $this->assertSame(Ansi::style('X', '1;37'), $theme->description('X', TRUE));
-    $this->assertSame(Ansi::style('X', '1;37'), $theme->heading('X'));
+    $this->assertSame(Ansi::style('X', '37'), $theme->breadcrumbLabel('X'));
+    $this->assertSame(Ansi::style('X', '37'), $theme->fieldState('X'));
+    $this->assertSame(Ansi::style('X', '37'), $theme->fieldDescription('X'));
+    $this->assertSame(Ansi::style('X', '37'), $theme->markupLine('X'));
   }
 
   public static function dataProviderDosSecondaryTextIsLegibleOnBlue(): \Iterator {
@@ -147,18 +142,27 @@ final class BuiltinThemesTest extends TestCase {
   }
 
   /**
-   * CGA has no italic, so the dos hint takes a colour of its own instead.
+   * A theme's heading hue reaches the pieces its elements are assembled into.
    */
-  #[DataProvider('dataProviderDosHintTakesItsOwnColourRatherThanItalic')]
-  public function testDosHintTakesItsOwnColourRatherThanItalic(Mode $mode): void {
-    $theme = ThemeManager::create('dos', 76, ['mode' => $mode]);
+  public function testDosHeadingReachesTheGridItHeads(): void {
+    $theme = ThemeManager::create('dos', 40, ['border' => Border::Line]);
 
-    $this->assertSame(Ansi::style('X', '96'), $theme->hint('X'));
-    $this->assertSame(Ansi::style('X', '1;96'), $theme->hint('X', TRUE));
-    $this->assertNotSame($theme->description('X'), $theme->hint('X'));
+    $this->assertStringContainsString(Ansi::style('Fruit', '1;37'), implode("\n", $theme->renderTable(['Fruit'], [['Apple']])));
+    $this->assertStringContainsString(Ansi::style('Yields', '1;37'), implode("\n", $theme->renderCard('Yields', [])));
   }
 
-  public static function dataProviderDosHintTakesItsOwnColourRatherThanItalic(): \Iterator {
+  /**
+   * CGA has no italic, so the dos constraint takes a colour of its own.
+   */
+  #[DataProvider('dataProviderDosConstraintTakesItsOwnColour')]
+  public function testDosConstraintTakesItsOwnColour(Mode $mode): void {
+    $theme = ThemeManager::create('dos', 76, ['mode' => $mode]);
+
+    $this->assertSame(Ansi::style('X', '96'), $theme->fieldConstraint('X'));
+    $this->assertNotSame($theme->fieldDescription('X'), $theme->fieldConstraint('X'));
+  }
+
+  public static function dataProviderDosConstraintTakesItsOwnColour(): \Iterator {
     yield 'dark' => [Mode::Dark];
     yield 'light' => [Mode::Light];
   }
@@ -166,7 +170,7 @@ final class BuiltinThemesTest extends TestCase {
   /**
    * Every theme separates guidance from description by colour, not italic.
    *
-   * A constraint is drawn directly beneath the highlighted option's own
+   * A constraint is drawn directly beneath the highlighted entry's own
    * description, so the two need a cue that survives the surface: an SVG
    * render carries colour but drops italic entirely.
    */
@@ -174,11 +178,11 @@ final class BuiltinThemesTest extends TestCase {
   public function testGuidanceTakesItsOwnColour(string $name, Mode $mode): void {
     $theme = ThemeManager::create($name, 76, ['mode' => $mode]);
 
-    $hint = $theme->hint('X');
-    $description = $theme->description('X');
+    $constraint = $theme->fieldConstraint('X');
+    $description = $theme->fieldDescription('X');
 
-    $this->assertNotSame($description, $hint);
-    $this->assertNotSame($description, str_replace(Sgr::Italic->value . ';', '', $hint));
+    $this->assertNotSame($description, $constraint);
+    $this->assertNotSame($description, str_replace(Sgr::Italic->value . ';', '', $constraint));
   }
 
   public static function dataProviderGuidanceTakesItsOwnColour(): \Iterator {
@@ -198,7 +202,7 @@ final class BuiltinThemesTest extends TestCase {
   public function testGuidanceSurvivesColourOff(string $name, bool $unicode): void {
     $theme = ThemeManager::create($name, 76, ['color' => FALSE, 'unicode' => $unicode]);
 
-    $this->assertNotSame($theme->description('X'), $theme->renderGuidance('X'));
+    $this->assertNotSame($theme->fieldDescription('X'), $theme->fieldConstraint('X'));
   }
 
   public static function dataProviderGuidanceSurvivesColourOff(): \Iterator {
@@ -209,30 +213,30 @@ final class BuiltinThemesTest extends TestCase {
   }
 
   /**
-   * A theme's description atom reaches the body text, not only its own rows.
+   * A theme's line element reaches the body text, not only its own rows.
    */
-  public function testDosDescriptionBodyCarriesTheThemeAtom(): void {
+  public function testDosDescriptionBodyCarriesTheThemeElement(): void {
     $dos = ThemeManager::create('dos', 76);
     $default = ThemeManager::create('default', 76);
 
     $line = Prose::lines('Picked this morning', $dos)[0];
 
-    // The body is styled by the same atom the one-line rows use, so the dos
+    // The body is styled by the same element the one-line rows use, so the dos
     // theme's legible white reaches it instead of the dim grey it inherits.
-    $this->assertSame($dos->description('Picked this morning'), $line);
+    $this->assertSame($dos->markupLine('Picked this morning'), $line);
     $this->assertNotSame(Prose::lines('Picked this morning', $default)[0], $line);
   }
 
   /**
    * The bullet leading a list item is themed with the text beside it.
    */
-  public function testDosBulletCarriesTheThemeAtom(): void {
+  public function testDosBulletCarriesTheThemeElement(): void {
     $theme = ThemeManager::create('dos', 76, ['markdown' => TRUE]);
 
     $line = Prose::lines('- crisp apples', $theme)[0];
 
-    $this->assertStringContainsString($theme->description($theme->bullet() . ' '), $line);
-    $this->assertStringContainsString($theme->description('crisp apples'), $line);
+    $this->assertStringContainsString($theme->markupLine($theme->markupBullet() . ' '), $line);
+    $this->assertStringContainsString($theme->markupLine('crisp apples'), $line);
   }
 
 }

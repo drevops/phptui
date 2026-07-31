@@ -223,16 +223,17 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
    * {@inheritdoc}
    */
   protected function renderBody(ThemeInterface $theme): string {
-    $lines = [$theme->caption($this->crumb())];
+    $elements = $this->elements($theme);
+    $lines = [$elements->fieldCaption($this->crumb())];
 
     if ($this->filter !== '') {
-      $lines[] = $this->filter . $theme->caret();
+      $lines[] = $elements->fieldDraft($this->filter) . $elements->fieldCaret();
     }
 
     $entries = $this->entries();
 
     if ($entries === []) {
-      $lines[] = $theme->description(Translator::t('(empty)'));
+      $lines[] = $elements->fieldEntryNote(Translator::t('(empty)'));
     }
 
     $viewport = $this->pageViewport(count($entries), $this->cursor);
@@ -269,7 +270,7 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
 
     // The guidance voice, not the description's: this line states what the
     // field expects, and shares its row with the error that replaces it.
-    return $theme->renderGuidance($describe);
+    return $this->elements($theme)->fieldConstraint($describe);
   }
 
   /**
@@ -625,14 +626,17 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
    */
   protected function renderRow(ThemeInterface $theme, string $name, bool $current): string {
     $label = $this->isDir($name) ? $name . '/' : $name;
-    $row = $theme->marker($current) . ' ';
+    $elements = $this->elements($theme);
+    $row = $elements->fieldEntrySelector($current) . ' ';
+    $chosen = FALSE;
 
     if ($this->multiple) {
-      $box = $this->isSelectable($name) ? $theme->check(isset($this->selected[$this->join($name)])) : $this->blankBox($theme);
+      $chosen = isset($this->selected[$this->join($name)]);
+      $box = $this->isSelectable($name) ? $elements->fieldEntryMarker($chosen) : $this->blankBox($theme);
       $row .= $box . ' ';
     }
 
-    return $row . $this->highlightLabel($theme, $label, $current);
+    return $row . $this->entryLabel($theme, $label, $current, $chosen);
   }
 
   /**
@@ -645,7 +649,7 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
    *   The spacer.
    */
   protected function blankBox(ThemeInterface $theme): string {
-    return str_repeat(' ', Strings::length(Ansi::strip($theme->check(FALSE))));
+    return str_repeat(' ', Strings::length(Ansi::strip($this->elements($theme)->fieldEntryMarker(FALSE))));
   }
 
   /**

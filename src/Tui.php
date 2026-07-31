@@ -23,6 +23,8 @@ use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
+use DrevOps\Tui\Theme\Override\Overrides;
+use DrevOps\Tui\Theme\ThemeBuilder;
 use DrevOps\Tui\Theme\ThemeManager;
 use DrevOps\Tui\Translation\Translator;
 
@@ -66,6 +68,11 @@ final class Tui {
    * @var array<string,mixed>
    */
   protected array $themeOptions = [];
+
+  /**
+   * What the consumer states differently, on whatever theme is selected.
+   */
+  protected ?Overrides $themeOverrides = NULL;
 
   /**
    * The resolved key bindings; NULL uses the default preset.
@@ -126,24 +133,68 @@ final class Tui {
   }
 
   /**
-   * Set the interactive theme name and its display options.
+   * Select the theme, or state what it draws differently.
    *
-   * @param string $theme
-   *   The theme name or class. Empty (or "auto") auto-detects light/dark from
-   *   the terminal background.
+   * Two things a consumer wants at two different sizes, so one call answers
+   * both. A name picks the theme and its display options. A closure is handed a
+   * {@see \DrevOps\Tui\Theme\ThemeBuilder} and states the elements whatever
+   * theme is selected should draw differently - anything it does not name keeps
+   * the theme's own answer, which is what makes it a patch rather than a
+   * replacement. Reach for a subclass when changing a palette; reach for the
+   * closure when changing a handful of glyphs.
+   *
+   * @code
+   * $tui->theme('mono')
+   *   ->theme(fn(ThemeBuilder $t) => $t
+   *     ->breadcrumb(fn(BreadcrumbOverrides $b) => $b->separator('›', '>'))
+   *     ->field(fn(FieldOverrides $f) => $f->selector('❯', '>')));
+   * @endcode
+   *
+   * @param string|\Closure $theme
+   *   The theme name or class - empty (or "auto") auto-detects light/dark from
+   *   the terminal background - or an `fn (ThemeBuilder $t): void` stating what
+   *   the selected theme draws differently.
    * @param array<string,mixed> $options
    *   Display options for the theme, keyed by name - e.g.
    *   `['spacing' => Spacing::Padded, 'border' => Border::Rounded]` - plus any
-   *   a custom theme reads.
+   *   a custom theme reads. Ignored when a closure is given, which patches the
+   *   theme rather than choosing one.
    *
    * @return $this
    *   The facade.
    */
-  public function theme(string $theme, array $options = []): self {
+  public function theme(string|\Closure $theme, array $options = []): self {
+    if ($theme instanceof \Closure) {
+      $builder = new ThemeBuilder();
+      $theme($builder);
+      $this->themeOverrides = $builder->overrides();
+
+      return $this;
+    }
+
     $this->theme = $theme;
     $this->themeOptions = $options;
 
     return $this;
+  }
+
+  /**
+   * Build the selected theme, carrying anything stated differently.
+   *
+   * @param string $name
+   *   The theme name or class; empty falls back to the facade's theme.
+   * @param int $width
+   *   The frame width.
+   * @param array<string,mixed> $options
+   *   The resolved display options.
+   *
+   * @return \DrevOps\Tui\Theme\DefaultTheme
+   *   The theme.
+   */
+  protected function buildTheme(string $name, int $width, array $options): DefaultTheme {
+    $theme = ThemeManager::create($this->resolveTheme($name), $width, $options);
+
+    return $this->themeOverrides instanceof Overrides ? $theme->overrides($this->themeOverrides) : $theme;
   }
 
   /**
@@ -388,7 +439,7 @@ final class Tui {
 
     $terminal ??= self::primitiveTerminal();
 
-    $theme = ThemeManager::create($this->resolveTheme(''), DefaultTheme::DEFAULT_WIDTH, $this->primitiveThemeOptions());
+    $theme = $this->buildTheme('', DefaultTheme::DEFAULT_WIDTH, $this->primitiveThemeOptions());
 
     return (new Progress($terminal, $theme, $terminal->isOutputTty(), $total, $caption))->run($work);
   }
@@ -416,7 +467,7 @@ final class Tui {
     $terminal ??= self::primitiveTerminal();
 
     $options = $this->primitiveThemeOptions($terminal->isOutputTty());
-    $theme = ThemeManager::create($this->resolveTheme(''), self::frameWidth($options, $terminal->width()), $options);
+    $theme = $this->buildTheme('', self::frameWidth($options, $terminal->width()), $options);
 
     return new Output($terminal, $theme);
   }
@@ -499,7 +550,7 @@ final class Tui {
     // Restore this facade's language before rendering (see collect()).
     Translator::setShared($this->translator);
 
-    $drawn = ThemeManager::create($this->resolveTheme($theme), $width, $options);
+    $drawn = $this->buildTheme($theme, $width, $options);
 
     return new ScreenController(
       $this->root(),

@@ -9,6 +9,10 @@ use DrevOps\Tui\Theme\DefaultTheme;
 /**
  * Test fixture: a theme declaring a custom "accent" display option.
  *
+ * The option is read back through a method named for the option rather than
+ * for the hue, so declaring one does not collide with the palette a theme
+ * paints from.
+ *
  * @package DrevOps\Tui\Tests\Fixtures\Theme
  */
 class AccentOptionTheme extends DefaultTheme {
@@ -37,7 +41,7 @@ class AccentOptionTheme extends DefaultTheme {
    * @return string
    *   The accent, or "cool" when unset.
    */
-  public function accent(): string {
+  public function accentOption(): string {
     return $this->option('accent', 'cool');
   }
 

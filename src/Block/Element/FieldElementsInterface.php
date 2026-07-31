@@ -14,6 +14,11 @@ namespace DrevOps\Tui\Block\Element;
  * elements rather than one because each says a different thing, at a different
  * moment or about a different subject.
  *
+ * A few elements answer with a whole composed line rather than one styled
+ * string - the input line, the scale, the marker pairs. Each still takes plain
+ * scalars and nothing else, so the piece is the theme's to arrange without the
+ * field having to hand over any of its state.
+ *
  * @package DrevOps\Tui\Block\Element
  */
 interface FieldElementsInterface {
@@ -85,6 +90,14 @@ interface FieldElementsInterface {
   public function fieldValueSeparator(): string;
 
   /**
+   * The character standing in for one character of a secret.
+   *
+   * @return string
+   *   The styled mark.
+   */
+  public function fieldMask(): string;
+
+  /**
    * Style the mark saying where an answer came from.
    *
    * @param string $text
@@ -109,15 +122,33 @@ interface FieldElementsInterface {
   /**
    * Style one entry of a list a field opens onto.
    *
+   * Being picked and being where the cursor rests are two different facts about
+   * an entry, and an entry can be either, both or neither: a settled row draws
+   * what was picked with no cursor anywhere in it, and a cursor moving down an
+   * open list picks nothing.
+   *
    * @param string $text
    *   The entry label.
    * @param bool $chosen
-   *   Whether it is chosen.
+   *   Whether it is picked.
+   * @param bool $focused
+   *   Whether the cursor rests on it.
    *
    * @return string
    *   The styled entry.
    */
-  public function fieldEntry(string $text, bool $chosen): string;
+  public function fieldEntry(string $text, bool $chosen, bool $focused = FALSE): string;
+
+  /**
+   * Style the run of an entry's label that answers what was typed.
+   *
+   * @param string $text
+   *   The matched run.
+   *
+   * @return string
+   *   The styled run.
+   */
+  public function fieldEntryMatch(string $text): string;
 
   /**
    * The mark saying which entry has focus.
@@ -138,15 +169,21 @@ interface FieldElementsInterface {
    * The mark recording that an entry was picked.
    *
    * Selecting and marking are different things: a selector says where you are,
-   * and this says what you decided.
+   * and this says what you decided. Whether picking one entry unpicks the last
+   * is a fact about the question rather than about the mark, so the mark is
+   * told - a question that takes one answer and a question that takes several
+   * are worth telling apart before anything has been picked at all.
    *
    * @param bool $chosen
    *   Whether the entry is picked.
+   * @param bool $exclusive
+   *   Whether picking this entry gives up every other, rather than adding to
+   *   what is already picked.
    *
    * @return string
    *   The styled mark.
    */
-  public function fieldEntryMarker(bool $chosen): string;
+  public function fieldEntryMarker(bool $chosen, bool $exclusive = FALSE): string;
 
   /**
    * Style a qualifier on an entry, such as why it is unavailable.
@@ -171,7 +208,20 @@ interface FieldElementsInterface {
   public function fieldEntryDescription(string $text): string;
 
   /**
+   * The mark standing between two runs of entries.
+   *
+   * @return string
+   *   The styled mark.
+   */
+  public function fieldEntrySeparator(): string;
+
+  /**
    * Style what a field will accept, before anything is refused.
+   *
+   * The guidance voice, and the one line that has to survive a surface with
+   * nothing to spend: it sits directly under an entry's own explanatory text,
+   * so with no colour and no dependable italic it needs a mark of its own or a
+   * reader cannot tell an expectation from prose.
    *
    * @param string $text
    *   The constraint.
@@ -210,6 +260,64 @@ interface FieldElementsInterface {
    *   The styled draft.
    */
   public function fieldDraft(string $text): string;
+
+  /**
+   * Style the completion offered after the draft, which was not typed.
+   *
+   * @param string $text
+   *   The suffix.
+   *
+   * @return string
+   *   The styled suffix, empty where nothing can tell it from typed text.
+   */
+  public function fieldGhost(string $text): string;
+
+  /**
+   * The line an answer is typed on: the draft, the caret and the completion.
+   *
+   * The three are one piece because where the caret sits is a position within
+   * the draft rather than a thing beside it, so only whatever draws the draft
+   * can put it there.
+   *
+   * @param string $before
+   *   The draft before the caret.
+   * @param string $after
+   *   The draft after it.
+   * @param string $ghost
+   *   The completion offered after the draft, or an empty string for none.
+   *
+   * @return string
+   *   The composed line.
+   */
+  public function fieldInput(string $before, string $after, string $ghost = ''): string;
+
+  /**
+   * The run of points a graded answer reads as.
+   *
+   * One element behind both the open grade and the settled row, so what a row
+   * says and what opening it shows can never disagree.
+   *
+   * @param int $current
+   *   The chosen point.
+   * @param int $min
+   *   The lowest point.
+   * @param int $max
+   *   The highest point.
+   * @param string $caption
+   *   What the chosen point is called, or an empty string when it has no name.
+   *
+   * @return string
+   *   The composed run.
+   */
+  public function fieldScale(int $current, int $min, int $max, string $caption): string;
+
+  /**
+   * The mark saying the field is still fetching what it will offer.
+   *
+   * @return string
+   *   The styled mark.
+   */
+  public function fieldLoading(): string;
 
   /**
    * Style what the field is doing right now.

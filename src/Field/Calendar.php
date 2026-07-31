@@ -197,7 +197,7 @@ class Calendar extends AbstractField implements StepCapableInterface {
     $title = Translator::t($this->cursor->format('F')) . ' ' . $this->cursor->format('Y');
     $left = max(0, intdiv(self::GRID_WIDTH - Strings::length($title), 2));
 
-    return str_repeat(' ', $left) . $theme->title($title);
+    return str_repeat(' ', $left) . $this->elements($theme)->fieldCaption($title);
   }
 
   /**
@@ -212,7 +212,7 @@ class Calendar extends AbstractField implements StepCapableInterface {
   protected function weekdayRow(ThemeInterface $theme): string {
     $cells = array_map(static fn(Weekday $day): string => sprintf(' %2s ', $day->abbreviation()), $this->bounds->weekStart->sequence());
 
-    return $theme->footer(implode('', $cells));
+    return $this->elements($theme)->fieldDescription(implode('', $cells));
   }
 
   /**
@@ -260,12 +260,12 @@ class Calendar extends AbstractField implements StepCapableInterface {
    */
   protected function dayCell(ThemeInterface $theme, \DateTimeImmutable $date, int $day): string {
     if ($date->format('Y-m-d') === $this->cursor->format('Y-m-d')) {
-      return $theme->highlight(sprintf('[%2d]', $day));
+      return $this->entryLabel($theme, sprintf('[%2d]', $day), TRUE);
     }
 
     $cell = sprintf(' %2d ', $day);
 
-    return $this->bounds->contains($date) ? $cell : $theme->description($cell);
+    return $this->bounds->contains($date) ? $cell : $this->elements($theme)->fieldEntryNote($cell);
   }
 
 }

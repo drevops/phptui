@@ -33,7 +33,9 @@ use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\OptionKind;
 use DrevOps\Tui\Model\RenderMode;
+use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
 use DrevOps\Tui\Primitive\ProgressReporter;
+use DrevOps\Tui\Primitive\Status;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\Box;
 use DrevOps\Tui\Render\ExternalEditor;
@@ -480,7 +482,7 @@ class ScreenController {
       return '';
     }
 
-    return $this->theme->renderBanner($this->banner, $this->version) . "\n\n" . Translator::t('Press any key to continue...');
+    return $this->pieces()->renderBanner($this->banner, $this->version) . "\n\n" . Translator::t('Press any key to continue...');
   }
 
   /**
@@ -513,14 +515,14 @@ class ScreenController {
     }
 
     $lines = [
-      $this->theme->error(Translator::t('Terminal too small.')),
+      $this->pieces()->renderStatus(Status::Error, Translator::t('Terminal too small.')),
       Translator::t('Need at least @width x @height - have @w x @h.', [
         '@width' => (string) $columns,
         '@height' => (string) $rows,
         '@w' => (string) $terminal->width(),
         '@h' => (string) $terminal->height(),
       ]),
-      $this->theme->keysHint($this->router->bindings(), 'quit', Action::Quit),
+      (new Legend())->advertise($this->router->bindings(), new Hint('quit', Action::Quit))->render($this->theme),
     ];
 
     $width = Ansi::blockWidth($lines);
@@ -1512,6 +1514,25 @@ class ScreenController {
    */
   protected function occupancy(): ?OccupyCapableInterface {
     return $this->theme instanceof OccupyCapableInterface ? $this->theme : NULL;
+  }
+
+  /**
+   * The theme, narrowed to the finished pieces the session draws around a form.
+   *
+   * @return \DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface
+   *   The theme, able to draw them.
+   *
+   * @throws \InvalidArgumentException
+   *   When the theme does not implement the elements.
+   */
+  protected function pieces(): PrimitiveElementsInterface {
+    if (!$this->theme instanceof PrimitiveElementsInterface) {
+      $elements = PrimitiveElementsInterface::class;
+
+      throw new \InvalidArgumentException(sprintf('%s cannot draw the session chrome: it does not implement %s.', $this->theme::class, $elements));
+    }
+
+    return $this->theme;
   }
 
   /**

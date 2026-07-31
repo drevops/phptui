@@ -11,6 +11,7 @@ use DrevOps\Tui\Block\Capability\DescendCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableTrait;
 use DrevOps\Tui\Block\Capability\OverlayCapableInterface;
+use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Block\Element\PanelElementsInterface;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
@@ -599,7 +600,9 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
       return [];
     }
 
-    return Prose::lines(Translator::t($this->description), $theme, $elements->panelDescription(...));
+    $markup = $this->elements($theme, MarkupElementsInterface::class, 'a description');
+
+    return Prose::lines(Translator::t($this->description), $markup, $elements->panelDescription(...));
   }
 
   /**

@@ -147,8 +147,9 @@ trait TextEditCapableTrait {
    */
   protected function renderCaretLine(ThemeInterface $theme): string {
     [$before, $after] = $this->caretSegments();
+    $elements = $this->elements($theme);
 
-    return $before . $theme->caret() . $after;
+    return $elements->fieldDraft($before) . $elements->fieldCaret() . $elements->fieldDraft($after);
   }
 
   /**
@@ -168,7 +169,7 @@ trait TextEditCapableTrait {
   protected function renderInputLine(ThemeInterface $theme, string $ghost = ''): string {
     [$before, $after] = $this->caretSegments();
 
-    return $theme->renderInput($before, $after, $ghost);
+    return $this->elements($theme)->fieldInput($before, $after, $ghost);
   }
 
 }

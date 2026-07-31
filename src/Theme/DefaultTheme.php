@@ -4,21 +4,16 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Theme;
 
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Input\ScopedKeyMap;
+use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
 use DrevOps\Tui\Primitive\Status;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\Box;
 use DrevOps\Tui\Render\Markup;
 use DrevOps\Tui\Render\MarkupKind;
 use DrevOps\Tui\Render\MarkupSegment;
-use DrevOps\Tui\Render\Overlay;
-use DrevOps\Tui\Render\Scroller;
 use DrevOps\Tui\Render\Table;
-use DrevOps\Tui\Render\Viewport;
 use DrevOps\Tui\Theme\Capability\ColorSchemeCapableInterface;
 use DrevOps\Tui\Theme\Capability\ColorSchemeCapableTrait;
 use DrevOps\Tui\Theme\Capability\DimCapableInterface;
@@ -33,35 +28,30 @@ use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Utils\Strings;
 
 /**
- * The default theme: the appearance atoms plus the assembly that arranges them.
+ * The theme that ships: every element painted, and the pieces they assemble.
  *
- * Two layers, one class. The **atoms** are one method per colour and glyph
- * (title(), value(), marker(), border(), caret()…) - each takes text or a flag
- * and returns it styled for the theme's mode; these are what a consumer theme
- * overrides. The **render*()** methods are the assembly: they take plain
- * strings and arrays and arrange those atoms into cards, tables, the scrolled
- * frame and the editor. Pure box geometry (character sets, width fitting) lives
- * in {@see Box}; everything visual routes through the atoms.
+ * It raises {@see AbstractTheme}'s floor by declaring colour, a scheme,
+ * Unicode, markdown, dimming and occupancy, so each element it answers for
+ * carries a palette and a glyph instead of the plain string the floor hands
+ * back. Alongside the elements it draws the pieces a primitive asks for -
+ * cards, grids, status lines - which take plain strings and arrays and nothing
+ * a form is holding, so the same piece serves standalone and in-form callers.
  *
- * It raises {@see AbstractTheme}'s floor by declaring colour, a scheme and
- * Unicode, so every element it inherits is answered with a palette and a glyph
- * instead of the plain string the floor hands back. Each element delegates to
- * the atom that draws it, which is what keeps a subclass's palette effective:
- * override the atom and every element drawn from it follows.
- *
- * A consumer theme extends this and overrides just what it wants - usually an
- * atom, occasionally a render method for a layout tweak:
+ * Where two elements must agree on one colour, they draw it from a small
+ * protected palette rather than restating it. The palette is not API: it is the
+ * one place a hue is written down, so a theme extending this repaints a family
+ * in a line rather than element by element.
  *
  * @code
  * class OceanTheme extends DefaultTheme {
- *   public function title(string $text): string { return $this->paint(Sgr::of(Sgr::Bold, Sgr::BrightCyan), $text); }
- *   public function panelTitle(string $text): string { return $this->title($text); }
+ *   protected function accent(): string { return Sgr::of(Sgr::Bold, Sgr::BrightCyan); }
+ *   public function fieldConstraint(string $text): string { return $this->paint(Sgr::of(Sgr::Cyan), $text); }
  * }
  * @endcode
  *
  * @package DrevOps\Tui\Theme
  */
-class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeCapableInterface, DimCapableInterface, MarkdownCapableInterface, OccupyCapableInterface, UnicodeCapableInterface {
+class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, ColorSchemeCapableInterface, DimCapableInterface, MarkdownCapableInterface, OccupyCapableInterface, UnicodeCapableInterface {
 
   use ColorSchemeCapableTrait;
   use UnicodeCapableTrait;
@@ -88,14 +78,6 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    * enough for the chrome and a few body lines.
    */
   protected const int MIN_HEIGHT = 10;
-
-  /**
-   * The rows reserved for the two scroll indicators (▲/▼).
-   *
-   * The scrolled body window carries its indicators outside the viewport
-   * height, so the frame budget reserves a row for each.
-   */
-  protected const int INDICATOR_LINES = 2;
 
   /**
    * The Unicode spinner animation frames, one glyph per tick.
@@ -146,11 +128,6 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
   protected bool $indentConditional;
 
   /**
-   * The outer frame width, including the border when one is drawn.
-   */
-  protected int $outerWidth;
-
-  /**
    * What a consumer states differently, consulted before every element.
    */
   protected Overrides $overrides;
@@ -166,7 +143,8 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    *   on), "spacing" (a SPACING_* value), "border" (a BORDER_* value), plus any
    *   option a concrete theme declares.
    */
-  public function __construct(protected int $width = self::DEFAULT_WIDTH, protected array $options = []) {
+  public function __construct(int $width = self::DEFAULT_WIDTH, protected array $options = []) {
+    $this->width = $width;
     $this->validateOptions();
 
     $this->overrides = new Overrides();
@@ -182,12 +160,10 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
       $this->width = min($this->width, $this->maxWidth());
     }
 
-    $this->outerWidth = $this->width;
-
     // A border consumes two frame columns plus a one-column gutter each side.
     // Lay rows out that much narrower to keep right-aligned badges inside it.
     if ($this->borderStyle() !== Border::None) {
-      $this->width = max(1, $this->width - 4);
+      $this->width = max(1, $this->width - self::BOX_CHROME);
     }
   }
 
@@ -371,33 +347,6 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
   }
 
   /**
-   * The frame width the renderer lays out to.
-   *
-   * @return int
-   *   The width.
-   */
-  protected function width(): int {
-    return $this->width;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function contentWidth(): int {
-    return $this->width;
-  }
-
-  /**
-   * The vertical spacing option.
-   *
-   * @return \DrevOps\Tui\Theme\Spacing
-   *   The spacing; padded when unset.
-   */
-  public function spacing(): Spacing {
-    return $this->enumOption('spacing', Spacing::class, Spacing::Padded);
-  }
-
-  /**
    * Whether the markdown subset is drawn, from "markdown".
    *
    * @return bool
@@ -429,102 +378,78 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
   }
 
   /**
-   * Whether the frame expands to the whole terminal screen.
-   *
-   * @return bool
-   *   TRUE when the "fullscreen" option is on.
+   * {@inheritdoc}
    */
   public function isFullscreen(): bool {
     return ($this->options['fullscreen'] ?? FALSE) === TRUE;
   }
 
   /**
-   * The horizontal alignment of content within the available width.
-   *
-   * @return \DrevOps\Tui\Theme\HAlign
-   *   The alignment; left when unset.
+   * {@inheritdoc}
    */
   public function halign(): HAlign {
     return $this->enumOption('halign', HAlign::class, HAlign::Left);
   }
 
   /**
-   * The vertical alignment of content within the available height.
-   *
-   * @return \DrevOps\Tui\Theme\VAlign
-   *   The alignment; top when unset.
+   * {@inheritdoc}
    */
   public function valign(): VAlign {
     return $this->enumOption('valign', VAlign::class, VAlign::Top);
   }
 
   /**
-   * The minimum terminal width fullscreen mode needs, in columns.
-   *
-   * @return int
-   *   The explicit "min_width" option, or 0 when the minimum should be
-   *   measured from the form's content instead.
+   * {@inheritdoc}
    */
   public function minWidth(): int {
     return $this->intOption('min_width', 0);
   }
 
   /**
-   * The minimum terminal height fullscreen mode needs, in rows.
-   *
-   * @return int
-   *   The minimum height.
+   * {@inheritdoc}
    */
   public function minHeight(): int {
     return $this->intOption('min_height', self::MIN_HEIGHT);
   }
 
   /**
-   * The widest frame fullscreen mode may stretch to, in columns.
-   *
-   * @return int
-   *   The cap, or 0 for uncapped.
+   * {@inheritdoc}
    */
   public function maxWidth(): int {
     return $this->intOption('max_width', 0);
   }
 
   /**
-   * The tallest frame fullscreen mode may stretch to, in rows.
-   *
-   * @return int
-   *   The cap, or 0 for uncapped.
+   * {@inheritdoc}
    */
   public function maxHeight(): int {
     return $this->intOption('max_height', 0);
   }
 
   /**
-   * The outer frame width, including the border when one is drawn.
-   *
-   * @return int
-   *   The width.
+   * {@inheritdoc}
    */
-  public function outerWidth(): int {
-    return $this->outerWidth;
+  public function spacing(): Spacing {
+    return $this->enumOption('spacing', Spacing::class, Spacing::Padded);
   }
 
   /**
-   * The background the theme washes the screen with, or NULL for none.
+   * {@inheritdoc}
    *
    * A styled span closes with a full reset, so a background opened once would
-   * not survive it. The render layer instead re-opens this background on every
-   * line and after every reset and erases each line to its end, so the whole
-   * screen - the gaps between spans and the padding past the content included -
-   * fills with it. A theme declares its background here the same way it
-   * declares a title colour.
-   *
-   * @return string|null
-   *   The background SGR parameters (e.g. "44" for blue), or NULL to keep the
-   *   terminal's own background.
+   * not survive it. The driver instead re-opens this background on every line
+   * and after every reset and erases each line to its end, so the whole screen
+   * fills with it.
    */
   public function background(): ?string {
     return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function dim(string $text): string {
+    return $this->paint(Sgr::of(Sgr::Dim), $text);
   }
 
   /**
@@ -558,175 +483,180 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
   }
 
   /**
-   * {@inheritdoc}
+   * The hue that says "here", "now" or "picked".
+   *
+   * The one colour a theme is recognised by, so it is written once: the cursor,
+   * the caret, an exclusive mark and every indicator of work in progress all
+   * carry it, and a theme repaints the family by repainting this.
+   *
+   * @return string
+   *   The SGR parameters.
    */
-  public function title(string $text): string {
-    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Cyan) : Sgr::of(Sgr::Bold, Sgr::Blue), $this->linkify($text));
+  protected function accent(): string {
+    return $this->isDark ? Sgr::of(Sgr::Bold, Sgr::Cyan) : Sgr::of(Sgr::Bold, Sgr::Blue);
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function label(string $text, bool $selected = FALSE): string {
-    return $this->paint($this->emphasize('', $selected), $this->linkify($text));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function value(string $text, bool $selected = FALSE): string {
-    return $this->paint($this->emphasize(Sgr::of(Sgr::Green), $selected), $text);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function description(string $text, bool $selected = FALSE): string {
-    // Secondary text stays secondary on the selected row too: bolding it puts
-    // a field's explanation at the same weight as the answer it explains, and
-    // the row already reads as selected from its marker and its value.
-    return $this->paint(Sgr::of(Sgr::Grey), $this->linkify($text));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hint(string $text, bool $selected = FALSE): string {
-    // Guidance on how to answer is never louder than the question itself, but
-    // still reads as its own voice - and a constraint sits directly beneath an
-    // option's own description, so the two must not be mistaken for each other
-    // on any surface. It steps along the grey ramp rather than taking a hue of
-    // its own: a coloured guidance line reads as output the field produced
-    // rather than as chrome telling you what it expects. Italic reinforces it
-    // where the surface honours it, and where neither survives the voice falls
-    // back to a mark, which nothing can strip.
-    return $this->paint($this->emphasize(Sgr::of(Sgr::Italic, Sgr::Pewter), $selected), $this->linkify($text));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function caption(string $text): string {
-    // The guidance hue at a different weight: a caption and a constraint are
-    // both the field speaking about the list rather than listing it, so they
-    // read as a pair - but bold against italic keeps them apart, and keeps the
-    // caption from being read as the panel's own trail.
-    return $this->paint(Sgr::of(Sgr::Bold, Sgr::Steel), $text);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function renderGuidance(string $text, bool $selected = FALSE): string {
-    // Strip the surface back far enough and neither the hue nor the italic
-    // survives, leaving guidance indistinguishable from the description beside
-    // it; a mark is the one cue nothing can take away, so it appears exactly
-    // when the others are gone.
-    return $this->hint($this->hasColor() ? $text : ($this->hasUnicode() ? '› ' : '> ') . $text, $selected);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function badge(string $text, bool $selected = FALSE): string {
-    return $this->paint($this->emphasize(Sgr::of(Sgr::Reverse), $selected), $text);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function cursor(string $text): string {
-    return $this->paint(Sgr::of(Sgr::Bold, Sgr::Reverse), $text);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function footer(string $text): string {
-    return $this->paint(Sgr::of(Sgr::Grey), $text);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function breadcrumb(string $text): string {
-    return $this->paint(Sgr::of(Sgr::Grey), $text);
-  }
-
-  /**
-   * Recede text into the background, so a modal reads as floating above it.
+   * Draw text in the accent hue.
    *
    * @param string $text
    *   The text.
    *
    * @return string
-   *   The dimmed text (unchanged when colour is off).
+   *   The painted text.
    */
-  public function dim(string $text): string {
-    return $this->paint(Sgr::of(Sgr::Dim), $text);
+  protected function highlight(string $text): string {
+    return $this->paint($this->accent(), $text);
   }
 
   /**
-   * {@inheritdoc}
+   * The hue the guidance voice speaks in.
+   *
+   * A step along the grey ramp rather than a hue of its own: a coloured
+   * guidance line reads as output the field produced rather than as chrome
+   * telling you what it expects.
+   *
+   * @return string
+   *   The SGR parameters.
    */
-  public function indicator(string $text): string {
-    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Yellow) : Sgr::of(Sgr::Magenta), $text);
+  protected function guidance(): string {
+    return Sgr::of(Sgr::Italic, Sgr::Pewter);
   }
 
   /**
-   * {@inheritdoc}
+   * Draw a heading: a name for what follows it.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The painted text.
    */
-  public function highlight(string $text): string {
-    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Cyan) : Sgr::of(Sgr::Bold, Sgr::Blue), $text);
+  protected function title(string $text): string {
+    return $this->paint($this->accent(), $this->linkify($text));
   }
 
   /**
-   * {@inheritdoc}
+   * Draw a name: what something is called, rather than what it holds.
+   *
+   * @param string $text
+   *   The text.
+   * @param bool $emphatic
+   *   Whether it is weighted above the names around it.
+   *
+   * @return string
+   *   The painted text.
    */
-  public function highlightMatch(string $text): string {
-    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Yellow) : Sgr::of(Sgr::Bold, Sgr::Magenta), $text);
+  protected function label(string $text, bool $emphatic = FALSE): string {
+    return $this->paint($this->emphasize('', $emphatic), $this->linkify($text));
   }
 
   /**
-   * {@inheritdoc}
+   * Draw an answer: what something holds, rather than what it is called.
+   *
+   * @param string $text
+   *   The text.
+   * @param bool $emphatic
+   *   Whether it is weighted above the answers around it.
+   *
+   * @return string
+   *   The painted text.
    */
-  public function heading(string $text): string {
+  protected function value(string $text, bool $emphatic = FALSE): string {
+    return $this->paint($this->emphasize(Sgr::of(Sgr::Green), $emphatic), $text);
+  }
+
+  /**
+   * Draw prose: what explains something, rather than what it says.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The painted text.
+   */
+  protected function description(string $text): string {
+    // Secondary text stays secondary wherever it appears: weighting it puts an
+    // explanation at the same weight as the thing it explains.
+    return $this->paint(Sgr::of(Sgr::Grey), $this->linkify($text));
+  }
+
+  /**
+   * Draw an aside: quieter than prose, and never the point of the line.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The painted text.
+   */
+  protected function footer(string $text): string {
+    return $this->paint(Sgr::of(Sgr::Grey), $text);
+  }
+
+  /**
+   * Draw a heading over a run of rows.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The painted text.
+   */
+  protected function heading(string $text): string {
     return $this->paint(Sgr::of(Sgr::Bold, Sgr::Grey), $this->linkify($text));
   }
 
   /**
-   * {@inheritdoc}
+   * Draw box-drawing characters.
+   *
+   * @param string $text
+   *   The run of glyphs.
+   *
+   * @return string
+   *   The painted run.
    */
-  public function strong(string $text): string {
-    return $this->paint(Sgr::of(Sgr::Bold), $text);
+  protected function border(string $text): string {
+    return $this->paint($this->isDark ? Sgr::of(Sgr::Cyan) : Sgr::of(Sgr::Blue), $text);
   }
 
   /**
-   * {@inheritdoc}
+   * Draw a mark that wants attention without claiming something failed.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The painted text.
    */
-  public function emphasis(string $text): string {
-    return $this->paint(Sgr::of(Sgr::Italic), $text);
+  protected function indicator(string $text): string {
+    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Yellow) : Sgr::of(Sgr::Magenta), $text);
   }
 
   /**
-   * {@inheritdoc}
+   * Draw a statement that something failed.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The painted text.
    */
-  public function code(string $text): string {
-    return $this->paint($this->isDark ? Sgr::of(Sgr::BrightYellow) : Sgr::of(Sgr::Magenta), $text);
+  protected function error(string $text): string {
+    return $this->paint(Sgr::of(Sgr::Red), $text);
   }
 
   /**
-   * {@inheritdoc}
+   * The cursor mark, or the gap standing in its place.
+   *
+   * @param bool $selected
+   *   Whether the cursor rests here.
+   *
+   * @return string
+   *   The mark.
    */
-  public function link(string $text, string $url): string {
-    return Markup::hyperlink($text, $url, $this->color);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function bullet(): string {
-    return $this->unicode ? '•' : '-';
+  protected function marker(bool $selected): string {
+    return $selected ? $this->highlight($this->glyph('❯', '>')) : ' ';
   }
 
   /**
@@ -743,119 +673,65 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
   }
 
   /**
-   * Render description or note-body text as themed physical lines.
-   *
-   * Links resolve on every terminal; the rest of the markdown subset - bold,
-   * emphasis, inline code and bullet lists - is rendered only when the
-   * "markdown" option is on, and otherwise left as literal text. Each span is
-   * styled by its own atom, so a custom theme restyles markup by overriding
-   * those atoms.
-   *
-   * @param string $source
-   *   The source text; newlines separate physical lines.
-   * @param bool $selected
-   *   Whether the owning row is selected.
-   *
-   * @return list<string>
-   *   The rendered lines.
+   * {@inheritdoc}
    */
-  protected function markupBody(string $source, bool $selected): array {
-    $lines = [];
+  #[\Override]
+  public function keyGlyph(Key $key): string {
+    $name = $key->name;
 
-    foreach (Markup::parse($source, $this->markdown) as $line) {
-      $rendered = $line->bullet ? $this->description($this->bullet() . ' ', $selected) : '';
-
-      foreach ($line->segments as $segment) {
-        $rendered .= $this->markupSegment($segment, $selected);
-      }
-
-      $lines[] = $rendered;
+    if (!$name instanceof KeyName) {
+      return $key->label();
     }
 
-    return $lines;
-  }
-
-  /**
-   * Style one parsed markup span with its atom.
-   *
-   * Plain text is the description atom, so a theme that restyles description
-   * text restyles the body of a description and a note with it - not only the
-   * one-line rows that call the atom directly.
-   *
-   * @param \DrevOps\Tui\Render\MarkupSegment $segment
-   *   The span.
-   * @param bool $selected
-   *   Whether the owning row is selected.
-   *
-   * @return string
-   *   The styled span.
-   */
-  protected function markupSegment(MarkupSegment $segment, bool $selected): string {
-    return match ($segment->kind) {
-      MarkupKind::Bold => $this->strong($segment->text),
-      MarkupKind::Emphasis => $this->emphasis($segment->text),
-      MarkupKind::Code => $this->code($segment->text),
-      MarkupKind::Link => $this->link($segment->text, $segment->url),
-      // The parser has already split every link into its own span, so the
-      // atom's own link resolution finds nothing left to do here.
-      MarkupKind::Text => $this->description($segment->text, $selected),
+    return match ($name) {
+      KeyName::Up, KeyName::MouseWheelUp => $this->glyph('↑', '^'),
+      KeyName::Down, KeyName::MouseWheelDown => $this->glyph('↓', 'v'),
+      KeyName::Left => $this->glyph('←', '<'),
+      KeyName::Right => $this->glyph('→', '>'),
+      KeyName::Enter => $this->glyph('↵', '<'),
+      KeyName::Escape => Translator::t('esc'),
+      KeyName::Interrupt => Translator::t('ctrl-c'),
+      KeyName::Tab => Translator::t('tab'),
+      KeyName::Space => Translator::t('space'),
+      KeyName::Backspace => $this->glyph('⌫', Translator::t('bksp')),
+      KeyName::Delete => Translator::t('del'),
+      KeyName::Home => Translator::t('home'),
+      KeyName::End => Translator::t('end'),
+      KeyName::PageUp => Translator::t('pgup'),
+      KeyName::PageDown => Translator::t('pgdn'),
     };
   }
 
   /**
    * {@inheritdoc}
    */
-  public function divider(): string {
-    return $this->footer(str_repeat($this->unicode ? '─' : '-', max(1, $this->width)));
+  #[\Override]
+  public function chromeBorder(string $text): string {
+    return $this->border($text);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function disabled(string $text): string {
+  #[\Override]
+  public function chromeOverflowMarker(bool $above): string {
+    return $this->indicator($above ? $this->glyph('▲', '^') : $this->glyph('▼', 'v'));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function breadcrumbLabel(string $text): string {
     return $this->paint(Sgr::of(Sgr::Grey), $text);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function error(string $text): string {
-    return $this->paint(Sgr::of(Sgr::Red), $text);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function rule(string $text): string {
-    return $this->paint(Sgr::of(Sgr::Grey), $text);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function border(string $text): string {
-    return $this->paint($this->isDark ? Sgr::of(Sgr::Cyan) : Sgr::of(Sgr::Blue), $text);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function marker(bool $selected): string {
-    return $selected ? $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Cyan) : Sgr::of(Sgr::Bold, Sgr::Blue), $this->unicode ? '❯' : '>') : ' ';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function arrow(): string {
-    return $this->unicode ? '›' : '>';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function separator(): string {
-    return $this->unicode ? '›' : '>';
+  #[\Override]
+  public function breadcrumbSeparator(): string {
+    return $this->overriddenGlyph(ThemeElement::BreadcrumbSeparator) ?? $this->glyph('›', '>');
   }
 
   /**
@@ -882,39 +758,7 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    */
   #[\Override]
   public function legendSeparator(): string {
-    return $this->paint(Sgr::of(Sgr::Ash), $this->overriddenGlyph(ThemeElement::LegendSeparator) ?? $this->dot());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  #[\Override]
-  public function chromeBorder(string $text): string {
-    return $this->border($text);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  #[\Override]
-  public function chromeOverflowMarker(bool $above): string {
-    return $this->indicator($above ? $this->indicatorUp() : $this->indicatorDown());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  #[\Override]
-  public function breadcrumbLabel(string $text): string {
-    return $this->breadcrumb($text);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  #[\Override]
-  public function breadcrumbSeparator(): string {
-    return $this->overriddenGlyph(ThemeElement::BreadcrumbSeparator) ?? $this->separator();
+    return $this->paint(Sgr::of(Sgr::Ash), $this->overriddenGlyph(ThemeElement::LegendSeparator) ?? $this->glyph('·', '*'));
   }
 
   /**
@@ -958,7 +802,16 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    */
   #[\Override]
   public function fieldHelpMarker(): string {
-    return $this->overriddenGlyph(ThemeElement::FieldHelpMarker) ?? $this->helpMarker();
+    // The label's own colour and never weighted: the mark belongs to the label
+    // it follows, and weighting it would have it competing with the label
+    // instead of hanging off it.
+    //
+    // A superscript rather than an enclosed glyph. An enclosed question mark
+    // either has no glyph in a monospace font at all (⍰ renders as a
+    // missing-character box) or is naturally wider than one cell and gets
+    // squeezed out of shape by a surface that pins each cell to a fixed
+    // advance (ⓘ, ℹ). A superscript is narrow by design, so it survives both.
+    return $this->overriddenGlyph(ThemeElement::FieldHelpMarker) ?? $this->paint('', $this->glyph('ⁱ', '[?]'));
   }
 
   /**
@@ -981,8 +834,16 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    * {@inheritdoc}
    */
   #[\Override]
+  public function fieldMask(): string {
+    return $this->glyph('•', '*');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
   public function fieldBadge(string $text): string {
-    return $this->badge($text);
+    return $this->paint(Sgr::of(Sgr::Reverse), $text);
   }
 
   /**
@@ -997,8 +858,22 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntry(string $text, bool $chosen): string {
+  public function fieldEntry(string $text, bool $chosen, bool $focused = FALSE): string {
+    // Where the cursor rests is the louder of the two facts, and the only one
+    // that moves, so it takes the accent and picking takes weight.
+    if ($focused) {
+      return $this->highlight($text);
+    }
+
     return $this->label($text, $chosen);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldEntryMatch(string $text): string {
+    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Yellow) : Sgr::of(Sgr::Bold, Sgr::Magenta), $text);
   }
 
   /**
@@ -1019,16 +894,23 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntryMarker(bool $chosen): string {
+  public function fieldEntryMarker(bool $chosen, bool $exclusive = FALSE): string {
     $glyph = $this->overriddenGlyph(ThemeElement::FieldEntryMarker);
 
     // Only the picked state is stated, so an entry nobody picked keeps the
     // mark the theme draws for it and the patch stays a patch.
-    if ($glyph === NULL || !$chosen) {
-      return $this->check($chosen);
+    if ($glyph !== NULL && $chosen) {
+      return $exclusive ? $this->paint($this->accent(), $glyph) : $this->value($glyph);
     }
 
-    return $this->value($glyph);
+    // A round mark for a question that takes one answer and a square one for a
+    // question that takes several, so the shape says how many before anything
+    // has been picked at all.
+    if ($exclusive) {
+      return $chosen ? $this->paint($this->accent(), $this->glyph('●', '(*)')) : $this->glyph('○', '( )');
+    }
+
+    return $chosen ? $this->value($this->glyph('◼', '[x]')) : $this->glyph('◻', '[ ]');
   }
 
   /**
@@ -1036,7 +918,7 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    */
   #[\Override]
   public function fieldEntryNote(string $text): string {
-    return $this->disabled($text);
+    return $this->paint(Sgr::of(Sgr::Grey), $text);
   }
 
   /**
@@ -1044,7 +926,18 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    */
   #[\Override]
   public function fieldEntryDescription(string $text): string {
-    return $this->entryDescription($text);
+    // Slanted against the description's grey: it says the same kind of thing
+    // about a smaller subject, and the slant marks it as belonging to the entry
+    // above rather than to the field.
+    return $this->paint(Sgr::of(Sgr::Italic, Sgr::Grey), $this->linkify($text));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldEntrySeparator(): string {
+    return $this->renderRule();
   }
 
   /**
@@ -1052,7 +945,14 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    */
   #[\Override]
   public function fieldConstraint(string $text): string {
-    return $this->hint($text);
+    // Guidance on how to answer is never louder than the question itself, but
+    // still reads as its own voice - and it sits directly beneath an entry's
+    // own description, so the two must not be mistaken for each other on any
+    // surface. Slant reinforces the hue where the surface honours it, and where
+    // neither survives the voice falls back to a mark, which nothing can strip.
+    $marked = $this->hasColor() ? $text : $this->glyph('› ', '> ') . $text;
+
+    return $this->paint($this->guidance(), $this->linkify($marked));
   }
 
   /**
@@ -1070,7 +970,7 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
   public function fieldCaret(): string {
     $glyph = $this->overriddenGlyph(ThemeElement::FieldCaret);
 
-    return $glyph === NULL ? $this->caret() : $this->highlight($glyph);
+    return $this->highlight($glyph ?? $this->glyph('█', '|'));
   }
 
   /**
@@ -1087,6 +987,84 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    * {@inheritdoc}
    */
   #[\Override]
+  public function fieldGhost(string $text): string {
+    return $this->color ? $this->paint(Sgr::of(Sgr::Grey), $text) : '';
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * The flat style is the draft with a plain caret. The boxed and underline
+   * styles wrap it in a fixed-width filled or underlined field, so the entry
+   * area reads as an input the way an MS-DOS form marked its fields: the fill
+   * runs behind the value text, and a reverse-video caret sits over the
+   * character it is on, so the letter still shows.
+   */
+  #[\Override]
+  public function fieldInput(string $before, string $after, string $ghost = ''): string {
+    if (!$this->color || $this->field() === FieldStyle::Flat) {
+      return $this->fieldDraft($before) . $this->fieldCaret() . $this->fieldDraft($after) . ($ghost === '' ? '' : $this->fieldGhost($ghost));
+    }
+
+    // The caret reverses the character it sits on (a space at the line end), so
+    // the cursor highlights the letter rather than hiding it behind a block.
+    $cursor_char = $after === '' ? ' ' : Strings::substr($after, 0, 1);
+    $tail = $after === '' ? '' : Strings::substr($after, 1);
+
+    $target = max(self::FIELD_MIN_WIDTH, min($this->width, self::FIELD_WIDTH));
+    $visible = Strings::length($before) + 1 + Strings::length($tail) + Strings::length($ghost);
+    $pad = str_repeat(' ', max(0, $target - $visible));
+
+    // The caret (reverse) and ghost (dim) toggle off again (27, 22) instead of
+    // resetting, so the field fill runs unbroken behind the whole value - the
+    // only reset is Ansi::style()'s closing one.
+    $cursor = Ansi::ESC . '[7m' . $cursor_char . Ansi::ESC . '[27m';
+    $suffix = $ghost === '' ? '' : Ansi::ESC . '[2m' . $ghost . Ansi::ESC . '[22m';
+
+    // Underline styles draw the value colour; a box fills it - light on dark
+    // (black on grey), dark on light (white on blue) - so the field reads
+    // against either terminal background.
+    $fill = $this->field() === FieldStyle::Underline ? Sgr::of(Sgr::Underline, Sgr::Green) : ($this->isDark ? Sgr::of(Sgr::Black, Sgr::OnGrey) : Sgr::of(Sgr::BrightWhite, Sgr::OnBlue));
+
+    return Ansi::style($before . $cursor . $tail . $suffix . $pad, $fill);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldScale(int $current, int $min, int $max, string $caption): string {
+    // The filled run carries the theme's accent; the empty remainder and the
+    // readout stay plain, so the scale reads with colour off and in ASCII
+    // alike.
+    [$on, $off] = $this->unicode ? ['●', '○'] : ['*', '-'];
+    $caption = $this->oneLine($caption);
+
+    // Clamp onto the scale: a point outside the range must not ask for a run
+    // of negative length. The lowest point still fills one, because it is a
+    // point like any other. The frame bounds the run because nothing wider can
+    // be drawn anyway, so an absurd range costs a truncated line rather than
+    // the whole heap.
+    $points = max(1, min($this->width, $max - $min + 1));
+    $filled = max(1, min($points, $current - $min + 1));
+
+    $line = $this->highlight(str_repeat($on, $filled)) . str_repeat($off, $points - $filled) . ' ' . $current . '/' . $max;
+
+    return $caption === '' ? $line : $line . ' ' . $caption;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldLoading(): string {
+    return $this->highlight($this->glyph('…', '...'));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
   public function fieldState(string $text): string {
     return $this->footer($text);
   }
@@ -1096,7 +1074,11 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    */
   #[\Override]
   public function fieldCaption(string $text): string {
-    return $this->caption($text);
+    // The guidance hue at a different weight: a caption and a constraint are
+    // both the field speaking about the list rather than listing it, so they
+    // read as a pair - but weight against slant keeps them apart, and keeps the
+    // caption from being read as the panel's own trail.
+    return $this->paint(Sgr::of(Sgr::Bold, Sgr::Steel), $text);
   }
 
   /**
@@ -1120,7 +1102,7 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    */
   #[\Override]
   public function panelDescend(): string {
-    return $this->description($this->arrow());
+    return $this->description($this->glyph('›', '>'));
   }
 
   /**
@@ -1144,7 +1126,7 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    */
   #[\Override]
   public function panelSummarySeparator(): string {
-    return $this->description($this->dot());
+    return $this->description($this->glyph('·', '*'));
   }
 
   /**
@@ -1167,6 +1149,46 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    * {@inheritdoc}
    */
   #[\Override]
+  public function markupStrong(string $text): string {
+    return $this->paint(Sgr::of(Sgr::Bold), $text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function markupEmphasis(string $text): string {
+    return $this->paint(Sgr::of(Sgr::Italic), $text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function markupCode(string $text): string {
+    return $this->paint($this->isDark ? Sgr::of(Sgr::BrightYellow) : Sgr::of(Sgr::Magenta), $text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function markupLink(string $text, string $url): string {
+    return Markup::hyperlink($text, $url, $this->color);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function markupBullet(): string {
+    return $this->glyph('•', '-');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
   public function actionButton(string $label): string {
     return $this->value($this->frameAction($label));
   }
@@ -1176,7 +1198,7 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    */
   #[\Override]
   public function actionSelected(string $label): string {
-    return $this->cursor($this->frameAction($label));
+    return $this->paint(Sgr::of(Sgr::Bold, Sgr::Reverse), $this->frameAction($label));
   }
 
   /**
@@ -1185,6 +1207,23 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
   #[\Override]
   public function actionSeparator(): string {
     return '  ';
+  }
+
+  /**
+   * Frame an action's label.
+   *
+   * The framing is the theme's rather than the block's, so a theme that draws a
+   * button differently changes this alone and the block goes on knowing only
+   * that it has labels.
+   *
+   * @param string $label
+   *   The label.
+   *
+   * @return string
+   *   The framed label.
+   */
+  protected function frameAction(string $label): string {
+    return '[ ' . $label . ' ]';
   }
 
   /**
@@ -1225,175 +1264,10 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
   }
 
   /**
-   * Frame an action's label.
-   *
-   * The framing is the theme's rather than the block's, so a theme that draws a
-   * button differently changes this alone and the block goes on knowing only
-   * that it has labels.
-   *
-   * @param string $label
-   *   The label.
-   *
-   * @return string
-   *   The framed label.
-   */
-  protected function frameAction(string $label): string {
-    return '[ ' . $label . ' ]';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function entryDescription(string $text): string {
-    // Italicized against the description's grey: it says the same kind of thing
-    // about a smaller subject, and the slant marks it as belonging to the entry
-    // above rather than to the field.
-    return $this->paint(Sgr::of(Sgr::Italic, Sgr::Grey), $this->linkify($text));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function helpMarker(): string {
-    // The label's own colour and never bolded: the mark belongs to the label it
-    // follows, and bolding it on the selected row would have it competing with
-    // the label instead of hanging off it.
-    //
-    // A superscript rather than an enclosed glyph. An enclosed question mark
-    // either has no glyph in a monospace font at all (⍰ renders as a
-    // missing-character box) or is naturally wider than one cell and gets
-    // squeezed out of shape by a surface that pins each cell to a fixed
-    // advance (ⓘ, ℹ). A superscript is narrow by design, so it survives both.
-    return $this->paint('', $this->unicode ? 'ⁱ' : '[?]');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function arrowUp(): string {
-    return $this->unicode ? '↑' : '^';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function arrowDown(): string {
-    return $this->unicode ? '↓' : 'v';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function arrowLeft(): string {
-    return $this->unicode ? '←' : '<';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function arrowRight(): string {
-    return $this->unicode ? '→' : '>';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function enter(): string {
-    return $this->unicode ? '↵' : '<';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function dot(): string {
-    return $this->unicode ? '·' : '*';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function indicatorUp(): string {
-    return $this->unicode ? '▲' : '^';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function indicatorDown(): string {
-    return $this->unicode ? '▼' : 'v';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function radio(bool $on): string {
-    return $on ? $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Cyan) : Sgr::of(Sgr::Bold, Sgr::Blue), $this->unicode ? '●' : '(*)') : ($this->unicode ? '○' : '( )');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function check(bool $on): string {
-    return $on ? $this->value($this->unicode ? '◼' : '[x]') : ($this->unicode ? '◻' : '[ ]');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function caret(): string {
-    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Cyan) : Sgr::of(Sgr::Bold, Sgr::Blue), $this->unicode ? '█' : '|');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function ghost(string $text): string {
-    return $this->color ? $this->paint(Sgr::of(Sgr::Grey), $text) : '';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function renderInput(string $before, string $after, string $ghost = ''): string {
-    if (!$this->color || $this->field() === FieldStyle::Flat) {
-      return $before . $this->caret() . $after . ($ghost === '' ? '' : $this->ghost($ghost));
-    }
-
-    // The caret reverses the character it sits on (a space at the line end), so
-    // the cursor highlights the letter rather than hiding it behind a block.
-    $cursor_char = $after === '' ? ' ' : Strings::substr($after, 0, 1);
-    $tail = $after === '' ? '' : Strings::substr($after, 1);
-
-    $target = max(self::FIELD_MIN_WIDTH, min($this->width, self::FIELD_WIDTH));
-    $visible = Strings::length($before) + 1 + Strings::length($tail) + Strings::length($ghost);
-    $pad = str_repeat(' ', max(0, $target - $visible));
-
-    // The caret (reverse) and ghost (dim) toggle off again (27, 22) instead of
-    // resetting, so the field fill runs unbroken behind the whole value - the
-    // only reset is Ansi::style()'s closing one.
-    $cursor = Ansi::ESC . '[7m' . $cursor_char . Ansi::ESC . '[27m';
-    $suffix = $ghost === '' ? '' : Ansi::ESC . '[2m' . $ghost . Ansi::ESC . '[22m';
-
-    // Underline styles draw the value colour; a box fills it - light on dark
-    // (black on grey), dark on light (white on blue) - so the field reads
-    // against either terminal background.
-    $fill = $this->field() === FieldStyle::Underline ? Sgr::of(Sgr::Underline, Sgr::Green) : ($this->isDark ? Sgr::of(Sgr::Black, Sgr::OnGrey) : Sgr::of(Sgr::BrightWhite, Sgr::OnBlue));
-
-    return Ansi::style($before . $cursor . $tail . $suffix . $pad, $fill);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function mask(): string {
-    return $this->unicode ? '•' : '*';
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function renderSpinner(int $frame, string $caption): string {
-    // Composed from the same atoms the standalone spinner draws, so a theme
+    // Composed from the same elements the in-form indicator draws, so a theme
     // that restyles the glyph restyles it everywhere it turns up.
     $glyph = $this->progressSpinner($frame);
     $caption = $this->progressCaption($caption);
@@ -1405,7 +1279,7 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    * {@inheritdoc}
    */
   public function renderProgressBar(int $current, int $total, string $caption, string $label): string {
-    // Composed from the same atoms the standalone bar draws, so a theme that
+    // Composed from the same elements the in-form bar draws, so a theme that
     // restyles the track or the count restyles both places it appears.
     $caption = $this->progressCaption($caption);
     $label = $this->oneLine($label);
@@ -1417,41 +1291,6 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
     $line = ($caption === '' ? '' : $caption . ' ') . $bar . ' ' . $this->progressCount($current, $total);
 
     return $label === '' ? $line : $line . ' ' . $label;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function renderScale(int $current, int $min, int $max, string $caption): string {
-    // The filled run carries the theme's accent through highlight(); the empty
-    // remainder and the readout stay plain, so the scale reads with colour off
-    // and in ASCII alike.
-    [$on, $off] = $this->unicode ? ['●', '○'] : ['*', '-'];
-    $caption = $this->oneLine($caption);
-
-    // Clamp onto the scale: this method is public, so a direct call with a
-    // point outside the range must not hand str_repeat() a negative count. The
-    // lowest point still fills one, because it is a point like any other. The
-    // frame bounds the run because nothing wider than it can be drawn anyway,
-    // so an absurd range costs a truncated line rather than the whole heap.
-    $points = max(1, min($this->width, $max - $min + 1));
-    $filled = max(1, min($points, $current - $min + 1));
-
-    $line = $this->highlight(str_repeat($on, $filled)) . str_repeat($off, $points - $filled) . ' ' . $current . '/' . $max;
-
-    return $caption === '' ? $line : $line . ' ' . $caption;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function renderLoading(string $caption): string {
-    // The ellipsis carries the theme's accent through highlight(), matching the
-    // spinner and bar; the caption stays plain.
-    $dots = $this->highlight($this->unicode ? '…' : '...');
-    $caption = $this->oneLine($caption);
-
-    return $caption === '' ? $dots : $caption . ' ' . $dots;
   }
 
   /**
@@ -1509,89 +1348,28 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
   }
 
   /**
-   * A card's grid, set off from any title and body above it by a blank line.
-   *
-   * @param list<string> $headers
-   *   The header cells.
-   * @param list<list<string>> $rows
-   *   The body rows.
-   * @param int $width
-   *   The width available inside the card's own chrome.
-   * @param bool $spaced
-   *   Whether a blank line precedes the grid; FALSE when the grid opens the
-   *   card and so has nothing above to be set off from.
-   *
-   * @return list<string>
-   *   The grid's lines, empty when there is no grid.
+   * {@inheritdoc}
    */
-  protected function cardTable(array $headers, array $rows, int $width, bool $spaced): array {
-    if ($headers === [] && $rows === []) {
-      return [];
-    }
-
-    $table = $this->tableLines($headers, $rows, $width);
-
-    if ($table === [] || !$spaced) {
-      return $table;
-    }
-
-    return array_merge([''], $table);
+  public function renderRule(): string {
+    return $this->footer(str_repeat($this->glyph('─', '-'), max(1, $this->width)));
   }
 
   /**
-   * Wrap source text to a width and style each physical line as markup.
-   *
-   * @param string $text
-   *   The source text; its own newlines split it into physical lines first.
-   * @param int $width
-   *   The width to wrap to.
-   *
-   * @return list<string>
-   *   The styled lines, each fitting the width.
+   * {@inheritdoc}
    */
-  protected function wrapMarkup(string $text, int $width): array {
+  public function renderBanner(string $logo, string $version): string {
     $lines = [];
 
-    foreach ($this->wrapLines($text, $width) as $chunk) {
-      if ($chunk === '') {
-        $lines[] = '';
-
-        continue;
-      }
-
-      foreach ($this->markupBody($chunk, FALSE) as $rendered) {
-        $lines[] = $rendered;
-      }
+    foreach (explode("\n", $logo) as $line) {
+      $lines[] = $this->title($line);
     }
 
-    return $lines;
-  }
-
-  /**
-   * Split source text into physical lines and word-wrap each to a width.
-   *
-   * @param string $text
-   *   The source text; its own line endings split it first.
-   * @param int $width
-   *   The width to wrap to.
-   *
-   * @return list<string>
-   *   The wrapped lines, unstyled.
-   */
-  protected function wrapLines(string $text, int $width): array {
-    $lines = [];
-
-    foreach (explode("\n", $this->normalizeLines($text)) as $physical) {
-      $wrapped = Strings::wrap($physical, $width);
-
-      // A line with no visible characters wraps to nothing; keeping it blank
-      // lets a caller space the content out.
-      foreach ($wrapped === [] ? [''] : $wrapped as $line) {
-        $lines[] = $line;
-      }
+    if ($version !== '') {
+      $lines[] = '';
+      $lines[] = $this->footer(Translator::t('Version: @version', ['@version' => $version]));
     }
 
-    return $lines;
+    return implode("\n", $lines);
   }
 
   /**
@@ -1608,27 +1386,6 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
       Status::Success => $this->value($line),
       Status::Warning => $this->indicator($line),
       Status::Error => $this->error($line),
-    };
-  }
-
-  /**
-   * The glyph that leads a status line.
-   *
-   * @param \DrevOps\Tui\Primitive\Status $status
-   *   The kind of status.
-   *
-   * @return string
-   *   The glyph, respecting the theme's Unicode mode.
-   */
-  protected function statusSymbol(Status $status): string {
-    // Every glyph is one column wide in any terminal - none has an emoji
-    // presentation or an East Asian width - so a run of status lines aligns.
-    return match ($status) {
-      Status::Note => $this->unicode ? '•' : '-',
-      Status::Info => $this->unicode ? '›' : '>',
-      Status::Success => $this->unicode ? '✓' : '+',
-      Status::Warning => '!',
-      Status::Error => $this->unicode ? '✗' : 'x',
     };
   }
 
@@ -1671,6 +1428,27 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
   }
 
   /**
+   * The glyph that leads a status line.
+   *
+   * @param \DrevOps\Tui\Primitive\Status $status
+   *   The kind of status.
+   *
+   * @return string
+   *   The glyph, respecting the theme's Unicode mode.
+   */
+  protected function statusSymbol(Status $status): string {
+    // Every glyph is one column wide in any terminal - none has an emoji
+    // presentation or an East Asian width - so a run of status lines aligns.
+    return match ($status) {
+      Status::Note => $this->glyph('•', '-'),
+      Status::Info => $this->glyph('›', '>'),
+      Status::Success => $this->glyph('✓', '+'),
+      Status::Warning => '!',
+      Status::Error => $this->glyph('✗', 'x'),
+    };
+  }
+
+  /**
    * Render one definition: its label, its value, and any wrapped continuation.
    *
    * @param string $label
@@ -1708,20 +1486,63 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
   }
 
   /**
-   * Fold a caption or label to a single physical line for the indicators.
+   * A card's grid, set off from any title and body above it by a blank line.
    *
-   * The spinner and bar redraw in place with carriage returns, so a CR or LF
-   * would reposition the cursor or leave a stale row behind; newlines collapse
-   * to a space.
+   * @param list<string> $headers
+   *   The header cells.
+   * @param list<list<string>> $rows
+   *   The body rows.
+   * @param int $width
+   *   The width available inside the card's own chrome.
+   * @param bool $spaced
+   *   Whether a blank line precedes the grid; FALSE when the grid opens the
+   *   card and so has nothing above to be set off from.
    *
-   * @param string $text
-   *   The text.
-   *
-   * @return string
-   *   The text with its line breaks folded to spaces.
+   * @return list<string>
+   *   The grid's lines, empty when there is no grid.
    */
-  protected function oneLine(string $text): string {
-    return str_replace(["\r\n", "\r", "\n"], ' ', $text);
+  protected function cardTable(array $headers, array $rows, int $width, bool $spaced): array {
+    if ($headers === [] && $rows === []) {
+      return [];
+    }
+
+    $table = $this->tableLines($headers, $rows, $width);
+
+    if ($table === [] || !$spaced) {
+      return $table;
+    }
+
+    return array_merge([''], $table);
+  }
+
+  /**
+   * Render a table at an explicit width cap, styled with the theme's palette.
+   *
+   * @param list<string> $headers
+   *   The header cells.
+   * @param list<list<string>> $rows
+   *   The body rows.
+   * @param int $max_width
+   *   The widest the table may be, in columns.
+   *
+   * @return list<string>
+   *   The styled table lines.
+   */
+  protected function tableLines(array $headers, array $rows, int $max_width): array {
+    // An explicit table always draws its grid, so a None frame falls back to
+    // the single-line box, exactly as a bordered note does.
+    $style = $this->borderStyle() === Border::None ? Border::Line : $this->borderStyle();
+
+    return Table::render(
+      $headers,
+      $rows,
+      $style,
+      $this->unicode,
+      $max_width,
+      fn(string $cell): string => $this->heading($cell),
+      fn(string $cell): string => $this->value($cell),
+      fn(string $glyphs): string => $this->border($glyphs),
+    );
   }
 
   /**
@@ -1755,292 +1576,17 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
 
     // boxLine adds a one-column gutter and a border column each side, so the
     // outer width is the content width plus four columns of chrome.
-    $outer = min(max(1, $this->width - $reserved), $inner + 4);
+    $outer = min(max(1, $this->width - $reserved), $inner + self::BOX_CHROME);
 
-    $lines = [$this->borderRule($chars['tl'], $chars['tr'], $chars['h'], $outer)];
+    $lines = [$this->border(Box::rule($chars['tl'], $chars['tr'], $chars['h'], $outer))];
 
     foreach ($content as $line) {
       $lines[] = $this->boxLine($line, $chars['v'], $outer);
     }
 
-    $lines[] = $this->borderRule($chars['bl'], $chars['br'], $chars['h'], $outer);
+    $lines[] = $this->border(Box::rule($chars['bl'], $chars['br'], $chars['h'], $outer));
 
     return $lines;
-  }
-
-  /**
-   * Render a table at an explicit width cap, styled with the theme's atoms.
-   *
-   * @param list<string> $headers
-   *   The header cells.
-   * @param list<list<string>> $rows
-   *   The body rows.
-   * @param int $max_width
-   *   The widest the table may be, in columns.
-   *
-   * @return list<string>
-   *   The styled table lines.
-   */
-  protected function tableLines(array $headers, array $rows, int $max_width): array {
-    // An explicit table always draws its grid, so a None frame falls back to
-    // the single-line box, exactly as a bordered note does.
-    $style = $this->borderStyle() === Border::None ? Border::Line : $this->borderStyle();
-
-    return Table::render(
-      $headers,
-      $rows,
-      $style,
-      $this->unicode,
-      $max_width,
-      fn(string $cell): string => $this->heading($cell),
-      fn(string $cell): string => $this->value($cell),
-      fn(string $glyphs): string => $this->border($glyphs),
-    );
-  }
-
-  /**
-   * The chrome rows a frame adds around the scrolled body window.
-   *
-   * Everything renderFrame() emits that is neither a header/footer line nor a
-   * body-window line: border rules and spacing pads for a boxed frame, the
-   * footer gap for a borderless one - plus the reserved scroll-indicator rows.
-   * The single home of the frame-height budget, so a caller sizing the body
-   * viewport to the terminal never overflows it.
-   *
-   * @param bool $has_footer
-   *   Whether the frame draws footer lines (a boxed frame separates them with
-   *   an extra rule).
-   *
-   * @return int
-   *   The chrome row count.
-   */
-  public function chromeHeight(bool $has_footer): int {
-    if ($this->borderStyle() === Border::None) {
-      return ($this->spacing() === Spacing::Compact ? 0 : 1) + self::INDICATOR_LINES;
-    }
-
-    $pad = $this->spacing() === Spacing::Padded ? 2 : 0;
-
-    return 3 + ($has_footer ? 1 : 0) + $pad + self::INDICATOR_LINES;
-  }
-
-  /**
-   * Compose a frame: pinned header, scrolled body with indicators, footer.
-   *
-   * In fullscreen the body window stretches to its full budget - the block
-   * aligns per the halign/valign options and the frame fills the terminal
-   * exactly; otherwise the frame stays as tall as its content.
-   *
-   * @param list<string> $header
-   *   The pinned header lines.
-   * @param list<string> $body
-   *   The full body lines.
-   * @param list<string> $footer
-   *   The pinned footer lines.
-   * @param \DrevOps\Tui\Render\Viewport $viewport
-   *   The computed viewport.
-   * @param int $height
-   *   The body viewport height.
-   *
-   * @return string
-   *   The composed frame.
-   */
-  public function renderFrame(array $header, array $body, array $footer, Viewport $viewport, int $height): string {
-    return $this->renderBoxed($header, $body, $footer, $viewport, $height, $this->outerWidth, $this->borderStyle(), $this->isFullscreen());
-  }
-
-  /**
-   * Compose a frame at an explicit width and border, else the same as a frame.
-   *
-   * The width/border are parameters so a modal can reuse the theme's boxing in
-   * a narrower box; the standard frame passes its own outer width and border.
-   *
-   * @param list<string> $header
-   *   The pinned header lines.
-   * @param list<string> $body
-   *   The full body lines.
-   * @param list<string> $footer
-   *   The pinned footer lines.
-   * @param \DrevOps\Tui\Render\Viewport $viewport
-   *   The computed viewport.
-   * @param int $height
-   *   The body viewport height.
-   * @param int $outer_width
-   *   The outer width, including the border columns.
-   * @param \DrevOps\Tui\Theme\Border $border
-   *   The border style to draw.
-   * @param bool $stretch
-   *   Whether the body window stretches to its full budget with the block
-   *   aligned inside it (the fullscreen frame), rather than hugging the
-   *   content (a modal dialog's box).
-   *
-   * @return string
-   *   The composed frame.
-   */
-  protected function renderBoxed(array $header, array $body, array $footer, Viewport $viewport, int $height, int $outer_width, Border $border, bool $stretch = FALSE): string {
-    if ($border === Border::None) {
-      return $this->renderBorderless($header, $body, $footer, $viewport, $height, $stretch);
-    }
-
-    $chars = Box::chars($border, $this->unicode);
-    $middle = $this->scrolledBody($body, $viewport, $height);
-    $pad = $this->spacing() === Spacing::Padded;
-
-    if ($stretch) {
-      $middle = $this->alignBlock($middle, max(1, $outer_width - 4), $height + self::INDICATOR_LINES);
-    }
-
-    $out = [$this->borderRule($chars['tl'], $chars['tr'], $chars['h'], $outer_width)];
-
-    foreach ($header as $line) {
-      $out[] = $this->boxLine($line, $chars['v'], $outer_width);
-    }
-
-    $out[] = $this->borderRule($chars['ml'], $chars['mr'], $chars['h'], $outer_width);
-
-    if ($pad) {
-      $out[] = $this->boxLine('', $chars['v'], $outer_width);
-    }
-
-    foreach ($middle as $line) {
-      $out[] = $this->boxLine($line, $chars['v'], $outer_width);
-    }
-
-    if ($pad) {
-      $out[] = $this->boxLine('', $chars['v'], $outer_width);
-    }
-
-    if ($footer !== []) {
-      $out[] = $this->borderRule($chars['ml'], $chars['mr'], $chars['h'], $outer_width);
-
-      foreach ($footer as $line) {
-        $out[] = $this->boxLine($line, $chars['v'], $outer_width);
-      }
-    }
-
-    $out[] = $this->borderRule($chars['bl'], $chars['br'], $chars['h'], $outer_width);
-
-    return implode("\n", $out);
-  }
-
-  /**
-   * Compose a borderless frame, detaching the status line by spacing.
-   *
-   * @param list<string> $header
-   *   The header lines.
-   * @param list<string> $body
-   *   The body lines.
-   * @param list<string> $footer
-   *   The footer lines.
-   * @param \DrevOps\Tui\Render\Viewport $viewport
-   *   The viewport.
-   * @param int $height
-   *   The body viewport height.
-   * @param bool $stretch
-   *   Whether the body window stretches to its full budget with the block
-   *   aligned inside it.
-   *
-   * @return string
-   *   The composed frame.
-   */
-  protected function renderBorderless(array $header, array $body, array $footer, Viewport $viewport, int $height, bool $stretch = FALSE): string {
-    $middle = $this->scrolledBody($body, $viewport, $height);
-
-    if ($stretch) {
-      $middle = $this->alignBlock($middle, $this->width, $height + self::INDICATOR_LINES);
-    }
-
-    $lines = array_merge($header, $middle);
-
-    if ($this->spacing() !== Spacing::Compact) {
-      $lines[] = '';
-    }
-
-    return implode("\n", array_merge($lines, $footer));
-  }
-
-  /**
-   * Align a block of lines within an area, padding it to the area's size.
-   *
-   * The lines move as one unit - their left edges stay mutually aligned - to
-   * the anchor the halign/valign options pick: blank rows pad the block to the
-   * target height and a uniform indent shifts it across the width.
-   *
-   * @param list<string> $lines
-   *   The block lines (may carry ANSI codes).
-   * @param int $inner_width
-   *   The width of the area the block aligns within.
-   * @param int $target_height
-   *   The height the block pads to.
-   *
-   * @return list<string>
-   *   The aligned lines, exactly the target height when the block fits it.
-   */
-  protected function alignBlock(array $lines, int $inner_width, int $target_height): array {
-    $block_width = Ansi::blockWidth($lines);
-
-    [$top, $left] = Overlay::place($inner_width, $target_height, $block_width, count($lines), $this->halign(), $this->valign());
-
-    $indent = str_repeat(' ', $left);
-    $out = array_fill(0, $top, '');
-
-    foreach ($lines as $line) {
-      $out[] = $line === '' ? '' : $indent . $line;
-    }
-
-    while (count($out) < $target_height) {
-      $out[] = '';
-    }
-
-    return $out;
-  }
-
-  /**
-   * The visible body window, wrapped with the scroll indicators.
-   *
-   * @param list<string> $body
-   *   The full body lines.
-   * @param \DrevOps\Tui\Render\Viewport $viewport
-   *   The computed viewport.
-   * @param int $height
-   *   The body viewport height.
-   *
-   * @return list<string>
-   *   The visible lines, with an indicator line for each hidden side.
-   */
-  protected function scrolledBody(array $body, Viewport $viewport, int $height): array {
-    $lines = [];
-
-    if ($viewport->hasAbove) {
-      $lines[] = $this->indicator('  ' . $this->indicatorUp());
-    }
-
-    $lines = array_merge($lines, (new Scroller())->slice($body, $viewport->offset, $height));
-
-    if ($viewport->hasBelow) {
-      $lines[] = $this->indicator('  ' . $this->indicatorDown());
-    }
-
-    return $lines;
-  }
-
-  /**
-   * Build a horizontal border rule, coloured with the border atom.
-   *
-   * @param string $left
-   *   The left corner or junction glyph.
-   * @param string $right
-   *   The right corner or junction glyph.
-   * @param string $fill
-   *   The horizontal fill glyph.
-   * @param int $outer_width
-   *   The total width the rule spans.
-   *
-   * @return string
-   *   The styled rule.
-   */
-  protected function borderRule(string $left, string $right, string $fill, int $outer_width): string {
-    return $this->border(Box::rule($left, $right, $fill, $outer_width));
   }
 
   /**
@@ -2059,236 +1605,130 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
   protected function boxLine(string $content, string $vertical, int $outer_width): string {
     $bar = $this->border($vertical);
 
-    return $bar . ' ' . Box::fit($content, max(1, $outer_width - 4)) . ' ' . $bar;
+    return $bar . ' ' . Box::fit($content, max(1, $outer_width - self::BOX_CHROME)) . ' ' . $bar;
   }
 
   /**
-   * {@inheritdoc}
+   * Wrap source text to a width and style each physical line as markup.
+   *
+   * @param string $text
+   *   The source text; its own newlines split it into physical lines first.
+   * @param int $width
+   *   The width to wrap to.
+   *
+   * @return list<string>
+   *   The styled lines, each fitting the width.
    */
-  public function renderBanner(string $logo, string $version): string {
+  protected function wrapMarkup(string $text, int $width): array {
     $lines = [];
 
-    foreach (explode("\n", $logo) as $line) {
-      $lines[] = $this->title($line);
+    foreach ($this->wrapLines($text, $width) as $chunk) {
+      if ($chunk === '') {
+        $lines[] = '';
+
+        continue;
+      }
+
+      foreach ($this->markupBody($chunk) as $rendered) {
+        $lines[] = $rendered;
+      }
     }
 
-    if ($version !== '') {
-      $lines[] = '';
-      $lines[] = $this->footer(Translator::t('Version: @version', ['@version' => $version]));
-    }
-
-    return implode("\n", $lines);
+    return $lines;
   }
 
   /**
-   * {@inheritdoc}
+   * Split source text into physical lines and word-wrap each to a width.
+   *
+   * @param string $text
+   *   The source text; its own line endings split it first.
+   * @param int $width
+   *   The width to wrap to.
+   *
+   * @return list<string>
+   *   The wrapped lines, unstyled.
    */
-  public function keyHint(Key $key): string {
-    $name = $key->name;
+  protected function wrapLines(string $text, int $width): array {
+    $lines = [];
 
-    if (!$name instanceof KeyName) {
-      return $key->label();
+    foreach (explode("\n", $this->normalizeLines($text)) as $physical) {
+      $wrapped = Strings::wrap($physical, $width);
+
+      // A line with no visible characters wraps to nothing; keeping it blank
+      // lets a caller space the content out.
+      foreach ($wrapped === [] ? [''] : $wrapped as $line) {
+        $lines[] = $line;
+      }
     }
 
-    return match ($name) {
-      KeyName::Up, KeyName::MouseWheelUp => $this->arrowUp(),
-      KeyName::Down, KeyName::MouseWheelDown => $this->arrowDown(),
-      KeyName::Left => $this->arrowLeft(),
-      KeyName::Right => $this->arrowRight(),
-      KeyName::Enter => $this->enter(),
-      KeyName::Escape => Translator::t('esc'),
-      KeyName::Interrupt => Translator::t('ctrl-c'),
-      KeyName::Tab => Translator::t('tab'),
-      KeyName::Space => Translator::t('space'),
-      KeyName::Backspace => $this->unicode ? '⌫' : Translator::t('bksp'),
-      KeyName::Delete => Translator::t('del'),
-      KeyName::Home => Translator::t('home'),
-      KeyName::End => Translator::t('end'),
-      KeyName::PageUp => Translator::t('pgup'),
-      KeyName::PageDown => Translator::t('pgdn'),
+    return $lines;
+  }
+
+  /**
+   * Render passage text as themed physical lines.
+   *
+   * Links resolve on every terminal; the rest of the markdown subset - bold,
+   * emphasis, inline code and bullet lists - is rendered only when the
+   * "markdown" option is on, and otherwise left as literal text.
+   *
+   * @param string $source
+   *   The source text; newlines separate physical lines.
+   *
+   * @return list<string>
+   *   The rendered lines.
+   */
+  protected function markupBody(string $source): array {
+    $lines = [];
+
+    foreach (Markup::parse($source, $this->markdown) as $line) {
+      $rendered = $line->bullet ? $this->markupLine($this->markupBullet() . ' ') : '';
+
+      foreach ($line->segments as $segment) {
+        $rendered .= $this->markupSegment($segment);
+      }
+
+      $lines[] = $rendered;
+    }
+
+    return $lines;
+  }
+
+  /**
+   * Style one parsed markup span with its element.
+   *
+   * @param \DrevOps\Tui\Render\MarkupSegment $segment
+   *   The span.
+   *
+   * @return string
+   *   The styled span.
+   */
+  protected function markupSegment(MarkupSegment $segment): string {
+    return match ($segment->kind) {
+      MarkupKind::Bold => $this->markupStrong($segment->text),
+      MarkupKind::Emphasis => $this->markupEmphasis($segment->text),
+      MarkupKind::Code => $this->markupCode($segment->text),
+      MarkupKind::Link => $this->markupLink($segment->text, $segment->url),
+      // The parser has already split every link into its own span, so the
+      // element's own link resolution finds nothing left to do here.
+      MarkupKind::Text => $this->markupLine($segment->text),
     };
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function keysHint(ScopedKeyMap $keys, string $label, Action ...$actions): string {
-    $glyphs = [];
-
-    foreach ($actions as $action) {
-      $key = $keys->primary($action);
-
-      if ($key instanceof Key) {
-        $glyphs[] = $this->keyHint($key);
-      }
-    }
-
-    if ($glyphs === []) {
-      return '';
-    }
-
-    // "KEY to action" rather than "KEY action": the preposition is what makes a
-    // legend entry a sentence you can read rather than two words abutted.
-    return $this->legendKey(implode('/', $glyphs)) . ' ' . $this->legendDescription(Translator::t('to @action', ['@action' => $label]));
-  }
-
-  /**
-   * Render a context's hint fragments as one dot-joined footer line.
+   * Fold a caption or label to a single physical line for the indicators.
    *
-   * Each {@see Hint} becomes a labelled fragment drawn from the live bindings,
-   * so the line never contradicts a remapped key. Fragments whose actions are
-   * all unbound drop out, and an entirely unbound context yields an empty line.
+   * The spinner and bar redraw in place with carriage returns, so a CR or LF
+   * would reposition the cursor or leave a stale row behind; newlines collapse
+   * to a space.
    *
-   * @param \DrevOps\Tui\Input\ScopedKeyMap $keys
-   *   The active scope's bindings.
-   * @param \DrevOps\Tui\Input\Hint ...$hints
-   *   The hint fragments, in display order.
+   * @param string $text
+   *   The text.
    *
    * @return string
-   *   The themed hint line, or an empty string when nothing is bound.
+   *   The text with its line breaks folded to spaces.
    */
-  public function renderHints(ScopedKeyMap $keys, Hint ...$hints): string {
-    $fragments = [];
-
-    foreach ($hints as $hint) {
-      $fragment = $this->keysHint($keys, $hint->label, ...$hint->actions);
-
-      if ($fragment !== '') {
-        $fragments[] = $fragment;
-      }
-    }
-
-    return $fragments === [] ? '' : $this->renderHintLine(...$fragments);
-  }
-
-  /**
-   * Render a dimmed line of key hints, joined with the dot glyph.
-   *
-   * @param string ...$hints
-   *   The hint fragments (e.g. "enter accept", "esc cancel"). Empty fragments -
-   *   an unbound action - are dropped so the line has no dangling separators.
-   *
-   * @return string
-   *   The themed hint line.
-   */
-  public function renderHintLine(string ...$hints): string {
-    // The parts arrive styled by their own atoms, so the line only joins them.
-    return implode(' ' . $this->legendSeparator() . ' ', array_filter($hints));
-  }
-
-  /**
-   * Render the header shown above a field's editor: its label, underlined.
-   *
-   * @param string $label
-   *   The field label.
-   *
-   * @return string
-   *   The two-line themed header.
-   */
-  public function renderEditorHeader(string $label): string {
-    $underline = str_repeat($this->unicode ? '─' : '-', max(1, Markup::width($label, FALSE, $this->color)));
-
-    return $this->title($label) . "\n" . $this->rule($underline);
-  }
-
-  /**
-   * Compose a field's editor screen: the label, the field view and its hints.
-   *
-   * @param string $label
-   *   The field label.
-   * @param string $view
-   *   The field's rendered view.
-   * @param list<\DrevOps\Tui\Input\Hint> $hints
-   *   The field's hint fragments; an empty list draws no hint line, so the
-   *   footer can be turned off form-wide.
-   * @param \DrevOps\Tui\Input\ScopedKeyMap|null $keys
-   *   The editor's scope bindings, so the hint glyphs reflect the active keys.
-   * @param int $rows
-   *   The terminal rows a fullscreen editor stretches its frame to; 0 keeps
-   *   the screen as tall as its content.
-   *
-   * @return string
-   *   The editor screen - boxed when the theme has a border, stretched to the
-   *   given rows in fullscreen, else plain.
-   */
-  public function renderEditor(string $label, string $view, array $hints = [], ?ScopedKeyMap $keys = NULL, int $rows = 0): string {
-    $hint = $keys instanceof ScopedKeyMap ? $this->renderHints($keys, ...$hints) : '';
-    $footer = $hint === '' ? [] : [$hint];
-    $stretch = $this->isFullscreen() && $rows > 0;
-
-    if ($this->borderStyle() !== Border::None || $stretch) {
-      $body = explode("\n", $view);
-      $height = count($body);
-
-      // A borderless editor keeps its label-over-rule header inside the frame.
-      $header = $this->borderStyle() === Border::None ? explode("\n", $this->renderEditorHeader($label)) : [$this->title($label)];
-
-      // A fullscreen editor stretches its frame like the hub does - the hint
-      // footer pins to the bottom row. A view taller than the budget keeps
-      // its full height - fields page inside themselves, so slicing here
-      // would hide rows they expect to show.
-      if ($stretch) {
-        $height = max($height, $rows - count($header) - count($footer) - $this->chromeHeight($footer !== []));
-      }
-
-      return $this->renderFrame($header, $body, $footer, new Viewport(0, FALSE, FALSE), $height);
-    }
-
-    $screen = $this->renderEditorHeader($label) . "\n" . $view;
-
-    return $hint === '' ? $screen : $screen . "\n\n" . $hint;
-  }
-
-  /**
-   * Compose a field's help as a full-screen page.
-   *
-   * The text is markup-formatted and wrapped like a description, since it is
-   * same voice at greater length, and takes the whole screen because that is
-   * what lets it run to paragraphs.
-   *
-   * @param string $label
-   *   The label of the field the help belongs to.
-   * @param string $help
-   *   The help text; blank lines separate paragraphs.
-   * @param \DrevOps\Tui\Input\ScopedKeyMap $keys
-   *   The bindings the close hint is resolved against.
-   *
-   * @return string
-   *   The rendered page.
-   */
-  public function renderHelp(string $label, string $help, ScopedKeyMap $keys): string {
-    $lines = [$this->title($label), ''];
-
-    foreach ($this->markupBody($help, FALSE) as $line) {
-      $lines[] = $line;
-    }
-
-    $lines[] = '';
-    $lines[] = $this->renderHints($keys, new Hint('close', Action::Help));
-
-    return implode("\n", $lines);
-  }
-
-  /**
-   * Render a row of inline submit/cancel buttons.
-   *
-   * @param list<string> $labels
-   *   The button labels, in order.
-   * @param int $selected
-   *   The index of the selected button, or -1 for none.
-   *
-   * @return string
-   *   The themed button row with the buttons side by side.
-   */
-  public function renderButtonBar(array $labels, int $selected): string {
-    $parts = [];
-
-    foreach ($labels as $index => $label) {
-      $text = '[ ' . $label . ' ]';
-      $parts[] = $index === $selected ? $this->cursor($text) : $this->value($text);
-    }
-
-    return '  ' . implode('  ', $parts);
+  protected function oneLine(string $text): string {
+    return str_replace(["\r\n", "\r", "\n"], ' ', $text);
   }
 
   /**

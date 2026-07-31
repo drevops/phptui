@@ -129,7 +129,7 @@ class Toggle extends AbstractField implements StepCapableInterface {
     $parts = [];
 
     foreach ($this->values as $index => $value) {
-      $parts[] = $this->renderRadioRow($theme, $this->labels[$value] ?? $value, $index === $this->cursor);
+      $parts[] = $this->renderExclusiveRow($theme, $this->labels[$value] ?? $value, $index === $this->cursor);
     }
 
     return implode('  ', $parts);

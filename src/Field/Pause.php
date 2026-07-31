@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Field;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Theme\ThemeInterface;
@@ -53,10 +54,9 @@ class Pause extends AbstractField {
    * {@inheritdoc}
    */
   protected function renderBody(ThemeInterface $theme): string {
-    $key = $this->keys()->primary(Action::Accept);
-    $glyph = $key instanceof Key ? $theme->keyHint($key) : $theme->enter();
+    $key = $this->keys()->primary(Action::Accept) ?? Key::named(KeyName::Enter);
 
-    return Translator::t('Press @key to continue', ['@key' => $theme->highlight($glyph)]);
+    return Translator::t('Press @key to continue', ['@key' => $this->entryLabel($theme, $theme->keyGlyph($key), TRUE)]);
   }
 
   /**

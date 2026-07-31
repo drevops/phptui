@@ -52,7 +52,9 @@ trait SearchCapableTrait {
    *   The query line.
    */
   public function queryLine(ThemeInterface $theme): string {
-    return $this->filter . $theme->caret();
+    $elements = $this->elements($theme);
+
+    return $elements->fieldDraft($this->filter) . $elements->fieldCaret();
   }
 
 }

@@ -85,7 +85,7 @@ trait SelectionBoundedTrait {
     // The guidance voice, not the description's: this line states what the
     // field expects, and drawn as a description it is indistinguishable from
     // the highlighted option's own text sitting directly above it.
-    return $theme->renderGuidance(Translator::t('Select @constraint.', ['@constraint' => $this->selectionBounds->describe()]));
+    return $this->elements($theme)->fieldConstraint(Translator::t('Select @constraint.', ['@constraint' => $this->selectionBounds->describe()]));
   }
 
   /**

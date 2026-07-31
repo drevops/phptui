@@ -65,7 +65,7 @@ trait PlaceholderCapableTrait {
   protected function placeholderGhost(ThemeInterface $theme, string $current): string {
     $text = $this->placeholderText($current);
 
-    return $text === '' ? '' : $theme->ghost($text);
+    return $text === '' ? '' : $this->elements($theme)->fieldGhost($text);
   }
 
 }

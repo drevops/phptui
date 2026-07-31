@@ -12,6 +12,7 @@ use DrevOps\Tui\Block\Element\LegendElementsInterface;
 use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Block\Element\PanelElementsInterface;
 use DrevOps\Tui\Block\Element\ProgressElementsInterface;
+use DrevOps\Tui\Input\Key;
 
 /**
  * The floor a theme starts from: every element, drawn with nothing at all.
@@ -29,12 +30,37 @@ use DrevOps\Tui\Block\Element\ProgressElementsInterface;
  *
  * @package DrevOps\Tui\Theme
  */
-abstract class AbstractTheme implements ActionsElementsInterface, BreadcrumbElementsInterface, ChromeElementsInterface, FieldElementsInterface, LegendElementsInterface, MarkupElementsInterface, PanelElementsInterface, ProgressElementsInterface {
+abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface, BreadcrumbElementsInterface, ChromeElementsInterface, FieldElementsInterface, LegendElementsInterface, MarkupElementsInterface, PanelElementsInterface, ProgressElementsInterface {
 
   /**
    * The spinner animation frames that need no glyph outside ASCII.
    */
   protected const array SPINNER_ASCII = ['|', '/', '-', '\\'];
+
+  /**
+   * The columns the floor lays content out in.
+   *
+   * Nothing here measures a terminal, so the floor states a width rather than
+   * discovering one; a theme that knows its frame answers with that instead.
+   */
+  protected int $width = 0;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function contentWidth(): int {
+    return $this->width;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function keyGlyph(Key $key): string {
+    // Its name, because a name is what the floor has: an arrow is outside ASCII
+    // and a shorthand is a vocabulary a theme with a terminal behind it can
+    // afford to teach.
+    return $key->label();
+  }
 
   /**
    * {@inheritdoc}
@@ -130,6 +156,13 @@ abstract class AbstractTheme implements ActionsElementsInterface, BreadcrumbElem
   /**
    * {@inheritdoc}
    */
+  public function fieldMask(): string {
+    return '*';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function fieldBadge(string $text): string {
     return $text;
   }
@@ -144,7 +177,14 @@ abstract class AbstractTheme implements ActionsElementsInterface, BreadcrumbElem
   /**
    * {@inheritdoc}
    */
-  public function fieldEntry(string $text, bool $chosen): string {
+  public function fieldEntry(string $text, bool $chosen, bool $focused = FALSE): string {
+    return $text;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldEntryMatch(string $text): string {
     return $text;
   }
 
@@ -158,7 +198,11 @@ abstract class AbstractTheme implements ActionsElementsInterface, BreadcrumbElem
   /**
    * {@inheritdoc}
    */
-  public function fieldEntryMarker(bool $chosen): string {
+  public function fieldEntryMarker(bool $chosen, bool $exclusive = FALSE): string {
+    if ($exclusive) {
+      return $chosen ? '(*)' : '( )';
+    }
+
     return $chosen ? '[x]' : '[ ]';
   }
 
@@ -179,8 +223,17 @@ abstract class AbstractTheme implements ActionsElementsInterface, BreadcrumbElem
   /**
    * {@inheritdoc}
    */
+  public function fieldEntrySeparator(): string {
+    return str_repeat('-', max(1, $this->contentWidth()));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function fieldConstraint(string $text): string {
-    return $text;
+    // The one line that cannot be told apart by colour or slant here, so it
+    // opens with a mark instead: nothing can strip a character.
+    return '> ' . $text;
   }
 
   /**
@@ -202,6 +255,43 @@ abstract class AbstractTheme implements ActionsElementsInterface, BreadcrumbElem
    */
   public function fieldDraft(string $text): string {
     return $text;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldGhost(string $text): string {
+    // Text nobody typed reads as text somebody did unless something sets it
+    // apart, and the floor has nothing to set it apart with.
+    return '';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldInput(string $before, string $after, string $ghost = ''): string {
+    return $this->fieldDraft($before) . $this->fieldCaret() . $this->fieldDraft($after) . $this->fieldGhost($ghost);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldScale(int $current, int $min, int $max, string $caption): string {
+    // Clamped onto the scale, because a point outside it would otherwise ask
+    // for a run of negative length.
+    $points = max(1, $max - $min + 1);
+    $filled = max(1, min($points, $current - $min + 1));
+
+    $line = str_repeat('*', $filled) . str_repeat('-', $points - $filled) . ' ' . $current . '/' . $max;
+
+    return $caption === '' ? $line : $line . ' ' . $caption;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldLoading(): string {
+    return '...';
   }
 
   /**
@@ -272,6 +362,43 @@ abstract class AbstractTheme implements ActionsElementsInterface, BreadcrumbElem
    */
   public function markupLine(string $text): string {
     return $text;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function markupStrong(string $text): string {
+    return $text;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function markupEmphasis(string $text): string {
+    return $text;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function markupCode(string $text): string {
+    return $text;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function markupLink(string $text, string $url): string {
+    // A target nothing can follow is still address, so it is written out beside
+    // the label rather than dropped with the styling that would have hidden it.
+    return $text . ' (' . $url . ')';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function markupBullet(): string {
+    return '-';
   }
 
   /**

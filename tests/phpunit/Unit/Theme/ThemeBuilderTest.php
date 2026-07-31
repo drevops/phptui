@@ -106,7 +106,7 @@ final class ThemeBuilderTest extends TestCase {
       (new ThemeBuilder())->field(static fn(FieldOverrides $f): FieldOverrides => $f->selector('→', '=>'))->overrides()
     );
 
-    $this->assertSame($theme->highlight('→'), $theme->fieldSelector(TRUE));
+    $this->assertSame($theme->fieldEntry('→', FALSE, TRUE), $theme->fieldSelector(TRUE));
   }
 
   public function testTwoSelectorsComeApartOnceEitherIsOverridden(): void {

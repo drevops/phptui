@@ -162,7 +162,7 @@ final class OutputRenderTest extends TestCase {
 
   public function testRuleSpansTheRowWidth(): void {
     $theme = $this->theme(color: FALSE);
-    $rule = $theme->divider();
+    $rule = $theme->renderRule();
 
     // The row width, not the frame's: a rule sits inside the border like any
     // other row, so it stops where the border's gutter begins.

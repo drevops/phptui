@@ -159,7 +159,7 @@ final class Legend extends AbstractBlock {
       $key = $this->keyMap?->primary($action);
 
       if ($key instanceof Key) {
-        $glyphs[] = $theme->keyHint($key);
+        $glyphs[] = $theme->keyGlyph($key);
       }
     }
 

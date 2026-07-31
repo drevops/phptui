@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field;
 
+use DrevOps\Tui\Block\Element\FieldElementsInterface;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
@@ -188,37 +189,61 @@ abstract class AbstractField implements FieldInterface {
   }
 
   /**
-   * Style an option label, highlighted when its row holds the cursor.
+   * The theme, narrowed to the elements a field draws with.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param string $label
-   *   The option label.
-   * @param bool $current
-   *   Whether the option's row holds the cursor.
    *
-   * @return string
-   *   The label, highlight-styled when current.
+   * @return \DrevOps\Tui\Block\Element\FieldElementsInterface
+   *   The theme, able to draw a field.
+   *
+   * @throws \InvalidArgumentException
+   *   When the theme does not implement the elements.
    */
-  protected function highlightLabel(ThemeInterface $theme, string $label, bool $current): string {
-    return $current ? $theme->highlight($label) : $label;
+  protected function elements(ThemeInterface $theme): FieldElementsInterface {
+    if (!$theme instanceof FieldElementsInterface) {
+      throw new \InvalidArgumentException(sprintf('%s cannot draw a field: it does not implement %s.', $theme::class, FieldElementsInterface::class));
+    }
+
+    return $theme;
   }
 
   /**
-   * Render a radio option row: the radio glyph plus the highlighted label.
+   * Style one entry's label.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
    * @param string $label
-   *   The option label.
+   *   The entry label.
    * @param bool $current
-   *   Whether the option's row holds the cursor.
+   *   Whether the entry's row holds the cursor.
+   * @param bool $chosen
+   *   Whether the entry is picked.
+   *
+   * @return string
+   *   The styled label.
+   */
+  protected function entryLabel(ThemeInterface $theme, string $label, bool $current, bool $chosen = FALSE): string {
+    return $this->elements($theme)->fieldEntry($label, $chosen, $current);
+  }
+
+  /**
+   * Render an exclusive entry row: the mark and the label beside it.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   * @param string $label
+   *   The entry label.
+   * @param bool $current
+   *   Whether the entry's row holds the cursor.
    *
    * @return string
    *   The rendered row.
    */
-  protected function renderRadioRow(ThemeInterface $theme, string $label, bool $current): string {
-    return $theme->radio($current) . ' ' . $this->highlightLabel($theme, $label, $current);
+  protected function renderExclusiveRow(ThemeInterface $theme, string $label, bool $current): string {
+    // Moving the cursor is what picks in an exclusive list, so the mark and the
+    // cursor say the same thing and the row draws only the mark.
+    return $this->elements($theme)->fieldEntryMarker($current, TRUE) . ' ' . $this->entryLabel($theme, $label, $current);
   }
 
   /**
@@ -236,8 +261,8 @@ abstract class AbstractField implements FieldInterface {
    *
    * The label is split into runs of matched and unmatched characters, each run
    * styled on its own so no SGR code nests inside another: matched runs get the
-   * match colour, and on the cursor row the rest keeps the highlight colour.
-   * With no matched positions this is exactly {@see highlightLabel()}.
+   * match colour, and the rest is drawn as the entry it belongs to. With no
+   * matched positions this is exactly {@see entryLabel()}.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -247,13 +272,15 @@ abstract class AbstractField implements FieldInterface {
    *   The zero-based indices of the matched characters.
    * @param bool $current
    *   Whether the option's row holds the cursor.
+   * @param bool $chosen
+   *   Whether the option is picked.
    *
    * @return string
    *   The styled label.
    */
-  protected function renderMatchedLabel(ThemeInterface $theme, string $label, array $positions, bool $current): string {
+  protected function renderMatchedLabel(ThemeInterface $theme, string $label, array $positions, bool $current, bool $chosen = FALSE): string {
     if ($positions === []) {
-      return $this->highlightLabel($theme, $label, $current);
+      return $this->entryLabel($theme, $label, $current, $chosen);
     }
 
     $matched = array_fill_keys($positions, TRUE);
@@ -265,7 +292,7 @@ abstract class AbstractField implements FieldInterface {
       $is_matched = isset($matched[$index]);
 
       if ($run !== '' && $is_matched !== $run_matched) {
-        $out .= $this->styleRun($theme, $run, $run_matched, $current);
+        $out .= $this->styleRun($theme, $run, $run_matched, $current, $chosen);
         $run = '';
       }
 
@@ -273,7 +300,7 @@ abstract class AbstractField implements FieldInterface {
       $run_matched = $is_matched;
     }
 
-    return $out . $this->styleRun($theme, $run, $run_matched, $current);
+    return $out . $this->styleRun($theme, $run, $run_matched, $current, $chosen);
   }
 
   /**
@@ -287,16 +314,18 @@ abstract class AbstractField implements FieldInterface {
    *   Whether the run's characters matched the query.
    * @param bool $current
    *   Whether the option's row holds the cursor.
+   * @param bool $chosen
+   *   Whether the option is picked.
    *
    * @return string
    *   The styled run.
    */
-  protected function styleRun(ThemeInterface $theme, string $run, bool $matched, bool $current): string {
+  protected function styleRun(ThemeInterface $theme, string $run, bool $matched, bool $current, bool $chosen): string {
     if ($matched) {
-      return $theme->highlightMatch($run);
+      return $this->elements($theme)->fieldEntryMatch($run);
     }
 
-    return $current ? $theme->highlight($run) : $run;
+    return $this->entryLabel($theme, $run, $current, $chosen);
   }
 
   /**
@@ -325,7 +354,7 @@ abstract class AbstractField implements FieldInterface {
     }
 
     if ($this->error !== NULL) {
-      $lines[] = $theme->error($this->error);
+      $lines[] = $this->elements($theme)->fieldError($this->error);
     }
 
     return implode("\n", $lines);
@@ -400,7 +429,9 @@ abstract class AbstractField implements FieldInterface {
       return '';
     }
 
-    return implode("\n", array_map(static fn(string $line): string => $indent . $theme->entryDescription($line), Strings::wrap($description, $width)));
+    $elements = $this->elements($theme);
+
+    return implode("\n", array_map(static fn(string $line): string => $indent . $elements->fieldEntryDescription($line), Strings::wrap($description, $width)));
   }
 
   /**

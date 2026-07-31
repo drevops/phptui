@@ -99,7 +99,6 @@ return [
   'between @min and @max items' => 'between @min and @max items',
   'bksp' => 'bksp',
   'cancel' => 'cancel',
-  'close' => 'close',
   'continue' => 'continue',
   'ctrl-c' => 'ctrl-c',
   'default' => 'default',

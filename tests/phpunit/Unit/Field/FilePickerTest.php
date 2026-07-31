@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Field;
 
+use DrevOps\Tui\Block\Legend;
+use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\Input\ScopedKeyMap;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FilePickerConstraints;
 use DrevOps\Tui\Model\FilePickerMode;
@@ -387,13 +390,13 @@ final class FilePickerTest extends TestCase {
 
     // A single picker binds no toggle key, so that fragment drops and Accept
     // reads "select"; the browse and hidden fragments are always present.
-    $single = Ansi::strip($theme->renderHints(KeyMapManager::create()->forField(FieldType::FilePicker), ...(new FilePicker($this->root))->hints()));
+    $single = Ansi::strip($this->legendOf($theme, KeyMapManager::create()->forField(FieldType::FilePicker), ...(new FilePicker($this->root))->hints()));
     $this->assertStringNotContainsString('SPACE to select', $single);
     $this->assertStringContainsString('open', $single);
     $this->assertStringContainsString('TAB to show hidden', $single);
 
     // Multiple mode leads with the toggle key and Accept reads "accept".
-    $multiple = Ansi::strip($theme->renderHints(KeyMapManager::create()->forField(FieldType::FilePicker, TRUE), ...(new FilePicker($this->root, multiple: TRUE))->hints()));
+    $multiple = Ansi::strip($this->legendOf($theme, KeyMapManager::create()->forField(FieldType::FilePicker, TRUE), ...(new FilePicker($this->root, multiple: TRUE))->hints()));
     $this->assertStringContainsString('SPACE to select', $multiple);
     $this->assertStringContainsString('accept', $multiple);
   }
@@ -541,6 +544,23 @@ final class FilePickerTest extends TestCase {
    */
   protected function render(FilePicker $field): string {
     return Ansi::strip($field->view(new DefaultTheme()));
+  }
+
+  /**
+   * The legend a set of bindings and hint fragments comes to.
+   *
+   * @param \DrevOps\Tui\Theme\DefaultTheme $theme
+   *   The theme.
+   * @param \DrevOps\Tui\Input\ScopedKeyMap $keys
+   *   The bindings a key press resolves against.
+   * @param \DrevOps\Tui\Input\Hint ...$hints
+   *   What those keys do.
+   *
+   * @return string
+   *   The drawn legend.
+   */
+  protected function legendOf(DefaultTheme $theme, ScopedKeyMap $keys, Hint ...$hints): string {
+    return (new Legend())->advertise($keys, ...$hints)->render($theme);
   }
 
 }

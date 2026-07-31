@@ -153,7 +153,7 @@ class Password extends AbstractField implements TextEditCapableInterface, Reveal
     $rows = [$this->renderLine($theme)];
 
     if ($this->firstEntry !== NULL) {
-      $rows[] = $theme->footer(Translator::t('re-enter to confirm'));
+      $rows[] = $this->elements($theme)->fieldState(Translator::t('re-enter to confirm'));
     }
 
     return implode("\n", $rows);
@@ -187,10 +187,11 @@ class Password extends AbstractField implements TextEditCapableInterface, Reveal
     // An empty buffer hides nothing, so the placeholder shows in every display
     // mode and disappears the moment a first character masks the entry.
     $placeholder = $this->placeholderText($this->buffer);
+    $elements = $this->elements($theme);
 
     return match ($this->display) {
-      PasswordDisplay::Hidden => $theme->renderInput('', '', $placeholder),
-      PasswordDisplay::Masked => $theme->renderInput(str_repeat($theme->mask(), $this->cursor), str_repeat($theme->mask(), Strings::length($this->buffer) - $this->cursor), $placeholder),
+      PasswordDisplay::Hidden => $elements->fieldInput('', '', $placeholder),
+      PasswordDisplay::Masked => $elements->fieldInput(str_repeat($elements->fieldMask(), $this->cursor), str_repeat($elements->fieldMask(), Strings::length($this->buffer) - $this->cursor), $placeholder),
       PasswordDisplay::Plaintext => $this->renderInputLine($theme, $placeholder),
     };
   }

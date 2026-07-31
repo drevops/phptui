@@ -8,6 +8,7 @@ use DrevOps\Tui\Block\Capability\DependCapableInterface;
 use DrevOps\Tui\Block\Capability\DependCapableTrait;
 use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Model\TableSpec;
+use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 
@@ -182,7 +183,11 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
       $headers = $this->table instanceof TableSpec ? $this->table->headers : [];
       $rows = $this->table instanceof TableSpec ? $this->table->rows : [];
 
-      return implode("\n", $theme->renderCard(Translator::t($this->title), $body, $headers, $rows, $this->bordered));
+      // The one card renderer, so a bordered note and a standalone box are
+      // restyled together rather than drifting apart.
+      $pieces = $this->elements($theme, PrimitiveElementsInterface::class, 'a card');
+
+      return implode("\n", $pieces->renderCard(Translator::t($this->title), $body, $headers, $rows, $this->bordered));
     }
 
     $lines = [];
@@ -191,7 +196,7 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
       $lines[] = $elements->markupTitle(Translator::t($this->title));
     }
 
-    foreach (Prose::lines(Translator::t($this->body), $theme, $elements->markupLine(...)) as $line) {
+    foreach (Prose::lines(Translator::t($this->body), $elements) as $line) {
       $lines[] = $line;
     }
 

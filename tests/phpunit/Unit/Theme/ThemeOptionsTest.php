@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Render\Viewport;
 use DrevOps\Tui\Tests\Fixtures\Theme\AccentOptionTheme;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
@@ -30,110 +25,30 @@ use PHPUnit\Framework\TestCase;
 #[Group('theme')]
 final class ThemeOptionsTest extends TestCase {
 
-  #[DataProvider('dataProviderBorderDrawsBox')]
-  public function testBorderDrawsBox(bool $unicode, Border $border, string $expected): void {
-    $theme = new DefaultTheme(24, ['color' => FALSE, 'unicode' => $unicode, 'border' => $border]);
-    $frame = $theme->renderFrame(['HEAD'], ['body'], ['FOOT'], new Viewport(0, FALSE, FALSE), 1);
-
-    $this->assertStringContainsString($expected, $frame);
-    $this->assertStringContainsString('HEAD', Ansi::strip($frame));
-    $this->assertStringContainsString('body', Ansi::strip($frame));
-    $this->assertStringContainsString('FOOT', Ansi::strip($frame));
+  #[DataProvider('dataProviderBorderStyleAccessor')]
+  public function testBorderStyleAccessor(array $options, Border $expected): void {
+    $this->assertSame($expected, (new DefaultTheme(24, $options))->borderStyle());
   }
 
-  public static function dataProviderBorderDrawsBox(): \Iterator {
-    yield 'line' => [TRUE, Border::Line, '┌'];
-    yield 'rounded' => [TRUE, Border::Rounded, '╭'];
-    yield 'double' => [TRUE, Border::Double, '╔'];
-    yield 'ascii line corner' => [FALSE, Border::Line, '+'];
-    yield 'ascii double fill' => [FALSE, Border::Double, '='];
+  public static function dataProviderBorderStyleAccessor(): \Iterator {
+    // Unset draws the rounded box; only an explicit opt-out goes borderless.
+    yield 'defaults' => [[], Border::Rounded];
+    yield 'enum case' => [['border' => Border::Double], Border::Double];
+    yield 'string value' => [['border' => 'line'], Border::Line];
+    yield 'none' => [['border' => Border::None], Border::None];
   }
 
-  public function testBorderedLinesAreExactlyOuterWidthAndClip(): void {
-    $theme = new DefaultTheme(12, ['color' => FALSE, 'border' => Border::Line]);
-
-    // Inner width is 12 - 4 = 8, so a 20-char body line must clip; every line
-    // is exactly the outer width.
-    $frame = $theme->renderFrame(['H'], [str_repeat('x', 20)], ['F'], new Viewport(0, FALSE, FALSE), 1);
-
-    foreach (explode("\n", $frame) as $line) {
-      $this->assertSame(12, Ansi::width($line));
-    }
+  public function testBorderCostsTheContentItsChromeColumns(): void {
+    // A bordered frame spends a border column and a gutter each side, so what
+    // is left for content is four columns narrower than the frame.
+    $this->assertSame(20, (new DefaultTheme(24, ['border' => Border::Line]))->contentWidth());
+    $this->assertSame(24, (new DefaultTheme(24, ['border' => Border::None]))->contentWidth());
   }
 
-  public function testPaddedBorderAddsInnerPadding(): void {
-    $padded = new DefaultTheme(20, ['color' => FALSE, 'spacing' => Spacing::Padded, 'border' => Border::Line]);
-    $plain = new DefaultTheme(20, ['color' => FALSE, 'spacing' => Spacing::Normal, 'border' => Border::Line]);
-
-    $args = [['H'], ['b'], ['F'], new Viewport(0, FALSE, FALSE), 1];
-
-    // Padded adds a blank boxed line above and below the body.
-    $this->assertSame(substr_count($plain->renderFrame(...$args), "\n") + 2, substr_count($padded->renderFrame(...$args), "\n"));
-  }
-
-  public function testBorderlessStatusGapFollowsSpacing(): void {
-    $args = [['H'], ['b'], ['F'], new Viewport(0, FALSE, FALSE), 1];
-
-    // Normal detaches the footer with a blank line; compact keeps it attached.
-    $normal = explode("\n", Ansi::strip((new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Normal]))->renderFrame(...$args)));
-    $this->assertSame(['H', 'b', '', 'F'], $normal);
-
-    $compact = explode("\n", Ansi::strip((new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Compact]))->renderFrame(...$args)));
-    $this->assertSame(['H', 'b', 'F'], $compact);
-  }
-
-  public function testDefaultLookIsBorderedAndPadded(): void {
-    $args = [['H'], ['b'], ['F'], new Viewport(0, FALSE, FALSE), 1];
-
-    // Unset options draw the padded rounded box; only an explicit opt-out
-    // goes borderless.
-    $default = (new DefaultTheme(24, ['color' => FALSE]))->renderFrame(...$args);
-    $explicit = (new DefaultTheme(24, ['color' => FALSE, 'border' => Border::Rounded, 'spacing' => Spacing::Padded]))->renderFrame(...$args);
-
-    $this->assertSame($explicit, $default);
-    $this->assertStringContainsString('╭', $default);
-    $this->assertStringNotContainsString('╭', (new DefaultTheme(24, ['color' => FALSE, 'border' => Border::None]))->renderFrame(...$args));
-  }
-
-  public function testEditorAdoptsBorder(): void {
-    $plain = (new DefaultTheme(30, ['color' => FALSE, 'border' => Border::None]))->renderEditor('Name', 'Acme');
-    $boxed = (new DefaultTheme(30, ['color' => FALSE, 'border' => Border::Line]))->renderEditor('Name', 'Acme');
-
-    // Borderless keeps today's label-over-rule editor; a border boxes it.
-    $this->assertStringContainsString("Name\n────", Ansi::strip($plain));
-    $this->assertStringNotContainsString('┌', $plain);
-
-    $this->assertStringContainsString('┌', $boxed);
-    $this->assertStringContainsString('Name', Ansi::strip($boxed));
-    $this->assertStringContainsString('Acme', Ansi::strip($boxed));
-  }
-
-  public function testEditorDrawsHintsOnlyWhenGiven(): void {
-    $plain = new DefaultTheme(30, ['color' => FALSE]);
-    $keys = KeyMapManager::create()->forField(FieldType::Text);
-
-    // An empty hint list draws no footer (the footer can be turned off); a
-    // non-empty list draws it.
-    $this->assertStringNotContainsString('accept', $plain->renderEditor('Name', 'body', [], $keys));
-    $this->assertStringContainsString('accept', $plain->renderEditor('Name', 'body', [new Hint('accept', Action::Accept)], $keys));
-
-    // Bordered: an empty hint list still closes the box with a single rule.
-    $boxed = new DefaultTheme(30, ['color' => FALSE, 'border' => Border::Line]);
-    $frame = $boxed->renderEditor('Name', 'body', [], $keys);
-    $this->assertStringNotContainsString('accept', $frame);
-    $this->assertStringContainsString('body', Ansi::strip($frame));
-  }
-
-  public function testBorderColourFollowsMode(): void {
-    $args = [['H'], ['b'], ['F'], new Viewport(0, FALSE, FALSE), 1];
-
-    // The border is drawn in the mode's border colour - cyan in dark, blue in
-    // light - not the editor-rule grey.
-    $dark = (new DefaultTheme(20, ['border' => Border::Line]))->renderFrame(...$args);
-    $this->assertStringContainsString("\033[36m", $dark);
-
-    $light = (new DefaultTheme(20, ['border' => Border::Line, 'mode' => Mode::Light]))->renderFrame(...$args);
-    $this->assertStringContainsString("\033[34m", $light);
+  public function testSpacingAccessor(): void {
+    $this->assertSame(Spacing::Padded, (new DefaultTheme(40))->spacing());
+    $this->assertSame(Spacing::Compact, (new DefaultTheme(40, ['spacing' => Spacing::Compact]))->spacing());
+    $this->assertSame(Spacing::Normal, (new DefaultTheme(40, ['spacing' => 'normal']))->spacing());
   }
 
   public function testFieldStyleInvalidValueThrows(): void {
@@ -144,7 +59,7 @@ final class ThemeOptionsTest extends TestCase {
   }
 
   public function testFieldFlatInputHasPlainCaretNoFill(): void {
-    $line = (new DefaultTheme(40))->renderInput('ab', 'cd', 'ef');
+    $line = (new DefaultTheme(40))->fieldInput('ab', 'cd', 'ef');
 
     // Flat keeps the value with the caret glyph and a dimmed ghost - no fill.
     $this->assertStringNotContainsString("\033[30;47m", $line);
@@ -155,7 +70,7 @@ final class ThemeOptionsTest extends TestCase {
 
   public function testFieldBoxedInputFillsBehindTheValue(): void {
     // A string value (not the enum case) exercises the option's string path.
-    $line = (new DefaultTheme(40, ['field' => 'boxed', 'border' => Border::None]))->renderInput('localhost', '');
+    $line = (new DefaultTheme(40, ['field' => 'boxed', 'border' => Border::None]))->fieldInput('localhost', '');
 
     // The fill opens before the value, so the background runs behind the text
     // itself, and the field is padded to a fixed, visible width.
@@ -166,7 +81,7 @@ final class ThemeOptionsTest extends TestCase {
   }
 
   public function testFieldBoxedEmptyInputIsVisible(): void {
-    $line = (new DefaultTheme(40, ['field' => FieldStyle::Boxed, 'border' => Border::None]))->renderInput('', '');
+    $line = (new DefaultTheme(40, ['field' => FieldStyle::Boxed, 'border' => Border::None]))->fieldInput('', '');
 
     // An empty buffer still renders a full-width filled bar (caret + pad).
     $this->assertStringStartsWith("\033[30;47m", $line);
@@ -174,14 +89,14 @@ final class ThemeOptionsTest extends TestCase {
   }
 
   public function testFieldBoxedInputAdaptsToLightMode(): void {
-    $line = (new DefaultTheme(40, ['field' => FieldStyle::Boxed, 'mode' => Mode::Light]))->renderInput('x', '');
+    $line = (new DefaultTheme(40, ['field' => FieldStyle::Boxed, 'mode' => Mode::Light]))->fieldInput('x', '');
 
     // Light mode fills dark (white on blue) for contrast on a light terminal.
     $this->assertStringStartsWith("\033[97;44m", $line);
   }
 
   public function testFieldUnderlineInputUnderlinesField(): void {
-    $line = (new DefaultTheme(40, ['field' => FieldStyle::Underline]))->renderInput('x', 'y');
+    $line = (new DefaultTheme(40, ['field' => FieldStyle::Underline]))->fieldInput('x', 'y');
 
     $this->assertStringStartsWith("\033[4;32m", $line);
     $this->assertStringContainsString('x', Ansi::strip($line));
@@ -189,7 +104,7 @@ final class ThemeOptionsTest extends TestCase {
   }
 
   public function testFieldBoxedInputCaretShowsTheLetter(): void {
-    $line = (new DefaultTheme(40, ['field' => FieldStyle::Boxed]))->renderInput('ab', 'cd');
+    $line = (new DefaultTheme(40, ['field' => FieldStyle::Boxed]))->fieldInput('ab', 'cd');
 
     // The caret reverses the character it sits on ('c'), so the letter shows
     // through the cursor rather than a solid block.
@@ -197,7 +112,7 @@ final class ThemeOptionsTest extends TestCase {
   }
 
   public function testFieldBoxedInputFillRunsUnbrokenThroughCaretAndGhost(): void {
-    $line = (new DefaultTheme(40, ['field' => FieldStyle::Boxed]))->renderInput('ab', 'cd', 'xyz');
+    $line = (new DefaultTheme(40, ['field' => FieldStyle::Boxed]))->fieldInput('ab', 'cd', 'xyz');
 
     // The caret (reverse) and ghost (dim) toggle off rather than reset, so the
     // fill is never punctured: exactly one closing reset in the whole line.
@@ -206,7 +121,7 @@ final class ThemeOptionsTest extends TestCase {
   }
 
   public function testFieldInputNoColourFallsBackToFlat(): void {
-    $line = (new DefaultTheme(40, ['field' => FieldStyle::Boxed, 'color' => FALSE]))->renderInput('ab', 'cd');
+    $line = (new DefaultTheme(40, ['field' => FieldStyle::Boxed, 'color' => FALSE]))->fieldInput('ab', 'cd');
 
     // No colour: no SGR and no padding, just the value with the ascii caret.
     $this->assertStringNotContainsString("\033[", $line);
@@ -308,22 +223,22 @@ final class ThemeOptionsTest extends TestCase {
 
   public function testFullscreenMaxWidthCapsTheFrame(): void {
     // The cap narrows a fullscreen frame; uncapped keeps the terminal width.
-    $this->assertSame(100, (new DefaultTheme(200, ['fullscreen' => TRUE, 'max_width' => 100]))->outerWidth());
-    $this->assertSame(200, (new DefaultTheme(200, ['fullscreen' => TRUE]))->outerWidth());
+    $this->assertSame(100, (new DefaultTheme(200, ['fullscreen' => TRUE, 'max_width' => 100, 'border' => Border::None]))->contentWidth());
+    $this->assertSame(200, (new DefaultTheme(200, ['fullscreen' => TRUE, 'border' => Border::None]))->contentWidth());
 
     // A cap wider than the terminal never widens the frame.
-    $this->assertSame(80, (new DefaultTheme(80, ['fullscreen' => TRUE, 'max_width' => 100]))->outerWidth());
+    $this->assertSame(80, (new DefaultTheme(80, ['fullscreen' => TRUE, 'max_width' => 100, 'border' => Border::None]))->contentWidth());
 
     // Outside fullscreen the cap has no effect on sizing.
-    $this->assertSame(200, (new DefaultTheme(200, ['max_width' => 100]))->outerWidth());
+    $this->assertSame(200, (new DefaultTheme(200, ['max_width' => 100, 'border' => Border::None]))->contentWidth());
   }
 
   public function testCustomOptionDeclaredBySchema(): void {
     $theme = $this->accentTheme(['color' => FALSE, 'accent' => 'warm']);
-    $this->assertSame('warm', $theme->accent());
+    $this->assertSame('warm', $theme->accentOption());
 
     // Unset falls back to the theme's default.
-    $this->assertSame('cool', $this->accentTheme(['color' => FALSE])->accent());
+    $this->assertSame('cool', $this->accentTheme(['color' => FALSE])->accentOption());
   }
 
   public function testCustomOptionInvalidValueThrows(): void {

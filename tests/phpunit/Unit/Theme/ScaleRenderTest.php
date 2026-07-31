@@ -27,24 +27,24 @@ final class ScaleRenderTest extends TestCase {
   use BuildsThemesTrait;
 
   public function testScaleFillsUpToTheChosenPoint(): void {
-    $line = $this->theme(color: FALSE)->renderScale(3, 1, 5, 'Fair');
+    $line = $this->theme(color: FALSE)->fieldScale(3, 1, 5, 'Fair');
 
     $this->assertSame('●●●○○ 3/5 Fair', $line);
   }
 
   public function testScaleWithoutCaptionIsPointsAndReadout(): void {
-    $this->assertSame('●●●●● 5/5', $this->theme(color: FALSE)->renderScale(5, 1, 5, ''));
+    $this->assertSame('●●●●● 5/5', $this->theme(color: FALSE)->fieldScale(5, 1, 5, ''));
   }
 
   public function testScaleAsciiFallback(): void {
-    $line = $this->theme(color: FALSE, unicode: FALSE)->renderScale(2, 1, 5, '');
+    $line = $this->theme(color: FALSE, unicode: FALSE)->fieldScale(2, 1, 5, '');
 
     $this->assertSame('**--- 2/5', $line);
     $this->assertStringNotContainsString('●', $line);
   }
 
   public function testScaleAppliesTheAccentToTheFilledRun(): void {
-    $this->assertStringContainsString("\033[1;36m", $this->theme()->renderScale(2, 1, 5, ''));
+    $this->assertStringContainsString("\033[1;36m", $this->theme()->fieldScale(2, 1, 5, ''));
   }
 
   public function testScaleCarriesTheThemeAccent(): void {
@@ -52,11 +52,11 @@ final class ScaleRenderTest extends TestCase {
     // no per-theme override, so the accent flows through highlight().
     $theme = ThemeManager::create('ember', DefaultTheme::DEFAULT_WIDTH, ['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
 
-    $this->assertStringContainsString("\033[1;38;5;208m", $theme->renderScale(2, 1, 5, ''));
+    $this->assertStringContainsString("\033[1;38;5;208m", $theme->fieldScale(2, 1, 5, ''));
   }
 
   public function testScaleFoldsCaptionToOneLine(): void {
-    $line = $this->theme(color: FALSE)->renderScale(1, 1, 3, "Poor\nby any measure");
+    $line = $this->theme(color: FALSE)->fieldScale(1, 1, 3, "Poor\nby any measure");
 
     $this->assertSame('●○○ 1/3 Poor by any measure', $line);
   }
@@ -64,7 +64,7 @@ final class ScaleRenderTest extends TestCase {
   #[DataProvider('dataProviderScaleClampsPointOffTheScale')]
   public function testScaleClampsPointOffTheScale(int $current, int $filled, int $empty): void {
     // A direct call outside the range must clamp, not crash str_repeat().
-    $line = $this->theme(color: FALSE)->renderScale($current, 1, 5, '');
+    $line = $this->theme(color: FALSE)->fieldScale($current, 1, 5, '');
 
     $this->assertSame($filled, substr_count($line, '●'));
     $this->assertSame($empty, substr_count($line, '○'));
@@ -83,13 +83,13 @@ final class ScaleRenderTest extends TestCase {
 
   public function testSinglePointScaleStillRendersOne(): void {
     // A collapsed range is rejected at build time, but the renderer is public.
-    $this->assertSame('● 2/2', $this->theme(color: FALSE)->renderScale(2, 2, 2, ''));
+    $this->assertSame('● 2/2', $this->theme(color: FALSE)->fieldScale(2, 2, 2, ''));
   }
 
   public function testScaleWiderThanTheFrameIsBoundedByIt(): void {
     // Nothing wider than the frame can be drawn, so a public call with an
     // absurd range costs a truncated line rather than the whole heap.
-    $line = $this->theme(color: FALSE)->renderScale(1, 1, PHP_INT_MAX, '');
+    $line = $this->theme(color: FALSE)->fieldScale(1, 1, PHP_INT_MAX, '');
 
     $points = substr_count($line, '●') + substr_count($line, '○');
     $this->assertGreaterThan(0, $points);

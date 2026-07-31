@@ -33,6 +33,9 @@ use DrevOps\Tui\Tests\Traits\IsolatesEnvTrait;
 use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\Mode;
+use DrevOps\Tui\Theme\Override\BreadcrumbOverrides;
+use DrevOps\Tui\Theme\Override\FieldOverrides;
+use DrevOps\Tui\Theme\ThemeBuilder;
 use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Tui;
 use org\bovigo\vfs\vfsStream;
@@ -368,6 +371,51 @@ final class TuiTest extends TestCase {
     foreach ($lines as $line) {
       $this->assertSame(50, mb_strlen($line, 'UTF-8'));
     }
+  }
+
+  #[DataProvider('dataProviderThemeClosureStatesWhatElementsDraw')]
+  public function testThemeClosureStatesWhatElementsDraw(bool $unicode, string $separator, string $selector): void {
+    // One Enter descends into the panel, so the trail gains a segment and the
+    // rows the field selector marks are on screen.
+    $terminal = new BufferedTerminal([KeyEncoder::encode(Key::named(KeyName::Enter))], 20, 60);
+
+    $this->tui()
+      ->color(FALSE)
+      ->unicode($unicode)
+      ->theme(static fn(ThemeBuilder $builder): ThemeBuilder => $builder
+        ->breadcrumb(static fn(BreadcrumbOverrides $group): BreadcrumbOverrides => $group->separator('»', '::'))
+        ->field(static fn(FieldOverrides $group): FieldOverrides => $group->selector('→', '=>')))
+      ->interact(terminal: $terminal);
+
+    $screen = Ansi::strip($terminal->output());
+
+    $this->assertStringContainsString($separator, $screen);
+    $this->assertStringContainsString($selector, $screen);
+    // Both display modes are stated together, so neither can be set and the
+    // other silently left broken.
+    $this->assertStringNotContainsString($unicode ? '::' : '»', $screen);
+  }
+
+  public static function dataProviderThemeClosureStatesWhatElementsDraw(): \Iterator {
+    yield 'unicode' => [TRUE, '»', '→'];
+    yield 'ascii' => [FALSE, '::', '=>'];
+  }
+
+  public function testThemeClosurePatchesWhicheverThemeIsSelected(): void {
+    $terminal = new BufferedTerminal([KeyEncoder::encode(Key::named(KeyName::Enter))], 20, 60);
+
+    // A name picks the theme and a closure patches it, in either order: the
+    // patch is not a second theme.
+    $this->tui()
+      ->theme(static fn(ThemeBuilder $builder): ThemeBuilder => $builder->field(static fn(FieldOverrides $group): FieldOverrides => $group->selector('→', '=>')))
+      ->theme('mono', ['color' => TRUE, 'unicode' => TRUE])
+      ->interact(terminal: $terminal);
+
+    $output = $terminal->output();
+
+    // The glyph is the consumer's and the hue is the theme's, so an override
+    // names the mark without taking the palette with it.
+    $this->assertStringContainsString("\033[1;97m→", $output);
   }
 
   #[DataProvider('dataProviderResolveTheme')]

@@ -136,7 +136,7 @@ final class SuggestTest extends TestCase {
 
     // The matched "Pa" prefix is themed as a match run; the label is intact
     // once the styling is stripped.
-    $this->assertStringContainsString($theme->highlightMatch('Pa'), $view);
+    $this->assertStringContainsString($theme->fieldEntryMatch('Pa'), $view);
     $this->assertStringContainsString('Palace', Ansi::strip($view));
   }
 
@@ -297,7 +297,7 @@ final class SuggestTest extends TestCase {
     // Without colour the preview cannot be dimmed, so it is dropped rather than
     // rendered as plain text indistinguishable from the typed query. The
     // suggestion itself still lists below, and no escapes leak into the line.
-    $this->assertSame('a' . $theme->caret(), $field->queryLine($theme));
+    $this->assertSame('a' . $theme->fieldCaret(), $field->queryLine($theme));
     $this->assertStringNotContainsString("\033", $field->view($theme));
   }
 
@@ -372,7 +372,7 @@ final class SuggestTest extends TestCase {
     // has already given way to the loading indicator; previewing one of them
     // would put back the answer being withdrawn.
     $field->beginQuery();
-    $this->assertSame('a' . $theme->caret(), $field->queryLine($theme));
+    $this->assertSame('a' . $theme->fieldCaret(), $field->queryLine($theme));
 
     // Once the new rows settle the preview returns, drawn from them.
     $field->applyQuery('a', Option::list(['Apple' => 'Apple']));
