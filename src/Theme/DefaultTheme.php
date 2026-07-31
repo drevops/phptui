@@ -31,6 +31,9 @@ use DrevOps\Tui\Render\Table;
 use DrevOps\Tui\Render\Viewport;
 use DrevOps\Tui\Theme\Capability\ColorSchemeCapableInterface;
 use DrevOps\Tui\Theme\Capability\ColorSchemeCapableTrait;
+use DrevOps\Tui\Theme\Capability\DimCapableInterface;
+use DrevOps\Tui\Theme\Capability\MarkdownCapableInterface;
+use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
 use DrevOps\Tui\Theme\Capability\UnicodeCapableInterface;
 use DrevOps\Tui\Theme\Capability\UnicodeCapableTrait;
 use DrevOps\Tui\Theme\Override\Glyph;
@@ -70,7 +73,7 @@ use DrevOps\Tui\Utils\Strings;
  *
  * @package DrevOps\Tui\Theme
  */
-class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeCapableInterface, UnicodeCapableInterface {
+class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeCapableInterface, DimCapableInterface, MarkdownCapableInterface, OccupyCapableInterface, UnicodeCapableInterface {
 
   use ColorSchemeCapableTrait;
   use UnicodeCapableTrait;
@@ -402,8 +405,18 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    * @return \DrevOps\Tui\Theme\Spacing
    *   The spacing; padded when unset.
    */
-  protected function spacing(): Spacing {
+  public function spacing(): Spacing {
     return $this->enumOption('spacing', Spacing::class, Spacing::Padded);
+  }
+
+  /**
+   * Whether the markdown subset is drawn, from "markdown".
+   *
+   * @return bool
+   *   TRUE when it is drawn rather than left as literal text.
+   */
+  public function hasMarkdown(): bool {
+    return $this->markdown;
   }
 
   /**

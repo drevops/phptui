@@ -416,7 +416,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
    * @return list<\DrevOps\Tui\Block\BlockInterface>
    *   The blocks; empty while the panel has no layout to hold any.
    */
-  protected function blocks(): array {
+  public function blocks(): array {
     if (!$this->layout instanceof LayoutInterface) {
       return [];
     }

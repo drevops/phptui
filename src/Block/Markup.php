@@ -92,6 +92,21 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
   }
 
   /**
+   * Set the title above this block's body.
+   *
+   * @param string $title
+   *   The title; empty draws the body alone.
+   *
+   * @return static
+   *   The block.
+   */
+  public function title(string $title): static {
+    $this->title = $title;
+
+    return $this;
+  }
+
+  /**
    * The title above this block's body.
    *
    * @return string
@@ -175,8 +190,8 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
       $lines[] = $elements->markupTitle($this->title);
     }
 
-    foreach ($this->lines() as $line) {
-      $lines[] = $elements->markupLine($line);
+    foreach (Prose::lines($this->body, $theme, $elements->markupLine(...)) as $line) {
+      $lines[] = $line;
     }
 
     return implode("\n", $lines);

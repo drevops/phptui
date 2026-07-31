@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Screen;
 
 use DrevOps\Tui\Block\Capability\BindCapableInterface;
+use DrevOps\Tui\Block\Capability\DependCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Legend;
@@ -178,6 +179,28 @@ final class KeyRouter {
   }
 
   /**
+   * Come back out of the panel you are in, as the key that does would.
+   *
+   * @return bool
+   *   TRUE when there was somewhere to come back to.
+   */
+  public function leave(): bool {
+    return $this->ascend();
+  }
+
+  /**
+   * Put the cursor back on a row that is there, after some stopped being.
+   *
+   * The answers decide which rows are there at all, so a row can leave from
+   * under the cursor - and a cursor counting to a row that is gone is on
+   * nothing at all.
+   */
+  public function reframe(): void {
+    $this->cursor = max(0, min($this->cursor, max(0, count($this->focusable()) - 1)));
+    $this->settle();
+  }
+
+  /**
    * Send a key where it belongs.
    *
    * @param \DrevOps\Tui\Input\Key $key
@@ -284,12 +307,15 @@ final class KeyRouter {
 
   /**
    * Come back out of a panel, restoring the screen and the row it was left on.
+   *
+   * @return bool
+   *   TRUE when there was somewhere to come back to.
    */
-  protected function ascend(): void {
+  protected function ascend(): bool {
     // The outermost panel is not somewhere you came from, so there is nowhere
     // to go back to and the key does nothing.
     if ($this->trail === []) {
-      return;
+      return FALSE;
     }
 
     $step = array_pop($this->trail);
@@ -298,6 +324,8 @@ final class KeyRouter {
     $this->panel = $step['panel'];
     $this->cursor = $step['cursor'];
     $this->settle();
+
+    return TRUE;
   }
 
   /**
@@ -369,6 +397,19 @@ final class KeyRouter {
 
     foreach ($this->panel->currentLayout()->names() as $name) {
       foreach ($this->panel->currentLayout()->in($name)->blocks() as $block) {
+        // A row the answers took off the screen is not somewhere the cursor can
+        // be, because it is not anywhere.
+        if ($block instanceof DependCapableInterface && $block->isHidden()) {
+          continue;
+        }
+
+        // A field of a kind that only shows is a field by declaration and a
+        // passage of text by behaviour: there is nothing to open, so the cursor
+        // passes over it exactly as it passes over markup.
+        if ($block instanceof Field && $block->type()->isPresentational()) {
+          continue;
+        }
+
         // A block that does not claim the cursor is skipped rather than landed
         // on, which is what lets markup sit between two fields.
         if ($block instanceof FocusCapableInterface) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Screen;
 
+use DrevOps\Tui\Block\Capability\DependCapableInterface;
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Render\Ansi;
@@ -187,16 +188,7 @@ final class ScreenRenderer {
    *   Exactly $rows rows, padded or clipped to fit.
    */
   protected function fill(Region $region, int $rows, int $columns): array {
-    $drawn = [];
-
-    foreach ($region->blocks() as $block) {
-      // An entered panel is where the next layout starts, which is where depth
-      // comes from rather than a fifth level. Only the renderer knows the box
-      // it has to fit into, so the recursion happens here.
-      $drawn[] = $block instanceof Panel && $block->isEntered()
-        ? implode("\n", $this->lay($block->currentLayout(), $rows, $columns))
-        : $block->render($this->theme);
-    }
+    $drawn = $this->draw($region->blocks(), $rows, $columns);
 
     $lines = $region->flowAxis() === Axis::Columns
       ? $this->across($drawn)
@@ -222,6 +214,56 @@ final class ScreenRenderer {
     }
 
     return $this->marked($lines, $columns, $from > 0, $from + $rows < $content);
+  }
+
+  /**
+   * Draw a region's blocks, giving an entered panel what its siblings leave.
+   *
+   * An entered panel is where the next layout starts, which is where depth
+   * comes from rather than a fifth level. Only the renderer knows the box it
+   * has to fit into, so the recursion happens here - and the box is what the
+   * region has left once the rows drawn beside it are spoken for, or the panel
+   * would fill the region on its own and push its own siblings out of a region
+   * that then reports there is more to reach.
+   *
+   * @param list<\DrevOps\Tui\Block\BlockInterface> $blocks
+   *   The blocks.
+   * @param int $rows
+   *   The rows the region was given.
+   * @param int $columns
+   *   The columns it was given.
+   *
+   * @return list<string>
+   *   Each block as it is drawn, in the order it was added.
+   */
+  protected function draw(array $blocks, int $rows, int $columns): array {
+    $drawn = [];
+    $taken = 0;
+
+    foreach ($blocks as $index => $block) {
+      // A block the answers took off the screen is not there at all: it costs
+      // no row, rather than costing a blank one.
+      if ($block instanceof DependCapableInterface && $block->isHidden()) {
+        continue;
+      }
+
+      if ($block instanceof Panel && $block->isEntered()) {
+        $drawn[$index] = '';
+
+        continue;
+      }
+
+      $drawn[$index] = $block->render($this->theme);
+      $taken += substr_count($drawn[$index], "\n") + 1;
+    }
+
+    foreach ($blocks as $index => $block) {
+      if ($block instanceof Panel && $block->isEntered()) {
+        $drawn[$index] = implode("\n", $this->lay($block->currentLayout(), max(0, $rows - $taken), $columns));
+      }
+    }
+
+    return array_values($drawn);
   }
 
   /**

@@ -10,6 +10,7 @@ use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyMap;
 use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Render\ExternalEditor;
 use DrevOps\Tui\Render\TerminalControl;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\ScreenController;
@@ -95,6 +96,26 @@ final class ScreenTester {
    * Whether the screen is cleared as the session ends.
    */
   protected bool $clearOnExit = TRUE;
+
+  /**
+   * Whether the keys that apply right now are advertised at all.
+   */
+  protected bool $footer = TRUE;
+
+  /**
+   * What is shown before the form, dismissed by any key.
+   */
+  protected string $banner = '';
+
+  /**
+   * The version shown under that banner.
+   */
+  protected string $version = '';
+
+  /**
+   * What hands a passage of text to an editor of the reader's own.
+   */
+  protected ?ExternalEditor $externalEditor = NULL;
 
   /**
    * The reported terminal height.
@@ -258,6 +279,55 @@ final class ScreenTester {
    */
   public function clearOnExit(bool $clear): self {
     $this->clearOnExit = $clear;
+
+    return $this;
+  }
+
+  /**
+   * Set whether the keys that apply right now are advertised at all.
+   *
+   * @param bool $show
+   *   Whether they are.
+   *
+   * @return $this
+   *   The tester.
+   */
+  public function footer(bool $show): self {
+    $this->footer = $show;
+
+    return $this;
+  }
+
+  /**
+   * Set what is shown before the form, dismissed by any key.
+   *
+   * @param string $banner
+   *   The banner.
+   * @param string $version
+   *   The version shown under it.
+   *
+   * @return $this
+   *   The tester.
+   */
+  public function banner(string $banner, string $version = ''): self {
+    $this->banner = $banner;
+    $this->version = $version;
+
+    return $this;
+  }
+
+  /**
+   * Set what hands a passage of text to an editor of the reader's own.
+   *
+   * @param \DrevOps\Tui\Render\ExternalEditor $editor
+   *   The editor service, so a test can answer for one without launching a
+   *   program or depending on the environment naming one.
+   *
+   * @return $this
+   *   The tester.
+   */
+  public function externalEditor(ExternalEditor $editor): self {
+    $this->externalEditor = $editor;
 
     return $this;
   }
@@ -429,7 +499,7 @@ final class ScreenTester {
   protected function controller(): ScreenController {
     return new ScreenController(
       $this->panel,
-      $this->theme ?? new DefaultTheme(min(DefaultTheme::DEFAULT_WIDTH, $this->cols), $this->options),
+      $this->theme ?? new DefaultTheme($this->width(), $this->options),
       $this->supplied,
       $this->keys,
       $this->collector,
@@ -437,7 +507,26 @@ final class ScreenTester {
       $this->layout,
       $this->border,
       $this->clearOnExit,
+      $this->footer,
+      $this->banner,
+      $this->version,
+      $this->externalEditor,
     );
+  }
+
+  /**
+   * The width the theme lays a frame out to.
+   *
+   * @return int
+   *   The columns: the terminal's when the frame takes the whole of it, else
+   *   the width a panel reads at, clamped to the room there is.
+   */
+  protected function width(): int {
+    if (($this->options['fullscreen'] ?? FALSE) === TRUE) {
+      return $this->cols;
+    }
+
+    return min(DefaultTheme::DEFAULT_WIDTH, $this->cols);
   }
 
 }

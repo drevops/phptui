@@ -205,6 +205,25 @@ final class Region {
   }
 
   /**
+   * Draw a block before everything already in this region.
+   *
+   * What a region holds is normally in the order it was declared in, so this is
+   * for the standing text a driver puts above rows that were placed before it
+   * knew there would be any.
+   *
+   * @param \DrevOps\Tui\Block\BlockInterface $block
+   *   The block.
+   *
+   * @return $this
+   *   The region.
+   */
+  public function prepend(BlockInterface $block): self {
+    array_unshift($this->blocks, $block);
+
+    return $this;
+  }
+
+  /**
    * The blocks drawn in this region, in the order they were added.
    *
    * @return list<\DrevOps\Tui\Block\BlockInterface>

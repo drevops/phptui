@@ -33,6 +33,8 @@ use DrevOps\Tui\Model\RenderMode;
 use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
+use DrevOps\Tui\Theme\Spacing;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 
@@ -150,6 +152,11 @@ final class Field extends AbstractBlock implements
   protected string $placeholder = '';
 
   /**
+   * The word for how the answer came to be, drawn beside it.
+   */
+  protected string $badge = '';
+
+  /**
    * Whether an answer is owed.
    */
   protected bool $required = FALSE;
@@ -263,6 +270,16 @@ final class Field extends AbstractBlock implements
   protected bool $externalEditor = FALSE;
 
   /**
+   * Whether there is an editor of the reader's own to hand off to.
+   */
+  protected bool $handoff = FALSE;
+
+  /**
+   * Whether the answer it holds was taken rather than merely settled.
+   */
+  protected bool $accepted = FALSE;
+
+  /**
    * Where the editor is drawn: in place on the panel, or full-screen.
    */
   protected RenderMode $renderMode = RenderMode::Inline;
@@ -358,6 +375,7 @@ final class Field extends AbstractBlock implements
     $this->mode = Mode::Edit;
     $this->draft = $this->value;
     $this->editor = $this->editorFor($this->value);
+    $this->accepted = FALSE;
 
     return $this;
   }
@@ -462,8 +480,22 @@ final class Field extends AbstractBlock implements
     $this->draft = NULL;
     $this->mode = Mode::View;
     $this->editor = NULL;
+    $this->accepted = TRUE;
 
     return TRUE;
+  }
+
+  /**
+   * Whether the answer this field holds was taken rather than merely settled.
+   *
+   * Taking an answer is an act even where the answer is what it already was, so
+   * this says an offer was accepted and not that a value changed.
+   *
+   * @return bool
+   *   TRUE when the last thing to happen here was an answer being taken.
+   */
+  public function hasAccepted(): bool {
+    return $this->accepted;
   }
 
   /**
@@ -1500,6 +1532,34 @@ final class Field extends AbstractBlock implements
   }
 
   /**
+   * Say how the answer this field holds came to be.
+   *
+   * The field holds the word rather than works it out: how an answer came to be
+   * is a fact about the collection, and a field knows only what it is holding.
+   *
+   * @param string $badge
+   *   The word; empty leaves the answer unmarked.
+   *
+   * @return static
+   *   The field.
+   */
+  public function badge(string $badge): static {
+    $this->badge = $badge;
+
+    return $this;
+  }
+
+  /**
+   * The word for how the answer this field holds came to be.
+   *
+   * @return string
+   *   The word, empty when the answer is unmarked.
+   */
+  public function badgeText(): string {
+    return $this->badge;
+  }
+
+  /**
    * Complete what is being typed from a set of candidates.
    *
    * @param list<string>|\Closure $source
@@ -1659,6 +1719,34 @@ final class Field extends AbstractBlock implements
   }
 
   /**
+   * Say whether there is an editor of the reader's own to hand off to.
+   *
+   * Declaring the handoff says the field would use one; this says whether there
+   * is one to use, which nothing in a declaration can know.
+   *
+   * @param bool $available
+   *   Whether one can be launched.
+   *
+   * @return static
+   *   The field.
+   */
+  public function handoff(bool $available = TRUE): static {
+    $this->handoff = $available;
+
+    return $this;
+  }
+
+  /**
+   * Whether there is an editor of the reader's own to hand off to.
+   *
+   * @return bool
+   *   TRUE when one can be launched.
+   */
+  public function hasHandoff(): bool {
+    return $this->handoff;
+  }
+
+  /**
    * Open the editor full-screen rather than in place on the panel.
    *
    * @param bool $standalone
@@ -1734,8 +1822,12 @@ final class Field extends AbstractBlock implements
     $marker = $this->help === '' ? '' : ' ' . $elements->fieldHelpMarker();
     $label = $elements->fieldSelector($this->isFocused()) . ' ' . $elements->fieldLabel($this->label) . $marker;
 
+    // The badge trails the answer rather than the label: it says something
+    // about the answer, and a row with no answer yet has nothing to say.
+    $badge = $this->badge === '' ? '' : '  ' . $elements->fieldBadge(' ' . $this->badge . ' ');
+
     return $this->mode === Mode::View
-      ? rtrim($label . '  ' . $elements->fieldValue($this->readable($elements)))
+      ? rtrim($label . '  ' . $elements->fieldValue($this->readable($elements)) . $badge)
       : $this->openLines($theme, $elements, $label);
   }
 
@@ -1756,7 +1848,7 @@ final class Field extends AbstractBlock implements
    *   The editor.
    */
   protected function editorFor(mixed $current): FieldInterface {
-    return (new FieldFactory($this->keyMap()))->open($this, $current);
+    return (new FieldFactory($this->keyMap(), $this->handoff))->open($this, $current);
   }
 
   /**
@@ -1977,8 +2069,8 @@ final class Field extends AbstractBlock implements
       $lines[] = rtrim(($lines === [] ? $label . '  ' : $indent) . $row);
     }
 
-    if ($this->description !== '') {
-      $lines[] = $indent . $elements->fieldDescription($this->description);
+    foreach ($this->explanation($theme, $elements) as $line) {
+      $lines[] = $indent . $line;
     }
 
     // The two share one line and never appear together: a constraint says what
@@ -1991,6 +2083,32 @@ final class Field extends AbstractBlock implements
     }
 
     return implode("\n", $lines);
+  }
+
+  /**
+   * The rows this field's explanation comes to, as they are drawn.
+   *
+   * The explanation is secondary to the question it explains, so a theme with
+   * no room to spare drops it rather than crowding the answer with it.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   *   The same theme, narrowed to the elements a field draws with.
+   *
+   * @return list<string>
+   *   The rows, none when there is nothing to explain or no room to explain it.
+   */
+  protected function explanation(ThemeInterface $theme, FieldElementsInterface $elements): array {
+    if ($this->description === '') {
+      return [];
+    }
+
+    if ($theme instanceof OccupyCapableInterface && $theme->spacing() === Spacing::Compact) {
+      return [];
+    }
+
+    return Prose::lines($this->description, $theme, $elements->fieldDescription(...));
   }
 
   /**

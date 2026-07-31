@@ -8,15 +8,18 @@ use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Block\Actions;
 use DrevOps\Tui\Block\Breadcrumb;
+use DrevOps\Tui\Block\Capability\DependCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
+use DrevOps\Tui\Block\Mode;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\CancelException;
 use DrevOps\Tui\Derive\Derive;
+use DrevOps\Tui\Field\Capability\ExternalEditCapableInterface;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Key;
@@ -25,11 +28,18 @@ use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Input\KeyParser;
 use DrevOps\Tui\InterruptException;
+use DrevOps\Tui\Model\RenderMode;
 use DrevOps\Tui\Primitive\ProgressReporter;
+use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Render\Box;
+use DrevOps\Tui\Render\ExternalEditor;
+use DrevOps\Tui\Render\Overlay;
 use DrevOps\Tui\Render\Scroller;
 use DrevOps\Tui\Render\Terminal;
 use DrevOps\Tui\Screen\Layout\LayoutManager;
 use DrevOps\Tui\Theme\Border;
+use DrevOps\Tui\Theme\Capability\DimCapableInterface;
+use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
@@ -42,12 +52,18 @@ use DrevOps\Tui\Translation\Translator;
  * terminal, and then does one thing at a time - draw the screen, read a key,
  * hand it to the router, draw again - until the form ends.
  *
- * Two kinds of key stop here rather than reaching the router, and both for the
- * same reason: they act on something outside the screen. Pressing a button ends
- * the session, and activating work runs it against the terminal a step at a
- * time. A panel knows about neither, and a block never learns where it is
- * drawn, so the cooperative repaint between one step of the work and the next
- * belongs to whoever owns the terminal.
+ * Three kinds of key stop here rather than reaching the router, and all three
+ * for the same reason: they act on something outside the screen. Pressing a
+ * button ends the form or closes the dialog it belongs to, activating work runs
+ * it against the terminal a step at a time, and leaving is about the session
+ * rather than about anything in it. A panel knows about none of them, and a
+ * block never learns where it is drawn, so the cooperative repaint between one
+ * step of the work and the next belongs to whoever owns the terminal.
+ *
+ * Every answer taken re-settles the form: rows that follow the answers resolve
+ * again, computed values recompute, conditions decide who is there at all and
+ * the rules that write a value re-apply - so a dependent row appears the moment
+ * its condition holds, exactly as it does with no screen at all.
  *
  * How the session ends is the whole of what a caller sees: finishing it hands
  * back the answers, abandoning it raises {@see \DrevOps\Tui\CancelException},
@@ -67,6 +83,16 @@ class ScreenController {
    * The rules a frame spends on the border it is drawn in, top and bottom.
    */
   protected const int FRAME_RULES = 2;
+
+  /**
+   * The rows a dialog spends on its title and on the air under its contents.
+   */
+  protected const int DIALOG_RULES = 2;
+
+  /**
+   * The share of the screen's width a dialog leaves clear on each side.
+   */
+  protected const int DIALOG_INSET = 8;
 
   /**
    * The screen the panel is drawn on.
@@ -124,9 +150,14 @@ class ScreenController {
   protected KeyMap $keys;
 
   /**
-   * What resolves the answers the form opens on.
+   * What resolves the answers the form opens on, and settles them again after.
    */
   protected Collector $collector;
+
+  /**
+   * What hands a passage of text to an editor of the reader's own.
+   */
+  protected ExternalEditor $externalEditor;
 
   /**
    * The terminal, for as long as the session is running.
@@ -146,6 +177,18 @@ class ScreenController {
    * @var array<string,bool>
    */
   protected array $active = [];
+
+  /**
+   * The dialogs standing open, with the answers each was opened over.
+   *
+   * @var list<array{panel:\DrevOps\Tui\Block\Panel,values:array<string,mixed>,provenance:array<string,\DrevOps\Tui\Answers\Provenance>}>
+   */
+  protected array $dialogs = [];
+
+  /**
+   * The narrowest terminal the frame can be read in, once it was measured.
+   */
+  protected ?int $minimumWidth = NULL;
 
   /**
    * Whether the session has ended.
@@ -184,6 +227,16 @@ class ScreenController {
    *   The frame drawn around every region at once.
    * @param bool $clearOnExit
    *   Whether the screen is cleared as the session ends.
+   * @param bool $footer
+   *   Whether the keys that apply right now are advertised at all.
+   * @param string $banner
+   *   What is shown before the form, dismissed by any key; empty opens straight
+   *   onto the first frame.
+   * @param string $version
+   *   The version shown under that banner.
+   * @param \DrevOps\Tui\Render\ExternalEditor|null $external_editor
+   *   What hands a passage of text to an editor of the reader's own, or NULL
+   *   for one that launches whatever the environment names.
    */
   public function __construct(
     protected Panel $panel,
@@ -192,31 +245,31 @@ class ScreenController {
     ?KeyMap $keys = NULL,
     ?Collector $collector = NULL,
     protected Context $context = new Context(),
-    string $layout = 'default',
+    protected string $layout = 'default',
     protected Border $border = Border::None,
     protected bool $clearOnExit = TRUE,
+    protected bool $footer = TRUE,
+    protected string $banner = '',
+    protected string $version = '',
+    ?ExternalEditor $external_editor = NULL,
   ) {
     $this->keys = $keys ?? KeyMapManager::create();
     $this->collector = $collector ?? new Collector();
+    $this->externalEditor = $external_editor ?? new ExternalEditor();
     $this->scroller = new Scroller();
     $this->renderer = new ScreenRenderer($theme, $border);
 
     $assembler = new Assembler();
-    $this->screen = $assembler->assemble($panel, $layout);
+    $this->screen = $assembler->assemble($panel, $this->layout);
     $this->breadcrumb = $this->furniture('header', Breadcrumb::class);
     $this->legend = $this->furniture('footer', Legend::class);
 
-    $this->actions = $this->buttons($assembler);
+    $this->actions = $this->buttons($assembler, $panel);
     $this->notice = new Markup('screen-notice', '');
     $this->help = (new Markup('screen-help', ''))->bordered();
-    $this->overlay = $this->helpScreen($layout);
+    $this->overlay = $this->helpScreen();
 
-    // The buttons end the form rather than the panel the cursor happens to be
-    // in, so they go among the outermost panel's own rows: going into a nested
-    // one leaves them behind exactly as it leaves that panel's siblings behind.
-    if ($panel->currentButtons()->show) {
-      $this->place($panel)->add($this->notice)->add($this->actions);
-    }
+    $this->dress($assembler);
 
     $this->router = (new KeyRouter($panel))->bind($this->keys);
 
@@ -240,16 +293,12 @@ class ScreenController {
   public function run(Terminal $terminal): Answers {
     $parser = new KeyParser();
     $this->terminal = $terminal;
-    $terminal->setup();
+    $terminal->setup($this->wash());
 
     try {
-      $opening = $this->opening();
+      $this->welcome($terminal, $parser);
 
-      if ($opening !== '') {
-        $terminal->render($opening);
-      }
-
-      while (!$this->done) {
+      while (!$this->done && !$this->interrupted) {
         $this->paint();
         $bytes = $terminal->read();
 
@@ -259,6 +308,11 @@ class ScreenController {
           break;
         }
 
+        // A terminal that cannot hold the frame is showing a notice instead of
+        // the form, so every key but the one that leaves is dropped rather than
+        // changing something nobody can see.
+        $guarded = $this->guard($terminal) !== '';
+
         foreach ($parser->parse($bytes) as $key) {
           // The interrupt aborts from anywhere, including from inside an open
           // field, so it is answered above the routing and drops straight out
@@ -267,6 +321,10 @@ class ScreenController {
             $this->interrupted = TRUE;
 
             break 2;
+          }
+
+          if ($guarded && !$this->quits($key)) {
+            continue;
           }
 
           $this->handle($key);
@@ -309,6 +367,12 @@ class ScreenController {
       return;
     }
 
+    if ($this->quits($key)) {
+      $this->leave();
+
+      return;
+    }
+
     $focused = $this->router->focused();
 
     if ($focused instanceof Actions && $this->pressed($focused, $key)) {
@@ -321,11 +385,15 @@ class ScreenController {
       return;
     }
 
-    $before = $focused instanceof Field ? $focused->value() : NULL;
+    // Read before the key reaches it: a row that was open before it and is
+    // settled after it is a row whose answer has just been taken.
+    $open = $focused instanceof Field && $focused->mode() === Mode::Edit ? $focused : NULL;
 
     $this->router->handle($key);
 
-    $this->stamp($focused, $before);
+    $this->handoff($open);
+    $this->stamp($open);
+    $this->synchronize();
   }
 
   /**
@@ -384,19 +452,25 @@ class ScreenController {
   /**
    * What is drawn before the first frame, if anything is.
    *
-   * The start banner - and whatever key dismisses it - lands here.
-   *
    * @return string
    *   The frame, empty when the session opens straight onto the form.
    */
   protected function opening(): string {
-    return '';
+    if ($this->banner === '') {
+      return '';
+    }
+
+    return $this->theme->renderBanner($this->banner, $this->version) . "\n\n" . Translator::t('Press any key to continue...');
   }
 
   /**
    * What is drawn instead of the frame when the terminal cannot hold it.
    *
-   * The notice asking for a bigger terminal lands here.
+   * Only a frame that takes the whole terminal can be too small for it: one
+   * that takes what it needs is read by scrolling, however little room there
+   * is. The notice is centred rather than anchored where the frame would be,
+   * because the anchor places content on a screen the frame fits, which this
+   * one is not.
    *
    * @param \DrevOps\Tui\Render\Terminal $terminal
    *   The terminal.
@@ -405,14 +479,44 @@ class ScreenController {
    *   The notice, empty when the frame is drawn as it is.
    */
   protected function guard(Terminal $terminal): string {
-    return '';
+    $occupancy = $this->occupancy();
+
+    if (!$occupancy instanceof OccupyCapableInterface || !$occupancy->isFullscreen()) {
+      return '';
+    }
+
+    $columns = $this->narrowest($occupancy);
+    $rows = $this->shortest($occupancy);
+
+    if ($terminal->width() >= $columns && $terminal->height() >= $rows) {
+      return '';
+    }
+
+    $lines = [
+      $this->theme->error(Translator::t('Terminal too small.')),
+      Translator::t('Need at least @width x @height - have @w x @h.', [
+        '@width' => (string) $columns,
+        '@height' => (string) $rows,
+        '@w' => (string) $terminal->width(),
+        '@h' => (string) $terminal->height(),
+      ]),
+      $this->theme->keysHint($this->router->bindings(), 'quit', Action::Quit),
+    ];
+
+    $width = Ansi::blockWidth($lines);
+    [$top, $left] = Overlay::center($terminal->width(), $terminal->height(), $width, count($lines));
+    $backdrop = array_fill(0, max(count($lines), $terminal->height()), str_repeat(' ', max($width, $terminal->width())));
+
+    return implode("\n", Overlay::composite($backdrop, $lines, $width, $top, $left));
   }
 
   /**
    * Place a drawn frame within the terminal area.
    *
-   * Where a frame smaller than the terminal is anchored, and the padding a
-   * spacing mode puts around what it holds, both land here.
+   * A frame that takes what it needs is drawn where the cursor already is, as
+   * anything written to a terminal is. One that takes the whole terminal and
+   * then does not fill it - a capped frame, a banner, a help page - is anchored
+   * where the theme says, padded with blank space on the sides it leaves.
    *
    * @param string $frame
    *   The drawn frame.
@@ -423,22 +527,53 @@ class ScreenController {
    *   The placed frame.
    */
   protected function chrome(string $frame, Terminal $terminal): string {
-    return $frame;
+    $occupancy = $this->occupancy();
+
+    if (!$occupancy instanceof OccupyCapableInterface || !$occupancy->isFullscreen()) {
+      return $frame;
+    }
+
+    $lines = explode("\n", $frame);
+    $area_width = $terminal->width();
+    $area_height = $terminal->height();
+    $width = Ansi::blockWidth($lines);
+
+    if (count($lines) >= $area_height && $width >= $area_width) {
+      return $frame;
+    }
+
+    [$top, $left] = Overlay::place($area_width, $area_height, $width, count($lines), $occupancy->halign(), $occupancy->valign());
+    $backdrop = array_fill(0, $area_height, str_repeat(' ', $area_width));
+
+    return implode("\n", Overlay::composite($backdrop, $lines, $width, $top, $left));
   }
 
   /**
-   * Style a passage of prose this controller composes.
+   * Show what precedes the form, and wait for the key that dismisses it.
    *
-   * The markdown subset a description or a note may carry lands here.
-   *
-   * @param string $text
-   *   The source text.
-   *
-   * @return string
-   *   The styled text.
+   * @param \DrevOps\Tui\Render\Terminal $terminal
+   *   The terminal.
+   * @param \DrevOps\Tui\Input\KeyParser $parser
+   *   What reads keys out of the bytes the terminal delivers.
    */
-  protected function prose(string $text): string {
-    return $text;
+  protected function welcome(Terminal $terminal, KeyParser $parser): void {
+    $opening = $this->opening();
+
+    if ($opening === '') {
+      return;
+    }
+
+    $terminal->render($this->chrome($opening, $terminal));
+
+    // Any key gets past it, but the interrupt aborts here as it does anywhere
+    // else rather than dropping a reader into a form they never asked for.
+    foreach ($parser->parse($terminal->read()) as $key) {
+      if ($key->is(KeyName::Interrupt)) {
+        $this->interrupted = TRUE;
+
+        return;
+      }
+    }
   }
 
   /**
@@ -468,24 +603,34 @@ class ScreenController {
    *   The frame.
    */
   protected function frame(Terminal $terminal): string {
-    $rows = $terminal->height();
+    $rows = $this->rows($terminal);
     $columns = $this->columns($terminal);
     $helping = $this->router->helping();
 
     // Both are read out of the router rather than written beside it, so the
     // trail and the keys on offer can never disagree with where the cursor is.
     $this->breadcrumb->trail(...$this->router->trail());
-    $this->router->refresh($this->legend);
+    $this->refresh();
 
     if ($helping instanceof Field) {
       // Help can run to paragraphs, so it replaces the panel rather than
       // crowding the row that offers it.
-      $this->help->body($this->prose(Translator::t($helping->label()) . "\n\n" . Translator::t($helping->helpText())));
+      $this->help->title(Translator::t($helping->label()))->body(Translator::t($helping->helpText()));
 
       return $this->renderer->render($this->overlay, $rows, $columns);
     }
 
     $this->follow($rows);
+
+    $alone = $this->alone();
+
+    if ($alone instanceof Field) {
+      return $this->renderer->render($this->stage($alone), $rows, $columns);
+    }
+
+    if ($this->router->current()->isModal()) {
+      return $this->overlaid($rows, $columns);
+    }
 
     return $this->renderer->render($this->screen, $rows, $columns);
   }
@@ -495,7 +640,8 @@ class ScreenController {
    *
    * A row sized past the terminal hard-wraps onto the next line and corrupts
    * the layout below it, so a frame is never laid out wider than there is room
-   * for - nor wider than the width a panel reads well at.
+   * for - nor wider than the width a panel reads well at, unless it was asked
+   * to take the whole terminal.
    *
    * @param \DrevOps\Tui\Render\Terminal $terminal
    *   The terminal.
@@ -504,9 +650,30 @@ class ScreenController {
    *   The columns.
    */
   protected function columns(Terminal $terminal): int {
-    $width = $terminal->width();
+    $width = $terminal->width() > 0 ? $terminal->width() : DefaultTheme::DEFAULT_WIDTH;
+    $occupancy = $this->occupancy();
 
-    return $width > 0 ? min(DefaultTheme::DEFAULT_WIDTH, $width) : DefaultTheme::DEFAULT_WIDTH;
+    if ($occupancy instanceof OccupyCapableInterface && $occupancy->isFullscreen()) {
+      return $occupancy->maxWidth() > 0 ? min($width, $occupancy->maxWidth()) : $width;
+    }
+
+    return min(DefaultTheme::DEFAULT_WIDTH, $width);
+  }
+
+  /**
+   * The rows a frame is laid out to.
+   *
+   * @param \DrevOps\Tui\Render\Terminal $terminal
+   *   The terminal.
+   *
+   * @return int
+   *   The rows.
+   */
+  protected function rows(Terminal $terminal): int {
+    $occupancy = $this->occupancy();
+    $tallest = $occupancy instanceof OccupyCapableInterface ? $occupancy->maxHeight() : 0;
+
+    return $tallest > 0 ? min($terminal->height(), $tallest) : $terminal->height();
   }
 
   /**
@@ -577,6 +744,11 @@ class ScreenController {
     $row = -1;
 
     foreach ($region->blocks() as $block) {
+      // A row that is not drawn is not a row to scroll past.
+      if ($block instanceof DependCapableInterface && $block->isHidden()) {
+        continue;
+      }
+
       if ($block === $focused) {
         $row = $total;
       }
@@ -637,6 +809,40 @@ class ScreenController {
   }
 
   /**
+   * Whether a key leaves where it is pressed.
+   *
+   * Asked of the keys that apply right now rather than of the whole map, which
+   * is what leaves the key typing itself into an open field: the letter that
+   * leaves a panel is a letter while something is collecting one.
+   *
+   * @param \DrevOps\Tui\Input\Key $key
+   *   The key.
+   *
+   * @return bool
+   *   TRUE when it does.
+   */
+  protected function quits(Key $key): bool {
+    return $this->router->bindings()->matches($key, Action::Quit);
+  }
+
+  /**
+   * Leave: close the dialog that is open, else end the session.
+   *
+   * Leaving is not abandoning. The answers stand exactly as they do on a
+   * finished form, because somebody who has answered a form and left it has
+   * still answered it.
+   */
+  protected function leave(): void {
+    if ($this->router->current()->isModal()) {
+      $this->dismiss(TRUE);
+
+      return;
+    }
+
+    $this->done = TRUE;
+  }
+
+  /**
    * Move the cursor along the buttons, stopping at the ends.
    *
    * @param \DrevOps\Tui\Block\Actions $actions
@@ -655,13 +861,21 @@ class ScreenController {
   }
 
   /**
-   * End the form, or say why it cannot be ended yet.
+   * End the form, close the dialog, or say why neither can happen yet.
    *
    * @param \DrevOps\Tui\Block\Actions $actions
    *   The buttons.
    */
   protected function press(Actions $actions): void {
     $ending = Ending::tryFrom((string) $actions->selected());
+
+    // Inside a dialog the pair closes the dialog: what is behind it is still
+    // being filled in, so neither button is about the form.
+    if ($this->router->current()->isModal()) {
+      $this->dismiss($ending === Ending::Cancel);
+
+      return;
+    }
 
     // Abandoning the form is always allowed: only finishing it has to answer
     // for the fields that are owed an answer.
@@ -731,27 +945,153 @@ class ScreenController {
   }
 
   /**
-   * Record how an answer came to be, once somebody has changed it.
+   * Hand what an open field holds to an editor of the reader's own.
    *
-   * @param \DrevOps\Tui\Block\Capability\FocusCapableInterface|null $focused
-   *   The block the key was handed to, if any had the cursor.
-   * @param mixed $before
-   *   The answer it held before the key reached it.
+   * The field asks and the session answers: launching a program means leaving
+   * the terminal to it and taking it back afterwards, which is the session's to
+   * do and nothing a block could reach.
+   *
+   * @param \DrevOps\Tui\Block\Field|null $open
+   *   The field the key reached, if it reached one that was open.
    */
-  protected function stamp(?FocusCapableInterface $focused, mixed $before): void {
-    if (!$focused instanceof Field || $focused->value() === $before) {
+  protected function handoff(?Field $open): void {
+    if (!$open instanceof Field) {
+      return;
+    }
+
+    $editor = $open->editor();
+
+    if (!$editor instanceof ExternalEditCapableInterface || !$editor->wantsExternalEdit()) {
+      return;
+    }
+
+    $held = $editor->value();
+    $editor->applyExternalEdit($this->externalEditor->edit(is_string($held) ? $held : '', $this->terminal));
+
+    // What came back is what is being typed, not what was accepted: the field
+    // still has to be accepted before it becomes the answer.
+    $open->draft($editor->value());
+  }
+
+  /**
+   * Record how an answer came to be, once somebody has taken it.
+   *
+   * Taking an answer is what stamps it, whether or not the answer changed: a
+   * reader who opened a row and accepted what was there has answered it.
+   *
+   * @param \DrevOps\Tui\Block\Field|null $open
+   *   The field the key reached, if it reached one that was open.
+   */
+  protected function stamp(?Field $open): void {
+    if (!$open instanceof Field || !$open->hasAccepted()) {
       return;
     }
 
     // Changing a field that computes its answer pins the rule against being
     // recomputed, exactly as supplying a value to it does.
-    $this->provenance[$focused->id()] = $focused->derivation() instanceof Derive ? Provenance::Override : Provenance::Edited;
+    $this->provenance[$open->id()] = $open->derivation() instanceof Derive ? Provenance::Override : Provenance::Edited;
 
     // A refusal describes the answers as they stood when the button was
     // pressed, so a change of any kind retires it rather than leaving it to
     // contradict what the screen now shows.
     $this->actions->refuse(NULL);
     $this->notice->body('');
+
+    $this->resettle();
+  }
+
+  /**
+   * Keep track of the dialogs that opened and closed while a key was handled.
+   *
+   * A dialog is entered and left through the same keys everything else is, so
+   * what tells one from the other is where the cursor ended up. Watching that
+   * rather than intercepting the keys is what keeps the router's one rule -
+   * inward to whatever binds it - true of a dialog too.
+   */
+  protected function synchronize(): void {
+    $current = $this->router->current();
+
+    // Going into a dialog is where the answers behind it are remembered, so
+    // that whatever it does to them can be put back.
+    if ($current->isModal() && $this->standing() !== $current) {
+      $this->dialogs[] = ['panel' => $current, 'values' => $this->values(), 'provenance' => $this->provenance];
+      $this->reset($current);
+
+      return;
+    }
+
+    // A dialog left any other way than through its own buttons is abandoned,
+    // so the answers behind it stand as they did when it opened.
+    while ($this->dialogs !== [] && $this->standing() !== $current) {
+      $this->discard();
+    }
+  }
+
+  /**
+   * Close the dialog that is open, keeping or discarding what it collected.
+   *
+   * @param bool $discard
+   *   Whether the answers go back to what they were when it opened.
+   */
+  protected function dismiss(bool $discard): void {
+    if ($discard) {
+      $this->discard();
+    }
+    else {
+      array_pop($this->dialogs);
+      $this->resettle();
+    }
+
+    $this->router->leave();
+  }
+
+  /**
+   * Put the answers back as they stood when the open dialog was opened.
+   */
+  protected function discard(): void {
+    $dialog = array_pop($this->dialogs);
+
+    if ($dialog === NULL) {
+      // @codeCoverageIgnoreStart
+      return;
+      // @codeCoverageIgnoreEnd
+    }
+
+    foreach (Tree::fields($this->panel) as $field) {
+      if (array_key_exists($field->id(), $dialog['values'])) {
+        $field->default($dialog['values'][$field->id()]);
+      }
+    }
+
+    $this->provenance = $dialog['provenance'];
+
+    $this->resettle();
+  }
+
+  /**
+   * The dialog standing open, if one is.
+   *
+   * @return \DrevOps\Tui\Block\Panel|null
+   *   The panel it was opened from, or NULL when no dialog is open.
+   */
+  protected function standing(): ?Panel {
+    return $this->dialogs === [] ? NULL : $this->dialogs[count($this->dialogs) - 1]['panel'];
+  }
+
+  /**
+   * Rest a panel's own buttons back on the first of them.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel.
+   */
+  protected function reset(Panel $panel): void {
+    foreach ($this->place($panel)->blocks() as $block) {
+      if ($block instanceof Actions) {
+        $block->select(Ending::Submit->value);
+
+        return;
+      }
+    }
   }
 
   /**
@@ -772,19 +1112,424 @@ class ScreenController {
 
     $this->provenance = $provenance;
     $this->active = $active;
+
+    $this->settled();
   }
 
   /**
-   * The buttons that end the form, labelled as the panel declares them.
+   * Settle the form again over the answers it now holds.
+   *
+   * The same stages the opening answers went through, so a row that follows the
+   * answers narrows, a computed value recomputes, a condition shows or hides a
+   * row and a rule that writes a value re-applies - the moment the answer they
+   * read is taken rather than at the end of the form.
+   */
+  protected function resettle(): void {
+    [$values, $active] = $this->collector->resettle($this->panel, $this->values(), $this->pinned(), $this->context);
+
+    foreach (Tree::fields($this->panel) as $field) {
+      if (array_key_exists($field->id(), $values)) {
+        $field->default($values[$field->id()]);
+      }
+    }
+
+    $this->active = $active;
+
+    $this->settled();
+    $this->router->reframe();
+  }
+
+  /**
+   * The answers as the blocks hold them, keyed by field id.
+   *
+   * @return array<string,mixed>
+   *   The values, a row that only shows carrying none.
+   */
+  protected function values(): array {
+    $values = [];
+
+    foreach (Tree::fields($this->panel) as $field) {
+      if ($field->type()->isDisplayOnly()) {
+        continue;
+      }
+
+      $values[$field->id()] = $field->value();
+    }
+
+    return $values;
+  }
+
+  /**
+   * The answers of the rows that are there, keyed by field id.
+   *
+   * What a condition is measured against: a row that is not there answers
+   * nothing, so it cannot decide whether another row is there either.
+   *
+   * @return array<string,mixed>
+   *   The answers.
+   */
+  protected function answered(): array {
+    $answers = [];
+
+    foreach (Tree::fields($this->panel) as $field) {
+      if ($field->type()->isDisplayOnly()) {
+        continue;
+      }
+
+      if ($this->active[$field->id()] ?? FALSE) {
+        $answers[$field->id()] = $field->value();
+      }
+    }
+
+    return $answers;
+  }
+
+  /**
+   * The computed answers that must not be recomputed, keyed by field id.
+   *
+   * A rule computes an answer until somebody answers over it, and detecting one
+   * outside the form counts as answering it - so both pin the rule, and every
+   * other computed answer follows it.
+   *
+   * @return array<string,bool>
+   *   The pinned map.
+   */
+  protected function pinned(): array {
+    $pinned = [];
+
+    foreach (Tree::fields($this->panel) as $field) {
+      if (!$field->derivation() instanceof Derive) {
+        continue;
+      }
+
+      $provenance = $this->provenance[$field->id()] ?? Provenance::Default;
+      $pinned[$field->id()] = $provenance === Provenance::Override || $provenance === Provenance::Detected;
+    }
+
+    return $pinned;
+  }
+
+  /**
+   * Bring the screen into line with the answers that have just settled.
+   *
+   * Which rows are there at all and how each answer came to be are both facts
+   * about the answers rather than about any block, so a block is told them
+   * whenever they are worked out again.
+   */
+  protected function settled(): void {
+    $answers = $this->answered();
+
+    foreach (Tree::panels($this->panel) as $panel) {
+      foreach ($panel->blocks() as $block) {
+        if ($block instanceof DependCapableInterface) {
+          $block->isActive($answers) ? $block->reveal() : $block->hide();
+        }
+      }
+    }
+
+    foreach (Tree::fields($this->panel) as $field) {
+      $provenance = $this->provenance[$field->id()] ?? Provenance::Default;
+
+      // How an answer starts out is not news, so saying it of every untouched
+      // row would badge the whole form and tell a reader nothing.
+      $field->badge($provenance === Provenance::Default ? '' : $provenance->label());
+    }
+  }
+
+  /**
+   * Advertise the keys that apply right now, unless the form says not to.
+   */
+  protected function refresh(): void {
+    if (!$this->footer) {
+      $this->legend->clear();
+
+      return;
+    }
+
+    $this->router->refresh($this->legend);
+  }
+
+  /**
+   * The field that has the whole frame to itself, if one has.
+   *
+   * @return \DrevOps\Tui\Block\Field|null
+   *   The field, or NULL when the panel is what is drawn.
+   */
+  protected function alone(): ?Field {
+    $focused = $this->router->focused();
+
+    if (!$focused instanceof Field || $focused->mode() !== Mode::Edit) {
+      return NULL;
+    }
+
+    return $focused->renderMode() === RenderMode::Standalone ? $focused : NULL;
+  }
+
+  /**
+   * The screen a field that takes the whole frame is drawn on.
+   *
+   * The trail and the keys on offer are the blocks the panel's own screen
+   * draws, so a field with the frame to itself is the same session with one row
+   * in front of the reader instead of a list.
+   *
+   * @param \DrevOps\Tui\Block\Field $field
+   *   The field.
+   *
+   * @return \DrevOps\Tui\Screen\Screen
+   *   The screen.
+   */
+  protected function stage(Field $field): Screen {
+    $screen = (new Screen())->layout(LayoutManager::create($this->layout));
+
+    $screen->in('header')->add($this->breadcrumb);
+    $screen->in(self::CONTENT)->add($field);
+    $screen->in('footer')->add($this->legend);
+
+    return $screen;
+  }
+
+  /**
+   * Draw the open dialog over the screen it was opened from.
+   *
+   * @param int $rows
+   *   The terminal rows.
+   * @param int $columns
+   *   The columns the frame is laid out to.
+   *
+   * @return string
+   *   The frame.
+   */
+  protected function overlaid(int $rows, int $columns): string {
+    $modal = $this->router->current();
+
+    // What is behind the dialog is the screen as it was before it opened, the
+    // row the dialog was opened from included.
+    $modal->leave();
+    $behind = explode("\n", $this->renderer->render($this->screen, $rows, $columns));
+    $modal->enter();
+
+    $inset = max(2, intdiv($columns, self::DIALOG_INSET));
+    $width = max(1, $columns - 2 * $inset);
+    $box = explode("\n", $this->dialog($modal, $rows, $width));
+
+    // Only plain text can be sliced by column, and what shows through beside
+    // the dialog is sliced on every row it covers.
+    $backdrop = array_map(static fn(string $line): string => Box::fit(Ansi::strip($line), $columns), $behind);
+
+    [$top, $left] = Overlay::center($columns, count($backdrop), $width, count($box));
+
+    return implode("\n", Overlay::composite($backdrop, $box, $width, $top, $left, $this->recede(...)));
+  }
+
+  /**
+   * Draw the dialog itself: its title over what it holds, inside a border.
+   *
+   * @param \DrevOps\Tui\Block\Panel $modal
+   *   The panel the dialog is.
+   * @param int $rows
+   *   The terminal rows.
+   * @param int $columns
+   *   The columns the dialog is drawn in.
+   *
+   * @return string
+   *   The dialog.
+   */
+  protected function dialog(Panel $modal, int $rows, int $columns): string {
+    $screen = (new Screen())->layout(LayoutManager::create($this->layout));
+
+    $screen->in('header')->add(new Breadcrumb($modal->title()));
+    $screen->in(self::CONTENT)->add($modal);
+
+    // A dialog is as tall as what it holds - it is one thing to read rather
+    // than a list to scroll - up to as much of it as the terminal can show.
+    $height = min($rows, $this->depth($modal) + self::FRAME_RULES + self::DIALOG_RULES);
+
+    // A dialog with no edge is a dialog nobody can see the edge of, so a form
+    // that draws no frame still draws one around what floats over it.
+    $renderer = new ScreenRenderer($this->theme, $this->border === Border::None ? Border::Line : $this->border);
+
+    return $renderer->render($screen, $height, $columns);
+  }
+
+  /**
+   * The rows a panel's own blocks come to.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel.
+   *
+   * @return int
+   *   The rows.
+   */
+  protected function depth(Panel $panel): int {
+    $rows = 0;
+
+    foreach ($panel->currentLayout()->names() as $name) {
+      [$total] = $this->measure($panel->in($name), NULL);
+      $rows += $total;
+    }
+
+    return $rows;
+  }
+
+  /**
+   * Push back a run of what shows from behind whatever is drawn over it.
+   *
+   * @param string $segment
+   *   The run.
+   *
+   * @return string
+   *   The receded run.
+   */
+  protected function recede(string $segment): string {
+    return $this->theme instanceof DimCapableInterface ? $this->theme->dim($segment) : $segment;
+  }
+
+  /**
+   * The wash the whole terminal is filled with, behind everything drawn.
+   *
+   * @return string|null
+   *   The background, or NULL to keep the terminal's own.
+   */
+  protected function wash(): ?string {
+    $occupancy = $this->occupancy();
+
+    return $occupancy instanceof OccupyCapableInterface ? $occupancy->background() : NULL;
+  }
+
+  /**
+   * The theme, when it says how much of the terminal it takes.
+   *
+   * @return \DrevOps\Tui\Theme\Capability\OccupyCapableInterface|null
+   *   The theme, or NULL when it says nothing about the terminal at all.
+   */
+  protected function occupancy(): ?OccupyCapableInterface {
+    return $this->theme instanceof OccupyCapableInterface ? $this->theme : NULL;
+  }
+
+  /**
+   * The narrowest terminal the frame can be read in.
+   *
+   * Measured once, from the rows the form opens on: a minimum that followed the
+   * answers would trip and clear again as they grew, which is a screen nobody
+   * can work in rather than a guard.
+   *
+   * @param \DrevOps\Tui\Theme\Capability\OccupyCapableInterface $occupancy
+   *   What the theme says about the terminal it takes.
+   *
+   * @return int
+   *   The columns.
+   */
+  protected function narrowest(OccupyCapableInterface $occupancy): int {
+    if ($this->minimumWidth !== NULL) {
+      return $this->minimumWidth;
+    }
+
+    $stated = $occupancy->minWidth();
+    $needed = $stated > 0 ? $stated : $this->widest() + ($this->border === Border::None ? 0 : 2 * self::FRAME_RULES);
+    $widest = $occupancy->maxWidth();
+
+    // A cap is a consumer's word that a narrower frame reads well enough, and
+    // a guard asking for more than the cap allows could never be satisfied.
+    return $this->minimumWidth = $widest > 0 ? min($needed, $widest) : $needed;
+  }
+
+  /**
+   * The shortest terminal the frame can be read in.
+   *
+   * @param \DrevOps\Tui\Theme\Capability\OccupyCapableInterface $occupancy
+   *   What the theme says about the terminal it takes.
+   *
+   * @return int
+   *   The rows.
+   */
+  protected function shortest(OccupyCapableInterface $occupancy): int {
+    $tallest = $occupancy->maxHeight();
+
+    return $tallest > 0 ? min($occupancy->minHeight(), $tallest) : $occupancy->minHeight();
+  }
+
+  /**
+   * The widest row the form draws, whatever room it is given to draw it in.
+   *
+   * @return int
+   *   The columns.
+   */
+  protected function widest(): int {
+    $width = 0;
+
+    foreach (Tree::panels($this->panel) as $panel) {
+      foreach ($panel->blocks() as $block) {
+        // A panel is measured by what it holds rather than by the row it draws,
+        // and an entered one draws no row at all.
+        if ($block instanceof Panel) {
+          continue;
+        }
+
+        if ($block instanceof DependCapableInterface && $block->isHidden()) {
+          continue;
+        }
+
+        $width = max($width, Ansi::blockWidth(explode("\n", $block->render($this->theme))));
+      }
+    }
+
+    return $width;
+  }
+
+  /**
+   * Put the way out into each panel that has one of its own.
    *
    * @param \DrevOps\Tui\Screen\Assembler $assembler
    *   The assembler that builds the standard pair.
+   */
+  protected function dress(Assembler $assembler): void {
+    // The buttons end the form rather than the panel the cursor happens to be
+    // in, so they go among the outermost panel's own rows: going into a nested
+    // one leaves them behind exactly as it leaves that panel's siblings behind.
+    if ($this->panel->currentButtons()->show) {
+      $this->place($this->panel)->add($this->notice)->add($this->actions);
+    }
+
+    foreach (Tree::panels($this->panel) as $panel) {
+      // The outermost panel is not somewhere you opened, so it has nothing of
+      // its own to close: the buttons in it are the form's.
+      if ($panel === $this->panel) {
+        continue;
+      }
+
+      if (!$panel->isModal()) {
+        continue;
+      }
+
+      $region = $this->place($panel);
+
+      // A dialog that only says something says it here: its standing text is
+      // its whole content, where a panel you walk into has rows instead.
+      if ($panel->descriptionText() !== '') {
+        $region->prepend(new Markup($panel->id() . '-description', $panel->descriptionText()));
+      }
+
+      $region->add($this->buttons($assembler, $panel));
+    }
+
+    foreach (Tree::fields($this->panel) as $field) {
+      $field->handoff($this->externalEditor->isAvailable());
+    }
+  }
+
+  /**
+   * The buttons that close a panel, labelled as it declares them.
+   *
+   * @param \DrevOps\Tui\Screen\Assembler $assembler
+   *   The assembler that builds the standard pair.
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel they close.
    *
    * @return \DrevOps\Tui\Block\Actions
    *   The buttons.
    */
-  protected function buttons(Assembler $assembler): Actions {
-    $declared = $this->panel->currentButtons();
+  protected function buttons(Assembler $assembler, Panel $panel): Actions {
+    $declared = $panel->currentButtons();
 
     // The assembler says which buttons a form has; the panel says what they
     // read, so a form that renamed its submit gets the name it chose.
@@ -799,14 +1544,11 @@ class ScreenController {
    * The trail and the keys on offer are the same blocks the panel's own screen
    * draws, so asking for help changes what is being read and nothing else.
    *
-   * @param string $layout
-   *   The layout the screen is arranged by.
-   *
    * @return \DrevOps\Tui\Screen\Screen
    *   The screen.
    */
-  protected function helpScreen(string $layout): Screen {
-    $screen = (new Screen())->layout(LayoutManager::create($layout));
+  protected function helpScreen(): Screen {
+    $screen = (new Screen())->layout(LayoutManager::create($this->layout));
 
     $screen->in('header')->add($this->breadcrumb);
     $screen->in(self::CONTENT)->add($this->help);

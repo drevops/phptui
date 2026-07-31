@@ -40,6 +40,25 @@ final class Tree {
   }
 
   /**
+   * Every panel beneath a panel, the panel itself included.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel to walk.
+   *
+   * @return list<\DrevOps\Tui\Block\Panel>
+   *   The panels, in declaration order, outermost first.
+   */
+  public static function panels(Panel $panel): array {
+    $panels = [$panel];
+
+    foreach ($panel->children() as $child) {
+      $panels = [...$panels, ...self::panels($child)];
+    }
+
+    return $panels;
+  }
+
+  /**
    * The ids of every row a panel and the panels beneath it hold.
    *
    * @param \DrevOps\Tui\Block\Panel $panel

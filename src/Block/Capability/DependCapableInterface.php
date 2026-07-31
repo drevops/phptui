@@ -53,4 +53,32 @@ interface DependCapableInterface {
    */
   public function isActive(array $answers = []): bool;
 
+  /**
+   * Take this block off the screen, because the answers say it is not there.
+   *
+   * Whether it is there is decided against the answers, and where those answers
+   * are is not a block's business - so a block is told rather than asked, and
+   * the telling is separate from the deciding.
+   *
+   * @return static
+   *   The block.
+   */
+  public function hide(): static;
+
+  /**
+   * Put this block back on the screen.
+   *
+   * @return static
+   *   The block.
+   */
+  public function reveal(): static;
+
+  /**
+   * Whether this block is off the screen.
+   *
+   * @return bool
+   *   TRUE when it is.
+   */
+  public function isHidden(): bool;
+
 }

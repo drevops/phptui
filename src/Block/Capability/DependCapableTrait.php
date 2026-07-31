@@ -19,6 +19,11 @@ trait DependCapableTrait {
   protected \Closure|ConditionInterface|null $when = NULL;
 
   /**
+   * Whether this block is off the screen because the answers took it off.
+   */
+  protected bool $hidden = FALSE;
+
+  /**
    * {@inheritdoc}
    */
   public function when(\Closure|ConditionInterface $when): static {
@@ -46,6 +51,31 @@ trait DependCapableTrait {
    */
   public function rule(): ?ConditionInterface {
     return $this->when instanceof ConditionInterface ? $this->when : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hide(): static {
+    $this->hidden = TRUE;
+
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function reveal(): static {
+    $this->hidden = FALSE;
+
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isHidden(): bool {
+    return $this->hidden;
   }
 
   /**

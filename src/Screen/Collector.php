@@ -181,6 +181,43 @@ final class Collector {
   }
 
   /**
+   * Settle a panel again over the answers it now holds.
+   *
+   * Where {@see seed()} works out what a form opens on, this works out what it
+   * stands at once somebody has answered something: the values arrive already
+   * resolved, so nothing is looked up, detected or defaulted again, and the
+   * stages that follow - the rows that follow the answers, the values computed
+   * from them, who is there at all, and the rules that write a value once the
+   * answers have settled - run exactly as they do on the way in. That is the
+   * whole of why a dependent row appears the moment its condition holds.
+   *
+   * Nothing here was supplied: an answer somebody gave is the live one, so a
+   * narrowed row set restates it rather than reporting it the way a supplied
+   * value is reported.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel to settle, and any panels beneath it.
+   * @param array<string,mixed> $values
+   *   The answers as they now stand, keyed by field id.
+   * @param array<string,bool> $pinned
+   *   The fields whose computed value must not be recomputed, keyed by field
+   *   id: the ones somebody answered over the rule that computes them.
+   * @param \DrevOps\Tui\Handler\Context|null $context
+   *   The run this collection belongs to, or NULL for one that targets no
+   *   directory and detects nothing.
+   *
+   * @return array{array<string,mixed>,array<string,bool>}
+   *   The settled values, and which fields are there.
+   */
+  public function resettle(Panel $panel, array $values, array $pinned = [], ?Context $context = NULL): array {
+    $fields = Tree::fields($panel);
+
+    [$active, $values] = $this->stabilize($this->shows($panel, $fields), $fields, $values, $this->ruleMap($fields), $pinned, $context ?? new Context(), []);
+
+    return [$values, $active];
+  }
+
+  /**
    * Resolve and settle every value, and work out who is there at all.
    *
    * @param \DrevOps\Tui\Block\Panel $panel
