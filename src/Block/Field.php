@@ -17,7 +17,12 @@ use DrevOps\Tui\Block\Capability\RejectCapableInterface;
 use DrevOps\Tui\Block\Element\FieldElementsInterface;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\DiscoverInterface;
+use DrevOps\Tui\Field\FieldFactory;
+use DrevOps\Tui\Field\FieldInterface;
+use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\Scope;
+use DrevOps\Tui\Input\ScopedKeyMap;
 use DrevOps\Tui\Model\DateBounds;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FilePickerConstraints;
@@ -86,6 +91,11 @@ final class Field extends AbstractBlock implements
    * What is being typed, before it is accepted.
    */
   protected mixed $draft = NULL;
+
+  /**
+   * What the field opened onto, for as long as it is open.
+   */
+  protected ?FieldInterface $editor = NULL;
 
   /**
    * The rows edit mode opens onto, in the order they were declared.
@@ -334,10 +344,20 @@ final class Field extends AbstractBlock implements
 
   /**
    * {@inheritdoc}
+   *
+   * The kind is what decides the editor, so opening is where the declaration
+   * becomes something that collects.
    */
   public function open(): static {
+    // A kind that only draws has nothing to open onto, so it stays as it is
+    // rather than failing at the keystroke that reached it.
+    if ($this->fieldType->isDisplayOnly()) {
+      return $this;
+    }
+
     $this->mode = Mode::Edit;
     $this->draft = $this->value;
+    $this->editor = $this->editorFor($this->value);
 
     return $this;
   }
@@ -348,8 +368,55 @@ final class Field extends AbstractBlock implements
   public function close(): static {
     $this->mode = Mode::View;
     $this->draft = NULL;
+    $this->editor = NULL;
 
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Accepting is the editor's to offer and the field's to refuse: a refused
+   * value leaves the field open on what was offered, so the reason on its error
+   * line is about something still in front of you.
+   */
+  public function capture(Key $key): bool {
+    if (!$this->editor instanceof FieldInterface) {
+      return FALSE;
+    }
+
+    $this->editor->handle($key);
+
+    if ($this->editor->isCancelled()) {
+      $this->close();
+
+      return TRUE;
+    }
+
+    if (!$this->editor->isComplete()) {
+      $this->draft = $this->editor->value();
+
+      return TRUE;
+    }
+
+    $offered = $this->editor->value();
+
+    if (!$this->accept($offered)) {
+      $this->draft = $offered;
+      $this->editor = $this->editorFor($offered);
+    }
+
+    return TRUE;
+  }
+
+  /**
+   * What this field opened onto.
+   *
+   * @return \DrevOps\Tui\Field\FieldInterface|null
+   *   The editor, or NULL while the field is settled.
+   */
+  public function editor(): ?FieldInterface {
+    return $this->editor;
   }
 
   /**
@@ -394,6 +461,7 @@ final class Field extends AbstractBlock implements
     $this->value = $this->transform instanceof \Closure ? ($this->transform)($offered) : $offered;
     $this->draft = NULL;
     $this->mode = Mode::View;
+    $this->editor = NULL;
 
     return TRUE;
   }
@@ -1482,16 +1550,42 @@ final class Field extends AbstractBlock implements
 
   /**
    * {@inheritdoc}
+   *
+   * A settled field takes no key at all: the cursor and what it opens belong to
+   * the panel, so every key travels outward until something is open.
    */
   public function binds(Key $key): bool {
-    // Every printable key is something being typed while it is open, which is
-    // why the help key reaches an open field and travels outward from a closed
-    // one without either being written as an exception.
-    if ($this->mode === Mode::Edit && $key->isChar()) {
+    if ($this->mode !== Mode::Edit) {
+      return FALSE;
+    }
+
+    // Every printable key is something being typed where the kind takes typed
+    // input, which is why the help key reaches an open text field and travels
+    // outward from a closed one without either being written as an exception.
+    if ($key->isChar() && $this->keyScope()->consumesText()) {
       return TRUE;
     }
 
-    return in_array($key->name, $this->bindings, TRUE);
+    return $this->boundAction($key) instanceof Action;
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * While it is open the field is its editor, so the keys it answers to are the
+   * ones the editor was wired with rather than a second copy of them.
+   */
+  public function bindings(): ScopedKeyMap {
+    return $this->editor instanceof FieldInterface ? $this->editor->keys() : $this->keyMap()->scope($this->keyScope());
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * A settled field advertises nothing, because nothing reaches it.
+   */
+  public function hints(): array {
+    return $this->editor instanceof FieldInterface ? $this->editor->hints() : [];
   }
 
   /**
@@ -1502,11 +1596,32 @@ final class Field extends AbstractBlock implements
 
     // Help is never drawn in the row that offers it: it can run to paragraphs,
     // so the row marks that there is something to ask for and nothing more.
-    $label = $elements->fieldLabel($this->label) . ($this->help === '' ? '' : ' ' . $elements->fieldHelpMarker());
+    $marker = $this->help === '' ? '' : ' ' . $elements->fieldHelpMarker();
+    $label = $elements->fieldSelector($this->isFocused()) . ' ' . $elements->fieldLabel($this->label) . $marker;
 
     return $this->mode === Mode::View
       ? rtrim($label . '  ' . $elements->fieldValue($this->readable($elements)))
-      : $this->openLines($elements, $label);
+      : $this->openLines($theme, $elements, $label);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function keyScope(): Scope {
+    return Scope::field($this->fieldType, $this->multiple);
+  }
+
+  /**
+   * The editor this field's kind opens onto, seeded with a value.
+   *
+   * @param mixed $current
+   *   The value it starts from.
+   *
+   * @return \DrevOps\Tui\Field\FieldInterface
+   *   The editor.
+   */
+  protected function editorFor(mixed $current): FieldInterface {
+    return (new FieldFactory($this->keyMap()))->open($this, $current);
   }
 
   /**
@@ -1634,43 +1749,66 @@ final class Field extends AbstractBlock implements
   /**
    * The rows this field draws while it is open.
    *
-   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $theme
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
+   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   *   The same theme, narrowed to the elements a field draws with.
    * @param string $label
    *   The already-styled label.
    *
    * @return string
    *   The rows.
    */
-  protected function openLines(FieldElementsInterface $theme, string $label): string {
+  protected function openLines(ThemeInterface $theme, FieldElementsInterface $elements, string $label): string {
     $lines = [];
     // Measured from the label as it was drawn, not from its source text: it may
     // carry a help marker and styling, and only its visible width lines the
-    // entries up under it.
+    // rows up under it.
     $indent = str_repeat(' ', Ansi::width($label) + 2);
 
-    foreach ($this->entries as $entry) {
-      $lines[] = rtrim(($lines === [] ? $label . '  ' : $indent) . $this->entryLine($theme, $entry));
-    }
-
-    if ($lines === []) {
-      $lines[] = rtrim($label . '  ' . $theme->fieldValue($this->readable($theme)));
+    foreach ($this->valueRegion($theme, $elements) as $row) {
+      $lines[] = rtrim(($lines === [] ? $label . '  ' : $indent) . $row);
     }
 
     if ($this->description !== '') {
-      $lines[] = $indent . $theme->fieldDescription($this->description);
+      $lines[] = $indent . $elements->fieldDescription($this->description);
     }
 
     // The two share one line and never appear together: a constraint says what
     // is acceptable, and an error replaces it the instant something is not.
     if ($this->refusal !== NULL) {
-      $lines[] = $indent . $theme->fieldError($this->refusal);
+      $lines[] = $indent . $elements->fieldError($this->refusal);
     }
     elseif ($this->constraint !== NULL) {
-      $lines[] = $indent . $theme->fieldConstraint($this->constraint);
+      $lines[] = $indent . $elements->fieldConstraint($this->constraint);
     }
 
     return implode("\n", $lines);
+  }
+
+  /**
+   * What fills the region right of the label while the field is open.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   *   The same theme, narrowed to the elements a field draws with.
+   *
+   * @return list<string>
+   *   The rows, at least one.
+   */
+  protected function valueRegion(ThemeInterface $theme, FieldElementsInterface $elements): array {
+    // The label and the selector stay put; only this region changes shape - and
+    // once something is open, its shape is whatever that thing draws.
+    if ($this->editor instanceof FieldInterface) {
+      return explode("\n", $this->editor->view($theme));
+    }
+
+    if ($this->entries === []) {
+      return [$elements->fieldValue($this->readable($elements))];
+    }
+
+    return array_map(fn(Option $entry): string => $this->entryLine($elements, $entry), $this->entries);
   }
 
   /**

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Field;
 
+use DrevOps\Tui\Block\Field as BlockField;
+use DrevOps\Tui\Field\Capability\QueryOptionsCapableInterface;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
@@ -467,6 +469,136 @@ final class FieldFactoryTest extends TestCase {
   }
 
   /**
+   * Tests the field a block's kind opens onto.
+   *
+   * @param \DrevOps\Tui\Block\Field $block
+   *   The block to open.
+   * @param mixed $current
+   *   The value the block holds.
+   * @param class-string $expected
+   *   The field the factory builds.
+   */
+  #[DataProvider('dataProviderOpensBlockByKind')]
+  public function testOpensBlockByKind(BlockField $block, mixed $current, string $expected): void {
+    $this->assertInstanceOf($expected, (new FieldFactory())->open($block, $current));
+  }
+
+  /**
+   * Data provider for testOpensBlockByKind().
+   *
+   * @return \Iterator<string, array{\DrevOps\Tui\Block\Field, mixed, class-string}>
+   *   The block, the value it opens on and the field class it builds.
+   */
+  public static function dataProviderOpensBlockByKind(): \Iterator {
+    yield 'text' => [new BlockField('f', 'F'), 'x', Text::class];
+    yield 'confirm' => [new BlockField('f', 'F', FieldType::Confirm), TRUE, Confirm::class];
+    yield 'toggle' => [self::blockWithEntries(FieldType::Toggle), 'a', Toggle::class];
+    yield 'select' => [self::blockWithEntries(FieldType::Select), 'a', Select::class];
+    yield 'multiple select' => [self::blockWithEntries(FieldType::Select)->multiple(), ['a'], Select::class];
+    yield 'search' => [self::blockWithEntries(FieldType::Search), 'a', Search::class];
+    yield 'suggest' => [self::blockWithEntries(FieldType::Suggest), 'a', Suggest::class];
+    yield 'reorder' => [self::blockWithEntries(FieldType::Reorder), ['a', 'b'], Reorder::class];
+    yield 'file picker' => [new BlockField('f', 'F', FieldType::FilePicker), '', FilePicker::class];
+    yield 'number' => [new BlockField('f', 'F', FieldType::Number), 42, Number::class];
+    yield 'rating' => [(new BlockField('f', 'F', FieldType::Rating))->bounds(new NumberBounds(1, 5)), 3, Rating::class];
+    yield 'calendar' => [new BlockField('f', 'F', FieldType::Calendar), '2026-07-15', Calendar::class];
+    yield 'textarea' => [new BlockField('f', 'F', FieldType::Textarea), 'x', Textarea::class];
+    yield 'password' => [new BlockField('f', 'F', FieldType::Password), 'x', Password::class];
+    yield 'pause' => [new BlockField('f', 'F', FieldType::Pause), NULL, Pause::class];
+    yield 'template' => [(new BlockField('f', 'F', FieldType::Template))->pattern(new TemplateModel('{{a}}-{{b}}')), '', Template::class];
+  }
+
+  /**
+   * Tests the kinds that only draw and so have nothing to open onto.
+   *
+   * @param \DrevOps\Tui\Model\FieldType $type
+   *   The kind.
+   */
+  #[DataProvider('dataProviderKindThatOnlyDrawsCannotBeOpened')]
+  public function testKindThatOnlyDrawsCannotBeOpened(FieldType $type): void {
+    $this->expectException(\LogicException::class);
+    $this->expectExceptionMessage('only draws, so there is nothing to open it onto');
+
+    (new FieldFactory())->open(new BlockField('f', 'F', $type));
+  }
+
+  /**
+   * Data provider for testKindThatOnlyDrawsCannotBeOpened().
+   *
+   * @return \Iterator<string, array{\DrevOps\Tui\Model\FieldType}>
+   *   The kinds.
+   */
+  public static function dataProviderKindThatOnlyDrawsCannotBeOpened(): \Iterator {
+    yield 'note' => [FieldType::Note];
+    yield 'progress' => [FieldType::Progress];
+  }
+
+  public function testOpeningTheBlockCarriesItsDeclarationOntoTheField(): void {
+    $block = (new BlockField('f', 'F', FieldType::Select))
+      ->multiple()
+      ->entry('a', 'A')
+      ->entry('b', 'B')
+      ->paginate(1)
+      ->placeholder('Pick some produce');
+
+    $field = (new FieldFactory())->open($block, ['b']);
+
+    $this->assertSame(['b'], $field->value());
+    $this->assertEquals(KeyMapManager::create()->forField(FieldType::Select, TRUE), $field->keys());
+
+    // One page of one row, so only the row the cursor is on is drawn.
+    $view = Ansi::strip($field->view(new DefaultTheme(40, ['color' => FALSE])));
+    $this->assertStringContainsString('A', $view);
+    $this->assertStringNotContainsString('B', $view);
+  }
+
+  public function testOpeningTheBlockWiresNoValidatorBecauseTheBlockRefuses(): void {
+    $block = (new BlockField('f', 'F'))
+      ->required()
+      ->validate(static fn(mixed $value): string => 'Never acceptable.');
+
+    $field = (new FieldFactory())->open($block, '');
+    $field->handle(Key::named(KeyName::Enter));
+
+    // What a block will not take is the block's own to refuse, so the field it
+    // opened onto offers the value rather than measuring it a second time.
+    $this->assertTrue($field->isComplete());
+    $this->assertNull($field->error());
+  }
+
+  public function testOpeningTheBlockDrivenByQuerySourceLeavesTheListToIt(): void {
+    $block = (new BlockField('f', 'F', FieldType::Search))->query(static fn(): array => ['a' => 'A']);
+
+    $field = (new FieldFactory())->open($block, '');
+
+    $this->assertInstanceOf(QueryOptionsCapableInterface::class, $field);
+    $this->assertTrue($field->isQueryDriven());
+  }
+
+  public function testOpeningTheRatingBlockWithNoScaleSaysSo(): void {
+    $this->expectException(\LogicException::class);
+    $this->expectExceptionMessage('is a rating field carrying no closed scale');
+
+    (new FieldFactory())->open(new BlockField('f', 'F', FieldType::Rating), 1);
+  }
+
+  public function testOpeningTheTemplateBlockWithNoShapeSaysSo(): void {
+    $this->expectException(\LogicException::class);
+    $this->expectExceptionMessage('is a template field carrying no template');
+
+    (new FieldFactory())->open(new BlockField('f', 'F', FieldType::Template), '');
+  }
+
+  public function testOpeningTheTextBlockResolvesCompletionAgainstTheAnswers(): void {
+    $block = (new BlockField('f', 'F'))->complete(static fn(array $answers): array => [(string) ($answers['courier'] ?? '')]);
+
+    $field = (new FieldFactory())->open($block, 'Val', ['courier' => 'Valley Runs']);
+    $field->handle(Key::named(KeyName::Tab));
+
+    $this->assertSame('Valley Runs', $field->value());
+  }
+
+  /**
    * A field of the given type.
    *
    * @param \DrevOps\Tui\Model\FieldType $type
@@ -474,6 +606,19 @@ final class FieldFactoryTest extends TestCase {
    */
   protected static function field(FieldType $type): Field {
     return new Field('f', 'F', '', $type, '');
+  }
+
+  /**
+   * A block of the given kind with two entries.
+   *
+   * @param \DrevOps\Tui\Model\FieldType $type
+   *   The kind.
+   *
+   * @return \DrevOps\Tui\Block\Field
+   *   The block.
+   */
+  protected static function blockWithEntries(FieldType $type): BlockField {
+    return (new BlockField('f', 'F', $type))->entry('a', 'A')->entry('b', 'B');
   }
 
   /**

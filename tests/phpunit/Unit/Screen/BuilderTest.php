@@ -73,9 +73,18 @@ final class BuilderTest extends TestCase {
     $lines = array_map(rtrim(...), explode("\n", $rendered));
 
     $this->assertSame('Delivery', $lines[0]);
-    $this->assertSame('Courier  Valley Runs', $lines[1]);
+    $this->assertSame('  Courier  Valley Runs', $lines[1]);
     $this->assertCount(6, $lines);
     $this->assertStringContainsString('to move', $lines[5]);
+  }
+
+  public function testTheAssembledLegendIsReadOutOfThePanelsOwnBindings(): void {
+    $panel = (new PanelBuilder('main', 'Delivery'))->build();
+
+    $legend = (new Assembler())->assemble($panel)->in('footer')->blocks()[0];
+
+    $this->assertInstanceOf(Legend::class, $legend);
+    $this->assertSame('↑/↓ to move · ↵ to select · ESC to go back', $legend->render(new DefaultTheme(40, ['color' => FALSE])));
   }
 
   public function testFieldBuilderHandsBackThePanelItCameFrom(): void {

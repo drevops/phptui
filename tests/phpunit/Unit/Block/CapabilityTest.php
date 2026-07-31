@@ -27,7 +27,9 @@ use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Condition\ConditionInterface;
 use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
@@ -140,30 +142,63 @@ final class CapabilityTest extends TestCase {
     yield 'progress, asking for nothing' => [new Progress('packing', 'Packing crates'), $standing, ['organic' => TRUE], FALSE];
   }
 
-  public function testBlockBindsTheKeysItWasGivenAndNoOthers(): void {
-    $panel = (new Panel('delivery', 'Delivery'))->bind(KeyName::Up, KeyName::Down);
+  public function testBlockBindsWhateverItsScopeResolvesAndNothingElse(): void {
+    // A block lists no keys of its own: what it binds is what its scope
+    // resolves, so retuning one is a declaration about the form rather than
+    // about every block that draws it.
+    $panel = (new Panel('delivery', 'Delivery'))->enter();
 
-    $this->assertSame([KeyName::Up, KeyName::Down], $panel->bindings());
     $this->assertTrue($panel->binds(Key::named(KeyName::Up)));
-    $this->assertFalse($panel->binds(Key::named(KeyName::Escape)));
-    $this->assertFalse($panel->binds(Key::char('?')));
+    $this->assertTrue($panel->binds(Key::named(KeyName::Enter)));
+    $this->assertTrue($panel->binds(Key::char('?')));
+    $this->assertFalse($panel->binds(Key::char('x')));
   }
 
-  public function testKeyBoundTwiceIsStillOneBinding(): void {
-    $panel = (new Panel('delivery', 'Delivery'))->bind(KeyName::Up)->bind(KeyName::Down, KeyName::Up);
+  public function testNestedPanelTakesNoKeyUntilYouHaveGoneIntoIt(): void {
+    $panel = new Panel('advanced', 'Advanced');
 
-    $this->assertSame([KeyName::Up, KeyName::Down], $panel->bindings());
+    $this->assertFalse($panel->binds(Key::named(KeyName::Up)));
+    $this->assertTrue($panel->enter()->binds(Key::named(KeyName::Up)));
+    $this->assertFalse($panel->leave()->binds(Key::named(KeyName::Up)));
+  }
+
+  public function testBlockAnswersToTheBindingsItIsGiven(): void {
+    $keys = KeyMapManager::create('vim');
+    $panel = (new Panel('delivery', 'Delivery'))->enter();
+
+    $this->assertFalse($panel->binds(Key::char('j')));
+
+    $this->assertTrue($panel->bind($keys)->binds(Key::char('j')));
+    $this->assertSame($keys->navigation(), $panel->bindings());
   }
 
   public function testOpenFieldBindsEveryPrintableKeyAndClosedOneBindsNone(): void {
-    $field = (new Field('courier', 'Courier'))->bind(KeyName::Enter);
+    $field = new Field('courier', 'Courier');
 
     // The same key stops at an open field and travels outward from a closed
     // one, which is one rule rather than an exception written for the help key.
     $this->assertFalse($field->binds(Key::char('?')));
+    $this->assertFalse($field->binds(Key::named(KeyName::Enter)));
     $this->assertTrue($field->open()->binds(Key::char('?')));
     $this->assertTrue($field->binds(Key::named(KeyName::Enter)));
     $this->assertFalse($field->close()->binds(Key::char('?')));
+  }
+
+  public function testOpenFieldTakesPrintableKeyOnlyWhereItsKindTakesTypedInput(): void {
+    $basket = (new Field('basket', 'Basket contents', FieldType::Select))->entry('apple', 'Apple')->open();
+
+    // A single choice is walked with the cursor rather than typed into, so a
+    // printable key is not something being typed and travels outward.
+    $this->assertFalse($basket->binds(Key::char('x')));
+    $this->assertTrue($basket->binds(Key::named(KeyName::Down)));
+  }
+
+  public function testOpenFieldAdvertisesItsEditorsKeysAndClosedOneAdvertisesNone(): void {
+    $field = new Field('courier', 'Courier');
+
+    $this->assertSame([], $field->hints());
+    $this->assertEquals($field->open()->editor()?->hints(), $field->hints());
+    $this->assertSame($field->editor()?->keys(), $field->bindings());
   }
 
   public function testActivatingActionsPressesTheButtonTheCursorRestsOn(): void {

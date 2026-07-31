@@ -14,7 +14,9 @@ use DrevOps\Tui\Screen\Layout\DefaultLayout;
 use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Screen\Screen;
 use DrevOps\Tui\Screen\ScreenRenderer;
+use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\Tui\Theme\ThemeInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -47,7 +49,8 @@ final class ScreenRenderTest extends TestCase {
     $lines = $this->render($screen, 6, 40);
 
     $this->assertCount(6, $lines);
-    $this->assertSame(['', 'row', 'row', 'row', 'row', ''], $lines);
+    // The last of those four carries the mark saying there is more below it.
+    $this->assertSame(['', 'row', 'row', 'row', 'row                                    ▼', ''], $lines);
   }
 
   public function testPinnedRegionClipsWhereScrollingOneWouldNot(): void {
@@ -68,8 +71,9 @@ final class ScreenRenderTest extends TestCase {
     $screen->in('content')->scrollTo(2);
     $lines = $this->render($screen, 6, 40);
 
-    // Four rows of content, starting two in.
-    $this->assertSame(['', 'three', 'four', 'five', 'six', ''], $lines);
+    // Four rows of content, starting two in, with the first marked because two
+    // rows are now out of sight above it.
+    $this->assertSame(['', 'three                                  ▲', 'four', 'five', 'six', ''], $lines);
   }
 
   public function testPinnedRegionCannotBeScrolled(): void {
@@ -87,7 +91,50 @@ final class ScreenRenderTest extends TestCase {
 
     // Six rows into four leaves two: the window stops there rather than
     // scrolling the content off the top of itself.
-    $this->assertSame(['', 'three', 'four', 'five', 'six', ''], $this->render($screen, 6, 40));
+    $this->assertSame(['', 'three                                  ▲', 'four', 'five', 'six', ''], $this->render($screen, 6, 40));
+  }
+
+  public function testPinnedRegionSaysNothingAboutWhatItClipped(): void {
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('header')->add(new Markup('over', "one\ntwo\nthree"));
+
+    // Only a region you can move through says there is more, because there is
+    // no way to reach what a pinned one dropped.
+    $this->assertSame('one', $this->render($screen, 6, 40)[0]);
+  }
+
+  public function testFramedScreenIsBoxedAndDrawsItsRegionsInside(): void {
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('header')->add(new Breadcrumb('Orchard', 'Delivery'));
+    $screen->in('content')->add(new Markup('intro', 'Pick the produce.'));
+
+    $lines = $this->render($screen, 6, 24, Border::Rounded);
+
+    $this->assertCount(6, $lines);
+    $this->assertSame('╭──────────────────────╮', $lines[0]);
+    $this->assertSame('│ Orchard › Delivery   │', $lines[1]);
+    $this->assertSame('│ Pick the produce.    │', $lines[2]);
+    $this->assertSame('╰──────────────────────╯', $lines[5]);
+  }
+
+  public function testFrameFallsBackToTheGlyphsThatNeedNoUnicode(): void {
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('content')->add(new Markup('intro', 'Pick the produce.'));
+
+    $theme = new DefaultTheme(20, ['color' => FALSE, 'unicode' => FALSE]);
+    $lines = explode("\n", (new ScreenRenderer($theme, Border::Rounded))->render($screen, 5, 20));
+
+    $this->assertSame('+------------------+', $lines[0]);
+    $this->assertStringStartsWith('| Pick the produce', $lines[2]);
+  }
+
+  public function testThemeThatCannotDrawTheChromeSaysSo(): void {
+    // The frame belongs to no block, so the theme is asked for it directly -
+    // and a theme that declares none of it cannot draw one.
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('cannot draw the window chrome');
+
+    (new ScreenRenderer($this->createStub(ThemeInterface::class), Border::Line))->render((new Screen())->layout(new DefaultLayout()), 5, 20);
   }
 
   public function testBlocksInOneRegionStackDownItByDefault(): void {
@@ -173,12 +220,14 @@ final class ScreenRenderTest extends TestCase {
    *   The terminal rows.
    * @param int $columns
    *   The terminal columns.
+   * @param \DrevOps\Tui\Theme\Border $border
+   *   The frame drawn around every region at once.
    *
    * @return list<string>
    *   The rows.
    */
-  protected function render(Screen $screen, int $rows, int $columns): array {
-    $rendered = (new ScreenRenderer(new DefaultTheme($columns, ['color' => FALSE])))->render($screen, $rows, $columns);
+  protected function render(Screen $screen, int $rows, int $columns, Border $border = Border::None): array {
+    $rendered = (new ScreenRenderer(new DefaultTheme($columns, ['color' => FALSE]), $border))->render($screen, $rows, $columns);
 
     return $rendered === '' ? [] : array_map(rtrim(...), explode("\n", $rendered));
   }

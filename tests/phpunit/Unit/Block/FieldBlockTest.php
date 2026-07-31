@@ -8,6 +8,11 @@ use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Mode;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\PathExists;
+use DrevOps\Tui\Field\FieldInterface;
+use DrevOps\Tui\Field\Select;
+use DrevOps\Tui\Field\Text;
+use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Model\DateBounds;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FilePickerConstraints;
@@ -35,7 +40,11 @@ final class FieldBlockTest extends TestCase {
     $field = (new Field('courier', 'Courier'))->default('Valley Runs');
 
     $this->assertSame(Mode::View, $field->mode());
-    $this->assertSame('Courier  Valley Runs', $field->render($this->theme()));
+    $this->assertSame('  Courier  Valley Runs', $field->render($this->theme()));
+
+    // The selector column is drawn whether or not the cursor is on the row, so
+    // a row never shifts sideways as the cursor arrives on it.
+    $this->assertSame('❯ Courier  Valley Runs', $field->focus()->render($this->theme()));
   }
 
   public function testOpeningFieldSwitchesItToEditMode(): void {
@@ -46,19 +55,44 @@ final class FieldBlockTest extends TestCase {
   }
 
   public function testTheLabelStaysPutAcrossBothModes(): void {
-    $field = (new Field('basket', 'Basket'))->entry('apple', 'Apple');
+    $field = (new Field('basket', 'Basket', FieldType::Select))->entry('apple', 'Apple');
 
-    $this->assertStringStartsWith('Basket', $field->render($this->theme()));
-    $this->assertStringStartsWith('Basket', $field->open()->render($this->theme()));
+    $this->assertStringStartsWith('  Basket', $field->render($this->theme()));
+    $this->assertStringStartsWith('  Basket', $field->open()->render($this->theme()));
   }
 
   public function testEditModeOpensOntoTheEntriesItWasGiven(): void {
-    $field = (new Field('basket', 'Basket'))->entry('apple', 'Apple')->entry('carrot', 'Carrot');
+    $field = (new Field('basket', 'Basket', FieldType::Select))->entry('apple', 'Apple')->entry('carrot', 'Carrot');
 
     $rendered = $field->open()->render($this->theme());
 
     $this->assertStringContainsString('Apple', $rendered);
     $this->assertStringContainsString('Carrot', $rendered);
+  }
+
+  public function testOpeningFieldHandsTheValueRegionToTheEditorItsKindOpensOnto(): void {
+    $courier = (new Field('courier', 'Courier'))->default('Valley Runs');
+    $basket = (new Field('basket', 'Basket', FieldType::Select))->entry('apple', 'Apple');
+
+    $this->assertNotInstanceOf(FieldInterface::class, $courier->editor());
+
+    $editor = $courier->open()->editor();
+
+    $this->assertInstanceOf(Text::class, $editor);
+    $this->assertInstanceOf(Select::class, $basket->open()->editor());
+
+    // The editor starts from the answer the field holds, so opening a field
+    // shows what is there rather than an empty one.
+    $this->assertSame('Valley Runs', $editor->value());
+
+    $this->assertNotInstanceOf(FieldInterface::class, $courier->close()->editor());
+  }
+
+  public function testKindThatOnlyDrawsHasNothingToOpenOnto(): void {
+    $note = new Field('weighing', 'Weighed at the bench.', FieldType::Note);
+
+    $this->assertSame(Mode::View, $note->open()->mode());
+    $this->assertNotInstanceOf(FieldInterface::class, $note->editor());
   }
 
   public function testOnlyWhatWasAcceptedReachesTheResult(): void {
@@ -88,6 +122,87 @@ final class FieldBlockTest extends TestCase {
     $this->assertTrue($field->accept());
     $this->assertSame('Coast Runs', $field->value());
     $this->assertSame(Mode::View, $field->mode());
+  }
+
+  public function testTypingIntoAnOpenFieldIsWhatFillsTheValueRegion(): void {
+    $field = (new Field('courier', 'Courier'))->open();
+
+    foreach (str_split('Coast') as $char) {
+      $field->capture(Key::char($char));
+    }
+
+    $this->assertStringContainsString('Coast', $field->render($this->theme()));
+
+    $field->capture(Key::named(KeyName::Enter));
+
+    $this->assertSame('Coast', $field->value());
+    $this->assertSame(Mode::View, $field->mode());
+  }
+
+  public function testSpaceTogglesAnEntryOfAnOpenMultipleSelect(): void {
+    $field = (new Field('basket', 'Basket contents', FieldType::Select))
+      ->multiple()
+      ->entry('apple', 'Apple')
+      ->entry('carrot', 'Carrot')
+      ->open();
+
+    // Space belongs to the kind rather than to whatever sends the key: the
+    // field binds what its editor binds, so nothing above it knows of a toggle.
+    $field->capture(Key::named(KeyName::Space));
+    $field->capture(Key::named(KeyName::Down));
+    $field->capture(Key::named(KeyName::Space));
+    $field->capture(Key::named(KeyName::Enter));
+
+    $this->assertSame(['apple', 'carrot'], $field->value());
+  }
+
+  public function testConfirmFieldAnswersTheKeysItsOwnKindBinds(): void {
+    $field = (new Field('organic', 'Organic only?', FieldType::Confirm))->open();
+
+    $field->capture(Key::char('y'));
+    $field->capture(Key::named(KeyName::Enter));
+
+    $this->assertTrue($field->value());
+  }
+
+  public function testCancellingAnOpenFieldLeavesTheAnswerWhereItWas(): void {
+    $field = (new Field('courier', 'Courier'))->default('Valley Runs')->open();
+
+    $field->capture(Key::char('X'));
+    $field->capture(Key::named(KeyName::Escape));
+
+    $this->assertSame('Valley Runs', $field->value());
+    $this->assertSame(Mode::View, $field->mode());
+  }
+
+  public function testTheEditorOffersAndTheFieldRefuses(): void {
+    $field = (new Field('courier', 'Courier'))
+      ->validate(static fn(mixed $value): ?string => $value === 'Coast' ? 'Coast Runs do not deliver here.' : NULL)
+      ->open();
+
+    foreach (str_split('Coast') as $char) {
+      $field->capture(Key::char($char));
+    }
+
+    $field->capture(Key::named(KeyName::Enter));
+
+    // What a field will not take is the field's to refuse rather than the
+    // editor's, so a refused value leaves the field open on what was offered.
+    $this->assertSame(Mode::Edit, $field->mode());
+    $this->assertSame('Coast Runs do not deliver here.', $field->refusal());
+    $this->assertStringContainsString('Coast Runs do not deliver here.', $field->render($this->theme()));
+    $this->assertNull($field->value());
+
+    // The editor starts again from what was offered, so correcting it carries
+    // on from what is on screen rather than from nothing.
+    $field->capture(Key::char('X'));
+    $field->capture(Key::named(KeyName::Enter));
+
+    $this->assertSame('CoastX', $field->value());
+  }
+
+  public function testSettledFieldHasNoEditorToTakeTheKey(): void {
+    $this->assertFalse((new Field('courier', 'Courier'))->capture(Key::char('x')));
   }
 
   public function testConstraintSaysWhatIsAcceptableBeforeYouAct(): void {
@@ -629,7 +744,7 @@ final class FieldBlockTest extends TestCase {
 
     $this->assertStringContainsString('Fruit', $lines[0]);
     $this->assertStringContainsString('Apple', $lines[1]);
-    $this->assertSame('', $lines[2]);
+    $this->assertStringContainsString('─', $lines[2]);
     $this->assertStringContainsString('Carrot', $lines[3]);
     $this->assertStringContainsString('Out of season.', $lines[3]);
   }
@@ -652,8 +767,11 @@ final class FieldBlockTest extends TestCase {
       ->entry('plum', 'Plum')
       ->default(['apple', 'carrot']);
 
-    $this->assertSame(['◻ Apple', '◼ Carrot'], $this->entryLines($one));
-    $this->assertSame(['◼ Apple', '◼ Carrot', '◻ Plum'], $this->entryLines($several));
+    // A single choice is a radio list and several is a checkbox list, which is
+    // the editor's shape rather than the row's: the field hands the region over
+    // and the kind decides what fills it.
+    $this->assertSame(['○ Apple', '● Carrot'], $this->entryLines($one));
+    $this->assertSame(['❯ ◼ Apple', '◼ Carrot', '◻ Plum'], $this->entryLines($several));
   }
 
   public function testSeveralAnswersReadAsOneLineWhileTheFieldIsSettled(): void {
@@ -663,7 +781,7 @@ final class FieldBlockTest extends TestCase {
       ->entry('carrot', 'Carrot')
       ->default(['apple', 'carrot']);
 
-    $this->assertSame('Basket contents  apple, carrot', $field->render($this->theme()));
+    $this->assertSame('  Basket contents  apple, carrot', $field->render($this->theme()));
   }
 
   public function testOpenFieldSaysWhatItAcceptsUntilSomethingIsRefused(): void {

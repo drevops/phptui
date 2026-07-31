@@ -8,6 +8,7 @@ use DrevOps\Tui\Block\BlockInterface;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
 
@@ -72,12 +73,15 @@ final class PanelBuilder {
    *   The field id.
    * @param string $label
    *   The field label.
+   * @param \DrevOps\Tui\Model\FieldType $type
+   *   The kind of answer it collects, which is what decides the editor it opens
+   *   onto and the keys that editor binds.
    *
    * @return \DrevOps\Tui\Screen\FieldBuilder
    *   The field, which hands this builder back when it is done.
    */
-  public function field(string $id, string $label): FieldBuilder {
-    $field = new Field($id, $label);
+  public function field(string $id, string $label, FieldType $type = FieldType::Text): FieldBuilder {
+    $field = new Field($id, $label, $type);
     $this->add($field);
 
     return new FieldBuilder($this, $field);

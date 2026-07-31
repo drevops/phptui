@@ -41,22 +41,25 @@ final class Assembler {
 
     $screen->in('header')->add(new Breadcrumb($panel->title()));
     $screen->in('content')->add($panel->enter());
-    $screen->in('footer')->add($this->legend());
+    $screen->in('footer')->add($this->legend($panel));
 
     return $screen;
   }
 
   /**
-   * The keys a panel offers before anything is open.
+   * The keys a panel offers before anything in it is open.
+   *
+   * Read out of the panel's own bindings rather than written out beside them,
+   * so a retuned key changes the line that advertises it too.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel filling the content region.
    *
    * @return \DrevOps\Tui\Block\Legend
    *   The legend.
    */
-  protected function legend(): Legend {
-    return (new Legend())
-      ->entry('↑/↓', 'move')
-      ->entry('↵', 'select')
-      ->entry('ESC', 'go back');
+  protected function legend(Panel $panel): Legend {
+    return (new Legend())->advertise($panel->bindings(), ...$panel->hints());
   }
 
   /**

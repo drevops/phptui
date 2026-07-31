@@ -12,9 +12,14 @@ use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
+use DrevOps\Tui\Input\Action;
+use DrevOps\Tui\Input\Hint;
+use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Model\TableSpec;
+use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\Tui\Translation\Translator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -31,6 +36,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Progress::class)]
 #[Group('block')]
 final class BlockTest extends TestCase {
+
+  use ResetsTranslatorTrait;
 
   public function testBreadcrumbJoinsItsSegments(): void {
     $theme = $this->theme();
@@ -56,6 +63,43 @@ final class BlockTest extends TestCase {
 
   public function testLegendWithNoKeysDrawsNothing(): void {
     $this->assertSame('', (new Legend())->render($this->theme()));
+  }
+
+  public function testLegendReadsItsKeysOutOfTheBindingsItAdvertises(): void {
+    $keys = KeyMapManager::create()->navigation();
+    $legend = (new Legend())->advertise($keys, new Hint('move', Action::MoveUp, Action::MoveDown), new Hint('select', Action::Activate));
+
+    // The glyph comes from the live binding rather than from a second copy of
+    // it, so a retuned key changes the line that advertises it.
+    $this->assertSame('↑/↓ to move · ↵ to select', $legend->render($this->theme()));
+  }
+
+  public function testLegendDropsFragmentWhoseActionsNothingReaches(): void {
+    $keys = KeyMapManager::create()->navigation();
+    $legend = (new Legend())->advertise($keys, new Hint('grab', Action::Grab), new Hint('quit', Action::Quit));
+
+    // Nothing in this scope grabs, so the fragment is dropped rather than drawn
+    // as a label with no key in front of it.
+    $this->assertSame('Q to quit', $legend->render($this->theme()));
+  }
+
+  public function testAdvertisedKeysReplaceTheOnesWrittenByHand(): void {
+    $legend = (new Legend())->entry('↵', 'accept');
+
+    $legend->advertise(KeyMapManager::create()->navigation(), new Hint('quit', Action::Quit));
+    $this->assertSame('Q to quit', $legend->render($this->theme()));
+
+    $this->assertSame('', $legend->clear()->render($this->theme()));
+  }
+
+  public function testAdvertisedKeysAreDrawnInTheActiveLanguage(): void {
+    Translator::setShared(new Translator('uk'));
+
+    // A fragment is translated where it is declared and the line around it
+    // where it is drawn, so what reaches a reader is the active language.
+    $legend = (new Legend())->advertise(KeyMapManager::create()->navigation(), new Hint('move', Action::MoveUp));
+
+    $this->assertSame('↑ to перемістити', $legend->render($this->theme()));
   }
 
   public function testMarkupDrawsItsBodyAndItsTitleWhenItHasOne(): void {

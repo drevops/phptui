@@ -10,7 +10,8 @@ use DrevOps\Tui\Block\Field;
  * Declares one field, then hands the panel back.
  *
  * Six of a field's capabilities are declared here, each with its own call; the
- * seventh, binding keys, comes from the kind of field rather than the field.
+ * seventh, binding keys, comes from the kind of field rather than the field -
+ * which is why the kind is named where the field is declared and not here.
  *
  * @package DrevOps\Tui\Screen
  */
@@ -58,6 +59,18 @@ final class FieldBuilder {
    */
   public function entry(string $value, string $label): self {
     $this->field->entry($value, $label);
+
+    return $this;
+  }
+
+  /**
+   * Collect several values rather than one.
+   *
+   * @return $this
+   *   The field builder.
+   */
+  public function multiple(): self {
+    $this->field->multiple();
 
     return $this;
   }

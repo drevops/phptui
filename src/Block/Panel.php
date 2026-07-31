@@ -11,6 +11,10 @@ use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableTrait;
 use DrevOps\Tui\Block\Capability\OverlayCapableInterface;
 use DrevOps\Tui\Block\Element\PanelElementsInterface;
+use DrevOps\Tui\Input\Action;
+use DrevOps\Tui\Input\Hint;
+use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Region;
@@ -277,6 +281,32 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
   }
 
   /**
+   * {@inheritdoc}
+   *
+   * A nested panel is a row you select rather than somewhere you are, so it
+   * takes no key until you have gone into it - which is what leaves the keys
+   * that move the cursor past it reaching the panel it sits in.
+   */
+  public function binds(Key $key): bool {
+    return $this->entered && $this->boundAction($key) instanceof Action;
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * These are the keys you have while you are in a panel rather than inside
+   * anything it holds, which is why moving the cursor, going into a nested
+   * panel and coming back out again all resolve here.
+   */
+  public function hints(): array {
+    return [
+      new Hint('move', Action::MoveUp, Action::MoveDown),
+      new Hint('select', Action::Activate),
+      new Hint('go back', Action::Back),
+    ];
+  }
+
+  /**
    * The panels you can descend into from this one.
    *
    * @return list<\DrevOps\Tui\Block\Panel>
@@ -311,6 +341,13 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
     }
 
     return $this->elements($theme, PanelElementsInterface::class, 'a panel')->panelTitle($this->title);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function keyScope(): Scope {
+    return Scope::navigation();
   }
 
   /**
