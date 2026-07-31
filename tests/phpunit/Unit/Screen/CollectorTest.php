@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Screen;
 
+use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Legend;
@@ -147,6 +148,34 @@ final class CollectorTest extends TestCase {
     $panel = $this->panel((new Field('courier', 'Courier'))->default('Valley Runs'), $advanced);
 
     $this->assertSame(['courier' => 'Valley Runs', 'debug' => FALSE], (new Collector())->collect($panel));
+  }
+
+  public function testSeedingResolvesEveryValueAndRefusesNone(): void {
+    $panel = $this->panel(
+      (new Field('weight', 'Weight', FieldType::Number))->default(1200)->bounds(new NumberBounds(200, 9000)),
+    );
+
+    // A screen has somebody in front of it, so a value it cannot take is
+    // something to say on the row holding it rather than grounds for failing.
+    [$values] = (new Collector())->seed($panel, ['weight' => 10]);
+
+    $this->assertSame(['weight' => 10], $values);
+  }
+
+  public function testSeedingSaysHowEachAnswerCameToBeAndWhoIsThere(): void {
+    $panel = $this->panel(
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(TRUE),
+      (new Field('courier', 'Courier'))->default('Valley Runs'),
+      (new Field('certifier', 'Certifier'))->default('Soil Board')->when(new Condition('organic', eq: FALSE)),
+    );
+
+    [$values, $provenance, $active] = (new Collector())->seed($panel, ['courier' => 'Coast Runs']);
+
+    // A field a condition hides keeps the value it settled on, so a condition
+    // satisfied later surfaces a row that already knows its answer.
+    $this->assertSame(['organic' => TRUE, 'courier' => 'Coast Runs', 'certifier' => 'Soil Board'], $values);
+    $this->assertSame(['organic' => Provenance::Default, 'courier' => Provenance::Edited], $provenance);
+    $this->assertSame(['organic' => TRUE, 'courier' => TRUE, 'certifier' => FALSE], $active);
   }
 
   public function testCollectingBuildsNoScreenAtAll(): void {

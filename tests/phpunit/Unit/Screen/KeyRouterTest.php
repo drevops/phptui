@@ -85,6 +85,17 @@ final class KeyRouterTest extends TestCase {
     $this->assertFalse($router->isShowingHelp());
   }
 
+  public function testTheHelpShowingIsTheHelpOfTheFieldItWasAskedOf(): void {
+    $courier = (new Field('courier', 'Courier'))->help('Every crate is weighed.');
+    $router = $this->router($courier);
+
+    $this->assertNotInstanceOf(Field::class, $router->helping());
+
+    $router->handle(Key::char('?'));
+
+    $this->assertSame($courier, $router->helping());
+  }
+
   public function testFieldWithNoHelpAdvertisesNoneAndOpensNone(): void {
     $router = $this->router(new Field('courier', 'Courier'));
 

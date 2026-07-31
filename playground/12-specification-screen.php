@@ -26,11 +26,13 @@ use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Screen\Assembler;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\KeyRouter;
 use DrevOps\Tui\Screen\ScreenRenderer;
+use DrevOps\Tui\Testing\ScreenTester;
 use DrevOps\Tui\Theme\DefaultTheme;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -111,3 +113,45 @@ print "\nA warning beside the breadcrumb, without nesting a layout\n\n";
 // Blocks run across the header rather than down it, so two sit side by side.
 $screen->in('header')->flow(Axis::Columns)->add(new Markup('note', '(read-only preview)'));
 print (new ScreenRenderer($theme))->render($screen, 10, 72) . "\n";
+
+print "\nDriven as a session, from the first frame to the submit\n\n";
+
+// A second declaration, so the session opens on a form nobody has typed into.
+$driven = Form::create('Orchard')
+  ->panel('delivery', 'Delivery', function (PanelBuilder $p): void {
+    $p->text('courier', 'Courier')->default('Valley Runs');
+    $p->number('weight', 'Basket weight')->default(1200)->min(200)->max(9000);
+  });
+
+// The session reads keys from a terminal and writes frames back to it, so it is
+// driven here through the scripted terminal the test harness wraps.
+$session = (new ScreenTester($driven->root()))->rows(9)->cols(72);
+
+try {
+  $collected = $session->run(
+    Key::named(KeyName::Enter),
+    Key::named(KeyName::Enter),
+    ' Coast',
+    Key::named(KeyName::Enter),
+    Key::named(KeyName::Escape),
+    Key::named(KeyName::Down),
+    Key::named(KeyName::Enter),
+  );
+}
+catch (InterruptException $exception) {
+  // Ctrl-C aborts from anywhere and the cancel button raises the same
+  // exception's subclass, so every way of ending without a submit leaves here.
+  print $exception->getMessage() . "\n";
+
+  exit(130);
+}
+
+foreach ([1, 3, 5] as $index) {
+  print $session->frame($index) . "\n\n";
+}
+
+print "Collected by the session\n\n";
+
+foreach (['courier', 'weight'] as $id) {
+  printf("  %-8s %s\n", $id, var_export($collected->value($id), TRUE));
+}

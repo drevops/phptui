@@ -154,6 +154,33 @@ final class Collector {
   }
 
   /**
+   * Resolve every value and where it came from, refusing none of them.
+   *
+   * The same resolution {@see collect()} runs, stopped where the two paths part
+   * company: a screen has somebody in front of it, so a value it cannot take is
+   * something to say on the row holding it rather than grounds for failing the
+   * call. The values arrive whole - a field a condition hides keeps the value
+   * it settled on - so a condition satisfied later surfaces a row that already
+   * knows its answer.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel to resolve, and any panels beneath it.
+   * @param array<string,mixed> $supplied
+   *   Values supplied for its fields, keyed by field id.
+   * @param \DrevOps\Tui\Handler\Context|null $context
+   *   The run this resolution belongs to, or NULL for one that targets no
+   *   directory and detects nothing.
+   *
+   * @return array{array<string,mixed>,array<string,\DrevOps\Tui\Answers\Provenance>,array<string,bool>}
+   *   The settled values, how each came to be, and which fields are there.
+   */
+  public function seed(Panel $panel, array $supplied = [], ?Context $context = NULL): array {
+    [$fields, $values, $sources, $active] = $this->settle($panel, $supplied, $context ?? new Context());
+
+    return [$values, $this->provenance($fields, $sources, $active), $active];
+  }
+
+  /**
    * Resolve and settle every value, and work out who is there at all.
    *
    * @param \DrevOps\Tui\Block\Panel $panel

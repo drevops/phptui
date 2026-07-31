@@ -168,6 +168,16 @@ final class KeyRouter {
   }
 
   /**
+   * The field whose help is showing.
+   *
+   * @return \DrevOps\Tui\Block\Field|null
+   *   The field, or NULL when none is showing.
+   */
+  public function helping(): ?Field {
+    return $this->help;
+  }
+
+  /**
    * Send a key where it belongs.
    *
    * @param \DrevOps\Tui\Input\Key $key
