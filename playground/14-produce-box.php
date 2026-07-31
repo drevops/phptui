@@ -21,11 +21,12 @@ declare(strict_types=1);
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\InterruptException;
+use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -84,7 +85,7 @@ try {
   // context and run() picks interactive or unattended
   // (playground/08-headless-*).
   $answers = (new Tui($form))
-    ->theme('default', ['border' => 'rounded'])
+    ->theme('default', ['border' => Border::Rounded])
     ->run('', '1.0.0');
 }
 catch (InterruptException) {

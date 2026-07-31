@@ -19,8 +19,8 @@ declare(strict_types=1);
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\CollectException;
+use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Tui;
 

@@ -22,12 +22,12 @@ declare(strict_types=1);
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Discovery\Dotenv;
 use DrevOps\Tui\Discovery\JsonValue;
 use DrevOps\Tui\Discovery\PathExists;
 use DrevOps\Tui\Discovery\Scan;
 use DrevOps\Tui\Discovery\ScanType;
-use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';

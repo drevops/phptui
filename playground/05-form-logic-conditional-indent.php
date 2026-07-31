@@ -18,8 +18,8 @@ declare(strict_types=1);
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\CollectException;
+use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Tui;
 

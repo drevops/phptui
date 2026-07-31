@@ -5,12 +5,12 @@
  * Bordered panels: the whole panel browser wrapped in a border frame.
  *
  * The padded rounded box shown here is also the default look; this demo sets
- * it explicitly to name the options. The border is a theme display option set
- * as a plain string - 'rounded', 'line', 'double' or 'none' - alongside the
- * 'spacing' option ('compact',
- * 'normal' or 'padded'). The theme draws the hub, breadcrumb header, fields
- * and key-hint footer inside the frame, and every drilled-in sub-panel keeps
- * it. A typo in an option value throws at startup, not mid-session.
+ * it explicitly to name the options. The border is a theme display option
+ * carrying a Border case - Rounded, Line, Double or None - alongside the
+ * 'spacing' option, whose cases are Compact, Normal and Padded. Both are
+ * closed sets, so an unknown value cannot be written in the first place. The
+ * theme draws the hub, breadcrumb header, fields and key-hint footer inside
+ * the frame, and every drilled-in sub-panel keeps it.
  *
  * Usage:
  *   php playground/03-panels-bordered.php
@@ -22,6 +22,8 @@ use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\CollectException;
 use DrevOps\Tui\InterruptException;
+use DrevOps\Tui\Theme\Border;
+use DrevOps\Tui\Theme\Spacing;
 use DrevOps\Tui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -54,11 +56,12 @@ $form = Form::create('Fruit basket')
   });
 
 try {
-  // 'rounded' + 'padded' is the frame the documentation demos use; swap the
-  // strings for 'double', 'line' or 'none' and 'normal' or 'compact' to
-  // compare. clearOnExit(FALSE) keeps the final frame on screen.
+  // Rounded and padded is the frame the documentation demos use; swap in
+  // Border::Double, Border::Line or Border::None and Spacing::Normal or
+  // Spacing::Compact to compare. clearOnExit(FALSE) keeps the final frame on
+  // screen.
   $answers = (new Tui($form))
-    ->theme('default', ['border' => 'rounded', 'spacing' => 'padded'])
+    ->theme('default', ['border' => Border::Rounded, 'spacing' => Spacing::Padded])
     ->clearOnExit(FALSE)
     ->run();
 }

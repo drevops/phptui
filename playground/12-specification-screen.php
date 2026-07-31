@@ -11,10 +11,11 @@
  * to be. The same tree collects with no screen at all, which is the point of
  * the split.
  *
+ * Unlike the rest of the playground it opens no session of its own: it prints
+ * the frames a screen draws, so it reads the same on any terminal and on none.
+ *
  * Usage:
- * @code
- * php playground/12-specification-screen.php
- * @endcode
+ *   php playground/12-specification-screen.php
  */
 
 declare(strict_types=1);

@@ -18,6 +18,7 @@ declare(strict_types=1);
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\InterruptException;
+use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -81,7 +82,7 @@ $form = Form::create('Fields')
 try {
   // The rounded border frames the whole browser - the house look of the
   // panel demos; playground/03-panels-bordered.php shows it on its own.
-  $answers = (new Tui($form))->theme('default', ['border' => 'rounded'])->run();
+  $answers = (new Tui($form))->theme('default', ['border' => Border::Rounded])->run();
 }
 catch (InterruptException) {
   // Leave quietly on Ctrl-C.

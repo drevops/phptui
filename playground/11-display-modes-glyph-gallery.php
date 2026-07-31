@@ -16,10 +16,9 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Utils\Strings;
 use DrevOps\Tui\Field\Calendar;
 use DrevOps\Tui\Field\Confirm;
+use DrevOps\Tui\Field\FieldInterface;
 use DrevOps\Tui\Field\Number;
 use DrevOps\Tui\Field\Password;
 use DrevOps\Tui\Field\Pause;
@@ -27,10 +26,11 @@ use DrevOps\Tui\Field\Reorder;
 use DrevOps\Tui\Field\Search;
 use DrevOps\Tui\Field\Select;
 use DrevOps\Tui\Field\Suggest;
-use DrevOps\Tui\Field\Textarea;
 use DrevOps\Tui\Field\Text;
+use DrevOps\Tui\Field\Textarea;
 use DrevOps\Tui\Field\Toggle;
-use DrevOps\Tui\Field\FieldInterface;
+use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\Tui\Utils\Strings;
 
 require __DIR__ . '/../vendor/autoload.php';
 

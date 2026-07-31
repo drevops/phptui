@@ -20,6 +20,7 @@ use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\CollectException;
 use DrevOps\Tui\InterruptException;
+use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Tui;
 use Playground\Themes\OceanTheme;
 
@@ -51,7 +52,7 @@ try {
   // The banner comes from the form; the theme class and the border are set
   // on the facade. The version renders below the banner.
   $answers = (new Tui($form))
-    ->theme(OceanTheme::class, ['border' => 'rounded'])
+    ->theme(OceanTheme::class, ['border' => Border::Rounded])
     ->run('', '1.0.0');
 }
 catch (InterruptException) {

@@ -17,10 +17,11 @@ declare(strict_types=1);
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\CollectException;
 use DrevOps\Tui\InterruptException;
+use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -67,7 +68,7 @@ try {
   // The rounded border frames the hub and every drilled-in screen; keep the
   // final frame on screen after the TUI exits instead of clearing it.
   $answers = (new Tui($form))
-    ->theme('default', ['border' => 'rounded'])
+    ->theme('default', ['border' => Border::Rounded])
     ->clearOnExit(FALSE)
     ->run();
 }
