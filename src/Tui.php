@@ -16,13 +16,13 @@ use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Primitive\Output;
 use DrevOps\Tui\Primitive\Progress;
-use DrevOps\Tui\Render\PanelController;
 use DrevOps\Tui\Render\Terminal;
 use DrevOps\Tui\Resolver\InputResolver;
 use DrevOps\Tui\Schema\AgentHelp;
 use DrevOps\Tui\Schema\SchemaGenerator;
 use DrevOps\Tui\Schema\SchemaValidator;
 use DrevOps\Tui\Screen\Collector;
+use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\ThemeManager;
@@ -478,32 +478,16 @@ final class Tui {
     // when set, otherwise they are auto-detected from the terminal.
     $options = $this->resolveThemeOptions($terminal);
 
-    $controller = $this->controller($options, $theme, $banner, $version, $directory, self::frameWidth($options, $terminal->width()), $update);
-
-    $answers = $controller->run($terminal);
-
-    // An interrupt is an abort, not a submit: surface it so the partial answers
-    // collected before the abort are never mistaken for a completed form.
-    if ($controller->isInterrupted()) {
-      throw new InterruptException('The interactive session was interrupted.');
-    }
-
-    // The cancel button is the same abort expressed as a click: without this a
-    // cancelled session would return its answers exactly like a submitted one.
-    if ($controller->isCancelled()) {
-      throw new CancelException('The interactive session was cancelled.');
-    }
-
-    return $answers;
+    return $this->controller($options, $theme, $banner, $version, $directory, self::frameWidth($options, $terminal->width()), $update)->run($terminal);
   }
 
   /**
-   * Build the interactive panel controller for the resolved display options.
+   * Build the session that drives the form for the resolved display options.
    *
-   * Shared by interact() and the test harness: it resolves and settles every
-   * field's state through the engine, resolves the theme and banner, and wires
-   * the controller - so a caller that supplies its own terminal (a real one,
-   * or a scripted one for tests) can run the interactive loop against it.
+   * Shared by interact() and the test harness: it builds the tree the form
+   * declares, resolves the theme and banner and wires the session - so a caller
+   * that supplies its own terminal (a real one, or a scripted one for tests)
+   * can run it against that.
    *
    * @param array<string,mixed> $options
    *   The resolved theme display options (colour, Unicode, mode).
@@ -521,39 +505,36 @@ final class Tui {
    * @param bool $update
    *   Whether discovery pre-fills the initial state from an existing project.
    *
-   * @return \DrevOps\Tui\Render\PanelController
-   *   The controller, ready to run against a terminal.
+   * @return \DrevOps\Tui\Screen\ScreenController
+   *   The session, ready to run against a terminal.
    *
    * @internal
    *   Public for the {@see \DrevOps\Tui\Testing\TuiTester} harness; consumers
    *   collect through run(), collect() or interact().
    */
-  public function controller(array $options, string $theme = '', string $banner = '', string $version = '', string $directory = '', int $width = DefaultTheme::DEFAULT_WIDTH, bool $update = FALSE): PanelController {
+  public function controller(array $options, string $theme = '', string $banner = '', string $version = '', string $directory = '', int $width = DefaultTheme::DEFAULT_WIDTH, bool $update = FALSE): ScreenController {
     // Restore this facade's language before rendering (see collect()).
     Translator::setShared($this->translator);
 
-    $context = $this->context($directory, $update, $version);
+    $drawn = ThemeManager::create($this->resolveTheme($theme), $width, $options);
 
-    // The full state, not collect()'s active-only answers: an inactive field
-    // keeps its settled value, so a condition satisfied mid-session surfaces
-    // the field with its default rather than an empty value.
-    [$values, $provenance] = $this->engine->resolveState([], $context);
-
-    $banner_text = $banner !== '' ? $banner : $this->form->banner;
-
-    return new PanelController(
-      $this->form,
-      ThemeManager::create($this->resolveTheme($theme), $width, $options),
-      $values,
-      $provenance,
+    return new ScreenController(
+      // A session is typed into, so it gets a tree of its own: the answer-side
+      // operations read one nobody has moved a cursor through.
+      (new BlockFactory())->create($this->form),
+      $drawn,
+      [],
       $this->keymap ?? KeyMapManager::create(),
-      $this->registry,
-      footer: $this->footer,
+      new Collector($this->registry, $this->form->fixups),
+      $this->context($directory, $update, $version),
+      // The frame the theme was told to lay its rows out to is the frame that
+      // has to be drawn around them, so the border is read back off it rather
+      // than resolved a second time here.
+      border: $drawn->borderStyle(),
       clearOnExit: $this->clearOnExit,
-      banner: $banner_text,
+      footer: $this->footer,
+      banner: $banner !== '' ? $banner : $this->form->banner,
       version: $version,
-      context: $context,
-      engine: $this->engine,
     );
   }
 

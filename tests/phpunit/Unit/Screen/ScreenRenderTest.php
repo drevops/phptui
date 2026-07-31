@@ -227,7 +227,7 @@ final class ScreenRenderTest extends TestCase {
     $screen = (new Screen())->layout(new DefaultLayout());
     $screen->in('content')->add($child);
 
-    $this->assertSame('Advanced', $this->render($screen, 4, 20)[1]);
+    $this->assertSame('  Advanced ›', $this->render($screen, 4, 20)[1]);
   }
 
   public function testAnEmptyLayoutDrawsNothingAtAll(): void {

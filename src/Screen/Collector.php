@@ -105,7 +105,7 @@ final class Collector {
    *   argument to that call.
    */
   public function collect(Panel $panel, array $supplied = [], ?Context $context = NULL): array {
-    [$fields, $values, $sources, $active] = $this->settle($panel, $supplied, $context ?? new Context());
+    [$fields, $values, $sources, $active] = $this->fetched($panel, $supplied, $context ?? new Context());
 
     $refusal = $this->refusal($fields, $values, $sources, $active);
 
@@ -139,7 +139,7 @@ final class Collector {
    *   so one that cannot be taken fails the whole collection.
    */
   public function answers(Panel $panel, array $supplied = [], ?Context $context = NULL): Answers {
-    [$fields, $values, $sources, $active] = $this->settle($panel, $supplied, $context ?? new Context());
+    [$fields, $values, $sources, $active] = $this->fetched($panel, $supplied, $context ?? new Context());
 
     $refusal = $this->refusal($fields, $values, $sources, $active);
 
@@ -218,6 +218,83 @@ final class Collector {
   }
 
   /**
+   * Fetch the rows a panel's own fields are still owed.
+   *
+   * A set that has to be fetched is fetched by whoever can wait for it. With no
+   * screen that is the collection itself, up front; with one it is whoever
+   * opens the panel, so a form does not pay on start-up for a list nobody has
+   * walked into yet.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel being opened; its own rows only, because a panel further in
+   *   has not been opened.
+   * @param \Closure|null $waiting
+   *   An `fn (): void` run once before the first fetch, so somebody watching is
+   *   told the wait has begun rather than meeting a frozen screen.
+   *
+   * @return bool
+   *   Whether anything was owed.
+   */
+  public function load(Panel $panel, ?\Closure $waiting = NULL): bool {
+    $owed = array_values(array_filter($panel->fields(), static fn(Field $field): bool => $field->loader() instanceof \Closure));
+
+    if ($owed === []) {
+      return FALSE;
+    }
+
+    if ($waiting instanceof \Closure) {
+      $waiting();
+    }
+
+    $this->loadEntries($owed);
+
+    return TRUE;
+  }
+
+  /**
+   * The behaviour written once for a field's kind of answer.
+   *
+   * @param string $id
+   *   The field id.
+   *
+   * @return array{\Closure|null,\Closure|null}
+   *   What refuses a value and says why, and what normalizes an accepted one;
+   *   either NULL when nothing is reused for that field.
+   */
+  public function reusable(string $id): array {
+    return [$this->handlers->validator($id), $this->handlers->transformer($id)];
+  }
+
+  /**
+   * Settle every value, having first fetched the rows anyone is owed.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel to collect.
+   * @param array<string,mixed> $supplied
+   *   Values supplied for its fields, keyed by field id.
+   * @param \DrevOps\Tui\Handler\Context $context
+   *   The run this collection belongs to.
+   *
+   * @return array{list<\DrevOps\Tui\Block\Field>,array<string,mixed>,array<string,\DrevOps\Tui\Engine\Source>,array<string,bool>}
+   *   The fields in declaration order, the settled values, where each value
+   *   came from, and which fields are there.
+   *
+   * @throws \DrevOps\Tui\Engine\EngineException
+   *   When a resolver or a source cannot answer.
+   */
+  protected function fetched(Panel $panel, array $supplied, Context $context): array {
+    // With no cursor to open a field, nothing would ever ask a loader for its
+    // rows - and a value cannot be measured against rows that never arrive.
+    $this->loadEntries(Tree::fields($panel));
+
+    [$fields, $values, $sources, $active] = $this->settle($panel, $supplied, $context);
+
+    $this->loadQueryEntries($fields, $values, $active);
+
+    return [$fields, $values, $sources, $active];
+  }
+
+  /**
    * Resolve and settle every value, and work out who is there at all.
    *
    * @param \DrevOps\Tui\Block\Panel $panel
@@ -234,15 +311,10 @@ final class Collector {
   protected function settle(Panel $panel, array $supplied, Context $context): array {
     $fields = Tree::fields($panel);
 
-    // With no cursor to open a field, nothing would ever ask a loader for its
-    // rows - and a value cannot be measured against rows that never arrive.
-    $this->loadEntries($fields);
-
     [$values, $sources] = $this->resolveAll($fields, $supplied, $context);
     $values = $this->transformSupplied($fields, $values, $sources);
     [$rules, $pinned] = $this->deriveRules($fields, $sources);
     [$active, $values] = $this->stabilize($this->shows($panel, $fields), $fields, $values, $rules, $pinned, $context, $this->suppliedFields($sources));
-    $this->loadQueryEntries($fields, $values, $active);
 
     return [$fields, $values, $sources, $active];
   }

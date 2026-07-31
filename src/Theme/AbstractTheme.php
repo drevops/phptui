@@ -214,8 +214,43 @@ abstract class AbstractTheme implements ActionsElementsInterface, BreadcrumbElem
   /**
    * {@inheritdoc}
    */
+  public function panelSelector(bool $selected): string {
+    return $selected ? '>' : ' ';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function panelTitle(string $text): string {
     return $text;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function panelDescend(): string {
+    return '>';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function panelDescription(string $text): string {
+    return $text;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function panelSummary(string $text): string {
+    return $text;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function panelSummarySeparator(): string {
+    return '-';
   }
 
   /**

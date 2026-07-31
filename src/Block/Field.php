@@ -182,6 +182,20 @@ final class Field extends AbstractBlock implements
   protected ?\Closure $transform = NULL;
 
   /**
+   * What refuses a value wherever this kind of answer is asked for.
+   *
+   * @var \Closure(mixed): ?string|null
+   */
+  protected ?\Closure $reusableValidate = NULL;
+
+  /**
+   * What normalizes this kind of answer wherever it is asked for.
+   *
+   * @var \Closure(mixed): mixed|null
+   */
+  protected ?\Closure $reusableTransform = NULL;
+
+  /**
    * What computes this field's answer from the others, or NULL for none.
    */
   protected ?Derive $derive = NULL;
@@ -468,7 +482,7 @@ final class Field extends AbstractBlock implements
   public function accept(mixed $value = NULL): bool {
     $offered = func_num_args() === 0 ? $this->draft : $value;
 
-    $refusal = $this->refuses($offered);
+    $refusal = $this->refuses($offered, $this->reusableValidate);
 
     if ($refusal !== NULL) {
       $this->refusal = $refusal;
@@ -476,8 +490,10 @@ final class Field extends AbstractBlock implements
       return FALSE;
     }
 
+    $transform = $this->transform ?? $this->reusableTransform;
+
     $this->refusal = NULL;
-    $this->value = $this->transform instanceof \Closure ? ($this->transform)($offered) : $offered;
+    $this->value = $transform instanceof \Closure ? $transform($offered) : $offered;
     $this->draft = NULL;
     $this->mode = Mode::View;
     $this->editor = NULL;
@@ -592,6 +608,28 @@ final class Field extends AbstractBlock implements
    */
   public function transformer(): ?\Closure {
     return $this->transform;
+  }
+
+  /**
+   * Offer behaviour written once for this kind of answer.
+   *
+   * A rule written for a kind of answer applies wherever that answer is asked
+   * for, and nothing in a declaration can know whether one exists - so it is
+   * offered here rather than declared. What the field declares always wins.
+   *
+   * @param \Closure|null $validate
+   *   What refuses a value and says why, or NULL when nothing is reused.
+   * @param \Closure|null $transform
+   *   What normalizes an accepted value, or NULL when nothing is reused.
+   *
+   * @return static
+   *   The field.
+   */
+  public function reuse(?\Closure $validate, ?\Closure $transform): static {
+    $this->reusableValidate = $validate;
+    $this->reusableTransform = $transform;
+
+    return $this;
   }
 
   /**
@@ -2043,6 +2081,25 @@ final class Field extends AbstractBlock implements
   }
 
   /**
+   * The answer this field is holding, as one line of readable text.
+   *
+   * The same reading the row draws, folded to a single line and left unstyled,
+   * so somewhere that quotes an answer rather than asking for it - a panel
+   * saying what it holds - reads it exactly as the row does.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   *
+   * @return string
+   *   The answer as it reads.
+   */
+  public function valueText(ThemeInterface $theme): string {
+    $elements = $this->elements($theme, FieldElementsInterface::class, 'a field');
+
+    return str_replace("\n", ' ', $this->readable($theme, $elements));
+  }
+
+  /**
    * The rows this field draws while it is settled.
    *
    * One line is the common case, and an answer carrying line breaks is the
@@ -2076,6 +2133,12 @@ final class Field extends AbstractBlock implements
     }
 
     $lines[0] = $this->badged($theme, $elements, $lines[0]);
+
+    // What is being asked is worth saying whether or not the row is open: a
+    // reader decides what to answer before opening anything.
+    foreach ($this->explanation($theme, $elements) as $line) {
+      $lines[] = $indent . $line;
+    }
 
     return implode("\n", $lines);
   }

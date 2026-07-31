@@ -77,8 +77,9 @@ final class TuiTesterTest extends TestCase {
   public function testCancelButtonIsReported(): void {
     $tester = new TuiTester($this->form());
 
-    // Root items: the panel, then Submit, then Cancel.
-    $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Down), Key::named(KeyName::Enter));
+    // Root rows: the panel, then the pair of buttons on one row of their own -
+    // so Down reaches them and Right walks along them to Cancel.
+    $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Right), Key::named(KeyName::Enter));
 
     $this->assertTrue($tester->isCancelled());
   }
@@ -90,6 +91,35 @@ final class TuiTesterTest extends TestCase {
     $tester->run(Key::named(KeyName::Interrupt));
 
     $this->assertTrue($tester->isInterrupted());
+    $this->assertFalse($tester->isCancelled());
+  }
+
+  public function testAbortedRunStillHandsBackWhatWasAnsweredAndDrawn(): void {
+    $tester = new TuiTester($this->form());
+
+    // A session that ends without a submit raises rather than returning, and
+    // the harness answers the question instead of passing the raise on.
+    $answers = $tester->run(
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Enter),
+      'Ada',
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Interrupt),
+    );
+
+    $this->assertSame('Ada', $answers->value('name'));
+    $this->assertStringContainsString('Ada', $tester->display());
+    $this->assertTrue($tester->isInterrupted());
+  }
+
+  public function testEndingIsForgottenBetweenOneRunAndTheNext(): void {
+    $tester = new TuiTester($this->form());
+
+    $tester->run(Key::named(KeyName::Interrupt));
+    $this->assertTrue($tester->isInterrupted());
+
+    $tester->run();
+    $this->assertFalse($tester->isInterrupted());
     $this->assertFalse($tester->isCancelled());
   }
 
@@ -268,8 +298,9 @@ final class TuiTesterTest extends TestCase {
   public function testModalDiscardRestoresThroughTheInputPipe(): void {
     $tester = new TuiTester($this->modalForm());
 
-    // Same as the submit flow but Discard the dialog (Down to Discard, Enter)
-    // instead of Apply, so the edit is rolled back before the form submits.
+    // Same as the submit flow but Discard the dialog (Right along its buttons,
+    // Enter) instead of Apply, so the edit is rolled back before the form
+    // submits.
     $answers = $tester->run(
       Key::named(KeyName::Down),
       Key::named(KeyName::Enter),
@@ -277,7 +308,7 @@ final class TuiTesterTest extends TestCase {
       'Zed',
       Key::named(KeyName::Enter),
       Key::named(KeyName::Down),
-      Key::named(KeyName::Down),
+      Key::named(KeyName::Right),
       Key::named(KeyName::Enter),
       Key::named(KeyName::Down),
       Key::named(KeyName::Enter),

@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Block;
 
 use DrevOps\Tui\Block\Capability\BindCapableInterface;
 use DrevOps\Tui\Block\Capability\BindCapableTrait;
+use DrevOps\Tui\Block\Capability\DependCapableInterface;
 use DrevOps\Tui\Block\Capability\DescendCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableTrait;
@@ -18,6 +19,8 @@ use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Region;
+use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
+use DrevOps\Tui\Theme\Spacing;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -37,6 +40,21 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
 
   use BindCapableTrait;
   use FocusCapableTrait;
+
+  /**
+   * The region a layout names for the rows a panel holds itself.
+   */
+  protected const string ROWS = 'content';
+
+  /**
+   * The gutter the rows under a panel's title are stepped in by.
+   */
+  protected const string INDENT = '    ';
+
+  /**
+   * How many answers a panel says it is holding before it stops counting.
+   */
+  protected const int SUMMARY_ANSWERS = 4;
 
   /**
    * The layout arranging this panel's blocks, once one is given.
@@ -336,6 +354,13 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
   public function grid(int ...$rows): static {
     $this->grid = array_values($rows);
 
+    // How its rows run is what arranges them, and what arranges the blocks in a
+    // region is the region: saying it there is what lets whatever draws one
+    // read the shape off the region it was handed.
+    if ($this->layout instanceof LayoutInterface) {
+      $this->place()->grid(...$this->grid);
+    }
+
     return $this;
   }
 
@@ -434,15 +459,190 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
 
   /**
    * {@inheritdoc}
+   *
+   * A row you select: the way in, what it is called, and enough of what is
+   * behind it to decide whether to go there.
    */
   public function render(ThemeInterface $theme): string {
+    $elements = $this->guard($theme);
+    $lines = [$this->headline($elements)];
+
+    foreach ($this->guidance($theme, $elements) as $line) {
+      $lines[] = self::INDENT . $line;
+    }
+
+    $summary = $this->summary($theme, $elements);
+
+    if ($summary !== '') {
+      $lines[] = self::INDENT . $elements->panelSummary($summary);
+    }
+
+    return implode("\n", $lines);
+  }
+
+  /**
+   * This panel drawn as a window into it rather than as a row.
+   *
+   * Where a row says what is behind it in one line, a window shows the rows
+   * themselves - which is what a panel sitting beside its siblings has the
+   * space for, and what makes a grid of them read as several views of the same
+   * form rather than as a list turned sideways.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   *
+   * @return string
+   *   The window; newlines separate rows.
+   */
+  public function preview(ThemeInterface $theme): string {
+    $elements = $this->guard($theme);
+    $lines = [$this->headline($elements)];
+
+    foreach ($this->guidance($theme, $elements) as $line) {
+      $lines[] = self::INDENT . $line;
+    }
+
+    foreach ($this->blocks() as $block) {
+      if ($block instanceof DependCapableInterface && $block->isHidden()) {
+        continue;
+      }
+
+      $drawn = $block->render($theme);
+
+      if ($drawn === '') {
+        continue;
+      }
+
+      foreach (explode("\n", $drawn) as $line) {
+        $lines[] = $line;
+      }
+    }
+
+    return implode("\n", $lines);
+  }
+
+  /**
+   * The region this panel's own rows are drawn in.
+   *
+   * @return \DrevOps\Tui\Screen\Region
+   *   The region: the one its layout names for a panel's rows, else the first
+   *   region it declares.
+   */
+  public function place(): Region {
+    $names = $this->currentLayout()->names();
+
+    return $this->in(in_array(self::ROWS, $names, TRUE) ? self::ROWS : ($names[0] ?? self::ROWS));
+  }
+
+  /**
+   * The theme this panel draws through, refusing to draw an entered one.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   *
+   * @return \DrevOps\Tui\Block\Element\PanelElementsInterface
+   *   The theme, narrowed to the elements a panel draws with.
+   *
+   * @throws \LogicException
+   *   When the panel is the one you are in, which draws nothing of its own.
+   */
+  protected function guard(ThemeInterface $theme): PanelElementsInterface {
     // Show and Focus are a nested panel's, not an entered one's: once you are
     // in it, its blocks draw and it draws nothing of its own.
     if ($this->entered) {
       throw new \LogicException(sprintf('Panel "%s" is entered, so its blocks draw rather than the panel itself.', $this->id));
     }
 
-    return $this->elements($theme, PanelElementsInterface::class, 'a panel')->panelTitle($this->title);
+    return $this->elements($theme, PanelElementsInterface::class, 'a panel');
+  }
+
+  /**
+   * The row that names this panel and says it leads somewhere.
+   *
+   * @param \DrevOps\Tui\Block\Element\PanelElementsInterface $elements
+   *   The theme, narrowed to the elements a panel draws with.
+   *
+   * @return string
+   *   The row.
+   */
+  protected function headline(PanelElementsInterface $elements): string {
+    return $elements->panelSelector($this->isFocused()) . ' ' . $elements->panelTitle($this->title) . ' ' . $elements->panelDescend();
+  }
+
+  /**
+   * The rows this panel's standing text comes to, as they are drawn.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   * @param \DrevOps\Tui\Block\Element\PanelElementsInterface $elements
+   *   The same theme, narrowed to the elements a panel draws with.
+   *
+   * @return list<string>
+   *   The rows, none when it carries no standing text or there is no room for
+   *   it: the text is secondary to the rows it introduces, so a theme with
+   *   nothing to spare drops it.
+   */
+  protected function guidance(ThemeInterface $theme, PanelElementsInterface $elements): array {
+    if ($this->description === '' || $this->terse($theme)) {
+      return [];
+    }
+
+    return Prose::lines($this->description, $theme, $elements->panelDescription(...));
+  }
+
+  /**
+   * What this panel is holding, as one line of answers.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   * @param \DrevOps\Tui\Block\Element\PanelElementsInterface $elements
+   *   The same theme, narrowed to the elements a panel draws with.
+   *
+   * @return string
+   *   The answers, empty when it holds none, when none of them is there, or
+   *   when the theme has no room to say them.
+   */
+  protected function summary(ThemeInterface $theme, PanelElementsInterface $elements): string {
+    if ($this->terse($theme)) {
+      return '';
+    }
+
+    $answers = [];
+
+    foreach ($this->fields() as $field) {
+      if ($field->type()->isDisplayOnly()) {
+        continue;
+      }
+
+      // A row the answers took off the screen says nothing about the panel,
+      // because it is not there to say it.
+      if ($field->isHidden()) {
+        continue;
+      }
+
+      $answers[] = $field->valueText($theme);
+
+      // A row summarizes rather than lists, so it stops well before it would
+      // be read as the panel itself.
+      if (count($answers) >= self::SUMMARY_ANSWERS) {
+        break;
+      }
+    }
+
+    return implode(' ' . $elements->panelSummarySeparator() . ' ', $answers);
+  }
+
+  /**
+   * Whether the theme has no room for anything but the rows themselves.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   *
+   * @return bool
+   *   TRUE when it says so.
+   */
+  protected function terse(ThemeInterface $theme): bool {
+    return $theme instanceof OccupyCapableInterface && $theme->spacing() === Spacing::Compact;
   }
 
   /**

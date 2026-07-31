@@ -580,6 +580,96 @@ final class ScreenParityTest extends TestCase {
     $this->assertSame('120', $answers->value('weight'));
   }
 
+  public function testRowSetThatHasToBeFetchedIsFetchedWhenItsPanelOpens(): void {
+    $calls = 0;
+    $basket = (new Field('basket', 'Basket contents', FieldType::Select))->load(function () use (&$calls): array {
+      $calls++;
+
+      return ['apple' => 'Apple', 'carrot' => 'Carrot'];
+    });
+
+    $tester = $this->tester($this->nested('main', 'Delivery', $basket));
+    $tester->run(Key::named(KeyName::Enter));
+
+    // Asked once, by the session opening the panel that holds it - and the row
+    // says the set is still coming rather than reading as empty until it lands.
+    $this->assertSame(1, $calls);
+    $this->assertStringContainsString('Apple', $tester->frame());
+  }
+
+  public function testRowSetIsFetchedOnlyOnceTheDeeperPanelIsWalkedInto(): void {
+    $calls = 0;
+    $basket = (new Field('basket', 'Basket contents', FieldType::Select))->load(function () use (&$calls): array {
+      $calls++;
+
+      return ['apple' => 'Apple'];
+    });
+
+    $tester = $this->tester($this->panel(new Field('courier', 'Courier'), $this->nested('advanced', 'Advanced', $basket)));
+    $tester->run();
+
+    // Nobody has walked into it, so nothing has paid for it yet.
+    $this->assertSame(0, $calls);
+
+    $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Enter));
+
+    $this->assertSame(1, $calls);
+  }
+
+  public function testLegendAdvertisesTheWayOutOfTheFormButNotOutOfAnOpenRow(): void {
+    $tester = $this->tester($this->panel((new Field('courier', 'Courier'))->default('Valley Runs')))->cols(80);
+    $tester->run(Key::named(KeyName::Enter));
+
+    // Leaving is about the session, so it is offered where it acts - and while
+    // a row is open the same letter is something being typed.
+    $this->assertStringContainsString('to quit', $tester->frame(0));
+    $this->assertStringNotContainsString('to quit', $tester->frame());
+  }
+
+  public function testLegendOffersHelpOnlyWhereThereIsHelpToShow(): void {
+    $courier = (new Field('courier', 'Courier'))->help('Every crate is weighed at the packing bench.');
+    $tester = $this->tester($this->panel($courier, new Field('weight', 'Basket weight')))->cols(80);
+    $tester->run(Key::named(KeyName::Down));
+
+    $this->assertStringContainsString('to show help', $tester->frame(0));
+    $this->assertStringNotContainsString('to show help', $tester->frame());
+  }
+
+  public function testNestedPanelsSitSideBySideWhereTheFormArrangesThemThatWay(): void {
+    $fruit = $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple'));
+    $veg = $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot'));
+    $panel = $this->panel((new Field('name', 'Order name'))->default('Weekly Box'), $fruit, $veg);
+    $panel->grid(2);
+
+    $tester = $this->tester($panel)->cols(60);
+    $tester->run();
+
+    $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
+
+    // Each window previews the panel behind it - the way in, then its own rows
+    // - and the two share a row rather than following one another.
+    $this->assertContains('  Fruit ›                        Vegetables ›', $rows);
+    $this->assertContains('  Fruit  Apple                   Vegetables  Carrot', $rows);
+  }
+
+  public function testGridDealsItsPanelsIntoTheVisualRowsTheFormDeclares(): void {
+    $panel = $this->panel(
+      $this->nested('summary', 'Summary', (new Field('name', 'Order name'))->default('Weekly Box')),
+      $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple')),
+      $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot')),
+    );
+    $panel->grid(1, 2);
+
+    $tester = $this->tester($panel)->rows(16)->cols(60);
+    $tester->run();
+
+    $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
+
+    // One full-width window above two sharing the row below it.
+    $this->assertContains('❯ Summary ›', $rows);
+    $this->assertContains('  Fruit ›                        Vegetables ›', $rows);
+  }
+
   public function testFormThatHidesItsLegendAdvertisesNothing(): void {
     $shown = $this->tester($this->panel(new Field('courier', 'Courier')));
     $shown->run();

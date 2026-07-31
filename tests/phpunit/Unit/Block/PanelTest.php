@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Block;
 
+use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Screen\Layout\DefaultLayout;
 use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\Tui\Theme\Spacing;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -45,11 +47,52 @@ final class PanelTest extends TestCase {
     (new Panel('delivery', 'Delivery'))->in('left');
   }
 
-  public function testNestedPanelDrawsItsTitleAsRowYouSelect(): void {
+  public function testNestedPanelDrawsTheWayInAsRowYouSelect(): void {
     $child = (new Panel('advanced', 'Advanced'))->layout(new DefaultLayout());
     $theme = new DefaultTheme(40, ['color' => FALSE]);
 
-    $this->assertSame('Advanced', $child->render($theme));
+    // The mark saying where the cursor is, what the panel is called, and the
+    // mark saying the row leads somewhere rather than opening in place.
+    $this->assertSame('  Advanced ›', $child->render($theme));
+    $this->assertSame('❯ Advanced ›', $child->focus()->render($theme));
+  }
+
+  public function testNestedPanelSaysWhatItIsHoldingUnderItsRow(): void {
+    $child = (new Panel('advanced', 'Advanced'))->layout(new DefaultLayout())->description('What the packers need.');
+    $child->in('content')->add((new Field('courier', 'Courier'))->default('Valley Runs'));
+    $child->in('content')->add((new Field('grade', 'Grade'))->default('Premium'));
+
+    $theme = new DefaultTheme(40, ['color' => FALSE]);
+
+    $this->assertSame([
+      '  Advanced ›',
+      '    What the packers need.',
+      '    Valley Runs · Premium',
+    ], explode("\n", $child->render($theme)));
+  }
+
+  public function testNestedPanelDrawnAsWindowShowsTheRowsThemselves(): void {
+    $child = (new Panel('advanced', 'Advanced'))->layout(new DefaultLayout())->description('What the packers need.');
+    $child->in('content')->add((new Field('courier', 'Courier'))->default('Valley Runs'));
+
+    $theme = new DefaultTheme(40, ['color' => FALSE]);
+
+    // Where the row says what is behind it in one line, the window shows the
+    // rows behind it instead.
+    $this->assertSame([
+      '  Advanced ›',
+      '    What the packers need.',
+      '  Courier  Valley Runs',
+    ], explode("\n", $child->preview($theme)));
+  }
+
+  public function testCompactPanelRowDropsEverythingButTheWayIn(): void {
+    $child = (new Panel('advanced', 'Advanced'))->layout(new DefaultLayout())->description('What the packers need.');
+    $child->in('content')->add((new Field('courier', 'Courier'))->default('Valley Runs'));
+
+    $theme = new DefaultTheme(40, ['color' => FALSE, 'spacing' => Spacing::Compact]);
+
+    $this->assertSame('  Advanced ›', $child->render($theme));
   }
 
   public function testPanelYouAreInDrawsNoRowOfItsOwn(): void {

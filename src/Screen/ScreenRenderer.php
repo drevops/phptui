@@ -36,6 +36,11 @@ use DrevOps\Tui\Theme\ThemeInterface;
 final class ScreenRenderer {
 
   /**
+   * The columns left clear between one window of a grid and the next.
+   */
+  protected const int GUTTER = 2;
+
+  /**
    * Construct a renderer.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
@@ -234,11 +239,7 @@ final class ScreenRenderer {
    *   Exactly $rows rows, padded or clipped to fit.
    */
   protected function fill(Region $region, int $rows, int $columns): array {
-    $drawn = $this->draw($region->blocks(), $rows, $columns);
-
-    $lines = $region->flowAxis() === Axis::Columns
-      ? $this->across($drawn)
-      : $this->down($drawn);
+    $lines = $this->arrange($region, $rows, $columns);
 
     // Its contents are its own problem once it has a size: it scrolls if it was
     // declared to, and clips if it was not. Either way it hands back the rows
@@ -263,7 +264,7 @@ final class ScreenRenderer {
   }
 
   /**
-   * Draw a region's blocks, an entered panel replacing the rest of them.
+   * Run a region's blocks the way it was declared they run.
    *
    * An entered panel is where the next layout starts, which is where depth
    * comes from rather than a fifth level. Only the renderer knows the box it
@@ -275,24 +276,131 @@ final class ScreenRenderer {
    * end the form, which sit among the outermost panel's own rows. Coming back
    * out draws every one of them again.
    *
-   * @param list<\DrevOps\Tui\Block\BlockInterface> $blocks
-   *   The blocks.
+   * @param \DrevOps\Tui\Screen\Region $region
+   *   The region.
    * @param int $rows
-   *   The rows the region was given.
+   *   The rows it was given.
    * @param int $columns
    *   The columns it was given.
    *
    * @return list<string>
-   *   Each block as it is drawn, in the order it was added.
+   *   The rows, before the region is sized to the space it has.
    */
-  protected function draw(array $blocks, int $rows, int $columns): array {
+  protected function arrange(Region $region, int $rows, int $columns): array {
+    $blocks = $region->blocks();
+
     foreach ($blocks as $block) {
       if ($block instanceof Panel && $block->isEntered()) {
-        return [implode("\n", $this->lay($block->currentLayout(), $rows, $columns))];
+        return $this->lay($block->currentLayout(), $rows, $columns);
       }
     }
 
-    return array_values($this->rendered($blocks));
+    if ($region->gridRows() !== []) {
+      return $this->gridded($blocks, $region->gridRows(), $columns);
+    }
+
+    $drawn = array_values($this->rendered($blocks));
+
+    return $region->flowAxis() === Axis::Columns ? $this->across($drawn) : $this->down($drawn);
+  }
+
+  /**
+   * Stack a region's own rows, then deal its panels into visual rows.
+   *
+   * @param list<\DrevOps\Tui\Block\BlockInterface> $blocks
+   *   The blocks.
+   * @param list<int> $grid
+   *   How many panels share each visual row, top to bottom.
+   * @param int $columns
+   *   The columns the region was given.
+   *
+   * @return list<string>
+   *   The rows.
+   */
+  protected function gridded(array $blocks, array $grid, int $columns): array {
+    $panels = [];
+    $above = [];
+    $below = [];
+
+    foreach ($blocks as $block) {
+      if ($block instanceof Panel) {
+        $panels[] = $block;
+
+        continue;
+      }
+
+      // A row placed before the first window stays above the grid and one
+      // placed after the last stays below it, so nothing moves past a row it
+      // was written above.
+      if ($panels === []) {
+        $above[] = $block;
+
+        continue;
+      }
+
+      $below[] = $block;
+    }
+
+    $windows = implode("\n", $this->windows($panels, $grid, $columns));
+
+    // The whole grid stacks as one more block, so what shows between it and
+    // the rows around it is the same air that shows between any two of them.
+    return $this->down([
+      ...array_values($this->rendered($above)),
+      ...($windows === '' ? [] : [$windows]),
+      ...array_values($this->rendered($below)),
+    ]);
+  }
+
+  /**
+   * Paste each visual row's panels side by side at one column width.
+   *
+   * @param list<\DrevOps\Tui\Block\Panel> $panels
+   *   The panels, in the order they were placed.
+   * @param list<int> $grid
+   *   How many of them share each visual row.
+   * @param int $columns
+   *   The columns the region was given.
+   *
+   * @return list<string>
+   *   The rows.
+   */
+  protected function windows(array $panels, array $grid, int $columns): array {
+    $lines = [];
+    $taken = 0;
+
+    foreach ($grid as $count) {
+      // Every visual row after the first is told apart from the one above it,
+      // whatever the theme says about the air between one block and the next.
+      if ($lines !== []) {
+        $lines[] = '';
+      }
+
+      $width = max(1, intdiv($columns - ($count - 1) * self::GUTTER, max(1, $count)));
+      $windows = [];
+      $height = 0;
+
+      foreach (array_slice($panels, $taken, $count) as $panel) {
+        $window = explode("\n", $panel->preview($this->theme));
+        $height = max($height, count($window));
+        $windows[] = $window;
+        $taken += 1;
+      }
+
+      for ($row = 0; $row < $height; $row++) {
+        $cells = [];
+
+        foreach ($windows as $window) {
+          $cells[] = Box::fit($window[$row] ?? '', $width);
+        }
+
+        // The gutters can outgrow a tiny frame even at one-column cells, so the
+        // assembled row is clamped to the region as a whole.
+        $lines[] = rtrim(Box::fit(implode(str_repeat(' ', self::GUTTER), $cells), $columns));
+      }
+    }
+
+    return $lines;
   }
 
   /**

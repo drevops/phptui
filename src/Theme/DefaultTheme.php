@@ -426,7 +426,7 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    *   The border style; a rounded box when unset - a form is framed unless
    *   it explicitly asks for no border.
    */
-  protected function borderStyle(): Border {
+  public function borderStyle(): Border {
     return $this->enumOption('border', Border::class, Border::Rounded);
   }
 
@@ -1128,8 +1128,48 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    * {@inheritdoc}
    */
   #[\Override]
+  public function panelSelector(bool $selected): string {
+    return $this->marker($selected);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
   public function panelTitle(string $text): string {
     return $this->title($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function panelDescend(): string {
+    return $this->description($this->arrow());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function panelDescription(string $text): string {
+    return $this->description($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function panelSummary(string $text): string {
+    return $this->value($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function panelSummarySeparator(): string {
+    return $this->description($this->dot());
   }
 
   /**

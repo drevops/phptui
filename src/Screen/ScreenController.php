@@ -20,14 +20,18 @@ use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\CancelException;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Field\Capability\ExternalEditCapableInterface;
+use DrevOps\Tui\Field\Capability\QueryOptionsCapableInterface;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Input\Action;
+use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyMap;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Input\KeyParser;
 use DrevOps\Tui\InterruptException;
+use DrevOps\Tui\Model\Option;
+use DrevOps\Tui\Model\OptionKind;
 use DrevOps\Tui\Model\RenderMode;
 use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Render\Ansi;
@@ -298,6 +302,10 @@ class ScreenController {
     try {
       $this->welcome($terminal, $parser);
 
+      // The outermost panel is opened by the session starting rather than by a
+      // key, so what it owes is fetched before the first frame is read.
+      $this->furnish();
+
       while (!$this->done && !$this->interrupted) {
         $this->paint();
         $bytes = $terminal->read();
@@ -329,6 +337,10 @@ class ScreenController {
 
           $this->handle($key);
         }
+
+        // Asked once the whole read is spent rather than once per key, so a
+        // burst of typing - or a paste - costs the source one call.
+        $this->query();
       }
     }
     finally {
@@ -387,13 +399,14 @@ class ScreenController {
 
     // Read before the key reaches it: a row that was open before it and is
     // settled after it is a row whose answer has just been taken.
-    $open = $focused instanceof Field && $focused->mode() === Mode::Edit ? $focused : NULL;
+    $open = $this->editing();
 
     $this->router->handle($key);
 
     $this->handoff($open);
     $this->stamp($open);
     $this->synchronize();
+    $this->furnish();
   }
 
   /**
@@ -913,6 +926,85 @@ class ScreenController {
   }
 
   /**
+   * Fetch what the panel you are now in owes, before anybody reads it.
+   *
+   * A set too large or too slow to hold is fetched when the panel holding it is
+   * opened rather than when the form starts, so walking into one is what pays
+   * for it - and the row says it is still coming while the call blocks.
+   */
+  protected function furnish(): void {
+    if ($this->collector->load($this->router->current(), $this->paint(...))) {
+      $this->resettle();
+    }
+  }
+
+  /**
+   * Ask an open row's source for the rows the query it holds names.
+   *
+   * Unlike a set fetched once, a query source is asked again as what is typed
+   * changes - so the call belongs where the typing is read rather than where
+   * the panel is opened.
+   */
+  protected function query(): void {
+    $open = $this->editing();
+    $editor = $open?->editor();
+    $source = $open?->source();
+
+    if (!$editor instanceof QueryOptionsCapableInterface || !$source instanceof \Closure) {
+      return;
+    }
+
+    $query = $editor->pendingQuery();
+
+    if ($query === NULL) {
+      return;
+    }
+
+    $editor->beginQuery();
+    $this->paint();
+
+    try {
+      $rows = Option::resolved($source($query, $this->values()));
+      $editor->applyQuery($query, $rows);
+      $open->settle($this->offered($open, $rows));
+    }
+    catch (\Throwable) {
+      // Consumer code that cannot answer must not end a session over a terminal
+      // still in raw mode: the row says so and stays open, and the query is
+      // remembered so the same failing call is not made again on every frame.
+      $editor->failQuery($query, Translator::t('Could not load options.'));
+    }
+  }
+
+  /**
+   * Everything a row has been offered so far, the latest query included.
+   *
+   * A query names a slice of a set rather than the set, so what it answers adds
+   * to what earlier ones answered: a choice made under one query is still the
+   * reader's when the next no longer offers it, and the row it stands for is
+   * still there to measure it against.
+   *
+   * @param \DrevOps\Tui\Block\Field $field
+   *   The field.
+   * @param list<\DrevOps\Tui\Model\Option> $rows
+   *   What the latest query answered.
+   *
+   * @return array<string,string>
+   *   The label of every row offered so far, keyed by its value.
+   */
+  protected function offered(Field $field, array $rows): array {
+    $offered = [];
+
+    foreach ([...$field->entries(), ...$rows] as $row) {
+      if ($row->kind === OptionKind::Option) {
+        $offered[$row->value] = $row->label;
+      }
+    }
+
+    return $offered;
+  }
+
+  /**
    * Hand what an open field holds to an editor of the reader's own.
    *
    * The field asks and the session answers: launching a program means leaving
@@ -1053,7 +1145,7 @@ class ScreenController {
    *   The panel.
    */
   protected function reset(Panel $panel): void {
-    foreach ($this->place($panel)->blocks() as $block) {
+    foreach ($panel->place()->blocks() as $block) {
       if ($block instanceof Actions) {
         $block->select(Ending::Submit->value);
 
@@ -1214,7 +1306,48 @@ class ScreenController {
       return;
     }
 
-    $this->router->refresh($this->legend);
+    $this->legend->advertise($this->router->bindings(), ...$this->hints());
+  }
+
+  /**
+   * What the keys on offer do, in the order they are advertised.
+   *
+   * Two of them are the session's rather than any block's, which is why they
+   * are added here: leaving is about the session, and help is a fact about the
+   * question rather than about whatever is collecting the answer.
+   *
+   * @return list<\DrevOps\Tui\Input\Hint>
+   *   The fragments.
+   */
+  protected function hints(): array {
+    $open = $this->editing();
+    $hints = $this->router->hints();
+
+    // Never beside an open row's keys, where the same letter is something
+    // being typed rather than a way out.
+    if (!$open instanceof Field) {
+      $hints[] = new Hint('quit', Action::Quit);
+    }
+
+    $asking = $open instanceof Field ? $open : $this->router->focused();
+
+    if ($asking instanceof Field && $asking->helpText() !== '') {
+      $hints[] = new Hint('show help', Action::Help);
+    }
+
+    return $hints;
+  }
+
+  /**
+   * The field that is open, if one is.
+   *
+   * @return \DrevOps\Tui\Block\Field|null
+   *   The field, or NULL when every row is settled.
+   */
+  protected function editing(): ?Field {
+    $focused = $this->router->focused();
+
+    return $focused instanceof Field && $focused->mode() === Mode::Edit ? $focused : NULL;
   }
 
   /**
@@ -1224,9 +1357,9 @@ class ScreenController {
    *   The field, or NULL when the panel is what is drawn.
    */
   protected function alone(): ?Field {
-    $focused = $this->router->focused();
+    $focused = $this->editing();
 
-    if (!$focused instanceof Field || $focused->mode() !== Mode::Edit) {
+    if (!$focused instanceof Field) {
       return NULL;
     }
 
@@ -1455,7 +1588,7 @@ class ScreenController {
     // in, so they go among the outermost panel's own rows: going into a nested
     // one leaves them behind exactly as it leaves that panel's siblings behind.
     if ($this->panel->currentButtons()->show) {
-      $this->place($this->panel)->add($this->notice)->add($this->actions);
+      $this->panel->place()->add($this->notice)->add($this->actions);
     }
 
     foreach (Tree::panels($this->panel) as $panel) {
@@ -1469,7 +1602,7 @@ class ScreenController {
         continue;
       }
 
-      $region = $this->place($panel);
+      $region = $panel->place();
 
       // A dialog that only says something says it here: its standing text is
       // its whole content, where a panel you walk into has rows instead.
@@ -1482,6 +1615,7 @@ class ScreenController {
 
     foreach (Tree::fields($this->panel) as $field) {
       $field->handoff($this->externalEditor->isAvailable());
+      $field->reuse(...$this->collector->reusable($field->id()));
     }
   }
 
@@ -1523,23 +1657,6 @@ class ScreenController {
     $screen->in('footer')->add($this->legend);
 
     return $screen;
-  }
-
-  /**
-   * The region a panel's own rows are drawn in.
-   *
-   * @param \DrevOps\Tui\Block\Panel $panel
-   *   The panel.
-   *
-   * @return \DrevOps\Tui\Screen\Region
-   *   The region.
-   */
-  protected function place(Panel $panel): Region {
-    $names = $panel->currentLayout()->names();
-
-    // A layout that names a region for its rows takes them there; one that
-    // names its regions anything else takes them in the first it declares.
-    return $panel->in(in_array(self::CONTENT, $names, TRUE) ? self::CONTENT : ($names[0] ?? self::CONTENT));
   }
 
   /**

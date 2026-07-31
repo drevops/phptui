@@ -24,8 +24,8 @@ use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Primitive\Progress;
 use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Render\PanelController;
 use DrevOps\Tui\Render\Terminal;
+use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Testing\BufferedTerminal;
 use DrevOps\Tui\Testing\KeyEncoder;
 use DrevOps\Tui\Tests\Traits\IsolatesEnvTrait;
@@ -220,9 +220,38 @@ final class TuiTest extends TestCase {
   public function testController(): void {
     $controller = $this->tui()->controller(['color' => FALSE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
 
-    $this->assertInstanceOf(PanelController::class, $controller);
-    // The engine's resolved answers seed the controller.
+    $this->assertInstanceOf(ScreenController::class, $controller);
+    // The answers the form opens on seed the session.
     $this->assertSame('', $controller->answers()->value('name'));
+  }
+
+  public function testControllerDrivesItsOwnTree(): void {
+    $tui = $this->tui();
+
+    // A session is typed into, so two of them never share a tree - and neither
+    // shares the one the answer-side operations read.
+    $first = $tui->controller(['color' => FALSE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
+    $second = $tui->controller(['color' => FALSE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
+
+    $panel = static fn(ScreenController $controller): mixed => (new \ReflectionProperty($controller, 'panel'))->getValue($controller);
+
+    $this->assertNotSame($panel($first), $panel($second));
+  }
+
+  #[DataProvider('dataProviderControllerCarriesTheThemeBorderIntoTheFrame')]
+  public function testControllerCarriesTheThemeBorderIntoTheFrame(array $options, Border $expected): void {
+    $controller = $this->tui()->controller($options + ['color' => FALSE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
+
+    // The frame the theme lays its rows out to is the frame drawn around them,
+    // so the border reaches the session rather than the theme alone.
+    $this->assertSame($expected, (new \ReflectionProperty($controller, 'border'))->getValue($controller));
+  }
+
+  public static function dataProviderControllerCarriesTheThemeBorderIntoTheFrame(): \Iterator {
+    yield 'declared' => [['border' => Border::Double], Border::Double];
+    yield 'declared as its name' => [['border' => 'none'], Border::None];
+    // A form is framed unless it asks not to be, and the theme is what says so.
+    yield 'undeclared' => [[], Border::Rounded];
   }
 
   public function testInteractDrivesScriptedTerminal(): void {
@@ -250,9 +279,11 @@ final class TuiTest extends TestCase {
     // rather than returning the answers exactly like a submitted form.
     $this->expectException(CancelException::class);
 
-    // Down twice reaches Cancel past the panel and Submit; Enter activates it.
+    // Down reaches the row the buttons share and Right walks along it to
+    // Cancel; Enter activates it.
     $down = KeyEncoder::encode(Key::named(KeyName::Down));
-    $this->tui()->interact(terminal: new BufferedTerminal([$down, $down, KeyEncoder::encode(Key::named(KeyName::Enter))]));
+    $right = KeyEncoder::encode(Key::named(KeyName::Right));
+    $this->tui()->interact(terminal: new BufferedTerminal([$down, $right, KeyEncoder::encode(Key::named(KeyName::Enter))]));
   }
 
   public function testInteractUpdateModePreFillsDetectedValues(): void {

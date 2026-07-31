@@ -139,7 +139,7 @@ class DosTheme extends DefaultTheme {
    * {@inheritdoc}
    */
   #[\Override]
-  protected function borderStyle(): Border {
+  public function borderStyle(): Border {
     // The MS-DOS look is a bordered window (EDIT.COM / Norton Commander), so
     // default to a double-line box when the form declares no border of its own.
     if (!isset($this->options['border'])) {

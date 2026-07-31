@@ -84,7 +84,7 @@ final class BuilderGapsTest extends TestCase {
   public function testLeavingPanelMakesItDrawAsRowAgain(): void {
     $panel = (new Panel('advanced', 'Advanced'))->layout(new TwoColumnLayout())->enter();
 
-    $this->assertSame('Advanced', $panel->leave()->render($this->theme()));
+    $this->assertSame('  Advanced ›', $panel->leave()->render($this->theme()));
   }
 
   public function testBuilderPlacesBlocksInWhicheverRegionWasNamed(): void {

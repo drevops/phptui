@@ -47,7 +47,7 @@ final class BlockFactory {
    *   name.
    */
   public function create(FormDefinition $form): Panel {
-    $root = (new Panel($form->title, $form->title))->layout(new PanelLayout());
+    $root = (new Panel($form->title, $form->title))->layout(new PanelLayout())->grid(...$form->layout);
 
     foreach ($form->panels as $panel) {
       $root->in('content')->add($this->panel($panel));

@@ -767,13 +767,21 @@ final class FieldBlockTest extends TestCase {
     $this->assertStringContainsString('Out of season.', $lines[3]);
   }
 
-  public function testDescriptionIsDrawnOnlyWhileTheFieldIsOpen(): void {
-    // A settled field is one line, so what it means is drawn where there is
-    // room for it: under the editor it opens onto.
+  public function testDescriptionIsDrawnWhetherOrNotTheFieldIsOpen(): void {
+    // What is being asked is worth saying before the row is opened: a reader
+    // decides what to answer without opening anything.
     $field = (new Field('basket', 'Basket contents'))->description('Pick the produce.')->default('apple');
 
-    $this->assertStringNotContainsString('Pick the produce.', $field->render($this->theme()));
+    $this->assertStringContainsString('Pick the produce.', $field->render($this->theme()));
     $this->assertStringContainsString('Pick the produce.', $field->open()->render($this->theme()));
+  }
+
+  public function testDescriptionUnderSettledRowLinesUpWithTheAnswer(): void {
+    $field = (new Field('basket', 'Basket contents'))->description('Pick the produce.')->default('apple');
+
+    // The explanation steps in to the column the answer starts in, so the row
+    // above it reads as the thing it explains.
+    $this->assertSame(['  Basket contents  apple', '                   Pick the produce.'], explode("\n", $field->render($this->theme())));
   }
 
   public function testChosenEntryIsMarkedAcrossOneValueAndSeveral(): void {

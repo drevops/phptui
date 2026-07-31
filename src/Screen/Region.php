@@ -36,6 +36,13 @@ final class Region {
   protected Axis $flow = Axis::Rows;
 
   /**
+   * How the panels inside it sit side by side, one entry per visual row.
+   *
+   * @var list<int>
+   */
+  protected array $grid = [];
+
+  /**
    * Whether its contents may outrun it.
    */
   protected bool $scrolls = FALSE;
@@ -162,6 +169,36 @@ final class Region {
    */
   public function flowAxis(): Axis {
     return $this->flow;
+  }
+
+  /**
+   * Sit the panels inside this region side by side.
+   *
+   * A shape rather than a direction, which is why it is stated apart from the
+   * flow: the rows a region holds still run down it, and only the panels among
+   * them are dealt into the visual rows declared here.
+   *
+   * @param int ...$rows
+   *   One entry per visual row, naming how many panels share it, top to
+   *   bottom; none leaves them one under another.
+   *
+   * @return $this
+   *   The region.
+   */
+  public function grid(int ...$rows): self {
+    $this->grid = array_values($rows);
+
+    return $this;
+  }
+
+  /**
+   * How the panels inside this region sit side by side.
+   *
+   * @return list<int>
+   *   The count of each visual row, empty when they run one under another.
+   */
+  public function gridRows(): array {
+    return $this->grid;
   }
 
   /**
