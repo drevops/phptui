@@ -490,6 +490,22 @@ final class FieldBlockTest extends TestCase {
     $this->assertNull((new Field('basket', 'Basket contents'))->requiredViolation(''));
   }
 
+  public function testFieldHandsBackWhatItWasDeclaredToRefuseAndNormalizeWith(): void {
+    $validate = static fn(mixed $value): ?string => NULL;
+    $transform = static fn(mixed $value): mixed => $value;
+    $field = (new Field('courier', 'Courier'))->required(TRUE, 'Name the courier.')->validate($validate)->transform($transform);
+
+    $this->assertSame('Name the courier.', $field->requiredMessage());
+    $this->assertSame($validate, $field->validator());
+    $this->assertSame($transform, $field->transformer());
+
+    $bare = new Field('courier', 'Courier');
+
+    $this->assertSame('', $bare->requiredMessage());
+    $this->assertNotInstanceOf(\Closure::class, $bare->validator());
+    $this->assertNotInstanceOf(\Closure::class, $bare->transformer());
+  }
+
   public function testAcceptedValueIsNormalizedBeforeItIsHeld(): void {
     $field = (new Field('courier', 'Courier'))->transform(static fn(mixed $value): mixed => is_string($value) ? trim($value) : $value);
 

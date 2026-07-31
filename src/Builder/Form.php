@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Builder;
 
+use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\Fixup;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Model\Panel;
+use DrevOps\Tui\Screen\Layout\PanelLayout;
 
 /**
  * A fluent builder declaring a form: its panels, fields and own chrome.
@@ -69,6 +70,11 @@ final class Form {
    * @var list<int>
    */
   protected array $layout = [];
+
+  /**
+   * The panel every declared panel hangs from, once the form is finished.
+   */
+  protected ?Panel $root = NULL;
 
   /**
    * Construct a form builder.
@@ -204,6 +210,37 @@ final class Form {
   }
 
   /**
+   * The block tree this form declares.
+   *
+   * The panels hang from one root, so the whole declaration is reachable from a
+   * single block - the panel a screen starts in, and the one a headless
+   * collection walks. The tree is the declaration rather than a view of it, so
+   * it is written once and handed back as it stands.
+   *
+   * @return \DrevOps\Tui\Block\Panel
+   *   The root panel, carrying the form's own name.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When a declaration contradicts itself.
+   */
+  public function root(): Panel {
+    if ($this->root instanceof Panel) {
+      return $this->root;
+    }
+
+    // The root is the form itself rather than a panel somebody declared, so it
+    // is addressed by the name the form goes by.
+    $root = (new Panel($this->title, $this->title))->layout(new PanelLayout());
+
+    foreach ($this->panels as $panel) {
+      $panel->seal();
+      $root->in('content')->add($panel->block());
+    }
+
+    return $this->root = $root;
+  }
+
+  /**
    * Build the immutable form definition.
    *
    * @return \DrevOps\Tui\Model\FormDefinition
@@ -212,16 +249,14 @@ final class Form {
   public function build(): FormDefinition {
     LayoutGuard::assert($this->layout, count($this->panels), $this->title);
 
-    $panels = array_map(static fn(PanelBuilder $panel): Panel => $panel->build(), $this->panels);
-
-    $form = new FormDefinition(
+    $form = (new DefinitionFactory())->create(
+      $this->root(),
       $this->title,
       $this->subject,
-      $panels,
-      $this->fixups,
-      $this->envPrefix,
-      $this->banner,
       new Buttons($this->buttons, $this->submitLabel, $this->cancelLabel),
+      $this->banner,
+      $this->envPrefix,
+      $this->fixups,
       $this->layout,
     );
 

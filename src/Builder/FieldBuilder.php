@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Builder;
 
+use DrevOps\Tui\Block\Field as FieldBlock;
+use DrevOps\Tui\Block\Markup;
+use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Condition\ConditionInterface;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\DiscoverInterface;
@@ -14,16 +17,19 @@ use DrevOps\Tui\Model\FilePickerConstraints;
 use DrevOps\Tui\Model\FilePickerMode;
 use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\NumberBounds;
-use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Model\OptionKind;
-use DrevOps\Tui\Model\RenderMode;
 use DrevOps\Tui\Model\SelectionBounds;
-use DrevOps\Tui\Model\TableSpec;
 use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Model\Weekday;
 
 /**
- * A fluent builder for a single Field.
+ * A fluent builder for a single block that answers, shows or runs.
+ *
+ * What is declared lands on a block as it is written, and the kind of block is
+ * the kind of answer asked for: a question builds the field that collects one,
+ * a note builds the markup that shows content, and a progress row builds the
+ * block that runs work. A declaration stated in parts - a range, a shape, a set
+ * of limits - is assembled when the declaration is finished, because only a
+ * finished one can be measured for the contradictions it must not hold.
  *
  * @package DrevOps\Tui\Builder
  */
@@ -40,19 +46,9 @@ final class FieldBuilder {
   protected const int RATING_MAX = 5;
 
   /**
-   * The help text.
+   * The block carrying the declaration.
    */
-  protected string $description = '';
-
-  /**
-   * The long-form text behind the field's help key.
-   */
-  protected string $help = '';
-
-  /**
-   * The ghost text shown while the editor's buffer is empty.
-   */
-  protected string $placeholder = '';
+  protected FieldBlock|Markup|Progress $block;
 
   /**
    * Whether an explicit default was set (otherwise the type default is used).
@@ -63,120 +59,6 @@ final class FieldBuilder {
    * The explicit default value, when set.
    */
   protected mixed $default = NULL;
-
-  /**
-   * Whether a representative default for machine-readable output was set.
-   */
-  protected bool $hasSchemaDefault = FALSE;
-
-  /**
-   * The representative default shown in machine-readable output, when set.
-   */
-  protected mixed $schemaDefault = NULL;
-
-  /**
-   * The option rows, in display order.
-   *
-   * @var list<\DrevOps\Tui\Model\Option>
-   */
-  protected array $options = [];
-
-  /**
-   * A loader for the options, or NULL for static options.
-   */
-  protected ?\Closure $optionsLoader = NULL;
-
-  /**
-   * A query source for the options, or NULL when they do not follow the query.
-   */
-  protected ?\Closure $optionsSource = NULL;
-
-  /**
-   * A resolver for the options, or NULL when they do not follow the answers.
-   */
-  protected ?\Closure $optionsResolver = NULL;
-
-  /**
-   * The query length below which the query source is not called.
-   */
-  protected int $queryMinLength = 0;
-
-  /**
-   * The step count for a progress bar, or NULL for an indeterminate spinner.
-   */
-  protected ?int $progressSteps = NULL;
-
-  /**
-   * The work a progress row runs when activated, or NULL for none.
-   */
-  protected ?\Closure $progressWork = NULL;
-
-  /**
-   * Whether a value is required.
-   */
-  protected bool $required = FALSE;
-
-  /**
-   * The message shown when a required value is missing, empty to derive one.
-   */
-  protected string $requiredMessage = '';
-
-  /**
-   * Whether the field collects several values as a list rather than one.
-   */
-  protected bool $multiple = FALSE;
-
-  /**
-   * The conditional-visibility rule.
-   */
-  protected ?ConditionInterface $when = NULL;
-
-  /**
-   * The derive rule.
-   */
-  protected ?Derive $derive = NULL;
-
-  /**
-   * The discovery rule, or a custom detector closure.
-   */
-  protected DiscoverInterface|\Closure|null $discover = NULL;
-
-  /**
-   * The declared validator.
-   */
-  protected ?\Closure $validate = NULL;
-
-  /**
-   * The declared transformer.
-   */
-  protected ?\Closure $transform = NULL;
-
-  /**
-   * The inline ghost-text completion source (a list or a closure).
-   *
-   * @var list<string>|\Closure
-   */
-  protected array|\Closure $completion = [];
-
-  /**
-   * Whether a suggest field previews its leading prefix match as ghost-text.
-   */
-  protected bool $ghost = FALSE;
-
-  /**
-   * Whether a password editor offers a reveal/hide toggle.
-   */
-  protected bool $revealable = FALSE;
-
-  /**
-   * Whether a password editor prompts for the value twice.
-   */
-  protected bool $confirm = FALSE;
-
-  /**
-   * Whether the field may hand off to the user's $EDITOR.
-   */
-  protected bool $externalEditor = FALSE;
 
   /**
    * The number field's inclusive minimum, when declared.
@@ -194,13 +76,6 @@ final class FieldBuilder {
   protected ?int $step = NULL;
 
   /**
-   * Rating only: the caption of a point on the scale, keyed by the point.
-   *
-   * @var array<int,string>
-   */
-  protected array $captions = [];
-
-  /**
    * Multiple only: the minimum number of selections, when declared.
    */
   protected ?int $minSelections = NULL;
@@ -216,11 +91,6 @@ final class FieldBuilder {
   protected FilePickerMode $pickerMode = FilePickerMode::Any;
 
   /**
-   * File picker only: the start directory and the floor it cannot ascend above.
-   */
-  protected string $pickerStart = '';
-
-  /**
    * File picker only: the extensions selectable files are limited to.
    *
    * @var list<string>
@@ -228,19 +98,9 @@ final class FieldBuilder {
   protected array $pickerExtensions = [];
 
   /**
-   * File picker only: whether dot-entries are shown when the browser opens.
-   */
-  protected bool $pickerShowHidden = FALSE;
-
-  /**
    * File picker only: the maximum selectable file size in bytes, when declared.
    */
   protected ?int $pickerMaxSize = NULL;
-
-  /**
-   * Choice fields only: the visible page size, when declared.
-   */
-  protected ?int $pageSize = NULL;
 
   /**
    * The date field's inclusive earliest date (ISO `Y-m-d`), when declared.
@@ -256,21 +116,6 @@ final class FieldBuilder {
    * The date field's week-start day, when declared.
    */
   protected ?Weekday $weekStart = NULL;
-
-  /**
-   * Where the field's editor is drawn: inline in the panel, or full-screen.
-   */
-  protected RenderMode $render = RenderMode::Inline;
-
-  /**
-   * Note only: whether the card is drawn inside a themed border.
-   */
-  protected bool $bordered = FALSE;
-
-  /**
-   * Note only: a presentational table rendered beneath the card, when declared.
-   */
-  protected ?TableSpec $table = NULL;
 
   /**
    * Template only: the fixed shape whose slots are filled in, when declared.
@@ -292,18 +137,6 @@ final class FieldBuilder {
   protected array $slotValidators = [];
 
   /**
-   * The environment variable answering the field, when it declares its own.
-   */
-  protected string $envName = '';
-
-  /**
-   * The further environment variables answering the field, in precedence order.
-   *
-   * @var list<string>
-   */
-  protected array $envAliases = [];
-
-  /**
    * Construct a field builder.
    *
    * @param string $id
@@ -314,6 +147,61 @@ final class FieldBuilder {
    *   The field type.
    */
   public function __construct(protected string $id, protected string $label, protected FieldType $fieldType) {
+    $this->block = match ($fieldType) {
+      // A note only shows content, and a progress row only runs work: neither
+      // collects, so neither builds the block that does.
+      FieldType::Note => new Markup($id, '', $label),
+      FieldType::Progress => new Progress($id, $label),
+      default => new FieldBlock($id, $label, $fieldType),
+    };
+  }
+
+  /**
+   * The block this builder is declaring.
+   *
+   * @return \DrevOps\Tui\Block\Field|\DrevOps\Tui\Block\Markup|\DrevOps\Tui\Block\Progress
+   *   The block, whose identity never changes, so it can be placed in a region
+   *   as it is declared.
+   */
+  public function block(): FieldBlock|Markup|Progress {
+    return $this->block;
+  }
+
+  /**
+   * Finish the declaration, writing what was stated in parts onto the block.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the finished declaration contradicts itself.
+   */
+  public function seal(): void {
+    $default = $this->resolveDefault();
+    $bounds = $this->buildBounds();
+    $picker = $this->buildPickerConstraints();
+    $dates = $this->buildDateBounds();
+    $selections = $this->buildSelectionBounds();
+    $template = $this->buildTemplate();
+
+    if (!$this->block instanceof FieldBlock) {
+      return;
+    }
+
+    $this->block->default($default)->picker($picker);
+
+    if ($bounds instanceof NumberBounds) {
+      $this->block->bounds($bounds);
+    }
+
+    if ($dates instanceof DateBounds) {
+      $this->block->dates($dates);
+    }
+
+    if ($selections instanceof SelectionBounds) {
+      $this->block->selections($selections);
+    }
+
+    if ($template instanceof Template) {
+      $this->block->pattern($template);
+    }
   }
 
   /**
@@ -326,7 +214,9 @@ final class FieldBuilder {
    *   The builder.
    */
   public function description(string $description): self {
-    $this->description = $description;
+    // A note's body is the content its card draws, so the same call fills it.
+    $this->markup()?->body($description);
+    $this->field()?->description($description);
 
     return $this;
   }
@@ -344,7 +234,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function help(string $help): self {
-    $this->help = $help;
+    $this->field()?->help($help);
 
     return $this;
   }
@@ -363,7 +253,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function placeholder(string $placeholder): self {
-    $this->placeholder = $placeholder;
+    $this->field()?->placeholder($placeholder);
 
     return $this;
   }
@@ -401,8 +291,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function schemaDefault(mixed $default): self {
-    $this->hasSchemaDefault = TRUE;
-    $this->schemaDefault = $default;
+    $this->field()?->schemaDefault($default);
 
     return $this;
   }
@@ -422,7 +311,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function env(string $name): self {
-    $this->envName = $name;
+    $this->field()?->env($name);
 
     return $this;
   }
@@ -441,7 +330,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function envAliases(array $names): self {
-    $this->envAliases = array_values($names);
+    $this->field()?->envAliases($names);
 
     return $this;
   }
@@ -459,8 +348,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function required(bool $required = TRUE, string $message = ''): self {
-    $this->required = $required;
-    $this->requiredMessage = $message;
+    $this->field()?->required($required, $message);
 
     return $this;
   }
@@ -485,7 +373,7 @@ final class FieldBuilder {
       throw new FormException(sprintf('Field "%s" of type "%s" does not collect several values; ->multiple() applies to select, search and file picker fields.', $this->id, $this->fieldType->value));
     }
 
-    $this->multiple = $multiple;
+    $this->field()?->multiple($multiple);
 
     return $this;
   }
@@ -500,7 +388,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function revealable(bool $revealable = TRUE): self {
-    $this->revealable = $revealable;
+    $this->field()?->revealable($revealable);
 
     return $this;
   }
@@ -515,7 +403,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function confirmation(bool $confirm = TRUE): self {
-    $this->confirm = $confirm;
+    $this->field()?->confirmation($confirm);
 
     return $this;
   }
@@ -533,7 +421,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function externalEditor(bool $enabled = TRUE): self {
-    $this->externalEditor = $enabled;
+    $this->field()?->externalEditor($enabled);
 
     return $this;
   }
@@ -554,7 +442,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function standalone(bool $standalone = TRUE): self {
-    $this->render = $standalone ? RenderMode::Standalone : RenderMode::Inline;
+    $this->field()?->standalone($standalone);
 
     return $this;
   }
@@ -569,7 +457,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function border(bool $bordered = TRUE): self {
-    $this->bordered = $bordered;
+    $this->markup()?->bordered($bordered);
 
     return $this;
   }
@@ -590,7 +478,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function table(array $headers, array $rows): self {
-    $this->table = new TableSpec($headers, $rows);
+    $this->markup()?->table($headers, $rows);
 
     return $this;
   }
@@ -656,7 +544,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function captions(array $captions): self {
-    $this->captions = $captions;
+    $this->field()?->captions($captions);
 
     return $this;
   }
@@ -705,7 +593,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function startIn(string $directory): self {
-    $this->pickerStart = $directory;
+    $this->field()?->startIn($directory);
 
     return $this;
   }
@@ -762,7 +650,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function showHidden(bool $show = TRUE): self {
-    $this->pickerShowHidden = $show;
+    $this->field()?->showHidden($show);
 
     return $this;
   }
@@ -813,7 +701,7 @@ final class FieldBuilder {
       throw new FormException(sprintf('Field "%s" declares a non-positive page size %d.', $this->id, $size));
     }
 
-    $this->pageSize = $size;
+    $this->field()?->paginate($size);
 
     return $this;
   }
@@ -873,7 +761,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function when(ConditionInterface $condition): self {
-    $this->when = $condition;
+    $this->block->when($condition);
 
     return $this;
   }
@@ -888,7 +776,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function derive(Derive $derive): self {
-    $this->derive = $derive;
+    $this->field()?->derive($derive);
 
     return $this;
   }
@@ -904,7 +792,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function discover(DiscoverInterface|\Closure $discover): self {
-    $this->discover = $discover;
+    $this->field()?->discover($discover);
 
     return $this;
   }
@@ -920,7 +808,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function validate(\Closure $validator): self {
-    $this->validate = $validator;
+    $this->field()?->validate($validator);
 
     return $this;
   }
@@ -936,7 +824,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function transform(\Closure $transformer): self {
-    $this->transform = $transformer;
+    $this->field()?->transform($transformer);
 
     return $this;
   }
@@ -956,7 +844,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function complete(array|\Closure $source): self {
-    $this->completion = $source;
+    $this->field()?->complete($source);
 
     return $this;
   }
@@ -976,7 +864,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function ghost(bool $ghost = TRUE): self {
-    $this->ghost = $ghost;
+    $this->field()?->ghost($ghost);
 
     return $this;
   }
@@ -1046,20 +934,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function option(string $value, string $label = '', string $description = '', bool $disabled = FALSE, string $disabled_reason = ''): self {
-    $option = new Option($value, $label === '' ? $value : $label, $description, OptionKind::Option, $disabled, $disabled_reason);
-
-    // Re-declaring a value replaces the earlier option in place, so the option
-    // set stays unique; separators and headings carry no value and always
-    // append.
-    foreach ($this->options as $index => $existing) {
-      if ($existing->kind === OptionKind::Option && $existing->value === $value) {
-        $this->options[$index] = $option;
-
-        return $this;
-      }
-    }
-
-    $this->options[] = $option;
+    $this->field()?->entry($value, $label, $description, $disabled, $disabled_reason);
 
     return $this;
   }
@@ -1071,7 +946,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function separator(): self {
-    $this->options[] = new Option('', '', '', OptionKind::Separator);
+    $this->field()?->separator();
 
     return $this;
   }
@@ -1086,7 +961,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function heading(string $label): self {
-    $this->options[] = new Option('', $label, '', OptionKind::Heading);
+    $this->field()?->heading($label);
 
     return $this;
   }
@@ -1126,10 +1001,10 @@ final class FieldBuilder {
       // Reading the signature here, rather than at every call, keeps the two
       // lifecycles apart without a reflection call mid-session.
       if ((new \ReflectionFunction($options))->getNumberOfParameters() > 0) {
-        $this->optionsResolver = $options;
+        $this->field()?->resolve($options);
       }
       else {
-        $this->optionsLoader = $options;
+        $this->field()?->load($options);
       }
 
       return $this;
@@ -1165,7 +1040,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function optionsFrom(\Closure $source): self {
-    $this->optionsSource = $source;
+    $this->field()?->query($source);
 
     return $this;
   }
@@ -1188,7 +1063,7 @@ final class FieldBuilder {
       throw new FormException(sprintf('Field "%s" declares a minimum query length of %d; it must be at least one character (omit minQuery() to query on every keystroke).', $this->id, $length));
     }
 
-    $this->queryMinLength = $length;
+    $this->field()?->minQuery($length);
 
     return $this;
   }
@@ -1210,7 +1085,7 @@ final class FieldBuilder {
       throw new FormException(sprintf('Field "%s" declares %d progress steps; a determinate bar needs at least one step (omit steps() for a spinner).', $this->id, $steps));
     }
 
-    $this->progressSteps = $steps;
+    $this->progress()?->steps($steps);
 
     return $this;
   }
@@ -1227,63 +1102,49 @@ final class FieldBuilder {
    *   The builder.
    */
   public function run(\Closure $work): self {
-    $this->progressWork = $work;
+    $this->progress()?->work($work);
 
     return $this;
   }
 
   /**
-   * Build the immutable Field.
+   * The block as the field that collects, when it is one.
    *
-   * @return \DrevOps\Tui\Model\Field
-   *   The field.
+   * @return \DrevOps\Tui\Block\Field|null
+   *   The field, or NULL for a block that shows or runs instead.
    */
-  public function build(): Field {
-    return new Field(
-      $this->id,
-      $this->label,
-      $this->description,
-      $this->fieldType,
-      $this->resolveDefault(),
-      $this->options,
-      $this->required,
-      $this->requiredMessage,
-      $this->when,
-      $this->derive,
-      $this->discover,
-      $this->validate,
-      $this->transform,
-      $this->revealable,
-      $this->confirm,
-      $this->externalEditor,
-      $this->buildBounds(),
-      $this->buildPickerConstraints(),
-      $this->pickerStart,
-      $this->pickerShowHidden,
-      $this->pageSize,
-      $this->completion,
-      $this->buildDateBounds(),
-      $this->render,
-      $this->multiple,
-      $this->bordered,
-      $this->buildSelectionBounds(),
-      $this->optionsLoader,
-      $this->progressSteps,
-      $this->progressWork,
-      schemaDefault: $this->schemaDefault,
-      hasSchemaDefault: $this->hasSchemaDefault,
-      table: $this->table,
-      template: $this->buildTemplate(),
-      optionsSource: $this->optionsSource,
-      queryMinLength: $this->queryMinLength,
-      help: $this->help,
-      placeholder: $this->placeholder,
-      envName: $this->envName,
-      envAliases: $this->envAliases,
-      ghost: $this->ghost,
-      ratingCaptions: $this->captions,
-      optionsResolver: $this->optionsResolver,
-    );
+  protected function field(): ?FieldBlock {
+    return $this->block instanceof FieldBlock ? $this->block : NULL;
+  }
+
+  /**
+   * The block as the markup that shows, when it is one.
+   *
+   * @return \DrevOps\Tui\Block\Markup|null
+   *   The markup, or NULL for a block that collects or runs instead.
+   */
+  protected function markup(): ?Markup {
+    return $this->block instanceof Markup ? $this->block : NULL;
+  }
+
+  /**
+   * The block as the work that runs, when it is one.
+   *
+   * @return \DrevOps\Tui\Block\Progress|null
+   *   The progress row, or NULL for a block that collects or shows instead.
+   */
+  protected function progress(): ?Progress {
+    return $this->block instanceof Progress ? $this->block : NULL;
+  }
+
+  /**
+   * The rows the field opens onto, as they stand.
+   *
+   * @return list<\DrevOps\Tui\Model\Option>
+   *   The rows; empty for a block that opens onto none.
+   */
+  protected function entries(): array {
+    return $this->field()?->entries() ?? [];
   }
 
   /**
@@ -1322,7 +1183,7 @@ final class FieldBuilder {
 
     // A multiple choice or file picker collects a list, so with nothing
     // declared it defaults to no values.
-    if ($this->multiple) {
+    if ($this->field()?->isMultiple() === TRUE) {
       return [];
     }
 
@@ -1336,8 +1197,10 @@ final class FieldBuilder {
     // option's value rather than an empty value that would not match either.
     // The value is read off the option, not its array key, so a numeric-string
     // value like "0" is not coerced to an int.
-    if ($this->fieldType === FieldType::Toggle && $this->options !== []) {
-      return reset($this->options)->value;
+    $entries = $this->entries();
+
+    if ($this->fieldType === FieldType::Toggle && $entries !== []) {
+      return reset($entries)->value;
     }
 
     return $this->defaultFor($this->fieldType);
@@ -1351,13 +1214,7 @@ final class FieldBuilder {
    *   remaining options appended in declared order.
    */
   protected function reorderDefault(): array {
-    $values = [];
-    foreach ($this->options as $option) {
-      if ($option->selectable()) {
-        $values[] = $option->value;
-      }
-    }
-
+    $values = $this->field()?->selectableValues() ?? [];
     $desired = $this->hasDefault ? Field::stringList($this->default) : [];
 
     return Field::canonicalOrder($values, $desired);
@@ -1435,7 +1292,7 @@ final class FieldBuilder {
       return NULL;
     }
 
-    if (!$this->multiple) {
+    if ($this->field()?->isMultiple() !== TRUE) {
       throw new FormException(sprintf('Field "%s" declares selection limits but is not multiple; ->minSelections()/->maxSelections() apply to multiple select, search and file picker fields.', $this->id));
     }
 

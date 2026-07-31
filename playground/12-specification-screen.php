@@ -4,11 +4,12 @@
  * @file
  * Draws a screen from the levels the specification describes.
  *
- * A layout declares regions and names no block; the assembler puts the
- * standard furniture in them; each block reaches the theme for its own
- * elements. Keys travel inward to the innermost thing that binds them, and
- * the legend rewrites itself from whatever that turns out to be. The same
- * panel collects with no screen at all, which is the point of the split.
+ * One form declaration reaches both paths: the builder writes a tree of blocks,
+ * the assembler puts the standard furniture around it, and each block reaches
+ * the theme for its own elements. Keys travel inward to the innermost thing
+ * that binds them, and the legend rewrites itself from whatever that turns out
+ * to be. The same tree collects with no screen at all, which is the point of
+ * the split.
  *
  * Usage:
  * @code
@@ -18,52 +19,48 @@
 
 declare(strict_types=1);
 
+use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
+use DrevOps\Tui\Builder\Form;
+use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Screen\Assembler;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\KeyRouter;
-use DrevOps\Tui\Screen\PanelBuilder;
 use DrevOps\Tui\Screen\ScreenRenderer;
 use DrevOps\Tui\Theme\DefaultTheme;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$panel = (new PanelBuilder('delivery', 'Delivery'))
-  ->field('courier', 'Courier')
-  ->default('Valley Runs')
-  ->help('Every crate is weighed and labelled at the packing bench.')
-  ->done()
-  ->markup('weighing', 'Weighed at the packing bench.')
-  ->field('weight', 'Basket weight')
-  ->default(1200)
-  ->constrain('a weight between 200 and 9000')
-  ->validate(static fn(mixed $value): ?string => is_int($value) && $value >= 200 && $value <= 9000 ? NULL : 'Enter a weight between 200 and 9000.')
-  ->done()
-  ->field('basket', 'Basket contents', FieldType::Select)
-  ->multiple()
-  ->entry('apple', 'Apple')
-  ->entry('carrot', 'Carrot')
-  ->default(['apple'])
-  ->done()
-  ->build();
+$form = Form::create('Orchard')
+  ->panel('delivery', 'Delivery', function (PanelBuilder $p): void {
+    $p->text('courier', 'Courier')->default('Valley Runs')->help('Every crate is weighed and labelled at the packing bench.');
+    $p->markup('weighing', 'Weighed at the packing bench.');
+    $p->number('weight', 'Basket weight')->default(1200)->min(200)->max(9000);
+    $p->select('basket', 'Basket contents')->multiple()->option('apple', 'Apple')->option('carrot', 'Carrot')->default(['apple']);
+  });
 
 // Wide enough that the editor's legend is read rather than clipped: a region
 // hands back the rows it was given, so anything past them is cut.
 $theme = new DefaultTheme(72);
+$panel = $form->root();
 $screen = (new Assembler())->assemble($panel);
+$breadcrumb = $screen->in('header')->blocks()[0];
 $legend = $screen->in('footer')->blocks()[0];
 $router = new KeyRouter($panel);
 
-$frame = static function (string $said) use ($router, $legend, $screen, $theme): void {
+$frame = static function (string $said) use ($router, $breadcrumb, $legend, $screen, $theme): void {
   // The legend is written from the innermost binder rather than beside it, so
   // it says something different the moment a field takes the keys.
   if ($legend instanceof Legend) {
     $router->refresh($legend);
+  }
+
+  if ($breadcrumb instanceof Breadcrumb) {
+    $breadcrumb->trail(...$router->trail());
   }
 
   print $said . "\n\n";
@@ -74,6 +71,9 @@ print "On screen\n\n";
 $frame('The cursor rests on the first block that takes it.');
 
 print "Driven by keys, one at a time\n\n";
+
+$router->handle(Key::named(KeyName::Enter));
+$frame('Enter goes into the panel, and the trail grows a segment.');
 
 $router->handle(Key::named(KeyName::Down));
 $router->handle(Key::named(KeyName::Down));

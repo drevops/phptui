@@ -491,6 +491,16 @@ final class Field extends AbstractBlock implements
   }
 
   /**
+   * What is said when a required answer is missing.
+   *
+   * @return string
+   *   The message, empty when one is derived from the label instead.
+   */
+  public function requiredMessage(): string {
+    return $this->requiredMessage;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function requiredViolation(mixed $value): ?string {
@@ -523,12 +533,32 @@ final class Field extends AbstractBlock implements
   }
 
   /**
+   * What refuses a value, and says why.
+   *
+   * @return \Closure|null
+   *   The validator, or NULL when nothing of its own refuses a value.
+   */
+  public function validator(): ?\Closure {
+    return $this->validate;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function transform(\Closure $transform): static {
     $this->transform = $transform;
 
     return $this;
+  }
+
+  /**
+   * What normalizes an accepted value before it is held.
+   *
+   * @return \Closure|null
+   *   The transformer, or NULL when a value is held as it was offered.
+   */
+  public function transformer(): ?\Closure {
+    return $this->transform;
   }
 
   /**

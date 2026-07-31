@@ -16,6 +16,7 @@ use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Model\TableSpec;
+use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\ThemeInterface;
@@ -150,6 +151,23 @@ final class BlockTest extends TestCase {
   public function testMarkupCarriesNoTableUntilItIsGivenOne(): void {
     $this->assertNotInstanceOf(TableSpec::class, (new Markup('yields', 'Yields per crate'))->tableSpec());
     $this->assertFalse((new Markup('yields', 'Yields per crate'))->isBordered());
+  }
+
+  public function testMarkupHandsBackTheContentItDraws(): void {
+    $markup = new Markup('notice', 'Deliveries leave at dawn.', 'Notice');
+
+    $this->assertSame('Notice', $markup->titleText());
+    $this->assertSame('Deliveries leave at dawn.', $markup->bodyText());
+    $this->assertSame('Weighed at the bench.', $markup->body('Weighed at the bench.')->bodyText());
+  }
+
+  public function testProgressHandsBackTheWorkItRuns(): void {
+    $work = static function (ProgressReporter $reporter): void {
+      $reporter->advance();
+    };
+
+    $this->assertNotInstanceOf(\Closure::class, (new Progress('packing', 'Packing crates'))->workload());
+    $this->assertSame($work, (new Progress('packing', 'Packing crates'))->work($work)->workload());
   }
 
   public function testProgressTrailsTheIndicatorWithWhatTheWorkIsDoing(): void {

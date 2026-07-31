@@ -124,6 +124,24 @@ final class PanelTest extends TestCase {
     $this->assertFalse((new Panel('delivery', 'Delivery'))->prepare());
   }
 
+  public function testPanelHandsBackWhatItStillHasToPrepare(): void {
+    $work = static function (): void {
+    };
+    $panel = (new Panel('delivery', 'Delivery'))->preload($work);
+
+    $this->assertSame($work, $panel->preparation());
+    // Doing it is what leaves nothing to do, so it is gone once it has run.
+    $panel->prepare();
+    $this->assertNull($panel->preparation());
+  }
+
+  public function testPanelsNestedInOneSitSideBySideWhenItSaysSo(): void {
+    $panel = new Panel('delivery', 'Delivery');
+
+    $this->assertSame([], $panel->gridRows());
+    $this->assertSame([1, 2], $panel->grid(1, 2)->gridRows());
+  }
+
   public function testPanelHoldsTheSubPanelsYouCanDescendInto(): void {
     $parent = (new Panel('main', 'Delivery'))->layout(new DefaultLayout());
     $child = new Panel('advanced', 'Advanced');

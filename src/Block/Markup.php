@@ -67,6 +67,41 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
   }
 
   /**
+   * Set the content this block draws.
+   *
+   * @param string $body
+   *   The content; newlines separate lines.
+   *
+   * @return static
+   *   The block.
+   */
+  public function body(string $body): static {
+    $this->body = $body;
+
+    return $this;
+  }
+
+  /**
+   * The content this block draws.
+   *
+   * @return string
+   *   The body, empty when it carries none.
+   */
+  public function bodyText(): string {
+    return $this->body;
+  }
+
+  /**
+   * The title above this block's body.
+   *
+   * @return string
+   *   The title, empty when the body draws alone.
+   */
+  public function titleText(): string {
+    return $this->title;
+  }
+
+  /**
    * Draw this block inside a border.
    *
    * @param bool $bordered

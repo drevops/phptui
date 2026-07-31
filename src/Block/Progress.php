@@ -10,6 +10,7 @@ use DrevOps\Tui\Block\Capability\DependCapableTrait;
 use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableTrait;
 use DrevOps\Tui\Block\Element\ProgressElementsInterface;
+use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -48,7 +49,7 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
   /**
    * The work activating this block runs, or NULL when it has none.
    *
-   * @var \Closure(self): void|null
+   * @var \Closure(\DrevOps\Tui\Primitive\ProgressReporter): void|null
    */
   protected ?\Closure $work = NULL;
 
@@ -159,8 +160,8 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
    * Set the work this block runs.
    *
    * @param \Closure $work
-   *   An `fn(\DrevOps\Tui\Block\Progress $progress): void` doing the work and
-   *   advancing the block as it goes.
+   *   An `fn(\DrevOps\Tui\Primitive\ProgressReporter $reporter): void` doing
+   *   the work, calling `advance()` on the reporter once per step.
    *
    * @return static
    *   The block.
@@ -169,6 +170,16 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
     $this->work = $work;
 
     return $this;
+  }
+
+  /**
+   * The work activating this block runs.
+   *
+   * @return \Closure|null
+   *   The work, or NULL when activating it does nothing.
+   */
+  public function workload(): ?\Closure {
+    return $this->work;
   }
 
   /**
@@ -208,7 +219,11 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
       return FALSE;
     }
 
-    ($this->work)($this);
+    // The work is handed a reporter rather than the block, so it says only that
+    // one more step is done and never reaches the state behind the indicator.
+    ($this->work)(new ProgressReporter(function (?string $label): void {
+      $this->advance(1, $label);
+    }));
 
     return TRUE;
   }

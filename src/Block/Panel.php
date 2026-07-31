@@ -69,6 +69,13 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
   protected ?\Closure $preload = NULL;
 
   /**
+   * How the panels nested in it sit side by side, one entry per visual row.
+   *
+   * @var list<int>
+   */
+  protected array $grid = [];
+
+  /**
    * Construct a panel.
    *
    * @param string $id
@@ -172,6 +179,16 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
     $this->preload = $work;
 
     return $this;
+  }
+
+  /**
+   * What prepares this panel before it is first entered.
+   *
+   * @return \Closure|null
+   *   The preparation, or NULL when there is none left to do.
+   */
+  public function preparation(): ?\Closure {
+    return $this->preload;
   }
 
   /**
@@ -304,6 +321,32 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
       new Hint('select', Action::Activate),
       new Hint('go back', Action::Back),
     ];
+  }
+
+  /**
+   * Sit the panels nested in this one side by side.
+   *
+   * @param int ...$rows
+   *   One entry per visual row, naming how many nested panels share it, top to
+   *   bottom; none leaves them one under another.
+   *
+   * @return static
+   *   The panel.
+   */
+  public function grid(int ...$rows): static {
+    $this->grid = array_values($rows);
+
+    return $this;
+  }
+
+  /**
+   * How the panels nested in this one sit side by side.
+   *
+   * @return list<int>
+   *   The count of each visual row, empty when they run one under another.
+   */
+  public function gridRows(): array {
+    return $this->grid;
   }
 
   /**

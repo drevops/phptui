@@ -30,6 +30,13 @@ trait DependCapableTrait {
   /**
    * {@inheritdoc}
    */
+  public function condition(): \Closure|ConditionInterface|null {
+    return $this->when;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isActive(array $answers = []): bool {
     if ($this->when instanceof ConditionInterface) {
       return $this->when->matches($answers);

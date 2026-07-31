@@ -35,6 +35,14 @@ interface DependCapableInterface {
   public function when(\Closure|ConditionInterface $when): static;
 
   /**
+   * What decides whether this block is there at all.
+   *
+   * @return \Closure|\DrevOps\Tui\Condition\ConditionInterface|null
+   *   The condition, or NULL when the block is always there.
+   */
+  public function condition(): \Closure|ConditionInterface|null;
+
+  /**
    * Whether this block is there.
    *
    * @param array<string,mixed> $answers

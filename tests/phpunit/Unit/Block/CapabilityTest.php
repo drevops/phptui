@@ -30,6 +30,7 @@ use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
@@ -118,6 +119,14 @@ final class CapabilityTest extends TestCase {
     yield 'field' => [new Field('certifier', 'Certifier')];
     yield 'markup' => [new Markup('certified', 'Organic crates need current certification.')];
     yield 'progress' => [new Progress('packing', 'Packing crates')];
+  }
+
+  public function testBlockHandsBackWhatDecidesWhetherItIsThere(): void {
+    $declared = new Condition('organic', eq: TRUE);
+    $block = new Markup('certified', 'Organic crates need current certification.');
+
+    $this->assertNull($block->condition());
+    $this->assertSame($declared, $block->when($declared)->condition());
   }
 
   #[DataProvider('dataProviderConditionIsAnsweredAgainstTheAnswersSoFar')]
@@ -228,8 +237,9 @@ final class CapabilityTest extends TestCase {
   public function testActivatingProgressRunsItsWork(): void {
     $progress = (new Progress('packing', 'Packing crates'))->steps(4);
 
-    $progress->work(static function (Progress $block): void {
-      $block->advance(2);
+    $progress->work(static function (ProgressReporter $reporter): void {
+      $reporter->advance();
+      $reporter->advance();
     });
 
     $this->assertTrue($progress->activate());
@@ -243,8 +253,9 @@ final class CapabilityTest extends TestCase {
   public function testWorkSaysWhatItIsDoingAsItAdvances(): void {
     $progress = (new Progress('packing', 'Packing crates'))->steps(4);
 
-    $progress->work(static function (Progress $block): void {
-      $block->advance(1, 'Apples')->advance(1);
+    $progress->work(static function (ProgressReporter $reporter): void {
+      $reporter->advance('Apples');
+      $reporter->advance();
     });
 
     $this->assertTrue($progress->activate());
