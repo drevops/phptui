@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Screen;
 
+use DrevOps\Tui\Block\BlockInterface;
 use DrevOps\Tui\Block\Capability\DependCapableInterface;
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Panel;
@@ -11,7 +12,9 @@ use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\Box;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Theme\Border;
+use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
 use DrevOps\Tui\Theme\Capability\UnicodeCapableInterface;
+use DrevOps\Tui\Theme\Spacing;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -22,10 +25,11 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * each region, the region flows its blocks into that size, and a block reaches
  * the theme for elements. Nothing reaches back up.
  *
- * Two things are drawn here rather than by any block: the frame around every
- * region at once, and the mark saying a region's contents outran it. Neither is
- * anything a block could ask for, because a block only ever fills the space it
- * is given and never learns where that space ends.
+ * Three things are drawn here rather than by any block: the frame around every
+ * region at once, the mark saying a region's contents outran it, and the air
+ * the theme asks for between one block and the next. None is anything a block
+ * could ask for, because a block only ever fills the space it is given and
+ * never learns where that space ends or what is drawn beside it.
  *
  * @package DrevOps\Tui\Screen
  */
@@ -69,6 +73,48 @@ final class ScreenRenderer {
     $inside = $this->lay($screen->currentLayout(), max(0, $rows - 2), max(1, $columns - 4));
 
     return implode("\n", $this->framed($inside, $columns));
+  }
+
+  /**
+   * The rows a region's blocks come to, and which one a block starts on.
+   *
+   * The same walk a frame makes, counted rather than drawn: a region that
+   * scrolls is moved against these numbers, so what a driver measures and what
+   * a reader sees are worked out by one rule rather than by two free to drift
+   * apart. It measures a region's own blocks, which is what the panel you are
+   * in holds - going into a panel is where a layout starts rather than where a
+   * row is counted.
+   *
+   * @param \DrevOps\Tui\Screen\Region $region
+   *   The region.
+   * @param \DrevOps\Tui\Block\BlockInterface|null $of
+   *   The block to locate, if one is being looked for.
+   *
+   * @return array{int,int}
+   *   The rows its blocks come to, and the first row of the given block - or
+   *   -1 when it holds no such block.
+   */
+  public function extent(Region $region, ?BlockInterface $of = NULL): array {
+    $blocks = $region->blocks();
+    $total = 0;
+    $row = -1;
+    $spaced = $this->spaced();
+
+    foreach ($this->rendered($blocks) as $index => $rendered) {
+      // Every block that draws at all costs a row, so anything past zero is a
+      // block with air owed above it.
+      if ($spaced && $total > 0) {
+        $total++;
+      }
+
+      if ($blocks[$index] === $of) {
+        $row = $total;
+      }
+
+      $total += substr_count($rendered, "\n") + 1;
+    }
+
+    return [$total, $row];
   }
 
   /**
@@ -217,14 +263,17 @@ final class ScreenRenderer {
   }
 
   /**
-   * Draw a region's blocks, giving an entered panel what its siblings leave.
+   * Draw a region's blocks, an entered panel replacing the rest of them.
    *
    * An entered panel is where the next layout starts, which is where depth
    * comes from rather than a fifth level. Only the renderer knows the box it
-   * has to fit into, so the recursion happens here - and the box is what the
-   * region has left once the rows drawn beside it are spoken for, or the panel
-   * would fill the region on its own and push its own siblings out of a region
-   * that then reports there is more to reach.
+   * has to fit into, so the recursion happens here.
+   *
+   * Going into a panel replaces the screen with its contents, so the panel
+   * takes the whole region and the rows placed beside it are the ones you left
+   * behind - the sibling rows of the panel you came from, and the buttons that
+   * end the form, which sit among the outermost panel's own rows. Coming back
+   * out draws every one of them again.
    *
    * @param list<\DrevOps\Tui\Block\BlockInterface> $blocks
    *   The blocks.
@@ -237,33 +286,13 @@ final class ScreenRenderer {
    *   Each block as it is drawn, in the order it was added.
    */
   protected function draw(array $blocks, int $rows, int $columns): array {
-    $drawn = [];
-    $taken = 0;
-
-    foreach ($blocks as $index => $block) {
-      // A block the answers took off the screen is not there at all: it costs
-      // no row, rather than costing a blank one.
-      if ($block instanceof DependCapableInterface && $block->isHidden()) {
-        continue;
-      }
-
+    foreach ($blocks as $block) {
       if ($block instanceof Panel && $block->isEntered()) {
-        $drawn[$index] = '';
-
-        continue;
-      }
-
-      $drawn[$index] = $block->render($this->theme);
-      $taken += substr_count($drawn[$index], "\n") + 1;
-    }
-
-    foreach ($blocks as $index => $block) {
-      if ($block instanceof Panel && $block->isEntered()) {
-        $drawn[$index] = implode("\n", $this->lay($block->currentLayout(), max(0, $rows - $taken), $columns));
+        return [implode("\n", $this->lay($block->currentLayout(), $rows, $columns))];
       }
     }
 
-    return array_values($drawn);
+    return array_values($this->rendered($blocks));
   }
 
   /**
@@ -321,7 +350,11 @@ final class ScreenRenderer {
   }
 
   /**
-   * Stack rendered blocks down a region.
+   * Stack rendered blocks down a region, spaced as the theme asks.
+   *
+   * What shows between the rows a region holds is the theme's to say and the
+   * flow's to do: a block draws itself and never learns what sits above or
+   * below it, so the air between two of them can only be put in here.
    *
    * @param list<string> $drawn
    *   The rendered blocks.
@@ -331,14 +364,64 @@ final class ScreenRenderer {
    */
   protected function down(array $drawn): array {
     $lines = [];
+    $spaced = $this->spaced();
 
     foreach ($drawn as $block) {
+      if ($spaced && $lines !== []) {
+        $lines[] = '';
+      }
+
       foreach (explode("\n", $block) as $line) {
         $lines[] = $line;
       }
     }
 
     return $lines;
+  }
+
+  /**
+   * Whether a blank row shows between one block in a region and the next.
+   *
+   * @return bool
+   *   TRUE when the theme asks for the air; FALSE when the rows stack against
+   *   each other, and when the theme says nothing about spacing at all.
+   */
+  protected function spaced(): bool {
+    return $this->theme instanceof OccupyCapableInterface && $this->theme->spacing() === Spacing::Padded;
+  }
+
+  /**
+   * What each block in a region drew, keyed by where it sits in it.
+   *
+   * @param list<\DrevOps\Tui\Block\BlockInterface> $blocks
+   *   The blocks.
+   *
+   * @return array<int,string>
+   *   What each block that drew anything drew.
+   */
+  protected function rendered(array $blocks): array {
+    $drawn = [];
+
+    foreach ($blocks as $index => $block) {
+      // A block the answers took off the screen is not there at all: it costs
+      // no row, rather than costing a blank one.
+      if ($block instanceof DependCapableInterface && $block->isHidden()) {
+        continue;
+      }
+
+      $rendered = $block->render($this->theme);
+
+      // Nor is a block with nothing to say: what shows between one row and the
+      // next is the flow's to decide, so a block that drew nothing must not
+      // leave a blank row behind for the spacing to be added around.
+      if ($rendered === '') {
+        continue;
+      }
+
+      $drawn[$index] = $rendered;
+    }
+
+    return $drawn;
   }
 
   /**

@@ -23,6 +23,8 @@ use DrevOps\Tui\Model\OptionKind;
 use DrevOps\Tui\Model\RenderMode;
 use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Model\Template;
+use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -798,6 +800,28 @@ final class FieldBlockTest extends TestCase {
       ->default(['apple', 'carrot']);
 
     $this->assertSame('  Basket contents  apple, carrot', $field->render($this->theme()));
+  }
+
+  public function testRowSaysItsEntriesAreStillComingRatherThanReadingAsEmpty(): void {
+    $field = (new Field('basket', 'Basket contents', FieldType::Select))->load(static fn(): array => ['apple' => 'Apple']);
+
+    // Nothing has asked the loader yet, which is what a reader meets while a
+    // panel that fetches its own rows is being opened.
+    $this->assertSame('  Basket contents  …', $field->render($this->theme()));
+
+    $this->assertSame('  Basket contents', $field->settle(['apple' => 'Apple'])->render($this->theme()));
+  }
+
+  public function testBadgeSitsAtTheEdgeOfTheFrameRatherThanBesideTheAnswer(): void {
+    $field = (new Field('courier', 'Courier'))->default('Valley Runs')->badge('edited');
+
+    $row = $field->render(new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None]));
+
+    // The badge belongs in a column of its own, so it is set against the width
+    // the theme lays the frame out to rather than against the answer's length.
+    $this->assertStringStartsWith('  Courier  Valley Runs', $row);
+    $this->assertStringEndsWith(' edited ', $row);
+    $this->assertSame(40, Ansi::width($row));
   }
 
   public function testOpenFieldSaysWhatItAcceptsUntilSomethingIsRefused(): void {

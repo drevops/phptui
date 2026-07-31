@@ -7,9 +7,9 @@ namespace DrevOps\Tui\Screen;
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Block\Actions;
+use DrevOps\Tui\Block\BlockInterface;
 use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Capability\DependCapableInterface;
-use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
@@ -694,7 +694,7 @@ class ScreenController {
         continue;
       }
 
-      [$total, $row] = $this->measure($region, $focused);
+      [$total, $row] = $this->renderer->extent($region, $focused instanceof BlockInterface ? $focused : NULL);
 
       // A region the cursor is not in stays where it was left: only the one
       // holding the focused row has anything to follow.
@@ -725,38 +725,6 @@ class ScreenController {
     $inside = $this->border === Border::None ? $rows : max(0, $rows - self::FRAME_RULES);
 
     return $this->screen->currentLayout()->arrange($inside)[self::CONTENT] ?? $inside;
-  }
-
-  /**
-   * The rows a region's blocks come to, and which one the cursor is on.
-   *
-   * @param \DrevOps\Tui\Screen\Region $region
-   *   The region.
-   * @param \DrevOps\Tui\Block\Capability\FocusCapableInterface|null $focused
-   *   The block with the cursor, if any has it.
-   *
-   * @return array{int,int}
-   *   The rows the blocks come to, and the first row of the focused one - or
-   *   -1 when the cursor is not in this region at all.
-   */
-  protected function measure(Region $region, ?FocusCapableInterface $focused): array {
-    $total = 0;
-    $row = -1;
-
-    foreach ($region->blocks() as $block) {
-      // A row that is not drawn is not a row to scroll past.
-      if ($block instanceof DependCapableInterface && $block->isHidden()) {
-        continue;
-      }
-
-      if ($block === $focused) {
-        $row = $total;
-      }
-
-      $total += substr_count($block->render($this->theme), "\n") + 1;
-    }
-
-    return [$total, $row];
   }
 
   /**
@@ -1364,7 +1332,7 @@ class ScreenController {
     $rows = 0;
 
     foreach ($panel->currentLayout()->names() as $name) {
-      [$total] = $this->measure($panel->in($name), NULL);
+      [$total] = $this->renderer->extent($panel->in($name));
       $rows += $total;
     }
 

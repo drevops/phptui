@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
+use DrevOps\Tui\Answers\ValueFormatter;
 use DrevOps\Tui\Block\Capability\BindCapableInterface;
 use DrevOps\Tui\Block\Capability\BindCapableTrait;
 use DrevOps\Tui\Block\Capability\CaptureCapableInterface;
@@ -1822,12 +1823,8 @@ final class Field extends AbstractBlock implements
     $marker = $this->help === '' ? '' : ' ' . $elements->fieldHelpMarker();
     $label = $elements->fieldSelector($this->isFocused()) . ' ' . $elements->fieldLabel($this->label) . $marker;
 
-    // The badge trails the answer rather than the label: it says something
-    // about the answer, and a row with no answer yet has nothing to say.
-    $badge = $this->badge === '' ? '' : '  ' . $elements->fieldBadge(' ' . $this->badge . ' ');
-
     return $this->mode === Mode::View
-      ? rtrim($label . '  ' . $elements->fieldValue($this->readable($elements)) . $badge)
+      ? $this->settledLines($theme, $elements, $label)
       : $this->openLines($theme, $elements, $label);
   }
 
@@ -2046,6 +2043,76 @@ final class Field extends AbstractBlock implements
   }
 
   /**
+   * The rows this field draws while it is settled.
+   *
+   * One line is the common case, and an answer carrying line breaks is the
+   * reason it is not the only one: a row with a newline inside it would break
+   * the frame it is drawn in, so each line of the answer is a row of its own,
+   * aligned under the first.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   *   The same theme, narrowed to the elements a field draws with.
+   * @param string $label
+   *   The already-styled label.
+   *
+   * @return string
+   *   The rows.
+   */
+  protected function settledLines(ThemeInterface $theme, FieldElementsInterface $elements, string $label): string {
+    $prefix = $label . '  ';
+    // Measured from the label as it was drawn, not from its source text: it may
+    // carry a help marker and styling, and only its visible width lines the
+    // rows up under it.
+    $indent = str_repeat(' ', Ansi::width($prefix));
+
+    $lines = [];
+
+    foreach (explode("\n", $this->readable($theme, $elements)) as $row) {
+      // Each row is styled on its own, so no colour span ever crosses a row
+      // boundary and leaks into the one below it.
+      $lines[] = rtrim(($lines === [] ? $prefix : $indent) . $elements->fieldValue($row));
+    }
+
+    $lines[0] = $this->badged($theme, $elements, $lines[0]);
+
+    return implode("\n", $lines);
+  }
+
+  /**
+   * One row with the word for how the answer came to be at its far edge.
+   *
+   * The badge belongs in a column of its own, so the badges down a panel line
+   * up rather than tracking the length of each answer. Where that column ends
+   * is a fact about the frame rather than about any block, and the theme is
+   * what both the block and the frame already read it from - the same width
+   * that decides where a card wraps and how wide a scale is drawn. Asking the
+   * theme keeps one width across the whole frame; measuring the row here would
+   * be a block working out its own space, and taking it from the region would
+   * be a second answer free to disagree with the first.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   *   The same theme, narrowed to the elements a field draws with.
+   * @param string $row
+   *   The row the badge trails.
+   *
+   * @return string
+   *   The row, unchanged while the answer has nothing to say about itself.
+   */
+  protected function badged(ThemeInterface $theme, FieldElementsInterface $elements, string $row): string {
+    // The badge trails the answer rather than the label: it says something
+    // about the answer, and a row with no answer yet has nothing to say.
+    if ($this->badge === '') {
+      return $row;
+    }
+
+    return Ansi::alignRight($row, $elements->fieldBadge(' ' . $this->badge . ' '), $theme->contentWidth());
+  }
+
+  /**
    * The rows this field draws while it is open.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
@@ -2130,7 +2197,7 @@ final class Field extends AbstractBlock implements
     }
 
     if ($this->entries === []) {
-      return [$elements->fieldValue($this->readable($elements))];
+      return [$elements->fieldValue($this->readable($theme, $elements))];
     }
 
     return array_map(fn(Option $entry): string => $this->entryLine($elements, $entry), $this->entries);
@@ -2192,22 +2259,79 @@ final class Field extends AbstractBlock implements
   }
 
   /**
-   * The answer as it reads on one line.
+   * The answer as it reads.
    *
-   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $theme
+   * What is held is rarely what a reader should be shown: a decision is a word
+   * rather than a flag, a secret is never printed at all, a grade reads as the
+   * scale it was picked on, and several answers read as one run. Every one of
+   * those rules lives here, so the row, and the region an open field hands to
+   * whatever has no rows of its own, can never disagree about one answer.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
+   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   *   The same theme, narrowed to the elements a field draws with.
    *
    * @return string
-   *   The value, or the draft while one is being typed.
+   *   The value, or the draft while one is being typed; newlines separate the
+   *   lines an answer that carries them reads as.
    */
-  protected function readable(FieldElementsInterface $theme): string {
+  protected function readable(ThemeInterface $theme, FieldElementsInterface $elements): string {
     $shown = $this->mode === Mode::Edit ? $this->draft : $this->value;
 
-    if (is_array($shown)) {
-      return implode($theme->fieldValueSeparator(), array_map(static fn(mixed $part): string => is_scalar($part) ? (string) $part : '', $shown));
+    // Rows nobody has resolved yet are not an absent answer: the field says the
+    // set is still coming rather than reading as empty until it lands.
+    if ($this->loader instanceof \Closure) {
+      return $theme->renderLoading('');
     }
 
-    return $shown === NULL ? '' : (is_scalar($shown) ? (string) $shown : '');
+    // A secret never prints, and a mask as long as the answer would give its
+    // length away, so the run is a fixed one whatever is behind it.
+    if ($this->fieldType === FieldType::Password) {
+      return is_string($shown) && $shown !== '' ? ValueFormatter::mask($theme->mask()) : '';
+    }
+
+    // A grade reads as its scale whether or not the editor is open, so what a
+    // settled row says and what opening it shows are the same thing.
+    if ($this->fieldType === FieldType::Rating) {
+      return $this->scale($theme, $shown);
+    }
+
+    if (is_bool($shown)) {
+      return $shown ? Translator::t('yes') : Translator::t('no');
+    }
+
+    if (is_array($shown)) {
+      return implode($elements->fieldValueSeparator(), array_map(static fn(mixed $part): string => is_scalar($part) ? (string) $part : '', $shown));
+    }
+
+    // A carriage return would send the cursor back to the start of the row and
+    // overprint what is already there, and it counts toward the width the badge
+    // column is measured against; folding it to the newline the rows split on
+    // keeps both right.
+    return is_scalar($shown) ? str_replace(["\r\n", "\r"], "\n", (string) $shown) : '';
+  }
+
+  /**
+   * The point a scale is sitting on, drawn as the whole scale.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   * @param mixed $value
+   *   The chosen point.
+   *
+   * @return string
+   *   The drawn scale.
+   */
+  protected function scale(ThemeInterface $theme, mixed $value): string {
+    // A declared scale carries both its ends, so the fallbacks only catch one
+    // that carries neither: it degrades to a single point rather than taking
+    // the frame it is drawn in down with it.
+    $min = $this->bounds->min ?? 0;
+    $point = is_int($value) || is_float($value) ? (int) $value : $min;
+    $caption = $this->captions[$point] ?? '';
+
+    return $theme->renderScale($point, $min, $this->bounds->max ?? 0, $caption === '' ? '' : Translator::t($caption));
   }
 
 }

@@ -16,6 +16,7 @@ use DrevOps\Tui\Screen\Screen;
 use DrevOps\Tui\Screen\ScreenRenderer;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\Tui\Theme\Spacing;
 use DrevOps\Tui\Theme\ThemeInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -145,8 +146,38 @@ final class ScreenRenderTest extends TestCase {
 
     $lines = $this->render($screen, 6, 40);
 
+    // One under the other, in the order they were added, with the air the
+    // default spacing asks for between them.
+    $this->assertSame('First.', $lines[1]);
+    $this->assertSame('', $lines[2]);
+    $this->assertSame('Second.', $lines[3]);
+  }
+
+  public function testBlocksStackAgainstEachOtherWhereTheThemeAsksForNoAir(): void {
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('content')
+      ->add(new Markup('first', 'First.'))
+      ->add(new Markup('second', 'Second.'));
+
+    $theme = new DefaultTheme(40, ['color' => FALSE, 'spacing' => Spacing::Normal]);
+    $lines = array_map(rtrim(...), explode("\n", (new ScreenRenderer($theme))->render($screen, 6, 40)));
+
     $this->assertSame('First.', $lines[1]);
     $this->assertSame('Second.', $lines[2]);
+  }
+
+  public function testBlockWithNothingToSayCostsNoRowAtAll(): void {
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('content')
+      ->add(new Markup('first', 'First.'))
+      ->add(new Markup('silent', ''))
+      ->add(new Markup('second', 'Second.'));
+
+    $lines = $this->render($screen, 6, 40);
+
+    // The silent block is not there at all, so the air between the two that
+    // did draw is the one blank row the spacing asks for rather than three.
+    $this->assertSame(['', 'First.', '', 'Second.', '', ''], $lines);
   }
 
   public function testBlocksRunAcrossRegionThatFlowsThatWay(): void {

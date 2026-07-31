@@ -499,7 +499,7 @@ final class ScreenTester {
   protected function controller(): ScreenController {
     return new ScreenController(
       $this->panel,
-      $this->theme ?? new DefaultTheme($this->width(), $this->options),
+      $this->theme ?? new DefaultTheme($this->width(), $this->themeOptions()),
       $this->supplied,
       $this->keys,
       $this->collector,
@@ -512,6 +512,22 @@ final class ScreenTester {
       $this->version,
       $this->externalEditor,
     );
+  }
+
+  /**
+   * The display options the theme is built from.
+   *
+   * The frame's border is stated on the tester rather than among these, and a
+   * theme that believes it is drawing a different one lays its rows out to a
+   * width the frame does not have - so a row aligned against the theme's width
+   * would stop short of the frame's edge, or run past it. Stating it here keeps
+   * the two in step, and an option a consumer sets by hand still wins.
+   *
+   * @return array<string,mixed>
+   *   The options.
+   */
+  protected function themeOptions(): array {
+    return $this->options + ['border' => $this->border->value];
   }
 
   /**

@@ -20,6 +20,8 @@ use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\Fixup;
+use DrevOps\Tui\Model\NumberBounds;
+use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Render\ExternalEditor;
 use DrevOps\Tui\Render\Terminal;
 use DrevOps\Tui\Screen\Collector;
@@ -30,9 +32,11 @@ use DrevOps\Tui\Screen\ScreenRenderer;
 use DrevOps\Tui\Testing\ScreenTester;
 use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\Tui\Theme\DosTheme;
+use DrevOps\Tui\Theme\Spacing;
 use DrevOps\Tui\Translation\Translator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -349,14 +353,112 @@ final class ScreenParityTest extends TestCase {
   public function testCompactSpacingDropsTheExplanationUnderTheRow(): void {
     $courier = (new Field('courier', 'Courier'))->description('The run this basket goes out on.');
 
-    $padded = $this->tester($this->panel($courier))->options(['spacing' => 'normal']);
+    $padded = $this->tester($this->panel($courier))->options(['spacing' => Spacing::Normal]);
     $padded->run(Key::named(KeyName::Enter));
 
-    $compact = $this->tester($this->panel($courier))->options(['spacing' => 'compact']);
+    $compact = $this->tester($this->panel($courier))->options(['spacing' => Spacing::Compact]);
     $compact->run(Key::named(KeyName::Enter));
 
     $this->assertStringContainsString('The run this basket goes out on.', $padded->frame());
     $this->assertStringNotContainsString('The run this basket goes out on.', $compact->frame());
+  }
+
+  #[DataProvider('dataProviderSpacingDecidesWhatShowsBetweenTheRows')]
+  public function testSpacingDecidesWhatShowsBetweenTheRows(Spacing $spacing, array $expected): void {
+    $panel = $this->panel(
+      (new Field('courier', 'Courier'))->default('Valley Runs'),
+      (new Field('weight', 'Basket weight'))->default('1200'),
+    );
+
+    $tester = $this->tester($panel)->options(['spacing' => $spacing]);
+    $tester->run();
+
+    $rows = array_map(rtrim(...), array_slice(explode("\n", $tester->frame()), 1, count($expected)));
+
+    $this->assertSame($expected, $rows);
+  }
+
+  public static function dataProviderSpacingDecidesWhatShowsBetweenTheRows(): \Iterator {
+    // The padded spacing is what a form gets without asking for one, so its
+    // blank row between two answers is the shape a reader meets by default.
+    yield 'padded' => [Spacing::Padded, ['❯ Courier  Valley Runs', '', '  Basket weight  1200', '', '[ Submit ]  [ Cancel ]']];
+    yield 'normal' => [Spacing::Normal, ['❯ Courier  Valley Runs', '  Basket weight  1200', '[ Submit ]  [ Cancel ]']];
+    yield 'compact' => [Spacing::Compact, ['❯ Courier  Valley Runs', '  Basket weight  1200', '[ Submit ]  [ Cancel ]']];
+  }
+
+  #[DataProvider('dataProviderSettledRowReadsTheAnswerRatherThanHoldsIt')]
+  public function testSettledRowReadsTheAnswerRatherThanHoldsIt(Field $field, string $reads): void {
+    $tester = $this->tester($this->panel($field));
+    $tester->run();
+
+    // The row under the trail is the field's, so what it reads is the whole of
+    // what the answer says on screen.
+    $this->assertSame($reads, rtrim(explode("\n", $tester->frame())[1]));
+  }
+
+  public static function dataProviderSettledRowReadsTheAnswerRatherThanHoldsIt(): \Iterator {
+    yield 'a decision is a word' => [
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(TRUE),
+      '❯ Organic only?  yes',
+    ];
+
+    yield 'a decision against is one too' => [
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(FALSE),
+      '❯ Organic only?  no',
+    ];
+
+    yield 'a secret never prints' => [
+      (new Field('key', 'Orchard key', FieldType::Password))->default('winter-pear'),
+      '❯ Orchard key  ••••••••',
+    ];
+
+    yield 'an unanswered secret masks nothing' => [
+      (new Field('key', 'Orchard key', FieldType::Password))->default(''),
+      '❯ Orchard key',
+    ];
+
+    yield 'several answers read as one run' => [
+      (new Field('basket', 'Basket contents', FieldType::Select))
+        ->multiple()
+        ->entry('apple', 'Apple')
+        ->entry('carrot', 'Carrot')
+        ->default(['apple', 'carrot']),
+      '❯ Basket contents  apple, carrot',
+    ];
+
+    yield 'a grade reads as its scale' => [
+      (new Field('ripeness', 'Ripeness', FieldType::Rating))->bounds(new NumberBounds(1, 5))->captions([3 => 'Ready'])->default(3),
+      '❯ Ripeness  ●●●○○ 3/5 Ready',
+    ];
+
+    yield 'a weight is its number' => [
+      (new Field('weight', 'Basket weight', FieldType::Number))->default(1200),
+      '❯ Basket weight  1200',
+    ];
+
+    yield 'a date is the day it names' => [
+      (new Field('harvest', 'Harvest date', FieldType::Calendar))->default('2026-07-15'),
+      '❯ Harvest date  2026-07-15',
+    ];
+
+    yield 'a filled shape is the shape' => [
+      (new Field('crate', 'Crate code', FieldType::Template))->pattern(new Template('{{orchard}}-{{fruit}}'))->default('valley-apple'),
+      '❯ Crate code  valley-apple',
+    ];
+  }
+
+  public function testAnswerThatCarriesLineBreaksTakesOneRowPerLine(): void {
+    $notes = (new Field('notes', 'Packing notes', FieldType::Textarea))->default("Weighed at the bench\r\nSealed at dawn");
+
+    $tester = $this->tester($this->panel($notes));
+    $tester->run();
+
+    $rows = array_map(rtrim(...), array_slice(explode("\n", $tester->frame()), 1, 2));
+
+    // No row ever carries a newline of its own, and the line that follows lines
+    // up under the value column rather than under the label.
+    $this->assertSame('❯ Packing notes  Weighed at the bench', $rows[0]);
+    $this->assertSame('                 Sealed at dawn', $rows[1]);
   }
 
   public function testMarkdownDrawsTheSubsetInTheRowExplanation(): void {
@@ -417,17 +519,39 @@ final class ScreenParityTest extends TestCase {
     $this->assertCount(1, $tester->frames());
   }
 
-  public function testEnteredPanelIsSizedAgainstTheRowsDrawnBesideIt(): void {
+  public function testGoingIntoPanelReplacesTheScreenWithItsContents(): void {
     $advanced = $this->nested('advanced', 'Advanced', new Field('certifier', 'Certifier'), new Field('grade', 'Grade'));
     $tester = $this->tester($this->panel(new Field('courier', 'Courier'), $advanced))->rows(14);
 
     $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Enter));
 
-    // Everything fits, so nothing says there is more to reach - and what the
-    // mark would have pointed at is on screen.
-    $this->assertStringContainsString('Certifier', $tester->frame());
-    $this->assertStringContainsString('[ Submit ]', $tester->frame());
-    $this->assertStringNotContainsString('▼', $tester->frame());
+    $inside = $tester->frame();
+
+    // What the panel holds is the whole of what is in front of the reader: the
+    // row it was entered from, the rows beside it and the buttons that end the
+    // form are all left behind, and only the trail says where the cursor is.
+    $this->assertStringContainsString('Delivery › Advanced', $inside);
+    $this->assertStringContainsString('Certifier', $inside);
+    $this->assertStringContainsString('Grade', $inside);
+    $this->assertStringNotContainsString('Courier', $inside);
+    $this->assertStringNotContainsString('[ Submit ]', $inside);
+
+    // Everything fits, so nothing says there is more to reach.
+    $this->assertStringNotContainsString('▼', $inside);
+  }
+
+  public function testComingBackOutOfPanelDrawsEverythingItReplaced(): void {
+    $advanced = $this->nested('advanced', 'Advanced', new Field('certifier', 'Certifier'));
+    $tester = $this->tester($this->panel(new Field('courier', 'Courier'), $advanced))->rows(14);
+
+    $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Enter), Key::named(KeyName::Escape));
+
+    $back = $tester->frame();
+
+    $this->assertStringContainsString('Courier', $back);
+    $this->assertStringContainsString('Advanced', $back);
+    $this->assertStringContainsString('[ Submit ]', $back);
+    $this->assertStringNotContainsString('Certifier', $back);
   }
 
   public function testVimPresetDrivesTheWholeSession(): void {
@@ -490,7 +614,27 @@ final class ScreenParityTest extends TestCase {
 
     $this->assertSame(Provenance::Detected, $answers->provenanceOf('courier'));
     $this->assertSame('detected', $courier->badgeText());
-    $this->assertStringContainsString('Courier  Runs from /orchard   detected', $tester->frame());
+    $this->assertStringContainsString('Courier  Runs from /orchard', $tester->frame());
+    $this->assertStringContainsString(' detected ', $tester->frame());
+  }
+
+  public function testBadgeSitsInItsOwnColumnAtTheEdgeOfTheFrame(): void {
+    $panel = $this->panel(
+      (new Field('courier', 'Courier'))->default('Valley Runs'),
+      (new Field('grade', 'Grade'))->default('Premium hand-picked'),
+    );
+
+    $tester = $this->tester($panel)->supplied(['courier' => 'Coast Runs', 'grade' => 'Standard']);
+    $tester->run();
+
+    $rows = array_values(array_filter(explode("\n", $tester->frame()), static fn(string $row): bool => str_contains($row, 'edited')));
+
+    // Every row of a frame is as wide as the frame, so a badge that ends where
+    // the row does is one in a column of its own - and two of them there line
+    // up with each other rather than trailing answers of different lengths.
+    $this->assertCount(2, $rows);
+    $this->assertStringEndsWith(' edited ', $rows[0]);
+    $this->assertStringEndsWith(' edited ', $rows[1]);
   }
 
   /**
