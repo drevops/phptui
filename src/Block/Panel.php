@@ -11,6 +11,7 @@ use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableTrait;
 use DrevOps\Tui\Block\Capability\OverlayCapableInterface;
 use DrevOps\Tui\Block\Element\PanelElementsInterface;
+use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Region;
 use DrevOps\Tui\Theme\ThemeInterface;
@@ -49,6 +50,21 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
   protected bool $entered = FALSE;
 
   /**
+   * The standing text under its title.
+   */
+  protected string $description = '';
+
+  /**
+   * The way out of it, once it draws over what is behind it.
+   */
+  protected Buttons $buttons;
+
+  /**
+   * What prepares it before it is first entered, until that has been done.
+   */
+  protected ?\Closure $preload = NULL;
+
+  /**
    * Construct a panel.
    *
    * @param string $id
@@ -60,6 +76,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
     protected string $id,
     protected string $title,
   ) {
+    $this->buttons = new Buttons();
   }
 
   /**
@@ -80,6 +97,95 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
    */
   public function title(): string {
     return $this->title;
+  }
+
+  /**
+   * Set the standing text under this panel's title.
+   *
+   * @param string $description
+   *   The description.
+   *
+   * @return static
+   *   The panel.
+   */
+  public function description(string $description): static {
+    $this->description = $description;
+
+    return $this;
+  }
+
+  /**
+   * The standing text under this panel's title.
+   *
+   * @return string
+   *   The description, empty when it carries none.
+   */
+  public function descriptionText(): string {
+    return $this->description;
+  }
+
+  /**
+   * Label the way out of this panel.
+   *
+   * @param \DrevOps\Tui\Model\Buttons $buttons
+   *   The pair that closes it.
+   *
+   * @return static
+   *   The panel.
+   *
+   * @throws \InvalidArgumentException
+   *   When the pair is hidden on a panel that draws over what is behind it,
+   *   which would strand it with no way out.
+   */
+  public function buttons(Buttons $buttons): static {
+    $this->assertWayOut($this->modal, $buttons);
+    $this->buttons = $buttons;
+
+    return $this;
+  }
+
+  /**
+   * The way out of this panel.
+   *
+   * @return \DrevOps\Tui\Model\Buttons
+   *   The pair that closes it.
+   */
+  public function currentButtons(): Buttons {
+    return $this->buttons;
+  }
+
+  /**
+   * Prepare this panel before it is first entered.
+   *
+   * @param \Closure $work
+   *   An `fn (): void` doing the preparation, such as one fetch several of the
+   *   panel's fields then read.
+   *
+   * @return static
+   *   The panel.
+   */
+  public function preload(\Closure $work): static {
+    $this->preload = $work;
+
+    return $this;
+  }
+
+  /**
+   * Do what was to be done before this panel is first entered.
+   *
+   * @return bool
+   *   Whether anything was done. Preparation happens once, so every call after
+   *   the first answers FALSE.
+   */
+  public function prepare(): bool {
+    if (!$this->preload instanceof \Closure) {
+      return FALSE;
+    }
+
+    ($this->preload)();
+    $this->preload = NULL;
+
+    return TRUE;
   }
 
   /**
@@ -151,8 +257,13 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \InvalidArgumentException
+   *   When its buttons are hidden, which would leave it drawn over everything
+   *   with no way out.
    */
   public function modal(): static {
+    $this->assertWayOut(TRUE, $this->buttons);
     $this->modal = TRUE;
 
     return $this;
@@ -200,6 +311,23 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
     }
 
     return $this->elements($theme, PanelElementsInterface::class, 'a panel')->panelTitle($this->title);
+  }
+
+  /**
+   * Reject a panel that would draw over everything with no way out.
+   *
+   * @param bool $modal
+   *   Whether it draws over what is behind it.
+   * @param \DrevOps\Tui\Model\Buttons $buttons
+   *   The pair that closes it.
+   *
+   * @throws \InvalidArgumentException
+   *   When such a panel hides its buttons.
+   */
+  protected function assertWayOut(bool $modal, Buttons $buttons): void {
+    if ($modal && !$buttons->show) {
+      throw new \InvalidArgumentException(sprintf('Panel "%s" draws over what is behind it, so its buttons are its only way out and cannot be hidden.', $this->id));
+    }
   }
 
 }

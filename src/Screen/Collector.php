@@ -39,8 +39,10 @@ final class Collector {
 
     foreach ($this->fields($panel) as $field) {
       // A field its condition hides was never asked for, so it contributes
-      // nothing rather than contributing a default nobody chose.
-      if (!$field->isActive()) {
+      // nothing rather than contributing a default nobody chose. What it
+      // depends on is what has been collected before it, which is why the
+      // answers so far are handed over rather than the finished set.
+      if (!$field->isActive($answers)) {
         continue;
       }
 

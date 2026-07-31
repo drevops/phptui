@@ -10,6 +10,9 @@ use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
+use DrevOps\Tui\Condition\Condition;
+use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\Layout\AbstractLayout;
@@ -83,6 +86,60 @@ final class CollectorTest extends TestCase {
     $this->expectExceptionMessage('Cannot collect "weight": Enter at least 200.');
 
     (new Collector())->collect($panel, ['weight' => 10]);
+  }
+
+  public function testConditionIsAnsweredAgainstWhatWasCollectedBeforeIt(): void {
+    $panel = $this->panel(
+      (new Field('organic', 'Organic only?'))->default(TRUE),
+      (new Field('certifier', 'Certifier'))->default('Soil Board')->when(new Condition('organic', eq: TRUE)),
+    );
+
+    $this->assertSame(['organic' => TRUE, 'certifier' => 'Soil Board'], (new Collector())->collect($panel));
+
+    // The supplied answer is what the condition then sees, so a field that
+    // depended on the default is no longer asked for.
+    $this->assertSame(['organic' => FALSE], (new Collector())->collect($panel, ['organic' => FALSE]));
+  }
+
+  public function testRequiredFieldRefusesAnEmptyAnswerAndSaysWhichOne(): void {
+    $panel = $this->panel((new Field('basket', 'Basket contents'))->required());
+
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Cannot collect "basket": Basket contents is required.');
+
+    (new Collector())->collect($panel, ['basket' => '']);
+  }
+
+  public function testSuppliedValueIsMeasuredAgainstTheBoundsItWasGiven(): void {
+    $panel = $this->panel((new Field('weight', 'Weight', FieldType::Number))->default(1200)->bounds(new NumberBounds(200, 9000)));
+
+    $this->assertSame(['weight' => 4000], (new Collector())->collect($panel, ['weight' => 4000]));
+
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Cannot collect "weight": must be between 200 and 9000.');
+
+    (new Collector())->collect($panel, ['weight' => 10]);
+  }
+
+  public function testSuppliedValueIsNormalizedBeforeItIsCollected(): void {
+    $panel = $this->panel(
+      (new Field('courier', 'Courier'))->transform(static fn(mixed $value): mixed => is_string($value) ? trim($value) : $value),
+    );
+
+    $this->assertSame(['courier' => 'Valley Runs'], (new Collector())->collect($panel, ['courier' => '  Valley Runs  ']));
+  }
+
+  public function testSuppliedValueIsMeasuredAgainstTheEntriesItMayPickFrom(): void {
+    $panel = $this->panel(
+      (new Field('basket', 'Basket contents', FieldType::Select))->entry('apple', 'Apple')->entry('carrot', 'Carrot')->default('apple'),
+    );
+
+    $this->assertSame(['basket' => 'carrot'], (new Collector())->collect($panel, ['basket' => 'carrot']));
+
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Cannot collect "basket": value "plum" is not one of: apple, carrot');
+
+    (new Collector())->collect($panel, ['basket' => 'plum']);
   }
 
   public function testFieldsInSubPanelsAreCollectedToo(): void {

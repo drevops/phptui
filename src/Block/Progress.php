@@ -53,6 +53,11 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
   protected ?\Closure $work = NULL;
 
   /**
+   * What the work says it is doing, shown after the indicator.
+   */
+  protected string $label = '';
+
+  /**
    * Construct a progress block.
    *
    * @param string $id
@@ -77,6 +82,16 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
   }
 
   /**
+   * The caption naming the work.
+   *
+   * @return string
+   *   The caption.
+   */
+  public function caption(): string {
+    return $this->caption;
+  }
+
+  /**
    * Say how many steps the work has, which is what earns it a bar.
    *
    * @param int $total
@@ -93,6 +108,51 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
     $this->total = $total;
 
     return $this;
+  }
+
+  /**
+   * The steps the work has, which is what earns it a bar.
+   *
+   * @return int|null
+   *   The steps, or NULL when the length is unknown.
+   */
+  public function total(): ?int {
+    return $this->total;
+  }
+
+  /**
+   * The steps done.
+   *
+   * @return int
+   *   The count.
+   */
+  public function current(): int {
+    return $this->current;
+  }
+
+  /**
+   * Say what the work is doing right now.
+   *
+   * @param string $label
+   *   The label, shown after the bar or the spinner.
+   *
+   * @return static
+   *   The block.
+   */
+  public function label(string $label): static {
+    $this->label = $label;
+
+    return $this;
+  }
+
+  /**
+   * What the work says it is doing.
+   *
+   * @return string
+   *   The label, empty when it says nothing.
+   */
+  public function labelText(): string {
+    return $this->label;
   }
 
   /**
@@ -116,11 +176,13 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
    *
    * @param int $steps
    *   The steps done since the last report.
+   * @param string|null $label
+   *   What is being done now, or NULL to leave the label as it stands.
    *
    * @return static
    *   The block.
    */
-  public function advance(int $steps = 1): static {
+  public function advance(int $steps = 1, ?string $label = NULL): static {
     // Work can report a step backwards, and a spinner frame is an index: both
     // are clamped here so no caller can drive the block into a state it could
     // not draw.
@@ -129,6 +191,10 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
 
     if ($this->total !== NULL) {
       $this->current = min($this->current, $this->total);
+    }
+
+    if ($label !== NULL) {
+      $this->label = $label;
     }
 
     return $this;
@@ -153,14 +219,17 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
   public function render(ThemeInterface $theme): string {
     $elements = $this->elements($theme, ProgressElementsInterface::class, 'progress');
     $caption = $elements->progressCaption($this->caption);
+    // The caption names the work and stays put; the label is what that work is
+    // doing right now, so it trails the indicator and changes under it.
+    $label = $this->label === '' ? '' : ' ' . $elements->progressCaption($this->label);
 
     if ($this->total === NULL) {
-      return $elements->progressSpinner($this->frame) . ' ' . $caption;
+      return $elements->progressSpinner($this->frame) . ' ' . $caption . $label;
     }
 
     $filled = (int) round($this->current / $this->total * self::TRACK_WIDTH);
 
-    return $caption . ' ' . $elements->progressTrack($filled, self::TRACK_WIDTH) . ' ' . $elements->progressCount($this->current, $this->total);
+    return $caption . ' ' . $elements->progressTrack($filled, self::TRACK_WIDTH) . ' ' . $elements->progressCount($this->current, $this->total) . $label;
   }
 
 }

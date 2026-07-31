@@ -24,6 +24,8 @@ use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
+use DrevOps\Tui\Condition\Condition;
+use DrevOps\Tui\Condition\ConditionInterface;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Theme\DefaultTheme;
@@ -116,6 +118,28 @@ final class CapabilityTest extends TestCase {
     yield 'progress' => [new Progress('packing', 'Packing crates')];
   }
 
+  #[DataProvider('dataProviderConditionIsAnsweredAgainstTheAnswersSoFar')]
+  public function testConditionIsAnsweredAgainstTheAnswersSoFar(DependCapableInterface $block, \Closure|ConditionInterface $when, array $answers, bool $active): void {
+    $this->assertSame($active, $block->when($when)->isActive($answers));
+  }
+
+  public static function dataProviderConditionIsAnsweredAgainstTheAnswersSoFar(): \Iterator {
+    $declared = new Condition('organic', eq: TRUE);
+    $written = static fn(array $answers): bool => ($answers['organic'] ?? FALSE) === TRUE;
+    // A condition that asks for nothing is answered without them, which is why
+    // both shapes are declared the same way.
+    $standing = static fn(): bool => FALSE;
+
+    yield 'field, declared' => [new Field('certifier', 'Certifier'), $declared, ['organic' => TRUE], TRUE];
+    yield 'field, declared and unmet' => [new Field('certifier', 'Certifier'), $declared, ['organic' => FALSE], FALSE];
+    yield 'field, written' => [new Field('certifier', 'Certifier'), $written, ['organic' => TRUE], TRUE];
+    yield 'field, written and unmet' => [new Field('certifier', 'Certifier'), $written, [], FALSE];
+    yield 'markup, declared' => [new Markup('certified', 'Certification is current.'), $declared, ['organic' => TRUE], TRUE];
+    yield 'markup, written and unmet' => [new Markup('certified', 'Certification is current.'), $written, ['organic' => FALSE], FALSE];
+    yield 'progress, declared' => [new Progress('packing', 'Packing crates'), $declared, ['organic' => TRUE], TRUE];
+    yield 'progress, asking for nothing' => [new Progress('packing', 'Packing crates'), $standing, ['organic' => TRUE], FALSE];
+  }
+
   public function testBlockBindsTheKeysItWasGivenAndNoOthers(): void {
     $panel = (new Panel('delivery', 'Delivery'))->bind(KeyName::Up, KeyName::Down);
 
@@ -179,6 +203,21 @@ final class CapabilityTest extends TestCase {
 
   public function testProgressWithNoWorkDoesNothingWhenActivated(): void {
     $this->assertFalse((new Progress('packing', 'Packing crates'))->activate());
+  }
+
+  public function testWorkSaysWhatItIsDoingAsItAdvances(): void {
+    $progress = (new Progress('packing', 'Packing crates'))->steps(4);
+
+    $progress->work(static function (Progress $block): void {
+      $block->advance(1, 'Apples')->advance(1);
+    });
+
+    $this->assertTrue($progress->activate());
+    $this->assertSame(2, $progress->current());
+    $this->assertSame(4, $progress->total());
+    // A step that says nothing leaves the label where the last one set it.
+    $this->assertSame('Apples', $progress->labelText());
+    $this->assertSame('Packing crates', $progress->caption());
   }
 
 }

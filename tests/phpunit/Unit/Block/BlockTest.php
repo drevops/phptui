@@ -12,6 +12,7 @@ use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
+use DrevOps\Tui\Model\TableSpec;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\ThemeInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -68,6 +69,51 @@ final class BlockTest extends TestCase {
     $rendered = (new Markup('note', "First.\nSecond."))->render($this->theme());
 
     $this->assertSame(['First.', 'Second.'], explode("\n", $rendered));
+  }
+
+  public function testMarkupInBorderIsBoxedAroundTheSameContent(): void {
+    $markup = (new Markup('notice', 'Deliveries leave at dawn.', 'Notice'))->bordered();
+
+    $this->assertTrue($markup->isBordered());
+
+    $lines = explode("\n", $markup->render($this->theme()));
+
+    $this->assertStringStartsWith('╭', $lines[0]);
+    $this->assertStringContainsString('Notice', $lines[1]);
+    $this->assertStringContainsString('Deliveries leave at dawn.', $lines[2]);
+    $this->assertStringStartsWith('╰', $lines[3]);
+  }
+
+  public function testMarkupAsTableAlignsTheRowsUnderTheirHeaders(): void {
+    $markup = (new Markup('yields', 'Yields per crate'))->table(['Produce', 'Crates'], [['Apple', '12'], ['Carrot', '8']]);
+
+    $this->assertSame(['Produce', 'Crates'], $markup->tableSpec()?->headers);
+
+    $rendered = $markup->render($this->theme());
+
+    $this->assertStringContainsString('Yields per crate', $rendered);
+    $this->assertStringContainsString('│ Produce │ Crates │', $rendered);
+    $this->assertStringContainsString('│ Apple   │ 12     │', $rendered);
+    $this->assertStringContainsString('│ Carrot  │ 8      │', $rendered);
+  }
+
+  public function testMarkupWithNothingToSayDrawsNoCardAroundIt(): void {
+    // A card with neither a title, a body nor a grid has nothing to frame, so
+    // it draws nothing rather than an empty box.
+    $this->assertSame('', (new Markup('spacer', ''))->bordered()->render($this->theme()));
+  }
+
+  public function testMarkupCarriesNoTableUntilItIsGivenOne(): void {
+    $this->assertNotInstanceOf(TableSpec::class, (new Markup('yields', 'Yields per crate'))->tableSpec());
+    $this->assertFalse((new Markup('yields', 'Yields per crate'))->isBordered());
+  }
+
+  public function testProgressTrailsTheIndicatorWithWhatTheWorkIsDoing(): void {
+    $bar = (new Progress('packing', 'Packing crates'))->steps(10)->advance(4, 'Apples');
+    $spinner = (new Progress('fetching', 'Fetching the price list'))->label('Orchards');
+
+    $this->assertSame('Packing crates [████░░░░░░] 4/10 Apples', $bar->render($this->theme()));
+    $this->assertSame('⠋ Fetching the price list Orchards', $spinner->render($this->theme()));
   }
 
   public function testActionsFrameEveryLabelAndMarkTheFocusedOne(): void {

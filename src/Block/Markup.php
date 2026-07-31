@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Block;
 use DrevOps\Tui\Block\Capability\DependCapableInterface;
 use DrevOps\Tui\Block\Capability\DependCapableTrait;
 use DrevOps\Tui\Block\Element\MarkupElementsInterface;
+use DrevOps\Tui\Model\TableSpec;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -17,11 +18,26 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * drawn three ways. What an earlier answer can change is whether it is there at
  * all, which is why a standing warning needs no block of its own.
  *
+ * Prose is composed line by line from the theme's markup elements. A card and a
+ * grid are laid out rather than styled - they measure their content, wrap it
+ * and align it - so both go to the theme's card renderer, the one that already
+ * draws a card wherever else the library draws one.
+ *
  * @package DrevOps\Tui\Block
  */
 final class Markup extends AbstractBlock implements DependCapableInterface {
 
   use DependCapableTrait;
+
+  /**
+   * Whether it is drawn inside a border rather than as bare lines.
+   */
+  protected bool $bordered = FALSE;
+
+  /**
+   * The grid drawn beneath the body, or NULL when it carries none.
+   */
+  protected ?TableSpec $table = NULL;
 
   /**
    * Construct a markup block.
@@ -51,23 +67,96 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
   }
 
   /**
+   * Draw this block inside a border.
+   *
+   * @param bool $bordered
+   *   Whether it is boxed.
+   *
+   * @return static
+   *   The block.
+   */
+  public function bordered(bool $bordered = TRUE): static {
+    $this->bordered = $bordered;
+
+    return $this;
+  }
+
+  /**
+   * Whether this block is drawn inside a border.
+   *
+   * @return bool
+   *   TRUE when it is.
+   */
+  public function isBordered(): bool {
+    return $this->bordered;
+  }
+
+  /**
+   * Lay this block's content out as a grid beneath its body.
+   *
+   * @param list<mixed> $headers
+   *   The header cells; empty draws the grid with no header row.
+   * @param list<list<mixed>> $rows
+   *   The body rows, each a list of cells.
+   *
+   * @return static
+   *   The block.
+   */
+  public function table(array $headers, array $rows): static {
+    $this->table = new TableSpec($headers, $rows);
+
+    return $this;
+  }
+
+  /**
+   * The grid drawn beneath this block's body.
+   *
+   * @return \DrevOps\Tui\Model\TableSpec|null
+   *   The grid, or NULL when it carries none.
+   */
+  public function tableSpec(): ?TableSpec {
+    return $this->table;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function render(ThemeInterface $theme): string {
     $elements = $this->elements($theme, MarkupElementsInterface::class, 'markup');
+
+    if ($this->bordered || $this->table instanceof TableSpec) {
+      // An empty body is no body at all here: a card that was handed one blank
+      // line would spend a row on it, where prose simply draws the blank line.
+      $body = $this->body === '' ? [] : $this->lines();
+      $headers = $this->table instanceof TableSpec ? $this->table->headers : [];
+      $rows = $this->table instanceof TableSpec ? $this->table->rows : [];
+
+      return implode("\n", $theme->renderCard($this->title, $body, $headers, $rows, $this->bordered));
+    }
+
     $lines = [];
 
     if ($this->title !== '') {
       $lines[] = $elements->markupTitle($this->title);
     }
 
-    // A Windows-authored body carries CRLF endings, and a surviving carriage
-    // return would send the cursor back to column 0 and overprint the row.
-    foreach (explode("\n", str_replace(["\r\n", "\r"], "\n", $this->body)) as $line) {
+    foreach ($this->lines() as $line) {
       $lines[] = $elements->markupLine($line);
     }
 
     return implode("\n", $lines);
+  }
+
+  /**
+   * The body as its physical lines.
+   *
+   * @return list<string>
+   *   The lines.
+   */
+  protected function lines(): array {
+    // A Windows-authored body carries CRLF endings, and a surviving carriage
+    // return would send the cursor back to column 0 and overprint the row.
+    return explode("\n", str_replace(["\r\n", "\r"], "\n", $this->body));
   }
 
 }

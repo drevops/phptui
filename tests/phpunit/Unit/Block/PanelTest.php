@@ -6,10 +6,12 @@ namespace DrevOps\Tui\Tests\Unit\Block;
 
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Screen\Layout\DefaultLayout;
 use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -78,6 +80,50 @@ final class PanelTest extends TestCase {
     $this->assertTrue($panel->modal()->isModal());
   }
 
+  public function testPanelCarriesTheStandingTextUnderItsTitle(): void {
+    $panel = new Panel('delivery', 'Delivery');
+
+    $this->assertSame('', $panel->descriptionText());
+    $this->assertSame('Every crate leaves at dawn.', $panel->description('Every crate leaves at dawn.')->descriptionText());
+  }
+
+  public function testPanelLabelsTheWayOutOfIt(): void {
+    $panel = new Panel('confirm', 'Confirm delivery');
+    $buttons = new Buttons(TRUE, 'Send', 'Keep packing');
+
+    $this->assertSame('Submit', $panel->currentButtons()->submitLabel);
+    $this->assertSame('Keep packing', $panel->buttons($buttons)->currentButtons()->cancelLabel);
+  }
+
+  #[DataProvider('dataProviderPanelDrawnOverEverythingCannotHideItsOnlyWayOut')]
+  public function testPanelDrawnOverEverythingCannotHideItsOnlyWayOut(\Closure $declare): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Panel "confirm" draws over what is behind it, so its buttons are its only way out and cannot be hidden.');
+
+    $declare(new Panel('confirm', 'Confirm delivery'));
+  }
+
+  public static function dataProviderPanelDrawnOverEverythingCannotHideItsOnlyWayOut(): \Iterator {
+    yield 'hidden after it overlays' => [static fn(Panel $panel): Panel => $panel->modal()->buttons(new Buttons(FALSE))];
+    yield 'overlaid after they are hidden' => [static fn(Panel $panel): Panel => $panel->buttons(new Buttons(FALSE))->modal()];
+  }
+
+  public function testPanelPreparesWhatItNeedsOnceBeforeItIsFirstEntered(): void {
+    $prepared = 0;
+    $panel = (new Panel('delivery', 'Delivery'))->preload(static function () use (&$prepared): void {
+      $prepared++;
+    });
+
+    $this->assertTrue($panel->prepare());
+    // Preparation happens once, so a panel entered again does not redo it.
+    $this->assertFalse($panel->prepare());
+    $this->assertSame(1, $prepared);
+  }
+
+  public function testPanelWithNothingToPrepareHasNothingToDo(): void {
+    $this->assertFalse((new Panel('delivery', 'Delivery'))->prepare());
+  }
+
   public function testPanelHoldsTheSubPanelsYouCanDescendInto(): void {
     $parent = (new Panel('main', 'Delivery'))->layout(new DefaultLayout());
     $child = new Panel('advanced', 'Advanced');
@@ -85,6 +131,10 @@ final class PanelTest extends TestCase {
     $parent->in('content')->add($child);
 
     $this->assertSame([$child], $parent->children());
+  }
+
+  public function testPanelWithNoLayoutHoldsNothingToDescendInto(): void {
+    $this->assertSame([], (new Panel('main', 'Delivery'))->children());
   }
 
   public function testBlockThatIsNotPanelIsNoDestination(): void {
