@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Resolver;
 
+use DrevOps\Tui\Block\Field as FieldBlock;
 use DrevOps\Tui\Model\Field;
 
 /**
@@ -18,7 +19,9 @@ use DrevOps\Tui\Model\Field;
  *
  * The rule lives here rather than in its callers because it is needed both to
  * read the environment and to advertise it in machine-readable output; a second
- * copy would let the two drift, advertising a variable that is never read.
+ * copy would let the two drift, advertising a variable that is never read. That
+ * is also why it answers for a field either way one is held - as the block that
+ * declares it, or as the definition derived from that block.
  *
  * @package DrevOps\Tui\Resolver
  */
@@ -36,39 +39,41 @@ class EnvNameResolver {
   /**
    * The variable that answers the field when several are set.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field|\DrevOps\Tui\Model\Field $field
    *   The field.
    *
    * @return string
    *   The declared override, or the prefixed and uppercased field id.
    */
-  public function canonical(Field $field): string {
-    return $field->envName !== '' ? $field->envName : $this->envPrefix . strtoupper($field->id);
+  public function canonical(FieldBlock|Field $field): string {
+    $declared = $this->declaredName($field);
+
+    return $declared !== '' ? $declared : $this->envPrefix . strtoupper($field instanceof FieldBlock ? $field->id() : $field->id);
   }
 
   /**
    * The additional variables the field also answers to, in declaration order.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field|\DrevOps\Tui\Model\Field $field
    *   The field.
    *
    * @return list<string>
    *   The alias names; empty when the field declares none.
    */
-  public function aliases(Field $field): array {
-    return $field->envAliases;
+  public function aliases(FieldBlock|Field $field): array {
+    return $field instanceof FieldBlock ? $field->aliases() : $field->envAliases;
   }
 
   /**
    * Every variable that answers the field, in precedence order.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field|\DrevOps\Tui\Model\Field $field
    *   The field.
    *
    * @return list<string>
    *   The canonical name first, then each alias in declaration order.
    */
-  public function all(Field $field): array {
+  public function all(FieldBlock|Field $field): array {
     return [$this->canonical($field), ...$this->aliases($field)];
   }
 
@@ -80,14 +85,31 @@ class EnvNameResolver {
    * so it is not offered as an answer route. Declared aliases are absolute and
    * carry no such risk, so they stand on their own.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field|\DrevOps\Tui\Model\Field $field
    *   The field.
    *
    * @return bool
    *   TRUE when the field declares its own name or a prefix namespaces it.
    */
-  public function isAdvertisable(Field $field): bool {
-    return $field->envName !== '' || $this->envPrefix !== '';
+  public function isAdvertisable(FieldBlock|Field $field): bool {
+    if ($this->declaredName($field) !== '') {
+      return TRUE;
+    }
+
+    return $this->envPrefix !== '';
+  }
+
+  /**
+   * The variable name a field declares for itself.
+   *
+   * @param \DrevOps\Tui\Block\Field|\DrevOps\Tui\Model\Field $field
+   *   The field.
+   *
+   * @return string
+   *   The name, empty when the mechanical one stands.
+   */
+  protected function declaredName(FieldBlock|Field $field): string {
+    return $field instanceof FieldBlock ? $field->envName() : $field->envName;
   }
 
 }

@@ -108,7 +108,7 @@ final class ProgressFieldTest extends TestCase {
     $form = Form::create('Apply')->panel('prep', 'Prep', function (PanelBuilder $p): void {
       $p->text('name', 'Name');
       $p->progress('apply', 'Apply')->steps(1)->run($this->work());
-    })->build();
+    })->root();
 
     $schema = (new AgentHelp($form))->generate();
 

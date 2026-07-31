@@ -588,6 +588,92 @@ final class Field extends AbstractBlock implements
   }
 
   /**
+   * Whether a value has the shape this field collects.
+   *
+   * @param mixed $value
+   *   The candidate value.
+   *
+   * @return bool
+   *   TRUE when the value's type is the one the kind answers with.
+   */
+  public function acceptsValue(mixed $value): bool {
+    return match (TRUE) {
+      $this->fieldType === FieldType::Confirm, $this->fieldType === FieldType::Pause => is_bool($value),
+      $this->collectsList() => is_array($value),
+      // A scale has no point between its points, so only a whole number names
+      // one - where a number field takes any numeric entry and rounds it.
+      $this->fieldType === FieldType::Rating => is_int($value),
+      $this->fieldType->collectsInteger() => is_int($value) || is_float($value),
+      // An empty string is an unset date, left to the required check; any
+      // other value must be a strict `Y-m-d` calendar date.
+      $this->fieldType === FieldType::Calendar => is_string($value) && ($value === '' || DateBounds::parse($value) instanceof \DateTimeImmutable),
+      default => is_string($value),
+    };
+  }
+
+  /**
+   * The human name of the shape this field collects, as a fragment.
+   *
+   * @return string
+   *   The fragment (e.g. "a string", "a list"), translated.
+   */
+  public function valueKind(): string {
+    return match (TRUE) {
+      $this->fieldType === FieldType::Confirm, $this->fieldType === FieldType::Pause => Translator::t('a boolean'),
+      $this->collectsList() => Translator::t('a list'),
+      $this->fieldType === FieldType::Rating => Translator::t('a whole number'),
+      $this->fieldType->collectsInteger() => Translator::t('a number'),
+      $this->fieldType === FieldType::Calendar => Translator::t('a date (YYYY-MM-DD)'),
+      default => Translator::t('a string'),
+    };
+  }
+
+  /**
+   * A value restated against the entries as they now stand.
+   *
+   * A choice outlives the rows it was picked from: a set that follows the
+   * answers narrows as they change, leaving a value that is no longer offered,
+   * a ranking that no longer covers the set, or a toggle sitting on a state
+   * that is gone. This drops what the set no longer holds, completes a ranking
+   * back to a full permutation and returns a toggle to its first state, so a
+   * value always describes the rows in front of it.
+   *
+   * A suggest field's rows are hints rather than a closed set, so its value is
+   * never restated against them.
+   *
+   * @param mixed $value
+   *   The current value.
+   *
+   * @return mixed
+   *   The value the current entries can carry.
+   */
+  public function reconcileValue(mixed $value): mixed {
+    if (!$this->fieldType->supportsOptions() || $this->fieldType === FieldType::Suggest) {
+      return $value;
+    }
+
+    $selectable = $this->selectableValues();
+
+    if ($this->fieldType === FieldType::Reorder) {
+      return self::canonicalOrder($selectable, self::stringList($value));
+    }
+
+    if ($this->isMultiChoice()) {
+      return array_values(array_filter(self::stringList($value), static fn(string $item): bool => in_array($item, $selectable, TRUE)));
+    }
+
+    $current = is_scalar($value) ? (string) $value : '';
+
+    if (in_array($current, $selectable, TRUE)) {
+      return $current;
+    }
+
+    // A toggle is always in one of its states, so a value the set no longer
+    // offers falls back to the first row rather than to nothing.
+    return $this->fieldType === FieldType::Toggle ? ($selectable[0] ?? '') : '';
+  }
+
+  /**
    * Whether the answer is several picks from the declared rows.
    *
    * Narrower than {@see collectsList()}: a multiple file picker collects a list
@@ -901,8 +987,9 @@ final class Field extends AbstractBlock implements
    * Resolve the entries from the answers, again whenever they change.
    *
    * @param \Closure $resolver
-   *   An `fn (array<string,mixed> $answers): array<string,string>` returning
-   *   the value => label map.
+   *   An `fn (\DrevOps\Tui\Handler\Context $context): array<string,string>`
+   *   returning the value => label map, read from the answers the context
+   *   carries and the run it describes.
    *
    * @return static
    *   The field.
@@ -1236,6 +1323,24 @@ final class Field extends AbstractBlock implements
     }
 
     return $this->template->error($value);
+  }
+
+  /**
+   * The values of the shape's slots, read back out of an assembled answer.
+   *
+   * @param mixed $value
+   *   The assembled answer.
+   *
+   * @return array<string,string>
+   *   The value of each slot keyed by slot name; empty when no shape is
+   *   declared or the answer does not have it.
+   */
+  public function templateParts(mixed $value): array {
+    if (!$this->template instanceof Template || !is_string($value)) {
+      return [];
+    }
+
+    return $this->template->extract($value);
   }
 
   /**
@@ -1663,11 +1768,15 @@ final class Field extends AbstractBlock implements
    *
    * @param mixed $value
    *   The offered value.
+   * @param \Closure|null $reusable
+   *   Behaviour to refuse with where the field declares none of its own, so a
+   *   rule written once for a kind of answer applies wherever that answer is
+   *   asked for. What the field declares always wins.
    *
    * @return string|null
    *   The reason, or NULL when nothing refuses it.
    */
-  protected function refuses(mixed $value): ?string {
+  public function refuses(mixed $value, ?\Closure $reusable = NULL): ?string {
     $missing = $this->requiredViolation($value);
 
     if ($missing !== NULL) {
@@ -1688,9 +1797,77 @@ final class Field extends AbstractBlock implements
       return $misshapen;
     }
 
-    $refusal = $this->validate instanceof \Closure ? ($this->validate)($value) : NULL;
+    $validate = $this->validate ?? $reusable;
+    $refusal = $validate instanceof \Closure ? $validate($value) : NULL;
 
-    return $refusal ?? $this->entryError($value);
+    // A validator that answers with nothing has not said why, and a refusal
+    // nobody can read is no refusal at all.
+    return is_string($refusal) && $refusal !== '' ? $refusal : $this->entryError($value);
+  }
+
+  /**
+   * Coerce a value to a list of strings, dropping every non-string item.
+   *
+   * @param mixed $value
+   *   The value.
+   *
+   * @return list<string>
+   *   The string items, in order; empty when the value is not a list.
+   */
+  protected static function stringList(mixed $value): array {
+    if (!is_array($value)) {
+      return [];
+    }
+
+    $out = [];
+
+    foreach ($value as $item) {
+      if (is_string($item)) {
+        $out[] = $item;
+      }
+    }
+
+    return $out;
+  }
+
+  /**
+   * Order a set of values, completing and de-duplicating a desired ordering.
+   *
+   * The desired values that belong to the allowed set come first - in the given
+   * order, de-duplicated - then every allowed value the desired list omits is
+   * appended in its declared order, so a partial or dirty ordering still
+   * resolves to a full permutation.
+   *
+   * @param list<string> $allowed
+   *   The full set of values, in declared order.
+   * @param list<string> $desired
+   *   The requested ordering; values outside the allowed set are ignored and
+   *   repeats collapsed.
+   *
+   * @return list<string>
+   *   The allowed values in the resolved order.
+   */
+  protected static function canonicalOrder(array $allowed, array $desired): array {
+    $set = array_fill_keys($allowed, TRUE);
+
+    $order = [];
+    $seen = [];
+
+    foreach ($desired as $value) {
+      if (isset($set[$value]) && !isset($seen[$value])) {
+        $order[] = $value;
+        $seen[$value] = TRUE;
+      }
+    }
+
+    foreach ($allowed as $value) {
+      if (!isset($seen[$value])) {
+        $order[] = $value;
+        $seen[$value] = TRUE;
+      }
+    }
+
+    return $order;
   }
 
   /**

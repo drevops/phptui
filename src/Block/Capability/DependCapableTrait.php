@@ -35,6 +35,20 @@ trait DependCapableTrait {
   }
 
   /**
+   * The declared rule deciding whether this block is there at all.
+   *
+   * A rule the block decides for itself cannot be read, only asked, so it is
+   * absent here: anything describing the form has to be able to say which
+   * answers a dependency is about.
+   *
+   * @return \DrevOps\Tui\Condition\ConditionInterface|null
+   *   The rule, or NULL when the block is always there or decides for itself.
+   */
+  public function rule(): ?ConditionInterface {
+    return $this->when instanceof ConditionInterface ? $this->when : NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function isActive(array $answers = []): bool {

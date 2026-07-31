@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Schema;
 
+use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Model\Template;
@@ -39,8 +40,9 @@ class AgentHelp {
   /**
    * Construct the schema generator.
    *
-   * @param \DrevOps\Tui\Model\FormDefinition $form
-   *   The form definition to describe.
+   * @param \DrevOps\Tui\Block\Panel $root
+   *   The declared tree to describe, read from the panel every declared panel
+   *   hangs from.
    * @param string $envPrefix
    *   The prefix for per-question env variable names (e.g. "APP_"); under an
    *   empty prefix only a field naming its own variable carries the `env`
@@ -49,7 +51,7 @@ class AgentHelp {
    *   The context a closure default is evaluated against; defaults to an empty
    *   context carrying no prior answers.
    */
-  public function __construct(protected FormDefinition $form, protected string $envPrefix = '', protected Context $context = new Context()) {
+  public function __construct(protected Panel $root, protected string $envPrefix = '', protected Context $context = new Context()) {
     $this->names = new EnvNameResolver($envPrefix);
   }
 
@@ -63,19 +65,19 @@ class AgentHelp {
     $properties = [];
     $required = [];
 
-    foreach ($this->form->fields() as $field) {
+    foreach (Tree::fields($this->root) as $field) {
       // A pause is a gate, and a note or a progress row is display-only: none
       // is a question, so none carries an answer.
-      if ($field->type === FieldType::Pause) {
+      if ($field->type() === FieldType::Pause) {
         continue;
       }
-      if ($field->type->isDisplayOnly()) {
+      if ($field->type()->isDisplayOnly()) {
         continue;
       }
-      $properties[$field->id] = $this->property($field);
+      $properties[$field->id()] = $this->property($field);
 
-      if ($field->required) {
-        $required[] = $field->id;
+      if ($field->isRequired()) {
+        $required[] = $field->id();
       }
     }
 
@@ -97,7 +99,7 @@ class AgentHelp {
   /**
    * Build the schema property for one field.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field $field
    *   The field.
    *
    * @return array<string,mixed>
@@ -105,16 +107,19 @@ class AgentHelp {
    */
   protected function property(Field $field): array {
     $values = $this->optionValues($field);
+    $template = $field->template();
+    $bounds = $field->numberBounds();
+    $selections = $field->selectionBounds();
     $property = [];
 
     if ($field->collectsList()) {
       $property['type'] = 'array';
       $property['items'] = $values === [] ? ['type' => 'string'] : ['enum' => $values];
     }
-    elseif ($field->type->collectsInteger()) {
+    elseif ($field->type()->collectsInteger()) {
       $property['type'] = 'integer';
     }
-    elseif ($field->type === FieldType::Confirm) {
+    elseif ($field->type() === FieldType::Confirm) {
       $property['type'] = 'boolean';
     }
     else {
@@ -125,56 +130,56 @@ class AgentHelp {
       }
     }
 
-    if ($field->type === FieldType::Calendar) {
+    if ($field->type() === FieldType::Calendar) {
       $property['format'] = 'date';
     }
 
     // A template answer is the assembled string, so its shape travels as the
     // expression that string must match rather than as the pattern's own
     // `{{slot}}` syntax, which no schema consumer would understand.
-    if ($field->template instanceof Template) {
-      $property['pattern'] = $field->template->schemaPattern();
+    if ($template instanceof Template) {
+      $property['pattern'] = $template->schemaPattern();
     }
 
     // The step is a keyboard increment, not a value constraint - the library
     // accepts any in-range integer - so it never becomes a `multipleOf` that
     // would reject values the collection allows.
-    if ($field->bounds instanceof NumberBounds) {
-      if ($field->bounds->min !== NULL) {
-        $property['minimum'] = $field->bounds->min;
+    if ($bounds instanceof NumberBounds) {
+      if ($bounds->min !== NULL) {
+        $property['minimum'] = $bounds->min;
       }
-      if ($field->bounds->max !== NULL) {
-        $property['maximum'] = $field->bounds->max;
-      }
-    }
-
-    if ($field->selectionBounds instanceof SelectionBounds) {
-      if ($field->selectionBounds->min !== NULL) {
-        $property['minItems'] = $field->selectionBounds->min;
-      }
-      if ($field->selectionBounds->max !== NULL) {
-        $property['maxItems'] = $field->selectionBounds->max;
+      if ($bounds->max !== NULL) {
+        $property['maximum'] = $bounds->max;
       }
     }
 
-    if ($field->label !== '') {
-      $property['title'] = Translator::t($field->label);
+    if ($selections instanceof SelectionBounds) {
+      if ($selections->min !== NULL) {
+        $property['minItems'] = $selections->min;
+      }
+      if ($selections->max !== NULL) {
+        $property['maxItems'] = $selections->max;
+      }
     }
 
-    if ($field->description !== '') {
-      $property['description'] = Translator::t($field->description);
+    if ($field->label() !== '') {
+      $property['title'] = Translator::t($field->label());
+    }
+
+    if ($field->descriptionText() !== '') {
+      $property['description'] = Translator::t($field->descriptionText());
     }
 
     // Extension keywords: JSON Schema has no slot for either, and folding them
     // into `description` would merge back the three texts a form keeps apart. A
     // placeholder is not `examples` either - it illustrates the shape of an
     // answer without being a valid one.
-    if ($field->help !== '') {
-      $property['x-help'] = Translator::t($field->help);
+    if ($field->helpText() !== '') {
+      $property['x-help'] = Translator::t($field->helpText());
     }
 
-    if ($field->placeholder !== '') {
-      $property['x-placeholder'] = Translator::t($field->placeholder);
+    if ($field->placeholderText() !== '') {
+      $property['x-placeholder'] = Translator::t($field->placeholderText());
     }
 
     $default = DefaultResolver::resolve($field, $this->context);
@@ -200,7 +205,7 @@ class AgentHelp {
   /**
    * The selectable option values of an option-constrained field.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field $field
    *   The field.
    *
    * @return list<string>
@@ -208,7 +213,7 @@ class AgentHelp {
    *   field is not constrained to a closed set.
    */
   protected function optionValues(Field $field): array {
-    if (!$field->type->constrainsToOptions()) {
+    if (!$field->type()->constrainsToOptions()) {
       return [];
     }
 

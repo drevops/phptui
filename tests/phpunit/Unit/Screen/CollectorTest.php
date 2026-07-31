@@ -59,7 +59,7 @@ final class CollectorTest extends TestCase {
 
   public function testFieldItsConditionHidesIsNeverAskedFor(): void {
     $panel = $this->panel(
-      (new Field('organic', 'Organic only?'))->default(TRUE),
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(TRUE),
       (new Field('certifier', 'Certifier'))->default('Soil Board')->when(static fn(): bool => FALSE),
     );
 
@@ -68,7 +68,7 @@ final class CollectorTest extends TestCase {
 
   public function testSuppliedValuesAreOfferedRatherThanTakenOnTrust(): void {
     $panel = $this->panel(
-      (new Field('weight', 'Weight'))
+      (new Field('weight', 'Weight', FieldType::Number))
         ->default(1200)
         ->validate(static fn(mixed $value): ?string => is_int($value) && $value >= 200 ? NULL : 'Enter at least 200.'),
     );
@@ -78,7 +78,7 @@ final class CollectorTest extends TestCase {
 
   public function testRefusedSuppliedValueSaysWhichFieldAndWhy(): void {
     $panel = $this->panel(
-      (new Field('weight', 'Weight'))
+      (new Field('weight', 'Weight', FieldType::Number))
         ->validate(static fn(mixed $value): ?string => is_int($value) && $value >= 200 ? NULL : 'Enter at least 200.'),
     );
 
@@ -90,7 +90,7 @@ final class CollectorTest extends TestCase {
 
   public function testConditionIsAnsweredAgainstWhatWasCollectedBeforeIt(): void {
     $panel = $this->panel(
-      (new Field('organic', 'Organic only?'))->default(TRUE),
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(TRUE),
       (new Field('certifier', 'Certifier'))->default('Soil Board')->when(new Condition('organic', eq: TRUE)),
     );
 

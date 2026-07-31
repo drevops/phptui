@@ -48,13 +48,12 @@ final class EngineAnswersTest extends TestCase {
       ->panel('p', 'p', function (PanelBuilder $p): void {
         $p->text('name')->required()->default('Acme');
         $p->select('profile')->default('standard')->option('standard')->option('minimal');
-      })
-      ->build();
-    $engine = new Engine($form, new HandlerRegistry());
+      });
+    $engine = new Engine($form->build(), new HandlerRegistry());
 
     $answers = $engine->collect([], new Context());
 
-    $errors = (new SchemaValidator($form))->validate($answers->values);
+    $errors = (new SchemaValidator($form->root()))->validate($answers->values);
     $this->assertSame([], $errors);
   }
 

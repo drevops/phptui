@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace DrevOps\Tui;
 
 use DrevOps\Tui\Answers\Answers;
+use DrevOps\Tui\Block\BlockFactory;
+use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Engine\Engine;
 use DrevOps\Tui\Handler\Context;
@@ -20,6 +22,7 @@ use DrevOps\Tui\Resolver\InputResolver;
 use DrevOps\Tui\Schema\AgentHelp;
 use DrevOps\Tui\Schema\SchemaGenerator;
 use DrevOps\Tui\Schema\SchemaValidator;
+use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\ThemeManager;
@@ -58,6 +61,16 @@ final class Tui {
    * The form definition.
    */
   protected FormDefinition $form;
+
+  /**
+   * The declared block tree, once the answer-side operations have needed one.
+   */
+  protected ?Panel $root = NULL;
+
+  /**
+   * What collects the answers with no screen at all, once one is asked for.
+   */
+  protected ?Collector $collector = NULL;
 
   /**
    * The theme name or class (empty for the default).
@@ -353,7 +366,9 @@ final class Tui {
     Translator::setShared($this->translator);
     $inputs = (new InputResolver($this->envPrefix))->resolve($this->form->fields(), $prompts, getenv());
 
-    return $this->engine->collect($inputs, $this->context($directory, $update, $version));
+    $this->collector ??= new Collector($this->registry, $this->form->fixups);
+
+    return $this->collector->answers($this->root(), $inputs, $this->context($directory, $update, $version));
   }
 
   /**
@@ -578,7 +593,7 @@ final class Tui {
    *   The schema.
    */
   public function schema(?Context $context = NULL): array {
-    return (new SchemaGenerator($this->form, $context ?? new Context(), $this->envPrefix))->generate();
+    return (new SchemaGenerator($this->root(), $context ?? new Context(), $this->envPrefix))->generate();
   }
 
   /**
@@ -592,7 +607,7 @@ final class Tui {
    *   The help text.
    */
   public function agentHelp(?Context $context = NULL): string {
-    return (new AgentHelp($this->form, $this->envPrefix, $context ?? new Context()))->generate();
+    return (new AgentHelp($this->root(), $this->envPrefix, $context ?? new Context()))->generate();
   }
 
   /**
@@ -608,7 +623,7 @@ final class Tui {
    *   The validation errors (empty when valid).
    */
   public function validate(array $answers, ?Context $context = NULL): array {
-    return (new SchemaValidator($this->form, $context ?? new Context()))->validate($answers);
+    return (new SchemaValidator($this->root(), $context ?? new Context()))->validate($answers);
   }
 
   /**
@@ -639,6 +654,20 @@ final class Tui {
    */
   public function registry(): HandlerRegistry {
     return $this->registry;
+  }
+
+  /**
+   * The declared block tree the answer-side operations read.
+   *
+   * The rows a form asks about are settled state - a set of entries that
+   * arrives from somewhere else settles onto the block holding it - so the tree
+   * is built once and kept, the way the interactive path keeps its engine.
+   *
+   * @return \DrevOps\Tui\Block\Panel
+   *   The panel every declared panel hangs from.
+   */
+  protected function root(): Panel {
+    return $this->root ??= (new BlockFactory())->create($this->form);
   }
 
   /**

@@ -113,7 +113,7 @@ final class TranslationRenderTest extends TestCase {
       ->panel('general', 'General', function (PanelBuilder $panel): void {
         $panel->text('name', 'Site name')->required();
       })
-      ->build();
+      ->root();
 
     // A headless validation error and the agent help both localize.
     $this->assertContains('Falta la pregunta obligatoria "name".', (new SchemaValidator($form))->validate([]));

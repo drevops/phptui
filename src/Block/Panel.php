@@ -350,27 +350,86 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
   }
 
   /**
+   * The fields this panel holds, in the order they were placed.
+   *
+   * Its own only: a nested panel is somewhere you go rather than something this
+   * one holds, so what it asks belongs to it.
+   *
+   * @return list<\DrevOps\Tui\Block\Field>
+   *   The fields.
+   */
+  public function fields(): array {
+    $fields = [];
+
+    foreach ($this->blocks() as $block) {
+      if ($block instanceof Field) {
+        $fields[] = $block;
+      }
+    }
+
+    return $fields;
+  }
+
+  /**
+   * The ids of the rows this panel holds, in the order they were placed.
+   *
+   * Every row that carries one, whether it collects an answer or only shows
+   * something: an id that shows is still an id the form knows, which is what
+   * tells a stray answer apart from one meant for a row that takes none.
+   *
+   * @return list<string>
+   *   The ids.
+   */
+  public function ids(): array {
+    $ids = [];
+
+    foreach ($this->blocks() as $block) {
+      if ($block instanceof Field || $block instanceof Markup || $block instanceof Progress) {
+        $ids[] = $block->id();
+      }
+    }
+
+    return $ids;
+  }
+
+  /**
    * The panels you can descend into from this one.
    *
    * @return list<\DrevOps\Tui\Block\Panel>
    *   The sub-panels, in the order they were placed.
    */
   public function children(): array {
-    if (!$this->layout instanceof LayoutInterface) {
-      return [];
-    }
-
     $children = [];
 
-    foreach ($this->layout->names() as $name) {
-      foreach ($this->layout->in($name)->blocks() as $block) {
-        if ($block instanceof self) {
-          $children[] = $block;
-        }
+    foreach ($this->blocks() as $block) {
+      if ($block instanceof self) {
+        $children[] = $block;
       }
     }
 
     return $children;
+  }
+
+  /**
+   * Everything placed in this panel, region by region, in placement order.
+   *
+   * @return list<\DrevOps\Tui\Block\BlockInterface>
+   *   The blocks; empty while the panel has no layout to hold any.
+   */
+  protected function blocks(): array {
+    if (!$this->layout instanceof LayoutInterface) {
+      return [];
+    }
+
+    $blocks = [];
+
+    foreach ($this->layout->names() as $name) {
+      foreach ($this->layout->in($name)->blocks() as $block) {
+        $blocks[] = $block;
+      }
+    }
+
+    return $blocks;
   }
 
   /**

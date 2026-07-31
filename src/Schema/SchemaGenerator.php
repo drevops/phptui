@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Schema;
 
+use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Discovery\DiscoverInterface;
 use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Model\Field;
-use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Resolver\EnvNameResolver;
 
 /**
@@ -30,8 +31,9 @@ class SchemaGenerator {
   /**
    * Construct a generator.
    *
-   * @param \DrevOps\Tui\Model\FormDefinition $form
-   *   The configuration to describe.
+   * @param \DrevOps\Tui\Block\Panel $root
+   *   The declared tree to describe, read from the panel every declared panel
+   *   hangs from.
    * @param \DrevOps\Tui\Handler\Context $context
    *   The context a closure default is evaluated against; defaults to an empty
    *   context carrying no prior answers.
@@ -39,7 +41,7 @@ class SchemaGenerator {
    *   The prefix for per-question env variable names (e.g. "APP_"); under an
    *   empty prefix only a field naming its own variable advertises one.
    */
-  public function __construct(protected FormDefinition $form, protected Context $context = new Context(), protected string $envPrefix = '') {
+  public function __construct(protected Panel $root, protected Context $context = new Context(), protected string $envPrefix = '') {
   }
 
   /**
@@ -52,40 +54,45 @@ class SchemaGenerator {
     $names = new EnvNameResolver($this->envPrefix);
     $prompts = [];
 
-    foreach ($this->form->fields() as $field) {
+    foreach (Tree::fields($this->root) as $field) {
       // A display-only field (a note or a progress row) collects no answer, so
       // it is not a prompt external tooling drives or validates.
-      if ($field->type->isDisplayOnly()) {
+      if ($field->type()->isDisplayOnly()) {
         continue;
       }
 
+      $rule = $field->rule();
+      $bounds = $field->numberBounds();
+      $dates = $field->dateBounds();
+      $discover = $field->discovery();
+
       $prompts[] = [
-        'id' => $field->id,
-        'type' => $field->type->value,
-        'label' => $field->label,
-        'description' => $field->description,
-        'help' => $field->help,
-        'placeholder' => $field->placeholder,
+        'id' => $field->id(),
+        'type' => $field->type()->value,
+        'label' => $field->label(),
+        'description' => $field->descriptionText(),
+        'help' => $field->helpText(),
+        'placeholder' => $field->placeholderText(),
         'options' => $this->options($field),
-        'options_dynamic' => $field->hasDynamicOptions(),
+        'options_dynamic' => $field->hasDynamicEntries(),
         'default' => DefaultResolver::resolve($field, $this->context),
-        'required' => $field->required,
+        'required' => $field->isRequired(),
         'env' => $names->isAdvertisable($field) ? $names->canonical($field) : NULL,
         'env_aliases' => $names->aliases($field),
-        'min' => $field->bounds?->min,
-        'max' => $field->bounds?->max,
-        'step' => $field->bounds?->step,
-        'min_selections' => $field->selectionBounds?->min,
-        'max_selections' => $field->selectionBounds?->max,
-        'min_date' => $field->dateBounds?->min?->format('Y-m-d'),
-        'max_date' => $field->dateBounds?->max?->format('Y-m-d'),
-        'week_start' => $field->dateBounds?->weekStart->value,
-        'template' => $field->template?->pattern(),
-        'placeholders' => $field->template?->placeholders() ?? [],
-        'when' => $field->when?->toArray(),
-        'derive' => $field->derive?->toArray(),
-        'discover' => $field->discover instanceof DiscoverInterface ? $field->discover->toArray() : NULL,
-        'depends_on' => $field->when === NULL ? [] : $field->when->fields(),
+        'min' => $bounds?->min,
+        'max' => $bounds?->max,
+        'step' => $bounds?->step,
+        'min_selections' => $field->selectionBounds()?->min,
+        'max_selections' => $field->selectionBounds()?->max,
+        'min_date' => $dates?->min?->format('Y-m-d'),
+        'max_date' => $dates?->max?->format('Y-m-d'),
+        'week_start' => $dates?->weekStart->value,
+        'template' => $field->template()?->pattern(),
+        'placeholders' => $field->template()?->placeholders() ?? [],
+        'when' => $rule?->toArray(),
+        'derive' => $field->derivation()?->toArray(),
+        'discover' => $discover instanceof DiscoverInterface ? $discover->toArray() : NULL,
+        'depends_on' => $rule === NULL ? [] : $rule->fields(),
       ];
     }
 
@@ -95,7 +102,7 @@ class SchemaGenerator {
   /**
    * Describe a field's options.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field $field
    *   The field.
    *
    * @return array<int,array<string,string>>
@@ -107,7 +114,7 @@ class SchemaGenerator {
 
     $out = [];
 
-    foreach ($field->options as $option) {
+    foreach ($field->entries() as $option) {
       if (!$option->selectable()) {
         continue;
       }

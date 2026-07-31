@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Answers;
 
+use DrevOps\Tui\Block\Panel as PanelBlock;
 use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\Panel;
 use DrevOps\Tui\Render\Terminal;
@@ -66,6 +67,89 @@ final readonly class Answers {
     }
 
     return new self($values, $provenance, $items);
+  }
+
+  /**
+   * Build a self-describing answer set from a declared block tree.
+   *
+   * The tree's root is the form itself rather than a panel somebody declared,
+   * so it contributes no heading: the trail each answer carries starts at the
+   * panel it was asked in.
+   *
+   * @param \DrevOps\Tui\Block\Panel $root
+   *   The panel every declared panel hangs from.
+   * @param array<string,mixed> $values
+   *   The answer values keyed by question id.
+   * @param array<string,\DrevOps\Tui\Answers\Provenance> $provenance
+   *   The provenance keyed by question id.
+   *
+   * @return self
+   *   The answer set.
+   */
+  public static function forTree(PanelBlock $root, array $values, array $provenance): self {
+    $items = self::snapshot($root, [], $values, $provenance);
+
+    foreach ($root->children() as $panel) {
+      $items = [...$items, ...self::walkTree($panel, [], $values, $provenance)];
+    }
+
+    return new self($values, $provenance, $items);
+  }
+
+  /**
+   * Walk a panel block and the panels beneath it, snapshotting each answer.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel to walk.
+   * @param list<string> $trail
+   *   The titles of the ancestor panels, outermost first.
+   * @param array<string,mixed> $values
+   *   The answer values keyed by question id.
+   * @param array<string,\DrevOps\Tui\Answers\Provenance> $provenance
+   *   The provenance keyed by question id.
+   *
+   * @return array<string,\DrevOps\Tui\Answers\Answer>
+   *   The self-describing answers keyed by question id.
+   */
+  protected static function walkTree(PanelBlock $panel, array $trail, array $values, array $provenance): array {
+    $trail[] = $panel->title();
+
+    $items = self::snapshot($panel, $trail, $values, $provenance);
+
+    foreach ($panel->children() as $child) {
+      $items = [...$items, ...self::walkTree($child, $trail, $values, $provenance)];
+    }
+
+    return $items;
+  }
+
+  /**
+   * Snapshot the questions one panel asked, in the order it asked them.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel.
+   * @param list<string> $trail
+   *   The titles of the panels the questions live under, outermost first.
+   * @param array<string,mixed> $values
+   *   The answer values keyed by question id.
+   * @param array<string,\DrevOps\Tui\Answers\Provenance> $provenance
+   *   The provenance keyed by question id.
+   *
+   * @return array<string,\DrevOps\Tui\Answers\Answer>
+   *   The self-describing answers keyed by question id.
+   */
+  protected static function snapshot(PanelBlock $panel, array $trail, array $values, array $provenance): array {
+    $items = [];
+
+    foreach ($panel->fields() as $field) {
+      if (!array_key_exists($field->id(), $values)) {
+        continue;
+      }
+
+      $items[$field->id()] = new Answer($field->id(), $values[$field->id()], $provenance[$field->id()] ?? Provenance::Default, $field->label(), $field->type(), $trail, $field->templateParts($values[$field->id()]));
+    }
+
+    return $items;
   }
 
   /**
