@@ -8,6 +8,10 @@
  * target language (e.g. "uk.php") and translate the values. The keys are the
  * English source strings the library looks up; placeholders such as "@count"
  * must be kept verbatim in a translation.
+ *
+ * A few strings reach the translator as a value rather than as a literal - the
+ * month name a calendar heading formats, and the default button labels - so
+ * they are listed here even though no `t('...')` call spells them out.
  */
 
 declare(strict_types=1);
@@ -23,25 +27,37 @@ return [
   '@label: must not contain "@text".' => '@label: must not contain "@text".',
   '@value is not a valid "@key". Allowed: @allowed.' => '@value is not a valid "@key". Allowed: @allowed.',
   '@value is not a valid "@key". Use a non-negative integer.' => '@value is not a valid "@key". Use a non-negative integer.',
+  'April' => 'April',
+  'August' => 'August',
   'Calendar' => 'Calendar',
+  'Cancel' => 'Cancel',
   'Choose @constraint.' => 'Choose @constraint.',
   'Confirm' => 'Confirm',
   'Could not load options for field "@id": @error' => 'Could not load options for field "@id": @error',
   'Could not load options.' => 'Could not load options.',
+  'December' => 'December',
   'Directories only' => 'Directories only',
   'Enter a number @constraint.' => 'Enter a number @constraint.',
   'Extensions: @extensions' => 'Extensions: @extensions',
+  'February' => 'February',
   'File picker' => 'File picker',
   'Files only' => 'Files only',
   'Fr' => 'Fr',
   'Invalid value for field "@id": @error' => 'Invalid value for field "@id": @error',
+  'January' => 'January',
+  'July' => 'July',
+  'June' => 'June',
+  'March' => 'March',
   'Max @size' => 'Max @size',
+  'May' => 'May',
   'Missing required question "@id".' => 'Missing required question "@id".',
   'Mo' => 'Mo',
   'Need at least @width x @height - have @w x @h.' => 'Need at least @width x @height - have @w x @h.',
   'No' => 'No',
   'Note' => 'Note',
+  'November' => 'November',
   'Number' => 'Number',
+  'October' => 'October',
   'Page size must be a positive integer, @size given.' => 'Page size must be a positive integer, @size given.',
   'Password' => 'Password',
   'Passwords do not match.' => 'Passwords do not match.',
@@ -58,7 +74,9 @@ return [
   'Search' => 'Search',
   'Select' => 'Select',
   'Select @constraint.' => 'Select @constraint.',
+  'September' => 'September',
   'Su' => 'Su',
+  'Submit' => 'Submit',
   'Suggest' => 'Suggest',
   'Template' => 'Template',
   'Terminal too small.' => 'Terminal too small.',

@@ -97,10 +97,11 @@ final class BlockTest extends TestCase {
     Translator::setShared(new Translator('uk'));
 
     // A fragment is translated where it is declared and the line around it
-    // where it is drawn, so what reaches a reader is the active language.
+    // where it is drawn, so nothing English is left between the key and what
+    // it does - Ukrainian joins the two without a preposition.
     $legend = (new Legend())->advertise(KeyMapManager::create()->navigation(), new Hint('move', Action::MoveUp));
 
-    $this->assertSame('↑ to перемістити', $legend->render($this->theme()));
+    $this->assertSame('↑ перемістити', $legend->render($this->theme()));
   }
 
   public function testMarkupDrawsItsBodyAndItsTitleWhenItHasOne(): void {

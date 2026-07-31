@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Tests\Unit\Translation;
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Answers\SummaryFormatter;
+use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
@@ -20,14 +21,23 @@ use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Translation\Translator;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests that chrome and questions render in the active language end to end.
+ *
+ * Two languages, for two different questions. A fixture catalog answers
+ * whether a string reaches the translator at all, and is deliberately partial
+ * so an untranslated one still shows. The bundled Ukrainian catalog answers
+ * whether the package alone, with nothing configured, puts a whole session in
+ * front of a reader in their language.
  */
 #[CoversClass(DefaultTheme::class)]
 #[CoversClass(FieldFactory::class)]
+#[CoversClass(Legend::class)]
+#[CoversClass(Provenance::class)]
 #[CoversClass(SummaryFormatter::class)]
 #[CoversClass(SchemaValidator::class)]
 #[CoversClass(AgentHelp::class)]
@@ -129,6 +139,154 @@ final class TranslationRenderTest extends TestCase {
     // A headless validation error and the agent help both localize.
     $this->assertContains('Falta la pregunta obligatoria "name".', (new SchemaValidator($form))->validate([]));
     $this->assertStringContainsString('Nombre del sitio', (new AgentHelp($form, 'TUI_'))->generate());
+  }
+
+  public function testUkrainianLegendNamesEveryKeyItAdvertises(): void {
+    $this->ukrainian();
+
+    $form = Form::create('Produce order')
+      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
+        $panel->select('basket', 'Basket')->multiple()->options(['apple' => 'Apple', 'beet' => 'Beet']);
+        $panel->text('courier', 'Courier')->help('Weighed at the packing bench.');
+      })
+      ->root();
+
+    $tester = (new ScreenTester($form))->rows(16)->cols(80);
+    $tester->run(
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Escape),
+      Key::named(KeyName::Down),
+    );
+
+    // Closed over the panel: moving, opening a row, stepping back out, and the
+    // way out of the session itself.
+    $closed = $tester->frame(1);
+    $this->assertStringContainsString('↑/↓ перемістити', $closed);
+    $this->assertStringContainsString('↵ вибрати', $closed);
+    $this->assertStringContainsString('ESC назад', $closed);
+    $this->assertStringContainsString('Q вийти', $closed);
+
+    // Open over a multi-select: the fragments only an open list advertises.
+    $open = $tester->frame(2);
+    $this->assertStringContainsString('ПРОБІЛ вибрати', $open);
+    $this->assertStringContainsString('нічого/усе', $open);
+    $this->assertStringContainsString('↵ прийняти', $open);
+
+    // Help is offered on the row that has some, so the fragment arrives last.
+    $this->assertStringContainsString('? довідка', $tester->frame());
+  }
+
+  public function testUkrainianRowStatesItsRefusalAndWhereItsValueCameFrom(): void {
+    $this->ukrainian();
+
+    $form = Form::create('Produce order')
+      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
+        $panel->text('courier', 'Courier')->required();
+        $panel->text('crate', 'Crate')->default('Valley Runs');
+      })
+      ->root();
+
+    $tester = (new ScreenTester($form))->rows(14)->cols(70)->supplied(['crate' => 'Ridge Runs']);
+    $tester->run(
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Enter),
+    );
+
+    // The refusal names the field and says, in Ukrainian, what it is owed; the
+    // badge beside the row it did not refuse says where that value came from.
+    $frame = $tester->frame();
+    $this->assertStringContainsString("є обов'язковим полем.", $frame);
+    $this->assertStringContainsString('змінено', $frame);
+  }
+
+  #[DataProvider('dataProviderUkrainianCountPhraseTakesTheFormTheCountCallsFor')]
+  public function testUkrainianCountPhraseTakesTheFormTheCountCallsFor(int $minimum, string $expected): void {
+    $this->ukrainian();
+
+    $form = Form::create('Produce order')
+      ->panel('order', 'Weekly box', static function (PanelBuilder $panel) use ($minimum): void {
+        $panel->select('basket', 'Basket')->multiple()->minSelections($minimum)
+          ->options(['apple' => 'Apple', 'beet' => 'Beet', 'carrot' => 'Carrot', 'date' => 'Date', 'endive' => 'Endive', 'fennel' => 'Fennel']);
+      })
+      ->root();
+
+    $tester = (new ScreenTester($form))->rows(16)->cols(70);
+    $tester->run(Key::named(KeyName::Enter), Key::named(KeyName::Enter));
+
+    $this->assertStringContainsString($expected, $tester->frame());
+  }
+
+  public static function dataProviderUkrainianCountPhraseTakesTheFormTheCountCallsFor(): \Iterator {
+    // Ukrainian's three forms, each reached through the count a bound states.
+    yield 'one' => [1, 'Виберіть щонайменше 1 елемент.'];
+    yield 'few' => [3, 'Виберіть щонайменше 3 елементи.'];
+    yield 'many' => [5, 'Виберіть щонайменше 5 елементів.'];
+  }
+
+  public function testUkrainianPanelRowCountsThePicksItHasNoRoomToList(): void {
+    $this->ukrainian();
+
+    $form = Form::create('Produce order')
+      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
+        $panel->select('basket', 'Basket')->multiple()->default(['apple', 'beet', 'carrot', 'date'])
+          ->options(['apple' => 'Apple', 'beet' => 'Beet', 'carrot' => 'Carrot', 'date' => 'Date']);
+      })
+      ->root();
+
+    $tester = (new ScreenTester($form))->rows(12)->cols(70);
+    $tester->run();
+
+    // Past a handful the row says how many were picked rather than listing
+    // them, which is the one count phrase a panel of its own renders.
+    $this->assertStringContainsString('4 елементи вибрано', $tester->frame());
+  }
+
+  public function testUkrainianCalendarNamesTheMonthItOpensOn(): void {
+    $this->ukrainian();
+
+    $form = Form::create('Produce order')
+      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
+        $panel->calendar('due', 'Due date')->default('2026-03-15');
+      })
+      ->root();
+
+    $tester = (new ScreenTester($form))->rows(16)->cols(70);
+    $tester->run(Key::named(KeyName::Enter), Key::named(KeyName::Enter));
+
+    // The heading and the weekday row are formatted from the date, not written
+    // out in the source, and both still arrive in Ukrainian.
+    $frame = $tester->frame();
+    $this->assertStringContainsString('Березень 2026', $frame);
+    $this->assertStringContainsString('Пн', $frame);
+    $this->assertStringContainsString('←/→ на день', $frame);
+    $this->assertStringContainsString('ESC скасувати', $frame);
+  }
+
+  public function testUkrainianSummaryAndHeadlessMessagesLocalize(): void {
+    $this->ukrainian();
+
+    $form = Form::create('Produce order')
+      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
+        $panel->text('courier', 'Courier')->required();
+      })
+      ->root();
+
+    $answers = Answers::forTree($form, ['courier' => 'Valley Runs'], ['courier' => Provenance::Edited]);
+
+    $this->assertStringContainsString('(змінено)', (new SummaryFormatter())->format($answers));
+    $this->assertContains('Пропущено потрібне питання "courier".', (new SchemaValidator($form))->validate([]));
+  }
+
+  /**
+   * Put the session into Ukrainian, on the package's own catalogs alone.
+   *
+   * No source is passed: what the assertions read is what a consumer gets from
+   * the package with nothing but a language named.
+   */
+  protected function ukrainian(): void {
+    Translator::setShared(new Translator('uk'));
   }
 
 }
