@@ -20,7 +20,7 @@ The engine doesn't know (or care) what application it serves. It stays generic: 
 
 ## Features
 
-- 🧭 [**Full-screen TUI**](/panels) - a scrollable, keyboard-driven form: fields group into sections that drill in to any depth (or open as modal dialogs), with a contextual key-hint footer and a <kbd>?</kbd> help overlay
+- 🧭 [**Full-screen TUI**](/panels) - a scrollable, keyboard-driven form: fields group into panels you go into to any depth (or that open as modal dialogs), with a contextual key-hint footer and <kbd>?</kbd> opening a field's own long-form help
 - ⚡ [**Inline editing**](/panels#inline-editing) - a field's editor opens in place on the panel row; opt a field out to full-screen with `->standalone()`
 - 🧩 [**Fields**](/fields) - `calendar`, `confirm`, `filepicker`, `number`, `password`, `pause`, `rating`, `reorder`, `search`, `select`, `suggest`, `template`, `text`, `textarea`, `toggle`
 - 🏗️ [**Builder-driven**](/configuration) - the form is declared in PHP with a fluent builder; the common cases need no code
@@ -39,7 +39,7 @@ The engine doesn't know (or care) what application it serves. It stays generic: 
 
 ## Quick start
 
-Declare a form with the fluent `Form` builder - a panel of fields, each one a [field](/fields) - then hand it to the `Tui` facade, the one class that wires up the engine, resolver, schema tools and TUI for you:
+Declare a form with the fluent `Form` builder - a panel of fields, each one a [field](/fields) - then hand it to the `Tui` facade, the one class that wires up collection, the input resolver, the schema tools and the interactive screen for you:
 
 ```php
 use DrevOps\Tui\Builder\Form;
@@ -88,6 +88,6 @@ Run it on a terminal and the panel opens on the form's fields, ready to fill:
   <ThemedImage sources={{light: useBaseUrl('/quickstart-light-static.svg'), dark: useBaseUrl('/quickstart-dark-static.svg')}} alt="The quick-start form: a 'New order' panel with text, select, multi-select, number and confirm fields" />
 </p>
 
-`run()` picks the mode for you - the interactive panel TUI on a terminal, headless otherwise. The facade also exposes `schema()`, `agentHelp()` and `validate()`, and - when you want finer control - the internals via `form()`, `engine()` and `registry()`.
+`run()` picks the mode for you - the interactive panel TUI on a terminal, headless otherwise. The facade also exposes `schema()`, `agentHelp()` and `validate()`, and - when you want finer control - `root()` for the declared [block tree](/specification) and `registry()` for the handler registry.
 
 This is the runnable [`playground/01-quickstart.php`](https://github.com/drevops/tui/blob/main/playground/01-quickstart.php) example, so you don't have to type it out. See [Installation](/installation) to get set up, and the [playground](/playground) for more complete examples.

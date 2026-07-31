@@ -3,8 +3,10 @@
 The [phptui.dev](https://phptui.dev) documentation site, built with
 [Docusaurus](https://docusaurus.io/).
 
-The documentation content lives in [`content/`](content) as `.mdx` pages; the
-sidebar is generated from the folder structure.
+The documentation content lives in [`content/`](content) as `.mdx` pages, and
+[`sidebars.js`](sidebars.js) declares the sidebar - every page is listed there,
+in the order it appears, so pages carry no `sidebar_position` frontmatter. A
+page missing from the sidebar (or listed twice) fails the test suite.
 
 ## Local development
 
@@ -31,9 +33,13 @@ any static hosting service.
 npm run test
 ```
 
-Runs the [Jest](https://jestjs.io/) component tests and the
-[CSpell](https://cspell.org/) spell check over the content. Add project-specific
-terms to [`cspell.json`](cspell.json).
+Runs the [Jest](https://jestjs.io/) component tests, the
+[CSpell](https://cspell.org/) spell check over the content, and a
+[Prettier](https://prettier.io/) formatting check. Add project-specific terms to
+[`cspell.json`](cspell.json), and reformat with `npm run format`.
+
+The architecture diagrams under [`architecture/`](architecture) are PlantUML
+sources rendered to SVG; see that directory's README for how to regenerate them.
 
 ## Publishing
 

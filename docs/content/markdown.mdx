@@ -30,7 +30,7 @@ The summary resolves links too: `$answers->toSummary()` follows the terminal's c
 
 ## Markdown
 
-Turn on `->markdown()` and field descriptions and note bodies render a small subset of markdown, each construct mapped to one of the theme's [style atoms](/themes):
+Turn on `->markdown()` and field descriptions and note bodies render a small subset of markdown, each construct mapped to one of the theme's [markup elements](/fields/anatomy#a-passage-of-text):
 
 ```php
 $answers = (new Tui($form))->markdown()->run();
@@ -53,7 +53,7 @@ $p->number('quantity', 'Quantity')->min(1)->max(99)
   ->description('Baskets hold up to **99**; order more in a *second* basket.');
 ```
 
-The subset is deliberately small and inline - no headings, tables or nested blocks - so a description stays a description. Because each construct maps to a theme atom, a [custom theme](/themes) restyles bold, emphasis, code, links and bullets by overriding `strong()`, `emphasis()`, `code()`, `link()` and `bullet()`.
+The subset is deliberately small and inline - no headings, tables or nested blocks - so a description stays a description. Because each construct is its own element, a [custom theme](/themes) restyles bold, emphasis, code, links and bullets by overriding `markupStrong()`, `markupEmphasis()`, `markupCode()`, `markupLink()` and `markupBullet()` - and restyles them everywhere a passage is drawn rather than in the one place that happened to compose it.
 
 Markdown honors both the color and the Unicode switches. With color off the markers drop and the text renders plain (bold `**ripe**` becomes `ripe`, a link becomes `text (url)`); with ASCII glyphs the bullet falls back from `•` to `-`. Headless collection never renders descriptions or notes at all, so it is unaffected. Links stay recognized whether or not markdown is on - `->markdown()` only adds the rest of the subset.
 

@@ -11,7 +11,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 Collection sometimes triggers slow work: a discovery scan of a target directory, a computed option set, a value resolved against external state. Left silent, the form looks frozen. The `progress()` primitive wraps that work and shows it running - a spinner when the length is unknown, a determinate bar when it is - and passes the callback's result straight back.
 
-`progress()` is one of the facade's **primitives**: it collects no answer and never runs inside the interactive panel. It is for slow work that happens _around_ the form - before it opens, after it closes, or wrapping a slow `->default` / `->discover`. The active theme draws it, so it matches the panel's look and honours the colour and Unicode switches. Off a TTY, or in headless collection, it degrades to a single plain caption line with no control sequences. The callback receives the primitive and drives it with `advance()`.
+`progress()` is one of the facade's **primitives**: it collects no answer and never runs inside the interactive panel. It is for slow work that happens _around_ the form - before it opens, after it closes, or wrapping a slow `->default` / `->discover`. The active theme draws it, so it matches the panel's look and honors the color and Unicode switches. Off a TTY, or in headless collection, it degrades to a single plain caption line with no control sequences. The callback receives the primitive and drives it with `advance()`.
 
 ```php
 use DrevOps\Tui\Primitive\Progress;
@@ -46,7 +46,7 @@ With a `null` total the indicator is an animated spinner: an accent glyph beside
 
 Runnable in [`playground/15-progress-spinner.php`](https://github.com/drevops/tui/blob/main/playground/15-progress-spinner.php).
 
-In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off:
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
 <table>
   <tr>
@@ -100,7 +100,7 @@ The glyphs and the accent come from the active [theme](/themes), the same way ev
 
 ## Degrading off a TTY
 
-Feedback is chrome, not data, so it is drawn on standard error and animates only when standard error is an interactive terminal. Piped, redirected or collected headlessly, `progress()` prints the caption once as a plain line and emits no cursor, colour or carriage-return sequences, so a captured log stays clean:
+Feedback is chrome, not data, so it is drawn on standard error and animates only when standard error is an interactive terminal. Piped, redirected or collected headlessly, `progress()` prints the caption once as a plain line and emits no cursor, color or carriage-return sequences, so a captured log stays clean:
 
 ```bash
 php playground/15-progress-bar.php 2>&1 | cat

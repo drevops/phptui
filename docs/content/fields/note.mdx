@@ -13,7 +13,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   <ThemedImage sources={{light: useBaseUrl('/field-note-light-animated.svg'), dark: useBaseUrl('/field-note-dark-animated.svg')}} alt="Note field" />
 </p>
 
-A non-interactive informational card. It renders a **title and body inline** in the form flow and collects **nothing** - the selection cursor skips it, it never appears in the answers, and it is absent from headless collection. Its title and body take the same `{{field}}` templating derived values use, so a note can reflect earlier answers, and it honours `->when()` like any other field.
+A non-interactive informational card. It renders a **title and body inline** in the form flow and collects **nothing** - the selection cursor skips it, it never appears in the answers, and it is absent from headless collection. Its title and body take the same `{{field}}` templating derived values use, so a note can reflect earlier answers, and it honors `->when()` like any other field.
 
 ```php
 $p->note('intro', 'Fresh produce order')

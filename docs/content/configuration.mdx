@@ -38,7 +38,9 @@ $form = Form::create('My form')
 
 Each field builder chains `->description()`, `->help()` and `->placeholder()` (the three [guidance texts](/field-behaviour#guidance-texts)), `->default()`, `->required()` (with an optional `message:` overriding the label-derived one), `->options()` / `->option()` (with per-option descriptions and optional `disabled` state), `->heading()` / `->separator()` (non-selectable option-list structure), `->when(new Condition(...))`, `->derive(new Derive(...))`, `->discover(...)`, `->validate(...)` and `->transform(...)`.
 
-The form declares its own chrome: `->banner()` sets a start banner and `->buttons()` controls the submit/cancel buttons. Everything that describes the terminal rather than the questionnaire - the global TUI runtime - is configured on the `Tui` facade instead: `->theme()` names a theme, auto-detected from the terminal background when unset (see [Themes](/themes)); `->keys()` sets the key bindings (see [Key bindings](/key-bindings)); `->footer()` toggles the key-hint footer; `->clearOnExit()` keeps or clears the final frame; `->color()` / `->unicode()` force a [display mode](/display-modes); `->fullscreen()` expands the frame to the whole terminal (see [Fullscreen](/panels#fullscreen)); and `->translator()` presents chrome and questions in another language (see [Translations](/translations)).
+The form declares its own chrome: `->banner()` sets a start banner and `->buttons()` controls the submit/cancel buttons. Everything that describes the terminal rather than the questionnaire - the global TUI runtime - is configured on the `Tui` facade instead: `->theme()` names a theme, auto-detected from the terminal background when unset, or patches individual elements (see [Themes](/themes)); `->layout()` arranges the screen into named regions (see [Layouts](/layouts)); `->keys()` sets the key bindings (see [Key bindings](/key-bindings)); `->footer()` toggles the key-hint footer; `->clearOnExit()` keeps or clears the final frame; `->color()` / `->unicode()` force a [display mode](/display-modes); `->markdown()` renders the [markdown subset](/markdown) in descriptions and notes; `->fullscreen()` expands the frame to the whole terminal (see [Fullscreen](/panels#fullscreen)); and `->translator()` presents chrome and questions in another language (see [Translations](/translations)).
+
+A panel can be arranged too - `$p->layout('two-column')`, then `$p->in('left')` - which is the same registry the facade reads. That is the one structural choice a form does make for itself, because it is about where a panel's own blocks go rather than about the terminal.
 
 ## Derived values
 
@@ -69,7 +71,7 @@ A conditional field renders flush with every other field, so nothing on screen s
 $tui = (new Tui($form))->theme('default', ['indent_conditional' => TRUE]);
 ```
 
-The steps follow the rules rather than the declaration order: a rule naming several fields takes the deepest of them, and a field whose rule names another conditional field sits one step further in than that one.
+The steps follow the rules rather than the declaration order: a rule naming several fields takes the deepest of them, and a field whose rule names another conditional field sits one step further in than that one. A rule that decides for itself - a closure rather than a `Condition` - names no field, so nothing can be said about what it waits on and its row sits flush like an unconditional one.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/conditional-indent-light-animated.svg'), dark: useBaseUrl('/conditional-indent-dark-animated.svg')}} alt="One answer opening a chain of conditional fields, each stepped in from the field that decides it" width="100%" />

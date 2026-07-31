@@ -47,7 +47,7 @@ The four levels are what the model is made of. What you actually build with are 
 | Level  | Kinds                                                       | Instances, on the screen below                      |
 | ------ | ----------------------------------------------------------- | --------------------------------------------------- |
 | Screen | one                                                         | the screen                                          |
-| Layout | `default`, `two-column`                                     | the screen's `default`                              |
+| Layout | `default`, `panel`, `two-column`                            | the screen's `default`                              |
 | Region | none - a layout names its own                               | `header`, `content`, `footer`                       |
 | Block  | Panel, Field, Markup, Breadcrumb, Legend, Actions, Progress | one Breadcrumb, one Panel, three Fields, one Legend |
 
@@ -132,7 +132,7 @@ Without _Occupy_ the frame shrinks to fit its contents. With it, the frame takes
 $screen->fullscreen();
 ```
 
-The capability and the method that turns it on are named separately on purpose. _Occupy_ is what this page calls the behaviour; `fullscreen()` is what a consumer types. A capability describes what is possible, so it stays the same however the API spells it.
+The capability and the method that turns it on are named separately on purpose. _Occupy_ is what this page calls the behavior; `fullscreen()` is what a consumer types. A capability describes what is possible, so it stays the same however the API spells it.
 
 _Occupy_ sits here rather than on a layout because it's a fact about the terminal, not about any arrangement inside it. A layout behaves identically whether the frame stretches to the terminal or shrinks to its contents, which is what makes a layout portable between the two.
 
@@ -196,7 +196,7 @@ $this->region('footer')->fixed(1);
 
 #### One region
 
-Nothing ships as one region, but nothing stops you writing it either - a single-region layout needs no special axis, because it is `Axis::Rows` that happens to declare one:
+This is what a _panel_ takes when it names no layout, and it ships as `panel`. A single-region layout needs no special axis, because it is `Axis::Rows` that happens to declare one:
 
 ```php
 parent::__construct(Axis::Rows);
@@ -337,18 +337,21 @@ This is why the axis needs no third value. Any arrangement is rows of columns of
 
 #### Shipped layouts
 
-_Reuse_ means a layout is named and reusable, so the same one serves a _screen_ and a _panel_. Two ship, and a form picks one by name rather than describing an arrangement inline:
+_Reuse_ means a layout is named and reusable, so the same one serves a _screen_ and a _panel_. Three ship, and a form picks one by name rather than describing an arrangement inline:
 
 | Name         | Axis    | Regions                                                     |
 | ------------ | ------- | ----------------------------------------------------------- |
 | `default`    | rows    | `header` (fixed 1), `content` (scrolls), `footer` (fixed 1) |
+| `panel`      | rows    | `content` (scrolls)                                         |
 | `two-column` | columns | `left`, `right`                                             |
 
-Two is enough because they cover the two axes. Anything else is those two nested, or a layout you write yourself.
+Two axes and one degenerate case is enough: `default` and `panel` run down, `two-column` runs across, and anything else is those nested, or a layout you write yourself. `panel` is what a panel is arranged by when it names none.
 
 ```php
 (new Tui($form))->layout('two-column')->run();
 ```
+
+The name is checked where you write it, so a typo throws at declaration rather than mid-session. The names are read from the shipped layout classes rather than listed anywhere, so the list above cannot fall out of step with what actually ships.
 
 #### A layout knows nothing about blocks
 
@@ -583,8 +586,8 @@ A field claims eight capabilities, more than any other block. Seven of them show
 ```php
 $p->select('basket', 'Basket contents')       // Show, Focus
   ->description('Pick the produce.')
-  ->entry('apple', 'Apple')                   // Capture
-  ->entry('carrot', 'Carrot')
+  ->option('apple', 'Apple')                  // Capture
+  ->option('carrot', 'Carrot')
   ->multiple()
   ->default(['apple'])                        // Collect
   ->minSelections(2)->maxSelections(3)        // Constrain
@@ -592,7 +595,7 @@ $p->select('basket', 'Basket contents')       // Show, Focus
   ->when(new Condition('organic', eq: TRUE)); // Depend
 ```
 
-The entries are what _edit_ mode opens onto, the default is what reaches the result until you change it, the bounds are stated before you act and the validator explains itself after, and the condition decides whether the field is there at all.
+The entries are what _edit_ mode opens onto, the default is what reaches the result until you change it, the bounds are stated before you act and the validator explains itself after, and the condition decides whether the field is there at all. The line that declares an entry is `->option()`, and the element that draws it is `fieldEntry()` - the declaration names what you supply, the element names what appears.
 
 The eighth is _Bind_, and the field doesn't declare it - it comes from the field's kind. A `select` binds <kbd>Space</kbd> because it offers a list; a `text` field binds no printable key at all, because every one of them is something you're typing.
 
@@ -613,7 +616,7 @@ The _label_ and the _selector_ stay put across both. Only the _value_ region cha
 
 _Constrain_ and _Reject_ are two capabilities rather than one because they answer different questions. _Constrain_ states what the field will accept before you act; _Reject_ explains why what you did was refused. They share one line on screen and never appear together - which is why [Anatomy](/fields/anatomy) names that line's two states the **constraint** and the **error**.
 
-Between the field and the theme sit its **capabilities** - the shared behaviour a field draws on rather than reimplements. The chain runs one way and never doubles back:
+Between the field and the theme sit its **capabilities** - the shared behavior a field draws on rather than reimplements. The chain runs one way and never doubles back:
 
 ```
 Field  ──▸  capabilities  ──▸  render()  ──▸  theme elements
@@ -630,8 +633,8 @@ $p->markup('weighing', 'Every crate is weighed at the packing bench.');
 // The same block in a bordered card.
 $p->markup('notice', 'Deliveries leave at dawn.')->bordered();
 
-// The same block again, laid out as a table.
-$p->markup('yields', 'Yields per crate')
+// The same block again, laid out as a table under a title.
+$p->markup('yields', '', 'Yields per crate')
   ->table(['Produce', 'Crates'], [['Apple', '12'], ['Carrot', '8']]);
 ```
 
@@ -759,7 +762,7 @@ Work that can't say how long it will take gets a spinner instead, and the captio
 
 ### On screen
 
-Here it is on a real screen, each level labelled on the row it owns - the _region_, the _block_ in it, then the _panel_'s _fields_ and the _mode_ each is drawing:
+Here it is on a real screen, each level labeled on the row it owns - the _region_, the _block_ in it, then the _panel_'s _fields_ and the _mode_ each is drawing:
 
 ```
                               ╭──────────────────────────────────────────────────────╮
@@ -787,56 +790,90 @@ The labels skip a level between `Panel` and `Field`, because the _panel_ has a _
 
 ## Theme
 
-A **block** draws itself - that's _Show_, and it arrives as a `render()` method. What a block never does is choose a colour or a glyph. For those it reaches into the theme for **elements**:
+A **block** draws itself - that's _Show_, and it arrives as a `render()` method. What a block never does is choose a color or a glyph. For those it reaches into the theme for **elements**:
 
 ```php
 final class Breadcrumb extends AbstractBlock {
 
   public function render(ThemeInterface $theme): string {
-    $labels = array_map($theme->breadcrumbLabel(...), $this->segments);
+    // Narrowed to the elements this block declares, so a theme that cannot
+    // draw one says so by name instead of drawing a blank line.
+    $elements = $this->elements($theme, BreadcrumbElementsInterface::class, 'a breadcrumb');
+    $labels = array_map(static fn(string $segment): string => $elements->breadcrumbLabel(Translator::t($segment)), $this->segments);
 
-    return implode($theme->breadcrumbSeparator(), $labels);
+    return implode(' ' . $elements->breadcrumbSeparator() . ' ', $labels);
   }
 
 }
 ```
 
+`ThemeInterface` itself carries only the two things no block could own - the width they all lay out against, and how the theme writes a key - so the block narrows it to its own elements interface before drawing. That narrowing is the whole reason the core stays thin: a theme grows by implementing more element interfaces, not by growing `ThemeInterface`.
+
 An **element** takes a plain string and returns a styled one. It knows nothing about what surrounds it, which is what lets the same element draw a separator inside a form and inside a standalone line of output.
 
-That's the whole division of labour. **Order, spacing and how many elements there are belong to the block; colour and glyph belong to the theme.** A theme can repaint a breadcrumb but can't reorder one, because reordering isn't styling.
+That's the whole division of labor. **Order, spacing and how many elements there are belong to the block; color and glyph belong to the theme.** A theme can repaint a breadcrumb but can't reorder one, because reordering isn't styling.
 
 ### A block declares the elements it needs
 
 A block names its elements in an interface, and a theme implements it - [Breadcrumb](#breadcrumb) and [Legend](#legend) above show both the interface and what each element draws.
 
-Two things follow. A theme that doesn't implement the interface can't draw that block, and the failure is a type error rather than a blank line. And adding a block to the library adds one interface instead of growing a single theme class that already knows about everything.
+Eight ship, one per block plus one for the frame that belongs to no block:
+
+| Interface                     | Draws                                                                |
+| ----------------------------- | -------------------------------------------------------------------- |
+| `ChromeElementsInterface`     | the border, and the mark saying a region's contents outran it        |
+| `BreadcrumbElementsInterface` | the trail's segments and what stands between them                    |
+| `LegendElementsInterface`     | a key, what it does, and what stands between two entries             |
+| `PanelElementsInterface`      | a nested panel's row: selector, title, descend mark, summary         |
+| `FieldElementsInterface`      | both of a field's modes, from its selector to its caret              |
+| `MarkupElementsInterface`     | a passage, one span at a time: strong, emphasis, code, links, bullet |
+| `ActionsElementsInterface`    | the buttons, and the gap between them                                |
+| `ProgressElementsInterface`   | the caption, the spinner frame, the bar's track and its tally        |
+
+`ChromeElementsInterface` is the one named for something other than a block, and for a reason worth stating: the frame surrounds every region at once and the overflow mark says a region's contents outran it. Neither is anything a block could ask for, since a block only ever fills the space it is given and never learns where that space ends. Both belong to whatever draws the screen, so they are declared apart from the blocks.
+
+Two things follow from the shape. A theme that doesn't implement the interface can't draw that block, and the failure names the theme and the interface rather than leaving a blank line. And adding a block to the library adds one interface instead of growing a single theme class that already knows about everything.
 
 ### A theme declares what it supports
 
-A terminal may have no colour, no Unicode, or a background the theme should read. A theme declares which of those it handles, and declaring one is what grants the facility that goes with it:
+A terminal may have no color, no Unicode, or a background the theme should read. A theme declares which of those it handles, and declaring one is what grants the facility that goes with it:
 
 ```php
-final class OrchardTheme extends DefaultTheme implements SchemeCapableInterface, BreadcrumbElementsInterface {
+final class OrchardTheme extends AbstractTheme implements ColorSchemeCapableInterface, UnicodeCapableInterface {
+
+  use ColorSchemeCapableTrait;
+  use UnicodeCapableTrait;
 
   public function breadcrumbLabel(string $text): string {
-    // isDark() exists because the theme declared SchemeCapableInterface.
-    return $this->isDark() ? $this->paint('dark-green', $text) : $this->paint('light-green', $text);
+    // isDark() and paint() exist because the theme declared the scheme.
+    return $this->paint($this->isDark() ? Sgr::of(Sgr::Jade) : Sgr::of(Sgr::Forest), $text);
   }
 
   public function breadcrumbSeparator(): string {
-    return $this->hasUnicode() ? '›' : '>';
+    // glyph() exists because the theme declared Unicode.
+    return $this->glyph('›', '>');
   }
 
 }
 ```
 
-| Declaration               | Grants         | For                                                            |
-| ------------------------- | -------------- | -------------------------------------------------------------- |
-| `SchemeCapableInterface`  | `isDark()`     | picking a palette for a dark or light terminal                 |
-| `ColorCapableInterface`   | `paint()`      | any colour at all; without it every element returns plain text |
-| `UnicodeCapableInterface` | `hasUnicode()` | choosing between a glyph and its ASCII stand-in                |
+Five capabilities exist, and that is the whole set:
 
-A theme that declares none of them still works - it returns the strings it was handed. That's the floor, and it's why a form renders in a terminal that supports nothing.
+| Declaration                   | Grants                                                                                   | For                                                                   |
+| ----------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `ColorSchemeCapableInterface` | `hasColor()`, `isDark()`                                                                 | painting at all, and picking a palette for a dark or light terminal   |
+| `UnicodeCapableInterface`     | `hasUnicode()`                                                                           | choosing between a glyph and its ASCII stand-in                       |
+| `DimCapableInterface`         | `dim()`                                                                                  | pushing back what a dialog is drawn over                              |
+| `MarkdownCapableInterface`    | `hasMarkdown()`                                                                          | drawing the markdown subset rather than its markers                   |
+| `OccupyCapableInterface`      | `isFullscreen()`, `halign()`, `valign()`, the min/max sizes, `spacing()`, `background()` | saying how much of the terminal the frame takes, and where it anchors |
+
+Color and the background are one declaration rather than two, because the two questions are never asked apart: a color is chosen against a background, and a color legible on a dark terminal is not legible on a light one.
+
+Two of the five carry a **trait** with the plumbing, so a theme states a flag and inherits the rest. `ColorSchemeCapableTrait` brings `paint()` and `emphasize()`, and `UnicodeCapableTrait` brings `glyph()` - which is why the palette above reads as color choices rather than as escape-sequence handling. The other three are small enough to answer directly.
+
+`AbstractTheme` is the floor. It implements every elements interface and declares no capability at all, so it may not paint and may not reach past ASCII: what is left is the strings it was handed and the stand-ins that read without them. That is why a form renders in a terminal that supports nothing, and why a theme adds what its terminal can do rather than working around what it cannot.
+
+`DefaultTheme` is that floor with all five declared, and it is the class a theme reached **by name** extends - the theme registry accepts a `DefaultTheme` subclass, so `->theme(OrchardTheme::class)` needs one. A theme extending `AbstractTheme` directly still draws a screen; it is handed to a `ScreenController` or a `ScreenTester` rather than named on the facade.
 
 ### Overriding an element
 
@@ -844,24 +881,27 @@ Subclassing a theme is the full answer, and overkill when all you want is a diff
 
 ```php
 $tui->theme(fn(ThemeBuilder $t) => $t
-  ->breadcrumb(fn(BreadcrumbElementsInterface $b) => $b
+  ->breadcrumb(fn(BreadcrumbOverrides $b) => $b
     ->separator('›', '>'))
-  ->legend(fn(LegendElementsInterface $l) => $l
+  ->legend(fn(LegendOverrides $l) => $l
     ->separator('·', '|')
-    ->key(Sgr::Bold))
-  ->field(fn(FieldElementsInterface $f) => $f
+    ->key(Sgr::Bold, Sgr::BrightCyan))
+  ->field(fn(FieldOverrides $f) => $f
     ->selector('❯', '>')
     ->helpMarker('ⁱ', '[?]')
     ->valueSeparator(', ')
-    ->entryMarker('◼', '◻')
-    ->caret('█')));
+    ->entrySelector('▸', '->')
+    ->entryMarker('◼', '[x]')
+    ->caret('█', '|')));
 ```
 
-Inside a group the block's prefix is implied, so `->separator()` under `->breadcrumb()` is `breadcrumbSeparator()`. Two arguments to a glyph are the Unicode form and its ASCII stand-in, so a consumer can't set one and silently break the other display mode.
+Inside a group the block's prefix is implied, so `->separator()` under `->breadcrumb()` is `breadcrumbSeparator()`. Three kinds of thing can be restated, and the argument count says which is which. A **glyph** takes the mark and its ASCII stand-in, so a patch can't set one display mode and silently break the other - `->entryMarker('◼', '[x]')` states the mark a picked entry carries and what stands in for it, not two states of the entry. **Text** takes one argument, because a phrase the reader parses is not something a terminal fails to draw. A **color** takes the palette parts in order.
+
+Nine elements can be patched this way, and that is the closed set: the breadcrumb's separator; the legend's key and separator; and the field's selector, help marker, value separator, entry selector, entry marker and caret. Naming anything else is a type error rather than a knob that quietly does nothing.
 
 Anything the override doesn't mention keeps the theme's own answer, which is what makes this a patch rather than a replacement. Reach for a subclass when you're changing a palette; reach for this when you're changing a handful of glyphs.
 
-## Behaviour
+## Behavior
 
 How a screen moves, and what happens when there is not one.
 
@@ -874,12 +914,16 @@ A key goes to the innermost thing that _Binds_ it, and only outward from there:
 ```
 key ──▸ the focused block, if it binds that key
     ──▸ else the panel the block sits in
-    ──▸ else the screen
+    ──▸ else the screen, which claims none of its own
 ```
 
-That one rule explains a behaviour that otherwise looks like a special case. An open _text_ field binds every printable key, because each is something you're typing - so <kbd>?</kbd> reaches it and becomes a character. Close the field and it binds nothing printable, so the same <kbd>?</kbd> travels outward to the panel and opens help. Nobody wrote an exception; the key simply stopped at a different level.
+`KeyRouter` is what applies that rule, and it is the whole of what a key does to the screen: move the cursor, open a field, go into a panel, come back out, show a field's help.
 
-_Focus_ decides which block is innermost. It moves with <kbd>↑</kbd> and <kbd>↓</kbd> between the blocks that claim it, skipping the ones that don't - so a _markup_ block sits between two _fields_ without ever being landed on.
+That one rule explains a behavior that otherwise looks like a special case. An open _text_ field binds every printable key, because each is something you're typing - so <kbd>?</kbd> reaches it and becomes a character. Close the field and it binds nothing printable, so the same <kbd>?</kbd> travels outward to the panel and opens help. Nobody wrote an exception; the key simply stopped at a different level.
+
+_Focus_ decides which block is innermost. It moves with <kbd>↑</kbd> and <kbd>↓</kbd> between the blocks that claim it, skipping the ones that don't - so a _markup_ block sits between two _fields_ without ever being landed on. <kbd>←</kbd> and <kbd>→</kbd> move across, which matters where sub-panels are dealt into a grid: what is beside a window is a neighbor rather than the next row, and stepping off the grid lands on the row beside it rather than under whichever window the cursor happened to be on.
+
+Three kinds of key never reach the router, and all three for the same reason - they act on something outside the screen. Pressing a button ends the form or closes the dialog it belongs to; activating work runs it against the terminal a step at a time; and leaving is about the session rather than about anything in it. `ScreenController` holds those, because a panel knows about none of them and a block never learns where it is drawn.
 
 Drawing runs the other way, outward from the root:
 
@@ -926,8 +970,7 @@ $form = Form::create('Orchard')
     $p->text('courier', 'Courier');
     $p->number('weight', 'Basket weight')->min(200)->max(9000);
     $p->confirm('organic', 'Organic only?');
-  })
-  ->build();
+  });
 
 (new Tui($form))->run();
 ```
@@ -978,7 +1021,7 @@ When something doesn't fit, don't argue about where it goes. Name the capability
 | Who works out how tall `content` is?               | _Arrange_  | _layout_      | The _layout_. Only it sees the fixed siblings that come off first. |
 | Can two _blocks_ sit side by side?                 | _Flow_     | _region_      | Yes, and without nesting a _layout_.                               |
 
-The last two were decided while this page was being written, and both turned on the same test: **which level can see what the job needs?** A region can't size itself, because its siblings' fixed cells come off the top before the remainder is divided. A layout can't furnish itself and stay reusable, because it would have to know what a breadcrumb is.
+The last two turn on the same test the others do: **which level can see what the job needs?** A region can't size itself, because its siblings' fixed cells come off the top before the remainder is divided. A layout can't furnish itself and stay reusable, because it would have to know what a breadcrumb is.
 
 That's the whole point of the split. A _region_ that knew what a breadcrumb was would need to know what every block is; instead a region knows only that it holds blocks, a block knows only how to fill the space it's given, and a theme knows only how to style what it's handed.
 
@@ -986,25 +1029,30 @@ It's also what makes an element reusable. Because `breadcrumbSeparator()` receiv
 
 ## What is built
 
-The model above is implemented and tested. Two parts of it are not, and the page names both rather than reading as though they were.
+Every level, every capability and every element on this page is implemented and tested. These are the classes behind them:
 
-| Level     | Class                                                                                |
-| --------- | ------------------------------------------------------------------------------------ |
-| Screen    | `Screen`, and `ScreenRenderer` to draw one                                           |
-| Layout    | `AbstractLayout`, `DefaultLayout`, `TwoColumnLayout`, `PanelLayout`, `LayoutManager` |
-| Region    | `Region`                                                                             |
-| Block     | `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions`, `Progress`            |
-| Elements  | one `*ElementsInterface` per block, implemented by `DefaultTheme`                    |
-| Support   | `ColorCapableInterface`, `UnicodeCapableInterface`, `SchemeCapableInterface`         |
-| Behaviour | `Router` for keys, `Collector` for the headless path                                 |
-| Building  | `PanelBuilder`, `FieldBuilder`, `Assembler`                                          |
+| Level        | Class                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Screen       | `Screen`, and `ScreenRenderer` to draw one                                                                                                                                                                                                                                                                                                                                                                         |
+| Layout       | `LayoutInterface`, `AbstractLayout`, `DefaultLayout`, `PanelLayout`, `TwoColumnLayout`, `LayoutManager`                                                                                                                                                                                                                                                                                                            |
+| Region       | `Region`                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Block        | `BlockInterface`, `AbstractBlock`, and `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions`, `Progress`                                                                                                                                                                                                                                                                                                   |
+| Capabilities | one interface per block capability - `ActivateCapableInterface`, `BindCapableInterface`, `CaptureCapableInterface`, `CollectCapableInterface`, `ConstrainCapableInterface`, `DependCapableInterface`, `DescendCapableInterface`, `FocusCapableInterface`, `OverlayCapableInterface`, `RejectCapableInterface` - with `BindCapableTrait`, `DependCapableTrait` and `FocusCapableTrait` carrying the shared behavior |
+| Elements     | one `*ElementsInterface` per block, plus `ChromeElementsInterface`, all implemented by `AbstractTheme`                                                                                                                                                                                                                                                                                                             |
+| Theme        | `ThemeInterface` (two methods), `AbstractTheme` as the floor, `DefaultTheme` above it, the five `*CapableInterface` declarations with `ColorSchemeCapableTrait` and `UnicodeCapableTrait`, and `ThemeManager` to name one                                                                                                                                                                                          |
+| Overriding   | `ThemeBuilder`, the `BreadcrumbOverrides` / `LegendOverrides` / `FieldOverrides` groups, and the `ThemeElement` set they write into                                                                                                                                                                                                                                                                                |
+| Behavior     | `KeyRouter` for keys, `ScreenController` for the session, `Collector` for the headless path                                                                                                                                                                                                                                                                                                                        |
+| Building     | `Form`, `PanelBuilder`, `FieldBuilder`, `Assembler`                                                                                                                                                                                                                                                                                                                                                                |
+| Testing      | `ScreenTester` for a screen, `TuiTester` for a whole form, `FieldRunner` for one field                                                                                                                                                                                                                                                                                                                             |
 
-[`playground/12-specification-screen.php`](https://github.com/drevops/tui/blob/main/playground/12-specification-screen.php) draws a form from these, opens a field, collects the same panel headlessly, and shows a refused value naming the field and the reason.
+Two endings are worth naming beside them, because they are what a caller sees when a collection does not finish: `CollectException` when the answers cannot be taken as they were given, and `CancelException` when the form is abandoned through its cancel button.
 
-**Not built yet.** The element override DSL - `$tui->theme(fn(ThemeBuilder $t) => ...)` - describes an API that does not exist; overriding an element today means subclassing the theme. And the theme a custom one extends is `DefaultTheme` rather than an `AbstractTheme`, which is the older name the rest of the library still uses.
+[`playground/12-specification-screen.php`](https://github.com/drevops/tui/blob/main/playground/12-specification-screen.php) draws a form from these, opens a field, collects the same panel headlessly, and shows a refused value naming the field and the reason. [`playground/20-layouts-custom.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-custom.php) registers two layouts of its own and arranges a panel and a screen with them, and [`playground/09-themes-elements.php`](https://github.com/drevops/tui/blob/main/playground/09-themes-elements.php) patches a handful of elements without a theme class.
 
 ## Open questions
 
-**Can anything but a field depend on an answer?** _Depend_ is declared on a field alone, so a whole _panel_ cannot appear or disappear on an earlier answer - only the fields inside it can, one at a time.
+**Can a whole panel depend on an answer?** _Depend_ is claimed by a _field_, by _markup_ and by a _progress_ row, so three of the seven blocks can come and go with the answers. A _panel_ is not among them, so a whole section cannot appear or disappear on an earlier answer - only the blocks inside it can, one at a time.
 
 **Can a flow align what it holds?** Blocks in a region take their natural size in the order they were added, and there is no way to say a _legend_ sits left while a version string sits right. Every side-by-side arrangement is packed from the start of the axis.
+
+**Can a region be addressed from outside its layout?** A block goes in by name, and the name is the layout's - so whatever places blocks has to be written against a layout that declares them. `default` keeps a `header`, a `content` and a `footer`, and the standard furniture goes wherever those exist and is silently skipped where they don't. That keeps every layout usable, and it means a layout naming its regions something else shows no trail and no key hints until something places them itself.

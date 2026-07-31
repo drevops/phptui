@@ -19,7 +19,7 @@ The package is a library you consume programmatically - it has no CLI entry poin
 
 ## Usage
 
-Declare a form with the fluent `Form` builder, then hand it to the `Tui` facade - one class that wires up the engine, resolver, schema tools and TUI so you don't have to:
+Declare a form with the fluent `Form` builder, then hand it to the `Tui` facade - one class that wires up collection, the input resolver, the schema tools and the interactive screen so you don't have to:
 
 ```php
 use DrevOps\Tui\Builder\Form;
@@ -62,7 +62,7 @@ echo $tui->collect('{"name":"Weekly Box"}')->toJson(); // headless: JSON + envir
 $answers = $tui->interact();                    // interactive panel TUI
 ```
 
-`run()` picks the mode for you: on a terminal it drives the interactive panel TUI, and anywhere else - or whenever prompts are supplied - it collects headlessly. The facade also exposes `schema()`, `agentHelp()` and `validate()`, and - when you want finer control - the internals via `form()`, `engine()` and `registry()`.
+`run()` picks the mode for you: on a terminal it drives the interactive panel TUI, and anywhere else - or whenever prompts are supplied - it collects headlessly. The facade also exposes `schema()`, `agentHelp()` and `validate()`, and - when you want finer control - `root()` for the declared [block tree](/specification) and `registry()` for the handler registry.
 
 ## Aborting with Ctrl-C or Cancel
 
@@ -83,6 +83,8 @@ echo $answers->toSummary();
 ```
 
 Catch `CancelException` first when an explicit cancel should react differently from a <kbd>Ctrl-C</kbd>. Only the interactive session raises these: headless collection - `collect()`, or `run()` when prompts are supplied or the input is piped - never interacts, so it never aborts this way.
+
+Headless collection has its own ending. A value the form refuses raises `DrevOps\Tui\CollectException` naming the field and the reason: with no screen there is nobody to retype it, so the whole collection fails rather than handing back answers one of which was never accepted. It sits in the same namespace as the other two, so one import covers every way a collection ends short.
 
 ## Next steps
 

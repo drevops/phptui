@@ -1,7 +1,7 @@
 ---
 title: Anatomy
-description: 'The atoms of a field, named: the window chrome, view mode, edit mode, and every line each of them draws.'
-keywords: ['anatomy', 'nomenclature', 'atoms', 'fields', 'tui']
+description: 'The atoms of a field, named: the window chrome, view mode, edit mode, every line each of them draws, and the theme elements behind them.'
+keywords: ['anatomy', 'nomenclature', 'atoms', 'elements', 'fields', 'tui']
 ---
 
 import ThemedImage from '@theme/ThemedImage';
@@ -11,7 +11,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 A screen has two layers. The **window chrome** frames the whole form and belongs to no field in particular: the border, the trail of panel titles, the key legend. Inside it, each field draws itself in one of two modes. In **view mode** it's a single line carrying the answer. Open it and it switches to **edit mode**, where the field takes over the space right of the label.
 
-An **atom** is one named piece of that interface - the smallest thing worth naming on its own, and the unit a [theme](/themes) restyles.
+An **atom** is one named piece of that interface - the smallest thing worth naming on its own, and the unit a [theme](/themes) restyles. Every atom is drawn by an **element**, the method a theme answers with; [Elements](#elements-what-a-theme-actually-implements) lists all of them, and [Patching an element](#patching-an-element) shows how to restate one without writing a theme at all.
 
 :::note
 
@@ -29,16 +29,16 @@ The chrome is the same whatever the form asks. You declare it once - the form's 
 
 <div className="table-scroll" tabIndex={0}>
 
-| #   | Atom                 | What it does                                                                                                          | Set with                                                       | Theme atom              |
-| --- | -------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ----------------------- |
-| 1   | border               | The frame around everything. One of `Border::None`, `Border::Line`, `Border::Rounded` or `Border::Double`, form-wide. | `Tui::theme(..., ['border' => Border::Rounded])`               | `border()`              |
-| 2   | breadcrumb           | The trail of panel titles: every panel you've descended through, plus the one you're in.                              | `Form::create('Orchard')`, `->panel('main', 'Delivery', ...)`  | `breadcrumb()`          |
-| 3   | breadcrumb separator | Stands between **breadcrumb** (2) segments.                                                                           | Not declared                                                   | `breadcrumbSeparator()` |
-| 4   | overflow marker      | Points at content past the top or bottom edge. Drawn only when the rows outgrow the frame.                            | Not declared                                                   | `overflowMarker()`      |
-| 5   | legend               | The keys bound right now.                                                                                             | `Tui::footer(FALSE)` hides it; the entries come from the field | `renderLegend()`        |
-| 6   | legend key           | One key in the **legend** (5). Worded keys are uppercased: <kbd>ESC</kbd>, <kbd>TAB</kbd>, <kbd>SPACE</kbd>.          | `Tui::keys(...)` rebinds which key it shows                    | `legendKey()`           |
-| 7   | legend description   | What that key does. Reads as `KEY to action`.                                                                         | Not declared; comes from the field                             | `legendDescription()`   |
-| 8   | legend separator     | Stands between **legend** (5) entries.                                                                                | Not declared                                                   | `legendSeparator()`     |
+| #   | Atom                 | What it does                                                                                                          | Set with                                                       | Theme element             |
+| --- | -------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------- |
+| 1   | border               | The frame around everything. One of `Border::None`, `Border::Line`, `Border::Rounded` or `Border::Double`, form-wide. | `Tui::theme(..., ['border' => Border::Rounded])`               | `chromeBorder()`          |
+| 2   | breadcrumb           | The trail of panel titles: every panel you've descended through, plus the one you're in.                              | `Form::create('Orchard')`, `->panel('main', 'Delivery', ...)`  | `breadcrumbLabel()`       |
+| 3   | breadcrumb separator | Stands between **breadcrumb** (2) segments.                                                                           | Not declared                                                   | `breadcrumbSeparator()`   |
+| 4   | overflow marker      | Points at content past the top or bottom edge. Drawn only when the rows outgrow the frame.                            | Not declared                                                   | `chromeOverflowMarker()`  |
+| 5   | legend               | The keys bound right now.                                                                                             | `Tui::footer(FALSE)` hides it; the entries come from the field | the `Legend` block itself |
+| 6   | legend key           | One key in the **legend** (5). Worded keys are uppercased: <kbd>ESC</kbd>, <kbd>TAB</kbd>, <kbd>SPACE</kbd>.          | `Tui::keys(...)` rebinds which key it shows                    | `legendKey()`             |
+| 7   | legend description   | What that key does. Reads as `KEY to action`.                                                                         | Not declared; comes from the field                             | `legendDescription()`     |
+| 8   | legend separator     | Stands between **legend** (5) entries.                                                                                | Not declared                                                   | `legendSeparator()`       |
 
 </div>
 
@@ -54,15 +54,15 @@ A panel stacks its fields as rows, each one in view mode until you open it. A ro
 
 <div className="table-scroll" tabIndex={0}>
 
-| #   | Atom            | What it does                                                                                                            | Set with                                                    | Theme atom         |
-| --- | --------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------ |
-| 1   | field selector  | Which field has focus. Moves with <kbd>↑</kbd> and <kbd>↓</kbd>.                                                        | Not declared; follows focus                                 | `fieldSelector()`  |
-| 2   | label           | The field's name. Every row has one.                                                                                    | `$p->select('basket', 'Basket contents')`                   | `label()`          |
-| 3   | help marker     | Marks a field carrying **help** (7). Sits after the **label** (2), in the label's own color and never bolded.           | Not declared; appears when the field has **help** (7)       | `helpMarker()`     |
-| 4   | value           | The settled answer. Empty until the field is answered, and never what you're mid-way through typing. Every row has one. | `->default(['apple', 'carrot'])`, then whatever is answered | `value()`          |
-| 5   | value separator | Stands between the parts of a **value** (4) that has more than one, so `Basket contents` reads `apple, carrot`.         | Not declared                                                | `valueSeparator()` |
-| 6   | description     | The field's explanatory text, under its row.                                                                            | `->description('Pick the produce for this delivery.')`      | `description()`    |
-| 7   | help            | The field's long-form text. Never drawn in the panel: <kbd>?</kbd> opens it on a page of its own.                       | `->help('Every crate is weighed at the packing bench.')`    | `renderHelp()`     |
+| #   | Atom            | What it does                                                                                                            | Set with                                                    | Theme element             |
+| --- | --------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------- |
+| 1   | field selector  | Which field has focus. Moves with <kbd>↑</kbd> and <kbd>↓</kbd>.                                                        | Not declared; follows focus                                 | `fieldSelector()`         |
+| 2   | label           | The field's name. Every row has one.                                                                                    | `$p->select('basket', 'Basket contents')`                   | `fieldLabel()`            |
+| 3   | help marker     | Marks a field carrying **help** (7). Sits after the **label** (2), in the label's own color and never bolded.           | Not declared; appears when the field has **help** (7)       | `fieldHelpMarker()`       |
+| 4   | value           | The settled answer. Empty until the field is answered, and never what you're mid-way through typing. Every row has one. | `->default(['apple', 'carrot'])`, then whatever is answered | `fieldValue()`            |
+| 5   | value separator | Stands between the parts of a **value** (4) that has more than one, so `Basket contents` reads `apple, carrot`.         | Not declared                                                | `fieldValueSeparator()`   |
+| 6   | description     | The field's explanatory text, under its row.                                                                            | `->description('Pick the produce for this delivery.')`      | `fieldDescription()`      |
+| 7   | help            | The field's long-form text. Never drawn in the panel: <kbd>?</kbd> opens it on a page of its own.                       | `->help('Every crate is weighed at the packing bench.')`    | a bordered `Markup` block |
 
 </div>
 
@@ -86,14 +86,14 @@ A multiple-choice field with bounds and per-entry text draws the fullest set of 
 
 <div className="table-scroll" tabIndex={0}>
 
-| #   | Atom              | What it does                                                                                            | Set with                                                                             | Theme atom           |
-| --- | ----------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------- |
-| 1   | entry             | One line of the list the field offers.                                                                  | `->option('apple', 'Apple')`, `->options([...])`                                     | `entry()`            |
-| 2   | entry selector    | Which **entry** (1) has focus. Moves with <kbd>↑</kbd> and <kbd>↓</kbd>.                                | Not declared; follows focus                                                          | `entrySelector()`    |
-| 3   | entry marker      | The per-entry chosen-state glyph.                                                                       | `->multiple()` picks which pair of glyphs                                            | `entryMarker()`      |
-| 4   | entry note        | A qualifier on an **entry** (1), such as why it's unavailable. Drawn only on entries carrying a reason. | `->option('tomato', 'Tomato', disabled: TRUE, disabled_reason: 'out of season')`     | `entryNote()`        |
-| 5   | entry description | The focused **entry** (1)'s own explanatory text. Indented to start where the entry text starts.        | `->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')` | `entryDescription()` |
-| 6   | constraint        | What the field expects, before anything is rejected.                                                    | `->minSelections(2)->maxSelections(3)`, `->maxSize(64)`, `->min()`/`->max()`         | `constraint()`       |
+| #   | Atom              | What it does                                                                                            | Set with                                                                             | Theme element             |
+| --- | ----------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------- |
+| 1   | entry             | One line of the list the field offers.                                                                  | `->option('apple', 'Apple')`, `->options([...])`                                     | `fieldEntry()`            |
+| 2   | entry selector    | Which **entry** (1) has focus. Moves with <kbd>↑</kbd> and <kbd>↓</kbd>.                                | Not declared; follows focus                                                          | `fieldEntrySelector()`    |
+| 3   | entry marker      | The per-entry chosen-state glyph.                                                                       | `->multiple()` picks which pair of glyphs                                            | `fieldEntryMarker()`      |
+| 4   | entry note        | A qualifier on an **entry** (1), such as why it's unavailable. Drawn only on entries carrying a reason. | `->option('tomato', 'Tomato', disabled: TRUE, disabled_reason: 'out of season')`     | `fieldEntryNote()`        |
+| 5   | entry description | The focused **entry** (1)'s own explanatory text. Indented to start where the entry text starts.        | `->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')` | `fieldEntryDescription()` |
+| 6   | constraint        | What the field expects, before anything is rejected.                                                    | `->minSelections(2)->maxSelections(3)`, `->maxSize(64)`, `->min()`/`->max()`         | `fieldConstraint()`       |
 
 </div>
 
@@ -113,11 +113,11 @@ Some fields collect an answer by typing instead of by choosing from a list, so t
 
 <div className="table-scroll" tabIndex={0}>
 
-| #   | Atom  | What it does                                                                          | Set with                                                 | Theme atom |
-| --- | ----- | ------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------- |
-| 8   | caret | The insertion point within the **draft** (9), showing where the next keystroke lands. | Not declared; follows what you type                      | `caret()`  |
-| 9   | draft | The text you're typing, before it's accepted.                                         | `->default('valley-pear-a')` seeds it; typing changes it | `draft()`  |
-| 10  | state | What the field is doing right now.                                                    | `->slot('fruit', 'Fruit')` names what it reports         | `state()`  |
+| #   | Atom  | What it does                                                                          | Set with                                                 | Theme element  |
+| --- | ----- | ------------------------------------------------------------------------------------- | -------------------------------------------------------- | -------------- |
+| 8   | caret | The insertion point within the **draft** (9), showing where the next keystroke lands. | Not declared; follows what you type                      | `fieldCaret()` |
+| 9   | draft | The text you're typing, before it's accepted.                                         | `->default('valley-pear-a')` seeds it; typing changes it | `fieldDraft()` |
+| 10  | state | What the field is doing right now.                                                    | `->slot('fruit', 'Fruit')` names what it reports         | `fieldState()` |
 
 </div>
 
@@ -135,9 +135,9 @@ The [FilePicker](/fields/filepicker) field draws the same skeleton over a direct
 
 <div className="table-scroll" tabIndex={0}>
 
-| #   | Atom    | What it does                                                                       | Set with                                     | Theme atom  |
-| --- | ------- | ---------------------------------------------------------------------------------- | -------------------------------------------- | ----------- |
-| 11  | caption | What the list below is showing. Rewritten whenever the list changes underneath it. | `->startIn($directory)` sets where it begins | `caption()` |
+| #   | Atom    | What it does                                                                       | Set with                                     | Theme element    |
+| --- | ------- | ---------------------------------------------------------------------------------- | -------------------------------------------- | ---------------- |
+| 11  | caption | What the list below is showing. Rewritten whenever the list changes underneath it. | `->startIn($directory)` sets where it begins | `fieldCaption()` |
 
 </div>
 
@@ -161,9 +161,9 @@ Now `harvest.csv` is picked, and at 88 bytes it breaks that limit. The same line
 
 <div className="table-scroll" tabIndex={0}>
 
-| #   | Atom  | What it does                                                                                                        | Set with                                  | Theme atom |
-| --- | ----- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ---------- |
-| 7   | error | Why the value was rejected. Drawn only after a refused accept, and cleared the moment the value becomes acceptable. | The declared bounds, or `->validate(...)` | `error()`  |
+| #   | Atom  | What it does                                                                                                        | Set with                                  | Theme element  |
+| --- | ----- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | -------------- |
+| 7   | error | Why the value was rejected. Drawn only after a refused accept, and cleared the moment the value becomes acceptable. | The declared bounds, or `->validate(...)` | `fieldError()` |
 
 </div>
 
@@ -178,86 +178,199 @@ A **constraint** (6) describes the field; an **error** (7) describes your value.
 
 That's also why they're built differently. The first is an unframed phrase - `a file no larger than 64 B` - that its caller wraps, so the same phrase becomes `Choose ...` in the picker, `Select ...` in a bounded list and `must be ...` headlessly. The second is already a whole message, and is shown as it stands.
 
-## What the code calls these today
+## Elements: what a theme actually implements
 
-Every atom has two public surfaces. **Theme** is the `ThemeInterface` method that styles it. **Owner** is the call a consumer makes to set it - run-wide through the group's own fluent builder for a glyph, or on the field for content. Where the source disagrees with the atom's name, the source is what moves.
+An atom is what you see. An **element** is the method a theme answers with, and every one of them takes plain strings and scalars and returns a styled string. That is the whole contract: order, spacing and how many elements there are belong to the block; color and glyph belong to the theme.
+
+Elements are grouped by the block that declares them, in one interface per block, and each is prefixed with its owner's name so a theme can implement every interface on one class without a collision. A theme that doesn't implement a block's interface can't draw that block, and it says so by name rather than leaving a blank line.
+
+`ThemeInterface` itself carries only two methods, because only two belong to no block at all: `contentWidth()`, the one width every block lays out against, and `keyGlyph(Key $key)`, so the legend, a field naming a key in a prompt and the notice saying how to quit all spell the same key the same way.
+
+### The chrome
+
+`ChromeElementsInterface` is the one interface named for something other than a block. The frame surrounds every region at once, and the overflow mark says a region's contents outran it - neither is something a block could ask for, since a block only fills the space it is given and never learns where that space ends.
+
+| Element                  | Draws                                                         |
+| ------------------------ | ------------------------------------------------------------- |
+| `chromeBorder()`         | the **border** (chrome 1) - the run of box-drawing characters |
+| `chromeOverflowMarker()` | the **overflow marker** (chrome 4), told whether it points up |
+
+### The trail, the keys and the buttons
+
+| Interface                     | Element                 | Draws                                        |
+| ----------------------------- | ----------------------- | -------------------------------------------- |
+| `BreadcrumbElementsInterface` | `breadcrumbLabel()`     | one segment of the **breadcrumb** (chrome 2) |
+|                               | `breadcrumbSeparator()` | the **breadcrumb separator** (chrome 3)      |
+| `LegendElementsInterface`     | `legendKey()`           | a **legend key** (chrome 6)                  |
+|                               | `legendDescription()`   | a **legend description** (chrome 7)          |
+|                               | `legendSeparator()`     | a **legend separator** (chrome 8)            |
+| `ActionsElementsInterface`    | `actionButton()`        | a button that does not have focus            |
+|                               | `actionSelected()`      | the button that has focus                    |
+|                               | `actionSeparator()`     | the gap standing between two buttons         |
+
+The brackets around a button belong to `actionButton()`, not to the block. A theme that frames a button differently changes that one method, and the block goes on knowing only that it has labels and one of them has focus.
+
+### A nested panel's row
+
+A panel draws a row of its own only as a sub-panel - the shape you select to enter. Once you are inside it, it draws nothing itself: its blocks do.
+
+| Element                   | Draws                                             |
+| ------------------------- | ------------------------------------------------- |
+| `panelSelector()`         | which row has focus                               |
+| `panelTitle()`            | the sub-panel's title                             |
+| `panelDescend()`          | the mark saying the row leads somewhere           |
+| `panelDescription()`      | the sub-panel's standing text                     |
+| `panelSummary()`          | the run of answers the sub-panel is holding       |
+| `panelSummarySeparator()` | the mark standing between two answers in that run |
+
+### A field, in both of its modes
+
+One field owns both modes, so one interface names both. `FieldElementsInterface` is the largest of them for that reason.
 
 <div className="table-scroll" tabIndex={0}>
 
-| Atom                                | Today                                                                                 | Theme                         | Owner                                                                                                            |
-| ----------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| **border** (chrome 1)               | `border()`                                                                            | `chromeBorder()`              | `chrome()->border(Border::Rounded)`                                                                              |
-| **breadcrumb** (chrome 2)           | `breadcrumb()`                                                                        | `chromeBreadcrumb()`          | `Form::create($title)`, `->panel($id, $title, ...)`                                                              |
-| **breadcrumb separator** (chrome 3) | `separator()`                                                                         | `chromeBreadcrumbSeparator()` | `chrome()->breadcrumbSeparator('›')`                                                                             |
-| **overflow marker** (chrome 4)      | `indicator()`, `indicatorUp()`, `indicatorDown()`                                     | `chromeOverflowMarker()`      | `chrome()->overflowMarker('▲', '▼')`                                                                             |
-| **legend** (chrome 5)               | `FieldInterface::hints()`, `renderHintLine()`                                         | `chromeLegend()`              | `chrome()->legend(TRUE)`                                                                                         |
-| **legend key** (chrome 6)           | `legendKey()`                                                                         | `chromeLegendKey()`           | `chrome()->legendKeys($preset, $overrides)`                                                                      |
-| **legend description** (chrome 7)   | `legendDescription()`                                                                 | `chromeLegendDescription()`   | `chrome()->legendLabel(Action::Toggle, 'pick')`                                                                  |
-| **legend separator** (chrome 8)     | `legendSeparator()`                                                                   | `chromeLegendSeparator()`     | `chrome()->legendSeparator('·')`                                                                                 |
-| **field selector** (view 1)         | `marker()`, shared with the **entry selector** (edit 2)                               | `viewSelector()`              | `view()->selector('❯')`                                                                                          |
-| **label** (view 2)                  | `label()`                                                                             | `viewLabel()`                 | `->label($text)`                                                                                                 |
-| **help marker** (view 3)            | `helpMarker()`                                                                        | `viewHelpMarker()`            | `view()->helpMarker('ⁱ', '[?]')`                                                                                 |
-| **value** (view 4)                  | `value()`                                                                             | `viewValue()`                 | `->default($value)`                                                                                              |
-| **value separator** (view 5)        | hardcoded in `ValueFormatter::format()`                                               | `viewValueSeparator()`        | `view()->valueSeparator(', ')`                                                                                   |
-| **description** (view 6)            | `description()`                                                                       | `viewDescription()`           | `->description($text)`                                                                                           |
-| **help** (view 7)                   | `renderHelp()`                                                                        | `viewHelp()`                  | `->help($text)`                                                                                                  |
-| **entry** (edit 1)                  | drawn inline, no theme method                                                         | `editEntry()`                 | `->entry($value, $label)`, `->entries($map)`                                                                     |
-| **entry selector** (edit 2)         | `marker()`, shared with the **field selector** (view 1)                               | `editEntrySelector()`         | `edit()->entrySelector('❯')`                                                                                     |
-| **entry marker** (edit 3)           | `check()` when multiple-choice, `radio()` when single                                 | `editEntryMarker()`           | `edit()->entryMarker('◼', '◻')`, `->multiple()` picks the pair                                                   |
-| **entry note** (edit 4)             | concatenated in `OptionsCapableTrait`, no theme method                                | `editEntryNote()`             | `->entry(..., note: $text)`                                                                                      |
-| **entry description** (edit 5)      | `entryDescription()`                                                                  | `editEntryDescription()`      | `->entry(..., description: $text)`                                                                               |
-| **constraint** (edit 6)             | `hint()` via `renderGuidance()`; produced by `selectionHint()` and `constraintHint()` | `editConstraint()`            | `->min()`, `->max()`, `->minSelections()`, `->maxSelections()`, `->maxSize()`, `->extensions()`, `->filesOnly()` |
-| **error** (edit 7)                  | `error()`                                                                             | `editError()`                 | `->validate($closure)`, `->required(message: $text)`                                                             |
-| **caret** (edit 8)                  | `caret()`                                                                             | `editCaret()`                 | `edit()->caret('█')`                                                                                             |
-| **draft** (edit 9)                  | `$buffer`, per field, no theme method                                                 | `editDraft()`                 | `->default($value)`, `->placeholder($text)`                                                                      |
-| **state** (edit 10)                 | `footer()`                                                                            | `editState()`                 | `edit()->state(FALSE)`, `->slot($name, $label)` labels it                                                        |
-| **caption** (edit 11)               | `caption()`                                                                           | `editCaption()`               | `edit()->caption(FALSE)`, `->startIn($directory)` fills it                                                       |
+| Element                   | Draws                                                                                              |
+| ------------------------- | -------------------------------------------------------------------------------------------------- |
+| `fieldSelector()`         | the **field selector** (view 1)                                                                    |
+| `fieldIndent()`           | the blank gutter a conditional field's rows step in behind, given the depth of its condition chain |
+| `fieldLabel()`            | the **label** (view 2)                                                                             |
+| `fieldHelpMarker()`       | the **help marker** (view 3)                                                                       |
+| `fieldValue()`            | the **value** (view 4)                                                                             |
+| `fieldValueSeparator()`   | the **value separator** (view 5)                                                                   |
+| `fieldMask()`             | one character of a secret, standing in for what was typed                                          |
+| `fieldBadge()`            | the mark saying where an answer came from - `default`, `detected`, `edited`, `derived`, `override` |
+| `fieldDescription()`      | the **description** (view 6)                                                                       |
+| `fieldEntry()`            | an **entry** (edit 1), told whether it is picked and whether the cursor rests on it                |
+| `fieldEntryMatch()`       | the run of an entry's label that answers what was typed                                            |
+| `fieldEntrySelector()`    | the **entry selector** (edit 2)                                                                    |
+| `fieldEntryMarker()`      | the **entry marker** (edit 3), told whether picking gives up every other choice                    |
+| `fieldEntryNote()`        | an **entry note** (edit 4)                                                                         |
+| `fieldEntryDescription()` | an **entry description** (edit 5)                                                                  |
+| `fieldEntrySeparator()`   | the mark standing between two runs of entries                                                      |
+| `fieldConstraint()`       | the **constraint** (edit 6)                                                                        |
+| `fieldError()`            | the **error** (edit 7)                                                                             |
+| `fieldCaret()`            | the **caret** (edit 8)                                                                             |
+| `fieldDraft()`            | the **draft** (edit 9)                                                                             |
+| `fieldGhost()`            | the completion offered after the draft, which nobody typed                                         |
+| `fieldInput()`            | the whole typed line: draft, caret and completion in one piece                                     |
+| `fieldScale()`            | the run of points a graded answer reads as                                                         |
+| `fieldLoading()`          | the mark saying the field is still fetching what it will offer                                     |
+| `fieldState()`            | the **state** (edit 10)                                                                            |
+| `fieldCaption()`          | the **caption** (edit 11)                                                                          |
 
 </div>
 
-Each group's glyphs are set through one closure, the way `Form::panel()` already reads:
+Four of these answer with a whole composed line rather than one styled string - `fieldInput()`, `fieldScale()`, `fieldEntryMarker()` and `fieldEntrySelector()`. Each still takes plain scalars and nothing else, so the piece stays the theme's to arrange without the field handing over any of its state. `fieldInput()` is one piece rather than three because where the caret sits is a position _within_ the draft rather than a thing beside it, so only whatever draws the draft can put it there.
+
+### A passage of text
+
+`MarkupElementsInterface` draws prose wherever it appears - a field's **description** (view 6), a standing note, the page behind the **help** (view 7) key. A passage is not one string with one style, so each span is its own element and a theme restyling what is emphatic restyles it everywhere.
+
+| Element            | Draws                                                       |
+| ------------------ | ----------------------------------------------------------- |
+| `markupTitle()`    | the title above a body of markup                            |
+| `markupLine()`     | one line of it                                              |
+| `markupStrong()`   | a span the passage states emphatically                      |
+| `markupEmphasis()` | a span it leans on                                          |
+| `markupCode()`     | a span it quotes verbatim                                   |
+| `markupLink()`     | a span that leads somewhere, given the label and the target |
+| `markupBullet()`   | the mark leading one item of a list                         |
+
+### Work in progress
+
+`ProgressElementsInterface` covers the [progress](/fields/progress) row and the [progress primitive](/progress) alike.
+
+| Element             | Draws                                |
+| ------------------- | ------------------------------------ |
+| `progressCaption()` | the caption naming the work          |
+| `progressSpinner()` | the spinner glyph for a frame number |
+| `progressTrack()`   | the filled and empty run of a bar    |
+| `progressCount()`   | the tally beside it                  |
+
+`progressSpinner()` takes the frame number rather than a glyph, so the theme owns both the animation's characters and how many there are - a Unicode theme can spin through ten frames where an ASCII one cycles four.
+
+### The finished pieces a primitive draws
+
+The [primitives](/output) collect nothing and never run inside a panel, so they cannot ask a block for anything. What they draw is a whole finished piece, declared in `PrimitiveElementsInterface`:
+
+| Element               | Draws                                                     |
+| --------------------- | --------------------------------------------------------- |
+| `renderCard()`        | a heading, a body and an optional grid, boxed or indented |
+| `renderTable()`       | an aligned, bordered grid of headers and rows             |
+| `renderText()`        | source text as wrapped, markup-styled lines               |
+| `renderRule()`        | a line spanning the frame                                 |
+| `renderBanner()`      | a logo above an optional version line                     |
+| `renderStatus()`      | one of the five status lines: its glyph and its message   |
+| `renderDefinitions()` | label/value pairs as an aligned definition list           |
+| `renderSpinner()`     | an indeterminate spinner beside its caption               |
+| `renderProgressBar()` | a determinate bar with its step count and label           |
+
+`renderCard()` and `renderTable()` are each the single renderer behind both the standalone piece and its in-panel counterpart, so restyling one restyles the [note field's card](/fields/note) or [its grid](/fields/table) at the same time. Every method here takes plain strings and arrays: a renderer that reached for a field, a panel or an answer set could only ever be used from inside a form.
+
+## Patching an element
+
+Subclassing a theme is the full answer, and overkill when all you want is a different glyph. Hand `->theme()` a closure instead of a name and it is given a `ThemeBuilder`, whose groups are the blocks that declare the elements - so the prefix is implied, and `->separator()` means one thing under `->breadcrumb()` and another under `->legend()`:
 
 ```php
-$tui
-  ->chrome(fn(Chrome $c) => $c
-    ->border(Border::Rounded)
-    ->breadcrumbSeparator('›')
-    ->overflowMarker('▲', '▼')
-    ->legend(TRUE)
-    ->legendSeparator('·'))
-  ->view(fn(View $v) => $v
-    ->selector('❯')
+use DrevOps\Tui\Theme\Override\BreadcrumbOverrides;
+use DrevOps\Tui\Theme\Override\FieldOverrides;
+use DrevOps\Tui\Theme\Override\LegendOverrides;
+use DrevOps\Tui\Theme\Sgr;
+use DrevOps\Tui\Theme\ThemeBuilder;
+
+$tui->theme(fn(ThemeBuilder $t) => $t
+  ->breadcrumb(fn(BreadcrumbOverrides $b) => $b
+    ->separator('›', '>'))
+  ->legend(fn(LegendOverrides $l) => $l
+    ->separator('·', '|')
+    ->key(Sgr::Bold, Sgr::BrightCyan))
+  ->field(fn(FieldOverrides $f) => $f
+    ->selector('❯', '>')
     ->helpMarker('ⁱ', '[?]')
-    ->valueSeparator(', '))
-  ->edit(fn(Edit $e) => $e
-    ->entrySelector('❯')
-    ->entryMarker('◼', '◻')
-    ->caret('█'));
+    ->valueSeparator(', ')
+    ->entrySelector('▸', '->')
+    ->entryMarker('◼', '[x]')
+    ->caret('█', '|')));
 ```
 
-Every glyph setter takes the Unicode form first and the ASCII fallback second, so a consumer can't set one and silently leave the other display mode broken.
+Nine elements can be patched, and that is the closed set:
 
-Four owner-side calls don't name the atom they set:
+| Group            | Call                 | Patches                 | Takes                          |
+| ---------------- | -------------------- | ----------------------- | ------------------------------ |
+| `->breadcrumb()` | `->separator()`      | `breadcrumbSeparator()` | a glyph and its ASCII stand-in |
+| `->legend()`     | `->separator()`      | `legendSeparator()`     | a glyph and its ASCII stand-in |
+|                  | `->key()`            | `legendKey()`           | `Sgr` palette parts, in order  |
+| `->field()`      | `->selector()`       | `fieldSelector()`       | a glyph and its ASCII stand-in |
+|                  | `->helpMarker()`     | `fieldHelpMarker()`     | a glyph and its ASCII stand-in |
+|                  | `->valueSeparator()` | `fieldValueSeparator()` | text                           |
+|                  | `->entrySelector()`  | `fieldEntrySelector()`  | a glyph and its ASCII stand-in |
+|                  | `->entryMarker()`    | `fieldEntryMarker()`    | a glyph and its ASCII stand-in |
+|                  | `->caret()`          | `fieldCaret()`          | a glyph and its ASCII stand-in |
 
-| Today                                   | Becomes                             |
-| --------------------------------------- | ----------------------------------- |
-| `Tui::footer(bool)`                     | `chrome()->legend(bool)`            |
-| `Tui::theme('x', ['border' => ...])`    | `chrome()->border(Border::Rounded)` |
-| `->option()`, `->options()`             | `->entry()`, `->entries()`          |
-| `->option(..., disabled_reason: $text)` | `->entry(..., note: $text)`         |
+The argument count says what kind of thing you are restating. A **glyph** takes two - the mark and its ASCII stand-in - so a patch can't set one display mode and silently leave the other broken. **Text** takes one, because a phrase the reader parses is not something a terminal fails to draw. A **color** takes the palette parts in order.
 
-`->label()` doesn't exist at all: the label is the second argument to `$p->select('basket', 'Basket contents')`. Every other settable atom gets a call named after it, so this one should too.
+Reading `->entryMarker('◼', '[x]')`: the two arguments are the Unicode mark a picked entry carries and what stands in for it where that mark can't be drawn - not the picked and unpicked states. An entry nobody picked keeps whatever the theme draws for it, which is what keeps this a patch.
 
-Three of the theme renames need more than a rename.
+Anything the patch doesn't name keeps the theme's own answer. Reach for a subclass when you're changing a palette; reach for this when you're changing a handful of glyphs. Runnable in [`playground/09-themes-elements.php`](https://github.com/drevops/tui/blob/main/playground/09-themes-elements.php).
 
-**`hint` names two things, and used to name three.** `FieldInterface::hints()` returns the **legend** (chrome 5) and `ThemeInterface::hint()` draws the **constraint** (edit 6). Nothing connects them. Renaming each to the atom it serves leaves `hint` naming nothing, which is the point.
+## What a theme is allowed to do
 
-**Two theme methods are shared by atoms that aren't the same atom.** `marker()` draws both selectors, so a theme can't restyle the field cursor without restyling the one inside every list. `description()` draws the **description** (view 6) and, until recently, the **entry description** (edit 5) - the second now has its own method, and the first keeps `description()`.
+A terminal may have no color, no Unicode, or a background the theme should read. A theme declares which of those it handles, and declaring one is what grants the facility that goes with it. Five capabilities exist, and that is the whole set:
 
-**Two theme methods have other legitimate users, so they can't simply be renamed.** `footer()` also draws the calendar's weekday header, the password confirm prompt and the version line, so the **state** (edit 10) needs a method of its own rather than a rename of that one. `indicator()` also draws a warning status line, so the **overflow marker** (chrome 4) is the same story.
+| Declaration                   | Grants                                                                                   | For                                                                   |
+| ----------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `ColorSchemeCapableInterface` | `hasColor()`, `isDark()`                                                                 | painting at all, and picking a palette for a dark or light terminal   |
+| `UnicodeCapableInterface`     | `hasUnicode()`                                                                           | choosing between a glyph and its ASCII stand-in                       |
+| `DimCapableInterface`         | `dim()`                                                                                  | pushing back what a dialog is drawn over                              |
+| `MarkdownCapableInterface`    | `hasMarkdown()`                                                                          | drawing the [markdown subset](/markdown) rather than its markers      |
+| `OccupyCapableInterface`      | `isFullscreen()`, `halign()`, `valign()`, the min/max sizes, `spacing()`, `background()` | saying how much of the terminal the frame takes, and where it anchors |
 
-**`error` names four things**, and only one of them draws an atom. `ThemeInterface::error()` draws the **error** (edit 7) and keeps the name; `FieldInterface::error()` is field state; `Field::templateError()` and friends produce a message; `Engine::optionsError()` builds an exception. Only the first draws anything, and the other three need names that say what they do instead.
+Color and the background are one declaration rather than two, because the two questions are never asked apart: a color is chosen against a background, and a color legible on a dark terminal is not legible on a light one.
+
+Two of the five carry a **trait** with the plumbing. `ColorSchemeCapableTrait` brings `paint()` and `emphasize()`, and `UnicodeCapableTrait` brings `glyph()`, so a palette reads as color choices rather than as escape-sequence handling. `AbstractTheme` declares none of them and implements every element interface, which is the floor: the strings it was handed, and the stand-ins that read without color or glyphs. See [Themes](/themes) for writing one.
 
 ## Open questions
 
-**Can the widest legend fit the frame?** A multiple-choice list advertises five entries - `SPACE to select · ↑/↓ to move · ←/→ to select none or all · ↵ to accept · ESC to cancel` - which is 87 columns. A non-fullscreen frame is 76. `measureContentWidth()` sizes the frame from the rows and the button bar without ever measuring the **legend** (chrome 5), so the line is drawn and then clipped by a box measured without it. Either the box accounts for the legend, or the legend wraps, or it sheds its lowest-priority entries as the room runs out.
+**Can the widest legend fit the frame?** A multiple-choice list advertises five entries - `SPACE to select · ↑/↓ to move · ←/→ to select none or all · ↵ to accept · ESC to cancel` - which is 87 columns. A non-fullscreen frame is 76, or 72 inside a border. The minimum-width guard measures the panels' own rows and never the **legend** (chrome 5), so the line is drawn and then clipped mid-word by a frame sized without it. Either the frame accounts for the legend, or the legend wraps, or it sheds its lowest-priority entries as the room runs out.
+
+**Is an entry declared or is it an option?** The atom is an _entry_ and every element that draws one is named for it - `fieldEntry()`, `fieldEntrySelector()`, `fieldEntryMarker()`. The call that declares one is `->option()`. The two names sit either side of the same thing: what you supply, and what appears. Nothing is broken by it, and one of the two would have to move for the vocabulary to be whole.

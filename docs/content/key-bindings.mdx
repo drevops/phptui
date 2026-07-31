@@ -18,27 +18,27 @@ Two presets ship: `default` (every binding it declares is listed below) and `vim
 
 The actions are the fixed set of intents the fields understand - the bindings behind them are configurable, the intents are not. Every `Action` case:
 
-| Action                                           | Meaning                                                        |
-| ------------------------------------------------ | -------------------------------------------------------------- |
-| `MoveUp` / `MoveDown` / `MoveLeft` / `MoveRight` | Move the cursor or caret                                       |
-| `Accept`                                         | Commit the editor's value                                      |
-| `Cancel`                                         | Close the editor without committing                            |
-| `Activate`                                       | Open the focused field or panel (panel browser)                |
-| `Back`                                           | Go up one panel level                                          |
-| `Quit`                                           | Leave the TUI                                                  |
-| `ScrollUp` / `ScrollDown`                        | Scroll the panel without moving the cursor                     |
-| `Help`                                           | Open the help overlay                                          |
-| `DeleteBack`                                     | Delete the character before the caret                          |
-| `InsertSpace`                                    | Type a space                                                   |
-| `NewLine`                                        | Insert a newline (textarea)                                    |
-| `ExternalEdit`                                   | Hand off to the external editor (textarea)                     |
-| `Complete`                                       | Accept the ghost-text completion (text, suggest)               |
-| `Increment` / `Decrement`                        | Step a bounded number                                          |
-| `Toggle`                                         | Check an option, or flip a two-state switch                    |
-| `SelectAll` / `SelectNone`                       | Check or clear every visible option                            |
-| `Grab`                                           | Pick up or drop the held item (reorder)                        |
-| `Yes` / `No`                                     | Set a confirm directly                                         |
-| `Reveal`                                         | Cycle the password display, or show hidden file-picker entries |
+| Action                                           | Meaning                                                              |
+| ------------------------------------------------ | -------------------------------------------------------------------- |
+| `MoveUp` / `MoveDown` / `MoveLeft` / `MoveRight` | Move the cursor or caret                                             |
+| `Accept`                                         | Commit the editor's value                                            |
+| `Cancel`                                         | Close the editor without committing                                  |
+| `Activate`                                       | Open the focused field, go into the focused panel, or press a button |
+| `Back`                                           | Come back out of the panel you are in                                |
+| `Quit`                                           | Close the dialog that is open, else end the session                  |
+| `ScrollUp` / `ScrollDown`                        | Scroll a panel without moving the cursor                             |
+| `Help`                                           | Show the focused field's help on a page of its own                   |
+| `DeleteBack`                                     | Delete the character before the caret                                |
+| `InsertSpace`                                    | Type a space                                                         |
+| `NewLine`                                        | Insert a newline (textarea)                                          |
+| `ExternalEdit`                                   | Hand off to the external editor (textarea)                           |
+| `Complete`                                       | Accept the ghost-text completion (text, suggest)                     |
+| `Increment` / `Decrement`                        | Step a bounded number                                                |
+| `Toggle`                                         | Check an option, or flip a two-state switch                          |
+| `SelectAll` / `SelectNone`                       | Check or clear every visible option                                  |
+| `Grab`                                           | Pick up or drop the held item (reorder)                              |
+| `Yes` / `No`                                     | Set a confirm directly                                               |
+| `Reveal`                                         | Cycle the password display, or show hidden file-picker entries       |
 
 The named keys a binding can use - every `KeyName` case: `Up`, `Down`, `Left`, `Right`, `Enter`, `Escape`, `Interrupt` (<kbd>Ctrl-C</kbd>), `Space`, `Backspace`, `Delete`, `Tab`, `Home`, `End`, `PageUp`, `PageDown`, `MouseWheelUp`, `MouseWheelDown`. Anything printable is bound as the character itself (`'q'`, `'?'`).
 
@@ -58,6 +58,7 @@ What `default` actually declares, scope by scope. Every field inherits the base 
 | navigation                           | <kbd>q</kbd>                                                                 | `Quit`                                           |
 | navigation                           | <kbd>?</kbd>                                                                 | `Help`                                           |
 | navigation                           | mouse wheel                                                                  | `ScrollUp` / `ScrollDown`                        |
+| every field that takes no typed text | <kbd>?</kbd>                                                                 | `Help`                                           |
 | number                               | <kbd>↑</kbd> / <kbd>↓</kbd>                                                  | `Increment` / `Decrement`                        |
 | rating                               | <kbd>→</kbd> / <kbd>↑</kbd> and <kbd>←</kbd> / <kbd>↓</kbd>                  | `Increment` and `Decrement`                      |
 | text, suggest                        | <kbd>Tab</kbd>                                                               | `Complete`                                       |
@@ -77,7 +78,11 @@ What `default` actually declares, scope by scope. Every field inherits the base 
 
 `vim` inherits all of it and adds letters where typing can't swallow them: the panel browser and the single-choice select gain <kbd>k</kbd>/<kbd>j</kbd> for up/down, and the calendar gains <kbd>k</kbd>/<kbd>j</kbd>/<kbd>h</kbd>/<kbd>l</kbd> for week and day movement - each alongside the arrow keys, never replacing them.
 
-Not everything on the keyboard routes through the map: a few field keys are fixed. The calendar's month and edge jumps (<kbd>PageUp</kbd>/<kbd>PageDown</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>) have no action behind them and always keep their keys.
+The last row is why a field's own help stays reachable while it is open. Where the field takes typed characters the key is one of them, so the scope is skipped rather than fought over - which is also what the validation below would insist on.
+
+Not everything on the keyboard routes through the map: a few field keys are fixed. The calendar's month and edge jumps (<kbd>PageUp</kbd>/<kbd>PageDown</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>) have no action behind them and always keep their keys. <kbd>Ctrl-C</kbd> is fixed the other way round - it is answered above the routing, so it aborts from anywhere, including from inside an open field.
+
+`ScrollUp` and `ScrollDown` are declared by the preset but nothing acts on them yet: a panel longer than the frame scrolls to keep the focused row in view, so the wheel changes nothing. The bindings are listed because they are what the map holds, not because the wheel does something.
 
 ## Per-field-type overrides
 

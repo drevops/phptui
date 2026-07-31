@@ -13,7 +13,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   <ThemedImage sources={{light: useBaseUrl('/field-table-light-animated.svg'), dark: useBaseUrl('/field-table-dark-animated.svg')}} alt="Table field" />
 </p>
 
-A table is presentational context, not a field of its own: a [note](/fields/note) renders one with `->table(headers, rows)`, drawing an aligned, bordered grid beneath its title and body. It honours the active theme - the border style, colour and Unicode switches - and its cells take the same `{{field}}` templating the note's title and body do, so the grid can reflect earlier answers. Like every note it collects **nothing**: the cursor skips it and it is absent from headless collection.
+A table is presentational context, not a field of its own: a [note](/fields/note) renders one with `->table(headers, rows)`, drawing an aligned, bordered grid beneath its title and body. It honors the active theme - the border style, color and Unicode switches - and its cells take the same `{{field}}` templating the note's title and body do, so the grid can reflect earlier answers. Like every note it collects **nothing**: the cursor skips it and it is absent from headless collection.
 
 ```php
 $p->note('stock', 'Basket contents')

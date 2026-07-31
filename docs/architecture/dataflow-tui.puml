@@ -1,74 +1,91 @@
 @startuml
-' drevops/tui - data flow for the interactive panel TUI.
-' Traced from src/Render/PanelController.php (run -> frame/handle), src/Theme/
-' (frame, and renderModal composited via src/Render/Overlay), src/Input/
-' (KeyMap resolves a key press to a semantic action) and src/Engine/Engine.php
-' (settle re-resolves answer-driven options and re-runs derives, conditions and
-' fix-ups after an accepted edit).
+' drevops/tui - data flow for the interactive screen session.
+' Traced from src/Screen/ScreenController.php (run -> paint/handle), with
+' src/Screen/ScreenRenderer.php drawing outward from the Screen, src/Screen/
+' KeyRouter.php sending each key inward, src/Input/ resolving a key press to a
+' semantic action, and src/Screen/Collector.php re-settling after every answer.
 ' Regenerate every SVG with:  plantuml -tsvg docs/architecture/*.puml
 !theme plain
 skinparam backgroundColor white
 skinparam defaultFontName Helvetica
 skinparam shadowing false
-title Data flow: interactive panel TUI (PanelController::run)
+title Data flow: interactive session (ScreenController::run)
 
 actor "User" as User
-participant "PanelController" as PC
+participant "ScreenController" as SC
+participant "Assembler" as Asm
 participant "Terminal" as Term
-participant "Theme" as Theme
-participant "Navigator\n+ Scroller" as Nav
+participant "ScreenRenderer" as SR
+participant "Screen\n-> Layout -> Region" as Screen
+participant "Block\n(Panel, Field, ...)" as Block
+participant "Theme\n(elements)" as Theme
 participant "KeyParser" as KP
-participant "KeyMap\n(scoped)" as KM
-participant "Widget\n(via factory)" as W
-participant "Engine" as Eng
+participant "KeyRouter" as KR
+participant "Collector" as Col
 
-PC -> Term: setup() raw mode, alt screen
-activate PC
-PC -> Theme: banner(logo, version)
-Theme --> PC: banner text
-PC -> Term: render(banner)
+SC -> Asm: assemble(panel, layout)
+activate SC
+Asm --> SC: Screen with the standard furniture
+note right of SC: a breadcrumb in 'header', the panel and its\nbuttons in 'content', a legend in 'footer' -\nwherever the named layout keeps a place
 
-loop until done
-  alt fullscreen and terminal below the minimum size
-    PC -> PC: centered "terminal too small" notice\n(only quit is handled)
+SC -> Term: setup() raw mode, alt screen
+SC -> Col: seed(panel, supplied, context)
+Col --> SC: the values the form opens on, and who is there
+
+loop until the form ends
+  alt the terminal cannot hold the frame
+    SC -> Term: render(resize notice)
+    note right of SC: every key but the one that leaves is dropped
   else laid out
-    PC -> Theme: body(panel, answers, cursor)
-    Theme --> PC: rows + cursor line
-    PC -> Nav: compute viewport\n(theme-owned chrome height)
-    Nav --> PC: visible window
-    alt current panel is a modal
-      PC -> Theme: renderModal(dialog, dimmed backdrop)
-      Theme --> PC: composited frame
-    else hub or field editor
-      PC -> Theme: frame(header, body, footer, viewport)
-      Theme --> PC: frame text\n(fullscreen: stretched, block aligned)
-    end
-    PC -> PC: position frame in the screen\n(fullscreen: Overlay place by halign/valign)
+    SC -> SR: render(screen, rows, columns)
+    activate SR
+    SR -> Screen: arrange(available)
+    Screen --> SR: a size for each Region
+    SR -> Screen: flow the Region's blocks, scroll if declared
+    SR -> Block: render(theme)
+    Block -> Theme: elements for what it draws
+    Theme --> Block: styled strings
+    Block --> SR: its rows
+    SR --> SC: the frame
+    deactivate SR
+    SC -> Term: render(frame)
   end
-  PC -> Term: render(frame)
 
   User -> Term: key press
-  Term --> PC: raw bytes
-  PC -> KP: parse(bytes)
-  KP --> PC: Key list
+  Term --> SC: raw bytes
+  SC -> KP: parse(bytes)
+  KP --> SC: Key list
 
-  alt editing a field
-    PC -> W: handle(key)
-    W -> KM: matches(key, action)?
-    KM --> W: bound action (accept, move, toggle...)
-    W --> PC: value, complete or cancel
-    opt edit accepted
-      PC -> Eng: settle(values, pinned, context)
-      Eng --> PC: settled values + active map\n(options resolve from the answers,\nderives recompute, conditions\nshow/hide fields, fix-ups apply)
+  alt the interrupt key
+    note right of SC: aborts from anywhere, including an open field
+  else a button, work to run, or leaving
+    note right of SC: held here: each acts on something outside\nthe screen, which no block knows about
+  else anything else
+    SC -> KR: handle(key)
+    activate KR
+    KR -> Block: the focused block, if it binds that key
+    KR -> Block: else the panel around it
+    note right of KR: move the cursor, open a field, go into a panel,\ncome back out, show a field's help
+    KR --> SC: done
+    deactivate KR
+
+    opt an answer was just taken
+      SC -> Col: resettle(panel, values, pinned, context)
+      Col --> SC: settled values + who is there
+      note right of SC: rows that follow the answers re-resolve,\ncomputed values recompute, conditions\nshow and hide rows, fix-ups apply
     end
-  else navigating
-    PC -> KM: matches(key, action)?
-    KM --> PC: bound action (move, activate, back, quit)
-    note right of PC: move cursor, drill panel, edit a field in place,\nor open a modal dialog over the dimmed parent;\na modal's submit keeps edits, cancel restores the opening answers
   end
+
+  SC -> SC: resolve one query, once the whole read is spent
 end
 
-PC -> Term: restore()
-PC --> User: Answers
-deactivate PC
+SC -> Term: restore(), and clear unless the session opted out
+alt interrupted
+  SC --> User: InterruptException
+else cancelled
+  SC --> User: CancelException
+else finished
+  SC --> User: Answers
+end
+deactivate SC
 @enduml

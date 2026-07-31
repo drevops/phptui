@@ -1,67 +1,83 @@
 # How the TUI works
 
-This is a walkthrough of the `drevops/tui` engine - what you assemble to build a form, and what happens when it runs. The diagrams are rendered from the PlantUML sources in this directory by the [`render-tui-diagrams`](../../.claude/skills/render-tui-diagrams/SKILL.md) skill; everything below is derived from `src/`, so if the prose and the code disagree, the code wins.
+This is a walkthrough of the `drevops/tui` library - what you assemble to build a form, and what happens when it runs. The diagrams are rendered from the PlantUML sources in this directory by the [`render-tui-diagrams`](../../.claude/skills/render-tui-diagrams/SKILL.md) skill; everything below is derived from `src/`, so if the prose and the code disagree, the code wins.
+
+The model the whole library is built on - four levels, seventeen capabilities, one canonical tree - is written out on the [specification](https://phptui.dev/specification) page. This walkthrough is the same thing seen from the outside: which class does which part, and in what order.
 
 ## The shape of it
 
-At the centre is the **Engine**. Everything else is either something you hand it (a configuration, a set of handlers, a theme) or something it produces (validated answers, a JSON schema). The packages below mirror the `src/` subdirectories, and the arrows are the main dependencies.
+At the center is the **block tree**. A form is declared as one, and everything else either writes into it (the builders), reads it (the collector, the schema tools) or draws it (the screen and its theme).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="architecture-dark.svg">
   <img alt="Component architecture" src="architecture.svg">
 </picture>
 
-Read it in three bands:
+Read it as three concerns around that tree:
 
-- **Left - what you provide.** A **FormDefinition** (assembled by the fluent `Form` builder into `FormDefinition` -> `Panel` -> `Field`) and, optionally, **Handlers** (classes that carry behaviour). The global TUI runtime - theme, key bindings, colour and language - is configured on the `Tui` facade and shared by every form. Together these declare the questions, how each one behaves, and how the TUI presents them.
-- **Middle - the Engine and its helpers.** The Engine drives collection, leaning on `InputResolver` (read a payload), `Discovery` (detect from the directory), `Deriver` + `Transform` (compute values), and the `Condition` rules (decide what is shown).
-- **Right - what comes out, and how it is shown.** `Answers` (plus a `SchemaGenerator` / `SchemaValidator` for agents and forms), and the **interactive TUI** - `PanelController` composing a `Theme` (resolved by name through `ThemeManager`), a `KeyMap` (resolved by preset through `KeyMapManager`), widgets, a `Navigator` and a `Terminal`.
+- **Declaring.** `Form`, `PanelBuilder` and `FieldBuilder` write the tree; `Tui` is the facade a consumer holds. Every runtime switch that describes the terminal rather than the questionnaire - the theme, the layout, the key bindings, color, Unicode, the footer - is set on the facade, so one declaration serves every way of running it.
+- **The tree itself.** `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions` and `Progress` all implement `BlockInterface`, and each declares what it can do as a capability interface (`Block\Capability`) and what it needs drawn as an elements interface (`Block\Element`).
+- **Running it.** `Collector` collects the tree with no screen at all. `ScreenController` drives it through a terminal, arranging it with a `Screen`, a layout and its regions, sending each key inward with `KeyRouter` and drawing outward with `ScreenRenderer`. Both paths settle the same rules and produce the same `Answers`.
 
 ## Step 1 - describe the questions
 
-You declare the questions in PHP with the fluent `Form` builder: panels holding fields. A field has an `id`, a `type` (text, select, suggest, search, file picker, confirm - the select, search and file picker types collecting a list with `->multiple()`) and optional rules - `default`, `required`, `options`, `when` (show it only when a condition holds), `derive` (compute it from other fields) and `discover` (detect it from the target directory). The builder validates the declaration - rejecting duplicate field ids - and builds the immutable `FormDefinition` model. The global TUI runtime is configured on the `Tui` facade instead, not the form. Nothing runs yet; this is pure description.
+You declare the questions in PHP with the fluent `Form` builder: panels holding fields. A field has an `id`, a type (`text`, `select`, `suggest`, `search`, `filepicker`, `confirm` and the rest; `select`, `search` and `filepicker` collect a list with `->multiple()`) and optional rules - `default`, `required`, `options`, `when` (show it only when a condition holds), `derive` (compute it from other fields) and `discover` (detect it from the target directory).
 
-## Step 2 - attach behaviour where you need it
+What the builder produces is not a separate model: it writes the block tree directly. `$form->root()` hands back the root `Panel`, its regions hold the blocks, and a sub-panel is a block in a region like any other. There is one tree, and every operation on the facade reads that one - collection, the interactive session, the JSON schema, the validator. Duplicate field ids, an unknown transform name, a layout name nothing answers to and a modal declaring sub-panels are all rejected here, when the form is declared, rather than mid-session.
 
-Most fields need no code. When one does - a dynamic default, discovery, validation or a normalisation - declare it on the field itself: `->default(fn ...)`, `->validate(fn ...)`, `->transform(fn ...)`, `->discover(...)`. Reusable validators and transformers are public static methods on a consumer class named after the field id (`machine_name` -> `MachineName`) in a registered namespace - referenced explicitly as first-class callables or discovered by the engine as the fallback; the field declaration wins when both exist.
+Nothing runs yet; this is pure description.
+
+## Step 2 - attach behavior where you need it
+
+Most fields need no code at all. When one does - a dynamic default, discovery, validation or a normalization - declare it on the field itself: `->default(fn ...)`, `->validate(fn ...)`, `->transform(fn ...)`, `->discover(...)`. Reusable validators and transformers are public static methods on a consumer class named after the field id (`red_apple` -> `RedApple`) in a registered namespace - referenced explicitly as first-class callables, or resolved through the `HandlerRegistry` as the fallback. When both exist, the field declaration wins.
 
 ## Step 3 - collect the answers
 
-`Engine::collect()` turns the config plus whatever the caller supplied into a settled set of answers. This is the heart of the engine:
+`Tui::collect()` turns the tree plus whatever the caller supplied into a settled set of answers, with no screen anywhere:
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="dataflow-collect-dark.svg">
   <img alt="Headless collection" src="dataflow-collect.svg">
 </picture>
 
+Four capabilities survive here and thirteen do not, and the line between them is the useful part: collecting, constraining, refusing and depending on another answer are the form's meaning; the rest is how it looks. No `Screen`, no layout and no `Region` is built, and neither is any block that only shows.
+
 Walking the sequence:
 
-1. **Resolve each field's starting value**, in priority order: an explicit input (from `--prompts` or the environment, via `InputResolver`) beats a discovered value (in update mode, adopted only when it passes the field's emptiness, type, bounds and options), which beats a handler's dynamic `default()`, which beats the static default in the config.
-2. **Transform each supplied input** through its declared or handler behaviour, so derivation, activation and fix-ups all evaluate the normalized value. Defaults and derived values are the configuration's own and skip the transformers.
-3. **Settle the derived and conditional fields.** `Deriver` recomputes `derive` values (with `Transform`) until they stop changing, the `Condition` rules decide which fields are active from their `when` declarations, and fix-ups reconcile dependents - repeated until the whole set is stable.
-4. **Validate each active supplied input** - an empty value on a required field is rejected first, then the type and bounds, and the first error throws.
+1. **Resolve each field's starting value**, in priority order: an explicit input (from a JSON payload or the environment, through `InputResolver`) beats a discovered value (in update mode, adopted only when it passes the field's emptiness, type, bounds and rows), which beats a dynamic default, which beats the static one.
+2. **Normalize each supplied value** through its declared or resolved transform, so derivation, conditions and fix-ups all see the final value. Defaults and derived values are the form's own and skip the transformers.
+3. **Settle.** `Deriver` recomputes `derive` values until they stop changing, the `Condition` rules decide which fields are there at all, rows that follow the answers re-resolve, and fix-ups reconcile dependents - repeated until nothing moves.
+4. **Measure each supplied value** that survived: emptiness on a required field first, then type, bounds and rows. A value the form refuses raises `CollectException` naming the field and the reason, because with no screen there is nobody to retype it.
 5. **Emit `Answers`** - the values plus their provenance (default, detected, edited, derived, override).
 
-The same lifecycle runs whether the caller is a human at the TUI or a script passing JSON, which is why the engine is testable without a terminal.
+Only supplied values are measured, and only once the set has settled, because until then there is nothing final to measure them against.
 
 ## Step 4 - let a person answer (optional)
 
-For interactive use, `PanelController::run()` seeds itself with the engine's resolved answers and drives a panel TUI until the user is done:
+For interactive use, `ScreenController::run()` seeds itself from the same collector and drives a terminal session until the form ends:
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="dataflow-tui-dark.svg">
-  <img alt="Interactive panel TUI" src="dataflow-tui.svg">
+  <img alt="Interactive session" src="dataflow-tui.svg">
 </picture>
 
-The theme instance comes from `ThemeManager` - a registry keyed by name ("default", a registered short name, or a theme class name directly). Colour, Unicode and the dark/light mode are display options: anything the form leaves unset is detected from the terminal, with the mode picked from the terminal background (an OSC 11 query answered by the `Terminal`, then `COLORFGBG`, then a dark default). Each turn the controller asks the **Theme** to compose a frame (the theme owns colours, glyphs and layout - including the chrome-height budget that sizes the body viewport to the terminal), computes the visible window with the `Navigator` and `Scroller`, and renders it to the `Terminal`. A panel that declares `->layout()` renders its sub-panels as a grid of side-by-side preview columns instead of the row list - each level of the tree declares its own arrangement, and the arrows then navigate the grid spatially. With the `fullscreen` option on, the frame stretches to the whole terminal (capped by `max_width`/`max_height`): the theme aligns the body block inside it per the `halign`/`valign` options, the controller positions any smaller frame in the screen through the same `Overlay` placement the modals use, and below the minimum size (measured from the content unless `min_width`/`min_height` say otherwise) a centered resize notice takes the frame's place until the terminal grows. A key press is parsed by `KeyParser` into a `Key`, which a **KeyMap** resolves to a semantic action (move, accept, toggle, quit...) rather than a fixed key - the bindings behind each action are configurable per widget type, ship a vim preset alongside the default, and are validated when `->keys()` resolves the key map - at declaration time, not mid-session. Armed with the action, the controller either moves the cursor / drills into a sub-panel, or opens a widget to edit a field - inline in the panel by default, the widget's view taking the place of the field's value in the row, or full-screen for a `->standalone()` field under a theme-composed underlined label header. The widget consults the same key map and renders through the theme, and an accept enforces the field's declared or handler-resolved `validate()`/`transform()` - the same behaviour the headless path applies - showing a rejection inline and writing the accepted value back marked "edited" (or "override" when it pins a derive rule). Every accepted edit then re-settles the form logic through the `Engine`: derive rules recompute, `when` conditions show and hide fields, and fix-ups re-apply - so the session honours exactly what a headless collection would. A panel can instead be declared modal with `->modal()`: activating it opens the panel as a centered dialog composited over the dimmed parent - the `Theme` boxes it narrower than the frame and `Overlay` splices it on top - with its own configurable submit/cancel buttons, where submit keeps the edits and cancel or Escape restores the answers the dialog opened with. When the user finishes, it returns the same active-field `Answers` a headless collection would produce: a condition-hidden field keeps its settled value internally - so a later activation change can surface it - but contributes no answer.
+**Assembling.** `Assembler` builds a `Screen` around the panel: a `Breadcrumb` in `header`, the panel and its `Actions` in `content`, a `Legend` in `footer` - wherever the named layout keeps a place for them. A layout naming its regions something else simply shows no trail rather than being refused, which is what keeps every layout usable. The layout itself comes from `LayoutManager`, by shipped name, by a name a consumer registered, or by the class itself.
 
-No widget extends another widget. Each one composes its behaviour from the capabilities in `Widget\Capability` - an interface per capability (`OptionsCapableInterface`, `SelectionCapableInterface`, `FilterCapableInterface`, `SearchCapableInterface`, `QueryOptionsCapableInterface`, `PagingCapableInterface`, `TextEditCapableInterface`, `CompletionCapableInterface`, `StepCapableInterface`, `RevealCapableInterface`, `ExternalEditCapableInterface`) paired with the trait carrying its default implementation (`OptionsCapableTrait`, `FilterCapableTrait`, ...) - so the controller and the tests interact with a capability - "is this widget filterable, can it page" - rather than a concrete class.
+**Drawing runs outward.** The `Screen` gives its layout the terminal; `AbstractLayout` takes the fixed regions off the top and divides the remainder by the declared shares; each `Region` flows its blocks and scrolls them if it was declared to; each block's `render()` reaches the theme for elements; the theme returns styled strings. Every step hands down exactly one thing and knows nothing of the step after it, and nothing reaches back up.
 
-Blocking work inside the session goes through one seam. A widget never performs I/O, because only the loop may block and repaint: a query-driven widget (`QueryOptionsCapableInterface`) reports which query still needs answering, and the controller paints the loading frame, calls the field's source and hands the rows back. The same applies to a panel's option loaders and preload on entry, and to a progress row's work on activation - each is consumer code the controller runs between reads, repainting around it, so the single-threaded loop shows what it is waiting on without any of the widgets knowing there is a terminal. A query resolves once per read rather than once per key, so a burst of typing costs one call.
+**Keys run inward.** `KeyParser` turns raw bytes into `Key` objects and a `KeyMap` resolves each to a semantic action rather than a fixed key. `KeyRouter` then sends the key to the innermost thing that binds it - the focused block if it binds that key, else the panel around it - which is why an open text field swallows `?` as a character while a closed one lets it travel outward and open help. Nobody wrote that exception; the key simply stops at a different level.
+
+Three kinds of key never reach the router, and all three for the same reason - they act on something outside the screen. Pressing a button ends the form or closes the dialog it belongs to; activating a `Progress` row runs its work against the terminal a step at a time, repainting between steps; and leaving is about the session rather than about anything in it. A block never learns where it is drawn, so whoever owns the terminal holds these.
+
+**Every answer re-settles the form.** An accepted edit goes back through `Collector::resettle()`: derive rules recompute, `when` conditions show and hide rows, answer-driven option lists re-resolve and fix-ups re-apply - so the session honors exactly what a headless collection would.
+
+**The frame.** Border, spacing, alignment and the min/max sizes are theme options read through `OccupyCapableInterface`. In fullscreen the frame stretches to the terminal and the content anchors at `halign`/`valign`; below the minimum size a resize notice takes the frame's place and every key but the one that leaves is dropped. A panel declared `->modal()` is drawn as a centered dialog over the dimmed screen behind it - `DimCapableInterface` is what pushes the backdrop back - with its own submit/cancel pair, where submit keeps the edits and cancel restores the answers the dialog opened with.
+
+**How it ends** is the whole of what a caller sees. Finishing hands back `Answers`; abandoning through the cancel button raises `CancelException`; the interrupt key raises `InterruptException` from anywhere, including from inside an open field. Partial answers are never mistaken for a completed form.
 
 ## Step 5 - apply the answers (the consumer's job)
 
-Collecting produces answers; acting on them - writing files, renaming directories - is the consumer's job, never the engine's. A consumer that processes answers defines its own processor contract with a `process()` hook, resolves each processor class by field id through the `HandlerRegistry`, and sequences the work by its own rules - ordering is a processing concern the form declaration does not carry. One class per field can carry both its `process()` and the reusable static `validate()`/`transform()` the engine discovers. This is the pattern a consumer CLI follows with its own `ProcessorInterface` and `Processor`.
+Collecting produces answers; acting on them - writing files, renaming directories - is the consumer's job, never the library's. A consumer that processes answers defines its own processor contract with a `process()` hook, resolves each processor class by field id through the `HandlerRegistry`, and sequences the work by its own rules - ordering is a processing concern the form declaration does not carry. One class per field can carry both its `process()` and the reusable static `validate()`/`transform()` the collector resolves.
 
 ## Regenerating this document
 
