@@ -29,16 +29,16 @@ The chrome is the same whatever the form asks. You declare it once - the form's 
 
 <div className="table-scroll" tabIndex={0}>
 
-| #   | Atom                 | What it does                                                                                                          | Set with                                                        | Theme atom              |
-| --- | -------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ----------------------- |
-| 1   | border               | The frame around everything. One of `Border::None`, `Border::Line`, `Border::Rounded` or `Border::Double`, form-wide. | `Tui::theme(..., ['border' => Border::Rounded])`                | `border()`              |
-| 2   | breadcrumb           | The trail of panel titles: every panel you've descended through, plus the one you're in.                              | `Form::create('Orchard')`, `->panel('main', 'Delivery', ...)`   | `breadcrumb()`          |
-| 3   | breadcrumb separator | Stands between **breadcrumb** (2) segments.                                                                           | Not declared                                                    | `breadcrumbSeparator()` |
-| 4   | overflow marker      | Points at content past the top or bottom edge. Drawn only when the rows outgrow the frame.                            | Not declared                                                    | `overflowMarker()`      |
+| #   | Atom                 | What it does                                                                                                          | Set with                                                       | Theme atom              |
+| --- | -------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ----------------------- |
+| 1   | border               | The frame around everything. One of `Border::None`, `Border::Line`, `Border::Rounded` or `Border::Double`, form-wide. | `Tui::theme(..., ['border' => Border::Rounded])`               | `border()`              |
+| 2   | breadcrumb           | The trail of panel titles: every panel you've descended through, plus the one you're in.                              | `Form::create('Orchard')`, `->panel('main', 'Delivery', ...)`  | `breadcrumb()`          |
+| 3   | breadcrumb separator | Stands between **breadcrumb** (2) segments.                                                                           | Not declared                                                   | `breadcrumbSeparator()` |
+| 4   | overflow marker      | Points at content past the top or bottom edge. Drawn only when the rows outgrow the frame.                            | Not declared                                                   | `overflowMarker()`      |
 | 5   | legend               | The keys bound right now.                                                                                             | `Tui::footer(FALSE)` hides it; the entries come from the field | `renderLegend()`        |
-| 6   | legend key           | One key in the **legend** (5). Worded keys are uppercased: <kbd>ESC</kbd>, <kbd>TAB</kbd>, <kbd>SPACE</kbd>.          | `Tui::keys(...)` rebinds which key it shows                     | `legendKey()`           |
+| 6   | legend key           | One key in the **legend** (5). Worded keys are uppercased: <kbd>ESC</kbd>, <kbd>TAB</kbd>, <kbd>SPACE</kbd>.          | `Tui::keys(...)` rebinds which key it shows                    | `legendKey()`           |
 | 7   | legend description   | What that key does. Reads as `KEY to action`.                                                                         | Not declared; comes from the field                             | `legendDescription()`   |
-| 8   | legend separator     | Stands between **legend** (5) entries.                                                                                | Not declared                                                    | `legendSeparator()`     |
+| 8   | legend separator     | Stands between **legend** (5) entries.                                                                                | Not declared                                                   | `legendSeparator()`     |
 
 </div>
 
@@ -88,7 +88,7 @@ A multiple-choice field with bounds and per-entry text draws the fullest set of 
 
 | #   | Atom              | What it does                                                                                            | Set with                                                                             | Theme atom           |
 | --- | ----------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------- |
-| 1   | entry             | One line of the list the field offers.                                                                 | `->option('apple', 'Apple')`, `->options([...])`                                     | `entry()`            |
+| 1   | entry             | One line of the list the field offers.                                                                  | `->option('apple', 'Apple')`, `->options([...])`                                     | `entry()`            |
 | 2   | entry selector    | Which **entry** (1) has focus. Moves with <kbd>↑</kbd> and <kbd>↓</kbd>.                                | Not declared; follows focus                                                          | `entrySelector()`    |
 | 3   | entry marker      | The per-entry chosen-state glyph.                                                                       | `->multiple()` picks which pair of glyphs                                            | `entryMarker()`      |
 | 4   | entry note        | A qualifier on an **entry** (1), such as why it's unavailable. Drawn only on entries carrying a reason. | `->option('tomato', 'Tomato', disabled: TRUE, disabled_reason: 'out of season')`     | `entryNote()`        |
@@ -117,7 +117,7 @@ Some fields collect an answer by typing instead of by choosing from a list, so t
 | --- | ----- | ------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------- |
 | 8   | caret | The insertion point within the **draft** (9), showing where the next keystroke lands. | Not declared; follows what you type                      | `caret()`  |
 | 9   | draft | The text you're typing, before it's accepted.                                         | `->default('valley-pear-a')` seeds it; typing changes it | `draft()`  |
-| 10  | state | What the field is doing right now.                                                   | `->slot('fruit', 'Fruit')` names what it reports         | `state()`  |
+| 10  | state | What the field is doing right now.                                                    | `->slot('fruit', 'Fruit')` names what it reports         | `state()`  |
 
 </div>
 
@@ -190,7 +190,7 @@ Every atom has two public surfaces. **Theme** is the `ThemeInterface` method tha
 | **breadcrumb** (chrome 2)           | `breadcrumb()`                                                                        | `chromeBreadcrumb()`          | `Form::create($title)`, `->panel($id, $title, ...)`                                                              |
 | **breadcrumb separator** (chrome 3) | `separator()`                                                                         | `chromeBreadcrumbSeparator()` | `chrome()->breadcrumbSeparator('›')`                                                                             |
 | **overflow marker** (chrome 4)      | `indicator()`, `indicatorUp()`, `indicatorDown()`                                     | `chromeOverflowMarker()`      | `chrome()->overflowMarker('▲', '▼')`                                                                             |
-| **legend** (chrome 5)               | `FieldInterface::hints()`, `renderHintLine()`                                        | `chromeLegend()`              | `chrome()->legend(TRUE)`                                                                                         |
+| **legend** (chrome 5)               | `FieldInterface::hints()`, `renderHintLine()`                                         | `chromeLegend()`              | `chrome()->legend(TRUE)`                                                                                         |
 | **legend key** (chrome 6)           | `legendKey()`                                                                         | `chromeLegendKey()`           | `chrome()->legendKeys($preset, $overrides)`                                                                      |
 | **legend description** (chrome 7)   | `legendDescription()`                                                                 | `chromeLegendDescription()`   | `chrome()->legendLabel(Action::Toggle, 'pick')`                                                                  |
 | **legend separator** (chrome 8)     | `legendSeparator()`                                                                   | `chromeLegendSeparator()`     | `chrome()->legendSeparator('·')`                                                                                 |
@@ -209,7 +209,7 @@ Every atom has two public surfaces. **Theme** is the `ThemeInterface` method tha
 | **constraint** (edit 6)             | `hint()` via `renderGuidance()`; produced by `selectionHint()` and `constraintHint()` | `editConstraint()`            | `->min()`, `->max()`, `->minSelections()`, `->maxSelections()`, `->maxSize()`, `->extensions()`, `->filesOnly()` |
 | **error** (edit 7)                  | `error()`                                                                             | `editError()`                 | `->validate($closure)`, `->required(message: $text)`                                                             |
 | **caret** (edit 8)                  | `caret()`                                                                             | `editCaret()`                 | `edit()->caret('█')`                                                                                             |
-| **draft** (edit 9)                  | `$buffer`, per field, no theme method                                                | `editDraft()`                 | `->default($value)`, `->placeholder($text)`                                                                      |
+| **draft** (edit 9)                  | `$buffer`, per field, no theme method                                                 | `editDraft()`                 | `->default($value)`, `->placeholder($text)`                                                                      |
 | **state** (edit 10)                 | `footer()`                                                                            | `editState()`                 | `edit()->state(FALSE)`, `->slot($name, $label)` labels it                                                        |
 | **caption** (edit 11)               | `caption()`                                                                           | `editCaption()`               | `edit()->caption(FALSE)`, `->startIn($directory)` fills it                                                       |
 

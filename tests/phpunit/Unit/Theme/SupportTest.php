@@ -13,6 +13,7 @@ use DrevOps\Tui\Theme\Capability\UnicodeCapableTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -20,8 +21,8 @@ use PHPUnit\Framework\TestCase;
  * Tests what a theme declares it supports, and what each declaration grants.
  */
 #[CoversClass(DefaultTheme::class)]
-#[CoversClass(ColorSchemeCapableTrait::class)]
-#[CoversClass(UnicodeCapableTrait::class)]
+#[CoversTrait(ColorSchemeCapableTrait::class)]
+#[CoversTrait(UnicodeCapableTrait::class)]
 #[Group('theme')]
 final class SupportTest extends TestCase {
 
