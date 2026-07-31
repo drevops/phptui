@@ -937,6 +937,18 @@ class DefaultTheme extends AbstractTheme implements ThemeInterface, ColorSchemeC
    * {@inheritdoc}
    */
   #[\Override]
+  public function fieldIndent(int $depth): string {
+    if (!$this->indentConditional) {
+      return '';
+    }
+
+    return str_repeat(' ', self::CONDITIONAL_INDENT * max(0, $depth));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
   public function fieldLabel(string $text): string {
     return $this->label($text);
   }

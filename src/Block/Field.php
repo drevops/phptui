@@ -158,6 +158,11 @@ final class Field extends AbstractBlock implements
   protected string $badge = '';
 
   /**
+   * How many answers had to be given before this one is asked at all.
+   */
+  protected int $depth = 0;
+
+  /**
    * Whether an answer is owed.
    */
   protected bool $required = FALSE;
@@ -1599,6 +1604,37 @@ final class Field extends AbstractBlock implements
   }
 
   /**
+   * Say how many answers had to be given before this one is asked at all.
+   *
+   * A rule may name a field on any panel, so how deep a question sits is a
+   * fact about the whole form rather than about the field or the panel holding
+   * it: it can only be worked out once the tree is finished, and it is written
+   * back here.
+   *
+   * @param int $depth
+   *   The links in the chain of rules leading to this field; zero for a
+   *   question that is always asked.
+   *
+   * @return static
+   *   The field.
+   */
+  public function nest(int $depth): static {
+    $this->depth = max(0, $depth);
+
+    return $this;
+  }
+
+  /**
+   * How many answers had to be given before this one is asked at all.
+   *
+   * @return int
+   *   The links in the chain, zero for a question that is always asked.
+   */
+  public function nesting(): int {
+    return $this->depth;
+  }
+
+  /**
    * Complete what is being typed from a set of candidates.
    *
    * @param list<string>|\Closure $source
@@ -1859,9 +1895,12 @@ final class Field extends AbstractBlock implements
     // Help is never drawn in the row that offers it: it can run to paragraphs,
     // so the row marks that there is something to ask for and nothing more.
     $marker = $this->help === '' ? '' : ' ' . $elements->fieldHelpMarker();
+    // The gutter leads the label rather than each row, which is what makes it
+    // the single source of the indent: every row the field contributes lines
+    // up under a label that already carries it.
     // The question is as much a string a reader reads as the chrome around it,
     // so it resolves through the active language wherever it is drawn.
-    $label = $elements->fieldSelector($this->isFocused()) . ' ' . $elements->fieldLabel(Translator::t($this->label)) . $marker;
+    $label = $elements->fieldIndent($this->depth) . $elements->fieldSelector($this->isFocused()) . ' ' . $elements->fieldLabel(Translator::t($this->label)) . $marker;
 
     return $this->mode === Mode::View
       ? $this->settledLines($theme, $elements, $label)

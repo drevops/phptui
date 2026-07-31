@@ -58,6 +58,11 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
   protected const int SUMMARY_ANSWERS = 4;
 
   /**
+   * How many picks a panel spells out before it says how many there were.
+   */
+  protected const int SUMMARY_ITEMS = 3;
+
+  /**
    * The layout arranging this panel's blocks, once one is given.
    */
   protected ?LayoutInterface $layout = NULL;
@@ -627,7 +632,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
         continue;
       }
 
-      $answers[] = $field->valueText($theme);
+      $answers[] = $this->held($theme, $field);
 
       // A row summarizes rather than lists, so it stops well before it would
       // be read as the panel itself.
@@ -637,6 +642,31 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
     }
 
     return implode(' ' . $elements->panelSummarySeparator() . ' ', $answers);
+  }
+
+  /**
+   * One answer, as the row that stands for a whole panel says it.
+   *
+   * A handful of picks reads as the picks themselves; more than that would be
+   * the panel's whole content spelled out on the line meant to stand for it,
+   * so past a handful the line says how many were picked instead.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   * @param \DrevOps\Tui\Block\Field $field
+   *   The field holding the answer.
+   *
+   * @return string
+   *   The answer as it reads on the panel's own row.
+   */
+  protected function held(ThemeInterface $theme, Field $field): string {
+    $value = $field->value();
+
+    if (!is_array($value) || count($value) <= self::SUMMARY_ITEMS) {
+      return $field->valueText($theme);
+    }
+
+    return Translator::formatPlural(count($value), '1 item selected', '@count items selected');
   }
 
   /**

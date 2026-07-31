@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Builder;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Tree;
+use DrevOps\Tui\Condition\ConditionInterface;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\Fixup;
@@ -250,6 +251,8 @@ final class Form {
     $this->assertTemplateShapes($root);
     $this->assertModalPanels($root);
 
+    $this->nestConditionals($root);
+
     return $this->root = $root;
   }
 
@@ -309,6 +312,76 @@ final class Form {
 
       $seen[$id] = TRUE;
     }
+  }
+
+  /**
+   * Say how many answers each question waits on before it is asked at all.
+   *
+   * A rule may name a field on any panel, so this is a fact about the whole
+   * form rather than about a panel or a field on its own: it can only be
+   * worked out once every panel has been placed, which is here.
+   *
+   * @param \DrevOps\Tui\Block\Panel $root
+   *   The panel every declared panel hangs from.
+   */
+  protected function nestConditionals(Panel $root): void {
+    $fields = Tree::fields($root);
+    $by_id = [];
+
+    foreach ($fields as $field) {
+      $by_id[$field->id()] = $field;
+    }
+
+    $resolved = [];
+
+    foreach ($fields as $field) {
+      $field->nest($this->nesting($field, $by_id, $resolved, []));
+    }
+  }
+
+  /**
+   * How deep one field sits: one more than the deepest field it waits on.
+   *
+   * @param \DrevOps\Tui\Block\Field $field
+   *   The field to measure.
+   * @param array<string,\DrevOps\Tui\Block\Field> $by_id
+   *   Every field in the form, keyed by id.
+   * @param array<string,int> $resolved
+   *   The depths measured so far, so a field several rules name is walked once.
+   * @param array<string,bool> $walking
+   *   The ids on the current walk, keyed by id.
+   *
+   * @return int
+   *   The depth.
+   */
+  protected function nesting(Field $field, array $by_id, array &$resolved, array $walking): int {
+    if (array_key_exists($field->id(), $resolved)) {
+      return $resolved[$field->id()];
+    }
+
+    // A rule the field decides for itself names no question, so nothing can be
+    // said about what it waits on and it sits where an unconditional row does.
+    if (!$field->condition() instanceof ConditionInterface) {
+      return $resolved[$field->id()] = 0;
+    }
+
+    // A reference leading back to a field already on the walk closes a cycle.
+    // Such a rule can never hold a stable depth, so the back edge contributes
+    // none and the walk ends rather than deepening forever.
+    if (isset($walking[$field->id()])) {
+      return 0;
+    }
+
+    $walking[$field->id()] = TRUE;
+    $deepest = 0;
+
+    foreach ($field->condition()->fields() as $id) {
+      if (isset($by_id[$id])) {
+        $deepest = max($deepest, $this->nesting($by_id[$id], $by_id, $resolved, $walking));
+      }
+    }
+
+    return $resolved[$field->id()] = $deepest + 1;
   }
 
   /**

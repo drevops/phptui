@@ -16,6 +16,8 @@ return [
   '"@min" must not exceed "@max".' => '"@min" must not exceed "@max".',
   '"@value" does not match the template "@pattern".' => '"@value" does not match the template "@pattern".',
   '(empty)' => '(empty)',
+  '1 item selected' => '1 item selected',
+  '@count items selected' => '@count items selected',
   '@label is required.' => '@label is required.',
   '@label: @error' => '@label: @error',
   '@label: must not contain "@text".' => '@label: must not contain "@text".',

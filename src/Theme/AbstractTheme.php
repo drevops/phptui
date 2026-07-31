@@ -95,6 +95,13 @@ abstract class AbstractTheme implements ActionsElementsInterface, BreadcrumbElem
   /**
    * {@inheritdoc}
    */
+  public function fieldIndent(int $depth): string {
+    return '';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function fieldLabel(string $text): string {
     return $text;
   }

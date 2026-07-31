@@ -10,6 +10,8 @@ use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Prose;
+use DrevOps\Tui\Builder\Form;
+use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Handler\Context;
@@ -698,6 +700,67 @@ final class ScreenParityTest extends TestCase {
 
     // A grid is moved through in two directions, so the legend says so.
     $this->assertStringContainsString('←/→', $tester->frame());
+  }
+
+  public function testPanelRowCountsThePicksItHasNoRoomToList(): void {
+    $form = Form::create('Order')
+      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
+        $p->select('basket', 'Basket')->multiple()->default(['apple', 'beet', 'carrot', 'date'])
+          ->options(['apple' => 'Apple', 'beet' => 'Beet', 'carrot' => 'Carrot', 'date' => 'Date']);
+        $p->select('herbs', 'Herbs')->multiple()->default(['basil', 'dill'])
+          ->options(['basil' => 'Basil', 'dill' => 'Dill']);
+      });
+
+    $tester = (new ScreenTester($form->root()))->rows(10)->cols(70);
+    $tester->run();
+
+    // The line standing for a whole panel spells out a handful of picks and
+    // says how many there were once there are more than a handful.
+    $this->assertStringContainsString('4 items selected', $tester->frame());
+    $this->assertStringContainsString('basil, dill', $tester->frame());
+  }
+
+  public function testChainOfConditionsStepsInOneStepPerLink(): void {
+    $form = Form::create('Conditional indentation')
+      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
+        $p->select('category', 'Category')->default('vegetable')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable']);
+        // One condition deep: it hangs off the unconditional category above.
+        $p->select('basket', 'Basket')->multiple()->default(['carrot'])->options(['carrot' => 'Carrot', 'potato' => 'Potato'])->when(new Condition('category', eq: 'vegetable'));
+        // Two deep: its rule names a field that is itself conditional.
+        $p->confirm('weekly', 'Weekly delivery?')->default(TRUE)->when(new Condition('basket', contains: 'carrot'));
+        // Three deep, and the steps keep going for as long as the chain does.
+        $p->text('courier', 'Courier note')->default('Leave at the gate')->when(new Condition('weekly', eq: TRUE));
+        // Unconditional again, so the row returns to the frame edge.
+        $p->number('quantity', 'Quantity')->min(1)->max(99)->default(6);
+      });
+
+    $stepped = (new ScreenTester($form->root()))->rows(16)->cols(70)->options(['indent_conditional' => TRUE]);
+    // Into the panel, so its own rows are what is in front of the reader.
+    $stepped->run(Key::named(KeyName::Enter));
+
+    $rows = array_map(rtrim(...), explode("\n", $stepped->frame()));
+
+    // One step per link in the chain, and the row after it back at the edge.
+    $this->assertContains('❯ Category  vegetable', $rows);
+    $this->assertContains('    Basket  carrot', $rows);
+    $this->assertContains('      Weekly delivery?  yes', $rows);
+    $this->assertContains('        Courier note  Leave at the gate', $rows);
+    $this->assertContains('  Quantity  6', $rows);
+  }
+
+  public function testChainOfConditionsStaysFlushUntilTheThemeIsAskedToStepIt(): void {
+    $form = Form::create('Conditional indentation')
+      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
+        $p->select('category', 'Category')->default('vegetable')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable']);
+        $p->confirm('weekly', 'Weekly delivery?')->default(TRUE)->when(new Condition('category', eq: 'vegetable'));
+      });
+
+    $flush = (new ScreenTester($form->root()))->rows(12)->cols(70);
+    $flush->run(Key::named(KeyName::Enter));
+
+    // Off by default: a conditional row renders exactly where every other one
+    // does, so nothing on screen says which answer brought it into view.
+    $this->assertContains('  Weekly delivery?  yes', array_map(rtrim(...), explode("\n", $flush->frame())));
   }
 
   public function testFormThatHidesItsLegendAdvertisesNothing(): void {
