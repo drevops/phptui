@@ -7,13 +7,13 @@ namespace DrevOps\Tui\Tests\Unit;
 use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Engine\Engine;
-use DrevOps\Tui\Engine\EngineException;
+use DrevOps\Tui\Screen\Collector;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Model\Field;
-use DrevOps\Tui\Model\Panel;
-use DrevOps\Tui\Render\PanelController;
+use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Tui;
@@ -28,8 +28,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(PanelBuilder::class)]
 #[CoversClass(Field::class)]
 #[CoversClass(Panel::class)]
-#[CoversClass(Engine::class)]
-#[CoversClass(PanelController::class)]
+#[CoversClass(Collector::class)]
+#[CoversClass(ScreenController::class)]
 #[CoversClass(DefaultTheme::class)]
 #[Group('tui')]
 final class ProgressableTest extends TestCase {
@@ -47,7 +47,7 @@ final class ProgressableTest extends TestCase {
   public function testHeadlessRejectsValueOutsideTheLoadedOptions(): void {
     $calls = 0;
 
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
 
     (new Tui($this->form($calls)))->collect('{"fruit":"grape"}');
   }

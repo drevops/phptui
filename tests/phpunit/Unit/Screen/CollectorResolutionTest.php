@@ -7,7 +7,6 @@ namespace DrevOps\Tui\Tests\Unit\Screen;
 use DrevOps\Tui\Answers\Answer;
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Answers\Provenance;
-use DrevOps\Tui\Block\BlockFactory;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Tree;
@@ -17,7 +16,7 @@ use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\Dotenv;
 use DrevOps\Tui\Discovery\JsonValue;
-use DrevOps\Tui\Engine\EngineException;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Model\FieldType;
@@ -35,7 +34,6 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(Collector::class)]
 #[CoversClass(Tree::class)]
-#[CoversClass(BlockFactory::class)]
 #[CoversClass(Field::class)]
 #[CoversClass(Panel::class)]
 #[CoversClass(Answers::class)]
@@ -174,7 +172,7 @@ final class CollectorResolutionTest extends TestCase {
    */
   #[DataProvider('dataProviderValueOfTheWrongShapeIsRefused')]
   public function testValueOfTheWrongShapeIsRefused(\Closure $declare, mixed $value, string $expected): void {
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessage($expected);
 
     $this->collect(Form::create('T')->panel('p', 'p', $declare), ['x' => $value]);
@@ -241,7 +239,7 @@ final class CollectorResolutionTest extends TestCase {
       $p->select('x', 'Picks')->multiple()->required()->options(['a' => 'Alpha']);
     });
 
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessage('Invalid value for field "x": Picks is required.');
 
     $this->collect($form, ['x' => []]);
@@ -252,7 +250,7 @@ final class CollectorResolutionTest extends TestCase {
       $p->number('x', 'X')->validate(static fn(): string => 'never reached');
     });
 
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessage('Invalid value for field "x": must be a number.');
 
     $this->collect($form, ['x' => 'many']);
@@ -263,7 +261,7 @@ final class CollectorResolutionTest extends TestCase {
       $p->template('x', 'X')->pattern('{{head}}-{{tail}}');
     });
 
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessage('Invalid value for field "x"');
 
     $this->collect($form, ['x' => 'nodash']);
@@ -285,7 +283,7 @@ final class CollectorResolutionTest extends TestCase {
       $p->text('machine_name', 'Machine name');
     });
 
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessage('Invalid value for field "machine_name": A machine name is required.');
 
     $this->collect($form, ['machine_name' => ''], NULL, new HandlerRegistry([self::HANDLERS]));
@@ -302,7 +300,7 @@ final class CollectorResolutionTest extends TestCase {
 
     $this->assertSame('GOLDEN', $this->collect($form, ['machine_name' => 'Golden'], NULL, $registry)->value('machine_name'));
 
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessage('Invalid value for field "machine_name": The field says so.');
 
     $this->collect($form, ['machine_name' => 'refused'], NULL, $registry);
@@ -396,7 +394,7 @@ final class CollectorResolutionTest extends TestCase {
       $p->select('x', 'X')->options(static fn(Context $context): array => ['carrot' => 'Carrot']);
     });
 
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessage('Invalid value for field "x": value "apple" is not one of: carrot');
 
     $this->collect($form, ['x' => 'apple']);
@@ -440,7 +438,7 @@ final class CollectorResolutionTest extends TestCase {
       });
     });
 
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessage('Could not load options for field "x": The pantry is unreachable.');
 
     $this->collect($form, ['x' => 'carrot']);
@@ -592,7 +590,7 @@ final class CollectorResolutionTest extends TestCase {
       });
     });
 
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessage('Could not load options for field "x": The pantry is unreachable.');
 
     $this->collect($form, []);
@@ -624,18 +622,6 @@ final class CollectorResolutionTest extends TestCase {
     $this->assertSame(0, $calls);
   }
 
-  public function testTreeReadBackFromDefinitionCollectsTheSameAnswers(): void {
-    $form = $this->sourcesForm();
-    $fixups = $form->build()->fixups;
-
-    $declared = (new Collector(NULL, $fixups))->answers($form->root(), ['name' => 'Pear'], $this->project(FALSE));
-    $derived = (new Collector(NULL, $fixups))->answers((new BlockFactory())->create($form->build()), ['name' => 'Pear'], $this->project(FALSE));
-
-    $this->assertSame($declared->values, $derived->values);
-    $this->assertEquals($declared->provenance, $derived->provenance);
-    $this->assertSame($declared->toSummary(), $derived->toSummary());
-  }
-
   /**
    * Collect a form's answers with no screen at all.
    *
@@ -654,7 +640,7 @@ final class CollectorResolutionTest extends TestCase {
   protected function collect(Form $form, array $supplied = [], ?Context $context = NULL, ?HandlerRegistry $registry = NULL): Answers {
     // The rules that write a value once the answers settle belong to the form
     // rather than to any block, so they travel beside the tree.
-    return (new Collector($registry, $form->build()->fixups))->answers($form->root(), $supplied, $context);
+    return (new Collector($registry, $form->currentFixups()))->answers($form->root(), $supplied, $context);
   }
 
   /**

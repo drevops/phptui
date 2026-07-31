@@ -9,6 +9,7 @@ use DrevOps\Tui\Block\Capability\DependCapableTrait;
 use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Model\TableSpec;
 use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\Tui\Translation\Translator;
 
 /**
  * Formatted content, and nothing else.
@@ -181,16 +182,16 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
       $headers = $this->table instanceof TableSpec ? $this->table->headers : [];
       $rows = $this->table instanceof TableSpec ? $this->table->rows : [];
 
-      return implode("\n", $theme->renderCard($this->title, $body, $headers, $rows, $this->bordered));
+      return implode("\n", $theme->renderCard(Translator::t($this->title), $body, $headers, $rows, $this->bordered));
     }
 
     $lines = [];
 
     if ($this->title !== '') {
-      $lines[] = $elements->markupTitle($this->title);
+      $lines[] = $elements->markupTitle(Translator::t($this->title));
     }
 
-    foreach (Prose::lines($this->body, $theme, $elements->markupLine(...)) as $line) {
+    foreach (Prose::lines(Translator::t($this->body), $theme, $elements->markupLine(...)) as $line) {
       $lines[] = $line;
     }
 

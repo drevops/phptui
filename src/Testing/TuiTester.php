@@ -9,7 +9,6 @@ use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\CancelException;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Tui;
@@ -103,14 +102,14 @@ final class TuiTester {
   /**
    * Construct a tester for a form.
    *
-   * @param \DrevOps\Tui\Model\FormDefinition|\DrevOps\Tui\Builder\Form $form
-   *   The form under test: a Form builder or its built definition.
+   * @param \DrevOps\Tui\Builder\Form $form
+   *   The form under test.
    * @param string[] $handler_namespaces
    *   Namespaces searched for per-field consumer classes.
    * @param string $env_prefix
    *   The env-variable prefix for per-question overrides.
    */
-  public function __construct(FormDefinition|Form $form, array $handler_namespaces = [], string $env_prefix = '') {
+  public function __construct(Form $form, array $handler_namespaces = [], string $env_prefix = '') {
     $this->tui = new Tui($form, $handler_namespaces, $env_prefix);
   }
 

@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Model\FormDefinition;
-use DrevOps\Tui\Answers\Answers;
-use DrevOps\Tui\Answers\Provenance;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\Viewport;
 use DrevOps\Tui\Theme\Border;
@@ -118,89 +113,6 @@ final class ThemeFullscreenTest extends TestCase {
     $this->assertCount(15, $lines);
     $this->assertStringContainsString('Name', Ansi::strip($lines[0]));
     $this->assertStringContainsString('val', Ansi::strip(implode("\n", $lines)));
-  }
-
-  public function testMeasureContentWidthFindsTheWidestRow(): void {
-    $form = Form::create('Produce stand')
-      ->panel('stand', 'Stand', function (PanelBuilder $p): void {
-        $p->text('window', 'Preferred delivery window')->default('Morning');
-      })
-      ->build();
-
-    $answers = new Answers(['window' => 'Morning'], []);
-
-    // The widest row is the field: marker gutter (4) + label (25) + value (7).
-    $this->assertSame(36, (new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None]))->measureContentWidth($form, $answers));
-
-    // A border adds its two columns and gutters on each side.
-    $this->assertSame(40, (new DefaultTheme(40, ['color' => FALSE, 'border' => Border::Line]))->measureContentWidth($form, $answers));
-
-    // A provenance badge widens the row by its padded label.
-    $edited = new Answers(['window' => 'Morning'], ['window' => Provenance::Edited]);
-    $this->assertSame(45, (new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None]))->measureContentWidth($form, $edited));
-  }
-
-  public function testMeasureContentWidthCoversDescriptionsSummariesAndButtons(): void {
-    $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $p): void {
-        $p->text('a', 'A')->default('a value under the summary clip')->description('a rather long field description row');
-      })
-      ->build();
-
-    $answers = new Answers(['a' => 'a value under the summary clip'], []);
-
-    // The field description row (4 + 35) beats the field row (4 + 1 + 30 + 2
-    // spacing = 37) and the hub summary row (4 + 30).
-    $this->assertSame(39, (new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None]))->measureContentWidth($form, $answers));
-
-    // Compact spacing drops descriptions and summaries: the field row itself
-    // (4 + 1 + 30) loses to the button bar (24)... and wins at 35.
-    $this->assertSame(35, (new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Compact]))->measureContentWidth($form, $answers));
-  }
-
-  public function testMeasureContentWidthCoversTheHelpMarkerButNotTheHelp(): void {
-    $build = static fn(string $help): FormDefinition => Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $p) use ($help): void {
-        $p->text('a', 'A rather long label that outruns the button bar')->help($help);
-      })
-      ->build();
-
-    $theme = new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None]);
-    $bare = $theme->measureContentWidth($build(''), new Answers());
-    $short = $theme->measureContentWidth($build('Help.'), new Answers());
-
-    // The marker announcing help costs the row its own width and a space, so a
-    // measured frame has room for it.
-    $this->assertGreaterThan($bare, $short);
-    $this->assertLessThanOrEqual($bare + 4, $short);
-
-    // That is all help ever costs the row, however far the help itself runs: it
-    // opens on a page of its own and never draws in the panel.
-    $this->assertSame($short, $theme->measureContentWidth($build(str_repeat('a rather long paragraph of help. ', 8)), new Answers()));
-  }
-
-  public function testMeasureContentWidthFloorsAtTheButtonBar(): void {
-    $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $p): void {
-        $p->text('a', 'A');
-      })
-      ->build();
-
-    // Every row is narrower than the button bar: it sets the floor.
-    $this->assertSame(24, (new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Compact]))->measureContentWidth($form, new Answers()));
-  }
-
-  public function testMeasureContentWidthSkipsHiddenButtons(): void {
-    $form = Form::create('T')
-      ->buttons(FALSE)
-      ->panel('p', 'P', function (PanelBuilder $p): void {
-        $p->text('a', 'A');
-      })
-      ->build();
-
-    // With the buttons hidden their bar never renders, so it never measures:
-    // the widest row is the one-letter field row itself.
-    $this->assertSame(5, (new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None, 'spacing' => Spacing::Compact]))->measureContentWidth($form, new Answers()));
   }
 
 }

@@ -11,6 +11,7 @@ use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Mode;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyMap;
@@ -61,6 +62,12 @@ final class KeyRouter {
   public function __construct(
     protected Panel $panel,
   ) {
+    // One declaration outlives the session driving it, so a session opens on a
+    // form nobody has walked into rather than wherever the last one stopped.
+    foreach (Tree::panels($this->panel) as $panel) {
+      $panel->leave();
+    }
+
     $this->panel->enter();
     $this->settle();
   }
@@ -253,6 +260,18 @@ final class KeyRouter {
       return;
     }
 
+    if ($bindings->matches($key, Action::MoveRight)) {
+      $this->moveAcross(1);
+
+      return;
+    }
+
+    if ($bindings->matches($key, Action::MoveLeft)) {
+      $this->moveAcross(-1);
+
+      return;
+    }
+
     if ($bindings->matches($key, Action::Activate)) {
       $this->activate($focused);
 
@@ -341,8 +360,151 @@ final class KeyRouter {
       return;
     }
 
-    $this->cursor = max(0, min($this->cursor + $delta, $count - 1));
+    $this->cursor = $this->stepped($delta) ?? max(0, min($this->cursor + $delta, $count - 1));
     $this->settle();
+  }
+
+  /**
+   * Move the cursor along the visual row of windows it is on.
+   *
+   * Windows sit beside each other, so what is next to one is a neighbour rather
+   * than the next row: moving across walks the row and stops at its ends, and
+   * anywhere else there is nothing beside the cursor to move to.
+   *
+   * @param int $delta
+   *   The windows to move by.
+   */
+  protected function moveAcross(int $delta): void {
+    $at = $this->windowAt();
+
+    if ($at === NULL) {
+      return;
+    }
+
+    [$row, $column] = $at;
+    $windows = $this->windowRows();
+    $next = $column + $delta;
+
+    if ($next < 0 || $next >= count($windows[$row])) {
+      return;
+    }
+
+    $this->cursor = $windows[$row][$next];
+    $this->settle();
+  }
+
+  /**
+   * Where the cursor lands when it steps off a row of windows, if it is on one.
+   *
+   * @param int $delta
+   *   The visual rows to move by.
+   *
+   * @return int|null
+   *   The block to land on, or NULL when the cursor is not on a window and the
+   *   move is the ordinary one from a row to the row after it.
+   */
+  protected function stepped(int $delta): ?int {
+    $at = $this->windowAt();
+
+    if ($at === NULL) {
+      return NULL;
+    }
+
+    [$row, $column] = $at;
+    $windows = $this->windowRows();
+    $next = $row + $delta;
+
+    // Off the top or the bottom of the grid is out of it: the whole grid is one
+    // step, so what is above or below it is the row beside the grid rather than
+    // the window the cursor happened to be under.
+    if (!isset($windows[$next])) {
+      return $this->beside($windows, $delta);
+    }
+
+    // A shorter row cannot be entered past its end, so the cursor lands on the
+    // window nearest the column it came from.
+    return $windows[$next][min($column, count($windows[$next]) - 1)];
+  }
+
+  /**
+   * The block on the far side of the grid, in the direction of a move.
+   *
+   * @param list<list<int>> $windows
+   *   The blocks of each visual row of windows.
+   * @param int $delta
+   *   The direction: below the grid when positive, above it when negative.
+   *
+   * @return int|null
+   *   The block to land on, or NULL when there is nothing beyond the grid.
+   */
+  protected function beside(array $windows, int $delta): ?int {
+    $placed = $windows === [] ? [] : array_merge(...$windows);
+
+    if ($placed === []) {
+      return NULL;
+    }
+
+    $count = count($this->focusable());
+    $index = $delta > 0 ? max($placed) + 1 : min($placed) - 1;
+
+    return $index >= 0 && $index < $count ? $index : NULL;
+  }
+
+  /**
+   * Which window of the grid the cursor is on, if it is on one.
+   *
+   * @return array{int,int}|null
+   *   The visual row and the place in it, or NULL when the cursor is not on a
+   *   window.
+   */
+  protected function windowAt(): ?array {
+    foreach ($this->windowRows() as $row => $blocks) {
+      $column = array_search($this->cursor, $blocks, TRUE);
+
+      if (is_int($column)) {
+        return [$row, $column];
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * The blocks of each visual row of windows, in the order they are drawn.
+   *
+   * @return list<list<int>>
+   *   One entry per visual row, naming the focusable blocks the windows of that
+   *   row are; empty when the panel arranges no grid.
+   */
+  protected function windowRows(): array {
+    $grid = $this->panel->place()->gridRows();
+
+    if ($grid === []) {
+      return [];
+    }
+
+    $windows = [];
+
+    foreach ($this->focusable() as $index => $block) {
+      if ($block instanceof Panel) {
+        $windows[] = $index;
+      }
+    }
+
+    $rows = [];
+    $taken = 0;
+
+    foreach ($grid as $count) {
+      $row = array_slice($windows, $taken, $count);
+
+      if ($row !== []) {
+        $rows[] = $row;
+      }
+
+      $taken += $count;
+    }
+
+    return $rows;
   }
 
   /**

@@ -670,6 +670,36 @@ final class ScreenParityTest extends TestCase {
     $this->assertContains('  Fruit ›                        Vegetables ›', $rows);
   }
 
+  public function testCursorMovesSpatiallyAcrossTheGridOfWindows(): void {
+    $panel = $this->panel(
+      $this->nested('summary', 'Summary', (new Field('name', 'Order name'))->default('Weekly Box')),
+      $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple')),
+      $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot')),
+    );
+    $panel->grid(1, 2);
+
+    $tester = $this->tester($panel)->rows(16)->cols(60);
+
+    // Down leaves the full-width window for the row beneath it, right walks
+    // that row, and up comes back to the window above rather than to the
+    // window the cursor passed on the way down.
+    $tester->run(
+      Key::named(KeyName::Down),
+      Key::named(KeyName::Right),
+      Key::named(KeyName::Up),
+    );
+
+    $frames = array_map(static fn(string $frame): array => array_map(rtrim(...), explode("\n", $frame)), $tester->frames());
+
+    $this->assertContains('  Fruit ›                        Vegetables ›', $frames[0]);
+    $this->assertContains('❯ Fruit ›                        Vegetables ›', $frames[1]);
+    $this->assertContains('  Fruit ›                      ❯ Vegetables ›', $frames[2]);
+    $this->assertContains('❯ Summary ›', $frames[3]);
+
+    // A grid is moved through in two directions, so the legend says so.
+    $this->assertStringContainsString('←/→', $tester->frame());
+  }
+
   public function testFormThatHidesItsLegendAdvertisesNothing(): void {
     $shown = $this->tester($this->panel(new Field('courier', 'Courier')));
     $shown->run();

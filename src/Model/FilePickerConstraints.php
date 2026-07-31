@@ -12,7 +12,7 @@ use DrevOps\Tui\Translation\Translator;
  * The one home for what counts as a valid pick: the mode (any entry, files or
  * directories), the extensions selectable files are limited to, and a maximum
  * file size. The predicate and the human phrase live here once, so the
- * interactive field, the headless engine and the answer-set validator all
+ * interactive field, a headless collection and the answer-set validator all
  * agree - mirroring {@see NumberBounds} and {@see SelectionBounds}, but
  * constraining a filesystem path rather than a number or a count.
  *

@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Builder;
 
+use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\Fixup;
-use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\Option;
+use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
 
 /**
@@ -157,7 +159,7 @@ final class Form {
    * Add a post-settle fix-up rule.
    *
    * @param \DrevOps\Tui\Model\Fixup $fixup
-   *   The fix-up, evaluated by the engine.
+   *   The fix-up, evaluated once the answers have settled.
    *
    * @return $this
    *   The builder.
@@ -228,129 +230,232 @@ final class Form {
       return $this->root;
     }
 
+    LayoutGuard::assert($this->layout, count($this->panels), $this->title);
+
     // The root is the form itself rather than a panel somebody declared, so it
     // is addressed by the name the form goes by.
-    $root = (new Panel($this->title, $this->title))->layout(new PanelLayout());
+    $root = (new Panel($this->title, $this->title))->layout(new PanelLayout())->grid(...$this->layout);
+    $root->buttons(new Buttons($this->buttons, $this->submitLabel, $this->cancelLabel));
 
     foreach ($this->panels as $panel) {
       $panel->seal();
       $root->in('content')->add($panel->block());
     }
 
+    $this->assertUniqueFieldIds($root);
+    $this->assertFieldSurfaces($root);
+    $this->assertEntrySources($root);
+    $this->assertToggleEntries($root);
+    $this->assertReorderEntries($root);
+    $this->assertTemplateShapes($root);
+    $this->assertModalPanels($root);
+
     return $this->root = $root;
   }
 
   /**
-   * Build the immutable form definition.
+   * The subject this form configures.
    *
-   * @return \DrevOps\Tui\Model\FormDefinition
-   *   The form definition.
+   * @return string
+   *   The subject, empty when the form names none.
    */
-  public function build(): FormDefinition {
-    LayoutGuard::assert($this->layout, count($this->panels), $this->title);
+  public function currentSubject(): string {
+    return $this->subject;
+  }
 
-    $form = (new DefinitionFactory())->create(
-      $this->root(),
-      $this->title,
-      $this->subject,
-      new Buttons($this->buttons, $this->submitLabel, $this->cancelLabel),
-      $this->banner,
-      $this->envPrefix,
-      $this->fixups,
-      $this->layout,
-    );
+  /**
+   * The start banner this form opens on.
+   *
+   * @return string
+   *   The banner, empty when it opens straight onto the first frame.
+   */
+  public function currentBanner(): string {
+    return $this->banner;
+  }
 
-    $this->assertUniqueFieldIds($form);
-    $this->assertToggleOptions($form);
-    $this->assertReorderOptions($form);
-    $this->assertModalPanels($form->panels);
+  /**
+   * The prefix namespacing this form's per-question env-variable overrides.
+   *
+   * @return string
+   *   The prefix, empty when the facade default stands.
+   */
+  public function currentEnvPrefix(): string {
+    return $this->envPrefix;
+  }
 
-    return $form;
+  /**
+   * The rules this form applies once its answers have settled.
+   *
+   * @return \DrevOps\Tui\Model\Fixup[]
+   *   The rules, in declaration order.
+   */
+  public function currentFixups(): array {
+    return $this->fixups;
   }
 
   /**
    * Assert that every field id is unique across the panel tree.
    *
-   * @param \DrevOps\Tui\Model\FormDefinition $form
-   *   The built form definition.
+   * @param \DrevOps\Tui\Block\Panel $root
+   *   The panel every declared panel hangs from.
    */
-  protected function assertUniqueFieldIds(FormDefinition $form): void {
+  protected function assertUniqueFieldIds(Panel $root): void {
     $seen = [];
 
-    foreach ($form->fields() as $field) {
-      if (isset($seen[$field->id])) {
-        throw new FormException(sprintf('Duplicate field id "%s".', $field->id));
+    foreach (Tree::ids($root) as $id) {
+      if (isset($seen[$id])) {
+        throw new FormException(sprintf('Duplicate field id "%s".', $id));
       }
 
-      $seen[$field->id] = TRUE;
+      $seen[$id] = TRUE;
     }
   }
 
   /**
-   * Assert that every toggle field declares exactly two options.
+   * Assert that nothing is declared on a field that never draws it.
    *
-   * @param \DrevOps\Tui\Model\FormDefinition $form
-   *   The built form definition.
+   * @param \DrevOps\Tui\Block\Panel $root
+   *   The panel every declared panel hangs from.
    */
-  protected function assertToggleOptions(FormDefinition $form): void {
-    foreach ($form->fields() as $field) {
-      if ($field->type !== FieldType::Toggle) {
+  protected function assertFieldSurfaces(Panel $root): void {
+    foreach (Tree::fields($root) as $field) {
+      if ($field->placeholderText() !== '' && !$field->type()->supportsPlaceholder()) {
+        throw new FormException(sprintf('Field "%s" of type "%s" shows no placeholder; only text, number, textarea, password, suggest and search fields have an input buffer to ghost.', $field->id(), $field->type()->value));
+      }
+
+      if ($field->ratingCaptions() !== [] && $field->type() !== FieldType::Rating) {
+        throw new FormException(sprintf('Field "%s" of type "%s" draws no scale to caption; captions apply to rating fields.', $field->id(), $field->type()->value));
+      }
+    }
+  }
+
+  /**
+   * Assert that every field is offered exactly one set of rows it can hold.
+   *
+   * A field's rows may stand as declared, arrive from a loader, follow the
+   * answers or follow a query, and each of the four replaces the others - so a
+   * field offered two of them has no one set, and a field offered any of them
+   * on a kind that shows no list has nowhere to put them.
+   *
+   * @param \DrevOps\Tui\Block\Panel $root
+   *   The panel every declared panel hangs from.
+   */
+  protected function assertEntrySources(Panel $root): void {
+    foreach (Tree::fields($root) as $field) {
+      $offered = [
+        $field->entries() !== [],
+        $field->loader() instanceof \Closure,
+        $field->resolver() instanceof \Closure,
+        $field->source() instanceof \Closure,
+      ];
+
+      if ($field->source() instanceof \Closure && !$field->type()->supportsQuerySource()) {
+        throw new FormException(sprintf('Field "%s" of type "%s" cannot source its options from a query; only search and suggest fields show one.', $field->id(), $field->type()->value));
+      }
+
+      if (in_array(TRUE, $offered, TRUE) && !$field->type()->supportsOptions()) {
+        throw new FormException(sprintf('Field "%s" of type "%s" shows no options; only select, search, suggest, toggle and reorder fields have a list.', $field->id(), $field->type()->value));
+      }
+
+      if (count(array_filter($offered)) > 1) {
+        throw new FormException(sprintf('Field "%s" is offered more than one set of options; each replaces the others, so declare only one.', $field->id()));
+      }
+
+      if ($field->queryMinLength() > 0 && !$field->source() instanceof \Closure) {
+        throw new FormException(sprintf('Field "%s" declares a minimum query length but no query source to apply it to.', $field->id()));
+      }
+    }
+  }
+
+  /**
+   * Assert that every toggle field declares exactly two entries.
+   *
+   * @param \DrevOps\Tui\Block\Panel $root
+   *   The panel every declared panel hangs from.
+   */
+  protected function assertToggleEntries(Panel $root): void {
+    foreach (Tree::fields($root) as $field) {
+      if ($field->type() !== FieldType::Toggle) {
         continue;
       }
 
       // Rows that arrive later cannot be counted here, and the default they
       // would be checked against is the one they will settle on.
-      if (!$field->hasSettledOptions()) {
+      if (!$this->settled($field)) {
         continue;
       }
 
-      if (count($field->options) !== 2) {
-        throw new FormException(sprintf('Toggle field "%s" must have exactly two options, %d given.', $field->id, count($field->options)));
+      $entries = $field->entries();
+
+      if (count($entries) !== 2) {
+        throw new FormException(sprintf('Toggle field "%s" must have exactly two options, %d given.', $field->id(), count($entries)));
       }
+
+      $default = $field->value();
 
       // A dynamic default is a closure resolved at runtime; every literal
       // default - whatever its type - must be one of the two option values,
       // otherwise the field would silently coerce it and select the first.
-      if ($field->default instanceof \Closure) {
+      if ($default instanceof \Closure) {
         continue;
       }
 
-      $values = array_map(static fn(Option $option): string => $option->value, $field->options);
+      $values = array_map(static fn(Option $entry): string => $entry->value, $entries);
 
-      if (!is_string($field->default) || !in_array($field->default, $values, TRUE)) {
-        throw new FormException(sprintf('Toggle field "%s" default must be one of: %s.', $field->id, implode(', ', $values)));
+      if (!is_string($default) || !in_array($default, $values, TRUE)) {
+        throw new FormException(sprintf('Toggle field "%s" default must be one of: %s.', $field->id(), implode(', ', $values)));
       }
     }
   }
 
   /**
-   * Assert that every reorder field declares at least two plain options.
+   * Assert that every reorder field declares at least two plain entries.
    *
    * A ranking arranges a flat list, so headings, separators and disabled rows
    * have no place in it, and fewer than two items is nothing to reorder.
    *
-   * @param \DrevOps\Tui\Model\FormDefinition $form
-   *   The built form definition.
+   * @param \DrevOps\Tui\Block\Panel $root
+   *   The panel every declared panel hangs from.
    */
-  protected function assertReorderOptions(FormDefinition $form): void {
-    foreach ($form->fields() as $field) {
-      if ($field->type !== FieldType::Reorder) {
+  protected function assertReorderEntries(Panel $root): void {
+    foreach (Tree::fields($root) as $field) {
+      if ($field->type() !== FieldType::Reorder) {
         continue;
       }
 
       // Rows that arrive later are not there to be counted or vetted here.
-      if (!$field->hasSettledOptions()) {
+      if (!$this->settled($field)) {
         continue;
       }
 
-      foreach ($field->options as $option) {
-        if (!$option->selectable()) {
-          throw new FormException(sprintf('Reorder field "%s" allows only plain options - no headings, separators or disabled rows.', $field->id));
+      $entries = $field->entries();
+
+      foreach ($entries as $entry) {
+        if (!$entry->selectable()) {
+          throw new FormException(sprintf('Reorder field "%s" allows only plain options - no headings, separators or disabled rows.', $field->id()));
         }
       }
 
-      if (count($field->options) < 2) {
-        throw new FormException(sprintf('Reorder field "%s" must have at least two options, %d given.', $field->id, count($field->options)));
+      if (count($entries) < 2) {
+        throw new FormException(sprintf('Reorder field "%s" must have at least two options, %d given.', $field->id(), count($entries)));
+      }
+    }
+  }
+
+  /**
+   * Assert that every template field declares the shape it fills in.
+   *
+   * @param \DrevOps\Tui\Block\Panel $root
+   *   The panel every declared panel hangs from.
+   */
+  protected function assertTemplateShapes(Panel $root): void {
+    foreach (Tree::fields($root) as $field) {
+      if ($field->type() !== FieldType::Template) {
+        continue;
+      }
+
+      if (!$field->template() instanceof Template) {
+        throw new FormException(sprintf('Field "%s" is a template field but declares no pattern; add ->pattern() with the shape to fill in.', $field->id()));
       }
     }
   }
@@ -362,17 +467,29 @@ final class Form {
    * fields and a description, but nesting panels (or another modal) inside it
    * has no defined layout.
    *
-   * @param \DrevOps\Tui\Model\Panel[] $panels
-   *   The panels to walk, recursively.
+   * @param \DrevOps\Tui\Block\Panel $root
+   *   The panel every declared panel hangs from.
    */
-  protected function assertModalPanels(array $panels): void {
-    foreach ($panels as $panel) {
-      if ($panel->isModal() && $panel->panels !== []) {
-        throw new FormException(sprintf('Modal panel "%s" cannot contain sub-panels.', $panel->id));
+  protected function assertModalPanels(Panel $root): void {
+    foreach (Tree::panels($root) as $panel) {
+      if ($panel->isModal() && $panel->children() !== []) {
+        throw new FormException(sprintf('Modal panel "%s" cannot contain sub-panels.', $panel->id()));
       }
-
-      $this->assertModalPanels($panel->panels);
     }
+  }
+
+  /**
+   * Whether a field's entries stand as declared.
+   *
+   * @param \DrevOps\Tui\Block\Field $field
+   *   The field.
+   *
+   * @return bool
+   *   FALSE while a loader, a resolver or a query source still owes the field
+   *   its rows, so there is nothing yet to count or to check a default against.
+   */
+  protected function settled(Field $field): bool {
+    return !$field->loader() instanceof \Closure && !$field->resolver() instanceof \Closure && !$field->source() instanceof \Closure;
   }
 
 }

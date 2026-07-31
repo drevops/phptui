@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Resolver;
 
-use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Resolver\InputResolver;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -44,7 +43,7 @@ final class InputResolverTest extends TestCase {
     yield 'date passes through' => ['APP_DUE', '2026-07-15', 'due', '2026-07-15'];
     yield 'number trims and casts' => ['APP_PORT', ' 8080 ', 'port', 8080];
     yield 'rating trims and casts' => ['APP_TASTE', ' 4 ', 'taste', 4];
-    // Left as typed so the engine rejects it instead of it becoming a 0.
+    // Left as typed so the collection rejects it instead of it becoming a 0.
     yield 'non-integral rating stays a string' => ['APP_TASTE', 'great', 'taste', 'great'];
     yield 'multiple select splits a comma list' => ['APP_MODS', 'a, b ,c', 'mods', ['a', 'b', 'c']];
     yield 'empty multiple select' => ['APP_MODS', '', 'mods', []];
@@ -62,49 +61,49 @@ final class InputResolverTest extends TestCase {
   /**
    * Data provider for testEnvNameResolution().
    *
-   * @return \Iterator<string, array{\DrevOps\Tui\Model\Field, array<string,string>, array<string,mixed>}>
+   * @return \Iterator<string, array{\DrevOps\Tui\Block\Field, array<string,string>, array<string,mixed>}>
    *   The field, the environment it is resolved against and the inputs it
    *   contributes.
    */
   public static function dataProviderEnvNameResolution(): \Iterator {
     yield 'mechanical name is the prefixed field id' => [
-      new Field('machine_name', 'Machine', '', FieldType::Text, ''),
+      new Field('machine_name', 'Machine', FieldType::Text),
       ['APP_MACHINE_NAME' => 'x'],
       ['machine_name' => 'x'],
     ];
 
     yield 'declared name replaces the mechanical one' => [
-      new Field('crate_size', 'Crate size', '', FieldType::Text, '', envName: 'LEGACY_CRATE'),
+      (new Field('crate_size', 'Crate size', FieldType::Text))->env('LEGACY_CRATE'),
       ['LEGACY_CRATE' => 'large', 'APP_CRATE_SIZE' => 'small'],
       ['crate_size' => 'large'],
     ];
 
     yield 'mechanical name is not read once replaced' => [
-      new Field('crate_size', 'Crate size', '', FieldType::Text, '', envName: 'LEGACY_CRATE'),
+      (new Field('crate_size', 'Crate size', FieldType::Text))->env('LEGACY_CRATE'),
       ['APP_CRATE_SIZE' => 'small'],
       [],
     ];
 
     yield 'alias answers when the canonical name is unset' => [
-      new Field('crate_size', 'Crate size', '', FieldType::Text, '', envAliases: ['OLD_CRATE']),
+      (new Field('crate_size', 'Crate size', FieldType::Text))->envAliases(['OLD_CRATE']),
       ['OLD_CRATE' => 'large'],
       ['crate_size' => 'large'],
     ];
 
     yield 'canonical name wins over an alias' => [
-      new Field('crate_size', 'Crate size', '', FieldType::Text, '', envAliases: ['OLD_CRATE']),
+      (new Field('crate_size', 'Crate size', FieldType::Text))->envAliases(['OLD_CRATE']),
       ['OLD_CRATE' => 'large', 'APP_CRATE_SIZE' => 'small'],
       ['crate_size' => 'small'],
     ];
 
     yield 'earlier alias wins over a later one' => [
-      new Field('crate_size', 'Crate size', '', FieldType::Text, '', envAliases: ['OLD_CRATE', 'OLDER_CRATE']),
+      (new Field('crate_size', 'Crate size', FieldType::Text))->envAliases(['OLD_CRATE', 'OLDER_CRATE']),
       ['OLDER_CRATE' => 'small', 'OLD_CRATE' => 'large'],
       ['crate_size' => 'large'],
     ];
 
     yield 'alias value is coerced like the canonical one' => [
-      new Field('organic', 'Organic', '', FieldType::Confirm, FALSE, envAliases: ['OLD_ORGANIC']),
+      (new Field('organic', 'Organic', FieldType::Confirm))->envAliases(['OLD_ORGANIC']),
       ['OLD_ORGANIC' => 'yes'],
       ['organic' => TRUE],
     ];
@@ -142,23 +141,23 @@ final class InputResolverTest extends TestCase {
   /**
    * Build one field of each coercible type for resolution.
    *
-   * @return \DrevOps\Tui\Model\Field[]
+   * @return list<\DrevOps\Tui\Block\Field>
    *   The fields.
    */
   protected function fields(): array {
     return [
-      new Field('name', 'Name', '', FieldType::Text, ''),
-      new Field('agree', 'Agree', '', FieldType::Confirm, FALSE),
-      new Field('mods', 'Mods', '', FieldType::Select, [], multiple: TRUE),
-      new Field('port', 'Port', '', FieldType::Number, 0),
-      new Field('taste', 'Taste', '', FieldType::Rating, 1, bounds: new NumberBounds(1, 5)),
-      new Field('ack', 'Ack', '', FieldType::Pause, TRUE),
-      new Field('tags', 'Tags', '', FieldType::Search, [], multiple: TRUE),
-      new Field('rank', 'Rank', '', FieldType::Reorder, []),
-      new Field('vis', 'Visibility', '', FieldType::Toggle, 'public'),
-      new Field('paths', 'Paths', '', FieldType::FilePicker, [], multiple: TRUE),
-      new Field('cfg', 'Config', '', FieldType::FilePicker, ''),
-      new Field('due', 'Due', '', FieldType::Calendar, ''),
+      new Field('name', 'Name', FieldType::Text),
+      new Field('agree', 'Agree', FieldType::Confirm),
+      (new Field('mods', 'Mods', FieldType::Select))->multiple(),
+      new Field('port', 'Port', FieldType::Number),
+      new Field('taste', 'Taste', FieldType::Rating),
+      new Field('ack', 'Ack', FieldType::Pause),
+      (new Field('tags', 'Tags', FieldType::Search))->multiple(),
+      new Field('rank', 'Rank', FieldType::Reorder),
+      new Field('vis', 'Visibility', FieldType::Toggle),
+      (new Field('paths', 'Paths', FieldType::FilePicker))->multiple(),
+      new Field('cfg', 'Config', FieldType::FilePicker),
+      new Field('due', 'Due', FieldType::Calendar),
     ];
   }
 

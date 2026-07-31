@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Block;
 
 use DrevOps\Tui\Block\Element\BreadcrumbElementsInterface;
 use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\Tui\Translation\Translator;
 
 /**
  * The trail of panels you have entered.
@@ -54,7 +55,9 @@ final class Breadcrumb extends AbstractBlock {
    */
   public function render(ThemeInterface $theme): string {
     $elements = $this->elements($theme, BreadcrumbElementsInterface::class, 'a breadcrumb');
-    $labels = array_map($elements->breadcrumbLabel(...), $this->segments);
+    // A trail is made of the panel titles a form declared, so each resolves
+    // through the active language exactly as it does on the row it names.
+    $labels = array_map(static fn(string $segment): string => $elements->breadcrumbLabel(Translator::t($segment)), $this->segments);
 
     return implode(' ' . $elements->breadcrumbSeparator() . ' ', $labels);
   }

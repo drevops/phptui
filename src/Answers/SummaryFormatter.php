@@ -33,7 +33,7 @@ class SummaryFormatter {
    * Format the answers grouped by their panel trails.
    *
    * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The answer set (as produced by the engine or the panel TUI).
+   *   The answer set, however it was collected.
    *
    * @return string
    *   The formatted summary.

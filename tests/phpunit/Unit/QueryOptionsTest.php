@@ -8,15 +8,15 @@ use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Engine\Engine;
-use DrevOps\Tui\Engine\EngineException;
+use DrevOps\Tui\Screen\Collector;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Render\PanelController;
+use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Tui;
 use DrevOps\Tui\Field\Capability\QueryOptionsCapableTrait;
@@ -36,8 +36,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Field::class)]
 #[CoversClass(FieldType::class)]
 #[CoversClass(Option::class)]
-#[CoversClass(Engine::class)]
-#[CoversClass(PanelController::class)]
+#[CoversClass(Collector::class)]
+#[CoversClass(ScreenController::class)]
 #[CoversClass(FieldFactory::class)]
 #[CoversClass(Search::class)]
 #[CoversClass(Suggest::class)]
@@ -210,7 +210,7 @@ final class QueryOptionsTest extends TestCase {
   }
 
   public function testHeadlessRejectsValueNoQueryProduces(): void {
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessageMatches('/"turnip" was not found/');
 
     (new Tui($this->form()))->collect('{"veg":"turnip"}');
@@ -219,7 +219,7 @@ final class QueryOptionsTest extends TestCase {
   public function testHeadlessRejectsValueTheQueryAnswersWithout(): void {
     // The lookup returns rows, just not the one asked for, so the message can
     // name what was allowed.
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessageMatches('/not one of: carrot/');
 
     (new Tui($this->form(static fn(string $query): array => ['carrot' => 'Carrot'])))->collect('{"veg":"turnip"}');
@@ -236,12 +236,12 @@ final class QueryOptionsTest extends TestCase {
     $this->assertSame(['carrot', 'onion'], $this->queries);
   }
 
-  public function testHeadlessTurnsSourceFailureIntoEngineError(): void {
+  public function testHeadlessTurnsSourceFailureIntoCollectError(): void {
     $form = $this->form(static function (string $query): array {
       throw new \RuntimeException('The pantry is unreachable.');
     });
 
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessageMatches('/Could not load options for field "veg": The pantry is unreachable\./');
 
     (new Tui($form))->collect('{"veg":"potato"}');
@@ -324,7 +324,7 @@ final class QueryOptionsTest extends TestCase {
     $this->expectException(FormException::class);
     $this->expectExceptionMessageMatches($message);
 
-    Form::create('Order')->panel('order', 'New order', $declare)->build();
+    Form::create('Order')->panel('order', 'New order', $declare)->root();
   }
 
   /**

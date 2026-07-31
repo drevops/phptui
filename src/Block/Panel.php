@@ -22,6 +22,7 @@ use DrevOps\Tui\Screen\Region;
 use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
 use DrevOps\Tui\Theme\Spacing;
 use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\Tui\Translation\Translator;
 
 /**
  * A destination you can go into and come back from.
@@ -334,8 +335,14 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
    * panel and coming back out again all resolve here.
    */
   public function hints(): array {
+    // Windows sitting beside each other are moved between in two directions
+    // rather than one, so what the keys do depends on how they are arranged.
+    $move = $this->grid === []
+      ? new Hint('move', Action::MoveUp, Action::MoveDown)
+      : new Hint('move', Action::MoveUp, Action::MoveDown, Action::MoveLeft, Action::MoveRight);
+
     return [
-      new Hint('move', Action::MoveUp, Action::MoveDown),
+      $move,
       new Hint('select', Action::Activate),
       new Hint('go back', Action::Back),
     ];
@@ -566,7 +573,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
    *   The row.
    */
   protected function headline(PanelElementsInterface $elements): string {
-    return $elements->panelSelector($this->isFocused()) . ' ' . $elements->panelTitle($this->title) . ' ' . $elements->panelDescend();
+    return $elements->panelSelector($this->isFocused()) . ' ' . $elements->panelTitle(Translator::t($this->title)) . ' ' . $elements->panelDescend();
   }
 
   /**
@@ -587,7 +594,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
       return [];
     }
 
-    return Prose::lines($this->description, $theme, $elements->panelDescription(...));
+    return Prose::lines(Translator::t($this->description), $theme, $elements->panelDescription(...));
   }
 
   /**

@@ -24,6 +24,7 @@ use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\InterruptException;
@@ -104,7 +105,7 @@ print "\nA value the field refuses\n\n";
 try {
   (new Collector())->collect($panel, ['weight' => 10]);
 }
-catch (InvalidArgumentException $exception) {
+catch (CollectException $exception) {
   print '  ' . $exception->getMessage() . "\n";
 }
 

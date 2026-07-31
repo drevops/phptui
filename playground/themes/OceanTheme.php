@@ -4,13 +4,8 @@ declare(strict_types=1);
 
 namespace Playground\Themes;
 
-use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\ScopedKeyMap;
-use DrevOps\Tui\Model\Field;
-use DrevOps\Tui\Model\Panel;
-use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Render\Navigator;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Sgr;
 
@@ -20,14 +15,13 @@ use DrevOps\Tui\Theme\Sgr;
  * It demonstrates two kinds of override, both shown below:
  *  - the appearance atoms - one method per colour and glyph (title(), value(),
  *    marker(), arrow()…), each overridden on its own;
- *  - any render*() and summarizePanel() method - to change how an element is
- *    laid out from those atoms.
+ *  - the per-block elements a block composes its row from (fieldLabel(),
+ *    panelTitle(), breadcrumbLabel()…), each drawn from those atoms.
  *
- * It extends DefaultTheme, so anything left un-overridden (e.g. renderBody(),
- * renderFrame()) falls back to the default theme, including its dark/light
- * mode. Select it with its class name (`\Playground\Themes\OceanTheme`), or
- * register a short name with ThemeManager::register('ocean',
- * OceanTheme::class).
+ * It extends DefaultTheme, so anything left un-overridden (e.g. renderFrame())
+ * falls back to the default theme, including its dark/light mode. Select it
+ * with its class name (`\Playground\Themes\OceanTheme`), or register a short
+ * name with ThemeManager::register('ocean', OceanTheme::class).
  */
 class OceanTheme extends DefaultTheme {
 
@@ -187,71 +181,72 @@ class OceanTheme extends DefaultTheme {
    * {@inheritdoc}
    */
   #[\Override]
-  public function renderFieldLine(Field $field, Answers $answers, bool $selected): array {
-    $prefix = $this->marker($selected) . ' ' . $this->label($field->label) . ': ';
-    $indent = str_repeat(' ', Ansi::width($prefix));
-
-    // A multi-line value (a textarea) lays out one row per line: the first
-    // rides the label row, the rest align under the value column, so no row
-    // carries an embedded newline.
-    $lines = [];
-
-    foreach (explode("\n", $this->normalizeLines($this->renderFieldValue($field, $answers->value($field->id)))) as $index => $value_line) {
-      $lines[] = ($index === 0 ? $prefix : $indent) . $this->value($value_line);
-    }
-
-    return $lines;
+  public function fieldLabel(string $text): string {
+    return $this->label($text) . ':';
   }
 
   /**
    * {@inheritdoc}
    */
   #[\Override]
-  public function renderPanelLine(Panel $panel, bool $selected): string {
-    $count = count($panel->fields) + count($panel->panels);
-
-    return $this->marker($selected) . ' ' . $this->title($panel->title) . '  ' . $this->description($this->arrow() . ' ' . $count . ' item' . ($count === 1 ? '' : 's'));
+  public function fieldDescription(string $text): string {
+    return $this->description($this->dot() . ' ' . $text);
   }
 
   /**
    * {@inheritdoc}
    */
   #[\Override]
-  public function renderDescriptionLine(string $description, bool $selected): string {
-    return '    ' . $this->description($this->dot() . ' ' . $description, $selected);
+  public function panelTitle(string $text): string {
+    return $this->title($text);
   }
 
   /**
    * {@inheritdoc}
    */
   #[\Override]
-  public function summarizePanel(Panel $panel, Answers $answers): string {
-    $parts = [];
-
-    foreach ($panel->fields as $field) {
-      if ($answers->has($field->id)) {
-        // A summary is one line, so a multi-line value folds to a single row.
-        $parts[] = str_replace("\n", ' ', $this->normalizeLines($this->renderFieldValue($field, $answers->value($field->id))));
-      }
-    }
-
-    return implode(' ' . $this->separator() . ' ', array_slice($parts, 0, 3));
+  public function panelDescend(): string {
+    return $this->description($this->arrow());
   }
 
   /**
    * {@inheritdoc}
    */
   #[\Override]
-  public function renderSummaryLine(string $summary, bool $selected): string {
-    return '    ' . $this->description($this->arrow() . ' ' . $summary, $selected);
+  public function panelDescription(string $text): string {
+    return $this->description($this->dot() . ' ' . $text);
   }
 
   /**
    * {@inheritdoc}
    */
   #[\Override]
-  public function renderBreadcrumbLine(Navigator $navigator): string {
-    return $this->breadcrumb('≈ ' . implode(' ' . $this->separator() . ' ', $navigator->breadcrumb()));
+  public function panelSummary(string $text): string {
+    return $this->description($this->arrow() . ' ' . $text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function panelSummarySeparator(): string {
+    return $this->separator();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function breadcrumbLabel(string $text): string {
+    return $this->breadcrumb($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function breadcrumbSeparator(): string {
+    return $this->breadcrumb($this->separator());
   }
 
   /**

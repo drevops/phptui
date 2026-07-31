@@ -7,14 +7,14 @@ namespace DrevOps\Tui\Tests\Unit;
 use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Engine\Engine;
+use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Primitive\ProgressReporter;
-use DrevOps\Tui\Render\PanelController;
+use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Schema\AgentHelp;
 use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Theme\DefaultTheme;
@@ -28,10 +28,10 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(FieldBuilder::class)]
 #[CoversClass(PanelBuilder::class)]
-#[CoversClass(Field::class)]
+#[CoversClass(Progress::class)]
 #[CoversClass(FieldType::class)]
-#[CoversClass(Engine::class)]
-#[CoversClass(PanelController::class)]
+#[CoversClass(Collector::class)]
+#[CoversClass(ScreenController::class)]
 #[CoversClass(DefaultTheme::class)]
 #[CoversClass(ProgressReporter::class)]
 #[CoversClass(AgentHelp::class)]
@@ -39,12 +39,11 @@ use PHPUnit\Framework\TestCase;
 final class ProgressFieldTest extends TestCase {
 
   public function testBuilderStoresTheStepsAndWork(): void {
-    $field = $this->form($this->work(), 3)->build()->fields()[0];
+    $block = $this->form($this->work(), 3)->root()->children()[0]->in('content')->blocks()[0];
 
-    $this->assertSame(FieldType::Progress, $field->type);
-    $this->assertSame(3, $field->progressSteps);
-    $this->assertInstanceOf(\Closure::class, $field->progressWork);
-    $this->assertNull($field->progressCurrent);
+    $this->assertInstanceOf(Progress::class, $block);
+    $this->assertSame(3, $block->total());
+    $this->assertInstanceOf(\Closure::class, $block->workload());
   }
 
   public function testNonPositiveStepsAreRejected(): void {

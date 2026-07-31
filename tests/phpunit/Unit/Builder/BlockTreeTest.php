@@ -284,17 +284,19 @@ final class BlockTreeTest extends TestCase {
     $this->assertSame($root, $form->root());
   }
 
-  public function testTheTreeIsWrittenBeforeTheDefinitionIsDerived(): void {
+  public function testTheTreeIsWrittenOnceAndHandedBackAsItStands(): void {
     $form = Form::create('Orchard')->panel('delivery', 'Delivery', static function (PanelBuilder $p): void {
       $p->select('basket', 'Basket contents')->option('apple', 'Apple')->default('apple');
     });
 
-    $definition = $form->build();
     $block = $form->root()->children()[0]->in('content')->blocks()[0];
 
     $this->assertInstanceOf(Field::class, $block);
     $this->assertSame('apple', $block->value());
-    $this->assertSame($block->value(), $definition->field('basket')?->default);
+
+    // The tree is written once and handed back as it stands, so a second call
+    // reaches the very blocks the first one did.
+    $this->assertSame($block, $form->root()->children()[0]->in('content')->blocks()[0]);
   }
 
   public function testLayoutDeclaringNoRegionHasNowhereToPutBlock(): void {

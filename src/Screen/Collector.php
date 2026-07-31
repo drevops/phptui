@@ -9,12 +9,11 @@ use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Tree;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Condition\ConditionInterface;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Derive\Deriver;
 use DrevOps\Tui\Discovery\DiscoverInterface;
-use DrevOps\Tui\Engine\EngineException;
-use DrevOps\Tui\Engine\Source;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Model\Option;
@@ -99,19 +98,14 @@ final class Collector {
    * @return array<string,mixed>
    *   The answers, keyed by field id.
    *
-   * @throws \InvalidArgumentException
-   *   When a supplied value is refused. Collecting without a screen is a call
-   *   in someone's code, so a value it cannot take is reported as a bad
-   *   argument to that call.
+   * @throws \DrevOps\Tui\CollectException
+   *   When a supplied value is refused. The answers were asked for as a whole,
+   *   so one that cannot be taken fails the whole collection.
    */
   public function collect(Panel $panel, array $supplied = [], ?Context $context = NULL): array {
     [$fields, $values, $sources, $active] = $this->fetched($panel, $supplied, $context ?? new Context());
 
-    $refusal = $this->refusal($fields, $values, $sources, $active);
-
-    if ($refusal !== NULL) {
-      throw new \InvalidArgumentException(sprintf('Cannot collect "%s": %s', $refusal[0], $refusal[1]));
-    }
+    $this->refuse($this->refusal($fields, $values, $sources, $active));
 
     return $this->activeAnswers($fields, $values, $active);
   }
@@ -134,23 +128,36 @@ final class Collector {
    * @return \DrevOps\Tui\Answers\Answers
    *   The answers.
    *
-   * @throws \DrevOps\Tui\Engine\EngineException
+   * @throws \DrevOps\Tui\CollectException
    *   When a supplied value is refused. The answers were asked for as a whole,
    *   so one that cannot be taken fails the whole collection.
    */
   public function answers(Panel $panel, array $supplied = [], ?Context $context = NULL): Answers {
     [$fields, $values, $sources, $active] = $this->fetched($panel, $supplied, $context ?? new Context());
 
-    $refusal = $this->refusal($fields, $values, $sources, $active);
-
-    if ($refusal !== NULL) {
-      throw new EngineException(Translator::t('Invalid value for field "@id": @error', [
-        '@id' => $refusal[0],
-        '@error' => $refusal[1],
-      ]));
-    }
+    $this->refuse($this->refusal($fields, $values, $sources, $active));
 
     return Answers::forTree($panel, $this->activeAnswers($fields, $values, $active), $this->provenance($fields, $sources, $active));
+  }
+
+  /**
+   * Fail the collection over a value the form refuses.
+   *
+   * @param array{string,string}|null $refusal
+   *   The field's id and the reason, or NULL when nothing is refused.
+   *
+   * @throws \DrevOps\Tui\CollectException
+   *   When there is a refusal to report.
+   */
+  protected function refuse(?array $refusal): void {
+    if ($refusal === NULL) {
+      return;
+    }
+
+    throw new CollectException(Translator::t('Invalid value for field "@id": @error', [
+      '@id' => $refusal[0],
+      '@error' => $refusal[1],
+    ]));
   }
 
   /**
@@ -275,11 +282,11 @@ final class Collector {
    * @param \DrevOps\Tui\Handler\Context $context
    *   The run this collection belongs to.
    *
-   * @return array{list<\DrevOps\Tui\Block\Field>,array<string,mixed>,array<string,\DrevOps\Tui\Engine\Source>,array<string,bool>}
+   * @return array{list<\DrevOps\Tui\Block\Field>,array<string,mixed>,array<string,\DrevOps\Tui\Screen\Source>,array<string,bool>}
    *   The fields in declaration order, the settled values, where each value
    *   came from, and which fields are there.
    *
-   * @throws \DrevOps\Tui\Engine\EngineException
+   * @throws \DrevOps\Tui\CollectException
    *   When a resolver or a source cannot answer.
    */
   protected function fetched(Panel $panel, array $supplied, Context $context): array {
@@ -304,7 +311,7 @@ final class Collector {
    * @param \DrevOps\Tui\Handler\Context $context
    *   The run this collection belongs to.
    *
-   * @return array{list<\DrevOps\Tui\Block\Field>,array<string,mixed>,array<string,\DrevOps\Tui\Engine\Source>,array<string,bool>}
+   * @return array{list<\DrevOps\Tui\Block\Field>,array<string,mixed>,array<string,\DrevOps\Tui\Screen\Source>,array<string,bool>}
    *   The fields in declaration order, the settled values, where each value
    *   came from, and which fields are there.
    */
@@ -352,7 +359,7 @@ final class Collector {
    * @param \DrevOps\Tui\Handler\Context $context
    *   The run this collection belongs to.
    *
-   * @return array{array<string,mixed>,array<string,\DrevOps\Tui\Engine\Source>}
+   * @return array{array<string,mixed>,array<string,\DrevOps\Tui\Screen\Source>}
    *   The values and their sources, each keyed by field id.
    */
   protected function resolveAll(array $fields, array $supplied, Context $context): array {
@@ -386,7 +393,7 @@ final class Collector {
    * @param \DrevOps\Tui\Handler\Context $context
    *   The run this collection belongs to.
    *
-   * @return array{mixed,\DrevOps\Tui\Engine\Source}
+   * @return array{mixed,\DrevOps\Tui\Screen\Source}
    *   The value and its source.
    */
   protected function resolveInitial(Field $field, array $supplied, Context $context): array {
@@ -471,7 +478,7 @@ final class Collector {
    *   The fields, in declaration order.
    * @param array<string,mixed> $values
    *   The resolved values keyed by field id.
-   * @param array<string,\DrevOps\Tui\Engine\Source> $sources
+   * @param array<string,\DrevOps\Tui\Screen\Source> $sources
    *   Where each value came from, keyed by field id.
    *
    * @return array<string,mixed>
@@ -495,7 +502,7 @@ final class Collector {
    *
    * @param list<\DrevOps\Tui\Block\Field> $fields
    *   The fields, in declaration order.
-   * @param array<string,\DrevOps\Tui\Engine\Source> $sources
+   * @param array<string,\DrevOps\Tui\Screen\Source> $sources
    *   Where each value came from, keyed by field id.
    *
    * @return array{array<string,\DrevOps\Tui\Derive\Derive>,array<string,bool>}
@@ -544,7 +551,7 @@ final class Collector {
   /**
    * The fields whose value was supplied, keyed by field id.
    *
-   * @param array<string,\DrevOps\Tui\Engine\Source> $sources
+   * @param array<string,\DrevOps\Tui\Screen\Source> $sources
    *   Where each value came from, keyed by field id.
    *
    * @return array<string,bool>
@@ -657,7 +664,7 @@ final class Collector {
    * @return array<string,mixed>
    *   The values, restated against the resolved rows.
    *
-   * @throws \DrevOps\Tui\Engine\EngineException
+   * @throws \DrevOps\Tui\CollectException
    *   When a resolver cannot answer.
    */
   protected function resolveEntries(array $fields, array $values, array $active, Context $context, array $supplied): array {
@@ -723,7 +730,7 @@ final class Collector {
    * @param array<string,bool> $active
    *   Which fields are there, keyed by field id.
    *
-   * @throws \DrevOps\Tui\Engine\EngineException
+   * @throws \DrevOps\Tui\CollectException
    *   When a source cannot answer.
    */
   protected function loadQueryEntries(array $fields, array $values, array $active): void {
@@ -796,14 +803,14 @@ final class Collector {
    * @param \Throwable $throwable
    *   What the consumer code threw.
    *
-   * @return \DrevOps\Tui\Engine\EngineException
+   * @return \DrevOps\Tui\CollectException
    *   The error naming the field.
    */
-  protected function entriesError(Field $field, \Throwable $throwable): EngineException {
+  protected function entriesError(Field $field, \Throwable $throwable): CollectException {
     // Not every code is an integer - a database driver's SQLSTATE is a string -
     // and consumer code decides which exception arrives here, so it is coerced
     // rather than allowed to fail the report instead of making it.
-    return new EngineException(Translator::t('Could not load options for field "@id": @error', [
+    return new CollectException(Translator::t('Could not load options for field "@id": @error', [
       '@id' => $field->id(),
       '@error' => $throwable->getMessage(),
     ]), (int) $throwable->getCode(), $throwable);
@@ -855,7 +862,7 @@ final class Collector {
    *   The fields, in declaration order.
    * @param array<string,mixed> $values
    *   The settled values keyed by field id.
-   * @param array<string,\DrevOps\Tui\Engine\Source> $sources
+   * @param array<string,\DrevOps\Tui\Screen\Source> $sources
    *   Where each value came from, keyed by field id.
    * @param array<string,bool> $active
    *   Which fields are there, keyed by field id.
@@ -946,7 +953,7 @@ final class Collector {
    *
    * @param list<\DrevOps\Tui\Block\Field> $fields
    *   The fields, in declaration order.
-   * @param array<string,\DrevOps\Tui\Engine\Source> $sources
+   * @param array<string,\DrevOps\Tui\Screen\Source> $sources
    *   Where each value came from, keyed by field id.
    * @param array<string,bool> $active
    *   Which fields are there, keyed by field id.

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Resolver;
 
-use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Translation\Translator;
 
@@ -14,7 +14,7 @@ use DrevOps\Tui\Translation\Translator;
  * The TUI stays dependency-free: this small overlay merges the external
  * layers - per-question environment variables (below) and a `--prompts`
  * JSON string or file (above) - into one input map. That map is the top layer
- * the engine resolves against, so the full precedence becomes
+ * a collection resolves against, so the full precedence becomes
  * `--prompts` > env > discovered > derived > default. Environment values are
  * strings, so they are coerced to the field's type; `--prompts` values are
  * already typed by JSON.
@@ -39,7 +39,7 @@ class InputResolver {
   /**
    * Build the input map for the given fields.
    *
-   * @param \DrevOps\Tui\Model\Field[] $fields
+   * @param list<\DrevOps\Tui\Block\Field> $fields
    *   The fields to resolve inputs for.
    * @param string $prompts
    *   A `--prompts` JSON string, or a path to a JSON file, or empty.
@@ -56,7 +56,7 @@ class InputResolver {
     foreach ($fields as $field) {
       foreach ($names->all($field) as $name) {
         if (array_key_exists($name, $env)) {
-          $inputs[$field->id] = $this->coerce($env[$name], $field);
+          $inputs[$field->id()] = $this->coerce($env[$name], $field);
 
           break;
         }
@@ -75,7 +75,7 @@ class InputResolver {
    *
    * @param string $value
    *   The raw environment value.
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field $field
    *   The field.
    *
    * @return mixed
@@ -86,11 +86,11 @@ class InputResolver {
     $truthy = ['1', 'true', 'yes', 'on'];
 
     return match (TRUE) {
-      $field->type === FieldType::Confirm, $field->type === FieldType::Pause => in_array(strtolower($trimmed), $truthy, TRUE),
+      $field->type() === FieldType::Confirm, $field->type() === FieldType::Pause => in_array(strtolower($trimmed), $truthy, TRUE),
       $field->collectsList() => $this->splitList($value),
       // Only an integral value coerces; anything else stays a string so the
-      // engine's type check rejects it instead of it silently becoming 0.
-      $field->type->collectsInteger() => preg_match('/^-?\d+$/', $trimmed) === 1 ? (int) $trimmed : $value,
+      // collection's type check rejects it instead of it silently becoming 0.
+      $field->type()->collectsInteger() => preg_match('/^-?\d+$/', $trimmed) === 1 ? (int) $trimmed : $value,
       default => $value,
     };
   }

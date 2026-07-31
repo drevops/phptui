@@ -27,7 +27,7 @@ use DrevOps\Tui\Discovery\JsonValue;
 use DrevOps\Tui\Discovery\PathExists;
 use DrevOps\Tui\Discovery\Scan;
 use DrevOps\Tui\Discovery\ScanType;
-use DrevOps\Tui\Engine\EngineException;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -59,7 +59,7 @@ try {
   // second argument points the run at the directory to inspect.
   $answers = (new Tui($form))->collect('', __DIR__ . '/sample-project', TRUE);
 }
-catch (EngineException $exception) {
+catch (CollectException $exception) {
   fwrite(STDERR, $exception->getMessage() . PHP_EOL);
   exit(1);
 }

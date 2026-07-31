@@ -8,16 +8,16 @@ use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Engine\Engine;
-use DrevOps\Tui\Engine\EngineException;
+use DrevOps\Tui\Screen\Collector;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Render\PanelController;
+use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Schema\AgentHelp;
 use DrevOps\Tui\Schema\OptionsResolver;
 use DrevOps\Tui\Schema\SchemaGenerator;
@@ -36,9 +36,9 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Field::class)]
 #[CoversClass(FieldType::class)]
 #[CoversClass(Option::class)]
-#[CoversClass(Engine::class)]
+#[CoversClass(Collector::class)]
 #[CoversClass(OptionsResolver::class)]
-#[CoversClass(PanelController::class)]
+#[CoversClass(ScreenController::class)]
 #[CoversClass(SchemaGenerator::class)]
 #[CoversClass(SchemaValidator::class)]
 #[CoversClass(AgentHelp::class)]
@@ -72,7 +72,7 @@ final class DynamicOptionsTest extends TestCase {
 
   public function testRejectsValueTheResolvedSetDoesNotHold(): void {
     // Apple is a real option - just not one this category resolves to.
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessageMatches('/not one of: carrot, potato, tomato/');
 
     (new Tui($this->form()))->collect('{"category":"vegetable","item":"apple"}');
@@ -80,7 +80,7 @@ final class DynamicOptionsTest extends TestCase {
 
   public function testRejectsValueWhenTheSetResolvesToNothing(): void {
     // With no list to offer, naming the value is all that can honestly be said.
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessageMatches('/"apple" was not found/');
 
     (new Tui($this->form(static fn(): array => [])))->collect('{"category":"fruit","item":"apple"}');
@@ -178,18 +178,18 @@ final class DynamicOptionsTest extends TestCase {
   public function testResolverReturningSomethingElseDegradesToNoOptions(): void {
     $form = $this->form(static fn(): mixed => 'not a map');
 
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessageMatches('/"apple" was not found/');
 
     (new Tui($form))->collect('{"category":"fruit","item":"apple"}');
   }
 
-  public function testThrowingResolverBecomesAnEngineError(): void {
+  public function testThrowingResolverFailsTheCollection(): void {
     $form = $this->form(static function (): array {
       throw new \RuntimeException('The pantry is unreachable.');
     });
 
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessageMatches('/Could not load options for field "item": The pantry is unreachable\./');
 
     (new Tui($form))->collect('{"category":"fruit"}');
@@ -325,7 +325,7 @@ final class DynamicOptionsTest extends TestCase {
   }
 
   public function testReconcilingLeavesNonChoiceValueAlone(): void {
-    $field = new Field('name', 'Order name', '', FieldType::Text, 'Pear');
+    $field = (new Field('name', 'Order name', FieldType::Text))->default('Pear');
 
     $this->assertSame('Pear', $field->reconcileValue('Pear'));
   }
@@ -335,7 +335,7 @@ final class DynamicOptionsTest extends TestCase {
     $this->expectException(FormException::class);
     $this->expectExceptionMessageMatches($message);
 
-    Form::create('Order')->panel('order', 'New order', $declare)->build();
+    Form::create('Order')->panel('order', 'New order', $declare)->root();
   }
 
   /**

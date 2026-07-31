@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
+use DrevOps\Tui\Block\Prose;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
@@ -17,6 +18,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the theme's semantic styler and symbol methods.
  */
 #[CoversClass(DefaultTheme::class)]
+#[CoversClass(Prose::class)]
 #[Group('theme')]
 final class ThemeTest extends TestCase {
 
@@ -89,63 +91,63 @@ final class ThemeTest extends TestCase {
     $this->assertSame('open Basket (https://example.com/basket)', $theme->label('open [Basket](https://example.com/basket)'));
   }
 
-  public function testDescriptionBlockRendersMarkdownWhenEnabled(): void {
+  public function testProseRendersMarkdownWhenEnabled(): void {
     $theme = new DefaultTheme(76, ['markdown' => TRUE]);
-    $lines = $theme->renderDescriptionBlock('pack **ripe** *sweet* `pears`', FALSE);
+    $lines = Prose::lines('pack **ripe** *sweet* `pears`', $theme);
 
     $this->assertCount(1, $lines);
-    $this->assertSame('    pack ripe sweet pears', Ansi::strip($lines[0]));
+    $this->assertSame('pack ripe sweet pears', Ansi::strip($lines[0]));
     // Bold, italic and the code colour each carry their own SGR.
     $this->assertStringContainsString("\033[1mripe\033[0m", $lines[0]);
     $this->assertStringContainsString("\033[3msweet\033[0m", $lines[0]);
     $this->assertStringContainsString("\033[93mpears\033[0m", $lines[0]);
   }
 
-  public function testDescriptionBlockRendersBulletList(): void {
+  public function testProseRendersBulletList(): void {
     $theme = new DefaultTheme(76, ['markdown' => TRUE]);
-    $lines = $theme->renderDescriptionBlock("- apples\n- pears", FALSE);
+    $lines = Prose::lines("- apples\n- pears", $theme);
 
     $this->assertCount(2, $lines);
-    $this->assertSame('    • apples', Ansi::strip($lines[0]));
-    $this->assertSame('    • pears', Ansi::strip($lines[1]));
+    $this->assertSame('• apples', Ansi::strip($lines[0]));
+    $this->assertSame('• pears', Ansi::strip($lines[1]));
   }
 
-  public function testDescriptionBlockLeavesMarkdownLiteralWhenDisabled(): void {
+  public function testProseLeavesMarkdownLiteralWhenDisabled(): void {
     $theme = new DefaultTheme();
-    $lines = $theme->renderDescriptionBlock('pack **ripe** pears', FALSE);
+    $lines = Prose::lines('pack **ripe** pears', $theme);
 
     // With markdown off the markers stay literal, but links still resolve.
     $this->assertCount(1, $lines);
-    $this->assertSame('    pack **ripe** pears', Ansi::strip($lines[0]));
+    $this->assertSame('pack **ripe** pears', Ansi::strip($lines[0]));
   }
 
-  public function testDescriptionBlockStripsToCleanTextWithoutColour(): void {
+  public function testProseStripsToCleanTextWithoutColour(): void {
     $theme = new DefaultTheme(76, ['markdown' => TRUE, 'color' => FALSE]);
-    $lines = $theme->renderDescriptionBlock("Pick **ripe** `pears` [here](https://example.com/here):\n- gala\n- bosc", FALSE);
+    $lines = Prose::lines("Pick **ripe** `pears` [here](https://example.com/here):\n- gala\n- bosc", $theme);
 
     // Markdown enabled but no colour: markers drop, links degrade, bullets show
     // as plain glyphs, and not a single escape sequence survives.
     $joined = implode("\n", $lines);
     $this->assertSame($joined, Ansi::strip($joined));
     $this->assertStringContainsString('Pick ripe pears here (https://example.com/here):', $joined);
-    $this->assertStringContainsString('    • gala', $joined);
-    $this->assertStringContainsString('    • bosc', $joined);
+    $this->assertStringContainsString('• gala', $joined);
+    $this->assertStringContainsString('• bosc', $joined);
   }
 
-  public function testDescriptionBlockNormalizesLineEndings(): void {
+  public function testProseNormalizesLineEndings(): void {
     $theme = new DefaultTheme(76, ['color' => FALSE, 'markdown' => TRUE]);
-    $lines = $theme->renderDescriptionBlock("- apples\r\n- pears\r- plums", FALSE);
+    $lines = Prose::lines("- apples\r\n- pears\r- plums", $theme);
 
     // CRLF and lone CR both split into their own physical lines, with no stray
     // carriage return left to overprint the row.
-    $this->assertSame(['    • apples', '    • pears', '    • plums'], $lines);
+    $this->assertSame(['• apples', '• pears', '• plums'], $lines);
   }
 
-  public function testDescriptionBlockResolvesLinksWithoutMarkdown(): void {
+  public function testProseResolvesLinksWithoutMarkdown(): void {
     $theme = new DefaultTheme();
-    $lines = $theme->renderDescriptionBlock('see [Guide](https://example.com/guide)', FALSE);
+    $lines = Prose::lines('see [Guide](https://example.com/guide)', $theme);
 
-    $this->assertSame('    see Guide', Ansi::strip($lines[0]));
+    $this->assertSame('see Guide', Ansi::strip($lines[0]));
     $this->assertStringContainsString(Ansi::link('Guide', 'https://example.com/guide'), $lines[0]);
   }
 

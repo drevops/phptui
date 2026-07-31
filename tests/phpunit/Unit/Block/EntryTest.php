@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Model;
+namespace DrevOps\Tui\Tests\Unit\Block;
 
-use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\Option;
@@ -15,14 +16,15 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests the option model, option kinds and the field option helpers.
+ * Tests the option model, option kinds and the entry helpers a field offers.
  */
 #[CoversClass(Option::class)]
 #[CoversClass(OptionKind::class)]
 #[CoversClass(FieldType::class)]
 #[CoversClass(Field::class)]
-#[Group('model')]
-final class OptionTest extends TestCase {
+#[CoversClass(FieldBuilder::class)]
+#[Group('block')]
+final class EntryTest extends TestCase {
 
   public function testListFromMap(): void {
     $options = Option::list(['a' => 'Apple', 'b' => 'Banana']);
@@ -84,9 +86,7 @@ final class OptionTest extends TestCase {
 
   #[DataProvider('dataProviderIsMultiChoice')]
   public function testIsMultiChoice(FieldType $type, bool $multiple, bool $expected): void {
-    $field = new Field('f', 'F', '', $type, $multiple ? [] : '', multiple: $multiple);
-
-    $this->assertSame($expected, $field->isMultiChoice());
+    $this->assertSame($expected, (new Field('f', 'F', $type))->multiple($multiple)->isMultiChoice());
   }
 
   public static function dataProviderIsMultiChoice(): \Iterator {
@@ -101,9 +101,7 @@ final class OptionTest extends TestCase {
 
   #[DataProvider('dataProviderCollectsList')]
   public function testCollectsList(FieldType $type, bool $multiple, bool $expected): void {
-    $field = new Field('f', 'F', '', $type, $multiple ? [] : '', multiple: $multiple);
-
-    $this->assertSame($expected, $field->collectsList());
+    $this->assertSame($expected, (new Field('f', 'F', $type))->multiple($multiple)->collectsList());
   }
 
   public static function dataProviderCollectsList(): \Iterator {
@@ -118,9 +116,7 @@ final class OptionTest extends TestCase {
 
   #[DataProvider('dataProviderAcceptsValue')]
   public function testAcceptsValue(FieldType $type, bool $multiple, mixed $value, bool $expected): void {
-    $field = new Field('f', 'F', '', $type, $multiple ? [] : '', multiple: $multiple);
-
-    $this->assertSame($expected, $field->acceptsValue($value));
+    $this->assertSame($expected, (new Field('f', 'F', $type))->multiple($multiple)->acceptsValue($value));
   }
 
   public static function dataProviderAcceptsValue(): \Iterator {
@@ -141,9 +137,7 @@ final class OptionTest extends TestCase {
 
   #[DataProvider('dataProviderValueKind')]
   public function testValueKind(FieldType $type, bool $multiple, string $expected): void {
-    $field = new Field('f', 'F', '', $type, $multiple ? [] : '', multiple: $multiple);
-
-    $this->assertSame($expected, $field->valueKind());
+    $this->assertSame($expected, (new Field('f', 'F', $type))->multiple($multiple)->valueKind());
   }
 
   public static function dataProviderValueKind(): \Iterator {
@@ -188,22 +182,11 @@ final class OptionTest extends TestCase {
     $this->assertSame('Note', FieldType::Note->label());
   }
 
-  public function testConstructorRejectsMultipleOnUnsupportedType(): void {
+  public function testDeclaringMultipleOnUnsupportedTypeIsRefused(): void {
     $this->expectException(FormException::class);
     $this->expectExceptionMessage('Field "n" of type "number" does not collect several values');
 
-    new Field('n', 'N', '', FieldType::Number, 0, multiple: TRUE);
-  }
-
-  public function testFieldOptionScan(): void {
-    $field = $this->selectField();
-
-    $this->assertSame('Standard', $field->option('standard')?->label);
-    // A disabled option is still found by value.
-    $this->assertTrue($field->option('demo')?->disabled);
-    // Missing values and structural rows are not returned.
-    $this->assertNotInstanceOf(Option::class, $field->option('missing'));
-    $this->assertNotInstanceOf(Option::class, $field->option(''));
+    (new FieldBuilder('n', 'N', FieldType::Number))->multiple();
   }
 
   public function testSelectableValues(): void {
@@ -212,9 +195,7 @@ final class OptionTest extends TestCase {
 
   #[DataProvider('dataProviderOptionError')]
   public function testOptionError(FieldType $type, bool $multiple, array $options, mixed $value, ?string $expected): void {
-    $field = new Field('f', 'F', '', $type, $multiple ? [] : '', $options, multiple: $multiple);
-
-    $this->assertSame($expected, $field->optionError($value));
+    $this->assertSame($expected, self::offering($type, $multiple, $options)->entryError($value));
   }
 
   public static function dataProviderOptionError(): \Iterator {
@@ -275,13 +256,40 @@ final class OptionTest extends TestCase {
    * A select field mixing selectable, disabled and structural rows.
    */
   protected function selectField(): Field {
-    return new Field('profile', 'Profile', '', FieldType::Select, '', [
+    return self::offering(FieldType::Select, FALSE, [
       new Option('standard', 'Standard'),
       new Option('', 'Group', '', OptionKind::Heading),
       new Option('minimal', 'Minimal'),
       new Option('', '', '', OptionKind::Separator),
       new Option('demo', 'Demo', '', OptionKind::Option, TRUE, 'unavailable'),
     ]);
+  }
+
+  /**
+   * A field offering the given rows, each declared as the kind of row it is.
+   *
+   * @param \DrevOps\Tui\Model\FieldType $type
+   *   The kind of answer it collects.
+   * @param bool $multiple
+   *   Whether it collects several values.
+   * @param array<array-key,\DrevOps\Tui\Model\Option> $options
+   *   The rows it offers.
+   *
+   * @return \DrevOps\Tui\Block\Field
+   *   The field.
+   */
+  protected static function offering(FieldType $type, bool $multiple, array $options): Field {
+    $field = (new Field('f', 'F', $type))->multiple($multiple);
+
+    foreach ($options as $option) {
+      match ($option->kind) {
+        OptionKind::Heading => $field->heading($option->label),
+        OptionKind::Separator => $field->separator(),
+        OptionKind::Option => $field->entry($option->value, $option->label, $option->description, $option->disabled, $option->disabledReason),
+      };
+    }
+
+    return $field;
   }
 
 }

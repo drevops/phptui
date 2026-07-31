@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Tests\Unit\Screen;
 use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
@@ -83,8 +84,8 @@ final class CollectorTest extends TestCase {
         ->validate(static fn(mixed $value): ?string => is_int($value) && $value >= 200 ? NULL : 'Enter at least 200.'),
     );
 
-    $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('Cannot collect "weight": Enter at least 200.');
+    $this->expectException(CollectException::class);
+    $this->expectExceptionMessage('Invalid value for field "weight": Enter at least 200.');
 
     (new Collector())->collect($panel, ['weight' => 10]);
   }
@@ -105,8 +106,8 @@ final class CollectorTest extends TestCase {
   public function testRequiredFieldRefusesAnEmptyAnswerAndSaysWhichOne(): void {
     $panel = $this->panel((new Field('basket', 'Basket contents'))->required());
 
-    $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('Cannot collect "basket": Basket contents is required.');
+    $this->expectException(CollectException::class);
+    $this->expectExceptionMessage('Invalid value for field "basket": Basket contents is required.');
 
     (new Collector())->collect($panel, ['basket' => '']);
   }
@@ -116,8 +117,8 @@ final class CollectorTest extends TestCase {
 
     $this->assertSame(['weight' => 4000], (new Collector())->collect($panel, ['weight' => 4000]));
 
-    $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('Cannot collect "weight": must be between 200 and 9000.');
+    $this->expectException(CollectException::class);
+    $this->expectExceptionMessage('Invalid value for field "weight": must be between 200 and 9000.');
 
     (new Collector())->collect($panel, ['weight' => 10]);
   }
@@ -137,8 +138,8 @@ final class CollectorTest extends TestCase {
 
     $this->assertSame(['basket' => 'carrot'], (new Collector())->collect($panel, ['basket' => 'carrot']));
 
-    $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('Cannot collect "basket": value "plum" is not one of: apple, carrot');
+    $this->expectException(CollectException::class);
+    $this->expectExceptionMessage('Invalid value for field "basket": value "plum" is not one of: apple, carrot');
 
     (new Collector())->collect($panel, ['basket' => 'plum']);
   }

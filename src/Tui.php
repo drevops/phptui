@@ -5,15 +5,13 @@ declare(strict_types=1);
 namespace DrevOps\Tui;
 
 use DrevOps\Tui\Answers\Answers;
-use DrevOps\Tui\Block\BlockFactory;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Engine\Engine;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Input\KeyMap;
 use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Primitive\Output;
 use DrevOps\Tui\Primitive\Progress;
 use DrevOps\Tui\Render\Terminal;
@@ -31,12 +29,12 @@ use DrevOps\Tui\Translation\Translator;
 /**
  * The one-class entry point for collecting a form's answers.
  *
- * Wraps the engine, input resolver, schema tools and panel TUI so a consumer
+ * Wraps the collector, input resolver, schema tools and panel TUI so a consumer
  * can collect answers - headlessly or interactively - in a single call. It also
  * owns the global TUI runtime shared by every form: the theme, key bindings,
  * colour and glyph forcing, the key-hint footer, screen clearing and the active
  * language, each set through a fluent setter. Those internals stay reachable
- * via form(), engine() and registry() when a consumer wants finer control.
+ * via root() and registry() when a consumer wants finer control.
  *
  * @package DrevOps\Tui
  */
@@ -48,24 +46,9 @@ final class Tui {
   protected HandlerRegistry $registry;
 
   /**
-   * The engine.
-   */
-  protected Engine $engine;
-
-  /**
    * The effective env-variable prefix for per-question overrides.
    */
   protected string $envPrefix;
-
-  /**
-   * The form definition.
-   */
-  protected FormDefinition $form;
-
-  /**
-   * The declared block tree, once the answer-side operations have needed one.
-   */
-  protected ?Panel $root = NULL;
 
   /**
    * What collects the answers with no screen at all, once one is asked for.
@@ -127,8 +110,8 @@ final class Tui {
   /**
    * Construct a TUI.
    *
-   * @param \DrevOps\Tui\Model\FormDefinition|\DrevOps\Tui\Builder\Form $form
-   *   The form: a Form builder (built internally) or its built definition.
+   * @param \DrevOps\Tui\Builder\Form $form
+   *   The form declaring the panels and fields to collect.
    * @param string[] $handler_namespaces
    *   Namespaces searched, in order, for per-field consumer classes offering
    *   reusable static validate()/transform() behaviour.
@@ -136,11 +119,10 @@ final class Tui {
    *   The env-variable prefix for per-question overrides; wins over the
    *   form-declared prefix, which wins over the "TUI_" default.
    */
-  public function __construct(FormDefinition|Form $form, array $handler_namespaces = [], string $env_prefix = '') {
-    $this->form = $form instanceof Form ? $form->build() : $form;
-    $this->envPrefix = $env_prefix !== '' ? $env_prefix : ($this->form->envPrefix !== '' ? $this->form->envPrefix : 'TUI_');
+  public function __construct(protected Form $form, array $handler_namespaces = [], string $env_prefix = '') {
+    $declared = $form->currentEnvPrefix();
+    $this->envPrefix = $env_prefix !== '' ? $env_prefix : ($declared !== '' ? $declared : 'TUI_');
     $this->registry = new HandlerRegistry($handler_namespaces);
-    $this->engine = new Engine($this->form, $this->registry);
   }
 
   /**
@@ -332,8 +314,8 @@ final class Tui {
    * @return \DrevOps\Tui\Answers\Answers
    *   The collected answers.
    *
-   * @throws \DrevOps\Tui\Engine\EngineException
-   *   When the engine cannot process the configuration or answers.
+   * @throws \DrevOps\Tui\CollectException
+   *   When the answers cannot be taken as they were given.
    * @throws \DrevOps\Tui\InterruptException
    *   When the user aborts the interactive session with the interrupt key.
    * @throws \DrevOps\Tui\CancelException
@@ -364,11 +346,12 @@ final class Tui {
     // Restore this facade's language at the operation boundary: another facade
     // constructed or configured meanwhile may have replaced the shared one.
     Translator::setShared($this->translator);
-    $inputs = (new InputResolver($this->envPrefix))->resolve($this->form->fields(), $prompts, getenv());
+    $root = $this->root();
+    $inputs = (new InputResolver($this->envPrefix))->resolve(Tree::fields($root), $prompts, getenv());
 
-    $this->collector ??= new Collector($this->registry, $this->form->fixups);
+    $this->collector ??= new Collector($this->registry, $this->form->currentFixups());
 
-    return $this->collector->answers($this->root(), $inputs, $this->context($directory, $update, $version));
+    return $this->collector->answers($root, $inputs, $this->context($directory, $update, $version));
   }
 
   /**
@@ -460,8 +443,8 @@ final class Tui {
    * @return \DrevOps\Tui\Answers\Answers
    *   The collected answers.
    *
-   * @throws \DrevOps\Tui\Engine\EngineException
-   *   When the engine cannot process the configuration or answers.
+   * @throws \DrevOps\Tui\CollectException
+   *   When the answers cannot be taken as they were given.
    * @throws \DrevOps\Tui\InterruptException
    *   When the user aborts the interactive session with the interrupt key.
    * @throws \DrevOps\Tui\CancelException
@@ -519,13 +502,11 @@ final class Tui {
     $drawn = ThemeManager::create($this->resolveTheme($theme), $width, $options);
 
     return new ScreenController(
-      // A session is typed into, so it gets a tree of its own: the answer-side
-      // operations read one nobody has moved a cursor through.
-      (new BlockFactory())->create($this->form),
+      $this->root(),
       $drawn,
       [],
       $this->keymap ?? KeyMapManager::create(),
-      new Collector($this->registry, $this->form->fixups),
+      new Collector($this->registry, $this->form->currentFixups()),
       $this->context($directory, $update, $version),
       // The frame the theme was told to lay its rows out to is the frame that
       // has to be drawn around them, so the border is read back off it rather
@@ -533,7 +514,7 @@ final class Tui {
       border: $drawn->borderStyle(),
       clearOnExit: $this->clearOnExit,
       footer: $this->footer,
-      banner: $banner !== '' ? $banner : $this->form->banner,
+      banner: $banner !== '' ? $banner : $this->form->currentBanner(),
       version: $version,
     );
   }
@@ -608,26 +589,6 @@ final class Tui {
   }
 
   /**
-   * The form definition.
-   *
-   * @return \DrevOps\Tui\Model\FormDefinition
-   *   The form definition.
-   */
-  public function form(): FormDefinition {
-    return $this->form;
-  }
-
-  /**
-   * The engine.
-   *
-   * @return \DrevOps\Tui\Engine\Engine
-   *   The engine.
-   */
-  public function engine(): Engine {
-    return $this->engine;
-  }
-
-  /**
    * The handler registry.
    *
    * @return \DrevOps\Tui\Handler\HandlerRegistry
@@ -638,17 +599,18 @@ final class Tui {
   }
 
   /**
-   * The declared block tree the answer-side operations read.
+   * The declared block tree: the panel every declared panel hangs from.
    *
    * The rows a form asks about are settled state - a set of entries that
-   * arrives from somewhere else settles onto the block holding it - so the tree
-   * is built once and kept, the way the interactive path keeps its engine.
+   * arrives from somewhere else settles onto the block holding it - so one tree
+   * carries the declaration and what has become of it, and every operation on
+   * this facade reads that one.
    *
    * @return \DrevOps\Tui\Block\Panel
-   *   The panel every declared panel hangs from.
+   *   The root panel.
    */
-  protected function root(): Panel {
-    return $this->root ??= (new BlockFactory())->create($this->form);
+  public function root(): Panel {
+    return $this->form->root();
   }
 
   /**

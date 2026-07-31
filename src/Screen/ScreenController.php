@@ -84,6 +84,11 @@ class ScreenController {
   protected const string CONTENT = 'content';
 
   /**
+   * The id of the row saying why the form cannot be ended yet.
+   */
+  protected const string NOTICE = 'screen-notice';
+
+  /**
    * The rules a frame spends on the border it is drawn in, top and bottom.
    */
   protected const int FRAME_RULES = 2;
@@ -269,7 +274,9 @@ class ScreenController {
     $this->legend = $this->furniture('footer', Legend::class);
 
     $this->actions = $this->buttons($assembler, $panel);
-    $this->notice = new Markup('screen-notice', '');
+    // A session opens on a form nobody has been refused yet, so whatever the
+    // last one left standing there is cleared rather than carried in.
+    $this->notice = ($this->stated($panel) ?? new Markup(self::NOTICE, ''))->body('');
     $this->help = (new Markup('screen-help', ''))->bordered();
     $this->overlay = $this->helpScreen();
 
@@ -1587,7 +1594,7 @@ class ScreenController {
     // The buttons end the form rather than the panel the cursor happens to be
     // in, so they go among the outermost panel's own rows: going into a nested
     // one leaves them behind exactly as it leaves that panel's siblings behind.
-    if ($this->panel->currentButtons()->show) {
+    if ($this->panel->currentButtons()->show && !$this->carries($this->panel)) {
       $this->panel->place()->add($this->notice)->add($this->actions);
     }
 
@@ -1597,8 +1604,10 @@ class ScreenController {
       if ($panel === $this->panel) {
         continue;
       }
-
       if (!$panel->isModal()) {
+        continue;
+      }
+      if ($this->carries($panel)) {
         continue;
       }
 
@@ -1635,9 +1644,64 @@ class ScreenController {
 
     // The assembler says which buttons a form has; the panel says what they
     // read, so a form that renamed its submit gets the name it chose.
-    return $assembler->actions()
+    return ($this->placed($panel) ?? $assembler->actions())
       ->action(Ending::Submit->value, Translator::t($declared->submitLabel))
       ->action(Ending::Cancel->value, Translator::t($declared->cancelLabel));
+  }
+
+  /**
+   * The way out a panel is already carrying, if it has been given one.
+   *
+   * One declaration outlives the session driving it, so a second run over the
+   * same panels takes on the buttons that are there rather than putting a
+   * second pair beside them.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel.
+   *
+   * @return \DrevOps\Tui\Block\Actions|null
+   *   The buttons, or NULL when the panel carries none.
+   */
+  protected function placed(Panel $panel): ?Actions {
+    foreach ($panel->place()->blocks() as $block) {
+      if ($block instanceof Actions) {
+        return $block;
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * The row a panel is already carrying for what withholds its end.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel.
+   *
+   * @return \DrevOps\Tui\Block\Markup|null
+   *   The row, or NULL when the panel carries none.
+   */
+  protected function stated(Panel $panel): ?Markup {
+    foreach ($panel->place()->blocks() as $block) {
+      if ($block instanceof Markup && $block->id() === self::NOTICE) {
+        return $block;
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Whether a panel already carries the way out of it.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel.
+   *
+   * @return bool
+   *   TRUE when it does.
+   */
+  protected function carries(Panel $panel): bool {
+    return $this->placed($panel) instanceof Actions;
   }
 
   /**

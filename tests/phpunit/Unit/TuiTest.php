@@ -12,7 +12,8 @@ use DrevOps\Tui\CancelException;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\Dotenv;
 use DrevOps\Tui\Discovery\JsonValue;
-use DrevOps\Tui\Engine\Engine;
+use DrevOps\Tui\Block\Actions;
+use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Input\Action;
@@ -158,8 +159,7 @@ final class TuiTest extends TestCase {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $panel): void {
         $panel->text('version', 'Version')->default(fn (Context $context): string => $context->version);
-      })
-      ->build();
+      });
 
     $prompts = (new Tui($form))->schema(new Context(version: '4.5.6'))['prompts'];
     $this->assertIsArray($prompts);
@@ -172,8 +172,7 @@ final class TuiTest extends TestCase {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $panel): void {
         $panel->text('version', 'Version')->default(fn (Context $context): string => $context->version);
-      })
-      ->build();
+      });
 
     $help = (new Tui($form))->agentHelp(new Context(version: '4.5.6'));
 
@@ -184,8 +183,7 @@ final class TuiTest extends TestCase {
     $form = Form::create('Demo')
       ->panel('p', 'p', function (PanelBuilder $panel): void {
         $panel->text('name');
-      })
-      ->build();
+      });
 
     // No prefix anywhere falls back to the package default.
     $this->assertStringContainsString('TUI_NAME', (new Tui($form))->agentHelp());
@@ -196,8 +194,7 @@ final class TuiTest extends TestCase {
       ->envPrefix('FORM_')
       ->panel('p', 'p', function (PanelBuilder $panel): void {
         $panel->text('name');
-      })
-      ->build();
+      });
 
     // The form-declared prefix is used unless the constructor overrides it.
     $this->assertStringContainsString('FORM_NAME', (new Tui($form))->agentHelp());
@@ -212,8 +209,8 @@ final class TuiTest extends TestCase {
   public function testAccessors(): void {
     $tui = $this->tui();
 
-    $this->assertSame('Demo', $tui->form()->title);
-    $this->assertInstanceOf(Engine::class, $tui->engine());
+    $this->assertInstanceOf(Panel::class, $tui->root());
+    $this->assertSame('Demo', $tui->root()->title());
     $this->assertInstanceOf(HandlerRegistry::class, $tui->registry());
   }
 
@@ -225,17 +222,22 @@ final class TuiTest extends TestCase {
     $this->assertSame('', $controller->answers()->value('name'));
   }
 
-  public function testControllerDrivesItsOwnTree(): void {
+  public function testEverySessionDrivesTheOneDeclaredTree(): void {
     $tui = $this->tui();
 
-    // A session is typed into, so two of them never share a tree - and neither
-    // shares the one the answer-side operations read.
+    // The declaration is the tree, so a second session drives the very blocks
+    // the first one did rather than a copy that could disagree with it.
     $first = $tui->controller(['color' => FALSE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
     $second = $tui->controller(['color' => FALSE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
 
     $panel = static fn(ScreenController $controller): mixed => (new \ReflectionProperty($controller, 'panel'))->getValue($controller);
 
-    $this->assertNotSame($panel($first), $panel($second));
+    $this->assertSame($tui->root(), $panel($first));
+    $this->assertSame($panel($first), $panel($second));
+
+    // Driving it twice leaves one way out of the form rather than two.
+    $actions = array_filter($tui->root()->place()->blocks(), static fn(object $block): bool => $block instanceof Actions);
+    $this->assertCount(1, $actions);
   }
 
   #[DataProvider('dataProviderControllerCarriesTheThemeBorderIntoTheFrame')]

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Engine;
+namespace DrevOps\Tui\Screen;
 
 /**
  * Where a field's initial value was resolved from.
  *
- * @package DrevOps\Tui\Engine
+ * @package DrevOps\Tui\Screen
  */
 enum Source {
 

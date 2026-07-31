@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Builder;
 
-use DrevOps\Tui\Block\Field as FieldBlock;
+use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Condition\ConditionInterface;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\DiscoverInterface;
 use DrevOps\Tui\Model\DateBounds;
-use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FilePickerConstraints;
 use DrevOps\Tui\Model\FilePickerMode;
@@ -48,7 +47,7 @@ final class FieldBuilder {
   /**
    * The block carrying the declaration.
    */
-  protected FieldBlock|Markup|Progress $block;
+  protected Field|Markup|Progress $block;
 
   /**
    * Whether an explicit default was set (otherwise the type default is used).
@@ -152,7 +151,7 @@ final class FieldBuilder {
       // collects, so neither builds the block that does.
       FieldType::Note => new Markup($id, '', $label),
       FieldType::Progress => new Progress($id, $label),
-      default => new FieldBlock($id, $label, $fieldType),
+      default => new Field($id, $label, $fieldType),
     };
   }
 
@@ -163,7 +162,7 @@ final class FieldBuilder {
    *   The block, whose identity never changes, so it can be placed in a region
    *   as it is declared.
    */
-  public function block(): FieldBlock|Markup|Progress {
+  public function block(): Field|Markup|Progress {
     return $this->block;
   }
 
@@ -181,7 +180,7 @@ final class FieldBuilder {
     $selections = $this->buildSelectionBounds();
     $template = $this->buildTemplate();
 
-    if (!$this->block instanceof FieldBlock) {
+    if (!$this->block instanceof Field) {
       return;
     }
 
@@ -755,7 +754,7 @@ final class FieldBuilder {
    * Set the conditional-visibility rule.
    *
    * @param \DrevOps\Tui\Condition\ConditionInterface $condition
-   *   The condition gating the field, evaluated by the engine.
+   *   The condition gating the field, evaluated as the answers settle.
    *
    * @return $this
    *   The builder.
@@ -770,7 +769,7 @@ final class FieldBuilder {
    * Set the derive rule.
    *
    * @param \DrevOps\Tui\Derive\Derive $derive
-   *   The derive rule, evaluated by the engine.
+   *   The derive rule, evaluated as the answers settle.
    *
    * @return $this
    *   The builder.
@@ -786,7 +785,7 @@ final class FieldBuilder {
    *
    * @param \DrevOps\Tui\Discovery\DiscoverInterface|\Closure $discover
    *   The discovery rule - or a custom `fn (Context): mixed` detector -
-   *   evaluated by the engine in update mode.
+   *   evaluated in update mode.
    *
    * @return $this
    *   The builder.
@@ -1113,8 +1112,8 @@ final class FieldBuilder {
    * @return \DrevOps\Tui\Block\Field|null
    *   The field, or NULL for a block that shows or runs instead.
    */
-  protected function field(): ?FieldBlock {
-    return $this->block instanceof FieldBlock ? $this->block : NULL;
+  protected function field(): ?Field {
+    return $this->block instanceof Field ? $this->block : NULL;
   }
 
   /**
@@ -1363,7 +1362,7 @@ final class FieldBuilder {
   }
 
   /**
-   * The engine default for a field type when none is declared.
+   * The default a field type settles on when none is declared.
    *
    * @param \DrevOps\Tui\Model\FieldType $type
    *   The field type.

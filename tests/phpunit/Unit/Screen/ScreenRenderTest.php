@@ -230,6 +230,36 @@ final class ScreenRenderTest extends TestCase {
     $this->assertSame('  Advanced ›', $this->render($screen, 4, 20)[1]);
   }
 
+  public function testGridIsMeasuredTheWayItIsDrawn(): void {
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $region = $screen->in('content')->grid(2, 1);
+    $region->add(new Markup('above', 'Pick the produce.'));
+
+    $windows = [];
+
+    foreach (['fruit' => 'Fruit', 'veg' => 'Vegetables', 'dairy' => 'Dairy'] as $id => $title) {
+      $window = (new Panel($id, $title))->layout(new DefaultLayout());
+      $window->in('content')->add(new Markup($id . '-note', "one\ntwo"));
+      $region->add($window);
+      $windows[$id] = $window;
+    }
+
+    [$total, $row] = (new ScreenRenderer(new DefaultTheme(40, ['color' => FALSE])))->extent($region, $windows['dairy']);
+
+    // The row above, the air under it, then two windows sharing three rows, a
+    // rule between the visual rows, and the window below sharing none: two
+    // windows side by side cost the rows of one rather than of both.
+    $this->assertSame(9, $total);
+    // The window below the first visual row starts after it and the rule.
+    $this->assertSame(6, $row);
+
+    // What was counted is what is drawn: the content region comes to exactly
+    // those rows, so a region moved against them shows what it says it does.
+    $drawn = $this->render($screen, $total + 2, 40);
+    $this->assertSame('  Dairy ›', $drawn[$row + 1]);
+    $this->assertSame('two', $drawn[$total]);
+  }
+
   public function testAnEmptyLayoutDrawsNothingAtAll(): void {
     $layout = new class() extends AbstractLayout {
 

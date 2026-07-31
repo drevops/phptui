@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Testing;
 
+use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\Markup;
+use DrevOps\Tui\Block\Progress;
+use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Model\FieldType;
@@ -40,12 +44,26 @@ final class AllFieldsFormTest extends TestCase {
   }
 
   public function testEveryFieldTypeIsExercised(): void {
-    $form = AllFieldsForm::create()->build();
-
+    $root = AllFieldsForm::create()->root();
     $present = [];
-    foreach ($form->fields() as $field) {
-      $present[$field->type->value] = TRUE;
+
+    foreach (Tree::panels($root) as $panel) {
+      foreach ($panel->blocks() as $block) {
+        // A row that only shows and a row that only runs are blocks of their
+        // own, so each stands for the kind of row it is.
+        $type = match (TRUE) {
+          $block instanceof Field => $block->type(),
+          $block instanceof Markup => FieldType::Note,
+          $block instanceof Progress => FieldType::Progress,
+          default => NULL,
+        };
+
+        if ($type instanceof FieldType) {
+          $present[$type->value] = TRUE;
+        }
+      }
     }
+
     $actual = array_keys($present);
     sort($actual);
 

@@ -100,26 +100,157 @@ final class ScreenRenderer {
    *   -1 when it holds no such block.
    */
   public function extent(Region $region, ?BlockInterface $of = NULL): array {
-    $blocks = $region->blocks();
     $total = 0;
     $row = -1;
     $spaced = $this->spaced();
 
-    foreach ($this->rendered($blocks) as $index => $rendered) {
-      // Every block that draws at all costs a row, so anything past zero is a
-      // block with air owed above it.
+    foreach ($this->pieces($region) as $piece) {
+      // Every piece that draws at all costs a row, so anything past zero is a
+      // piece with air owed above it.
       if ($spaced && $total > 0) {
         $total++;
       }
 
-      if ($blocks[$index] === $of) {
-        $row = $total;
+      $at = array_search($of, $piece['blocks'], TRUE);
+
+      if ($of instanceof BlockInterface && is_int($at)) {
+        $row = $total + $piece['offsets'][$at];
       }
 
-      $total += substr_count($rendered, "\n") + 1;
+      $total += $piece['height'];
     }
 
     return [$total, $row];
+  }
+
+  /**
+   * What a region stacks, piece by piece.
+   *
+   * A grid stacks as one piece however many windows it deals into it, which is
+   * exactly how it draws: windows sitting beside each other share the rows they
+   * are drawn on, so counting them one under another would say the region is
+   * several times as deep as anyone can see.
+   *
+   * @param \DrevOps\Tui\Screen\Region $region
+   *   The region.
+   *
+   * @return list<array{height:int,blocks:list<\DrevOps\Tui\Block\BlockInterface>,offsets:list<int>}>
+   *   Each piece: the rows it comes to, the blocks drawn in it, and the row
+   *   each of those starts on within it.
+   */
+  protected function pieces(Region $region): array {
+    $blocks = $region->blocks();
+
+    if ($region->gridRows() === []) {
+      return $this->stacked($blocks);
+    }
+
+    [$panels, $above, $below] = $this->dealt($blocks);
+    $windows = $this->windowPiece($panels, $region->gridRows());
+
+    return [
+      ...$this->stacked($above),
+      ...($windows['height'] > 0 ? [$windows] : []),
+      ...$this->stacked($below),
+    ];
+  }
+
+  /**
+   * One piece per block, in the order they are drawn.
+   *
+   * @param list<\DrevOps\Tui\Block\BlockInterface> $blocks
+   *   The blocks.
+   *
+   * @return list<array{height:int,blocks:list<\DrevOps\Tui\Block\BlockInterface>,offsets:list<int>}>
+   *   The pieces.
+   */
+  protected function stacked(array $blocks): array {
+    $pieces = [];
+
+    foreach ($this->rendered($blocks) as $index => $rendered) {
+      $pieces[] = [
+        'height' => substr_count($rendered, "\n") + 1,
+        'blocks' => [$blocks[$index]],
+        'offsets' => [0],
+      ];
+    }
+
+    return $pieces;
+  }
+
+  /**
+   * The one piece a grid of windows stacks as.
+   *
+   * @param list<\DrevOps\Tui\Block\Panel> $panels
+   *   The panels, in the order they were placed.
+   * @param list<int> $grid
+   *   How many of them share each visual row.
+   *
+   * @return array{height:int,blocks:list<\DrevOps\Tui\Block\BlockInterface>,offsets:list<int>}
+   *   The rows the grid comes to, its windows, and the row each starts on.
+   */
+  protected function windowPiece(array $panels, array $grid): array {
+    $blocks = [];
+    $offsets = [];
+    $height = 0;
+    $taken = 0;
+
+    foreach ($grid as $count) {
+      // Every visual row after the first is told apart from the one above it,
+      // exactly as it is drawn.
+      if ($height > 0) {
+        $height++;
+      }
+
+      $tallest = 0;
+
+      foreach (array_slice($panels, $taken, $count) as $panel) {
+        $blocks[] = $panel;
+        $offsets[] = $height;
+        $tallest = max($tallest, substr_count($panel->preview($this->theme), "\n") + 1);
+        $taken += 1;
+      }
+
+      $height += $tallest;
+    }
+
+    return ['height' => $height, 'blocks' => $blocks, 'offsets' => $offsets];
+  }
+
+  /**
+   * Deal a region's blocks into its windows and the rows around them.
+   *
+   * @param list<\DrevOps\Tui\Block\BlockInterface> $blocks
+   *   The blocks.
+   *
+   * @return array{list<\DrevOps\Tui\Block\Panel>,list<\DrevOps\Tui\Block\BlockInterface>,list<\DrevOps\Tui\Block\BlockInterface>}
+   *   The panels the grid deals, the rows above it, and the rows below it. A
+   *   row placed before the first window stays above the grid and one placed
+   *   after the last stays below it, so nothing moves past a row it was
+   *   written above.
+   */
+  protected function dealt(array $blocks): array {
+    $panels = [];
+    $above = [];
+    $below = [];
+
+    foreach ($blocks as $block) {
+      if ($block instanceof Panel) {
+        $panels[] = $block;
+
+        continue;
+      }
+
+      if ($panels === []) {
+        $above[] = $block;
+
+        continue;
+      }
+
+      $below[] = $block;
+    }
+
+    return [$panels, $above, $below];
   }
 
   /**
@@ -318,29 +449,7 @@ final class ScreenRenderer {
    *   The rows.
    */
   protected function gridded(array $blocks, array $grid, int $columns): array {
-    $panels = [];
-    $above = [];
-    $below = [];
-
-    foreach ($blocks as $block) {
-      if ($block instanceof Panel) {
-        $panels[] = $block;
-
-        continue;
-      }
-
-      // A row placed before the first window stays above the grid and one
-      // placed after the last stays below it, so nothing moves past a row it
-      // was written above.
-      if ($panels === []) {
-        $above[] = $block;
-
-        continue;
-      }
-
-      $below[] = $block;
-    }
-
+    [$panels, $above, $below] = $this->dealt($blocks);
     $windows = implode("\n", $this->windows($panels, $grid, $columns));
 
     // The whole grid stacks as one more block, so what shows between it and

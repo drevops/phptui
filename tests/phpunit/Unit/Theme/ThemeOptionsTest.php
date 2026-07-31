@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Panel;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\Viewport;
 use DrevOps\Tui\Tests\Fixtures\Theme\AccentOptionTheme;
@@ -32,41 +29,6 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(DefaultTheme::class)]
 #[Group('theme')]
 final class ThemeOptionsTest extends TestCase {
-
-  public function testCompactSpacingDropsDescriptionsAndSummary(): void {
-    $panel = new Panel('p', 'P', '', [
-      new Field('a', 'A', 'field help', FieldType::Text, ''),
-    ], [
-      new Panel('sub', 'Sub', 'panel help', [new Field('b', 'B', '', FieldType::Text, '')]),
-    ]);
-
-    $theme = new DefaultTheme(40, ['color' => FALSE, 'spacing' => Spacing::Compact]);
-    [$lines] = $theme->renderBody($panel, new Answers(['b' => 'Beta'], []), 0);
-    $body = Ansi::strip(implode("\n", $lines));
-
-    // Compact keeps labels but drops descriptions, the summary and any gaps.
-    $this->assertStringContainsString('A', $body);
-    $this->assertStringContainsString('Sub', $body);
-    $this->assertStringNotContainsString('field help', $body);
-    $this->assertStringNotContainsString('panel help', $body);
-    $this->assertStringNotContainsString('Beta', $body);
-    $this->assertStringNotContainsString("\n\n", implode("\n", $lines));
-  }
-
-  public function testPaddedSpacingInsertsGapsBetweenItems(): void {
-    $panel = new Panel('p', 'P', '', [
-      new Field('a', 'A', '', FieldType::Text, ''),
-      new Field('b', 'B', '', FieldType::Text, ''),
-    ]);
-
-    $theme = new DefaultTheme(40, ['color' => FALSE, 'spacing' => Spacing::Padded]);
-    [$lines] = $theme->renderBody($panel, new Answers(), 0);
-
-    // A blank line separates the two fields.
-    $this->assertStringContainsString('A', Ansi::strip($lines[0]));
-    $this->assertSame('', $lines[1]);
-    $this->assertStringContainsString('B', Ansi::strip($lines[2]));
-  }
 
   #[DataProvider('dataProviderBorderDrawsBox')]
   public function testBorderDrawsBox(bool $unicode, Border $border, string $expected): void {

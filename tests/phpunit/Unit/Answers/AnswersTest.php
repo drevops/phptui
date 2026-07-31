@@ -49,7 +49,7 @@ final class AnswersTest extends TestCase {
     $this->assertSame('', $answers->toSummary());
   }
 
-  public function testForFormSnapshotsQuestions(): void {
+  public function testForTreeSnapshotsQuestions(): void {
     $form = Form::create('T')
       ->panel('general', 'General', function (PanelBuilder $p): void {
         $p->text('name', 'Site name');
@@ -58,9 +58,9 @@ final class AnswersTest extends TestCase {
           $sp->confirm('debug', 'Debug');
         });
       })
-      ->build();
+      ->root();
 
-    $answers = Answers::forForm($form, ['name' => 'Acme', 'debug' => TRUE], ['name' => Provenance::Edited]);
+    $answers = Answers::forTree($form, ['name' => 'Acme', 'debug' => TRUE], ['name' => Provenance::Edited]);
 
     // Snapshots exist only for active questions, in form order.
     $this->assertSame(['name', 'debug'], array_keys($answers->items));
@@ -80,15 +80,15 @@ final class AnswersTest extends TestCase {
     $this->assertSame(['General', 'Advanced'], $debug->panels);
   }
 
-  public function testForFormSplitsTemplateAnswerIntoItsParts(): void {
+  public function testForTreeSplitsTemplateAnswerIntoItsParts(): void {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $p): void {
         $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{grade}}');
         $p->text('name', 'Name');
       })
-      ->build();
+      ->root();
 
-    $answers = Answers::forForm($form, ['crate' => 'valley-a', 'name' => 'Acme'], []);
+    $answers = Answers::forTree($form, ['crate' => 'valley-a', 'name' => 'Acme'], []);
 
     // The value stays whole and the parts ride alongside it.
     $this->assertSame('valley-a', $answers->value('crate'));
@@ -105,9 +105,9 @@ final class AnswersTest extends TestCase {
       ->panel('p', 'P', function (PanelBuilder $p): void {
         $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{grade}}');
       })
-      ->build();
+      ->root();
 
-    $answers = Answers::forForm($form, ['crate' => 'nope'], []);
+    $answers = Answers::forTree($form, ['crate' => 'nope'], []);
 
     $this->assertSame([], $answers->parts('crate'));
   }
@@ -117,9 +117,9 @@ final class AnswersTest extends TestCase {
       ->panel('p', 'P', function (PanelBuilder $p): void {
         $p->text('name', 'Name');
       })
-      ->build();
+      ->root();
 
-    $summary = Answers::forForm($form, ['name' => 'Acme'], ['name' => Provenance::Edited])->toSummary();
+    $summary = Answers::forTree($form, ['name' => 'Acme'], ['name' => Provenance::Edited])->toSummary();
 
     $this->assertStringContainsString('P', $summary);
     $this->assertStringContainsString('Name: Acme (edited)', $summary);
@@ -130,8 +130,8 @@ final class AnswersTest extends TestCase {
       ->panel('p', 'P', function (PanelBuilder $p): void {
         $p->text('name', 'Order at [Basket](https://example.com/basket)');
       })
-      ->build();
-    $answers = Answers::forForm($form, ['name' => 'Weekly'], ['name' => Provenance::Edited]);
+      ->root();
+    $answers = Answers::forTree($form, ['name' => 'Weekly'], ['name' => Provenance::Edited]);
 
     $no_color = getenv('NO_COLOR');
     $term = getenv('TERM');

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
 use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Block\Prose;
 use DrevOps\Tui\Render\Viewport;
 use DrevOps\Tui\Theme\DosTheme;
 use DrevOps\Tui\Theme\EmberTheme;
@@ -214,12 +215,12 @@ final class BuiltinThemesTest extends TestCase {
     $dos = ThemeManager::create('dos', 76);
     $default = ThemeManager::create('default', 76);
 
-    $line = $dos->renderDescriptionBlock('Picked this morning', FALSE)[0];
+    $line = Prose::lines('Picked this morning', $dos)[0];
 
     // The body is styled by the same atom the one-line rows use, so the dos
     // theme's legible white reaches it instead of the dim grey it inherits.
-    $this->assertSame('    ' . $dos->description('Picked this morning'), $line);
-    $this->assertNotSame($default->renderDescriptionBlock('Picked this morning', FALSE)[0], $line);
+    $this->assertSame($dos->description('Picked this morning'), $line);
+    $this->assertNotSame(Prose::lines('Picked this morning', $default)[0], $line);
   }
 
   /**
@@ -228,7 +229,7 @@ final class BuiltinThemesTest extends TestCase {
   public function testDosBulletCarriesTheThemeAtom(): void {
     $theme = ThemeManager::create('dos', 76, ['markdown' => TRUE]);
 
-    $line = $theme->renderDescriptionBlock('- crisp apples', FALSE)[0];
+    $line = Prose::lines('- crisp apples', $theme)[0];
 
     $this->assertStringContainsString($theme->description($theme->bullet() . ' '), $line);
     $this->assertStringContainsString($theme->description('crisp apples'), $line);

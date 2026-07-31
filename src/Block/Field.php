@@ -1859,7 +1859,9 @@ final class Field extends AbstractBlock implements
     // Help is never drawn in the row that offers it: it can run to paragraphs,
     // so the row marks that there is something to ask for and nothing more.
     $marker = $this->help === '' ? '' : ' ' . $elements->fieldHelpMarker();
-    $label = $elements->fieldSelector($this->isFocused()) . ' ' . $elements->fieldLabel($this->label) . $marker;
+    // The question is as much a string a reader reads as the chrome around it,
+    // so it resolves through the active language wherever it is drawn.
+    $label = $elements->fieldSelector($this->isFocused()) . ' ' . $elements->fieldLabel(Translator::t($this->label)) . $marker;
 
     return $this->mode === Mode::View
       ? $this->settledLines($theme, $elements, $label)
@@ -1941,7 +1943,7 @@ final class Field extends AbstractBlock implements
    * @return list<string>
    *   The string items, in order; empty when the value is not a list.
    */
-  protected static function stringList(mixed $value): array {
+  public static function stringList(mixed $value): array {
     if (!is_array($value)) {
       return [];
     }
@@ -1974,7 +1976,7 @@ final class Field extends AbstractBlock implements
    * @return list<string>
    *   The allowed values in the resolved order.
    */
-  protected static function canonicalOrder(array $allowed, array $desired): array {
+  public static function canonicalOrder(array $allowed, array $desired): array {
     $set = array_fill_keys($allowed, TRUE);
 
     $order = [];
@@ -2238,7 +2240,7 @@ final class Field extends AbstractBlock implements
       return [];
     }
 
-    return Prose::lines($this->description, $theme, $elements->fieldDescription(...));
+    return Prose::lines(Translator::t($this->description), $theme, $elements->fieldDescription(...));
   }
 
   /**

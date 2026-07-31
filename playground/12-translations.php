@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Engine\EngineException;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Tui;
@@ -66,7 +66,7 @@ catch (InterruptException) {
   // Leave quietly on Ctrl-C.
   exit(130);
 }
-catch (EngineException $exception) {
+catch (CollectException $exception) {
   fwrite(STDERR, $exception->getMessage() . PHP_EOL);
   exit(1);
 }
