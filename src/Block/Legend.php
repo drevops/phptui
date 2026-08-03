@@ -8,6 +8,7 @@ use DrevOps\Tui\Block\Element\LegendElementsInterface;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\ScopedKeyMap;
+use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 
@@ -100,14 +101,28 @@ final class Legend extends AbstractBlock {
    */
   public function render(ThemeInterface $theme): string {
     $elements = $this->elements($theme, LegendElementsInterface::class, 'a legend');
+    $separator = ' ' . $elements->legendSeparator() . ' ';
+    $joint = Ansi::width($separator);
     $parts = [];
+    $width = 0;
 
     foreach ($this->written($theme) as $entry) {
       $does = Translator::t('to @action', ['@action' => Translator::t($entry['does'])]);
-      $parts[] = $elements->legendKey($entry['key']) . ' ' . $elements->legendDescription($does);
+      $part = $elements->legendKey($entry['key']) . ' ' . $elements->legendDescription($does);
+      $taken = $parts === [] ? Ansi::width($part) : $width + $joint + Ansi::width($part);
+
+      // A hint cut mid-word reads as a different word, so a legend out of room
+      // drops whole hints from the end - the earliest are the ones a reader
+      // reaches for first - keeping at least one however narrow the frame.
+      if ($parts !== [] && $taken > $theme->contentWidth()) {
+        break;
+      }
+
+      $parts[] = $part;
+      $width = $taken;
     }
 
-    return implode(' ' . $elements->legendSeparator() . ' ', $parts);
+    return implode($separator, $parts);
   }
 
   /**

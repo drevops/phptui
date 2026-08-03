@@ -16,6 +16,7 @@ use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Model\TableSpec;
+use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
@@ -102,6 +103,19 @@ final class BlockTest extends TestCase {
     $legend = (new Legend())->advertise(KeyMapManager::create()->navigation(), new Hint('move', Action::MoveUp));
 
     $this->assertSame('↑ перемістити', $legend->render($this->theme()));
+  }
+
+  public function testLegendOutOfRoomDropsWholeHintsFromTheEnd(): void {
+    $legend = (new Legend())->entry('↑/↓', 'move')->entry('↵', 'accept')->entry('ESC', 'cancel');
+    $whole = $legend->render($this->theme());
+
+    // A hint cut mid-word reads as a different word, so a narrow frame loses
+    // its last hints whole - and the narrowest frame still shows the first.
+    $short = $legend->render(new DefaultTheme(Ansi::width($whole) + 3, ['color' => FALSE]));
+    $tight = $legend->render(new DefaultTheme(12, ['color' => FALSE]));
+
+    $this->assertStringEndsWith('↵ to accept', $short);
+    $this->assertSame('↑/↓ to move', $tight);
   }
 
   public function testMarkupDrawsItsBodyAndItsTitleWhenItHasOne(): void {

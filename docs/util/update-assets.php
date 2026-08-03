@@ -46,6 +46,11 @@ declare(strict_types=1);
 define('TERMINAL_COLS', 80);
 define('TERMINAL_ROWS', 24);
 
+// The narrowest terminal an open editor's hint line survives whole on: it is
+// the theme's own default frame width, and below it a hint that does not fit
+// is cut mid-word instead of being dropped as a whole hint.
+define('HINT_COLS', 76);
+
 // Maximum idle time in recordings (seconds).
 define('MAX_IDLE_TIME', 3);
 
@@ -229,9 +234,10 @@ type_text "u"
 wait_and_enter
 arrow_down
 
-# Pause: acknowledge.
+# Pause: the gate opens on the first Enter and continues on the second.
 pause 800
 safe_send "\r"
+wait_and_enter
 
 # Back to the hub and submit.
 press_escape
@@ -616,12 +622,7 @@ pause 600
 safe_send "j"
 pause 600
 safe_send "k"
-pause 600
-
-# The ? overlay lists whatever is bound; any key dismisses it.
-safe_send "?"
-pause 3000
-press_escape
+pause 1500
 
 # Open the select under the cursor and pick the next option with j.
 pause 800
@@ -1072,10 +1073,10 @@ function getJobs(string $project_dir): array {
   // Inline editing: each editor opens in place on its panel row, with the
   // standalone calendar as the full-screen contrast.
   $jobs['inline-editing'] = [
-    'command' => 'env LINES=20 COLUMNS=64 php ' . $project_dir . '/playground/04-inline-editing.php',
+    'command' => 'env LINES=20 COLUMNS=' . HINT_COLS . ' php ' . $project_dir . '/playground/04-inline-editing.php',
     'interact' => inlineEditingInteraction(),
     'rows' => 20,
-    'cols' => 64,
+    'cols' => HINT_COLS,
     'verify' => 'Harvest date',
   ];
 
@@ -1092,10 +1093,10 @@ function getJobs(string $project_dir): array {
   // Conditional fields: picking herbs and the large box makes fields appear
   // and disappear; the herb bundle only renders once herbs are selected.
   $jobs['conditional-fields'] = [
-    'command' => 'env LINES=22 COLUMNS=72 php ' . $project_dir . '/playground/05-form-logic-conditional-fields.php',
+    'command' => 'env LINES=22 COLUMNS=' . HINT_COLS . ' php ' . $project_dir . '/playground/05-form-logic-conditional-fields.php',
     'interact' => conditionalFieldsInteraction(),
     'rows' => 22,
-    'cols' => 72,
+    'cols' => HINT_COLS,
     'verify' => 'Herb bundle',
   ];
 
@@ -1104,10 +1105,10 @@ function getJobs(string $project_dir): array {
   // renders once the first one did, so it proves the chain opened past its
   // head; "Courier" would not, matching the monospace font stack as well.
   $jobs['conditional-indent'] = [
-    'command' => 'env LINES=22 COLUMNS=72 php ' . $project_dir . '/playground/05-form-logic-conditional-indent.php',
+    'command' => 'env LINES=22 COLUMNS=' . HINT_COLS . ' php ' . $project_dir . '/playground/05-form-logic-conditional-indent.php',
     'interact' => conditionalIndentInteraction(),
     'rows' => 22,
-    'cols' => 72,
+    'cols' => HINT_COLS,
     'verify' => 'Weekly delivery?',
   ];
 
@@ -1115,15 +1116,15 @@ function getJobs(string $project_dir): array {
   // the editor and withholds the submit for the untouched basket, so the
   // derived message and a declared one both appear before the form completes.
   $jobs['field-behaviour'] = [
-    'command' => 'env LINES=18 COLUMNS=72 php ' . $project_dir . '/playground/06-field-behaviour-closures.php',
+    'command' => 'env LINES=18 COLUMNS=' . HINT_COLS . ' php ' . $project_dir . '/playground/06-field-behaviour-closures.php',
     'interact' => fieldBehaviourInteraction(),
     'rows' => 18,
-    'cols' => 72,
+    'cols' => HINT_COLS,
     'verify' => 'Stall name is required.',
   ];
 
-  // The vim key-bindings preset: j/k navigation and the ? help overlay. The
-  // taller screen leaves the overlay room to list the bound keys.
+  // The vim key-bindings preset: j and k drive the panel browser and the
+  // option list, alongside the arrows the preset keeps.
   $jobs['key-bindings-vim'] = [
     'command' => 'env LINES=22 COLUMNS=72 php ' . $project_dir . '/playground/10-key-bindings-vim.php',
     'interact' => keyBindingsVimInteraction(),
@@ -1133,12 +1134,14 @@ function getJobs(string $project_dir): array {
   ];
 
   // Translations: the Ukrainian catalog localizes the chrome and the labels;
-  // the translated Fruits label proves the localized render was captured.
+  // the translated Fruits label proves the localized render was captured. The
+  // localized hints run longer than the English ones, so the frame shows as
+  // many whole hints as fit and drops the rest.
   $jobs['translations'] = [
-    'command' => 'env LINES=20 COLUMNS=64 php ' . $project_dir . '/playground/12-translations.php',
+    'command' => 'env LINES=20 COLUMNS=' . HINT_COLS . ' php ' . $project_dir . '/playground/12-translations.php',
     'interact' => translationsInteraction(),
     'rows' => 20,
-    'cols' => 64,
+    'cols' => HINT_COLS,
     'verify' => 'Фрукти',
   ];
 
@@ -1268,7 +1271,7 @@ expect "Password field" {
 }
 EXPECT,
     'rows' => 12,
-    'cols' => 44,
+    'cols' => HINT_COLS,
     'at_needle' => 'melon7',
   ];
 
@@ -1295,7 +1298,7 @@ EXPECT,
         'command' => 'env ' . $env . 'php ' . $project_dir . '/playground/02-fields-' . $demo . '.php',
         'interact' => $interact,
         'rows' => $meta['rows'],
-        'cols' => 44,
+        'cols' => HINT_COLS,
         'at_needle' => $meta['needle'],
       ];
     }

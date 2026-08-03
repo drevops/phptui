@@ -24,7 +24,7 @@ use DrevOps\Tui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$headers = ['Fruit', 'Colour', 'In stock'];
+$headers = ['Fruit', 'Color', 'In stock'];
 $rows = [
   ['Apple', 'Red', '12'],
   ['Pear', 'Green', '5'],

@@ -83,7 +83,7 @@ final class BuilderTest extends TestCase {
     $legend = (new Assembler())->assemble($this->panel())->in('footer')->blocks()[0];
 
     $this->assertInstanceOf(Legend::class, $legend);
-    $this->assertSame('↑/↓ to move · ↵ to select · ESC to go back', $legend->render(new DefaultTheme(40, ['color' => FALSE])));
+    $this->assertSame('↑/↓ to move · ↵ to select · ESC to go back', $legend->render(new DefaultTheme(80, ['color' => FALSE])));
   }
 
   /**

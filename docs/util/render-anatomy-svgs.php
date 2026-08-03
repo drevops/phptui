@@ -144,12 +144,13 @@ const MARGIN_ROWS = 2.7;
 /**
  * The terminal width the frames are drawn at.
  *
- * Narrower than the other assets. The whole canvas is scaled to the width of
- * the documentation column, and the callout margins take a fixed share of it,
- * so every column the frame does not need is one the reader gets back as
- * legible type.
+ * The key legend is the longest line a diagram carries, and a legend cut off
+ * mid-word is the one thing these frames must not show, so the width is the
+ * widest the theme draws at. Every column past that is one the reader would
+ * get back as legible type once the whole canvas is scaled to the
+ * documentation column, so the frames take no more than they need.
  */
-const FRAME_COLUMNS = 68;
+const FRAME_COLUMNS = 78;
 
 /**
  * The label type size, in SVG user units.
@@ -206,21 +207,20 @@ function anatomySpecs(string $tree): array {
       'form' => $delivery(),
       'group' => AnatomyGroup::Chrome,
       'keys' => [$enter],
-      'rows' => 21,
-      // The panel's own legend is the longest line any diagram carries, and a
-      // truncated legend is the one thing this frame must not show.
-      'cols' => 78,
+      // The overflow marker is drawn only while the rows outgrow the frame, so
+      // the screen is one row short of holding the panel whole.
+      'rows' => 16,
       'callouts' => [
         ['col' => 0, 'row' => 0, 'label' => 'border', 'side' => Side::Left],
         ['col' => 2, 'row' => 1, 'label' => 'breadcrumb', 'side' => Side::Left],
         ['col' => 10, 'row' => 1, 'label' => 'breadcrumb separator'],
-        ['col' => 4, 'row' => 15, 'label' => 'overflow marker'],
-        ['col' => 2, 'row' => 18, 'label' => 'legend', 'side' => Side::Left],
-        ['col' => 2, 'row' => 18, 'label' => 'legend key', 'side' => Side::Down],
+        ['col' => 73, 'row' => 13, 'label' => 'overflow marker'],
+        ['col' => 2, 'row' => 14, 'label' => 'legend', 'side' => Side::Left],
+        ['col' => 2, 'row' => 14, 'label' => 'legend key', 'side' => Side::Down],
         // Each points at the far end of its part rather than the near one, so a
         // riser clears the label of the band above instead of crossing it.
-        ['col' => 12, 'row' => 18, 'label' => 'legend description', 'side' => Side::Down],
-        ['col' => 28, 'row' => 18, 'label' => 'legend separator', 'side' => Side::Down],
+        ['col' => 12, 'row' => 14, 'label' => 'legend description', 'side' => Side::Down],
+        ['col' => 28, 'row' => 14, 'label' => 'legend separator', 'side' => Side::Down],
       ],
     ],
     'row' => [
@@ -228,14 +228,15 @@ function anatomySpecs(string $tree): array {
       'group' => AnatomyGroup::View,
       'keys' => [$enter],
       'rows' => 21,
-      'cols' => 78,
       'callouts' => [
-        ['col' => 2, 'row' => 4, 'label' => 'field selector'],
-        ['col' => 6, 'row' => 5, 'label' => 'description'],
-        ['label' => 'label', 'side' => Side::Left, 'cells' => [[7, 4], [10, 4], [12, 4]]],
-        ['col' => 20, 'row' => 4, 'label' => 'help marker'],
-        ['col' => 28, 'row' => 4, 'label' => 'value separator'],
-        ['label' => 'value', 'side' => Side::Right, 'cells' => [[4, 35], [7, 22], [10, 27], [12, 23]]],
+        ['col' => 2, 'row' => 2, 'label' => 'field selector'],
+        // A description hangs under its row at the value column, so it is
+        // named from the left where the label column is empty.
+        ['col' => 23, 'row' => 3, 'label' => 'description'],
+        ['label' => 'label', 'side' => Side::Left, 'cells' => [[5, 4], [8, 4], [10, 4]]],
+        ['col' => 20, 'row' => 2, 'label' => 'help marker'],
+        ['col' => 28, 'row' => 2, 'label' => 'value separator'],
+        ['label' => 'value', 'side' => Side::Right, 'cells' => [[2, 35], [5, 22], [8, 27], [10, 23]]],
       ],
     ],
     'editor' => [
@@ -249,12 +250,12 @@ function anatomySpecs(string $tree): array {
       'keys' => [...$open, $space, $down, $space],
       'rows' => 16,
       'callouts' => [
-        ['col' => 20, 'row' => 4, 'label' => 'entry'],
-        ['col' => 12, 'row' => 5, 'label' => 'entry selector'],
-        ['col' => 14, 'row' => 6, 'label' => 'entry marker'],
-        ['col' => 37, 'row' => 6, 'label' => 'entry note'],
-        ['col' => 16, 'row' => 7, 'label' => 'entry description'],
-        ['col' => 12, 'row' => 8, 'label' => 'constraint'],
+        ['col' => 20, 'row' => 2, 'label' => 'entry'],
+        ['col' => 12, 'row' => 3, 'label' => 'entry selector'],
+        ['col' => 14, 'row' => 4, 'label' => 'entry marker'],
+        ['col' => 37, 'row' => 4, 'label' => 'entry note'],
+        ['col' => 16, 'row' => 5, 'label' => 'entry description'],
+        ['col' => 12, 'row' => 6, 'label' => 'constraint'],
       ],
     ],
     'filepicker' => [
@@ -265,10 +266,10 @@ function anatomySpecs(string $tree): array {
       'keys' => [...$open, $down],
       'rows' => 16,
       'callouts' => [
-        ['col' => 29, 'row' => 4, 'label' => 'caption'],
-        ['col' => 18, 'row' => 5, 'label' => 'entry'],
-        ['col' => 16, 'row' => 6, 'label' => 'entry selector'],
-        ['col' => 16, 'row' => 8, 'label' => 'constraint'],
+        ['col' => 29, 'row' => 2, 'label' => 'caption'],
+        ['col' => 18, 'row' => 3, 'label' => 'entry'],
+        ['col' => 16, 'row' => 4, 'label' => 'entry selector'],
+        ['col' => 16, 'row' => 6, 'label' => 'constraint'],
       ],
     ],
     'text' => [
@@ -279,9 +280,9 @@ function anatomySpecs(string $tree): array {
       'keys' => [...$open, $tab],
       'rows' => 10,
       'callouts' => [
-        ['col' => 28, 'row' => 4, 'label' => 'caret'],
-        ['col' => 30, 'row' => 4, 'label' => 'draft'],
-        ['col' => 32, 'row' => 5, 'label' => 'state', 'side' => Side::Right],
+        ['col' => 28, 'row' => 2, 'label' => 'caret'],
+        ['col' => 30, 'row' => 2, 'label' => 'draft'],
+        ['col' => 32, 'row' => 3, 'label' => 'state', 'side' => Side::Right],
       ],
     ],
     'constraint' => [
@@ -292,7 +293,7 @@ function anatomySpecs(string $tree): array {
       'keys' => [...$open],
       'rows' => 20,
       'callouts' => [
-        ['col' => 16, 'row' => 11, 'label' => 'constraint'],
+        ['col' => 16, 'row' => 9, 'label' => 'constraint'],
       ],
     ],
     // The same picker, after a pick that breaks the size limit the line above
@@ -305,7 +306,7 @@ function anatomySpecs(string $tree): array {
       'keys' => [...$open, $down, $down, $down, $enter],
       'rows' => 20,
       'callouts' => [
-        ['col' => 16, 'row' => 11, 'label' => 'error'],
+        ['col' => 16, 'row' => 9, 'label' => 'error'],
       ],
     ],
   ];
