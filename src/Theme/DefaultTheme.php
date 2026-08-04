@@ -19,6 +19,7 @@ use DrevOps\Tui\Theme\Capability\ColorSchemeCapableTrait;
 use DrevOps\Tui\Theme\Capability\DimCapableInterface;
 use DrevOps\Tui\Theme\Capability\MarkdownCapableInterface;
 use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
+use DrevOps\Tui\Theme\Capability\OverrideCapableInterface;
 use DrevOps\Tui\Theme\Capability\UnicodeCapableInterface;
 use DrevOps\Tui\Theme\Capability\UnicodeCapableTrait;
 use DrevOps\Tui\Theme\Override\Glyph;
@@ -51,7 +52,7 @@ use DrevOps\Tui\Utils\Strings;
  *
  * @package DrevOps\Tui\Theme
  */
-class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, ColorSchemeCapableInterface, DimCapableInterface, MarkdownCapableInterface, OccupyCapableInterface, UnicodeCapableInterface {
+class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, ColorSchemeCapableInterface, DimCapableInterface, MarkdownCapableInterface, OccupyCapableInterface, OverrideCapableInterface, UnicodeCapableInterface {
 
   use ColorSchemeCapableTrait;
   use UnicodeCapableTrait;
@@ -143,8 +144,8 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    *   on), "spacing" (a SPACING_* value), "border" (a BORDER_* value), plus any
    *   option a concrete theme declares.
    */
-  public function __construct(int $width = self::DEFAULT_WIDTH, protected array $options = []) {
-    $this->width = $width;
+  public function __construct(int $width = self::DEFAULT_WIDTH, array $options = []) {
+    parent::__construct($width, $options);
     $this->validateOptions();
 
     $this->overrides = new Overrides();
@@ -357,11 +358,10 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   }
 
   /**
-   * The border-style option.
+   * {@inheritdoc}
    *
-   * @return \DrevOps\Tui\Theme\Border
-   *   The border style; a rounded box when unset - a form is framed unless
-   *   it explicitly asks for no border.
+   * A rounded box when unset: a form is framed unless it explicitly asks for
+   * no border.
    */
   public function borderStyle(): Border {
     return $this->enumOption('border', Border::class, Border::Rounded);
@@ -453,13 +453,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   }
 
   /**
-   * Take the elements a consumer states differently.
-   *
-   * @param \DrevOps\Tui\Theme\Override\Overrides $overrides
-   *   The patch; anything it does not name keeps the theme's own answer.
-   *
-   * @return static
-   *   The theme.
+   * {@inheritdoc}
    */
   public function overrides(Overrides $overrides): static {
     $this->overrides = $overrides;
@@ -938,6 +932,14 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   #[\Override]
   public function fieldEntrySeparator(): string {
     return $this->renderRule();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldOverflowMarker(bool $above): string {
+    return $this->indicator($above ? $this->glyph('▲', '^') : $this->glyph('▼', 'v'));
   }
 
   /**

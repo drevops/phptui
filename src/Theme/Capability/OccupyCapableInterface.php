@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Theme\Capability;
 
+use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\HAlign;
 use DrevOps\Tui\Theme\Spacing;
 use DrevOps\Tui\Theme\VAlign;
@@ -14,8 +15,9 @@ use DrevOps\Tui\Theme\VAlign;
  * One declaration rather than several, because the answers are never wanted
  * apart: what fills the terminal has to say where it anchors when it does not
  * fill it, how small a terminal it can still be read in, how large it is
- * willing to grow, and what shows between what it holds. A driver that has
- * these can place a frame; one that has none draws where the cursor already is,
+ * willing to grow, and what it spends on the edge it draws around itself and
+ * on the air between what it holds. A driver that has these can place a frame;
+ * one that has none draws where the cursor already is, unframed and unspaced,
  * which is what a frame in a plain terminal does.
  *
  * @package DrevOps\Tui\Theme\Capability
@@ -77,6 +79,18 @@ interface OccupyCapableInterface {
    *   The rows, or 0 for as tall as the terminal is.
    */
   public function maxHeight(): int;
+
+  /**
+   * The frame drawn around every region at once.
+   *
+   * Two columns and a gutter each side, and a rule top and bottom, come off
+   * the terminal before anything is laid out in what is left - so the edge a
+   * theme draws around itself is part of the room it takes.
+   *
+   * @return \DrevOps\Tui\Theme\Border
+   *   The border style.
+   */
+  public function borderStyle(): Border;
 
   /**
    * What shows between the rows a region holds.

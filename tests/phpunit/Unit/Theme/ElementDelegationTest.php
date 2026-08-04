@@ -89,6 +89,32 @@ final class ElementDelegationTest extends TestCase {
     yield 'progress spinner' => [static fn(DefaultTheme $t): string => $t->progressSpinner(0)];
   }
 
+  public function testTheTwoOverflowMarksAreDrawnAlikeAndStatedApart(): void {
+    $theme = new DefaultTheme(80);
+
+    // A list that outran its page and a region that outran its space read the
+    // same here, so a reader learns one mark rather than two.
+    $this->assertSame($theme->chromeOverflowMarker(TRUE), $theme->fieldOverflowMarker(TRUE));
+    $this->assertSame($theme->chromeOverflowMarker(FALSE), $theme->fieldOverflowMarker(FALSE));
+
+    $diverged = new class(80) extends DefaultTheme {
+
+      /**
+       * {@inheritdoc}
+       */
+      #[\Override]
+      public function fieldOverflowMarker(bool $above): string {
+        return $above ? '<<' : '>>';
+      }
+
+    };
+
+    // They are still two elements, so restyling either leaves the other where
+    // the theme left it.
+    $this->assertSame('<<', $diverged->fieldOverflowMarker(TRUE));
+    $this->assertSame($theme->chromeOverflowMarker(TRUE), $diverged->chromeOverflowMarker(TRUE));
+  }
+
   public function testThemeSubclassReachesEveryElementThroughOneRepaintedHue(): void {
     // The fixture repaints the accent alone, and every element drawn from it
     // follows without the theme mentioning any of them.

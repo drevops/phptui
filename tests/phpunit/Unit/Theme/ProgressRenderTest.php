@@ -8,7 +8,6 @@ use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\EmberTheme;
 use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\ThemeManager;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -91,7 +90,7 @@ final class ProgressRenderTest extends TestCase {
     // Ember's highlight is bold orange (1;38;5;208); the spinner and bar
     // inherit it with no per-theme override, so the accent flows through
     // highlight().
-    $theme = ThemeManager::create('ember', DefaultTheme::DEFAULT_WIDTH, ['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
+    $theme = $this->builtin('ember', DefaultTheme::DEFAULT_WIDTH, ['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
 
     $this->assertStringContainsString("\033[1;38;5;208m", $theme->renderSpinner(0, 'x'));
     $this->assertStringContainsString("\033[1;38;5;208m", $theme->renderProgressBar(1, 2, 'x', ''));

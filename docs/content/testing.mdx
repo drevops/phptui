@@ -91,7 +91,7 @@ Everything a session is built from can be set on it, which is what makes it the 
 | `externalEditor(...)`     | what hands a passage of text to an editor of the reader's own        |
 | `rows(int)` / `cols(int)` | the reported terminal size                                           |
 
-`theme()` takes a `ThemeInterface` instance rather than a name, which is the seam for a theme built on `AbstractTheme` - the facade resolves names through the theme registry, and that wants a `DefaultTheme`. See [Themes](/themes#what-a-theme-is-allowed-to-do).
+`theme()` takes a `ThemeInterface` instance rather than a name, so a theme built for one test - an anonymous class overriding a single element, say - goes straight in with no registration and no construction contract to satisfy. A theme that is a real class is better named on the facade, floor or not; see [Themes](/themes#what-a-theme-is-allowed-to-do).
 
 ## One field
 

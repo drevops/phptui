@@ -38,12 +38,22 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
   protected const array SPINNER_ASCII = ['|', '/', '-', '\\'];
 
   /**
-   * The columns the floor lays content out in.
+   * Construct a theme.
    *
-   * Nothing here measures a terminal, so the floor states a width rather than
-   * discovering one; a theme that knows its frame answers with that instead.
+   * The two things no theme can work out for itself, which is why both arrive
+   * from outside: the frame it lays content out to, and what a consumer stated
+   * about how it should look. Nothing here measures a terminal, so the floor is
+   * told a width rather than discovering one, and a theme that knows its own
+   * frame answers with that instead. The floor reads no option at all - a theme
+   * that declares one reads it from here.
+   *
+   * @param int $width
+   *   The columns available for the content it lays out.
+   * @param array<string,mixed> $options
+   *   Display options keyed by name, as a consumer stated them.
    */
-  protected int $width = 0;
+  public function __construct(protected int $width = 0, protected array $options = []) {
+  }
 
   /**
    * {@inheritdoc}
@@ -225,6 +235,13 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
    */
   public function fieldEntrySeparator(): string {
     return str_repeat('-', max(1, $this->contentWidth()));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldOverflowMarker(bool $above): string {
+    return $above ? '^' : 'v';
   }
 
   /**

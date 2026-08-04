@@ -10,7 +10,6 @@ use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\EmberTheme;
 use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\ThemeManager;
 use DrevOps\Tui\Utils\Strings;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -297,7 +296,7 @@ final class OutputRenderTest extends TestCase {
   public function testBuiltinThemeRendersStatusInItsOwnAccent(): void {
     // Ember's highlight is bold orange; an info line inherits it with no
     // per-theme override, exactly as the spinner does.
-    $theme = ThemeManager::create('ember', DefaultTheme::DEFAULT_WIDTH, ['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
+    $theme = $this->builtin('ember', DefaultTheme::DEFAULT_WIDTH, ['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
 
     $this->assertStringContainsString("\033[1;38;5;208m", $theme->renderStatus(Status::Info, 'Packing'));
   }

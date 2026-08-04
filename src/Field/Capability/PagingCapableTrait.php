@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field\Capability;
 
-use DrevOps\Tui\Block\Element\ChromeElementsInterface;
+use DrevOps\Tui\Block\Element\FieldElementsInterface;
 use DrevOps\Tui\Render\Scroller;
 use DrevOps\Tui\Render\Viewport;
 use DrevOps\Tui\Theme\ThemeInterface;
@@ -102,37 +102,37 @@ trait PagingCapableTrait {
     $lines = [];
 
     if ($viewport->hasAbove) {
-      $lines[] = '  ' . $this->overflow($theme)->chromeOverflowMarker(TRUE);
+      $lines[] = '  ' . $this->overflow($theme)->fieldOverflowMarker(TRUE);
     }
 
     $lines = array_merge($lines, $rows);
 
     if ($viewport->hasBelow) {
-      $lines[] = '  ' . $this->overflow($theme)->chromeOverflowMarker(FALSE);
+      $lines[] = '  ' . $this->overflow($theme)->fieldOverflowMarker(FALSE);
     }
 
     return $lines;
   }
 
   /**
-   * The theme, narrowed to the mark that says content ran past an edge.
+   * The theme, narrowed to the mark that says a list runs past its page.
    *
-   * The chrome's mark rather than one of the field's own: a list that outran
-   * its page and a region that outran the frame are the same fact, and a reader
-   * who learns the mark once should not have to learn it twice.
+   * The field's own mark rather than the chrome's: a field draws only what it
+   * owns, so the page it windows a list to is marked with an element of its
+   * own, and a theme that wants the two to read alike says so once in each.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
    *
-   * @return \DrevOps\Tui\Block\Element\ChromeElementsInterface
+   * @return \DrevOps\Tui\Block\Element\FieldElementsInterface
    *   The theme, able to draw the mark.
    *
    * @throws \InvalidArgumentException
    *   When the theme does not implement the elements.
    */
-  protected function overflow(ThemeInterface $theme): ChromeElementsInterface {
-    if (!$theme instanceof ChromeElementsInterface) {
-      throw new \InvalidArgumentException(sprintf('%s cannot draw an overflow mark: it does not implement %s.', $theme::class, ChromeElementsInterface::class));
+  protected function overflow(ThemeInterface $theme): FieldElementsInterface {
+    if (!$theme instanceof FieldElementsInterface) {
+      throw new \InvalidArgumentException(sprintf('%s cannot draw an overflow mark: it does not implement %s.', $theme::class, FieldElementsInterface::class));
     }
 
     return $theme;

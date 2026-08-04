@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Tests\Unit\Theme;
 
 use DrevOps\Tui\Block\Prose;
 use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DosTheme;
 use DrevOps\Tui\Theme\EmberTheme;
@@ -14,7 +15,6 @@ use DrevOps\Tui\Theme\MidnightTheme;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\MonoTheme;
 use DrevOps\Tui\Theme\Sgr;
-use DrevOps\Tui\Theme\ThemeManager;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -32,12 +32,14 @@ use PHPUnit\Framework\TestCase;
 #[Group('theme')]
 final class BuiltinThemesTest extends TestCase {
 
+  use BuildsThemesTrait;
+
   /**
    * Each theme recolours its five palette roles, per mode.
    */
   #[DataProvider('dataProviderPalette')]
   public function testPalette(string $name, Mode $mode, array $expected): void {
-    $theme = ThemeManager::create($name, 76, ['mode' => $mode]);
+    $theme = $this->builtin($name, 76, ['mode' => $mode]);
 
     // A hue is stated once and every element drawn from it follows, so each
     // role is read back through an element rather than through the palette.
@@ -67,7 +69,7 @@ final class BuiltinThemesTest extends TestCase {
    */
   #[DataProvider('dataProviderPickedEntryIsBold')]
   public function testPickedEntryIsBold(string $name, string $expected): void {
-    $theme = ThemeManager::create($name, 76, ['mode' => Mode::Dark]);
+    $theme = $this->builtin($name, 76, ['mode' => Mode::Dark]);
 
     $this->assertSame(Ansi::style('X', $expected), $theme->panelSummary('X'));
   }
@@ -85,7 +87,7 @@ final class BuiltinThemesTest extends TestCase {
    */
   #[DataProvider('dataProviderColourOffStripsPalette')]
   public function testColourOffStripsPalette(string $name): void {
-    $theme = ThemeManager::create($name, 76, ['color' => FALSE]);
+    $theme = $this->builtin($name, 76, ['color' => FALSE]);
 
     $this->assertFalse($theme->hasColor());
     $this->assertSame('Setup', $theme->markupTitle('Setup'));
@@ -108,19 +110,19 @@ final class BuiltinThemesTest extends TestCase {
    */
   public function testDosDefaultsToBorderedWindow(): void {
     // With no border declared, dos draws its double-line MS-DOS window.
-    $this->assertSame(Border::Double, ThemeManager::create('dos', 40, ['color' => FALSE])->borderStyle());
+    $this->assertSame(Border::Double, $this->builtin('dos', 40, ['color' => FALSE])->borderStyle());
 
     // An explicit border option still wins over the theme's default.
-    $this->assertSame(Border::None, ThemeManager::create('dos', 40, ['color' => FALSE, 'border' => 'none'])->borderStyle());
+    $this->assertSame(Border::None, $this->builtin('dos', 40, ['color' => FALSE, 'border' => 'none'])->borderStyle());
   }
 
   /**
    * The dos theme washes the screen blue in either mode, colour permitting.
    */
   public function testDosPaintsBlueBackground(): void {
-    $this->assertSame('44', ThemeManager::create('dos', 76, ['mode' => Mode::Dark])->background());
-    $this->assertSame('44', ThemeManager::create('dos', 76, ['mode' => Mode::Light])->background());
-    $this->assertNull(ThemeManager::create('dos', 76, ['color' => FALSE])->background());
+    $this->assertSame('44', $this->builtin('dos', 76, ['mode' => Mode::Dark])->background());
+    $this->assertSame('44', $this->builtin('dos', 76, ['mode' => Mode::Light])->background());
+    $this->assertNull($this->builtin('dos', 76, ['color' => FALSE])->background());
   }
 
   /**
@@ -128,7 +130,7 @@ final class BuiltinThemesTest extends TestCase {
    */
   #[DataProvider('dataProviderDosSecondaryTextIsLegibleOnBlue')]
   public function testDosSecondaryTextIsLegibleOnBlue(Mode $mode): void {
-    $theme = ThemeManager::create('dos', 76, ['mode' => $mode]);
+    $theme = $this->builtin('dos', 76, ['mode' => $mode]);
 
     $this->assertSame(Ansi::style('X', '37'), $theme->breadcrumbLabel('X'));
     $this->assertSame(Ansi::style('X', '37'), $theme->fieldState('X'));
@@ -145,7 +147,7 @@ final class BuiltinThemesTest extends TestCase {
    * A theme's heading hue reaches the pieces its elements are assembled into.
    */
   public function testDosHeadingReachesTheGridItHeads(): void {
-    $theme = ThemeManager::create('dos', 40, ['border' => Border::Line]);
+    $theme = $this->builtin('dos', 40, ['border' => Border::Line]);
 
     $this->assertStringContainsString(Ansi::style('Fruit', '1;37'), implode("\n", $theme->renderTable(['Fruit'], [['Apple']])));
     $this->assertStringContainsString(Ansi::style('Yields', '1;37'), implode("\n", $theme->renderCard('Yields', [])));
@@ -156,7 +158,7 @@ final class BuiltinThemesTest extends TestCase {
    */
   #[DataProvider('dataProviderDosConstraintTakesItsOwnColour')]
   public function testDosConstraintTakesItsOwnColour(Mode $mode): void {
-    $theme = ThemeManager::create('dos', 76, ['mode' => $mode]);
+    $theme = $this->builtin('dos', 76, ['mode' => $mode]);
 
     $this->assertSame(Ansi::style('X', '96'), $theme->fieldConstraint('X'));
     $this->assertNotSame($theme->fieldDescription('X'), $theme->fieldConstraint('X'));
@@ -176,7 +178,7 @@ final class BuiltinThemesTest extends TestCase {
    */
   #[DataProvider('dataProviderGuidanceTakesItsOwnColour')]
   public function testGuidanceTakesItsOwnColour(string $name, Mode $mode): void {
-    $theme = ThemeManager::create($name, 76, ['mode' => $mode]);
+    $theme = $this->builtin($name, 76, ['mode' => $mode]);
 
     $constraint = $theme->fieldConstraint('X');
     $description = $theme->fieldDescription('X');
@@ -200,7 +202,7 @@ final class BuiltinThemesTest extends TestCase {
    */
   #[DataProvider('dataProviderGuidanceSurvivesColourOff')]
   public function testGuidanceSurvivesColourOff(string $name, bool $unicode): void {
-    $theme = ThemeManager::create($name, 76, ['color' => FALSE, 'unicode' => $unicode]);
+    $theme = $this->builtin($name, 76, ['color' => FALSE, 'unicode' => $unicode]);
 
     $this->assertNotSame($theme->fieldDescription('X'), $theme->fieldConstraint('X'));
   }
@@ -216,8 +218,8 @@ final class BuiltinThemesTest extends TestCase {
    * A theme's line element reaches the body text, not only its own rows.
    */
   public function testDosDescriptionBodyCarriesTheThemeElement(): void {
-    $dos = ThemeManager::create('dos', 76);
-    $default = ThemeManager::create('default', 76);
+    $dos = $this->builtin('dos', 76);
+    $default = $this->builtin('default', 76);
 
     $line = Prose::lines('Picked this morning', $dos)[0];
 
@@ -231,7 +233,7 @@ final class BuiltinThemesTest extends TestCase {
    * The bullet leading a list item is themed with the text beside it.
    */
   public function testDosBulletCarriesTheThemeElement(): void {
-    $theme = ThemeManager::create('dos', 76, ['markdown' => TRUE]);
+    $theme = $this->builtin('dos', 76, ['markdown' => TRUE]);
 
     $line = Prose::lines('- crisp apples', $theme)[0];
 

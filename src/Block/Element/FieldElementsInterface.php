@@ -199,6 +199,21 @@ interface FieldElementsInterface {
   public function fieldEntrySeparator(): string;
 
   /**
+   * The mark saying a list runs past the page it is windowed to.
+   *
+   * Its own element rather than a reuse of the chrome's: one says a list the
+   * field owns outran its page and the other that a region outran the space it
+   * was given, so a theme can restyle either without touching the other.
+   *
+   * @param bool $above
+   *   Whether the entries it points at are above rather than below.
+   *
+   * @return string
+   *   The styled mark.
+   */
+  public function fieldOverflowMarker(bool $above): string;
+
+  /**
    * Style what a field will accept, before anything is refused.
    *
    * The guidance voice, and the one line that has to survive a surface with

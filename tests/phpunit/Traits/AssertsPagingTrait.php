@@ -79,6 +79,23 @@ trait AssertsPagingTrait {
     $this->assertStringContainsString('Cherry', $scrolled);
     $this->assertStringContainsString('▲', $scrolled);
     $this->assertStringNotContainsString('Apple', $scrolled);
+
+    $marked = Ansi::strip($field->view(new class(80) extends DefaultTheme {
+
+      /**
+       * {@inheritdoc}
+       */
+      #[\Override]
+      public function fieldOverflowMarker(bool $above): string {
+        return $above ? '<<' : '>>';
+      }
+
+    }));
+
+    // The mark is the field's own element: a theme restyling it restyles what
+    // a paged list draws, and the region's mark is left where it was.
+    $this->assertStringContainsString('<<', $marked);
+    $this->assertStringNotContainsString('▲', $marked);
   }
 
 }

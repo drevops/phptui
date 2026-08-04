@@ -26,10 +26,12 @@ use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Primitive\Progress;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\Terminal;
+use DrevOps\Tui\Render\TerminalControl;
 use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Testing\BufferedTerminal;
 use DrevOps\Tui\Testing\KeyEncoder;
 use DrevOps\Tui\Testing\TuiTester;
+use DrevOps\Tui\Tests\Fixtures\Theme\FloorTheme;
 use DrevOps\Tui\Tests\Traits\IsolatesEnvTrait;
 use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\Tui\Theme\Border;
@@ -441,6 +443,60 @@ final class TuiTest extends TestCase {
     $this->assertStringContainsString("\033[1;97m→", $output);
   }
 
+  #[DataProvider('dataProviderFloorThemeRunsTheWholeSession')]
+  public function testFloorThemeRunsTheWholeSession(bool $color, bool $unicode): void {
+    $output = $this->floorRun($color, $unicode)->output();
+
+    $this->assertStringContainsString('Demo', Ansi::strip($output));
+
+    // The floor declares neither colour nor Unicode, so neither switch reaches
+    // it: nothing but the screen clears is escaped, and the cursor is the
+    // stand-in that reads without a glyph.
+    $this->assertSame(Ansi::strip($output), str_replace(TerminalControl::clear(), '', $output));
+    $this->assertStringNotContainsString('❯', $output);
+  }
+
+  public static function dataProviderFloorThemeRunsTheWholeSession(): \Iterator {
+    yield 'plain terminal' => [FALSE, FALSE];
+    yield 'capable terminal' => [TRUE, TRUE];
+  }
+
+  public function testFloorThemeDrawsTheSameWhateverTheTerminalOffers(): void {
+    // A theme declaring nothing is granted nothing, so the two terminals are
+    // handed the identical frame.
+    $this->assertSame($this->floorRun(FALSE, FALSE)->output(), $this->floorRun(TRUE, TRUE)->output());
+  }
+
+  public function testFloorThemeIsDrawnWithNoFrameAroundIt(): void {
+    $controller = $this->tui()->controller(['color' => FALSE, 'unicode' => TRUE, 'mode' => Mode::Dark], FloorTheme::class);
+
+    // A theme that says nothing about the room it takes gets no edge drawn
+    // around it, rather than the session guessing one on its behalf.
+    $this->assertSame(Border::None, (new \ReflectionProperty($controller, 'border'))->getValue($controller));
+  }
+
+  public function testFloorThemeKeepsItsOwnAnswersUnderThePatch(): void {
+    $terminal = new BufferedTerminal([KeyEncoder::encode(Key::named(KeyName::Enter))], 20, 60);
+
+    (new Tui($this->demoForm()))
+      ->color(FALSE)
+      ->unicode(TRUE)
+      ->theme(static fn(ThemeBuilder $builder): ThemeBuilder => $builder->field(static fn(FieldOverrides $group): FieldOverrides => $group->selector('→', '=>')))
+      ->theme(FloorTheme::class)
+      ->interact(terminal: $terminal);
+
+    // Taking a patch is a facility a theme declares; one with nowhere to put it
+    // keeps every answer of its own rather than refusing to draw.
+    $this->assertStringNotContainsString('→', Ansi::strip($terminal->output()));
+  }
+
+  public function testPrimitiveNamesTheThemeThatCannotDrawIt(): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('cannot draw a primitive');
+
+    (new Tui($this->demoForm()))->theme(FloorTheme::class)->output(new BufferedTerminal());
+  }
+
   #[DataProvider('dataProviderResolveTheme')]
   public function testResolveTheme(string $facade_theme, string $theme, string $expected): void {
     $tui = $this->themedTui($facade_theme);
@@ -645,6 +701,33 @@ final class TuiTest extends TestCase {
    */
   protected function themedTui(string $theme): Tui {
     return (new Tui($this->demoForm()))->theme($theme);
+  }
+
+  /**
+   * Run a whole session on a theme named for a class built on the floor.
+   *
+   * Selected the way any other theme is and driven to the end, so what comes
+   * back is a session a consumer could have run rather than one only a harness
+   * can reach.
+   *
+   * @param bool $color
+   *   Whether the terminal is told to paint.
+   * @param bool $unicode
+   *   Whether the terminal is told it draws glyphs outside ASCII.
+   *
+   * @return \DrevOps\Tui\Testing\BufferedTerminal
+   *   The terminal the session drew on.
+   */
+  protected function floorRun(bool $color, bool $unicode): BufferedTerminal {
+    // Down reaches Submit and Enter presses it, so the session opens a panel,
+    // draws every piece of furniture around it and ends.
+    $terminal = new BufferedTerminal([KeyEncoder::encode(Key::named(KeyName::Down)), KeyEncoder::encode(Key::named(KeyName::Enter))], 20, 60);
+
+    $answers = (new Tui($this->demoForm()))->color($color)->unicode($unicode)->theme(FloorTheme::class)->interact(terminal: $terminal);
+
+    $this->assertInstanceOf(Answers::class, $answers);
+
+    return $terminal;
   }
 
   /**

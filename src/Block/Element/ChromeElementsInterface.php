@@ -36,7 +36,11 @@ interface ChromeElementsInterface {
   public function chromeBorder(string $text): string;
 
   /**
-   * The mark pointing at content past an edge of the frame.
+   * The mark saying a region's contents run past the space it was given.
+   *
+   * The region's alone. A field that windows a long list to a page draws its
+   * own, so the two marks are free to read differently on a theme that wants
+   * them to.
    *
    * @param bool $above
    *   Whether the content it points at is above rather than below.
