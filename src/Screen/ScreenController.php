@@ -705,7 +705,7 @@ class ScreenController {
         continue;
       }
 
-      [$total, $row] = $this->renderer->extent($region, $focused instanceof BlockInterface ? $focused : NULL);
+      [$total, $row] = $this->renderer->extent($panel->currentLayout(), $name, $focused instanceof BlockInterface ? $focused : NULL);
 
       // A region the cursor is not in stays where it was left: only the one
       // holding the focused row has anything to follow.
@@ -1462,7 +1462,7 @@ class ScreenController {
     $rows = 0;
 
     foreach ($panel->currentLayout()->names() as $name) {
-      [$total] = $this->renderer->extent($panel->in($name));
+      [$total] = $this->renderer->extent($panel->currentLayout(), $name);
       $rows += $total;
     }
 

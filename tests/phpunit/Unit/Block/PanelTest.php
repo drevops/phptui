@@ -7,8 +7,11 @@ namespace DrevOps\Tui\Tests\Unit\Block;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Screen\Layout\DefaultLayout;
+use DrevOps\Tui\Screen\Layout\GridLayout;
+use DrevOps\Tui\Screen\Layout\PanelLayout;
 use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Spacing;
@@ -178,11 +181,35 @@ final class PanelTest extends TestCase {
     $this->assertNull($panel->preparation());
   }
 
-  public function testPanelsNestedInOneSitSideBySideWhenItSaysSo(): void {
-    $panel = new Panel('delivery', 'Delivery');
+  public function testPanelReadsHowItIsMovedThroughOffTheArrangement(): void {
+    $listed = (new Panel('delivery', 'Delivery'))->layout(new PanelLayout());
+    $dealt = (new Panel('delivery', 'Delivery'))->layout(new GridLayout(1, 2));
 
-    $this->assertSame([], $panel->gridRows());
-    $this->assertSame([1, 2], $panel->grid(1, 2)->gridRows());
+    // A panel arranges nothing itself, so which keys move through it is read
+    // off the layout it nests rather than off anything it was told.
+    $this->assertSame('move', $listed->hints()[0]->label);
+    $this->assertSame([Action::MoveUp, Action::MoveDown], $listed->hints()[0]->actions);
+    $this->assertSame([Action::MoveUp, Action::MoveDown, Action::MoveLeft, Action::MoveRight], $dealt->hints()[0]->actions);
+  }
+
+  public function testWayIntoPanelIsTheLineThatSaysSoAndNothingMore(): void {
+    $child = (new Panel('advanced', 'Advanced'))->layout(new DefaultLayout())->description('What the packers need.');
+    $child->in('content')->add((new Field('courier', 'Courier'))->default('Valley Runs'));
+
+    // The full row belongs to a list, where there is a width to spend on it.
+    $this->assertSame('  Advanced ›', $child->wayIn(new DefaultTheme(40, ['color' => FALSE])));
+  }
+
+  public function testWindowDrawsWayIntoPanelItHoldsRatherThanItsWholeRow(): void {
+    $child = (new Panel('advanced', 'Advanced'))->layout(new PanelLayout())->description('What the packers need.');
+    $child->in('content')->add((new Field('courier', 'Courier'))->default('Valley Runs'));
+
+    $window = (new Panel('delivery', 'Delivery'))->layout(new PanelLayout());
+    $window->in('content')->add($child);
+
+    // A window is a column previewing one panel, so a way into another is one
+    // line of it rather than a description and a summary as well.
+    $this->assertSame(['  Delivery ›', '  Advanced ›'], explode("\n", $window->preview(new DefaultTheme(40, ['color' => FALSE]))));
   }
 
   public function testPanelHoldsTheSubPanelsYouCanDescendInto(): void {

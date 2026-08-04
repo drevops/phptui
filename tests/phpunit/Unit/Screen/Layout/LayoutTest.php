@@ -158,6 +158,15 @@ final class LayoutTest extends TestCase {
     $this->assertSame(['left', 'right'], $layout->names());
   }
 
+  public function testArrangementDealingNothingGivesOneBlockTheRegionWhole(): void {
+    $layout = new DefaultLayout();
+
+    // A row is one block where nothing is dealt, so it takes the region as it
+    // stands however many blocks are stacked under it.
+    $this->assertSame([], $layout->deal());
+    $this->assertSame(40, $layout->share(40, 1));
+  }
+
   public function testLayoutNamesNoBlockItMightHold(): void {
     // Reuse is what a layout would lose by knowing its content: it declares
     // arrangement and nothing else, so its regions arrive empty.

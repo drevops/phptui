@@ -23,15 +23,18 @@ The [specification](/specification#layout) explains why the split falls exactly 
 
 ## The layouts that ship
 
-Three, picked by name:
+Four, picked by name:
 
 | Name         | Axis    | Regions                                                     | For                                         |
 | ------------ | ------- | ----------------------------------------------------------- | ------------------------------------------- |
 | `default`    | rows    | `header` (fixed 1), `content` (scrolls), `footer` (fixed 1) | the screen, unless you say otherwise        |
+| `grid`       | rows    | `content` (scrolls)                                         | sub-panels dealt into visual rows           |
 | `panel`      | rows    | `content` (scrolls)                                         | a panel, unless it says otherwise           |
 | `two-column` | columns | `left`, `right`                                             | anything that wants its blocks side by side |
 
-Two axes and one degenerate case cover it, because the second dimension comes from nesting rather than from a grid: a panel is a block that holds a layout, so any arrangement is rows of columns of rows, as deep as it needs to be.
+Two axes cover it, because the second dimension comes from nesting rather than from a grid: a panel is a block that holds a layout, so any arrangement is rows of columns of rows, as deep as it needs to be.
+
+`grid` is the odd one out, and the [next section](#a-grid-of-windows) is why: it takes the same one region `panel` does, and adds the arithmetic that sizes the sub-panels sharing a visual row.
 
 ## Picking one
 
@@ -67,9 +70,35 @@ Both calls resolve through the same registry, which is the whole of what _reuse_
 
 :::note
 
-`PanelBuilder::layout()` also takes **numbers**, and that is a different feature: `->layout(1, 2)` arranges the panel's _sub-panels_ as a [grid of side-by-side windows](/panels#panel-layouts). A name arranges the panel's own blocks; numbers deal its sub-panels into visual rows. Mixing the two in one call throws, because a panel is arranged one way or the other.
+`PanelBuilder::layout()` also takes **numbers**: `->layout(1, 2)` arranges the panel with a `grid` of that shape, dealing its _sub-panels_ into [side-by-side windows](/panels#panel-layouts). Both forms pick a layout, so mixing them in one call throws - a panel is arranged by one.
 
 :::
+
+## A grid of windows
+
+`grid` is the one shipped layout built with an argument, because what it arranges is a shape rather than a set of names:
+
+```php
+use DrevOps\Tui\Screen\Layout\GridLayout;
+
+// One window on the first visual row, two sharing the second.
+$panel->layout(new GridLayout(1, 2));
+```
+
+The builder's `->layout(1, 2)` is the same thing said shorter, and it is how a form usually reaches one. Either way the panels in the layout's `content` region are dealt into those visual rows and drawn as **windows** - columns previewing what is behind them - while everything else in the region keeps its place, above the grid or below it depending on where it was written.
+
+It declares the same one region `panel` does rather than one region per window, and that split is the point:
+
+| Question             | Answered by                                                        |
+| -------------------- | ------------------------------------------------------------------ |
+| how tall a window is | what it holds, so the whole grid scrolls together as one region    |
+| how wide a window is | the layout, because the windows beside it come off the width first |
+
+A window sized by its own contents, stacking with its siblings and scrolling with them, is a block in a region. A width that can only be worked out once every window in the row has been counted is _sizing_, and sizing is the layout's - which is the whole of what `GridLayout` adds. The gutter between two windows comes off the width before it is divided, so they are the same width at every terminal size.
+
+Moving through a grid is spatial: <kbd>Left</kbd> and <kbd>Right</kbd> walk a visual row, <kbd>Up</kbd> and <kbd>Down</kbd> move between rows and out to whatever sits above or below the grid. The key hints advertise all four only where a grid is arranged, because they read that off the layout too.
+
+Two mistakes are refused where they are written rather than mid-session: a visual row declaring fewer than one window is nothing could ever be dealt into, and a shape whose slots do not exactly cover the sub-panels would leave one of them off the screen or a row of the grid empty.
 
 ## Sizing a region
 
@@ -121,6 +150,28 @@ flow: Axis::Rows            flow: Axis::Columns
 
 This is what saves you from nesting a layout every time two things belong side by side. A trail and a standing note in one header is a flow, not a second arrangement.
 
+A flow has two ends, and a block says which one it is packed from. `->add()` packs from the start of the axis and `->tail()` from the end of it:
+
+```php
+$layout->in('footer')
+  ->add(new Legend())
+  ->tail(new Markup('version', 'v1.2.3'));
+```
+
+```
+flow: Axis::Columns          flow: Axis::Rows
+
+╭──────────────────────╮     ╭──────────────────────╮
+│ ↵ to accept   v1.2.3 │     │ ↵ to accept          │
+╰──────────────────────╯     │                      │
+                             │ v1.2.3               │
+                             ╰──────────────────────╯
+```
+
+One call rather than a left-and-right pair, because it is the same statement with the axis turned: the end of a flow running across a region is its far edge, and the end of one running down it is its last row.
+
+Where the two runs meet in the middle, **the head keeps its space and the tail is cut**. A trail too long for its header pushes the version string off rather than being truncated itself, and a footer of one row draws what was packed at its start. Packing is placement and nothing more: both runs hold ordinary blocks, landed on in the order they are drawn and collected wherever they sit.
+
 Flow is what a layout and a region share; sizing is what only a layout does. Both run their contents in one direction, but only a layout apportions space between them. A region's blocks take their natural size, in the order they were added.
 
 | You need                          | Use                                      |
@@ -157,7 +208,7 @@ final class StallLayout extends AbstractLayout {
 
 Two axes exist - `Axis::Rows` and `Axis::Columns` - and that is the whole set. Declaring the same region name twice throws, naming the layout. So does arranging a panel with a layout that declares no region at all, since there would be nowhere for a block to go.
 
-Overriding the arithmetic is the other reason to subclass - a layout that packs its regions to fit, or gives the focused one extra room - and `arrange(int $available): array<string,int>` is the one method that does it.
+Overriding the arithmetic is the other reason to subclass - a layout that packs its regions to fit, or gives the focused one extra room - and `arrange(int $available): array<string,int>` is the method that does it. Two more sit beside it for the arithmetic that runs across a region rather than along the axis: `deal(): array<int>` says how many of its blocks share each visual row, and `share(int $available, int $count): int` how much of the region each of them takes. `GridLayout` is the one shipped layout that answers either with anything but "one block, the whole width".
 
 ## Registering one
 

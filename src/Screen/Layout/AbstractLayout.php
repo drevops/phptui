@@ -120,6 +120,23 @@ abstract class AbstractLayout implements LayoutInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function deal(): array {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * An arrangement dealing nothing puts one block on a visual row, so the row
+   * is the block and it takes the region whole.
+   */
+  public function share(int $available, int $count): int {
+    return $available;
+  }
+
+  /**
    * Declare a region.
    *
    * @param string $name

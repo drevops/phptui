@@ -125,7 +125,7 @@ final class BlockTreeTest extends TestCase {
       $p->panel('right', 'Right', static fn(PanelBuilder $sp): FieldBuilder => $sp->text('two', 'Two'));
     });
 
-    $this->assertSame([2], $panel->gridRows());
+    $this->assertSame([2], $panel->currentLayout()->deal());
     $this->assertSame(['content'], $panel->currentLayout()->names());
     $this->assertCount(2, $panel->children());
   }
@@ -173,6 +173,21 @@ final class BlockTreeTest extends TestCase {
         $p->layout('two-column');
       },
       'Panel "main" declares a layout after placing blocks in the one it had',
+    ];
+
+    yield 'a grid after the blocks' => [
+      static function (PanelBuilder $p): void {
+        $p->text('courier', 'Courier');
+        $p->layout(2);
+      },
+      'Panel "main" declares a layout after placing blocks in the one it had',
+    ];
+
+    yield 'a visual row nothing could be dealt into' => [
+      static function (PanelBuilder $p): void {
+        $p->layout(0, 2);
+      },
+      'Every visual row of a grid holds at least one window.',
     ];
   }
 

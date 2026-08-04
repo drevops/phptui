@@ -40,6 +40,15 @@ final class CollectorTest extends TestCase {
     $this->assertSame(['courier' => 'Valley Runs', 'weight' => 1200], (new Collector())->collect($panel));
   }
 
+  public function testWhichEndOfFlowRowWasPackedFromChangesNothingHereAtAll(): void {
+    $panel = $this->panel((new Field('courier', 'Courier'))->default('Valley Runs'));
+    $panel->in('content')->tail((new Field('weight', 'Weight'))->default(1200));
+
+    // Where a row sits is arranging, and there is no screen to arrange, so a
+    // question asked from the far end of a flow is asked just the same.
+    $this->assertSame(['courier' => 'Valley Runs', 'weight' => 1200], (new Collector())->collect($panel));
+  }
+
   public function testNothingThatOnlyShowsReachesTheResult(): void {
     $panel = $this->panel(
       new Breadcrumb('Orchard'),

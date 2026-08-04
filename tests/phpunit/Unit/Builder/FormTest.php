@@ -6,7 +6,6 @@ namespace DrevOps\Tui\Tests\Unit\Builder;
 
 use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\LayoutGuard;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Derive\Derive;
@@ -28,6 +27,7 @@ use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Model\TableSpec;
 use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Model\Weekday;
+use DrevOps\Tui\Screen\Layout\GridLayout;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -37,7 +37,6 @@ use PHPUnit\Framework\TestCase;
  * Tests the fluent form builder.
  */
 #[CoversClass(Form::class)]
-#[CoversClass(LayoutGuard::class)]
 #[CoversClass(PanelBuilder::class)]
 #[CoversClass(FieldBuilder::class)]
 #[Group('builder')]
@@ -774,10 +773,13 @@ final class FormTest extends TestCase {
       ->panel('c', 'C', fn(PanelBuilder $p): FieldBuilder => $p->text('four', 'Four'))
       ->root();
 
-    $this->assertSame([1, 2], $form->gridRows());
-    $this->assertSame([2], $form->children()[0]->gridRows());
+    // The counts are the arrangement, so what they declare is the layout the
+    // panel is arranged by rather than something the panel carries itself.
+    $this->assertInstanceOf(GridLayout::class, $form->currentLayout());
+    $this->assertSame([1, 2], $form->currentLayout()->deal());
+    $this->assertSame([2], $form->children()[0]->currentLayout()->deal());
     // A panel without a declaration keeps the default row list.
-    $this->assertSame([], $form->children()[1]->gridRows());
+    $this->assertSame([], $form->children()[1]->currentLayout()->deal());
   }
 
   #[DataProvider('dataProviderBuildThrows')]
@@ -970,7 +972,7 @@ final class FormTest extends TestCase {
           ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('two', 'Two'))
           ->root();
       },
-      'The layout of "Demo" declares 1 slot(s) for 2 panel(s).',
+      'The grid of "Demo" declares 1 slot(s) for 2 window(s).',
     ];
 
     yield 'form slots above the panels' => [
@@ -981,7 +983,7 @@ final class FormTest extends TestCase {
           ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('two', 'Two'))
           ->root();
       },
-      'The layout of "Demo" declares 4 slot(s) for 2 panel(s).',
+      'The grid of "Demo" declares 4 slot(s) for 2 window(s).',
     ];
 
     yield 'panel slots mismatch its children' => [
@@ -993,7 +995,7 @@ final class FormTest extends TestCase {
           })
           ->root();
       },
-      'The layout of "a" declares 2 slot(s) for 1 panel(s).',
+      'The grid of "a" declares 2 slot(s) for 1 window(s).',
     ];
 
     yield 'zero-width row' => [
@@ -1004,7 +1006,7 @@ final class FormTest extends TestCase {
           ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('two', 'Two'))
           ->root();
       },
-      'Every layout row of "Demo" must hold at least one panel.',
+      'Every visual row of a grid holds at least one window.',
     ];
   }
 

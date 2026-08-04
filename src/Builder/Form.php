@@ -15,6 +15,7 @@ use DrevOps\Tui\Model\Fixup;
 use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\Template;
+use DrevOps\Tui\Screen\Layout\GridLayout;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
 
 /**
@@ -69,11 +70,9 @@ final class Form {
   protected array $panels = [];
 
   /**
-   * The top-level panel grid rows, or empty for the row list.
-   *
-   * @var list<int>
+   * The grid arranging the top-level panels, once one is declared.
    */
-  protected array $layout = [];
+  protected ?GridLayout $layout = NULL;
 
   /**
    * The panel every declared panel hangs from, once the form is finished.
@@ -214,12 +213,13 @@ final class Form {
    *   The builder.
    *
    * @throws \DrevOps\Tui\Model\FormException
-   *   When the form's tree has already been built.
+   *   When the form's tree has already been built, or a visual row holds fewer
+   *   than one panel.
    */
   public function layout(int ...$rows): self {
     $this->assertUnbuilt('a layout');
 
-    $this->layout = array_values($rows);
+    $this->layout = new GridLayout(...$rows);
 
     return $this;
   }
@@ -243,11 +243,11 @@ final class Form {
       return $this->root;
     }
 
-    LayoutGuard::assert($this->layout, count($this->panels), $this->title);
+    $this->layout?->assertDeals(count($this->panels), $this->title);
 
     // The root is the form itself rather than a panel somebody declared, so it
     // is addressed by the name the form goes by.
-    $root = (new Panel($this->title, $this->title))->layout(new PanelLayout())->grid(...$this->layout);
+    $root = (new Panel($this->title, $this->title))->layout($this->layout ?? new PanelLayout());
     $root->buttons(new Buttons($this->buttons, $this->submitLabel, $this->cancelLabel));
 
     foreach ($this->panels as $panel) {

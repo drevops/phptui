@@ -47,7 +47,7 @@ The four levels are what the model is made of. What you actually build with are 
 | Level  | Kinds                                                       | Instances, on the screen below                      |
 | ------ | ----------------------------------------------------------- | --------------------------------------------------- |
 | Screen | one                                                         | the screen                                          |
-| Layout | `default`, `panel`, `two-column`                            | the screen's `default`                              |
+| Layout | `default`, `grid`, `panel`, `two-column`                    | the screen's `default`                              |
 | Region | none - a layout names its own                               | `header`, `content`, `footer`                       |
 | Block  | Panel, Field, Markup, Breadcrumb, Legend, Actions, Progress | one Breadcrumb, one Panel, three Fields, one Legend |
 
@@ -337,15 +337,38 @@ This is why the axis needs no third value. Any arrangement is rows of columns of
 
 #### Shipped layouts
 
-_Reuse_ means a layout is named and reusable, so the same one serves a _screen_ and a _panel_. Three ship, and a form picks one by name rather than describing an arrangement inline:
+_Reuse_ means a layout is named and reusable, so the same one serves a _screen_ and a _panel_. Four ship, and a form picks one by name rather than describing an arrangement inline:
 
 | Name         | Axis    | Regions                                                     |
 | ------------ | ------- | ----------------------------------------------------------- |
 | `default`    | rows    | `header` (fixed 1), `content` (scrolls), `footer` (fixed 1) |
+| `grid`       | rows    | `content` (scrolls)                                         |
 | `panel`      | rows    | `content` (scrolls)                                         |
 | `two-column` | columns | `left`, `right`                                             |
 
-Two axes and one degenerate case is enough: `default` and `panel` run down, `two-column` runs across, and anything else is those nested, or a layout you write yourself. `panel` is what a panel is arranged by when it names none.
+Two axes and one degenerate case is enough: `default`, `grid` and `panel` run down, `two-column` runs across, and anything else is those nested, or a layout you write yourself. `panel` is what a panel is arranged by when it names none.
+
+#### A grid of windows
+
+`grid` is the one shipped layout constructed with an argument, because what it arranges is a shape rather than a set of names:
+
+```php
+// One window on the first visual row, two sharing the second.
+$panel->layout(new GridLayout(1, 2));
+```
+
+The _panels_ in its one region are dealt into those visual rows, each drawn as a **window** - a column previewing what is behind it rather than a row summarizing it. Everything else in the region keeps its place: a block written above the first window stays above the grid, one written below the last stays below it.
+
+It declares one region rather than one per window, and that split is the useful part:
+
+|                      | Answered by                                                    |
+| -------------------- | -------------------------------------------------------------- |
+| how tall a window is | what it holds - so the whole grid scrolls as one _region_ does |
+| how wide a window is | the _layout_, because its neighbors come off the width first   |
+
+A window sized by its own contents and scrolling with its siblings is a block in a region. A window whose width can only be worked out once every window in its row has been counted is _Arrange_, and _Arrange_ is the layout's - which is the whole of what `GridLayout` adds over `panel`.
+
+Moving through one is spatial: <kbd>←</kbd> and <kbd>→</kbd> walk a visual row, <kbd>↑</kbd> and <kbd>↓</kbd> move between rows and out to the blocks above and below the grid. The _legend_ advertises all four only where a grid is arranged, because it reads that off the layout too.
 
 ```php
 (new Tui($form))->layout('two-column')->run();
@@ -429,7 +452,8 @@ $this->region('sidebar')
 | `->flex(2)`             | twice the share of the remainder that `flex(1)` gets      |
 | `->flow(Axis::Columns)` | its blocks run across it rather than down                 |
 | `->scrolls()`           | its contents may outrun it, and you can move through them |
-| `->add($block)`         | a block goes in it                                        |
+| `->add($block)`         | a block goes in it, packed from the start of the flow     |
+| `->tail($block)`        | a block goes in it, packed from the end of the flow       |
 
 `fixed()` and `flex()` are the odd pair out: they _declare_ a size but don't compute one, because _Arrange_ is the layout's. The region states what it wants and the layout does the arithmetic.
 
@@ -475,7 +499,33 @@ flow: Axis::Rows            flow: Axis::Columns
 
 This is what saves you from nesting a layout every time two things belong side by side. A breadcrumb and a clock in one header is a flow, not a second layout.
 
-**Flow is what a layout and a region share; sizing is what only a layout does.** Both run their contents in one direction, so both claim _Flow_. Only a layout also apportions space between them - naming the areas, sizing them, letting each scroll on its own - and that's _Arrange_. A region's blocks take their natural size and sit in the order they were added.
+##### Both ends of a flow
+
+A flow has two ends, and a block says which one it is packed from. `add()` packs from the start of the axis; `tail()` packs from the end of it:
+
+```php
+$layout->in('footer')
+  ->add(new Legend())
+  ->tail(new Markup('version', 'v1.2.3'));
+```
+
+```
+flow: Axis::Columns          flow: Axis::Rows
+
+╭──────────────────────╮     ╭──────────────────────╮
+│ ↵ to accept   v1.2.3 │     │ ↵ to accept          │
+╰──────────────────────╯     │                      │
+                             │ v1.2.3               │
+                             ╰──────────────────────╯
+```
+
+The same statement with the axis turned, which is why it's one call rather than a left-and-right pair: the end of a flow running across a region is its far edge, and the end of one running down it is its last row.
+
+**Where the two runs meet in the middle, the head keeps its space and the tail is cut.** A trail too long for its header pushes the version string off rather than being truncated itself, and a footer of one row draws what was packed at its start. That way the thing a reader needs is never the thing that goes, however small the terminal gets.
+
+Packing is placement, not a new capability: both runs are the region's blocks, drawn in the order they end up in, landed on in that order, and collected exactly as they would be anywhere else.
+
+**Flow is what a layout and a region share; sizing is what only a layout does.** Both run their contents in one direction, so both claim _Flow_. Only a layout also apportions space between them - naming the areas, sizing them, letting each scroll on its own - and that's _Arrange_. A region's blocks take their natural size and sit in the order they were added, from whichever end they were packed from.
 
 It's the difference between a grid and the text flow inside one of its cells, and you don't nest a grid to put two words on one line. So nesting a _layout_ is for when you need what a flow can't give:
 
@@ -1027,18 +1077,20 @@ Named regions mean a block says where it goes, rather than depending on the orde
 
 ### Resolving a tension
 
-When something doesn't fit, don't argue about where it goes. Name the capability it needs, and whichever level owns that capability is the answer. Six that have already been settled this way:
+When something doesn't fit, don't argue about where it goes. Name the capability it needs, and whichever level owns that capability is the answer. Eight that have already been settled this way:
 
-| Question                                           | Capability | Owned by      | Answer                                                             |
-| -------------------------------------------------- | ---------- | ------------- | ------------------------------------------------------------------ |
-| Can _markup_ sit in the footer?                    | _Show_     | every _block_ | Yes. A placement, not a feature.                                   |
-| Should a _progress_ row reach the result?          | _Collect_  | _field_       | No. It _Activates_, which is a different thing.                    |
-| Can a _panel_ scroll one column and pin the other? | _Scroll_   | _region_      | Yes. The left _region_ declares it; no _block_ changes.            |
-| Who works out how tall `content` is?               | _Arrange_  | _layout_      | The _layout_. Only it sees the fixed siblings that come off first. |
-| Can two _blocks_ sit side by side?                 | _Flow_     | _region_      | Yes, and without nesting a _layout_.                               |
-| Can a whole section come and go?                   | _Depend_   | the _block_   | Yes. A _panel_ claims it, and carries what it holds.               |
+| Question                                            | Capability | Owned by      | Answer                                                                       |
+| --------------------------------------------------- | ---------- | ------------- | ---------------------------------------------------------------------------- |
+| Can _markup_ sit in the footer?                     | _Show_     | every _block_ | Yes. A placement, not a feature.                                             |
+| Should a _progress_ row reach the result?           | _Collect_  | _field_       | No. It _Activates_, which is a different thing.                              |
+| Can a _panel_ scroll one column and pin the other?  | _Scroll_   | _region_      | Yes. The left _region_ declares it; no _block_ changes.                      |
+| Who works out how tall `content` is?                | _Arrange_  | _layout_      | The _layout_. Only it sees the fixed siblings that come off first.           |
+| Can two _blocks_ sit side by side?                  | _Flow_     | _region_      | Yes, and without nesting a _layout_.                                         |
+| Can a whole section come and go?                    | _Depend_   | the _block_   | Yes. A _panel_ claims it, and carries what it holds.                         |
+| Who deals sub-panels into a grid of windows?        | _Arrange_  | _layout_      | The _layout_ - `grid`. Only it can size a window against the row it sits in. |
+| Can a _legend_ sit left and a version string right? | _Flow_     | _region_      | Yes. Both ends of one flow, on either axis.                                  |
 
-The last two turn on the same test the others do: **which level can see what the job needs?** A region can't size itself, because its siblings' fixed cells come off the top before the remainder is divided. A layout can't furnish itself and stay reusable, because it would have to know what a breadcrumb is.
+The last four turn on the same test the others do: **which level can see what the job needs?** A region can't size itself, because its siblings' fixed cells come off the top before the remainder is divided. Nor can a window, because the windows beside it come off the width first - which is why a grid is a layout rather than something a panel carries. A layout can't furnish itself and stay reusable, because it would have to know what a breadcrumb is.
 
 That's the whole point of the split. A _region_ that knew what a breadcrumb was would need to know what every block is; instead a region knows only that it holds blocks, a block knows only how to fill the space it's given, and a theme knows only how to style what it's handed.
 
@@ -1051,7 +1103,7 @@ Every level, every capability and every element on this page is implemented and 
 | Level        | Class                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Screen       | `Screen`, and `ScreenRenderer` to draw one                                                                                                                                                                                                                                                                                                                                                                         |
-| Layout       | `LayoutInterface`, `AbstractLayout`, `DefaultLayout`, `PanelLayout`, `TwoColumnLayout`, `LayoutManager`                                                                                                                                                                                                                                                                                                            |
+| Layout       | `LayoutInterface`, `AbstractLayout`, `DefaultLayout`, `GridLayout`, `PanelLayout`, `TwoColumnLayout`, `LayoutManager`                                                                                                                                                                                                                                                                                              |
 | Region       | `Region`                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Block        | `BlockInterface`, `AbstractBlock`, and `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions`, `Progress`                                                                                                                                                                                                                                                                                                   |
 | Capabilities | one interface per block capability - `ActivateCapableInterface`, `BindCapableInterface`, `CaptureCapableInterface`, `CollectCapableInterface`, `ConstrainCapableInterface`, `DependCapableInterface`, `DescendCapableInterface`, `FocusCapableInterface`, `OverlayCapableInterface`, `RejectCapableInterface` - with `BindCapableTrait`, `DependCapableTrait` and `FocusCapableTrait` carrying the shared behavior |
@@ -1067,7 +1119,5 @@ Two endings are worth naming beside them, because they are what a caller sees wh
 [`playground/12-specification-screen.php`](https://github.com/drevops/tui/blob/main/playground/12-specification-screen.php) draws a form from these, opens a field, collects the same panel headlessly, and shows a refused value naming the field and the reason. [`playground/20-layouts-custom.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-custom.php) registers two layouts of its own and arranges a panel and a screen with them, and [`playground/09-themes-elements.php`](https://github.com/drevops/tui/blob/main/playground/09-themes-elements.php) patches a handful of elements without a theme class.
 
 ## Open questions
-
-**Can a flow align what it holds?** Blocks in a region take their natural size in the order they were added, and there is no way to say a _legend_ sits left while a version string sits right. Every side-by-side arrangement is packed from the start of the axis.
 
 **Can a region be addressed from outside its layout?** A block goes in by name, and the name is the layout's - so whatever places blocks has to be written against a layout that declares them. `default` keeps a `header`, a `content` and a `footer`, and the standard furniture goes wherever those exist and is silently skipped where they don't. That keeps every layout usable, and it means a layout naming its regions something else shows no trail and no key hints until something places them itself.

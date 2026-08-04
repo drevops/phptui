@@ -12,6 +12,8 @@ use DrevOps\Tui\Condition\ConditionInterface;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormException;
+use DrevOps\Tui\Screen\Layout\GridLayout;
+use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Layout\LayoutManager;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
 
@@ -88,7 +90,11 @@ final class PanelBuilder {
    *   When the declared grid does not match the panels it arranges.
    */
   public function seal(): void {
-    LayoutGuard::assert($this->panel->gridRows(), count($this->panels), $this->id);
+    $layout = $this->panel->currentLayout();
+
+    if ($layout instanceof GridLayout) {
+      $layout->assertDeals(count($this->panels), $this->id);
+    }
 
     foreach ($this->fields as $field) {
       $field->seal();
@@ -522,8 +528,9 @@ final class PanelBuilder {
    *   The builder.
    *
    * @throws \DrevOps\Tui\Model\FormException
-   *   When a name is mixed with counts, more than one name is given, or the
-   *   panel already holds blocks the named layout has nowhere to put.
+   *   When a name is mixed with counts, more than one name is given, a visual
+   *   row holds fewer than one sub-panel, or the panel already holds blocks
+   *   the named layout has nowhere to put.
    */
   public function layout(int|string ...$rows): self {
     $counts = [];
@@ -540,16 +547,18 @@ final class PanelBuilder {
     }
 
     if ($names === []) {
-      $this->panel->grid(...$counts);
-
-      return $this;
+      return $this->arrange(new GridLayout(...$counts));
     }
 
     if ($counts !== []) {
       throw new FormException(sprintf('Panel "%s" declares a layout name beside a grid of sub-panels; a panel is arranged one way or the other.', $this->id));
     }
 
-    return $this->arrange($names);
+    if (count($names) > 1) {
+      throw new FormException(sprintf('Panel "%s" declares %d layouts; a panel is arranged by one.', $this->id, count($names)));
+    }
+
+    return $this->arrange(LayoutManager::create($names[0]));
   }
 
   /**
@@ -591,28 +600,23 @@ final class PanelBuilder {
   }
 
   /**
-   * Arrange the panel's own blocks with a named layout.
+   * Arrange the panel with a layout.
    *
-   * @param list<string> $names
-   *   The declared names.
+   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   *   The layout.
    *
    * @return $this
    *   The builder.
    *
    * @throws \DrevOps\Tui\Model\FormException
-   *   When more than one name is given, or the panel already holds blocks the
-   *   named layout has nowhere to put.
+   *   When the panel already holds blocks the layout has nowhere to put.
    */
-  protected function arrange(array $names): self {
-    if (count($names) > 1) {
-      throw new FormException(sprintf('Panel "%s" declares %d layouts; a panel is arranged by one.', $this->id, count($names)));
-    }
-
+  protected function arrange(LayoutInterface $layout): self {
     if ($this->placed) {
       throw new FormException(sprintf('Panel "%s" declares a layout after placing blocks in the one it had; declare the layout first, so every block knows the regions it may go in.', $this->id));
     }
 
-    $this->panel->layout(LayoutManager::create($names[0]));
+    $this->panel->layout($layout);
     $this->region = $this->firstRegion();
 
     return $this;

@@ -103,13 +103,6 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   protected ?\Closure $preload = NULL;
 
   /**
-   * How the panels nested in it sit side by side, one entry per visual row.
-   *
-   * @var list<int>
-   */
-  protected array $grid = [];
-
-  /**
    * Construct a panel.
    *
    * @param string $id
@@ -352,48 +345,16 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   public function hints(): array {
     // Windows sitting beside each other are moved between in two directions
     // rather than one, so what the keys do depends on how they are arranged.
-    $move = $this->grid === []
-      ? new Hint('move', Action::MoveUp, Action::MoveDown)
-      : new Hint('move', Action::MoveUp, Action::MoveDown, Action::MoveLeft, Action::MoveRight);
+    $dealt = $this->layout instanceof LayoutInterface && $this->layout->deal() !== [];
+    $move = $dealt
+      ? new Hint('move', Action::MoveUp, Action::MoveDown, Action::MoveLeft, Action::MoveRight)
+      : new Hint('move', Action::MoveUp, Action::MoveDown);
 
     return [
       $move,
       new Hint('select', Action::Activate),
       new Hint('go back', Action::Back),
     ];
-  }
-
-  /**
-   * Sit the panels nested in this one side by side.
-   *
-   * @param int ...$rows
-   *   One entry per visual row, naming how many nested panels share it, top to
-   *   bottom; none leaves them one under another.
-   *
-   * @return static
-   *   The panel.
-   */
-  public function grid(int ...$rows): static {
-    $this->grid = array_values($rows);
-
-    // How its rows run is what arranges them, and what arranges the blocks in a
-    // region is the region: saying it there is what lets whatever draws one
-    // read the shape off the region it was handed.
-    if ($this->layout instanceof LayoutInterface) {
-      $this->place()->grid(...$this->grid);
-    }
-
-    return $this;
-  }
-
-  /**
-   * How the panels nested in this one sit side by side.
-   *
-   * @return list<int>
-   *   The count of each visual row, empty when they run one under another.
-   */
-  public function gridRows(): array {
-    return $this->grid;
   }
 
   /**
@@ -503,12 +464,31 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   }
 
   /**
+   * This panel drawn as the bare way into it.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   *
+   * @return string
+   *   The row: where the cursor is, what the panel is called, and the mark
+   *   saying it leads somewhere.
+   */
+  public function wayIn(ThemeInterface $theme): string {
+    return $this->stepped($this->headline($this->guard($theme)), $this->gutter($theme));
+  }
+
+  /**
    * This panel drawn as a window into it rather than as a row.
    *
    * Where a row says what is behind it in one line, a window shows the rows
    * themselves - which is what a panel sitting beside its siblings has the
    * space for, and what makes a grid of them read as several views of the same
    * form rather than as a list turned sideways.
+   *
+   * A window is a column previewing one panel, so a way into another panel is
+   * drawn as the line that says so and nothing more: the row spelling out a
+   * description and a summary of what is behind it belongs to a list, where
+   * there is a whole width to spend on it.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -529,7 +509,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
         continue;
       }
 
-      $drawn = $block->render($theme);
+      $drawn = $block instanceof self ? $block->wayIn($theme) : $block->render($theme);
 
       if ($drawn === '') {
         continue;

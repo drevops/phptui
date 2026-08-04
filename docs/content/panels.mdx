@@ -146,9 +146,9 @@ $bare = (new Tui($form))->theme('default', ['border' => 'none', 'spacing' => 'no
 
 ## Panel layouts
 
-A panel's sub-panels list vertically by default; `->layout()` given **numbers** arranges them as a grid of side-by-side windows instead. Each argument declares one visual row and says how many panels sit beside each other in it, filled in declaration order: `layout(2)` puts two panels side by side, `layout(2, 2)` makes four windows, `layout(1, 2)` one full-width panel above two columns - and `layout(2, 1)` the other way around. Every level of the panel tree declares its own, so a panel you have gone into arranges its children independently: `Form::layout()` arranges the top-level panels, `PanelBuilder::layout()` a panel's children.
+A panel's sub-panels list vertically by default; `->layout()` given **numbers** arranges the panel with a [grid layout](/layouts#a-grid-of-windows) instead, dealing them into side-by-side windows. Each argument declares one visual row and says how many panels sit beside each other in it, filled in declaration order: `layout(2)` puts two panels side by side, `layout(2, 2)` makes four windows, `layout(1, 2)` one full-width panel above two columns - and `layout(2, 1)` the other way around. Every level of the panel tree declares its own, so a panel you have gone into arranges its children independently: `Form::layout()` arranges the top-level panels, `PanelBuilder::layout()` a panel's children.
 
-Given a **name** instead, the same `PanelBuilder::layout()` arranges the panel's own blocks into named regions - `$p->layout('two-column')`, then `$p->in('left')`. That is a different feature and a separate page: see [Layouts](/layouts). Numbers deal sub-panels into a grid; a name says where every block goes. Mixing the two in one call throws.
+Given a **name** instead, the same `PanelBuilder::layout()` picks a layout that arranges the panel's own blocks into named regions - `$p->layout('two-column')`, then `$p->in('left')`. Both forms pick the layout a panel is arranged by, which is why mixing them in one call throws: a panel is arranged by one. Names are covered on [Layouts](/layouts).
 
 ```php
 $form = Form::create('Market stall')
@@ -177,7 +177,9 @@ $form = Form::create('Market stall')
   <ThemedImage sources={{light: useBaseUrl('/panel-layout-light-animated.svg'), dark: useBaseUrl('/panel-layout-dark-animated.svg')}} alt="Panels arranged as a grid: one full-width panel above two side-by-side columns" width="100%" />
 </p>
 
-Each column previews its panel - the title, the description and one row per field value, plus a drill-in row per nested panel - so the grid reads as windows into the form. The arrows move spatially: <kbd>Left</kbd>/<kbd>Right</kbd> along a row, <kbd>Up</kbd>/<kbd>Down</kbd> between rows, and out to the fields above or the buttons below. <kbd>Enter</kbd> drills into the focused panel exactly as in the row list, and fields declared on the same panel keep their normal rows above the grid. The declaration is validated when the form is built - every row must hold at least one panel and the slots must exactly cover the sub-panels - so a mismatch throws at declaration time, never mid-session.
+Each column previews its panel - the title, the description and one row per field value - so the grid reads as windows into the form. A panel nested inside a window draws the bare way into it, the title and the mark saying it leads somewhere: a window is a preview column, and the full row with a description and a summary belongs to a list, where there is a whole width to spend on it.
+
+The arrows move spatially: <kbd>Left</kbd>/<kbd>Right</kbd> along a row, <kbd>Up</kbd>/<kbd>Down</kbd> between rows, and out to the fields above or the buttons below. <kbd>Enter</kbd> drills into the focused panel exactly as in the row list, and fields declared on the same panel keep their normal rows above the grid. The declaration is refused where it is written - every visual row must hold at least one window, and the slots must exactly cover the sub-panels - so a mismatch throws at declaration time, never mid-session.
 
 ## Fullscreen
 

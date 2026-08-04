@@ -489,10 +489,13 @@ final class KeyRouter {
    *
    * @return list<list<int>>
    *   One entry per visual row, naming the focusable blocks the windows of that
-   *   row are; empty when the panel arranges no grid.
+   *   row are; empty when the panel is arranged by no grid.
    */
   protected function windowRows(): array {
-    $grid = $this->panel->place()->gridRows();
+    // Read off the arrangement rather than off the panel, because how what a
+    // panel holds sits on screen is the layout's to say and the panel nests one
+    // precisely so it never has to know.
+    $grid = $this->panel->currentLayout()->deal();
 
     if ($grid === []) {
       return [];

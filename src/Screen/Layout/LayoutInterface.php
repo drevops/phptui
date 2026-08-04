@@ -63,4 +63,26 @@ interface LayoutInterface {
    */
   public function arrange(int $available): array;
 
+  /**
+   * How this layout deals the blocks a region flows into visual rows.
+   *
+   * @return list<int>
+   *   How many blocks share each visual row, top to bottom; empty runs them
+   *   one under another, which is what every arrangement but a grid does.
+   */
+  public function deal(): array;
+
+  /**
+   * Work out how much of a region each block sharing one visual row gets.
+   *
+   * @param int $available
+   *   The cells across the region.
+   * @param int $count
+   *   How many blocks share the row.
+   *
+   * @return int
+   *   The cells each of them gets.
+   */
+  public function share(int $available, int $count): int;
+
 }

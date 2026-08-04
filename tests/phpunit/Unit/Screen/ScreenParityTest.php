@@ -28,6 +28,8 @@ use DrevOps\Tui\Render\ExternalEditor;
 use DrevOps\Tui\Render\Terminal;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\KeyRouter;
+use DrevOps\Tui\Screen\Layout\GridLayout;
+use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
 use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Screen\ScreenRenderer;
@@ -752,8 +754,7 @@ final class ScreenParityTest extends TestCase {
   public function testNestedPanelsSitSideBySideWhereTheFormArrangesThemThatWay(): void {
     $fruit = $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple'));
     $veg = $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot'));
-    $panel = $this->panel((new Field('name', 'Order name'))->default('Weekly Box'), $fruit, $veg);
-    $panel->grid(2);
+    $panel = $this->dealt([2], (new Field('name', 'Order name'))->default('Weekly Box'), $fruit, $veg);
 
     $tester = $this->tester($panel)->cols(60);
     $tester->run();
@@ -767,12 +768,12 @@ final class ScreenParityTest extends TestCase {
   }
 
   public function testGridDealsItsPanelsIntoTheVisualRowsTheFormDeclares(): void {
-    $panel = $this->panel(
+    $panel = $this->dealt(
+      [1, 2],
       $this->nested('summary', 'Summary', (new Field('name', 'Order name'))->default('Weekly Box')),
       $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple')),
       $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot')),
     );
-    $panel->grid(1, 2);
 
     $tester = $this->tester($panel)->rows(16)->cols(60);
     $tester->run();
@@ -785,12 +786,12 @@ final class ScreenParityTest extends TestCase {
   }
 
   public function testCursorMovesSpatiallyAcrossTheGridOfWindows(): void {
-    $panel = $this->panel(
+    $panel = $this->dealt(
+      [1, 2],
       $this->nested('summary', 'Summary', (new Field('name', 'Order name'))->default('Weekly Box')),
       $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple')),
       $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot')),
     );
-    $panel->grid(1, 2);
 
     $tester = $this->tester($panel)->rows(16)->cols(60);
 
@@ -812,6 +813,26 @@ final class ScreenParityTest extends TestCase {
 
     // A grid is moved through in two directions, so the legend says so.
     $this->assertStringContainsString('←/→', $tester->frame());
+  }
+
+  public function testRowPackedFromTheEndOfFlowIsStillOneYouLandOn(): void {
+    $panel = $this->panel((new Field('courier', 'Courier'))->default('Valley Runs'));
+    $panel->in('content')->tail((new Field('weight', 'Basket weight'))->default('1200'));
+
+    $tester = $this->tester($panel);
+    $answers = $tester->run(
+      Key::named(KeyName::Down),
+      Key::named(KeyName::Down),
+      Key::named(KeyName::Enter),
+      '!',
+      Key::named(KeyName::Enter),
+    );
+
+    // Which end it was packed from says where it is drawn and nothing else, so
+    // the cursor reaches it in the order it is drawn in - after the buttons
+    // that end the form, which the session puts among the panel's own rows.
+    $this->assertStringContainsString('Basket weight', $tester->frame());
+    $this->assertSame('1200!', $answers->value('weight'));
   }
 
   public function testPanelRowCountsThePicksItHasNoRoomToList(): void {
@@ -1021,7 +1042,21 @@ final class ScreenParityTest extends TestCase {
    * A panel holding the given blocks in its content region.
    */
   protected function nested(string $id, string $title, object ...$blocks): Panel {
-    $panel = (new Panel($id, $title))->layout(new PanelLayout());
+    return $this->arranged(new PanelLayout(), $id, $title, ...$blocks);
+  }
+
+  /**
+   * The panel a screen starts in, arranged as a grid of windows.
+   */
+  protected function dealt(array $shape, object ...$blocks): Panel {
+    return $this->arranged(new GridLayout(...$shape), 'main', 'Delivery', ...$blocks);
+  }
+
+  /**
+   * A panel holding the given blocks, arranged by a layout of its own.
+   */
+  protected function arranged(LayoutInterface $layout, string $id, string $title, object ...$blocks): Panel {
+    $panel = (new Panel($id, $title))->layout($layout);
 
     foreach ($blocks as $block) {
       /** @var \DrevOps\Tui\Block\BlockInterface $block */

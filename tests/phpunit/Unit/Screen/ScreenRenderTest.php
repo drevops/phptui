@@ -11,6 +11,7 @@ use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Layout\AbstractLayout;
 use DrevOps\Tui\Screen\Layout\DefaultLayout;
+use DrevOps\Tui\Screen\Layout\GridLayout;
 use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Screen\Screen;
 use DrevOps\Tui\Screen\ScreenRenderer;
@@ -231,9 +232,13 @@ final class ScreenRenderTest extends TestCase {
   }
 
   public function testGridIsMeasuredTheWayItIsDrawn(): void {
-    $screen = (new Screen())->layout(new DefaultLayout());
-    $region = $screen->in('content')->grid(2, 1);
+    $grid = new GridLayout(2, 1);
+    $hub = (new Panel('hub', 'Hub'))->layout($grid)->enter();
+    $region = $grid->in('content');
     $region->add(new Markup('above', 'Pick the produce.'));
+
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('content')->add($hub);
 
     $windows = [];
 
@@ -244,7 +249,7 @@ final class ScreenRenderTest extends TestCase {
       $windows[$id] = $window;
     }
 
-    [$total, $row] = (new ScreenRenderer(new DefaultTheme(40, ['color' => FALSE])))->extent($region, $windows['dairy']);
+    [$total, $row] = (new ScreenRenderer(new DefaultTheme(40, ['color' => FALSE])))->extent($grid, 'content', $windows['dairy']);
 
     // The row above, the air under it, then two windows sharing three rows, a
     // rule between the visual rows, and the window below sharing none: two
@@ -258,6 +263,55 @@ final class ScreenRenderTest extends TestCase {
     $drawn = $this->render($screen, $total + 2, 40);
     $this->assertSame('  Dairy ›', $drawn[$row + 1]);
     $this->assertSame('two', $drawn[$total]);
+  }
+
+  public function testBlockPackedFromTheEndSitsAgainstTheFarEdgeOfTheFlow(): void {
+    $layout = new DefaultLayout();
+    $layout->in('footer')->flow(Axis::Columns);
+
+    $screen = (new Screen())->layout($layout);
+    $screen->in('footer')->add((new Legend())->entry('↵', 'accept'))->tail(new Markup('version', 'v1.2.3'));
+
+    // A footer flows its key hints from one end and a version string from the
+    // other, without a second arrangement to put them there.
+    $this->assertSame('↵ to accept                       v1.2.3', $this->render($screen, 6, 40)[5]);
+  }
+
+  public function testBlockPackedFromTheEndSitsOnTheLastRowWhereTheFlowRunsDown(): void {
+    $layout = new class() extends AbstractLayout {
+
+      public function __construct() {
+        parent::__construct(Axis::Rows);
+
+        $this->region('content');
+      }
+
+    };
+
+    $screen = (new Screen())->layout($layout);
+    $screen->in('content')->add(new Markup('intro', 'Pick the produce.'))->tail(new Markup('version', 'v1.2.3'));
+
+    // The same statement with the axis turned: the end of a flow running down
+    // a region is its last row.
+    $this->assertSame(['Pick the produce.', '', '', '', '', 'v1.2.3'], $this->render($screen, 6, 40));
+  }
+
+  public function testWhereTheTwoEndsMeetTheHeadKeepsItsSpaceAndTheTailIsCut(): void {
+    $layout = new DefaultLayout();
+    $layout->in('header')->flow(Axis::Columns);
+
+    $screen = (new Screen())->layout($layout);
+    $screen->in('header')->add(new Markup('trail', 'Orchard › Delivery › Certification'))->tail(new Markup('version', 'v1.2.3'));
+    $screen->in('footer')->add(new Markup('legend', 'Legend'))->tail(new Markup('build', 'built today'));
+
+    $lines = $this->render($screen, 6, 40);
+
+    // Whichever axis they meet on, what packs from the start keeps every cell
+    // it drew and what packs from the end loses what will not fit: across the
+    // header the version string is cut, and down a one-row footer there is no
+    // row left for what was packed at its end.
+    $this->assertSame('Orchard › Delivery › Certification v1.2.', $lines[0]);
+    $this->assertSame('Legend', $lines[5]);
   }
 
   public function testAnEmptyLayoutDrawsNothingAtAll(): void {
