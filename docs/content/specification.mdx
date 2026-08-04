@@ -47,7 +47,7 @@ The four levels are what the model is made of. What you actually build with are 
 | Level  | Kinds                                                       | Instances, on the screen below                      |
 | ------ | ----------------------------------------------------------- | --------------------------------------------------- |
 | Screen | one                                                         | the screen                                          |
-| Layout | `default`, `grid`, `panel`, `two-column`                    | the screen's `default`                              |
+| Layout | `default`, `panel`, `two-column`, and the shaped grid       | the screen's `default`                              |
 | Region | none - a layout names its own                               | `header`, `content`, `footer`                       |
 | Block  | Panel, Field, Markup, Breadcrumb, Legend, Actions, Progress | one Breadcrumb, one Panel, three Fields, one Legend |
 
@@ -251,11 +251,12 @@ $this->region('bottom')->flex(1)->scrolls();
 
 #### Sizing a region
 
-A region takes its share of the axis one of two ways, and both axes work the same:
+A region takes its share of the axis one of three ways, and both axes work the same:
 
 ```php
 $this->region('header')->fixed(1);    // exactly one row (or column)
 $this->region('content')->flex(1);   // a share of whatever is left
+$this->region('window-1')->content(); // as much as what it holds comes to
 ```
 
 **`fixed` is cells**, and rows are why it exists. A header is one line whatever the terminal height, and no proportion can say that - 4% of a 24-row terminal is one row, of a 50-row terminal is two. Columns rarely need it; rows almost always do at their edges.
@@ -283,6 +284,8 @@ $this->region('bottom')->flex(30)->scrolls();
 ╰─────────────────────────╯
 ```
 
+**`content` is what it holds.** A window is as deep as the rows behind it, and neither a count of cells nor a share of the remainder can say that. It stays a declaration rather than a measurement: what the region holds is counted where blocks are drawn and handed to the layout as a number, so the region states a kind and the layout still does every line of the arithmetic. The three are one closed set, so they are an enum - `Sizing::Fixed`, `Sizing::Flex`, `Sizing::Content` - and `->sizing()` answers with it.
+
 Declaring neither is `flex(1)`, which is why the default layout can leave its middle region bare:
 
 ```php
@@ -303,7 +306,10 @@ Sizing and scrolling are two calculations, and each can only be done by one leve
 
 **The region scrolls.** Given the one number the layout hands it, everything else is its own: how tall its blocks are, where its viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved, which is why _Scroll_ is the region's.
 
+**The renderer measures.** A region sized by what it holds still can't size itself, because what it holds is only known where blocks are drawn. So the renderer counts each region's contents and hands the layout a map of name to cells; the layout divides the axis by those numbers. That way a layout that apportions by content still never learns that blocks exist - it is told numbers keyed by its own regions, which is the same kind of thing `arrange()` already deals in.
+
 ```
+Renderer ──▸  each Region's contents are counted
 Layout   ──▸  each Region is given a size
 Region   ──▸  offset, visible rows, overflow markers
 ```
@@ -337,38 +343,43 @@ This is why the axis needs no third value. Any arrangement is rows of columns of
 
 #### Shipped layouts
 
-_Reuse_ means a layout is named and reusable, so the same one serves a _screen_ and a _panel_. Four ship, and a form picks one by name rather than describing an arrangement inline:
+_Reuse_ means a layout is named and reusable, so the same one serves a _screen_ and a _panel_. Three ship, and a form picks one by name rather than describing an arrangement inline:
 
 | Name         | Axis    | Regions                                                     |
 | ------------ | ------- | ----------------------------------------------------------- |
 | `default`    | rows    | `header` (fixed 1), `content` (scrolls), `footer` (fixed 1) |
-| `grid`       | rows    | `content` (scrolls)                                         |
 | `panel`      | rows    | `content` (scrolls)                                         |
 | `two-column` | columns | `left`, `right`                                             |
 
-Two axes and one degenerate case is enough: `default`, `grid` and `panel` run down, `two-column` runs across, and anything else is those nested, or a layout you write yourself. `panel` is what a panel is arranged by when it names none.
+Two axes and one degenerate case is enough: `default` and `panel` run down, `two-column` runs across, and anything else is those nested, a grid, or a layout you write yourself. `panel` is what a panel is arranged by when it names none.
 
 #### A grid of windows
 
-`grid` is the one shipped layout constructed with an argument, because what it arranges is a shape rather than a set of names:
+A **grid** is the one arrangement built from a shape rather than picked by a name:
 
 ```php
 // One window on the first visual row, two sharing the second.
 $panel->layout(new GridLayout(1, 2));
 ```
 
-The _panels_ in its one region are dealt into those visual rows, each drawn as a **window** - a column previewing what is behind it rather than a row summarizing it. Everything else in the region keeps its place: a block written above the first window stays above the grid, one written below the last stays below it.
+Each of its windows is a _region_ of its own, so `GridLayout(1, 2)` declares four: `content`, which holds the panel's own rows above the grid, and then `window-1`, `window-2` and `window-3`, numbered in reading order - across the first visual row, then across the second. A _panel_ reaches a window by naming that region, exactly as any block reaches any other, and is drawn there as a **window** - a column showing what is behind it rather than a row summarizing it. That is the region's declaration, not the panel's: a row has one line to say what is behind a panel and a window has the depth to show it, so which of the two the space is can only be answered by the arrangement.
 
-It declares one region rather than one per window, and that split is the useful part:
+Both of the questions a window raises are the layout's, which is the whole of what a grid adds over `panel`:
 
-|                      | Answered by                                                    |
-| -------------------- | -------------------------------------------------------------- |
-| how tall a window is | what it holds - so the whole grid scrolls as one _region_ does |
-| how wide a window is | the _layout_, because its neighbors come off the width first   |
+|                      | Answered by                                                                            |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| how deep a window is | what it holds, which is a size a region states and the layout apportions               |
+| how wide a window is | the _layout_, because the windows it shares a visual row with come off the width first |
 
-A window sized by its own contents and scrolling with its siblings is a block in a region. A window whose width can only be worked out once every window in its row has been counted is _Arrange_, and _Arrange_ is the layout's - which is the whole of what `GridLayout` adds over `panel`.
+The width is where the theme comes in: the air between two things drawn side by side is a styling decision, so the layout asks the theme for the gutter before dividing the width, and the renderer asks the same theme when it joins what the windows drew. One fact, read in both places, so they cannot disagree.
 
-Moving through one is spatial: <kbd>←</kbd> and <kbd>→</kbd> walk a visual row, <kbd>↑</kbd> and <kbd>↓</kbd> move between rows and out to the blocks above and below the grid. The _legend_ advertises all four only where a grid is arranged, because it reads that off the layout too.
+Each window **scrolls its own region**, as any region does when its contents outrun it. The visual rows themselves are apportioned by the layout, which is the only thing that sees them all, and the driver's follow-the-cursor rule works unchanged: the cursor sits on a window rather than inside one, so the region holding it is already showing the row the cursor is on.
+
+Moving through one is spatial: <kbd>←</kbd> and <kbd>→</kbd> walk a visual row, <kbd>↑</kbd> and <kbd>↓</kbd> move between rows and out to the blocks above and below the grid. The _legend_ advertises all four only where windows actually sit beside each other, because it reads that off the layout's lines too.
+
+Going into a window leaves the grid behind: the panel takes the whole arrangement rather than the cell it was previewed in, exactly as going into any panel replaces what was drawn where it stood.
+
+**No name reaches a grid**, and that is what keeps a grid a grid. Two grids of different shapes are different arrangements and a name carries no shape, so `'grid'` is not among the names a form can pick, the class is refused by name too, and a grid with no visual row at all is refused where it is constructed. It is built where the shape is written: `new GridLayout(1, 2)`, or the builder's `->layout(1, 2)` that says the same thing shorter.
 
 ```php
 (new Tui($form))->layout('two-column')->run();
@@ -439,6 +450,8 @@ LayoutManager::create('sidebar');             // registered
 LayoutManager::create(SidebarLayout::class);  // the class, unregistered
 ```
 
+All three hand over a name and nothing else, so a layout any of them can build is one that asks for nothing else either. That is the whole reason a [grid](#a-grid-of-windows) is reached by none of them: its shape is what it arranges, and no name says which shape. A layout whose constructor takes an argument is left out of the shipped names and refused by the other two routes, naming the class rather than failing at the first frame.
+
 Most subclasses only declare regions, and inherit every line of the arithmetic. Overriding that arithmetic is the other reason to subclass - a layout that packs regions to fit, or gives the focused one extra room - and it is the same door `AbstractLayout` already holds open.
 
 ### Region
@@ -458,12 +471,14 @@ $this->region('sidebar')
 | ----------------------- | --------------------------------------------------------- |
 | `->fixed(24)`           | 24 cells of the axis, whatever the terminal size          |
 | `->flex(2)`             | twice the share of the remainder that `flex(1)` gets      |
+| `->content()`           | as much of the axis as what it holds comes to             |
 | `->flow(Axis::Columns)` | its blocks run across it rather than down                 |
 | `->scrolls()`           | its contents may outrun it, and you can move through them |
+| `->previews()`          | a panel in it draws as a window onto it, not as a row     |
 | `->add($block)`         | a block goes in it, packed from the start of the flow     |
 | `->tail($block)`        | a block goes in it, packed from the end of the flow       |
 
-`fixed()` and `flex()` are the odd pair out: they _declare_ a size but don't compute one, because _Arrange_ is the layout's. The region states what it wants and the layout does the arithmetic.
+`fixed()`, `flex()` and `content()` are the odd trio out: they _declare_ a size but don't compute one, because _Arrange_ is the layout's. The region states what it wants and the layout does the arithmetic - even for `content()`, where the number comes from the renderer counting what the region holds.
 
 The name is the whole point of a region: it's how a block says where it goes, so nothing depends on the order things were declared in.
 
@@ -1114,7 +1129,7 @@ When something doesn't fit, don't argue about where it goes. Name the capability
 | Who works out how tall `content` is?                | _Arrange_  | _layout_      | The _layout_. Only it sees the fixed siblings that come off first.           |
 | Can two _blocks_ sit side by side?                  | _Flow_     | _region_      | Yes, and without nesting a _layout_.                                         |
 | Can a whole section come and go?                    | _Depend_   | the _block_   | Yes. A _panel_ claims it, and carries what it holds.                         |
-| Who deals sub-panels into a grid of windows?        | _Arrange_  | _layout_      | The _layout_ - `grid`. Only it can size a window against the row it sits in. |
+| Who deals sub-panels into a grid of windows?        | _Arrange_  | _layout_      | The _layout_ - a grid. Only it can size a window against the row it sits in. |
 | Can a _legend_ sit left and a version string right? | _Flow_     | _region_      | Yes. Both ends of one flow, on either axis.                                  |
 
 Every one of them turns on the same test: **which level can see what the job needs?** A region can't size itself, because its siblings' fixed cells come off the top before the remainder is divided. Nor can a window, because the windows beside it come off the width first - which is why a grid is a layout rather than something a panel carries. A layout can't furnish itself and stay reusable, because it would have to know what a breadcrumb is - it can only say which of its regions the trail belongs in, and that is arrangement.

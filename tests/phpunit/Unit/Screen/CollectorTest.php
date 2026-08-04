@@ -283,10 +283,10 @@ final class CollectorTest extends TestCase {
         $this->region('content')->flex(1);
       }
 
-      public function arrange(int $available): array {
+      public function arrange(int $available, array $measured = []): array {
         $this->arranged++;
 
-        return parent::arrange($available);
+        return parent::arrange($available, $measured);
       }
 
     };

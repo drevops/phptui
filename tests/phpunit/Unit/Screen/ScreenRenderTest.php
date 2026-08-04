@@ -268,35 +268,37 @@ final class ScreenRenderTest extends TestCase {
   public function testGridIsMeasuredTheWayItIsDrawn(): void {
     $grid = new GridLayout(2, 1);
     $hub = (new Panel('hub', 'Hub'))->layout($grid)->enter();
-    $region = $grid->in('content');
-    $region->add(new Markup('above', 'Pick the produce.'));
+    $grid->in('content')->add(new Markup('above', 'Pick the produce.'));
 
     $screen = (new Screen())->layout(new DefaultLayout());
     $screen->in('content')->add($hub);
 
-    $windows = [];
+    $placed = 0;
 
     foreach (['fruit' => 'Fruit', 'veg' => 'Vegetables', 'dairy' => 'Dairy'] as $id => $title) {
       $window = (new Panel($id, $title))->layout(new DefaultLayout());
       $window->in('content')->add(new Markup($id . '-note', "one\ntwo"));
-      $region->add($window);
-      $windows[$id] = $window;
+      $grid->in($grid->windows()[$placed])->add($window);
+      $placed++;
     }
 
-    [$total, $row] = (new ScreenRenderer(new DefaultTheme(40, ['color' => FALSE])))->extent($grid, 'content', $windows['dairy']);
+    $renderer = new ScreenRenderer(new DefaultTheme(40, ['color' => FALSE]));
 
-    // The row above, the air under it, then two windows sharing three rows, a
-    // rule between the visual rows, and the window below sharing none: two
-    // windows side by side cost the rows of one rather than of both.
-    $this->assertSame(9, $total);
-    // The window below the first visual row starts after it and the rule.
-    $this->assertSame(6, $row);
+    // Every region is measured on its own, and the arrangement is what adds
+    // them up: the row above, then two windows sharing three rows, then the
+    // window below sharing none - so two windows side by side cost the rows of
+    // one rather than of both. Every line but the last carries the row telling
+    // it from the next.
+    $sizes = $renderer->sizes($grid, 40);
+    $this->assertSame(1, $renderer->extent($grid, 'content')[0]);
+    $this->assertSame(3, $renderer->extent($grid, 'window-1')[0]);
+    $this->assertSame(['content' => 2, 'window-1' => 4, 'window-2' => 4, 'window-3' => 3], $sizes);
 
-    // What was counted is what is drawn: the content region comes to exactly
-    // those rows, so a region moved against them shows what it says it does.
-    $drawn = $this->render($screen, $total + 2, 40);
-    $this->assertSame('  Dairy ›', $drawn[$row + 1]);
-    $this->assertSame('two', $drawn[$total]);
+    // What was counted is what is drawn: the windows come to exactly those
+    // rows, so a region moved against them shows what it says it does.
+    $drawn = $this->render($screen, 11, 40);
+    $this->assertSame('  Dairy ›', $drawn[7]);
+    $this->assertSame('two', $drawn[9]);
   }
 
   public function testBlockPackedFromTheEndSitsAgainstTheFarEdgeOfTheFlow(): void {

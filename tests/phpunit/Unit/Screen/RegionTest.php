@@ -8,6 +8,7 @@ use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Region;
+use DrevOps\Tui\Screen\Sizing;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -26,22 +27,36 @@ final class RegionTest extends TestCase {
   public function testDeclaringNeitherSizeIsWeightOfOne(): void {
     $region = new Region('content');
 
-    $this->assertNull($region->fixedSize());
-    $this->assertSame(1, $region->flexShare());
+    $this->assertSame(Sizing::Flex, $region->sizing());
+    $this->assertSame(1, $region->size());
   }
 
   public function testFixedTakesCellsAndClearsAnyShare(): void {
     $region = (new Region('header'))->flex(4)->fixed(1);
 
-    $this->assertSame(1, $region->fixedSize());
-    $this->assertNull($region->flexShare());
+    $this->assertSame(Sizing::Fixed, $region->sizing());
+    $this->assertSame(1, $region->size());
   }
 
   public function testFlexTakesShareAndClearsAnyFixedSize(): void {
     $region = (new Region('content'))->fixed(1)->flex(3);
 
-    $this->assertNull($region->fixedSize());
-    $this->assertSame(3, $region->flexShare());
+    $this->assertSame(Sizing::Flex, $region->sizing());
+    $this->assertSame(3, $region->size());
+  }
+
+  public function testContentTakesWhatItHoldsAndAsksForNoNumberOfItsOwn(): void {
+    $region = (new Region('window-1'))->fixed(4)->content();
+
+    // What it comes to is measured where blocks are drawn, so the declaration
+    // carries no number at all.
+    $this->assertSame(Sizing::Content, $region->sizing());
+    $this->assertSame(0, $region->size());
+  }
+
+  public function testRegionDrawsRowsUntilItDeclaresItShowsWhatIsBehindThem(): void {
+    $this->assertFalse((new Region('content'))->isPreviewing());
+    $this->assertTrue((new Region('window-1'))->previews()->isPreviewing());
   }
 
   public function testBlocksFlowDownTheRegionUnlessToldOtherwise(): void {
@@ -59,8 +74,10 @@ final class RegionTest extends TestCase {
 
     $this->assertSame($region, $region->fixed(1));
     $this->assertSame($region, $region->flex(2));
+    $this->assertSame($region, $region->content());
     $this->assertSame($region, $region->flow(Axis::Columns));
     $this->assertSame($region, $region->scrolls());
+    $this->assertSame($region, $region->previews());
   }
 
   public function testRegionArrivesEmpty(): void {

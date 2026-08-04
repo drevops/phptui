@@ -807,7 +807,7 @@ class ScreenController {
   protected function viewports(int $rows): \Generator {
     $panel = $this->router->current();
     $focused = $this->router->focused();
-    $sizes = $panel->currentLayout()->arrange($this->content($rows));
+    $sizes = $this->renderer->sizes($panel->currentLayout(), $this->content($rows));
 
     foreach ($panel->currentLayout()->names() as $name) {
       $region = $panel->in($name);
@@ -846,7 +846,7 @@ class ScreenController {
     // A frame spends a rule top and bottom, so what the layout is given is the
     // terminal less its chrome.
     $inside = $this->border === Border::None ? $rows : max(0, $rows - self::FRAME_RULES);
-    $region = $this->screen->currentLayout()->arrange($inside)[$this->body] ?? $inside;
+    $region = $this->renderer->sizes($this->screen->currentLayout(), $inside)[$this->body] ?? $inside;
 
     return $this->renderer->room($this->screen->in($this->body), $this->panel, $region);
   }

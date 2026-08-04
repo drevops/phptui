@@ -88,6 +88,16 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
 
   /**
    * {@inheritdoc}
+   *
+   * One column, which is the least that keeps two things apart: the floor draws
+   * no decoration, but two windows run against each other read as one.
+   */
+  public function chromeGutter(): int {
+    return 1;
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function chromeIndent(int $depth): string {
     return '';

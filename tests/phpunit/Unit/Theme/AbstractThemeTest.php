@@ -116,6 +116,12 @@ final class AbstractThemeTest extends TestCase {
     $this->assertSame('', (new FloorTheme())->chromeIndent(2));
   }
 
+  public function testFloorKeepsOneColumnBetweenTwoThingsDrawnSideBySide(): void {
+    // The floor draws no decoration, but two windows run against each other
+    // read as one, so the least that keeps them apart is still spent.
+    $this->assertSame(1, (new FloorTheme())->chromeGutter());
+  }
+
   public function testGuidanceOpensWithMarkNothingCanStrip(): void {
     // Neither hue nor slant survives here, and a constraint sits directly under
     // an entry's own text, so a mark is the one cue left to tell them apart.

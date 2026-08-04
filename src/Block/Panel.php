@@ -346,8 +346,8 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   public function hints(): array {
     // Windows sitting beside each other are moved between in two directions
     // rather than one, so what the keys do depends on how they are arranged.
-    $dealt = $this->layout instanceof LayoutInterface && $this->layout->deal() !== [];
-    $move = $dealt
+    $abreast = $this->layout instanceof LayoutInterface && array_filter($this->layout->lines(), static fn(array $line): bool => count($line) > 1) !== [];
+    $move = $abreast
       ? new Hint('move', Action::MoveUp, Action::MoveDown, Action::MoveLeft, Action::MoveRight)
       : new Hint('move', Action::MoveUp, Action::MoveDown);
 

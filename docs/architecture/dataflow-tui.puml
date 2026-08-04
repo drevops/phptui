@@ -41,9 +41,9 @@ loop until the form ends
   else laid out
     SC -> SR: render(screen, rows, columns)
     activate SR
-    SR -> Screen: arrange(available)
+    SR -> Screen: arrange(available, measured), after counting what each Region holds
     Screen --> SR: a size for each Region
-    SR -> Screen: deal() and share(), where a grid puts blocks side by side
+    SR -> Screen: lines() and share(), where a grid draws Regions side by side
     SR -> Screen: flow the Region's blocks from both ends, scroll if declared
     SR -> Block: render(theme)
     Block -> Theme: elements for what it draws

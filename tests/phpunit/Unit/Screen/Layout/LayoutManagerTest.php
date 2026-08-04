@@ -43,7 +43,6 @@ final class LayoutManagerTest extends TestCase {
 
     $this->assertSame([
       'default' => DefaultLayout::class,
-      'grid' => GridLayout::class,
       'panel' => PanelLayout::class,
       'two-column' => TwoColumnLayout::class,
     ], $built);
@@ -59,7 +58,7 @@ final class LayoutManagerTest extends TestCase {
     LayoutManager::register('sidebar', SidebarLayoutFixture::class);
 
     $this->assertInstanceOf(SidebarLayoutFixture::class, LayoutManager::create('sidebar'));
-    $this->assertSame(['default', 'grid', 'panel', 'two-column', 'sidebar'], LayoutManager::names());
+    $this->assertSame(['default', 'panel', 'two-column', 'sidebar'], LayoutManager::names());
   }
 
   public function testClassNameWorksWithoutRegistering(): void {
@@ -68,7 +67,7 @@ final class LayoutManagerTest extends TestCase {
 
   public function testAnUnknownNameListsTheOnesThereAre(): void {
     $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('Unknown layout "sidebar". Registered: default, grid, panel, two-column.');
+    $this->expectExceptionMessage('Unknown layout "sidebar". Registered: default, panel, two-column.');
 
     LayoutManager::create('sidebar');
   }
@@ -89,16 +88,43 @@ final class LayoutManagerTest extends TestCase {
 
   public function testArrangementNobodyCanBuildIsRefusedWhereItIsNamed(): void {
     $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('Layout class "' . AbstractLayout::class . '" cannot be instantiated.');
+    $this->expectExceptionMessage('Layout class "' . AbstractLayout::class . '" cannot be built from a name alone.');
 
     LayoutManager::register('abstract', AbstractLayout::class);
   }
 
   public function testBuildingArrangementNobodyCanBuildIsRefusedToo(): void {
     $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('Layout class "' . AbstractLayout::class . '" cannot be instantiated.');
+    $this->expectExceptionMessage('Layout class "' . AbstractLayout::class . '" cannot be built from a name alone.');
 
     LayoutManager::create(AbstractLayout::class);
+  }
+
+  public function testArrangementBuiltFromShapeIsNotReachedByName(): void {
+    // A name carries no shape, and two grids of different shapes are different
+    // arrangements, so the grid is not among the names a form can pick.
+    $this->assertNotContains('grid', LayoutManager::names());
+
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Unknown layout "grid". Registered: default, panel, two-column.');
+
+    LayoutManager::create('grid');
+  }
+
+  public function testArrangementBuiltFromShapeIsRefusedByItsClassToo(): void {
+    // The other two routes hand over no more than a name does, so what a name
+    // cannot reach a class name cannot reach either.
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Layout class "' . GridLayout::class . '" cannot be built from a name alone.');
+
+    LayoutManager::create(GridLayout::class);
+  }
+
+  public function testRegisteringArrangementBuiltFromShapeIsRefused(): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Layout class "' . GridLayout::class . '" cannot be built from a name alone.');
+
+    LayoutManager::register('grid', GridLayout::class);
   }
 
 }

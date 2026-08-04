@@ -31,6 +31,11 @@ use DrevOps\Tui\Screen\Layout\PanelLayout;
 final class Form {
 
   /**
+   * The region a panel goes in when the arrangement keeps no window for it.
+   */
+  protected const string CONTENT = 'content';
+
+  /**
    * The start banner (logo).
    */
   protected string $banner = '';
@@ -250,9 +255,11 @@ final class Form {
     $root = (new Panel($this->title, $this->title))->layout($this->layout ?? new PanelLayout());
     $root->buttons(new Buttons($this->buttons, $this->submitLabel, $this->cancelLabel));
 
-    foreach ($this->panels as $panel) {
+    foreach ($this->panels as $index => $panel) {
       $panel->seal();
-      $root->in('content')->add($panel->block());
+      // A grid draws each panel in a window of its own, and a window is a
+      // region, so the panel is placed in the one that names it.
+      $root->in($this->layout instanceof GridLayout ? $this->layout->windows()[$index] : self::CONTENT)->add($panel->block());
     }
 
     $this->assertUniqueFieldIds($root);

@@ -99,6 +99,11 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   protected const int CONDITIONAL_INDENT = 2;
 
   /**
+   * The columns left clear between two things drawn side by side.
+   */
+  protected const int GUTTER = 2;
+
+  /**
    * The left indent of a definition list, in columns.
    */
   protected const int DEFINITION_INDENT = 2;
@@ -710,6 +715,14 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   #[\Override]
   public function chromeOverflowMarker(bool $above): string {
     return $this->indicator($above ? $this->glyph('▲', '^') : $this->glyph('▼', 'v'));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function chromeGutter(): int {
+    return self::GUTTER;
   }
 
   /**

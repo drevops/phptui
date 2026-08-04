@@ -500,7 +500,7 @@ final class PanelBuilder {
     $panel = new self($id, $title);
     $build($panel);
     $this->panels[] = $panel;
-    $this->add($panel->block());
+    $this->descend($panel->block());
 
     return $this;
   }
@@ -597,6 +597,38 @@ final class PanelBuilder {
     $this->placed = TRUE;
 
     return $this;
+  }
+
+  /**
+   * Put a sub-panel where the arrangement keeps it.
+   *
+   * A grid draws each of its sub-panels in a window of its own, and a window is
+   * a region, so which one a sub-panel goes in is settled here rather than left
+   * to something further down to work out from the order they arrived in.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The sub-panel.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the grid has no window left to draw it in.
+   */
+  protected function descend(Panel $panel): void {
+    $layout = $this->panel->currentLayout();
+
+    if (!$layout instanceof GridLayout) {
+      $this->add($panel);
+
+      return;
+    }
+
+    $window = $layout->windows()[count($this->panels) - 1] ?? NULL;
+
+    if ($window === NULL) {
+      throw new FormException(sprintf('The grid of "%s" declares %d slot(s) for %d window(s).', $this->id, count($layout->windows()), count($this->panels)));
+    }
+
+    $this->panel->in($window)->add($panel);
+    $this->placed = TRUE;
   }
 
   /**

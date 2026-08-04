@@ -12,9 +12,11 @@ namespace DrevOps\Tui\Block\Element;
  * once and the overflow marker says a region's contents outran it: neither is
  * anything a block could ask for, since a block only ever fills the space it is
  * given and never learns where that space ends, so both are the renderer's to
- * draw. The gutter is the other kind of shared piece - every block that can
- * come and go with the answers steps in behind the same one, so a chain of a
- * row, a note and a row steps in together rather than one kind at a time.
+ * draw. The air between two things drawn side by side is the same kind of
+ * piece, and so is the gutter a conditional block steps in behind - every block
+ * that can come and go with the answers steps in behind that same one, so a
+ * chain of a row, a note and a row steps in together rather than one kind at a
+ * time.
  *
  * The prefix follows the same rule the block interfaces do: every element is
  * named for its owner, so a theme implements all of them on one class without
@@ -49,6 +51,21 @@ interface ChromeElementsInterface {
    *   The styled mark.
    */
   public function chromeOverflowMarker(bool $above): string;
+
+  /**
+   * The columns left clear between two things drawn side by side.
+   *
+   * Frame furniture, like the border and the overflow mark: it belongs to no
+   * block, because a block only ever fills the space it is given and never
+   * learns what is drawn beside it. Two levels spend it - an arrangement takes
+   * it off the width before dividing what is left, and the renderer leaves it
+   * when it joins what they drew - and both read it here, so they cannot say
+   * different things about the same air.
+   *
+   * @return int
+   *   The columns; none draws the two against each other.
+   */
+  public function chromeGutter(): int;
 
   /**
    * The blank gutter a block behind a condition is laid out after.

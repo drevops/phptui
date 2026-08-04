@@ -776,10 +776,10 @@ final class FormTest extends TestCase {
     // The counts are the arrangement, so what they declare is the layout the
     // panel is arranged by rather than something the panel carries itself.
     $this->assertInstanceOf(GridLayout::class, $form->currentLayout());
-    $this->assertSame([1, 2], $form->currentLayout()->deal());
-    $this->assertSame([2], $form->children()[0]->currentLayout()->deal());
+    $this->assertSame([['content'], ['window-1'], ['window-2', 'window-3']], $form->currentLayout()->lines());
+    $this->assertSame([['content'], ['window-1', 'window-2']], $form->children()[0]->currentLayout()->lines());
     // A panel without a declaration keeps the default row list.
-    $this->assertSame([], $form->children()[1]->currentLayout()->deal());
+    $this->assertSame([['content']], $form->children()[1]->currentLayout()->lines());
   }
 
   #[DataProvider('dataProviderBuildThrows')]

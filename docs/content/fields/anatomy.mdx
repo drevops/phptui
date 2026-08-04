@@ -190,13 +190,16 @@ Elements are grouped by the block that declares them, in one interface per block
 
 ### The chrome
 
-`ChromeElementsInterface` is the one interface named for something other than a block. The frame surrounds every region at once, and the overflow mark says a region's contents outran it - neither is something a block could ask for, since a block only fills the space it is given and never learns where that space ends. The gutter is the other kind of shared piece: every block that comes and goes with the answers steps in behind the same one, so a run of a row, a note and a row steps in together rather than one kind at a time.
+`ChromeElementsInterface` is the one interface named for something other than a block. The frame surrounds every region at once, and the overflow mark says a region's contents outran it - neither is something a block could ask for, since a block only fills the space it is given and never learns where that space ends or what is drawn beside it. The two gutters are the other kind of shared piece: every block that comes and goes with the answers steps in behind the same one, and the air between two things drawn side by side belongs to neither of them.
 
 | Element                  | Draws                                                                                                     |
 | ------------------------ | --------------------------------------------------------------------------------------------------------- |
 | `chromeBorder()`         | the **border** (chrome 1) - the run of box-drawing characters                                             |
 | `chromeOverflowMarker()` | the **overflow marker** (chrome 4), told whether it points up                                             |
+| `chromeGutter()`         | the columns left clear between two things drawn side by side, as a count rather than a string             |
 | `chromeIndent()`         | the blank gutter a block behind a condition is laid out after, given how many answers put it there at all |
+
+`chromeGutter()` is read in two places and spent in one: a [grid](/layouts#a-grid-of-windows) takes it off the width before dividing what is left between the windows of a visual row, and the renderer leaves exactly that many columns when it joins what they drew. Answering `0` runs them against each other; the floor answers `1` and `DefaultTheme` answers `2`.
 
 ### The trail, the keys and the buttons
 

@@ -4,19 +4,18 @@
  * @file
  * Panel layouts: sub-panels arranged as a grid of side-by-side columns.
  *
- * The grid is a layout like any other, shipped under the name "grid", and
- * ->layout() is the one call that takes either a name or a shape. Counts are
- * sugar over that same class: each argument is one visual row naming how many
- * panels sit beside each other in it, filled in declaration order. layout(1, 2)
- * puts the first panel alone on top and the next two side by side below;
- * layout(2, 2) makes four windows.
+ * The grid is the one arrangement built from a shape rather than picked by a
+ * name, and ->layout() takes either. Counts are the shape: each argument is one
+ * visual row naming how many panels sit beside each other in it, filled in
+ * declaration order. layout(1, 2) puts the first panel alone on top and the
+ * next two side by side below; layout(2, 2) makes four windows. Each window is
+ * a region of the grid, so a panel is drawn in the one that names it.
  *
- * A name carries no shape, which is the whole difference between the two
- * routes: layout('grid') is the grid with nothing dealt into rows, so its
- * windows run one under another - which is what Delivery does here, beside
- * Produce's layout(2) of Fruit and Vegetables. Every level declares its own.
- * The arrows move spatially across the grid, and a slot count that does not
- * match the panels throws when the form is built.
+ * A name carries no shape, so no name reaches a grid: a panel that declares no
+ * arrangement lists its sub-panels as rows instead - which is what Delivery
+ * does here, beside Produce's layout(2) of Fruit and Vegetables. Every level
+ * declares its own. The arrows move spatially across the grid, and a slot count
+ * that does not match the panels throws when the form is built.
  *
  * Usage:
  *   php playground/03-panels-layout.php
@@ -59,9 +58,8 @@ $form = Form::create('Market stall')
     });
   })
   ->panel('delivery', 'Delivery', function (PanelBuilder $p): void {
-    // The same class by name. A name carries no shape, so nothing is dealt
-    // into visual rows and the two windows run one under the other.
-    $p->layout('grid');
+    // No shape, so no grid: the two sub-panels are rows you select, one under
+    // the other, which is what a panel does without being told otherwise.
     $p->panel('when', 'When', function (PanelBuilder $sp): void {
       $sp->toggle('slot', 'Slot')->default('morning')->options([
         'morning' => 'Morning',

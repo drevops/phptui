@@ -117,16 +117,21 @@ final class BlockTreeTest extends TestCase {
     $this->assertCount(0, $panel->in('right')->blocks());
   }
 
-  public function testGridArrangesTheSubPanelsWithoutTouchingTheRegions(): void {
+  public function testGridDrawsEachSubPanelInTheWindowThatNamesIt(): void {
     $panel = $this->panel(static function (PanelBuilder $p): void {
       $p->layout(2);
+      $p->text('courier', 'Courier');
       $p->panel('left', 'Left', static fn(PanelBuilder $sp): FieldBuilder => $sp->text('one', 'One'));
       $p->panel('right', 'Right', static fn(PanelBuilder $sp): FieldBuilder => $sp->text('two', 'Two'));
     });
 
-    $this->assertSame([2], $panel->currentLayout()->deal());
-    $this->assertSame(['content'], $panel->currentLayout()->names());
-    $this->assertCount(2, $panel->children());
+    // The panel's own rows stay in the region a block reaches without naming
+    // one; each sub-panel goes in the window that names it.
+    $this->assertSame([['content'], ['window-1', 'window-2']], $panel->currentLayout()->lines());
+    $this->assertCount(1, $panel->in('content')->blocks());
+    $this->assertSame(['left', 'right'], array_map(static fn(Panel $child): string => $child->id(), $panel->children()));
+    $this->assertSame($panel->children()[0], $panel->in('window-1')->blocks()[0]);
+    $this->assertSame($panel->children()[1], $panel->in('window-2')->blocks()[0]);
   }
 
   /**

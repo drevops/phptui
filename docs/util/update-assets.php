@@ -864,9 +864,9 @@ EXPECT;
 /**
  * The expect body driving the panel-layout grid TUI.
  *
- * Both routes into the one grid class are opened in turn, so the recording
- * carries the difference between them: a name deals nothing into rows, counts
- * deal windows side by side.
+ * Both arrangements a panel can take are opened in turn, so the recording
+ * carries the difference between them: a shape deals windows side by side, and
+ * a panel that declares none lists its sub-panels as rows.
  *
  * @return string
  *   The expect script body.
@@ -879,8 +879,8 @@ expect "Summary" {
     arrow_down
 }
 
-# Across to Delivery and into it: arranged by the name "grid", which carries
-# no shape, so its two windows run one under the other.
+# Across to Delivery and into it: no shape and so no grid, which leaves its
+# two sub-panels as rows one under the other.
 pause 800
 arrow_right
 pause 600

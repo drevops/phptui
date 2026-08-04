@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Screen\Layout;
 
+use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Furniture;
 use DrevOps\Tui\Screen\Region;
@@ -72,32 +73,54 @@ interface LayoutInterface {
    *
    * @param int $available
    *   The cells to divide.
+   * @param array<string,int> $measured
+   *   The cells each region's contents come to, keyed by name, for the ones
+   *   that take as much of the axis as what they hold. Numbers rather than
+   *   anything that could measure: what a region holds is drawn where drawing
+   *   happens, and a layout that could ask would be a layout that knows there
+   *   are blocks.
    *
    * @return array<string,int>
    *   The cells each region gets, keyed by name.
    */
-  public function arrange(int $available): array;
+  public function arrange(int $available, array $measured = []): array;
 
   /**
-   * How this layout deals the blocks a region flows into visual rows.
+   * The cells this arrangement comes to when nothing has sized it.
    *
-   * @return list<int>
-   *   How many blocks share each visual row, top to bottom; empty runs them
-   *   one under another, which is what every arrangement but a grid does.
+   * @param array<string,int> $measured
+   *   The cells each region's contents come to, keyed by name.
+   *
+   * @return int
+   *   The cells: what its lines come to together down the axis, and what the
+   *   deepest of them comes to across it, where they share the cells instead.
    */
-  public function deal(): array;
+  public function natural(array $measured = []): int;
 
   /**
-   * Work out how much of a region each block sharing one visual row gets.
+   * The regions drawn on each line of the axis, in declaration order.
+   *
+   * @return list<list<string>>
+   *   One entry per line, naming the regions drawn on it. Most arrangements
+   *   put one region on a line; a grid puts a visual row's windows on one.
+   */
+  public function lines(): array;
+
+  /**
+   * Work out how much of the cross-axis each region sharing a line gets.
    *
    * @param int $available
-   *   The cells across the region.
+   *   The cells across the line.
    * @param int $count
-   *   How many blocks share the row.
+   *   How many regions share it.
+   * @param \DrevOps\Tui\Block\Element\ChromeElementsInterface $chrome
+   *   The theme, for the gutter left between two things drawn side by side:
+   *   an arrangement cannot divide a width without knowing what the air
+   *   between the pieces costs, and how wide that air is is the theme's.
    *
    * @return int
    *   The cells each of them gets.
    */
-  public function share(int $available, int $count): int;
+  public function share(int $available, int $count, ChromeElementsInterface $chrome): int;
 
 }

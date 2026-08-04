@@ -815,6 +815,26 @@ final class ScreenParityTest extends TestCase {
     $this->assertStringContainsString('←/→', $tester->frame());
   }
 
+  public function testGoingIntoWindowLeavesTheGridItWasWindowOnto(): void {
+    $panel = $this->dealt(
+      [2],
+      $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple')),
+      $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot')),
+    );
+
+    $tester = $this->tester($panel)->cols(60);
+    $tester->run(Key::named(KeyName::Enter));
+
+    $rows = array_values(array_filter(array_map(rtrim(...), explode("\n", $tester->frame()))));
+
+    // A window is a way in, so going in replaces what it was a window onto:
+    // the panel takes the whole frame rather than the cell it was drawn in,
+    // and the window beside it goes with the grid.
+    $this->assertSame('Delivery › Fruit', $rows[0]);
+    $this->assertStringContainsString('Fruit  Apple', $rows[1]);
+    $this->assertStringNotContainsString('Vegetables', $tester->frame());
+  }
+
   public function testRowPackedFromTheEndOfFlowIsStillOneYouLandOn(): void {
     $panel = $this->panel((new Field('courier', 'Courier'))->default('Valley Runs'));
     $panel->in('content')->tail((new Field('weight', 'Basket weight'))->default('1200'));
@@ -1089,9 +1109,22 @@ final class ScreenParityTest extends TestCase {
 
   /**
    * The panel a screen starts in, arranged as a grid of windows.
+   *
+   * A window is a region, so each panel goes in the one that names it and
+   * everything else stays in the region the panel's own rows are drawn in.
    */
   protected function dealt(array $shape, object ...$blocks): Panel {
-    return $this->arranged(new GridLayout(...$shape), 'main', 'Delivery', ...$blocks);
+    $layout = new GridLayout(...$shape);
+    $panel = (new Panel('main', 'Delivery'))->layout($layout);
+    $windows = 0;
+
+    foreach ($blocks as $block) {
+      /** @var \DrevOps\Tui\Block\BlockInterface $block */
+      $region = $block instanceof Panel ? $layout->windows()[$windows++] : 'content';
+      $panel->in($region)->add($block);
+    }
+
+    return $panel;
   }
 
   /**
