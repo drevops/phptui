@@ -12,20 +12,20 @@ title Data flow: headless collection (Tui::collect)
 
 participant "Caller" as Caller
 participant "Tui" as Tui
+participant "Form" as Form
 participant "InputResolver" as IR
 participant "Collector" as Col
-participant "Block tree\n(Panel -> Field)" as Tree
+participant "Tree\n(one walk of the declared blocks)" as Tree
 participant "Field behaviour\n(closure or static)" as B
 participant "Discovery spec" as Disc
 participant "Deriver\n+ Derive" as Der
-participant "Condition" as CE
 participant "Answers" as Ans
 
 Caller -> Tui: collect(prompts, directory, update, version)
 activate Tui
 
-Tui -> Tree: root()
-Tree --> Tui: the declared Panel
+Tui -> Form: root()
+Form --> Tui: the declared Panel
 
 Tui -> IR: resolve(fields, prompts, env)
 activate IR
@@ -36,6 +36,7 @@ Tui -> Col: answers(panel, supplied, context)
 activate Col
 
 Col -> Tree: fields(panel)
+Tree --> Col: every question, in declaration order
 note right of Col: no Screen, Layout or Region is built,\nand no block that only shows
 
 loop each field whose rows are loaded
@@ -63,10 +64,11 @@ Col -> Der: derive(rules, values, pinned)
 activate Der
 Der --> Col: derived values (fixpoint)
 deactivate Der
-Col -> CE: matches(answers)
-activate CE
-CE --> Col: there / not there, per field
-deactivate CE
+Col -> Tree: within(panel, answers)
+activate Tree
+Tree --> Col: there / not there, per block
+deactivate Tree
+note right of Col: one walk answers presence for everything,\nso a section takes what it holds off the form\nwhatever each question's own rule says
 note right of Col: rows that follow the answers re-resolve,\nfix-ups apply; repeat until nothing moves
 
 loop each field that is there and was supplied

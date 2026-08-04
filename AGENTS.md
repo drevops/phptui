@@ -40,10 +40,10 @@ collect no answer and never run inside the panel:
 
 Every piece a primitive draws routes through a `render*()` method on the theme
 that takes only plain strings and arrays - never a `Field`, `Panel` or
-`Answers`. `renderCard()` and `renderTable()` are each the single renderer
-behind both the standalone piece and its in-panel counterpart (a note field's
-card and its grid), so a theme override restyles the two together. Keep it that
-way: a renderer that reaches for form state cannot be used standalone.
+`Answers`. `renderCard()` is the single renderer behind both the standalone
+card and the one a markup block draws in a panel, grid included, so a theme
+override restyles the two together. Keep it that way: a renderer that reaches
+for form state cannot be used standalone.
 
 
 ### Namespace Structure

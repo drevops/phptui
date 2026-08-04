@@ -6,7 +6,7 @@ keywords: ['testing', 'test harness', 'scripted keystrokes', 'phpunit', 'asserti
 
 # Testing
 
-Three harnesses ship, one per scope. All of them push keystrokes onto a scripted terminal's input pipe and run the **real** loop, so you assert on the answers and on what was drawn without a terminal anywhere in sight.
+Three harnesses ship, one per scope, and each runs the **real** thing at its own scope - so you assert on the answers and on what was drawn without a terminal anywhere in sight. The first two push keystrokes onto a scripted terminal's input pipe and run the session loop; the third hands them straight to one field, since a field on its own has no session to run.
 
 | Harness        | Drives                      | Reach for it when                                 |
 | -------------- | --------------------------- | ------------------------------------------------- |

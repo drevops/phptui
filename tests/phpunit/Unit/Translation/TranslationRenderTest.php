@@ -12,8 +12,12 @@ use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Field\FieldFactory;
+use DrevOps\Tui\Field\FilePicker;
 use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Schema\AgentHelp;
 use DrevOps\Tui\Schema\SchemaValidator;
 use DrevOps\Tui\Testing\ScreenTester;
@@ -144,37 +148,52 @@ final class TranslationRenderTest extends TestCase {
   public function testUkrainianLegendNamesEveryKeyItAdvertises(): void {
     $this->ukrainian();
 
-    $form = Form::create('Produce order')
-      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
-        $panel->select('basket', 'Basket')->multiple()->options(['apple' => 'Apple', 'beet' => 'Beet']);
-        $panel->text('courier', 'Courier')->help('Weighed at the packing bench.');
-      })
-      ->root();
-
-    $tester = (new ScreenTester($form))->rows(16)->cols(80);
-    $tester->run(
-      Key::named(KeyName::Enter),
-      Key::named(KeyName::Enter),
-      Key::named(KeyName::Escape),
-      Key::named(KeyName::Down),
-    );
+    $tester = (new ScreenTester($this->weeklyBox()))->rows(16)->cols(80);
+    $tester->run(...$this->walk());
 
     // Closed over the panel: moving, opening a row, stepping back out, and the
     // way out of the session itself.
-    $closed = $tester->frame(1);
-    $this->assertStringContainsString('↑/↓ перемістити', $closed);
-    $this->assertStringContainsString('↵ вибрати', $closed);
-    $this->assertStringContainsString('ESC назад', $closed);
-    $this->assertStringContainsString('Q вийти', $closed);
+    $this->assertSame('↑/↓ рух · ↵ вибрати · ESC назад · Q вийти', $this->legend($tester->frame(1)));
 
     // Open over a multi-select: the fragments only an open list advertises.
-    $open = $tester->frame(2);
-    $this->assertStringContainsString('ПРОБІЛ вибрати', $open);
-    $this->assertStringContainsString('нічого/усе', $open);
-    $this->assertStringContainsString('↵ прийняти', $open);
+    $this->assertSame('ПРОБІЛ вибрати · ↑/↓ рух · ←/→ нічого/усе · ↵ прийняти · ESC скасувати', $this->legend($tester->frame(2)));
 
     // Help is offered on the row that has some, so the fragment arrives last.
-    $this->assertStringContainsString('? довідка', $tester->frame());
+    $this->assertSame('↑/↓ рух · ↵ вибрати · ESC назад · Q вийти · ? довідка', $this->legend($tester->frame()));
+  }
+
+  public function testUkrainianLegendFitsTheDefaultFrameWithNothingDropped(): void {
+    $this->ukrainian();
+
+    $narrow = (new ScreenTester($this->weeklyBox()))->rows(16)->cols(80);
+    $narrow->run(...$this->walk());
+
+    // The same walk through a frame nothing clips. A legend out of room drops
+    // whole hints from the end, so a fragment grown past the width a session
+    // is normally drawn at costs a reader the way out of a list rather than a
+    // few characters of one.
+    $wide = (new ScreenTester($this->weeklyBox()))->rows(16)->cols(200)->options(['fullscreen' => TRUE]);
+    $wide->run(...$this->walk());
+
+    foreach (array_keys($wide->frames()) as $at) {
+      $composed = $this->legend($wide->frame($at));
+
+      $this->assertLessThanOrEqual(DefaultTheme::DEFAULT_WIDTH, Ansi::width($composed));
+      $this->assertSame($composed, $this->legend($narrow->frame($at)));
+    }
+  }
+
+  public function testUkrainianFilePickerAdvertisesItsWholeListInsideTheDefaultFrame(): void {
+    $this->ukrainian();
+
+    $picker = new FilePicker(__DIR__);
+    $legend = (new Legend())->advertise(KeyMapManager::create()->forField(FieldType::FilePicker), ...$picker->hints());
+    $composed = Ansi::strip($legend->render(new DefaultTheme(DefaultTheme::DEFAULT_WIDTH * 2, ['color' => FALSE, 'unicode' => TRUE])));
+
+    // The longest list anything here advertises: browsing adds a way in, a way
+    // out and a way to see what is hidden on top of the four every field has.
+    $this->assertSame('↑/↓ рух · → відкрити · ← вгору · ↵ вибрати · TAB приховані · ESC скасувати', $composed);
+    $this->assertLessThanOrEqual(DefaultTheme::DEFAULT_WIDTH, Ansi::width($composed));
   }
 
   public function testUkrainianRowStatesItsRefusalAndWhereItsValueCameFrom(): void {
@@ -287,6 +306,60 @@ final class TranslationRenderTest extends TestCase {
    */
   protected function ukrainian(): void {
     Translator::setShared(new Translator('uk'));
+  }
+
+  /**
+   * The tree the legend scenarios are driven against.
+   *
+   * @return \DrevOps\Tui\Block\Panel
+   *   The panel the declared panel hangs from.
+   */
+  protected function weeklyBox(): Panel {
+    return Form::create('Produce order')
+      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
+        $panel->select('basket', 'Basket')->multiple()->options(['apple' => 'Apple', 'beet' => 'Beet']);
+        $panel->text('courier', 'Courier')->help('Weighed at the packing bench.');
+      })
+      ->root();
+  }
+
+  /**
+   * The keystrokes that walk a session past each legend it draws.
+   *
+   * @return list<\DrevOps\Tui\Input\Key>
+   *   The keystrokes: into the panel, into the list, back out, onto the row
+   *   that has help.
+   */
+  protected function walk(): array {
+    return [
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Escape),
+      Key::named(KeyName::Down),
+    ];
+  }
+
+  /**
+   * The keys line a frame advertises.
+   *
+   * @param string $frame
+   *   The frame, with its ANSI escape sequences already stripped.
+   *
+   * @return string
+   *   The line, empty when the frame advertises nothing.
+   */
+  protected function legend(string $frame): string {
+    $line = '';
+
+    // The last one it draws: the keys sit at the foot of the frame, below
+    // anything else a separator could appear in.
+    foreach (explode("\n", $frame) as $row) {
+      if (str_contains($row, '·')) {
+        $line = trim($row);
+      }
+    }
+
+    return $line;
   }
 
 }

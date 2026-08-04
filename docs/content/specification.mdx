@@ -98,7 +98,7 @@ Seventeen capabilities cover everything on screen, each described as what you ca
 
 </div>
 
-Nine readings of that table are worth stating outright, because they're the ones a new block will test.
+Eight readings of that table are worth stating outright, because they're the ones a new block will test.
 
 **Only a field collects.** Everything else on screen shows, focuses or activates, and none of it reaches the collected result.
 
@@ -400,9 +400,9 @@ So it asks. A layout answers where each piece of standard furniture goes, one **
 public function furnishes(Furniture $piece): ?string;
 ```
 
-`AbstractLayout` answers with the conventional names - `header`, `content`, `footer` - so every layout that uses them is furnished without writing a line. A layout that calls its regions something else overrides it and says where each piece goes; one that answers `NULL` keeps that piece off the screen entirely. Only `Furniture::Body` has to be answered: a layout with nowhere to draw the form is refused where the layout is named, because there is nothing to fall back to.
+`AbstractLayout` answers with the conventional names - `header`, `content`, `footer` - so every layout that uses them is furnished without writing a line. A layout that calls its regions something else overrides it and says where each piece goes; one that answers `NULL` keeps that piece off the screen entirely - `two-column` answers `left` for the form and nothing for the trail or the keys, so neither of those is drawn. Only `Furniture::Body` has to be answered: a layout with nowhere to draw the form is refused where the layout is named, because there is nothing to fall back to. The trail and the keys keep tracking the session whether or not a region was kept for them; they are only never drawn.
 
-**The standard furniture is assembled by the facade**, which is where the form's other defaults already come from - its theme, its key bindings, its controller. Declare a screen yourself and the facade assembles nothing; declare nothing and it gives you a breadcrumb, the panel, its actions, and a legend.
+**The standard furniture is assembled by the session**, alongside the form's other defaults - its theme, its key bindings, the panel it opens on. Every session assembles the same four pieces around the declared panel: a breadcrumb, the panel itself, the buttons that end the form, and a legend.
 
 Everything it places goes into the **screen's** own regions, never into the panel tree. One declaration outlives the session driving it, so a session that wrote its furniture into the tree would hand the next one a form nobody declared - two sets of buttons, or a standing notice from a run that has already finished. After a session the tree holds exactly the blocks the form declared.
 
@@ -958,7 +958,7 @@ Color and the background are one declaration rather than two, because the two qu
 
 Two of the six carry a **trait** with the plumbing, so a theme states a flag and inherits the rest. `ColorSchemeCapableTrait` brings `paint()` and `emphasize()`, and `UnicodeCapableTrait` brings `glyph()` - which is why the palette above reads as color choices rather than as escape-sequence handling. The other four are small enough to answer directly.
 
-`AbstractTheme` is the floor. It implements every elements interface and declares no capability at all, so it may not paint and may not reach past ASCII: what is left is the strings it was handed and the stand-ins that read without them. That is why a form renders in a terminal that supports nothing, and why a theme adds what its terminal can do rather than working around what it cannot.
+`AbstractTheme` is the floor. It implements all eight of the elements interfaces above and declares no capability at all, so it may not paint and may not reach past ASCII: what is left is the strings it was handed and the stand-ins that read without them. That is why a form renders in a terminal that supports nothing, and why a theme adds what its terminal can do rather than working around what it cannot.
 
 `DefaultTheme` is that floor with all six declared, and it's the class a theme extends when it wants a palette rather than a blank page. It isn't a requirement. `ThemeManager` builds anything implementing `ThemeInterface` from a frame width and an options array - the constructor `AbstractTheme` carries - so `->theme(OrchardTheme::class)` reaches a theme built straight on the floor exactly as it reaches one built on `DefaultTheme`, whether it's named by class, registered under a short name or shipped. What the floor doesn't declare, the driver does without: no edge is drawn around it, no air shows between its rows, nothing recedes behind a dialog, and an element patch goes nowhere. The [primitives](/output) are the one thing it can't do at all, because a card, a grid and a status line are composed rather than styled: they want `PrimitiveElementsInterface`, and a theme without it is named rather than drawn blank.
 
@@ -1117,7 +1117,7 @@ When something doesn't fit, don't argue about where it goes. Name the capability
 | Who deals sub-panels into a grid of windows?        | _Arrange_  | _layout_      | The _layout_ - `grid`. Only it can size a window against the row it sits in. |
 | Can a _legend_ sit left and a version string right? | _Flow_     | _region_      | Yes. Both ends of one flow, on either axis.                                  |
 
-The last four turn on the same test the others do: **which level can see what the job needs?** A region can't size itself, because its siblings' fixed cells come off the top before the remainder is divided. Nor can a window, because the windows beside it come off the width first - which is why a grid is a layout rather than something a panel carries. A layout can't furnish itself and stay reusable, because it would have to know what a breadcrumb is - it can only say which of its regions the trail belongs in, and that is arrangement.
+Every one of them turns on the same test: **which level can see what the job needs?** A region can't size itself, because its siblings' fixed cells come off the top before the remainder is divided. Nor can a window, because the windows beside it come off the width first - which is why a grid is a layout rather than something a panel carries. A layout can't furnish itself and stay reusable, because it would have to know what a breadcrumb is - it can only say which of its regions the trail belongs in, and that is arrangement.
 
 That's the whole point of the split. A _region_ that knew what a breadcrumb was would need to know what every block is; instead a region knows only that it holds blocks, a block knows only how to fill the space it's given, and a theme knows only how to style what it's handed.
 
@@ -1144,7 +1144,3 @@ Every level, every capability and every element on this page is implemented and 
 Two endings are worth naming beside them, because they are what a caller sees when a collection does not finish: `CollectException` when the answers cannot be taken as they were given, and `CancelException` when the form is abandoned through its cancel button.
 
 [`playground/12-specification-screen.php`](https://github.com/drevops/tui/blob/main/playground/12-specification-screen.php) draws a form from these, opens a field, collects the same panel headlessly, and shows a refused value naming the field and the reason. [`playground/20-layouts-custom.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-custom.php) registers two layouts of its own and arranges a panel and a screen with them, and [`playground/09-themes-elements.php`](https://github.com/drevops/tui/blob/main/playground/09-themes-elements.php) patches a handful of elements without a theme class.
-
-## Open questions
-
-**Can a region be addressed from outside its layout?** A block goes in by name, and the name is the layout's - so whatever places blocks asks the layout where each piece belongs rather than going looking for a name it hopes is there. `furnishes()` is that question, asked one role at a time. `default` answers `header`, `content` and `footer`; `two-column` answers `left` for the form and nothing for the trail or the keys, so neither is drawn; a layout of your own answers whatever it likes, and a piece it refuses is a piece it keeps off the screen. Only the form itself has to be answered, because there is nothing to draw it in place of. The trail and the keys keep tracking the session either way - they are just never drawn.

@@ -118,7 +118,7 @@ $out->card('Loaded for delivery', 'Everything below leaves the shed at seven.', 
 ]);
 ```
 
-The grid is sized to fit inside the card's own border, so the two frames never collide. Pass `bordered: false` for the indented card a [markup block](/markup) draws without `->bordered()`.
+The grid is sized to fit inside the card's own border, so the two frames never collide. Pass `bordered: false` for the indented card - the shape a [markup block](/markup) draws when it carries a grid without asking for a border.
 
 ## Status lines
 
@@ -234,7 +234,7 @@ The colors and glyphs come from the active [theme](/themes), the same way every 
 
 To go further and restyle one piece outright, override its `render*()` method on your theme - `renderCard()`, `renderTable()`, `renderStatus()`, `renderDefinitions()`, `renderText()` or `renderBanner()`.
 
-`renderCard()` and `renderTable()` are each the single renderer behind both the standalone piece and its in-panel counterpart, so overriding one restyles a [markup block's](/markup) card - or its grid - at the same time. None of them takes a field, a panel or an answer set: they take plain strings and arrays, which is what makes them usable outside a form at all.
+`renderCard()` is the single renderer behind both the standalone card and the one a [markup block](/markup) draws in a panel - grid included, since a markup grid is a card with a grid in it - so overriding it restyles the two together. `renderTable()` draws the standalone grid. None of them takes a field, a panel or an answer set: they take plain strings and arrays, which is what makes them usable outside a form at all.
 
 ## Degrading off a TTY
 

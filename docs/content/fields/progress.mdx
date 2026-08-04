@@ -1,7 +1,7 @@
 ---
 title: Progress
 description: 'A panel row that runs work when activated, filling a bar or ticking a spinner in place.'
-keywords: ['progress', 'bar', 'spinner', 'field']
+keywords: ['progress', 'bar', 'spinner', 'block']
 ---
 
 import ThemedImage from '@theme/ThemedImage';
@@ -13,12 +13,14 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   <ThemedImage sources={{light: useBaseUrl('/field-progress-light-animated.svg'), dark: useBaseUrl('/field-progress-dark-animated.svg')}} alt="Progress field" />
 </p>
 
-A place to do work inside the form: select the row, press `Enter`, and its work runs with a **determinate bar** (when it declares a step count) or an **indeterminate spinner** (when it does not), drawn in the row itself as the work advances. It collects **no value** - it sits beside the fields it depends on, not among the answers.
+A place to do work inside the form: select the row, press <kbd>Enter</kbd>, and its work runs with a **determinate bar** (when it declares a step count) or an **indeterminate spinner** (when it does not), drawn in the row itself as the work advances. It collects **no value** - it sits beside the fields it depends on, not among the answers, so it's a block of its own rather than a kind of field.
 
 ```php
+use DrevOps\Tui\Primitive\ProgressReporter;
+
 $p->progress('pack', 'Packing the box')
   ->steps(6) // Omit for an indeterminate spinner.
-  ->run(function (ProgressReporter $reporter) use ($items): void {
+  ->work(function (ProgressReporter $reporter) use ($items): void {
     foreach ($items as $item) {
       // ... one step of work ...
       $reporter->advance(); // Fills one step of the bar (ticks the spinner).
@@ -30,10 +32,10 @@ Runnable script: [`playground/02-fields-progress.php`](https://github.com/drevop
 
 ## Options
 
-| Method            | Effect                                                                                                                  |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `->steps(int)`    | The step count, making the indicator a determinate bar. Omit it for an indeterminate spinner.                           |
-| `->run(callable)` | The work run when the row is activated. The callback receives a `ProgressReporter` and calls `advance()` once per step. |
+| Method            | Effect                                                                                                                 |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `->steps(int)`    | The step count, making the indicator a determinate bar. Omit it for an indeterminate spinner.                          |
+| `->work(Closure)` | The work run when the row is activated. The closure receives a `ProgressReporter` and calls `advance()` once per step. |
 
 The indicator is drawn by the [active theme](/themes), in its accent and Unicode/ASCII mode - the same spinner and bar as the standalone [`progress()` primitive](/progress).
 

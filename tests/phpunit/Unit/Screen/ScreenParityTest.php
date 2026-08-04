@@ -978,7 +978,7 @@ final class ScreenParityTest extends TestCase {
     // the language the run was given.
     $this->assertStringContainsString('Постачання', $tester->frame());
     $this->assertStringContainsString('[ Надіслати ]  [ Скасувати ]', $tester->frame());
-    $this->assertStringContainsString('перемістити', $tester->frame());
+    $this->assertStringContainsString('↑/↓ рух', $tester->frame());
     $this->assertStringContainsString('змінено', $tester->frame());
   }
 

@@ -42,7 +42,7 @@ A slot name is a word (`{{grade}}`, `{{part_1}}`), and inner whitespace is allow
 
 Only the slot name is required: an omitted label falls back to the slot name, and an omitted validator leaves the slot checked by the field's own validator alone - so `->slot('grade')` is enough to name a slot without constraining it.
 
-Two rules are enforced when the form is built, both raising a `FormException`: a pattern must declare at least one slot, and two slots must be separated by some fixed text. A slot ends where the next fixed chunk begins, so `{{a}}{{b}}` could not be read back into its parts.
+Four rules are enforced when the form is built, each raising a `FormException`: a pattern declares at least one slot, no slot name is repeated, two slots are separated by some fixed text, and `->slot()` names a slot the pattern actually declares. The middle two are the same requirement seen twice - every slot is filled in separately and the answer is read back off the assembled string, so `{{a}}{{a}}` has no one place to put a value and `{{a}}{{b}}` has no boundary to read back at.
 
 ## Reading the answer
 

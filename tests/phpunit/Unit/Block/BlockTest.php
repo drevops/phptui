@@ -102,7 +102,7 @@ final class BlockTest extends TestCase {
     // it does - Ukrainian joins the two without a preposition.
     $legend = (new Legend())->advertise(KeyMapManager::create()->navigation(), new Hint('move', Action::MoveUp));
 
-    $this->assertSame('↑ перемістити', $legend->render($this->theme()));
+    $this->assertSame('↑ рух', $legend->render($this->theme()));
   }
 
   public function testLegendOutOfRoomDropsWholeHintsFromTheEnd(): void {
