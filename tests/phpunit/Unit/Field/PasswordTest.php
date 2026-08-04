@@ -53,13 +53,15 @@ final class PasswordTest extends TestCase {
     $this->assertStringContainsString('█', $view);
   }
 
-  public function testValidationErrorShownUnderMask(): void {
-    $field = (new Password(''))->setHandlers(validate: fn(mixed $value): ?string => is_string($value) && $value !== '' ? NULL : 'Required.');
+  public function testRefusalIsShownUnderTheMask(): void {
+    $field = new Password('secret');
 
-    $field->handle(Key::named(KeyName::Enter));
+    $field->refused('Required.');
 
-    $this->assertFalse($field->isComplete());
-    $this->assertStringContainsString('Required.', $field->view(new DefaultTheme()));
+    $view = $field->view(new DefaultTheme());
+
+    $this->assertStringContainsString('Required.', $view);
+    $this->assertStringNotContainsString('secret', $view);
   }
 
   public function testRevealToggleCyclesDisplayModes(): void {
@@ -168,19 +170,19 @@ final class PasswordTest extends TestCase {
     $this->assertSame('pw', $field->value());
   }
 
-  public function testConfirmRevalidatesMatchedValue(): void {
-    $theme = new DefaultTheme();
-    $field = (new Password('', confirm: TRUE))->setHandlers(validate: fn(mixed $value): string => 'Too weak.');
+  public function testConfirmOffersTheMatchedValueForTheFieldToMeasure(): void {
+    $field = new Password('', confirm: TRUE);
 
     $this->type($field, 'x');
     $field->handle(Key::named(KeyName::Enter));
     $this->type($field, 'x');
     $field->handle(Key::named(KeyName::Enter));
 
-    // Entries match, but the validator still rejects the value and restarts.
-    $this->assertFalse($field->isComplete());
-    $this->assertStringContainsString('Too weak.', $field->view($theme));
-    $this->assertStringNotContainsString('re-enter to confirm', $field->view($theme));
+    // Matching is the whole of what the confirmation decides; whether the
+    // value is strong enough is measured where the answer is held.
+    $this->assertTrue($field->isComplete());
+    $this->assertSame('x', $field->value());
+    $this->assertNull($field->error());
   }
 
   public function testPlaceholderGhostsAnEmptyBufferInEveryDisplayMode(): void {

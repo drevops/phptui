@@ -129,12 +129,6 @@ class Password extends AbstractField implements TextEditCapableInterface, Reveal
     }
 
     $this->accept($this->firstEntry);
-
-    // A validator may still reject the matched value; restart on failure so the
-    // shown error is not stranded against a completed field.
-    if (!$this->isComplete()) {
-      $this->reset();
-    }
   }
 
   /**

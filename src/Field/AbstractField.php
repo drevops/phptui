@@ -15,7 +15,7 @@ use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Utils\Strings;
 
 /**
- * Shared field behaviour: accept/cancel, validation and transformation.
+ * Shared field behaviour: accepting what was collected, and cancelling.
  *
  * @package DrevOps\Tui\Field
  */
@@ -35,7 +35,7 @@ abstract class AbstractField implements FieldInterface {
   protected ?Matcher $matcher = NULL;
 
   /**
-   * Whether a valid value has been accepted.
+   * Whether a value has been offered as the answer.
    */
   protected bool $complete = FALSE;
 
@@ -50,22 +50,9 @@ abstract class AbstractField implements FieldInterface {
   protected ?string $error = NULL;
 
   /**
-   * The accepted, transformed value once complete.
+   * The value offered as the answer once complete.
    */
   protected mixed $accepted = NULL;
-
-  /**
-   * The validator `fn(mixed $value): ?string`, NULL accepting every value.
-   *
-   * Injected by the field factory via {@see setHandlers()}, like the key
-   * bindings; a directly constructed field starts with neither.
-   */
-  protected ?\Closure $validate = NULL;
-
-  /**
-   * The transformer `fn(mixed $value): mixed` applied on accept, if any.
-   */
-  protected ?\Closure $transform = NULL;
 
   /**
    * {@inheritdoc}
@@ -116,16 +103,6 @@ abstract class AbstractField implements FieldInterface {
    */
   public function setKeys(ScopedKeyMap $keys): static {
     $this->scoped = $keys;
-
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setHandlers(?\Closure $validate = NULL, ?\Closure $transform = NULL): static {
-    $this->validate = $validate;
-    $this->transform = $transform;
 
     return $this;
   }
@@ -184,8 +161,7 @@ abstract class AbstractField implements FieldInterface {
    *   The key to test.
    *
    * @return bool
-   *   TRUE when the key triggered the accept - it is consumed whether or not
-   *   the value passed validation.
+   *   TRUE when the key triggered the accept, so it travels no further.
    */
   protected function handleAccept(Key $key): bool {
     if ($this->keys()->matches($key, Action::Accept)) {
@@ -457,27 +433,19 @@ abstract class AbstractField implements FieldInterface {
   }
 
   /**
-   * Validate and, when valid, transform a value and complete the field.
+   * Offer a value as the answer, finishing the collection.
+   *
+   * Nothing is measured here: a field offers what it collected and whatever
+   * holds the answer decides whether it stands, so the offer always goes
+   * through and whatever was being said about the last one is cleared.
    *
    * @param mixed $value
-   *   The candidate value.
-   *
-   * @return bool
-   *   TRUE when the value was accepted; FALSE when validation failed.
+   *   The collected value.
    */
-  protected function accept(mixed $value): bool {
-    $error = $this->validate instanceof \Closure ? ($this->validate)($value) : NULL;
-    if (is_string($error) && $error !== '') {
-      $this->error = $error;
-
-      return FALSE;
-    }
-
+  protected function accept(mixed $value): void {
     $this->error = NULL;
-    $this->accepted = $this->transform instanceof \Closure ? ($this->transform)($value) : $value;
+    $this->accepted = $value;
     $this->complete = TRUE;
-
-    return TRUE;
   }
 
 }

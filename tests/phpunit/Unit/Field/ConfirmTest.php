@@ -35,12 +35,11 @@ final class ConfirmTest extends TestCase {
     $this->assertStringContainsString('● Yes', Ansi::strip($field->view(new DefaultTheme())));
   }
 
-  public function testValidatorErrorShownInView(): void {
-    $field = (new Confirm(FALSE))->setHandlers(validate: static fn (mixed $value): string => 'Not allowed.');
+  public function testRefusalIsShownBesideTheChoice(): void {
+    $field = new Confirm(FALSE);
 
-    $field->handle(Key::named(KeyName::Enter));
+    $field->refused('Not allowed.');
 
-    $this->assertFalse($field->isComplete());
     $this->assertStringContainsString('Not allowed.', Ansi::strip($field->view(new DefaultTheme())));
   }
 

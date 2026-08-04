@@ -70,10 +70,11 @@ final class TextareaTest extends TestCase {
     $this->assertSame("aZ\nlonger", $field->value());
   }
 
-  public function testViewShowsError(): void {
-    $field = (new Textarea('x'))->setHandlers(validate: fn(mixed $value): string => 'Nope.');
+  public function testRefusalIsShownUnderTheBuffer(): void {
+    $field = new Textarea('x');
 
-    $field->handle(Key::named(KeyName::Tab));
+    $field->refused('Nope.');
+
     $this->assertStringContainsString('Nope.', $field->view(new DefaultTheme()));
   }
 
@@ -133,15 +134,6 @@ final class TextareaTest extends TestCase {
     $this->assertSame('keep', $field->value());
     $this->assertFalse($field->isComplete());
     $this->assertFalse($field->wantsExternalEdit());
-  }
-
-  public function testApplyExternalEditRunsValidator(): void {
-    $field = (new Textarea('x', externalEdit: TRUE))->setHandlers(validate: fn(mixed $value): string => 'Nope.');
-
-    $field->applyExternalEdit('bad');
-
-    $this->assertFalse($field->isComplete());
-    $this->assertStringContainsString('Nope.', $field->view(new DefaultTheme()));
   }
 
   public function testEditorHintOnlyWhenEnabled(): void {

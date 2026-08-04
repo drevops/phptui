@@ -15,6 +15,7 @@ use DrevOps\Tui\Model\DateBounds;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FilePickerMode;
@@ -1042,6 +1043,22 @@ final class FormTest extends TestCase {
       static fn(PanelBuilder $p): FieldBuilder => $p->calendar('d')->maxDate('the-first'),
       'Field "d" declares an invalid date "the-first".',
     ];
+
+    yield 'steps on a field that runs nothing' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('t')->steps(4),
+      'Field "t" of type "text" runs no work to report on; ->steps() applies to progress rows.',
+    ];
+  }
+
+  public function testProgressRowStillTakesTheStepsItRuns(): void {
+    $root = Form::create('T')
+      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->progress('packing', 'Packing crates')->steps(4))
+      ->root();
+
+    $packing = $root->children()[0]->in('content')->blocks()[0];
+
+    $this->assertInstanceOf(Progress::class, $packing);
+    $this->assertSame(4, $packing->total());
   }
 
   #[DataProvider('dataProviderEveryRefusalIsTheSameFamily')]

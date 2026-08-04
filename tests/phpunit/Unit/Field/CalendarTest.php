@@ -167,12 +167,11 @@ final class CalendarTest extends TestCase {
     $this->assertTrue($field->isCancelled());
   }
 
-  public function testValidatorErrorIsShown(): void {
-    $field = (new Calendar('2026-07-15'))->setHandlers(validate: static fn(mixed $value): string => 'No dates allowed.');
+  public function testRefusalIsShownUnderTheMonth(): void {
+    $field = new Calendar('2026-07-15');
 
-    $field->handle(Key::named(KeyName::Enter));
+    $field->refused('No dates allowed.');
 
-    $this->assertFalse($field->isComplete());
     $this->assertStringContainsString('No dates allowed.', Ansi::strip($field->view(new DefaultTheme())));
   }
 

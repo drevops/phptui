@@ -718,6 +718,27 @@ final class FieldBlockTest extends TestCase {
     $this->assertStringContainsString('does not match the template', (string) $field->refusal());
   }
 
+  public function testShapeIsMeasuredAndNormalizedWhole(): void {
+    $seen = NULL;
+    $field = (new Field('crate', 'Crate code', FieldType::Template))
+      ->pattern(new Template('{{orchard}}-{{fruit}}'))
+      ->validate(static function (mixed $value) use (&$seen): ?string {
+        $seen = $value;
+
+        return $value === 'valley-apple' ? NULL : 'Unknown crate.';
+      })
+      ->transform(static fn(mixed $value): string => is_string($value) ? strtoupper($value) : '');
+
+    // The shape is filled in slot by slot and refused or normalized whole, so
+    // neither ever sees a part of it.
+    $this->assertFalse($field->accept('valley-pear'));
+    $this->assertSame('valley-pear', $seen);
+    $this->assertSame('Unknown crate.', $field->refusal());
+
+    $this->assertTrue($field->accept('valley-apple'));
+    $this->assertSame('VALLEY-APPLE', $field->value());
+  }
+
   public function testPathOutsideTheDeclaredLimitsIsRefused(): void {
     $field = (new Field('manifest', 'Manifest', FieldType::FilePicker))
       ->picker(new FilePickerConstraints(FilePickerMode::File, ['csv']));

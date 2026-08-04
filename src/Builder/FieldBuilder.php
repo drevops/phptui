@@ -1096,8 +1096,16 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field runs no work to report on, or the step count is below
+   *   one.
    */
   public function steps(int $steps): self {
+    if ($this->fieldType !== FieldType::Progress) {
+      throw new FormException(sprintf('Field "%s" of type "%s" runs no work to report on; ->steps() applies to progress rows.', $this->id, $this->fieldType->value));
+    }
+
     if ($steps < 1) {
       throw new FormException(sprintf('Field "%s" declares %d progress steps; a determinate bar needs at least one step (omit steps() for a spinner).', $this->id, $steps));
     }

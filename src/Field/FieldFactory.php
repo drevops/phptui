@@ -47,10 +47,6 @@ class FieldFactory {
   /**
    * Build the field a block opens onto, seeded with the value it holds.
    *
-   * Nothing here is wired with a validator: what a block will not take is the
-   * block's own to refuse, so an offered value is measured once, where the
-   * answer is held, rather than twice with two chances to disagree.
-   *
    * @param \DrevOps\Tui\Block\Field $block
    *   The block being opened.
    * @param mixed $current

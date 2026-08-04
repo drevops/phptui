@@ -80,12 +80,11 @@ final class SelectTest extends TestCase {
     $this->assertSame('b', $field->value());
   }
 
-  public function testValidatorErrorShownInView(): void {
-    $field = (new Select(['a' => 'A', 'b' => 'B'], 'a'))->setHandlers(validate: static fn (mixed $value): string => 'Not allowed.');
+  public function testRefusalIsShownUnderTheList(): void {
+    $field = new Select(['a' => 'A', 'b' => 'B'], 'a');
 
-    $field->handle(Key::named(KeyName::Enter));
+    $field->refused('Not allowed.');
 
-    $this->assertFalse($field->isComplete());
     $this->assertStringContainsString('Not allowed.', Ansi::strip($field->view(new DefaultTheme())));
   }
 

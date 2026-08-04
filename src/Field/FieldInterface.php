@@ -11,6 +11,10 @@ use DrevOps\Tui\Theme\ThemeInterface;
 /**
  * A single interactive field collector driven one key at a time.
  *
+ * It collects and it offers; it never decides whether what it collected stands.
+ * Measuring an offered value belongs to whatever holds the answer, so nothing
+ * here refuses one.
+ *
  * @package DrevOps\Tui\Field
  */
 interface FieldInterface {
@@ -35,22 +39,7 @@ interface FieldInterface {
   public function setKeys(ScopedKeyMap $keys): static;
 
   /**
-   * Give the field its validator and transformer.
-   *
-   * @param \Closure|null $validate
-   *   The validator `fn(mixed $value): ?string` returning an error message, or
-   *   NULL when the value is valid; a NULL validator accepts every value.
-   * @param \Closure|null $transform
-   *   The transformer `fn(mixed $value): mixed` applied on accept, or NULL to
-   *   accept values as they are.
-   *
-   * @return static
-   *   The field, for chaining.
-   */
-  public function setHandlers(?\Closure $validate = NULL, ?\Closure $transform = NULL): static;
-
-  /**
-   * Whether a valid value has been accepted.
+   * Whether a value has been offered as the answer.
    */
   public function isComplete(): bool;
 

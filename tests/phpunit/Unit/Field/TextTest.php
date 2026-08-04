@@ -41,29 +41,21 @@ final class TextTest extends TestCase {
     $this->assertTrue($field->isComplete());
   }
 
-  public function testTransformApplied(): void {
-    $field = (new Text(''))->setHandlers(transform: fn(mixed $value): string => is_string($value) ? strtoupper($value) : '');
+  public function testRefusalIsShownUnderTheBuffer(): void {
+    $field = new Text('');
 
-    $value = FieldRunner::run($field, ArrayKeyStream::of('acme', Key::named(KeyName::Enter)));
+    $field->refused('Required.');
 
-    $this->assertSame('ACME', $value);
-  }
-
-  public function testValidationBlocksThenAccepts(): void {
-    $validate = fn(mixed $value): ?string => is_string($value) && $value !== '' ? NULL : 'Required.';
-    $field = (new Text(''))->setHandlers($validate);
-
-    $field->handle(Key::named(KeyName::Enter));
-    $this->assertFalse($field->isComplete());
     $this->assertSame('Required.', $field->error());
     $this->assertStringContainsString('Required.', $field->view(new DefaultTheme()));
 
+    // Offering again clears what was said about the last offer.
     $field->handle(Key::char('a'));
     $field->handle(Key::char('b'));
     $field->handle(Key::named(KeyName::Enter));
 
-    $this->assertTrue($field->isComplete());
     $this->assertNull($field->error());
+    $this->assertTrue($field->isComplete());
     $this->assertSame('ab', $field->value());
   }
 

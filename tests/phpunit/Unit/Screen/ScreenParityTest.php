@@ -233,6 +233,21 @@ final class ScreenParityTest extends TestCase {
     $this->assertInstanceOf(Terminal::class, $editor->suspended);
   }
 
+  public function testWhatComesBackFromTheEditorIsMeasuredLikeAnythingTyped(): void {
+    $notes = (new Field('notes', 'Packing notes', FieldType::Textarea))
+      ->default('Weighed')
+      ->externalEditor()
+      ->validate(static fn(mixed $value): ?string => $value === 'Weighed at the bench' ? 'Say where, not what.' : NULL);
+
+    $tester = $this->tester($this->panel($notes))->externalEditor(new EditorFixture(TRUE));
+    $answers = $tester->run(Key::named(KeyName::Enter), Key::char("\x05"), Key::named(KeyName::Tab));
+
+    // Text written somewhere else is still an offer: the row measures it and
+    // stays open on it, exactly as it does with text typed into the frame.
+    $this->assertStringContainsString('Say where, not what.', $tester->frame());
+    $this->assertSame('Weighed', $answers->value('notes'));
+  }
+
   public function testFieldOffersNoHandoffWhereThereIsNoEditorToHandOffTo(): void {
     $notes = (new Field('notes', 'Packing notes', FieldType::Textarea))->default('Weighed')->externalEditor();
 
