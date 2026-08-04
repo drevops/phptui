@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Screen\Layout;
 
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Screen\Axis;
+use DrevOps\Tui\Screen\Capability\ScrollCapableInterface;
 use DrevOps\Tui\Screen\Furniture;
 use DrevOps\Tui\Screen\Region;
 
@@ -23,11 +24,15 @@ use DrevOps\Tui\Screen\Region;
  * regions each piece of the standard furniture belongs in: a role rather than a
  * block, so the answer is still arrangement.
  *
+ * An arrangement can be a scrolling surface as well, which a region cannot do
+ * for it: moving every line together is only possible for the thing that sees
+ * every line, exactly as sizing them is.
+ *
  * {@see AbstractLayout} carries the sizing arithmetic every layout inherits.
  *
  * @package DrevOps\Tui\Screen\Layout
  */
-interface LayoutInterface {
+interface LayoutInterface extends ScrollCapableInterface {
 
   /**
    * The direction this layout's regions run.

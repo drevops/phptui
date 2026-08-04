@@ -815,6 +815,77 @@ final class ScreenParityTest extends TestCase {
     $this->assertStringContainsString('←/→', $tester->frame());
   }
 
+  public function testGridTooTallForItsSpaceMovesEveryLineTogether(): void {
+    $panel = $this->dealt(
+      [1, 1, 1],
+      $this->nested('one', 'One', (new Field('a', 'A'))->default('1'), (new Field('b', 'B'))->default('2')),
+      $this->nested('two', 'Two', (new Field('c', 'C'))->default('3'), (new Field('d', 'D'))->default('4')),
+      $this->nested('three', 'Three', (new Field('e', 'E'))->default('5'), (new Field('f', 'F'))->default('6')),
+    );
+
+    $tester = $this->tester($panel)->rows(12)->cols(50);
+    $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Down));
+
+    // Nothing is lost where a grid outruns its space, because no window can
+    // move its siblings and the arrangement can: the mark says there is more
+    // below, and moving onto the window past the edge brings it into sight by
+    // moving every line at once. The mark then says there is more above too.
+    $this->assertStringNotContainsString('Three', $tester->frame(0));
+    $this->assertStringContainsString('▼', $tester->frame(0));
+    $this->assertStringNotContainsString('▲', $tester->frame(0));
+
+    $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
+    $this->assertContains('  A  1                                           ▲', $rows);
+    $this->assertContains('❯ Three ›                                        ▼', $rows);
+  }
+
+  public function testWindowTheAnswersTookAwayClosesItsRowUp(): void {
+    $fruit = $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple'));
+    $panel = $this->dealt(
+      [3],
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(FALSE),
+      $fruit->when(new Condition('organic', eq: TRUE)),
+      $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot')),
+      $this->nested('herbs', 'Herbs', (new Field('herbs', 'Herbs'))->default('Basil')),
+    );
+
+    $tester = $this->tester($panel)->cols(60);
+    $tester->run(Key::named(KeyName::Enter), Key::char('y'), Key::named(KeyName::Enter));
+
+    $rows = array_map(rtrim(...), explode("\n", $tester->frame(0)));
+
+    // A section the answers took away is not there at all, so the row it was
+    // in closes up: the windows left move over and share the width between
+    // them rather than one of them standing in an empty slot.
+    $this->assertContains('  Vegetables ›                   Herbs ›', $rows);
+    $this->assertStringNotContainsString('Fruit', $tester->frame(0));
+
+    // The moment it is there again it takes its place back, and the row it is
+    // in is three windows wide.
+    $this->assertContains('  Fruit ›             Vegetables ›        Herbs ›', array_map(rtrim(...), explode("\n", $tester->frame())));
+  }
+
+  public function testCursorNeverLandsOnWindowTheAnswersTookAway(): void {
+    $veg = $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot'));
+    $panel = $this->dealt(
+      [3],
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(FALSE),
+      $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple')),
+      $veg->when(new Condition('organic', eq: TRUE)),
+      $this->nested('herbs', 'Herbs', (new Field('herbs', 'Herbs'))->default('Basil')),
+    );
+
+    $tester = $this->tester($panel)->cols(60);
+    $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Right));
+
+    $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
+
+    // Moving across walks the windows that are there: the one the answers took
+    // away is not a place the cursor can be, so the step past it lands on the
+    // window beyond it rather than on nothing at all.
+    $this->assertContains('  Fruit ›                      ❯ Herbs ›', $rows);
+  }
+
   public function testGoingIntoWindowLeavesTheGridItWasWindowOnto(): void {
     $panel = $this->dealt(
       [2],
@@ -1120,7 +1191,13 @@ final class ScreenParityTest extends TestCase {
 
     foreach ($blocks as $block) {
       /** @var \DrevOps\Tui\Block\BlockInterface $block */
-      $region = $block instanceof Panel ? $layout->windows()[$windows++] : 'content';
+      $region = $windows === 0 ? $layout->leading() : $layout->trailing();
+
+      if ($block instanceof Panel) {
+        $region = $layout->windows()[$windows];
+        $windows++;
+      }
+
       $panel->in($region)->add($block);
     }
 

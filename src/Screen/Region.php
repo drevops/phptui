@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Screen;
 
 use DrevOps\Tui\Block\BlockInterface;
+use DrevOps\Tui\Screen\Capability\ScrollCapableInterface;
+use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
 
 /**
  * A named container inside a layout.
@@ -24,7 +26,9 @@ use DrevOps\Tui\Block\BlockInterface;
  *
  * @package DrevOps\Tui\Screen
  */
-final class Region {
+final class Region implements ScrollCapableInterface {
+
+  use ScrollCapableTrait;
 
   /**
    * How it asks for its share of the axis.
@@ -40,11 +44,6 @@ final class Region {
    * The direction the blocks inside it run.
    */
   protected Axis $flow = Axis::Rows;
-
-  /**
-   * Whether its contents may outrun it.
-   */
-  protected bool $scrolls = FALSE;
 
   /**
    * Whether a panel in it shows what is behind it rather than a row.
@@ -201,28 +200,6 @@ final class Region {
   }
 
   /**
-   * Let this region's contents outrun it.
-   *
-   * @return $this
-   *   The region.
-   */
-  public function scrolls(): self {
-    $this->scrolls = TRUE;
-
-    return $this;
-  }
-
-  /**
-   * Whether this region's contents may outrun it.
-   *
-   * @return bool
-   *   TRUE when they may.
-   */
-  public function isScrolling(): bool {
-    return $this->scrolls;
-  }
-
-  /**
    * Show a panel in this region as a window onto it rather than as a row.
    *
    * A row has one line to say what is behind a panel and a window has the depth
@@ -337,37 +314,10 @@ final class Region {
   }
 
   /**
-   * Move the window onto this region's contents.
-   *
-   * @param int $row
-   *   The first row of the contents to show.
-   *
-   * @return $this
-   *   The region.
+   * {@inheritdoc}
    */
-  public function scrollTo(int $row): self {
-    if (!$this->scrolls) {
-      throw new \LogicException(sprintf('Region "%s" does not scroll, so it cannot be scrolled to row %d.', $this->name, $row));
-    }
-
-    $this->offset = max(0, $row);
-
-    return $this;
-  }
-
-  /**
-   * The first row of this region's contents that is visible.
-   *
-   * @param int $content
-   *   The rows its contents come to.
-   * @param int $visible
-   *   The rows it was given.
-   *
-   * @return int
-   *   The offset, never far enough to scroll the contents off their own end.
-   */
-  public function offset(int $content, int $visible): int {
-    return min($this->offset, max(0, $content - $visible));
+  protected function surface(): string {
+    return sprintf('Region "%s"', $this->name);
   }
 
 }

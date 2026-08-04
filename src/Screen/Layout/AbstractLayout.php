@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Screen\Layout;
 
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Screen\Axis;
+use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
 use DrevOps\Tui\Screen\Furniture;
 use DrevOps\Tui\Screen\Region;
 use DrevOps\Tui\Screen\Sizing;
@@ -24,6 +25,8 @@ use DrevOps\Tui\Screen\Sizing;
  * @package DrevOps\Tui\Screen\Layout
  */
 abstract class AbstractLayout implements LayoutInterface {
+
+  use ScrollCapableTrait;
 
   /**
    * The region a trail conventionally goes in.

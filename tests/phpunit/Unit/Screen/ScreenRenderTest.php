@@ -268,7 +268,7 @@ final class ScreenRenderTest extends TestCase {
   public function testGridIsMeasuredTheWayItIsDrawn(): void {
     $grid = new GridLayout(2, 1);
     $hub = (new Panel('hub', 'Hub'))->layout($grid)->enter();
-    $grid->in('content')->add(new Markup('above', 'Pick the produce.'));
+    $grid->in($grid->leading())->add(new Markup('intro', 'Pick the produce.'));
 
     $screen = (new Screen())->layout(new DefaultLayout());
     $screen->in('content')->add($hub);
@@ -290,12 +290,16 @@ final class ScreenRenderTest extends TestCase {
     // one rather than of both. Every line but the last carries the row telling
     // it from the next.
     $sizes = $renderer->sizes($grid, 40);
-    $this->assertSame(1, $renderer->extent($grid, 'content')[0]);
+    $this->assertSame(1, $renderer->extent($grid, 'above')[0]);
     $this->assertSame(3, $renderer->extent($grid, 'window-1')[0]);
-    $this->assertSame(['content' => 2, 'window-1' => 4, 'window-2' => 4, 'window-3' => 3], $sizes);
+    $this->assertSame(['above' => 2, 'window-1' => 4, 'window-2' => 4, 'window-3' => 3, 'below' => 0], $sizes);
+
+    // The arrangement is measured as one surface too, which is what it is
+    // moved against when it outruns its space.
+    $this->assertSame([9, 6], $renderer->reach($grid, $grid->in('window-3')->blocks()[0]));
 
     // What was counted is what is drawn: the windows come to exactly those
-    // rows, so a region moved against them shows what it says it does.
+    // rows, so a surface moved against them shows what it says it does.
     $drawn = $this->render($screen, 11, 40);
     $this->assertSame('  Dairy ›', $drawn[7]);
     $this->assertSame('two', $drawn[9]);

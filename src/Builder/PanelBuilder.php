@@ -629,6 +629,11 @@ final class PanelBuilder {
 
     $this->panel->in($window)->add($panel);
     $this->placed = TRUE;
+
+    // Where a row sits is which region it is in, and where it was written is
+    // what says which: from here on a row is one written after the windows, so
+    // it goes below them rather than above.
+    $this->region = $layout->trailing();
   }
 
   /**

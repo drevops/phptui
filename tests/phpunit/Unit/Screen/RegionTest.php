@@ -7,9 +7,11 @@ namespace DrevOps\Tui\Tests\Unit\Screen;
 use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Screen\Axis;
+use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
 use DrevOps\Tui\Screen\Region;
 use DrevOps\Tui\Screen\Sizing;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -17,6 +19,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the region: a named container that flows blocks and may scroll.
  */
 #[CoversClass(Region::class)]
+#[CoversTrait(ScrollCapableTrait::class)]
 #[Group('screen')]
 final class RegionTest extends TestCase {
 
@@ -67,6 +70,24 @@ final class RegionTest extends TestCase {
   public function testRegionIsPinnedUntilItDeclaresItScrolls(): void {
     $this->assertFalse((new Region('header'))->isScrolling());
     $this->assertTrue((new Region('content'))->scrolls()->isScrolling());
+  }
+
+  public function testSurfaceShowsWhatItWasMovedToAndNeverPastItsOwnEnd(): void {
+    $region = (new Region('content'))->scrolls();
+
+    $this->assertSame(0, $region->offset(20, 8));
+    $this->assertSame(4, $region->scrollTo(4)->offset(20, 8));
+    // Moving past the end shows the last of the contents rather than nothing.
+    $this->assertSame(12, $region->scrollTo(40)->offset(20, 8));
+    // Contents that fit are never moved at all.
+    $this->assertSame(0, $region->offset(6, 8));
+  }
+
+  public function testSurfaceThatDoesNotScrollRefusesToBeMovedAndNamesItself(): void {
+    $this->expectException(\LogicException::class);
+    $this->expectExceptionMessage('Region "header" does not scroll, so it cannot be scrolled to row 2.');
+
+    (new Region('header'))->scrollTo(2);
   }
 
   public function testEveryDeclarationChainsBackToTheRegion(): void {

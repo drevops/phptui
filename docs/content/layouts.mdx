@@ -86,7 +86,17 @@ $panel->layout(new GridLayout(1, 2));
 
 The builder's `->layout(1, 2)` is the same thing said shorter, and it is how a form usually reaches one.
 
-**Every window is a region.** `GridLayout(1, 2)` declares four of them: `content`, which holds the panel's own rows above the grid, and then `window-1`, `window-2` and `window-3`, numbered in reading order - across the first visual row, then across the second. A sub-panel goes in the region that names it, which is what the builder does for you as each one is declared, and it draws there as a **window**: a column showing what is behind it rather than a row summarizing it. That is the region's declaration rather than the panel's - a row has one line to say what is behind a panel and a window has the depth to show it, so only the arrangement knows which of the two the space is.
+**Every window is a region.** `GridLayout(1, 2)` declares five of them: `above`, then `window-1`, `window-2` and `window-3` numbered in reading order - across the first visual row, then across the second - and last `below`. A sub-panel goes in the window that names it, which is what the builder does for you as each one is declared, and it draws there as a **window**: a column showing what is behind it rather than a row summarizing it. That is the region's declaration rather than the panel's - a row has one line to say what is behind a panel and a window has the depth to show it, so only the arrangement knows which of the two the space is.
+
+**`above` and `below` are the panel's own rows**, and which of the two a row is in is the whole of where it sits: written before the first window it draws over the grid, written after the last it draws under it, and declaration order holds either side. The builder puts them there without being asked - the region a block reaches by naming none is `above` until the first sub-panel is declared and `below` from then on:
+
+```php
+$p->layout(2);
+$p->text('name', 'Order name');                  // above the grid
+$p->panel('fruit', 'Fruit', $declare);           // window-1
+$p->panel('veg', 'Vegetables', $declare);        // window-2
+$p->markup('note', 'Crates are weighed at the bench.'); // below the grid
+```
 
 Both questions a window raises are the layout's, which is the whole of what a grid adds:
 
@@ -97,7 +107,9 @@ Both questions a window raises are the layout's, which is the whole of what a gr
 
 The gutter between two windows comes off the width before it is divided, so they are the same width at every terminal size. How wide that gutter is belongs to the theme, so the layout asks for it before dividing and the renderer asks the same theme when it joins what the windows drew - one fact, read in both places.
 
-Each window scrolls its own region, as any region does when its contents outrun it, and the visual rows themselves are apportioned by the layout. A row you write on a grid-arranged panel goes in `content` and is drawn above the windows.
+**A grid scrolls as one surface.** A grid too tall for its space has to move every line together, and no window can move its siblings any more than it can size them, so the offset belongs to the arrangement - the third thing only the layout can do. Everything else reads exactly as it does for a region: the grid is drawn whole, the part in sight is what its space has room for, and the [overflow marker](#scrolling) points at the edge the rest is past. Nothing is dropped silently. Following the cursor works on the whole surface too, so stepping onto a window past the edge brings its line into sight.
+
+**A window that is not there closes its row up.** A sub-panel gated on an answer is a whole [section](/panels#conditional-panels), and a section that has gone leaves no space where it stood: the windows still there share the width between them, the arrows step straight past the gone one, and the row is back at its old width the moment the answer brings it back.
 
 Moving through a grid is spatial: <kbd>Left</kbd> and <kbd>Right</kbd> walk a visual row, <kbd>Up</kbd> and <kbd>Down</kbd> move between rows and out to whatever sits above or below the grid. The key hints advertise all four only where windows actually sit beside each other, because they read that off the layout too. Going into a window leaves the grid behind: the panel takes the whole frame rather than the cell it was previewed in.
 
@@ -125,7 +137,7 @@ A terminal too small even for the fixed regions is a real state rather than an e
 
 ## Scrolling
 
-Scrolling is declared **per region**, not per layout:
+Scrolling is declared **per region** rather than per layout:
 
 ```php
 $this->region('produce')->flex(3)->scrolls();
@@ -135,6 +147,22 @@ $this->region('delivery')->flex(2);
 That is what lets a long produce list outrun its column while its neighbor stays pinned, and what lets two rows scroll independently of each other. A region that was not declared to scroll clips what outruns it instead.
 
 The region does the scrolling too. Its layout hands it one number - the size it was given - and everything after that is the region's own: how tall its blocks add up to, where the viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved, which is why sizing belongs to the layout and scrolling belongs to the region.
+
+**An arrangement can be a surface too**, declared the same way and moved by the same rules:
+
+```php
+public function __construct() {
+  parent::__construct(Axis::Rows);
+
+  // Its lines move together rather than each region moving on its own.
+  $this->scrolls();
+
+  $this->region('top')->content();
+  $this->region('bottom')->content();
+}
+```
+
+Use it where no single region can do the moving, which is exactly what a [grid](#a-grid-of-windows) needs: its lines have to move together, and none of them sees its siblings. The layout is then drawn whole and shows what its space has room for, marking whichever edge the rest is past - the region rules, one level up.
 
 ## Flow: two blocks on one line
 

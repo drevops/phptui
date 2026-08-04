@@ -135,6 +135,47 @@ final class ScreenRenderer {
   }
 
   /**
+   * The rows an arrangement comes to, and which one a block starts on.
+   *
+   * What {@see self::extent()} answers about one region, answered about every
+   * line of an arrangement at once - which is what an arrangement that moves as
+   * one surface has to be measured against.
+   *
+   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   *   The layout.
+   * @param \DrevOps\Tui\Block\BlockInterface|null $of
+   *   The block to locate, if one is being looked for.
+   *
+   * @return array{int,int}
+   *   The rows its lines come to, and the first row of the given block - or -1
+   *   when no region of it holds any such block.
+   */
+  public function reach(LayoutInterface $layout, ?BlockInterface $of = NULL): array {
+    $measured = $this->measured($layout);
+    $sizes = $layout->arrange($layout->natural($measured), $measured);
+    $total = 0;
+    $row = -1;
+
+    foreach ($layout->lines() as $line) {
+      $held = 0;
+
+      foreach ($line as $name) {
+        [, $at] = $this->extent($layout, $name, $of);
+
+        if ($at >= 0) {
+          $row = $total + $at;
+        }
+
+        $held = max($held, $sizes[$name] ?? 0);
+      }
+
+      $total += $held;
+    }
+
+    return [$total, $row];
+  }
+
+  /**
    * The rows a region's blocks come to, and which one a block starts on.
    *
    * The same walk a frame makes, counted rather than drawn: a region that
@@ -358,7 +399,14 @@ final class ScreenRenderer {
     }
 
     $down = $layout->axis() === Axis::Rows;
-    $sizes = $this->sizes($layout, $down ? $rows : $columns);
+    $measured = $this->measured($layout);
+    $moves = $down && $layout->isScrolling();
+
+    // An arrangement that moves as one is drawn whole and then moved against
+    // the space it has, exactly as a region is with the blocks it holds: every
+    // line takes the cells it comes to, and what is shown of the stack is a
+    // second question asked afterwards.
+    $sizes = $layout->arrange($moves ? max($rows, $layout->natural($measured)) : ($down ? $rows : $columns), $measured);
 
     // A rows layout stacks its lines; a columns layout draws each region into
     // its own width and then pastes them side by side onto shared rows.
@@ -366,12 +414,12 @@ final class ScreenRenderer {
       $out = [];
 
       foreach ($lines as $line) {
-        foreach ($this->abreast($layout, $line, $sizes, $columns, $furnished) as $drawn) {
+        foreach ($this->abreast($layout, $this->present($line, $measured), $sizes, $columns, $furnished) as $drawn) {
           $out[] = $drawn;
         }
       }
 
-      return $out;
+      return $moves ? $this->moved($layout, $out, $rows, $columns) : $out;
     }
 
     $columns_out = [];
@@ -381,6 +429,53 @@ final class ScreenRenderer {
     }
 
     return $this->paste($columns_out, $sizes, $rows);
+  }
+
+  /**
+   * The regions of a line that draw anything.
+   *
+   * A window the answers took off the form is not there at all, so the line it
+   * was on closes up around it: the windows left share the width between them,
+   * rather than one of them standing in an empty slot.
+   *
+   * @param list<string> $line
+   *   The regions drawn on the line.
+   * @param array<string,int> $measured
+   *   The rows each region's contents come to, keyed by name.
+   *
+   * @return list<string>
+   *   The regions still there. A line of one is not narrowed by this: it is
+   *   the whole line whether it draws anything or not.
+   */
+  protected function present(array $line, array $measured): array {
+    if (count($line) < 2) {
+      return $line;
+    }
+
+    return array_values(array_filter($line, static fn(string $name): bool => ($measured[$name] ?? 0) > 0));
+  }
+
+  /**
+   * Show the part of an arrangement its space has room for.
+   *
+   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   *   The arrangement, which is what holds the offset.
+   * @param list<string> $lines
+   *   Every row it drew.
+   * @param int $rows
+   *   The rows it was given.
+   * @param int $columns
+   *   The columns it was given.
+   *
+   * @return list<string>
+   *   The rows in sight, marked at whichever edges they outran.
+   */
+  protected function moved(LayoutInterface $layout, array $lines, int $rows, int $columns): array {
+    $content = count($lines);
+    $from = $layout->offset($content, $rows);
+    $shown = array_slice($lines, $from, max(0, $rows));
+
+    return $this->marked($shown, $columns, $from > 0, $from + $rows < $content);
   }
 
   /**
@@ -401,6 +496,10 @@ final class ScreenRenderer {
    *   The rows.
    */
   protected function abreast(LayoutInterface $layout, array $names, array $sizes, int $columns, bool $furnished): array {
+    if ($names === []) {
+      return [];
+    }
+
     $rows = $sizes[$names[0]] ?? 0;
 
     if (count($names) === 1) {

@@ -123,12 +123,20 @@ final class BlockTreeTest extends TestCase {
       $p->text('courier', 'Courier');
       $p->panel('left', 'Left', static fn(PanelBuilder $sp): FieldBuilder => $sp->text('one', 'One'));
       $p->panel('right', 'Right', static fn(PanelBuilder $sp): FieldBuilder => $sp->text('two', 'Two'));
+      $p->markup('note', 'Every crate is weighed at the bench.');
     });
 
-    // The panel's own rows stay in the region a block reaches without naming
-    // one; each sub-panel goes in the window that names it.
-    $this->assertSame([['content'], ['window-1', 'window-2']], $panel->currentLayout()->lines());
-    $this->assertCount(1, $panel->in('content')->blocks());
+    // Each sub-panel goes in the window that names it, and where a row sits is
+    // which of the pair around them it is in: written before the windows it is
+    // above them, written after it is below.
+    $this->assertSame([['above'], ['window-1', 'window-2'], ['below']], $panel->currentLayout()->lines());
+    $courier = $panel->in('above')->blocks()[0] ?? NULL;
+    $note = $panel->in('below')->blocks()[0] ?? NULL;
+
+    $this->assertInstanceOf(Field::class, $courier);
+    $this->assertInstanceOf(Markup::class, $note);
+    $this->assertSame('courier', $courier->id());
+    $this->assertSame('note', $note->id());
     $this->assertSame(['left', 'right'], array_map(static fn(Panel $child): string => $child->id(), $panel->children()));
     $this->assertSame($panel->children()[0], $panel->in('window-1')->blocks()[0]);
     $this->assertSame($panel->children()[1], $panel->in('window-2')->blocks()[0]);

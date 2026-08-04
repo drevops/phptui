@@ -25,48 +25,64 @@ final class GridLayoutTest extends TestCase {
     $layout = new GridLayout(1, 2);
 
     // A window is a region, so a panel reaches one by naming it rather than by
-    // being counted into place by something looking past its own level.
+    // being counted into place by something looking past its own level - and
+    // the rows written either side of the grid have a region each.
     $this->assertSame(Axis::Rows, $layout->axis());
-    $this->assertSame(['content', 'window-1', 'window-2', 'window-3'], $layout->names());
+    $this->assertSame(['above', 'window-1', 'window-2', 'window-3', 'below'], $layout->names());
     $this->assertSame(['window-1', 'window-2', 'window-3'], $layout->windows());
+    $this->assertSame('above', $layout->leading());
+    $this->assertSame('below', $layout->trailing());
   }
 
   public function testWindowIsAsDeepAsWhatItHoldsAndShowsWhatIsBehindIt(): void {
     $layout = new GridLayout(2);
 
-    foreach (['content', 'window-1', 'window-2'] as $name) {
+    foreach (['above', 'window-1', 'window-2', 'below'] as $name) {
       $this->assertSame(Sizing::Content, $layout->in($name)->sizing());
-      $this->assertTrue($layout->in($name)->isScrolling());
+      // The grid moves every line together, so no region moves on its own.
+      $this->assertFalse($layout->in($name)->isScrolling());
     }
 
     // The panel's own rows are a list; only the windows are windows.
-    $this->assertFalse($layout->in('content')->isPreviewing());
+    $this->assertFalse($layout->in('above')->isPreviewing());
+    $this->assertFalse($layout->in('below')->isPreviewing());
     $this->assertTrue($layout->in('window-1')->isPreviewing());
     $this->assertTrue($layout->in('window-2')->isPreviewing());
   }
 
+  public function testGridMovesEveryLineTogetherAsOneSurface(): void {
+    $layout = new GridLayout(1, 2);
+
+    // No window can move its siblings, so the arrangement is the surface - and
+    // it is moved the way any surface is.
+    $this->assertTrue($layout->isScrolling());
+    $this->assertSame(3, $layout->scrollTo(3)->offset(20, 8));
+    // Never far enough to scroll the lines off their own end.
+    $this->assertSame(2, $layout->scrollTo(9)->offset(10, 8));
+  }
+
   public function testVisualRowsAreTheLinesTheRegionsAreDrawnOn(): void {
-    // The panel's own rows have the first line to themselves, which is what
-    // puts them above the grid rather than in it.
-    $this->assertSame([['content'], ['window-1'], ['window-2', 'window-3']], (new GridLayout(1, 2))->lines());
+    // The rows written either side have a line to themselves, which is what
+    // keeps them out of the grid rather than in it.
+    $this->assertSame([['above'], ['window-1'], ['window-2', 'window-3'], ['below']], (new GridLayout(1, 2))->lines());
   }
 
   public function testWindowsSharingOneLineAreAsDeepAsTheDeepestOfThem(): void {
+    $measured = ['above' => 1, 'window-1' => 2, 'window-2' => 3, 'window-3' => 5, 'below' => 1];
     $layout = new GridLayout(1, 2);
-    $sizes = $layout->arrange(40, ['content' => 1, 'window-1' => 2, 'window-2' => 3, 'window-3' => 5]);
 
     // Two windows beside each other cost the rows of one rather than of both,
     // and every line but the last carries the row telling it from the next.
-    $this->assertSame(['content' => 2, 'window-1' => 3, 'window-2' => 5, 'window-3' => 5], $sizes);
-    $this->assertSame(10, $layout->natural(['content' => 1, 'window-1' => 2, 'window-2' => 3, 'window-3' => 5]));
+    $this->assertSame(['above' => 2, 'window-1' => 3, 'window-2' => 6, 'window-3' => 6, 'below' => 1], $layout->arrange(40, $measured));
+    $this->assertSame(12, $layout->natural($measured));
   }
 
   public function testLineHoldingNothingCostsNoRowAtAll(): void {
     $layout = new GridLayout(2);
 
     // A grid whose panel declares no rows of its own opens on its windows: the
-    // empty line takes no row, and none is spent telling it from the next.
-    $this->assertSame(['content' => 0, 'window-1' => 4, 'window-2' => 4], $layout->arrange(40, ['window-1' => 4, 'window-2' => 2]));
+    // empty lines take no row, and none is spent telling them from the next.
+    $this->assertSame(['above' => 0, 'window-1' => 4, 'window-2' => 4, 'below' => 0], $layout->arrange(40, ['window-1' => 4, 'window-2' => 2]));
     $this->assertSame(4, $layout->natural(['window-1' => 4, 'window-2' => 2]));
   }
 

@@ -138,7 +138,7 @@ _Occupy_ sits here rather than on a layout because it's a fact about the termina
 
 ### Layout
 
-A **layout** is composed of _region_ instances and decides where they sit. It claims _Arrange_, _Flow_, _Nest_ and _Reuse_.
+A **layout** is composed of _region_ instances and decides where they sit. It claims _Arrange_, _Flow_, _Nest_ and _Reuse_ - and _Scroll_, where its lines move together as one surface.
 
 Every layout is a class extending `AbstractLayout`, which carries the sizing arithmetic. A subclass declares its **axis** - whether its regions run top to bottom or left to right - and names them:
 
@@ -306,12 +306,15 @@ Sizing and scrolling are two calculations, and each can only be done by one leve
 
 **The region scrolls.** Given the one number the layout hands it, everything else is its own: how tall its blocks are, where its viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved, which is why _Scroll_ is the region's.
 
+**An arrangement can scroll too**, and for the same reason it sizes: moving every line together is beyond any one region, because none of them sees its siblings. So _Scroll_ is claimed by a region over the blocks it holds, and by an arrangement over the lines it stacks - one capability, two things that can be a surface. `two-column` and `default` scroll neither way; a [grid](#a-grid-of-windows) is the arrangement that does.
+
 **The renderer measures.** A region sized by what it holds still can't size itself, because what it holds is only known where blocks are drawn. So the renderer counts each region's contents and hands the layout a map of name to cells; the layout divides the axis by those numbers. That way a layout that apportions by content still never learns that blocks exist - it is told numbers keyed by its own regions, which is the same kind of thing `arrange()` already deals in.
 
 ```
 Renderer ──▸  each Region's contents are counted
 Layout   ──▸  each Region is given a size
 Region   ──▸  offset, visible rows, overflow markers
+Layout   ──▸  the same, over every line at once, where it is one surface
 ```
 
 Character cells don't divide evenly, so the layout rounds: it takes the fixed sizes off, divides the remainder by the flex values, and hands any leftover cell to the last flexible region. A region never sees that arithmetic - it's told a number and gets on with it.
@@ -362,7 +365,9 @@ A **grid** is the one arrangement built from a shape rather than picked by a nam
 $panel->layout(new GridLayout(1, 2));
 ```
 
-Each of its windows is a _region_ of its own, so `GridLayout(1, 2)` declares four: `content`, which holds the panel's own rows above the grid, and then `window-1`, `window-2` and `window-3`, numbered in reading order - across the first visual row, then across the second. A _panel_ reaches a window by naming that region, exactly as any block reaches any other, and is drawn there as a **window** - a column showing what is behind it rather than a row summarizing it. That is the region's declaration, not the panel's: a row has one line to say what is behind a panel and a window has the depth to show it, so which of the two the space is can only be answered by the arrangement.
+Each of its windows is a _region_ of its own, so `GridLayout(1, 2)` declares five: `above`, then `window-1`, `window-2` and `window-3` numbered in reading order - across the first visual row, then across the second - and last `below`. A _panel_ reaches a window by naming that region, exactly as any block reaches any other, and is drawn there as a **window** - a column showing what is behind it rather than a row summarizing it. That is the region's declaration, not the panel's: a row has one line to say what is behind a panel and a window has the depth to show it, so which of the two the space is can only be answered by the arrangement.
+
+`above` and `below` are where the panel's own rows go, and which of the two a row is in is the whole of where it sits: a row written before the first window is in `above` and draws over the grid, one written after the last is in `below` and draws under it, and declaration order holds either side. The builder places them without being told - the region a block reaches by naming none is `above` until the first window is declared and `below` from then on - so `$p->text(...)` before a sub-panel and `$p->markup(...)` after it end up where they read.
 
 Both of the questions a window raises are the layout's, which is the whole of what a grid adds over `panel`:
 
@@ -373,9 +378,13 @@ Both of the questions a window raises are the layout's, which is the whole of wh
 
 The width is where the theme comes in: the air between two things drawn side by side is a styling decision, so the layout asks the theme for the gutter before dividing the width, and the renderer asks the same theme when it joins what the windows drew. One fact, read in both places, so they cannot disagree.
 
-Each window **scrolls its own region**, as any region does when its contents outrun it. The visual rows themselves are apportioned by the layout, which is the only thing that sees them all, and the driver's follow-the-cursor rule works unchanged: the cursor sits on a window rather than inside one, so the region holding it is already showing the row the cursor is on.
+**A grid _Scrolls_ as one surface**, which is the third thing only the layout can do. A grid too tall for its space has to move every line together, and no window can move its siblings any more than it can size them - so the arrangement holds the offset, and the same rule that keeps a region honest applies to it: it is drawn whole, the part in sight is what its space has room for, and the overflow mark says which edge the rest is past. Nothing is trimmed away silently, which no region does anywhere either.
+
+The driver moves it exactly as it moves a region, because both are the same kind of thing - a surface with contents that may outrun it. Following the cursor works on the arrangement rather than on one region of it: the row the focused window starts on is counted across every line, so stepping onto a window past the edge brings its whole line into sight.
 
 Moving through one is spatial: <kbd>←</kbd> and <kbd>→</kbd> walk a visual row, <kbd>↑</kbd> and <kbd>↓</kbd> move between rows and out to the blocks above and below the grid. The _legend_ advertises all four only where windows actually sit beside each other, because it reads that off the layout's lines too.
+
+A window is a whole _section_, so it comes and goes with the answers exactly as one row does - and a section that is not there leaves no space where it stood. **The visual row closes up**: the windows still there share the width between them, the cursor steps straight past the gone one, and the row is back at its old width the moment the answer brings it back.
 
 Going into a window leaves the grid behind: the panel takes the whole arrangement rather than the cell it was previewed in, exactly as going into any panel replaces what was drawn where it stood.
 

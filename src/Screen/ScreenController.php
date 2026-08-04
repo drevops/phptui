@@ -723,7 +723,7 @@ class ScreenController {
   }
 
   /**
-   * Move each scrolling region so the row the cursor is on stays in sight.
+   * Move each scrolling surface so the row the cursor is on stays in sight.
    *
    * @param int $rows
    *   The terminal rows.
@@ -736,8 +736,8 @@ class ScreenController {
       return;
     }
 
-    foreach ($this->viewports($rows) as [$region, $total, $row, $height]) {
-      $region->scrollTo($this->scroller->follow($total, $height, $row, $region->offset($total, $height))->offset);
+    foreach ($this->viewports($rows) as [$surface, $total, $row, $height]) {
+      $surface->scrollTo($this->scroller->follow($total, $height, $row, $surface->offset($total, $height))->offset);
     }
   }
 
@@ -772,7 +772,7 @@ class ScreenController {
   }
 
   /**
-   * Move the region the wheel points at by a row, leaving the cursor alone.
+   * Move the surface the wheel points at by a row, leaving the cursor alone.
    *
    * @param int $delta
    *   The rows to move by: negative towards the top of the contents.
@@ -780,43 +780,59 @@ class ScreenController {
   protected function scroll(int $delta): void {
     $terminal = $this->terminal;
 
-    // A region is moved against the room it has, and until a session is
+    // A surface is moved against the room it has, and until a session is
     // running there is no terminal to say how much that is.
     if (!$terminal instanceof Terminal) {
       return;
     }
 
-    foreach ($this->viewports($this->rows($terminal)) as [$region, $total, , $height]) {
-      $region->scrollTo($this->scroller->viewport($region->offset($total, $height) + $delta, $total, $height)->offset);
+    foreach ($this->viewports($this->rows($terminal)) as [$surface, $total, , $height]) {
+      $surface->scrollTo($this->scroller->viewport($surface->offset($total, $height) + $delta, $total, $height)->offset);
     }
   }
 
   /**
-   * The scrolling region the cursor is in, and what it is showing of what.
+   * The scrolling surface the cursor is on, and what it is showing of what.
    *
    * The one the wheel points at too: a reader turning it is looking at the
-   * region they are working in, which is the region the cursor is in.
+   * surface they are working on, which is the one the cursor is on.
    *
    * @param int $rows
    *   The terminal rows.
    *
-   * @return \Generator<int,array{\DrevOps\Tui\Screen\Region,int,int,int}>
-   *   The region, the rows its contents come to, the row the cursor is on, and
-   *   the rows it was given.
+   * @return \Generator<int,array{\DrevOps\Tui\Screen\Capability\ScrollCapableInterface,int,int,int}>
+   *   The surface, the rows its contents come to, the row the cursor is on,
+   *   and the rows it was given.
    */
   protected function viewports(int $rows): \Generator {
     $panel = $this->router->current();
+    $layout = $panel->currentLayout();
     $focused = $this->router->focused();
-    $sizes = $this->renderer->sizes($panel->currentLayout(), $this->content($rows));
+    $of = $focused instanceof BlockInterface ? $focused : NULL;
+    $room = $this->content($rows);
 
-    foreach ($panel->currentLayout()->names() as $name) {
+    // An arrangement whose lines move together is one surface however many
+    // regions it is made of, so it is the surface the cursor is followed on.
+    if ($layout->isScrolling()) {
+      [$total, $row] = $this->renderer->reach($layout, $of);
+
+      if ($row >= 0) {
+        yield [$layout, $total, $row, $room];
+      }
+
+      return;
+    }
+
+    $sizes = $this->renderer->sizes($layout, $room);
+
+    foreach ($layout->names() as $name) {
       $region = $panel->in($name);
 
       if (!$region->isScrolling()) {
         continue;
       }
 
-      [$total, $row] = $this->renderer->extent($panel->currentLayout(), $name, $focused instanceof BlockInterface ? $focused : NULL);
+      [$total, $row] = $this->renderer->extent($layout, $name, $of);
 
       // A region the cursor is not in stays where it was left: only the one
       // holding the focused row has anything to follow.
