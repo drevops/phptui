@@ -11,6 +11,7 @@ use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
+use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Model\FilePickerConstraints;
 use DrevOps\Tui\Schema\SchemaValidator;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
@@ -185,6 +186,29 @@ final class SchemaValidatorTest extends TestCase {
     // The very same payload plus the answer that puts the section on the form
     // now owes the question, and the refusal names it.
     $this->assertSame(['Missing required question "certifier".'], (new SchemaValidator($this->gatedForm()))->validate(['organic' => TRUE]));
+  }
+
+  public function testValueTheAnswersTakeAwayCannotWidenAnotherQuestionsOptions(): void {
+    // The category sits in a section this payload switches off, so collection
+    // drops it before the variety's options resolve - membership here has to
+    // read the same dropped set, or the validator allows a pick the form
+    // refuses.
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->confirm('organic', 'Organic only?');
+
+        $p->panel('sourcing', 'Sourcing', function (PanelBuilder $sp): void {
+          $sp->when(new Condition('organic', eq: TRUE));
+          $sp->text('category', 'Category');
+        });
+
+        $p->select('variety', 'Variety')->options(static fn(Context $context): array => ($context->answers['category'] ?? '') === 'stone' ? ['plum' => 'Plum'] : ['apple' => 'Apple']);
+      });
+
+    $refusals = (new SchemaValidator($form->root()))->validate(['organic' => FALSE, 'category' => 'stone', 'variety' => 'plum']);
+
+    $this->assertNotSame([], $refusals);
+    $this->assertStringContainsString('variety', implode(' ', $refusals));
   }
 
   public function testValueTheAnswersTakeAwayCannotAskForAnythingElse(): void {

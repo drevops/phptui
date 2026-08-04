@@ -64,6 +64,10 @@ class SchemaValidator {
     // the conditions are measured again. Reading it once would owe a question
     // that a run of the same payload never asks.
     $within = Tree::settled($this->root, $answers);
+    // What the form actually asks with: a value inside a section the payload
+    // took away must not feed another field's option list, or membership here
+    // would allow what collection refuses.
+    $asked = Tree::held($this->root, $answers, $within);
 
     foreach (Tree::fields($this->root) as $field) {
       if (!($within[spl_object_id($field)] ?? TRUE)) {
@@ -82,7 +86,7 @@ class SchemaValidator {
       // allows, so they are settled against it - carried on the run context, so
       // a resolver reading the directory or the update flag sees what it would
       // see during collection - before membership is checked.
-      OptionsResolver::resolve($field, new Context($this->context->directory, $answers, $this->context->update, $this->context->version));
+      OptionsResolver::resolve($field, new Context($this->context->directory, $asked, $this->context->update, $this->context->version));
 
       $error = $this->validateValue($field, $answers[$field->id()]);
       if ($error !== NULL) {

@@ -156,7 +156,7 @@ final class Tree {
    *   value under an id the tree does not know is left alone, because whether
    *   it belongs to the form at all is somebody else's question.
    */
-  protected static function held(Panel $panel, array $answers, array $there): array {
+  public static function held(Panel $panel, array $answers, array $there): array {
     foreach (self::fields($panel) as $field) {
       if (!($there[spl_object_id($field)] ?? TRUE)) {
         unset($answers[$field->id()]);
