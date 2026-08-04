@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit;
 
-use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Block\Progress;
-use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Screen\ScreenController;
@@ -26,10 +24,8 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests the progress field: a display row that runs work when activated.
  */
-#[CoversClass(FieldBuilder::class)]
 #[CoversClass(PanelBuilder::class)]
 #[CoversClass(Progress::class)]
-#[CoversClass(FieldType::class)]
 #[CoversClass(Collector::class)]
 #[CoversClass(ScreenController::class)]
 #[CoversClass(DefaultTheme::class)]
@@ -49,7 +45,7 @@ final class ProgressFieldTest extends TestCase {
   public function testNonPositiveStepsAreRejected(): void {
     $this->expectException(FormException::class);
 
-    (new FieldBuilder('apply', 'Apply', FieldType::Progress))->steps(-1);
+    (new Progress('apply', 'Apply'))->steps(-1);
   }
 
   public function testActivatingDeterminateRowRunsTheWorkAndCollectsNoAnswer(): void {
@@ -106,7 +102,7 @@ final class ProgressFieldTest extends TestCase {
   public function testTheAnswerSchemaOmitsProgressRow(): void {
     $form = Form::create('Apply')->panel('prep', 'Prep', function (PanelBuilder $p): void {
       $p->text('name', 'Name');
-      $p->progress('apply', 'Apply')->steps(1)->run($this->work());
+      $p->progress('apply', 'Apply')->steps(1)->work($this->work());
     })->root();
 
     $schema = (new AgentHelp($form))->generate();
@@ -129,10 +125,10 @@ final class ProgressFieldTest extends TestCase {
    */
   protected function form(\Closure $work, ?int $steps = NULL): Form {
     return Form::create('Apply')->panel('prep', 'Prep', function (PanelBuilder $p) use ($work, $steps): void {
-      $builder = $p->progress('apply', 'Apply')->run($work);
+      $block = $p->progress('apply', 'Apply')->work($work);
 
       if ($steps !== NULL) {
-        $builder->steps($steps);
+        $block->steps($steps);
       }
     });
   }

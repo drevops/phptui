@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Block;
 
 use DrevOps\Tui\Block\Capability\DependCapableInterface;
+use DrevOps\Tui\Condition\Condition;
+use DrevOps\Tui\Condition\ConditionInterface;
 
 /**
  * A declared block tree, read as a flat list.
@@ -97,6 +99,67 @@ final class Tree {
     }
 
     return $there;
+  }
+
+  /**
+   * The one rule deciding whether each block is there, as it can be read.
+   *
+   * The companion to {@see within()}: where that measures the composed rule
+   * against one answer set, this hands the rule itself over, so anything
+   * describing the form can publish what a block waits on rather than only
+   * whether it is there right now.
+   *
+   * A rule a block decides for itself cannot be read, only asked, so it counts
+   * as no rule here - the same reading {@see DependCapableTrait::rule()} takes.
+   *
+   * Keyed by object rather than by id, for the reason {@see within()} is.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel to walk.
+   * @param \DrevOps\Tui\Condition\ConditionInterface|null $inherited
+   *   The rule the sections holding this one already impose.
+   *
+   * @return array<int,\DrevOps\Tui\Condition\ConditionInterface|null>
+   *   The rule each block waits on, or NULL where it is always there, keyed by
+   *   its object id.
+   */
+  public static function gates(Panel $panel, ?ConditionInterface $inherited = NULL): array {
+    $gates = [];
+
+    foreach ($panel->blocks() as $block) {
+      $own = $block instanceof DependCapableInterface ? $block->condition() : NULL;
+      $gate = self::both($inherited, $own instanceof ConditionInterface ? $own : NULL);
+      $gates[spl_object_id($block)] = $gate;
+
+      if ($block instanceof Panel) {
+        foreach (self::gates($block, $gate) as $id => $held) {
+          $gates[$id] = $held;
+        }
+      }
+    }
+
+    return $gates;
+  }
+
+  /**
+   * The single rule two rules amount to.
+   *
+   * @param \DrevOps\Tui\Condition\ConditionInterface|null $outer
+   *   The rule the section imposes, or NULL when it imposes none.
+   * @param \DrevOps\Tui\Condition\ConditionInterface|null $own
+   *   The block's own rule, or NULL when it declares none.
+   *
+   * @return \DrevOps\Tui\Condition\ConditionInterface|null
+   *   Both rules combined, the one that exists, or NULL when neither does. One
+   *   rule is handed back as it is rather than wrapped, so a reader is never
+   *   given an "all" of a single condition to unpick.
+   */
+  protected static function both(?ConditionInterface $outer, ?ConditionInterface $own): ?ConditionInterface {
+    if (!$outer instanceof ConditionInterface) {
+      return $own;
+    }
+
+    return $own instanceof ConditionInterface ? Condition::all($outer, $own) : $outer;
   }
 
   /**

@@ -46,20 +46,14 @@ final class AllFieldsFormTest extends TestCase {
   public function testEveryFieldTypeIsExercised(): void {
     $root = AllFieldsForm::create()->root();
     $present = [];
+    $kinds = [];
 
     foreach (Tree::panels($root) as $panel) {
       foreach ($panel->blocks() as $block) {
-        // A row that only shows and a row that only runs are blocks of their
-        // own, so each stands for the kind of row it is.
-        $type = match (TRUE) {
-          $block instanceof Field => $block->type(),
-          $block instanceof Markup => FieldType::Note,
-          $block instanceof Progress => FieldType::Progress,
-          default => NULL,
-        };
+        $kinds[$block::class] = TRUE;
 
-        if ($type instanceof FieldType) {
-          $present[$type->value] = TRUE;
+        if ($block instanceof Field) {
+          $present[$block->type()->value] = TRUE;
         }
       }
     }
@@ -71,6 +65,11 @@ final class AllFieldsFormTest extends TestCase {
     sort($expected);
 
     $this->assertSame($expected, $actual, 'AllFieldsForm must exercise every FieldType so new fields are not left untested.');
+
+    // A row that only shows and a row that only runs are blocks of their own
+    // rather than kinds of answer, so each is claimed here in its own right.
+    $this->assertArrayHasKey(Markup::class, $kinds, 'AllFieldsForm must exercise the block that only shows.');
+    $this->assertArrayHasKey(Progress::class, $kinds, 'AllFieldsForm must exercise the block that only runs.');
   }
 
   public function testDrivesEveryField(): void {

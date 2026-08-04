@@ -108,7 +108,7 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
    */
   public function steps(int $total): static {
     if ($total < 1) {
-      throw new FormException(sprintf('Field "%s" declares %d progress steps; a determinate bar needs at least one step (omit steps() for a spinner).', $this->id, $total));
+      throw new FormException(sprintf('Progress row "%s" declares %d steps; a determinate bar needs at least one step (omit steps() for a spinner).', $this->id, $total));
     }
 
     $this->total = $total;

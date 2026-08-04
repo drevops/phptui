@@ -30,7 +30,7 @@ The summary resolves links too: `$answers->toSummary()` follows the terminal's c
 
 ## Markdown
 
-Turn on `->markdown()` and field descriptions and note bodies render a small subset of markdown, each construct mapped to one of the theme's [markup elements](/fields/anatomy#a-passage-of-text):
+Turn on `->markdown()` and field descriptions and [markup](/markup) bodies render a small subset of markdown, each construct mapped to one of the theme's [markup elements](/fields/anatomy#a-passage-of-text):
 
 ```php
 $answers = (new Tui($form))->markdown()->run();
@@ -46,8 +46,8 @@ $answers = (new Tui($form))->markdown()->run();
 
 ```php
 $p->note('intro', 'Fresh produce order')
-  ->description("Pick what is **ripe** today:\n- crisp apples\n- sweet pears\nSee the [seasonal guide](https://example.com/seasonal-guide).")
-  ->border();
+  ->body("Pick what is **ripe** today:\n- crisp apples\n- sweet pears\nSee the [seasonal guide](https://example.com/seasonal-guide).")
+  ->bordered();
 
 $p->number('quantity', 'Quantity')->min(1)->max(99)
   ->description('Baskets hold up to **99**; order more in a *second* basket.');

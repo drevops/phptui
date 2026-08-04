@@ -8,6 +8,7 @@ use DrevOps\Tui\Answers\Answer;
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Builder\Form;
@@ -551,7 +552,7 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testRowThatOnlyShowsContributesNothingWhereverItSits(): void {
     $panel = (new Panel('main', 'Delivery'))->layout(new PanelLayout());
-    $panel->in('content')->add(new Field('note', 'Note', FieldType::Note));
+    $panel->in('content')->add(new Markup('note', 'Note'));
     $panel->in('content')->add((new Field('courier', 'Courier'))->default('Valley Runs'));
 
     $answers = (new Collector())->answers($panel);

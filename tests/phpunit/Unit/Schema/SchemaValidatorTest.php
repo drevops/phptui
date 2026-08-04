@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Schema;
 
+use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
+use DrevOps\Tui\Model\FilePickerConstraints;
 use DrevOps\Tui\Schema\SchemaValidator;
+use DrevOps\Tui\Screen\Layout\PanelLayout;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -161,13 +164,13 @@ final class SchemaValidatorTest extends TestCase {
   }
 
   public function testFilePickerConstraintsIgnoredOnNonPickerField(): void {
-    // A picker limit mistakenly set on a non-picker field never applies: the
-    // field's plain string value is not weighed as a filesystem path.
-    $form = Form::create('T')
-      ->panel('p', 'p', fn(PanelBuilder $p): FieldBuilder => $p->text('name')->maxSize(100))
-      ->root();
+    // A hand-built field takes a picker limit its kind never weighs a value
+    // against, so the plain string value passes rather than being read as a
+    // filesystem path.
+    $panel = (new Panel('p', 'p'))->layout(new PanelLayout());
+    $panel->in('content')->add((new Field('name', 'Name'))->picker(new FilePickerConstraints(maxSize: 100)));
 
-    $this->assertSame([], (new SchemaValidator($form))->validate(['name' => 'not-a-real-path']));
+    $this->assertSame([], (new SchemaValidator($panel))->validate(['name' => 'not-a-real-path']));
   }
 
   /**
@@ -176,7 +179,7 @@ final class SchemaValidatorTest extends TestCase {
   protected function form(): Panel {
     return Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->note('intro', 'Intro')->description('Welcome.');
+        $p->note('intro', 'Intro')->body('Welcome.');
         $p->text('name')->required();
         $p->select('profile')->option('standard')->option('minimal')->option('demo', 'Demo', disabled: TRUE, disabled_reason: 'unavailable');
         $p->confirm('agree');

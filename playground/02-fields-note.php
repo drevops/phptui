@@ -7,8 +7,8 @@
  * A note renders a title and body inline in the form flow. The cursor skips it,
  * it never appears in the answers, and headless runs omit it entirely. Its text
  * takes the same `{{field}}` templating derived values use, so a note can
- * reflect earlier answers; `->border()` frames the card. Here the summary note
- * echoes the item, and the collected JSON carries only the field's value.
+ * reflect earlier answers; `->bordered()` frames the card. Here the summary
+ * note echoes the item, and the collected JSON carries only the field's value.
  *
  * Usage:
  *   php playground/02-fields-note.php
@@ -25,9 +25,9 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Note field')
   ->panel('main', 'Order', function (PanelBuilder $p): void {
-    $p->note('intro', 'Fresh produce order')->description('This card is read-only - the cursor skips it and it collects nothing.');
+    $p->note('intro', 'Fresh produce order')->body('This card is read-only - the cursor skips it and it collects nothing.');
     $p->text('item', 'Item')->default('Pear');
-    $p->note('summary', 'Ready to pack')->description('Packing {{item}} into the basket.')->border();
+    $p->note('summary', 'Ready to pack')->body('Packing {{item}} into the basket.')->bordered();
   });
 
 try {

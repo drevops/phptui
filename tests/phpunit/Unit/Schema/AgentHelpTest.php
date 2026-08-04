@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Tests\Unit\Schema;
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Schema\AgentHelp;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -328,10 +329,31 @@ final class AgentHelpTest extends TestCase {
     yield 'note' => [
       static function (PanelBuilder $p): void {
         $p->text('name', 'Name')->required();
-        $p->note('intro', 'Intro')->description('Welcome.');
+        $p->note('intro', 'Intro')->body('Welcome.');
       },
       'intro',
     ];
+  }
+
+  public function testCarriesTheWholeRuleGatingTheQuestion(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->confirm('organic', 'Organic only?');
+        $p->text('courier', 'Courier');
+
+        $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
+          $sp->when(new Condition('organic', eq: TRUE));
+          $sp->text('certifier', 'Certifier');
+        });
+      })
+      ->root();
+
+    $help = (new AgentHelp($form))->generate();
+
+    // The section's rule reaches the question it holds, and a question outside
+    // every section carries no rule at all.
+    $this->assertMatchesRegularExpression('/"certifier":\s*\{[^}]*"x-asked-when":\s*\{\s*"field":\s*"organic",\s*"eq":\s*true\s*\}/', $help);
+    $this->assertDoesNotMatchRegularExpression('/"courier":\s*\{[^}]*"x-asked-when"/', $help);
   }
 
   /**

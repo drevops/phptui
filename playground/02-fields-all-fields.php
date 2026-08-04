@@ -27,7 +27,7 @@ require __DIR__ . '/../vendor/autoload.php';
 // single-field scripts show the same fields with real-world labels.
 $form = Form::create('Fields')
   ->panel('fields', 'Fields', function (PanelBuilder $p): void {
-    $p->note('note', 'Note')->description('A read-only card - the cursor skips it and it collects nothing.');
+    $p->note('note', 'Note')->body('A read-only card - the cursor skips it and it collects nothing.');
     $p->text('text', 'Text')->default('Pear');
     $p->template('template', 'Template')->pattern('{{orchard}}-{{fruit}}-{{grade}}')->default('valley-pear-a');
     $p->number('number', 'Number')->default(1200);

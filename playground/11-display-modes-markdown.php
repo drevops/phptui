@@ -31,8 +31,8 @@ require __DIR__ . '/../vendor/autoload.php';
 $form = Form::create('Produce order')
   ->panel('order', 'New order', function (PanelBuilder $p): void {
     $p->note('intro', 'Fresh produce order')
-      ->description('Pick what is **ripe** today:' . chr(10) . '- crisp apples' . chr(10) . '- sweet pears' . chr(10) . 'See the [seasonal guide](https://example.com/seasonal-guide).')
-      ->border();
+      ->body('Pick what is **ripe** today:' . chr(10) . '- crisp apples' . chr(10) . '- sweet pears' . chr(10) . 'See the [seasonal guide](https://example.com/seasonal-guide).')
+      ->bordered();
     $p->text('item', 'Item')->default('Pear')
       ->description('Type any fruit - `Pear` and `Plum` keep well. Full list in the [orchard index](https://example.com/orchard).');
     $p->number('quantity', 'Quantity')->min(1)->max(99)->default(6)

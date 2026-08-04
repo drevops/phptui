@@ -56,12 +56,6 @@ class SchemaValidator {
     $within = Tree::within($this->root, $answers);
 
     foreach (Tree::fields($this->root) as $field) {
-      // A display-only field (a note or a progress row) carries no answer, so
-      // it is never required and any value supplied for it is ignored.
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       if (!($within[spl_object_id($field)] ?? TRUE)) {
         continue;
       }

@@ -77,7 +77,7 @@ final class BuilderGapsTest extends TestCase {
 
   public function testWorkWithNoStepsCannotReportProgress(): void {
     $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Field "packing" declares 0 progress steps; a determinate bar needs at least one step (omit steps() for a spinner).');
+    $this->expectExceptionMessage('Progress row "packing" declares 0 steps; a determinate bar needs at least one step (omit steps() for a spinner).');
 
     (new Progress('packing', 'Packing'))->steps(0);
   }

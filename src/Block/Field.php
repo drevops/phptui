@@ -384,12 +384,6 @@ final class Field extends AbstractBlock implements
    * becomes something that collects.
    */
   public function open(): static {
-    // A kind that only draws has nothing to open onto, so it stays as it is
-    // rather than failing at the keystroke that reached it.
-    if ($this->fieldType->isDisplayOnly()) {
-      return $this;
-    }
-
     $this->mode = Mode::Edit;
     $this->draft = $this->value;
     $this->editor = $this->editorFor($this->value);

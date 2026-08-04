@@ -65,9 +65,9 @@ final class BlockTreeTest extends TestCase {
   public static function dataProviderDeclarationWritesTheBlockItsAnswerNeeds(): \Iterator {
     yield 'a question collects' => [static fn(PanelBuilder $p): FieldBuilder => $p->text('courier', 'Courier'), Field::class];
     yield 'a choice collects' => [static fn(PanelBuilder $p): FieldBuilder => $p->select('basket', 'Basket'), Field::class];
-    yield 'a note only shows' => [static fn(PanelBuilder $p): FieldBuilder => $p->note('intro', 'Fresh produce'), Markup::class];
+    yield 'a note only shows' => [static fn(PanelBuilder $p): Markup => $p->note('intro', 'Fresh produce'), Markup::class];
     yield 'markup only shows' => [static fn(PanelBuilder $p): Markup => $p->markup('intro', 'Fresh produce'), Markup::class];
-    yield 'a progress row only runs' => [static fn(PanelBuilder $p): FieldBuilder => $p->progress('packing', 'Packing'), Progress::class];
+    yield 'a progress row only runs' => [static fn(PanelBuilder $p): Progress => $p->progress('packing', 'Packing'), Progress::class];
   }
 
   public function testBlocksAreInTheRegionInTheOrderTheyWereWritten(): void {
@@ -228,7 +228,7 @@ final class BlockTreeTest extends TestCase {
 
     yield 'a note is the same block' => [
       static function (PanelBuilder $p): void {
-        $p->note('packing', 'Ready to pack')->description('Framed with a border.')->border();
+        $p->note('packing', 'Ready to pack')->body('Framed with a border.')->bordered();
       },
       TRUE,
       FALSE,
@@ -237,7 +237,7 @@ final class BlockTreeTest extends TestCase {
 
   public function testNoteAndMarkupCarryTheSameTitleAndBody(): void {
     $panel = $this->panel(static function (PanelBuilder $p): void {
-      $p->note('note', 'Ready to pack')->description('Packed at dawn.');
+      $p->note('note', 'Ready to pack')->body('Packed at dawn.');
       $p->markup('markup', 'Packed at dawn.', 'Ready to pack');
     });
 

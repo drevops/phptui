@@ -223,15 +223,15 @@ function fieldSpecs(string $tree): array {
     ],
     'note' => [
       'form' => static fn(): Form => Form::create('Note field')->panel('main', 'Note', function (PanelBuilder $p): void {
-        $p->note('intro', 'Fresh produce order')->description('A read-only card - the cursor skips it.');
-        $p->note('packing', 'Ready to pack')->description('Framed with a border.')->border();
+        $p->note('intro', 'Fresh produce order')->body('A read-only card - the cursor skips it.');
+        $p->note('packing', 'Ready to pack')->body('Framed with a border.')->bordered();
       }),
       'keys' => [$enter],
       'rows' => 14,
     ],
     'note-markdown' => [
       'form' => static fn(): Form => Form::create('Markdown note')->panel('main', 'Note', function (PanelBuilder $p): void {
-        $p->note('order', 'Fresh produce order')->description('Pick what is **ripe** today:' . chr(10) . '- crisp `apples`' . chr(10) . '- sweet *pears*' . chr(10) . 'See the [seasonal guide](https://example.com/guide).')->border();
+        $p->note('order', 'Fresh produce order')->body('Pick what is **ripe** today:' . chr(10) . '- crisp `apples`' . chr(10) . '- sweet *pears*' . chr(10) . 'See the [seasonal guide](https://example.com/guide).')->bordered();
       }),
       'keys' => [$enter],
       'rows' => 14,
@@ -239,7 +239,7 @@ function fieldSpecs(string $tree): array {
     ],
     'table' => [
       'form' => static fn(): Form => Form::create('Table field')->panel('main', 'Stock', function (PanelBuilder $p): void {
-        $p->note('stock', 'Basket contents')->description('Everything picked so far:')->table(['Fruit', 'Color', 'In stock'], [
+        $p->note('stock', 'Basket contents')->body('Everything picked so far:')->table(['Fruit', 'Color', 'In stock'], [
           ['Apple', 'Red', '12'],
           ['Pear', 'Green', '5'],
           ['Plum', 'Purple', '120'],
@@ -249,7 +249,7 @@ function fieldSpecs(string $tree): array {
       'rows' => 16,
     ],
     'progress' => [
-      'form' => static fn(): Form => Form::create('Progress field')->panel('main', 'Progress', function (PanelBuilder $p) use ($pack): void { $p->progress('pack', 'Packing the box')->steps(6)->run($pack); }),
+      'form' => static fn(): Form => Form::create('Progress field')->panel('main', 'Progress', function (PanelBuilder $p) use ($pack): void { $p->progress('pack', 'Packing the box')->steps(6)->work($pack); }),
       'keys' => [$enter, $enter],
       'rows' => 6,
     ],

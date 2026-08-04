@@ -647,10 +647,6 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
     $answers = [];
 
     foreach ($this->fields() as $field) {
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       // A row the answers took off the screen says nothing about the panel,
       // because it is not there to say it.
       if ($field->isHidden()) {

@@ -346,9 +346,7 @@ final class Collector {
     $shows = array_fill_keys(Tree::ids($panel), TRUE);
 
     foreach ($fields as $field) {
-      if (!$field->type()->isDisplayOnly()) {
-        $shows[$field->id()] = FALSE;
-      }
+      $shows[$field->id()] = FALSE;
     }
 
     return $shows;
@@ -372,13 +370,6 @@ final class Collector {
     $sources = [];
 
     foreach ($fields as $field) {
-      // A field that only shows carries no answer, so it never enters the
-      // values: it is neither resolved nor allowed to colour what a later
-      // field is resolved against.
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       $resolved = new Context($context->directory, $values, $context->update, $context->version);
       [$value, $source] = $this->resolveInitial($field, $supplied, $resolved);
       $sources[$field->id()] = $source;
@@ -537,12 +528,6 @@ final class Collector {
     $rules = [];
 
     foreach ($fields as $field) {
-      // A field that only shows is absent from the values, so a rule on it
-      // would compute against something that is not there.
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       $derive = $field->derivation();
 
       if ($derive instanceof Derive) {
@@ -946,10 +931,6 @@ final class Collector {
     $answers = [];
 
     foreach ($fields as $field) {
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       if ($active[$field->id()] ?? FALSE) {
         $answers[$field->id()] = $values[$field->id()] ?? NULL;
       }
@@ -975,10 +956,6 @@ final class Collector {
     $provenance = [];
 
     foreach ($fields as $field) {
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       if (!($active[$field->id()] ?? FALSE)) {
         continue;
       }

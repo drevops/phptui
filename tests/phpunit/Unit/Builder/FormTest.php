@@ -241,9 +241,9 @@ final class FormTest extends TestCase {
   public function testNoteField(): void {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->note('intro', 'Getting started')->description('Fill in each field.');
+        $panel->note('intro', 'Getting started')->body('Fill in each field.');
         $panel->note('bare');
-        $panel->note('boxed', 'Boxed')->border();
+        $panel->note('boxed', 'Boxed')->bordered();
         $panel->note('stock', 'Stock')->table(['Fruit', 'Qty'], [['Apple', '3'], ['Pear', '5']]);
       })
       ->root();
@@ -261,7 +261,7 @@ final class FormTest extends TestCase {
     // An omitted title stays empty rather than falling back to the id.
     $this->assertSame('', self::markupOf($form, 'bare')?->titleText());
 
-    // ->border() draws the card inside a box.
+    // ->bordered() draws the card inside a box.
     $this->assertTrue(self::markupOf($form, 'boxed')?->isBordered());
 
     // ->table() stores the header cells and body rows on the block.
@@ -447,14 +447,15 @@ final class FormTest extends TestCase {
     $this->assertSame('', $crop->placeholderText());
   }
 
-  public function testPatternIgnoredOnNonTemplateField(): void {
-    $form = Form::create('T')
+  public function testPatternIsRefusedOnNonTemplateField(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Field "name" of type "text" fills in no fixed shape; ->pattern() applies to template.');
+
+    Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $panel): void {
         $panel->text('name', 'Name')->pattern('{{a}}-{{b}}');
       })
       ->root();
-
-    $this->assertNotInstanceOf(Template::class, self::fieldOf($form, 'name')?->template());
   }
 
   public function testNumberBoundsAssembled(): void {
@@ -562,13 +563,13 @@ final class FormTest extends TestCase {
     $this->assertSame(Weekday::Monday, $plain->dateBounds()->weekStart);
   }
 
-  public function testDateBoundsIgnoredOnNonDateField(): void {
-    $form = Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->text('t')->minDate('2020-01-01')->weekStart(Weekday::Sunday))
-      ->root();
+  public function testDateBoundsAreRefusedOnNonDateField(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Field "t" of type "text" picks no date; ->minDate() applies to calendar.');
 
-    // The date setters are inert on a non-date field: no bounds are attached.
-    $this->assertNotInstanceOf(DateBounds::class, self::fieldOf($form, 't')?->dateBounds());
+    Form::create('T')
+      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->text('t')->minDate('2020-01-01'))
+      ->root();
   }
 
   public function testPageSizeAssembled(): void {
@@ -1044,21 +1045,169 @@ final class FormTest extends TestCase {
       'Field "d" declares an invalid date "the-first".',
     ];
 
-    yield 'steps on a field that runs nothing' => [
-      static fn(PanelBuilder $p): FieldBuilder => $p->text('t')->steps(4),
-      'Field "t" of type "text" runs no work to report on; ->steps() applies to progress rows.',
-    ];
   }
 
   public function testProgressRowStillTakesTheStepsItRuns(): void {
     $root = Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->progress('packing', 'Packing crates')->steps(4))
+      ->panel('p', 'P', fn(PanelBuilder $p): Progress => $p->progress('packing', 'Packing crates')->steps(4))
       ->root();
 
     $packing = $root->children()[0]->in('content')->blocks()[0];
 
     $this->assertInstanceOf(Progress::class, $packing);
     $this->assertSame(4, $packing->total());
+  }
+
+  /**
+   * Tests that a kind-scoped setter refuses the kinds it does not apply to.
+   *
+   * @param \Closure $declare
+   *   The declaration, given a panel builder.
+   * @param string $message
+   *   The message it is refused with.
+   */
+  #[DataProvider('dataProviderKindScopedSetterRefusesTheWrongKind')]
+  public function testKindScopedSetterRefusesTheWrongKind(\Closure $declare, string $message): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage($message);
+
+    $declare(new PanelBuilder('p', 'P'));
+  }
+
+  /**
+   * Data provider for testKindScopedSetterRefusesTheWrongKind().
+   *
+   * Every setter the builder scopes to particular kinds appears once, called on
+   * a kind it does not apply to, so a setter that stops refusing is caught.
+   *
+   * @return \Iterator<string, array{\Closure, string}>
+   *   The declaration and the message refusing it.
+   */
+  public static function dataProviderKindScopedSetterRefusesTheWrongKind(): \Iterator {
+    yield 'placeholder' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->confirm('f')->placeholder('E.g. Pear'),
+      'Field "f" of type "confirm" draws no input buffer to ghost; ->placeholder() applies to text, suggest, number, textarea, password, search.',
+    ];
+    yield 'multiple' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->multiple(),
+      'Field "f" of type "text" does not collect several values; ->multiple() applies to select, search, filepicker.',
+    ];
+    yield 'revealable' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->revealable(),
+      'Field "f" of type "text" masks nothing to reveal; ->revealable() applies to password.',
+    ];
+    yield 'confirmation' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->confirmation(),
+      'Field "f" of type "text" keeps no secret to confirm; ->confirmation() applies to password.',
+    ];
+    yield 'externalEditor' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->externalEditor(),
+      'Field "f" of type "text" composes no long-form text to hand off; ->externalEditor() applies to textarea.',
+    ];
+    yield 'min' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->min(1),
+      'Field "f" of type "text" counts through no numbers; ->min() applies to number, rating.',
+    ];
+    yield 'max' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->max(9),
+      'Field "f" of type "text" counts through no numbers; ->max() applies to number, rating.',
+    ];
+    yield 'step' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->step(2),
+      'Field "f" of type "text" counts through no numbers; ->step() applies to number.',
+    ];
+    yield 'captions' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->captions([1 => 'Poor']),
+      'Field "f" of type "text" draws no scale to caption; ->captions() applies to rating.',
+    ];
+    yield 'minSelections' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->minSelections(2),
+      'Field "f" of type "text" does not collect several values; ->minSelections() applies to select, search, filepicker.',
+    ];
+    yield 'maxSelections' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->maxSelections(3),
+      'Field "f" of type "text" does not collect several values; ->maxSelections() applies to select, search, filepicker.',
+    ];
+    yield 'startIn' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->startIn('/orchard'),
+      'Field "f" of type "text" browses no filesystem; ->startIn() applies to filepicker.',
+    ];
+    yield 'filesOnly' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->filesOnly(),
+      'Field "f" of type "text" browses no filesystem; ->filesOnly() applies to filepicker.',
+    ];
+    yield 'directoriesOnly' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->directoriesOnly(),
+      'Field "f" of type "text" browses no filesystem; ->directoriesOnly() applies to filepicker.',
+    ];
+    yield 'extensions' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->extensions(['csv']),
+      'Field "f" of type "text" browses no filesystem; ->extensions() applies to filepicker.',
+    ];
+    yield 'showHidden' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->showHidden(),
+      'Field "f" of type "text" browses no filesystem; ->showHidden() applies to filepicker.',
+    ];
+    yield 'maxSize' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->maxSize(64),
+      'Field "f" of type "text" browses no filesystem; ->maxSize() applies to filepicker.',
+    ];
+    yield 'pageSize' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->pageSize(5),
+      'Field "f" of type "text" draws no list to page; ->pageSize() applies to select, toggle, suggest, search, reorder, filepicker.',
+    ];
+    yield 'minDate' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->minDate('2026-01-01'),
+      'Field "f" of type "text" picks no date; ->minDate() applies to calendar.',
+    ];
+    yield 'maxDate' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->maxDate('2026-12-31'),
+      'Field "f" of type "text" picks no date; ->maxDate() applies to calendar.',
+    ];
+    yield 'weekStart' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->weekStart(Weekday::Sunday),
+      'Field "f" of type "text" picks no date; ->weekStart() applies to calendar.',
+    ];
+    yield 'complete' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->number('f')->complete(['Pear']),
+      'Field "f" of type "number" completes no typed text; ->complete() applies to text.',
+    ];
+    yield 'ghost' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->ghost(),
+      'Field "f" of type "text" ranks no options to preview; ->ghost() applies to suggest.',
+    ];
+    yield 'pattern' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->pattern('{{a}}-{{b}}'),
+      'Field "f" of type "text" fills in no fixed shape; ->pattern() applies to template.',
+    ];
+    yield 'slot' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->slot('a', 'A'),
+      'Field "f" of type "text" fills in no fixed shape; ->slot() applies to template.',
+    ];
+    yield 'option' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->option('apple', 'Apple'),
+      'Field "f" of type "text" shows no options; ->option() applies to select, toggle, suggest, search, reorder.',
+    ];
+    yield 'separator' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->separator(),
+      'Field "f" of type "text" shows no options; ->separator() applies to select, toggle, suggest, search, reorder.',
+    ];
+    yield 'heading' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->heading('Fruit'),
+      'Field "f" of type "text" shows no options; ->heading() applies to select, toggle, suggest, search, reorder.',
+    ];
+    yield 'options' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->text('f')->options(['apple' => 'Apple']),
+      'Field "f" of type "text" shows no options; ->options() applies to select, toggle, suggest, search, reorder.',
+    ];
+    yield 'optionsFrom' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->select('f')->optionsFrom(static fn(string $query, array $answers): array => []),
+      'Field "f" of type "select" runs no query; ->optionsFrom() applies to suggest, search.',
+    ];
+    yield 'minQuery' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->select('f')->minQuery(2),
+      'Field "f" of type "select" runs no query; ->minQuery() applies to suggest, search.',
+    ];
   }
 
   #[DataProvider('dataProviderEveryRefusalIsTheSameFamily')]

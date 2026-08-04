@@ -90,13 +90,6 @@ final class FieldBlockTest extends TestCase {
     $this->assertNotInstanceOf(FieldInterface::class, $courier->close()->editor());
   }
 
-  public function testKindThatOnlyDrawsHasNothingToOpenOnto(): void {
-    $note = new Field('weighing', 'Weighed at the bench.', FieldType::Note);
-
-    $this->assertSame(Mode::View, $note->open()->mode());
-    $this->assertNotInstanceOf(FieldInterface::class, $note->editor());
-  }
-
   public function testOnlyWhatWasAcceptedReachesTheResult(): void {
     $field = new Field('courier', 'Courier');
 

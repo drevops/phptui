@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Builder;
 use DrevOps\Tui\Block\BlockInterface;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Condition\ConditionInterface;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Model\FieldType;
@@ -411,25 +412,22 @@ final class PanelBuilder {
   }
 
   /**
-   * Add a note: a non-interactive informational card.
+   * Add a titled note: markup written title first.
    *
-   * The note renders its title and body inline but collects no value - the
-   * selection cursor skips it and it never appears in the answers. The body is
-   * set with ->description(); ->border() draws the card inside a box; ->table()
-   * renders an aligned grid beneath it.
+   * Sugar over {@see markup()} for the common shape of a card, where the title
+   * is what you write first and the body follows through `->body()`. It builds
+   * the same block, so every markup call is available on it.
    *
    * @param string $id
-   *   The field id.
+   *   The block id.
    * @param string $title
-   *   The card title (optional; an empty title renders the body alone).
+   *   The title (optional; an empty title draws the body alone).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
-   *   The field builder.
+   * @return \DrevOps\Tui\Block\Markup
+   *   The markup block.
    */
-  public function note(string $id, string $title = ''): FieldBuilder {
-    // A note's title is genuinely optional, so unlike other fields it is not
-    // filled from the id when omitted.
-    return $this->field($id, $title, FieldType::Note, FALSE);
+  public function note(string $id, string $title = ''): Markup {
+    return $this->markup($id, '', $title);
   }
 
   /**
@@ -461,19 +459,22 @@ final class PanelBuilder {
    * Add a progress row that runs work when activated, showing an indicator.
    *
    * Chain `->steps(int)` for a determinate bar (omit it for a spinner) and
-   * `->run(callable)` for the work; the callback drives the indicator through
+   * `->work(\Closure)` for the work; the callback drives the indicator through
    * the {@see \DrevOps\Tui\Primitive\ProgressReporter} it receives.
    *
    * @param string $id
-   *   The field id.
-   * @param string $label
+   *   The block id.
+   * @param string $caption
    *   The caption shown beside the indicator (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
-   *   The field builder.
+   * @return \DrevOps\Tui\Block\Progress
+   *   The progress block.
    */
-  public function progress(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Progress);
+  public function progress(string $id, string $caption = ''): Progress {
+    $progress = new Progress($id, $caption === '' ? $id : $caption);
+    $this->add($progress);
+
+    return $progress;
   }
 
   /**
@@ -646,15 +647,12 @@ final class PanelBuilder {
    *   The label (defaults to the id).
    * @param \DrevOps\Tui\Model\FieldType $type
    *   The field type.
-   * @param bool $label_fallback
-   *   Whether an empty label falls back to the id (the default); FALSE keeps an
-   *   empty label empty, for a note whose title is optional.
    *
    * @return \DrevOps\Tui\Builder\FieldBuilder
    *   The field builder.
    */
-  protected function field(string $id, string $label, FieldType $type, bool $label_fallback = TRUE): FieldBuilder {
-    $field = new FieldBuilder($id, $label === '' && $label_fallback ? $id : $label, $type);
+  protected function field(string $id, string $label, FieldType $type): FieldBuilder {
+    $field = new FieldBuilder($id, $label === '' ? $id : $label, $type);
     $this->fields[] = $field;
     $this->add($field->block());
 

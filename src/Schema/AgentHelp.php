@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Schema;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Tree;
+use DrevOps\Tui\Condition\ConditionInterface;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\NumberBounds;
@@ -22,11 +23,13 @@ use DrevOps\Tui\Translation\Translator;
  * each property carries its allowed values (a `select`'s options, a number's
  * bounds), its `title`/`description`, whether it is `required`, its `default`,
  * and the `env` variable that sets it - with any further names it answers to
- * in `x-env-aliases`. Only what the library controls appears here - the CLI
- * flags an agent ultimately calls are the consumer's to define, so they are
- * absent. The resolution order is the root `x-precedence`. A closure default is
- * resolved against the context (see {@see DefaultResolver}) rather than
- * omitted.
+ * in `x-env-aliases`. A question the answers can take off the form carries the
+ * whole rule that decides whether it is asked in `x-asked-when` - the sections
+ * holding it and its own condition together. Only what the library controls
+ * appears here - the CLI flags an agent ultimately calls are the consumer's to
+ * define, so they are absent. The resolution order is the root `x-precedence`.
+ * A closure default is resolved against the context (see
+ * {@see DefaultResolver}) rather than omitted.
  *
  * @package DrevOps\Tui\Schema
  */
@@ -65,16 +68,15 @@ class AgentHelp {
     $properties = [];
     $required = [];
 
+    $gates = Tree::gates($this->root);
+
     foreach (Tree::fields($this->root) as $field) {
-      // A pause is a gate, and a note or a progress row is display-only: none
-      // is a question, so none carries an answer.
+      // A pause is a gate rather than a question, so it carries no answer.
       if ($field->type() === FieldType::Pause) {
         continue;
       }
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-      $properties[$field->id()] = $this->property($field);
+
+      $properties[$field->id()] = $this->property($field, $gates[spl_object_id($field)] ?? NULL);
 
       if ($field->isRequired()) {
         $required[] = $field->id();
@@ -101,11 +103,14 @@ class AgentHelp {
    *
    * @param \DrevOps\Tui\Block\Field $field
    *   The field.
+   * @param \DrevOps\Tui\Condition\ConditionInterface|null $gate
+   *   The rule deciding whether the question is asked at all, or NULL when it
+   *   always is.
    *
    * @return array<string,mixed>
    *   The property definition.
    */
-  protected function property(Field $field): array {
+  protected function property(Field $field, ?ConditionInterface $gate): array {
     $values = $this->optionValues($field);
     $template = $field->template();
     $bounds = $field->numberBounds();
@@ -180,6 +185,13 @@ class AgentHelp {
 
     if ($field->placeholderText() !== '') {
       $property['x-placeholder'] = Translator::t($field->placeholderText());
+    }
+
+    // A section carries what it holds, so the rule published here is the whole
+    // one: an agent reading a question's own `when` would be told nothing about
+    // the section that takes the question away with it.
+    if ($gate instanceof ConditionInterface) {
+      $property['x-asked-when'] = $gate->toArray();
     }
 
     $default = DefaultResolver::resolve($field, $this->context);

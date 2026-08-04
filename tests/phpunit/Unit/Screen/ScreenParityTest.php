@@ -66,7 +66,7 @@ final class ScreenParityTest extends TestCase {
 
   public function testDependentRowAppearsTheMomentItsConditionHolds(): void {
     $panel = $this->panel(
-      new Field('intro', 'Pick the produce.', FieldType::Note),
+      new Markup('intro', 'Pick the produce.'),
       (new Field('organic', 'Organic only?', FieldType::Confirm))->default(FALSE),
       (new Field('certifier', 'Certifier'))->default('Soil Board')->when(new Condition('organic', eq: TRUE)),
     );
@@ -615,7 +615,7 @@ final class ScreenParityTest extends TestCase {
   public function testRowThatOnlyShowsNeverTakesTheCursor(): void {
     $courier = new Field('courier', 'Courier');
     $weight = new Field('weight', 'Basket weight');
-    $panel = $this->panel($courier, new Field('intro', 'Pick the produce.', FieldType::Note), $weight);
+    $panel = $this->panel($courier, new Markup('intro', 'Pick the produce.'), $weight);
 
     $this->tester($panel)->run(Key::named(KeyName::Down));
 

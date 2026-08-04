@@ -282,7 +282,7 @@ final class ScreenControllerTest extends TestCase {
 
   public function testRowThatOnlyShowsIsNeitherCollectedNorOwedAnAnswer(): void {
     $panel = $this->panel(
-      (new Field('intro', 'Pick the produce.', FieldType::Note))->required(),
+      new Markup('intro', 'Pick the produce.'),
       (new Field('courier', 'Courier'))->default('Valley Runs'),
     );
 

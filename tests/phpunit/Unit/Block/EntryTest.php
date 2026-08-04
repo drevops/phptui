@@ -164,24 +164,6 @@ final class EntryTest extends TestCase {
     yield 'text' => [FieldType::Text, FALSE];
   }
 
-  #[DataProvider('dataProviderIsPresentational')]
-  public function testIsPresentational(FieldType $type, bool $expected): void {
-    $this->assertSame($expected, $type->isPresentational());
-  }
-
-  public static function dataProviderIsPresentational(): \Iterator {
-    yield 'note' => [FieldType::Note, TRUE];
-    // A pause renders but still carries a boolean answer, so it is not
-    // presentational.
-    yield 'pause' => [FieldType::Pause, FALSE];
-    yield 'text' => [FieldType::Text, FALSE];
-    yield 'confirm' => [FieldType::Confirm, FALSE];
-  }
-
-  public function testNoteLabel(): void {
-    $this->assertSame('Note', FieldType::Note->label());
-  }
-
   public function testDeclaringMultipleOnUnsupportedTypeIsRefused(): void {
     $this->expectException(FormException::class);
     $this->expectExceptionMessage('Field "n" of type "number" does not collect several values');

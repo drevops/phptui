@@ -580,13 +580,6 @@ final class KeyRouter {
           continue;
         }
 
-        // A field of a kind that only shows is a field by declaration and a
-        // passage of text by behaviour: there is nothing to open, so the cursor
-        // passes over it exactly as it passes over markup.
-        if ($block instanceof Field && $block->type()->isPresentational()) {
-          continue;
-        }
-
         // A block that does not claim the cursor is skipped rather than landed
         // on, which is what lets markup sit between two fields.
         if ($block instanceof FocusCapableInterface) {

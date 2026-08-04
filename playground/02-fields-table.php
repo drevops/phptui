@@ -33,7 +33,7 @@ $rows = [
 
 $form = Form::create('Table')
   ->panel('main', 'Stock', function (PanelBuilder $p) use ($headers, $rows): void {
-    $p->note('stock', 'Basket contents')->description('Everything picked so far:')->table($headers, $rows);
+    $p->note('stock', 'Basket contents')->body('Everything picked so far:')->table($headers, $rows);
   });
 
 try {

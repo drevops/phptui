@@ -434,10 +434,6 @@ class ScreenController {
     $provenance = [];
 
     foreach (Tree::fields($this->panel) as $field) {
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       if (!($this->active[$field->id()] ?? TRUE)) {
         continue;
       }
@@ -886,10 +882,6 @@ class ScreenController {
    */
   protected function owed(): ?string {
     foreach (Tree::fields($this->panel) as $field) {
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       if (!($this->active[$field->id()] ?? TRUE)) {
         continue;
       }
@@ -1209,16 +1201,12 @@ class ScreenController {
    * The answers as the blocks hold them, keyed by field id.
    *
    * @return array<string,mixed>
-   *   The values, a row that only shows carrying none.
+   *   The values.
    */
   protected function values(): array {
     $values = [];
 
     foreach (Tree::fields($this->panel) as $field) {
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       $values[$field->id()] = $field->value();
     }
 
@@ -1238,10 +1226,6 @@ class ScreenController {
     $answers = [];
 
     foreach (Tree::fields($this->panel) as $field) {
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       if ($this->active[$field->id()] ?? FALSE) {
         $answers[$field->id()] = $field->value();
       }
