@@ -100,6 +100,103 @@ final class ScreenParityTest extends TestCase {
     $this->assertFalse($answers->has('certifier'));
   }
 
+  public function testSectionAppearsTheMomentItsConditionHolds(): void {
+    $certification = $this->nested('certification', 'Certification', (new Field('certifier', 'Certifier'))->default('Soil Board'));
+    $panel = $this->panel(
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(FALSE),
+      $certification->when(new Condition('organic', eq: TRUE)),
+    );
+
+    $tester = $this->tester($panel);
+    $answers = $tester->run(Key::named(KeyName::Enter), Key::char('y'), Key::named(KeyName::Enter));
+
+    // A whole section comes and goes exactly as one row does, and what it holds
+    // reaches the answers only once it is there.
+    $this->assertStringNotContainsString('Certification', $tester->frame(0));
+    $this->assertStringContainsString('Certification', $tester->frame());
+    $this->assertSame('Soil Board', $answers->value('certifier'));
+  }
+
+  public function testSectionThatLeavesTakesTheCursorOntoRowThatIsThere(): void {
+    $certification = $this->nested('certification', 'Certification', (new Field('certifier', 'Certifier'))->default('Soil Board'));
+    $panel = $this->panel(
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(TRUE),
+      $certification->when(new Condition('organic', eq: TRUE)),
+    );
+
+    $tester = $this->tester($panel);
+    $answers = $tester->run(
+      Key::named(KeyName::Down),
+      Key::named(KeyName::Up),
+      Key::named(KeyName::Enter),
+      Key::char('n'),
+      Key::named(KeyName::Enter),
+    );
+
+    $this->assertStringNotContainsString('Certification', $tester->frame());
+    $this->assertStringContainsString('❯ Organic only?', $tester->frame());
+    $this->assertFalse($answers->has('certifier'));
+  }
+
+  public function testSectionThatGoesWhileYouAreInsideItPutsYouBackOutsideIt(): void {
+    $form = Form::create('Delivery')
+      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
+        $p->confirm('organic', 'Organic only?')->default(TRUE);
+
+        $p->panel('certification', 'Certification', static function (PanelBuilder $sp): void {
+          $sp->when(new Condition('organic', eq: TRUE));
+          $sp->text('certifier', 'Certifier');
+        });
+      });
+
+    // The answer that decides the section is written by a rule rather than
+    // typed, which is how an answer given inside a section can take it away.
+    $fixup = new Fixup(set: 'organic', to: FALSE, when: new Condition('certifier', eq: 'none'));
+    $tester = (new ScreenTester($form->root()))->rows(14)->cols(60)->collector(new Collector(NULL, [$fixup]));
+    $answers = $tester->run(
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Down),
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Enter),
+      'none',
+      Key::named(KeyName::Enter),
+    );
+
+    // The section is where the reader was standing, so it cannot simply stop
+    // being drawn: the way out is the way in, as far as the nearest section
+    // that is still there.
+    $this->assertStringContainsString('Delivery › Produce order', $tester->frame());
+    $this->assertStringNotContainsString('Certifier', $tester->frame());
+    $this->assertStringContainsString('Organic only?', $tester->frame());
+    $this->assertFalse($answers->has('certifier'));
+  }
+
+  public function testSectionTheAnswersRemovedIsDealtNoWindowEither(): void {
+    $form = Form::create('Market stall')
+      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
+        $p->layout(2);
+        $p->confirm('organic', 'Organic only?')->default(FALSE);
+
+        $p->panel('fruit', 'Fruit', static function (PanelBuilder $sp): void {
+          $sp->select('fruit', 'Fruit')->default('apple')->options(['apple' => 'Apple', 'pear' => 'Pear']);
+        });
+
+        $p->panel('certification', 'Certification', static function (PanelBuilder $sp): void {
+          $sp->when(new Condition('organic', eq: TRUE));
+          $sp->text('certifier', 'Certifier')->default('Soil Board');
+        });
+      });
+
+    $tester = (new ScreenTester($form->root()))->rows(16)->cols(70);
+    $tester->run(Key::named(KeyName::Enter));
+
+    // A window is how a section draws where its siblings sit beside it, so a
+    // section that is not there is dealt none and the row closes up.
+    $this->assertStringContainsString('Fruit', $tester->frame());
+    $this->assertStringNotContainsString('Certification', $tester->frame());
+    $this->assertStringNotContainsString('Certifier', $tester->frame());
+  }
+
   public function testComputedAnswerRecomputesAsTheAnswerItReadsChanges(): void {
     $panel = $this->panel(
       (new Field('courier', 'Courier'))->default('Valley'),
@@ -776,6 +873,50 @@ final class ScreenParityTest extends TestCase {
     // Off by default: a conditional row renders exactly where every other one
     // does, so nothing on screen says which answer brought it into view.
     $this->assertContains('  Weekly delivery?  yes', array_map(rtrim(...), explode("\n", $flush->frame())));
+  }
+
+  #[DataProvider('dataProviderEveryKindOfRowInChainStepsInWithIt')]
+  public function testEveryKindOfRowInChainStepsInWithIt(array $options, array $expected): void {
+    $form = Form::create('Conditional indentation')
+      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
+        $p->confirm('weekly', 'Weekly delivery?')->default(TRUE);
+        // One condition, three kinds of row: whatever a rule can take off the
+        // form steps in behind the answer that brought it back.
+        $p->text('courier', 'Courier note')->default('Leave at the gate')->when(new Condition('weekly', eq: TRUE));
+        $p->markup('crates', 'Weekly crates are packed the evening before.')->when(new Condition('weekly', eq: TRUE));
+        $p->text('gate', 'Gate code')->default('4821')->when(new Condition('weekly', eq: TRUE));
+      });
+
+    $tester = (new ScreenTester($form->root()))->rows(16)->cols(70)->options($options);
+    $tester->run(Key::named(KeyName::Enter));
+
+    $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
+
+    foreach ($expected as $row) {
+      $this->assertContains($row, $rows);
+    }
+  }
+
+  public static function dataProviderEveryKindOfRowInChainStepsInWithIt(): \Iterator {
+    yield 'stepped' => [
+      ['indent_conditional' => TRUE],
+      [
+        '❯ Weekly delivery?  yes',
+        '    Courier note  Leave at the gate',
+        '  Weekly crates are packed the evening before.',
+        '    Gate code  4821',
+      ],
+    ];
+
+    yield 'flush' => [
+      [],
+      [
+        '❯ Weekly delivery?  yes',
+        '  Courier note  Leave at the gate',
+        'Weekly crates are packed the evening before.',
+        '  Gate code  4821',
+      ],
+    ];
   }
 
   public function testFormThatHidesItsLegendAdvertisesNothing(): void {

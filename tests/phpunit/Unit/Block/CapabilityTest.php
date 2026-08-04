@@ -72,7 +72,13 @@ final class CapabilityTest extends TestCase {
   public static function dataProviderBlockClaimsExactlyWhatItIsGranted(): \Iterator {
     yield 'panel' => [
       Panel::class,
-      [BindCapableInterface::class, DescendCapableInterface::class, FocusCapableInterface::class, OverlayCapableInterface::class],
+      [
+        BindCapableInterface::class,
+        DependCapableInterface::class,
+        DescendCapableInterface::class,
+        FocusCapableInterface::class,
+        OverlayCapableInterface::class,
+      ],
     ];
 
     yield 'field' => [
@@ -116,6 +122,25 @@ final class CapabilityTest extends TestCase {
   }
 
   public static function dataProviderBlockIsThereUnlessItsConditionSaysOtherwise(): \Iterator {
+    yield 'panel' => [new Panel('certification', 'Certification')];
+    yield 'field' => [new Field('certifier', 'Certifier')];
+    yield 'markup' => [new Markup('certified', 'Organic crates need current certification.')];
+    yield 'progress' => [new Progress('packing', 'Packing crates')];
+  }
+
+  #[DataProvider('dataProviderBlockSitsWhereTheChainLeadingToItPutsIt')]
+  public function testBlockSitsWhereTheChainLeadingToItPutsIt(DependCapableInterface $block): void {
+    // Where a block sits is worked out once the whole tree is finished and
+    // written back, so a block on its own is always at the frame edge.
+    $this->assertSame(0, $block->nesting());
+    $this->assertSame(2, $block->nest(2)->nesting());
+
+    // A chain cannot run backwards, so nothing puts a block past the edge.
+    $this->assertSame(0, $block->nest(-1)->nesting());
+  }
+
+  public static function dataProviderBlockSitsWhereTheChainLeadingToItPutsIt(): \Iterator {
+    yield 'panel' => [new Panel('certification', 'Certification')];
     yield 'field' => [new Field('certifier', 'Certifier')];
     yield 'markup' => [new Markup('certified', 'Organic crates need current certification.')];
     yield 'progress' => [new Progress('packing', 'Packing crates')];
@@ -141,6 +166,8 @@ final class CapabilityTest extends TestCase {
     // both shapes are declared the same way.
     $standing = static fn(): bool => FALSE;
 
+    yield 'panel, declared' => [new Panel('certification', 'Certification'), $declared, ['organic' => TRUE], TRUE];
+    yield 'panel, declared and unmet' => [new Panel('certification', 'Certification'), $declared, ['organic' => FALSE], FALSE];
     yield 'field, declared' => [new Field('certifier', 'Certifier'), $declared, ['organic' => TRUE], TRUE];
     yield 'field, declared and unmet' => [new Field('certifier', 'Certifier'), $declared, ['organic' => FALSE], FALSE];
     yield 'field, written' => [new Field('certifier', 'Certifier'), $written, ['organic' => TRUE], TRUE];

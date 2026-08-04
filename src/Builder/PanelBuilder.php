@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Builder;
 use DrevOps\Tui\Block\BlockInterface;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Condition\ConditionInterface;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormException;
@@ -108,6 +109,25 @@ final class PanelBuilder {
    */
   public function description(string $description): self {
     $this->panel->description($description);
+
+    return $this;
+  }
+
+  /**
+   * Set the conditional-visibility rule.
+   *
+   * A section comes and goes exactly as a field does, and takes everything it
+   * holds with it: while the condition does not hold, its questions are not
+   * asked, not drawn and not in the answers.
+   *
+   * @param \DrevOps\Tui\Condition\ConditionInterface $condition
+   *   The condition gating the panel, evaluated as the answers settle.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function when(ConditionInterface $condition): self {
+    $this->panel->when($condition);
 
     return $this;
   }

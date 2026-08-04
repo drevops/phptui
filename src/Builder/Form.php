@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Builder;
 
+use DrevOps\Tui\Block\Capability\DependCapableInterface;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Tree;
@@ -335,73 +336,120 @@ final class Form {
   }
 
   /**
-   * Say how many answers each question waits on before it is asked at all.
+   * Say how many answers each block waits on before it is there at all.
    *
-   * A rule may name a field on any panel, so this is a fact about the whole
-   * form rather than about a panel or a field on its own: it can only be
-   * worked out once every panel has been placed, which is here.
+   * A rule may name a field on any panel, and a section carries what it holds,
+   * so this is a fact about the whole form rather than about a panel or a block
+   * on its own: it can only be worked out once every panel has been placed,
+   * which is here.
    *
    * @param \DrevOps\Tui\Block\Panel $root
    *   The panel every declared panel hangs from.
    */
   protected function nestConditionals(Panel $root): void {
-    $fields = Tree::fields($root);
+    $holders = [];
+    $blocks = $this->conditionals($root, $holders);
     $by_id = [];
 
-    foreach ($fields as $field) {
+    foreach (Tree::fields($root) as $field) {
       $by_id[$field->id()] = $field;
     }
 
     $resolved = [];
 
-    foreach ($fields as $field) {
-      $field->nest($this->nesting($field, $by_id, $resolved, []));
+    foreach ($blocks as $block) {
+      $block->nest($this->nesting($block, $holders, $by_id, $resolved, []));
     }
   }
 
   /**
-   * How deep one field sits: one more than the deepest field it waits on.
+   * Every block a tree holds that can come and go, and what holds each.
    *
-   * @param \DrevOps\Tui\Block\Field $field
-   *   The field to measure.
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel to walk.
+   * @param array<int,\DrevOps\Tui\Block\Panel> $holders
+   *   The section each block sits in, keyed by the block's object id, written
+   *   here as the walk goes.
+   *
+   * @return list<\DrevOps\Tui\Block\Capability\DependCapableInterface>
+   *   The blocks, in declaration order.
+   */
+  protected function conditionals(Panel $panel, array &$holders): array {
+    $blocks = [];
+
+    foreach ($panel->blocks() as $block) {
+      if (!$block instanceof DependCapableInterface) {
+        continue;
+      }
+
+      $holders[spl_object_id($block)] = $panel;
+      $blocks[] = $block;
+
+      if ($block instanceof Panel) {
+        $blocks = [...$blocks, ...$this->conditionals($block, $holders)];
+      }
+    }
+
+    return $blocks;
+  }
+
+  /**
+   * How deep one block sits: one step per rule in the chain leading to it.
+   *
+   * The chain runs through the sections as well as through the rules: a section
+   * only there behind an answer is one such rule, so everything it holds counts
+   * it once, and a block with a rule of its own is the next step in from there.
+   *
+   * Measured by object rather than by id, because a section and a row it holds
+   * may go by the same name.
+   *
+   * @param \DrevOps\Tui\Block\Capability\DependCapableInterface $block
+   *   The block to measure.
+   * @param array<int,\DrevOps\Tui\Block\Panel> $holders
+   *   The section each block sits in, keyed by the block's object id.
    * @param array<string,\DrevOps\Tui\Block\Field> $by_id
    *   Every field in the form, keyed by id.
-   * @param array<string,int> $resolved
-   *   The depths measured so far, so a field several rules name is walked once.
-   * @param array<string,bool> $walking
-   *   The ids on the current walk, keyed by id.
+   * @param array<int,int> $resolved
+   *   The depths measured so far, so a block several rules name is walked once.
+   * @param array<int,bool> $walking
+   *   The blocks on the current walk, keyed by object id.
    *
    * @return int
    *   The depth.
    */
-  protected function nesting(Field $field, array $by_id, array &$resolved, array $walking): int {
-    if (array_key_exists($field->id(), $resolved)) {
-      return $resolved[$field->id()];
+  protected function nesting(DependCapableInterface $block, array $holders, array $by_id, array &$resolved, array $walking): int {
+    $at = spl_object_id($block);
+
+    if (array_key_exists($at, $resolved)) {
+      return $resolved[$at];
     }
 
-    // A rule the field decides for itself names no question, so nothing can be
-    // said about what it waits on and it sits where an unconditional row does.
-    if (!$field->condition() instanceof ConditionInterface) {
-      return $resolved[$field->id()] = 0;
-    }
-
-    // A reference leading back to a field already on the walk closes a cycle.
+    // A reference leading back to a block already on the walk closes a cycle.
     // Such a rule can never hold a stable depth, so the back edge contributes
     // none and the walk ends rather than deepening forever.
-    if (isset($walking[$field->id()])) {
+    if (isset($walking[$at])) {
       return 0;
     }
 
-    $walking[$field->id()] = TRUE;
-    $deepest = 0;
+    $walking[$at] = TRUE;
+    $holder = $holders[$at] ?? NULL;
+    $base = $holder instanceof Panel ? $this->nesting($holder, $holders, $by_id, $resolved, $walking) : 0;
 
-    foreach ($field->condition()->fields() as $id) {
+    // A rule the block decides for itself names no question, so nothing can be
+    // said about what it waits on and it sits where its section's rows do.
+    if (!$block->condition() instanceof ConditionInterface) {
+      return $resolved[$at] = $base;
+    }
+
+    $deepest = $base;
+
+    foreach ($block->condition()->fields() as $id) {
       if (isset($by_id[$id])) {
-        $deepest = max($deepest, $this->nesting($by_id[$id], $by_id, $resolved, $walking));
+        $deepest = max($deepest, $this->nesting($by_id[$id], $holders, $by_id, $resolved, $walking));
       }
     }
 
-    return $resolved[$field->id()] = $deepest + 1;
+    return $resolved[$at] = $deepest + 1;
   }
 
   /**

@@ -9,6 +9,7 @@ use DrevOps\Tui\Block\Capability\DependCapableInterface;
 use DrevOps\Tui\Block\Capability\DependCapableTrait;
 use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableTrait;
+use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Element\ProgressElementsInterface;
 use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Primitive\ProgressReporter;
@@ -237,18 +238,19 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
    */
   public function render(ThemeInterface $theme): string {
     $elements = $this->elements($theme, ProgressElementsInterface::class, 'progress');
+    $gutter = $this->elements($theme, ChromeElementsInterface::class, 'a conditional row')->chromeIndent($this->depth);
     $caption = $elements->progressCaption($this->caption);
     // The caption names the work and stays put; the label is what that work is
     // doing right now, so it trails the indicator and changes under it.
     $label = $this->label === '' ? '' : ' ' . $elements->progressCaption($this->label);
 
     if ($this->total === NULL) {
-      return $elements->progressSpinner($this->frame) . ' ' . $caption . $label;
+      return $this->stepped($elements->progressSpinner($this->frame) . ' ' . $caption . $label, $gutter);
     }
 
     $filled = (int) round($this->current / $this->total * self::TRACK_WIDTH);
 
-    return $caption . ' ' . $elements->progressTrack($filled, self::TRACK_WIDTH) . ' ' . $elements->progressCount($this->current, $this->total) . $label;
+    return $this->stepped($caption . ' ' . $elements->progressTrack($filled, self::TRACK_WIDTH) . ' ' . $elements->progressCount($this->current, $this->total) . $label, $gutter);
   }
 
 }

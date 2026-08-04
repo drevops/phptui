@@ -208,6 +208,21 @@ final class KeyRouter {
   }
 
   /**
+   * Come back out of every section the answers have taken off the form.
+   *
+   * A section is somewhere you are rather than something you are looking at, so
+   * one that stops being there while you are inside it cannot simply stop being
+   * drawn: there would be nowhere left to stand. The way out is the way you
+   * came in, as far out as it takes to reach a section that is still there -
+   * and never past the outermost one, which is not somewhere you came from.
+   */
+  public function resurface(): void {
+    while ($this->panel->isHidden() && $this->trail !== []) {
+      $this->ascend();
+    }
+  }
+
+  /**
    * Send a key where it belongs.
    *
    * @param \DrevOps\Tui\Input\Key $key

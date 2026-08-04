@@ -13,6 +13,7 @@ use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Condition\Condition;
+use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Screen\Axis;
@@ -66,6 +67,83 @@ final class CollectorTest extends TestCase {
     );
 
     $this->assertSame(['organic' => TRUE], (new Collector())->collect($panel));
+  }
+
+  public function testSectionItsConditionHidesIsNeverAskedForEither(): void {
+    $panel = $this->panel(
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(FALSE),
+      $this->panel((new Field('certifier', 'Certifier'))->default('Soil Board'))->when(new Condition('organic', eq: TRUE)),
+      // Written after the section, so a rule that reached past what it holds
+      // would take this question with it.
+      (new Field('quantity', 'Quantity', FieldType::Number))->default(6),
+    );
+
+    // Nothing the section holds is collected while it is not there, and every
+    // question in it is asked again the moment the answers bring it back.
+    $this->assertSame(['organic' => FALSE, 'quantity' => 6], (new Collector())->collect($panel));
+    $this->assertSame(['organic' => TRUE, 'quantity' => 6, 'certifier' => 'Soil Board'], (new Collector())->collect($panel, ['organic' => TRUE]));
+  }
+
+  public function testQuestionInsideSectionWaitsOnBothRules(): void {
+    $panel = $this->panel(
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(TRUE),
+      (new Field('exported', 'Exported?', FieldType::Confirm))->default(FALSE),
+      $this->panel(
+        (new Field('certifier', 'Certifier'))->default('Soil Board'),
+        (new Field('customs', 'Customs code'))->default('CT-14')->when(new Condition('exported', eq: TRUE)),
+      )->when(new Condition('organic', eq: TRUE)),
+    );
+
+    $collected = (new Collector())->collect($panel, ['exported' => TRUE]);
+
+    // The section is there, so its unconditional question is asked and the one
+    // carrying a rule of its own is asked once that rule holds too.
+    $this->assertSame(['organic' => TRUE, 'exported' => TRUE, 'certifier' => 'Soil Board', 'customs' => 'CT-14'], $collected);
+
+    // With the section gone neither is asked, however its own rule reads.
+    $this->assertSame(['organic' => FALSE, 'exported' => TRUE], (new Collector())->collect($panel, ['organic' => FALSE, 'exported' => TRUE]));
+  }
+
+  public function testSectionInsideSectionGoesWithTheOneAroundIt(): void {
+    $panel = $this->panel(
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(FALSE),
+      $this->panel(
+        (new Field('certifier', 'Certifier'))->default('Soil Board'),
+        $this->panel((new Field('renewal', 'Renewal date'))->default('2026-07-15')),
+      )->when(new Condition('organic', eq: TRUE)),
+    );
+
+    // The inner section carries no rule of its own, so what decides it is the
+    // one it sits in.
+    $this->assertSame(['organic' => FALSE], (new Collector())->collect($panel));
+    $this->assertSame(['organic' => TRUE, 'certifier' => 'Soil Board', 'renewal' => '2026-07-15'], (new Collector())->collect($panel, ['organic' => TRUE]));
+  }
+
+  public function testValueSuppliedForSectionThatIsNotThereIsNeverRefused(): void {
+    $panel = $this->panel(
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(FALSE),
+      $this->panel(
+        (new Field('weight', 'Weight', FieldType::Number))
+          ->validate(static fn(mixed $value): ?string => is_int($value) && $value >= 200 ? NULL : 'Enter at least 200.'),
+      )->when(new Condition('organic', eq: TRUE)),
+    );
+
+    // Not collected, not refused, not in the result: a question nobody asked
+    // cannot have been answered wrongly.
+    $this->assertSame(['organic' => FALSE], (new Collector())->collect($panel, ['weight' => 10]));
+  }
+
+  public function testSectionComesBackAsTheAnswersItWaitsOnSettle(): void {
+    $panel = $this->panel(
+      (new Field('category', 'Category'))->default('vegetable'),
+      (new Field('grade', 'Grade'))->derive(new Derive('{{category}}', 'upper')),
+      $this->panel((new Field('heat', 'Heat level'))->default('mild'))->when(new Condition('grade', eq: 'VEGETABLE')),
+    );
+
+    // The answer the section waits on is computed rather than given, so the
+    // section enters the settling on a later pass than the fields do.
+    $this->assertSame(['category' => 'vegetable', 'grade' => 'VEGETABLE', 'heat' => 'mild'], (new Collector())->collect($panel));
+    $this->assertSame(['category' => 'fruit', 'grade' => 'FRUIT'], (new Collector())->collect($panel, ['category' => 'fruit']));
   }
 
   public function testSuppliedValuesAreOfferedRatherThanTakenOnTrust(): void {

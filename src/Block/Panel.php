@@ -7,10 +7,12 @@ namespace DrevOps\Tui\Block;
 use DrevOps\Tui\Block\Capability\BindCapableInterface;
 use DrevOps\Tui\Block\Capability\BindCapableTrait;
 use DrevOps\Tui\Block\Capability\DependCapableInterface;
+use DrevOps\Tui\Block\Capability\DependCapableTrait;
 use DrevOps\Tui\Block\Capability\DescendCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableTrait;
 use DrevOps\Tui\Block\Capability\OverlayCapableInterface;
+use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Block\Element\PanelElementsInterface;
 use DrevOps\Tui\Input\Action;
@@ -37,11 +39,17 @@ use DrevOps\Tui\Translation\Translator;
  * Nested inside another panel it draws a row you select. Once entered it draws
  * nothing of its own, because its blocks do.
  *
+ * A whole section can come and go with the answers, exactly as one row can: the
+ * condition decides whether the section is there at all, and a section that is
+ * not there takes everything it holds with it - so a question inside one is
+ * never asked, drawn or navigated into.
+ *
  * @package DrevOps\Tui\Block
  */
-final class Panel extends AbstractBlock implements BindCapableInterface, DescendCapableInterface, FocusCapableInterface, OverlayCapableInterface {
+final class Panel extends AbstractBlock implements BindCapableInterface, DependCapableInterface, DescendCapableInterface, FocusCapableInterface, OverlayCapableInterface {
 
   use BindCapableTrait;
+  use DependCapableTrait;
   use FocusCapableTrait;
 
   /**
@@ -491,7 +499,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
       $lines[] = self::INDENT . $elements->panelSummary($summary);
     }
 
-    return implode("\n", $lines);
+    return $this->stepped(implode("\n", $lines), $this->gutter($theme));
   }
 
   /**
@@ -532,7 +540,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
       }
     }
 
-    return implode("\n", $lines);
+    return $this->stepped(implode("\n", $lines), $this->gutter($theme));
   }
 
   /**
@@ -568,6 +576,19 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
     }
 
     return $this->elements($theme, PanelElementsInterface::class, 'a panel');
+  }
+
+  /**
+   * The gutter this panel's rows are laid out after.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   *
+   * @return string
+   *   The gutter, empty when nothing steps the section in.
+   */
+  protected function gutter(ThemeInterface $theme): string {
+    return $this->elements($theme, ChromeElementsInterface::class, 'a conditional section')->chromeIndent($this->depth);
   }
 
   /**

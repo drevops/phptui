@@ -15,6 +15,7 @@ use DrevOps\Tui\Block\Capability\DependCapableTrait;
 use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableTrait;
 use DrevOps\Tui\Block\Capability\RejectCapableInterface;
+use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Element\FieldElementsInterface;
 use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Derive\Derive;
@@ -158,11 +159,6 @@ final class Field extends AbstractBlock implements
    * The word for how the answer came to be, drawn beside it.
    */
   protected string $badge = '';
-
-  /**
-   * How many answers had to be given before this one is asked at all.
-   */
-  protected int $depth = 0;
 
   /**
    * Whether an answer is owed.
@@ -1609,37 +1605,6 @@ final class Field extends AbstractBlock implements
   }
 
   /**
-   * Say how many answers had to be given before this one is asked at all.
-   *
-   * A rule may name a field on any panel, so how deep a question sits is a
-   * fact about the whole form rather than about the field or the panel holding
-   * it: it can only be worked out once the tree is finished, and it is written
-   * back here.
-   *
-   * @param int $depth
-   *   The links in the chain of rules leading to this field; zero for a
-   *   question that is always asked.
-   *
-   * @return static
-   *   The field.
-   */
-  public function nest(int $depth): static {
-    $this->depth = max(0, $depth);
-
-    return $this;
-  }
-
-  /**
-   * How many answers had to be given before this one is asked at all.
-   *
-   * @return int
-   *   The links in the chain, zero for a question that is always asked.
-   */
-  public function nesting(): int {
-    return $this->depth;
-  }
-
-  /**
    * Complete what is being typed from a set of candidates.
    *
    * @param list<string>|\Closure $source
@@ -1903,9 +1868,10 @@ final class Field extends AbstractBlock implements
     // The gutter leads the label rather than each row, which is what makes it
     // the single source of the indent: every row the field contributes lines
     // up under a label that already carries it.
+    $gutter = $this->elements($theme, ChromeElementsInterface::class, 'a conditional row')->chromeIndent($this->depth);
     // The question is as much a string a reader reads as the chrome around it,
     // so it resolves through the active language wherever it is drawn.
-    $label = $elements->fieldIndent($this->depth) . $elements->fieldSelector($this->isFocused()) . ' ' . $elements->fieldLabel(Translator::t($this->label)) . $marker;
+    $label = $gutter . $elements->fieldSelector($this->isFocused()) . ' ' . $elements->fieldLabel(Translator::t($this->label)) . $marker;
 
     return $this->mode === Mode::View
       ? $this->settledLines($theme, $elements, $label)

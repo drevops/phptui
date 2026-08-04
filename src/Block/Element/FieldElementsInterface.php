@@ -35,23 +35,6 @@ interface FieldElementsInterface {
   public function fieldSelector(bool $selected): string;
 
   /**
-   * The blank gutter a field's rows are laid out after.
-   *
-   * A question asked only once an earlier one is answered steps in from the
-   * questions that decide it, so a panel reads as a hierarchy rather than as a
-   * flat list. Every row the field contributes is laid out after this same
-   * gutter, and a theme that would rather draw a flat list answers with none.
-   *
-   * @param int $depth
-   *   How many answers had to be given before this one is asked at all; zero
-   *   for a question that is always asked.
-   *
-   * @return string
-   *   The gutter, empty when nothing steps in.
-   */
-  public function fieldIndent(int $depth): string;
-
-  /**
    * Style a field's name.
    *
    * @param string $text

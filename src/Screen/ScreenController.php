@@ -1198,6 +1198,10 @@ class ScreenController {
     $this->active = $active;
 
     $this->settled();
+    // In that order: what is there is worked out first, then the cursor is put
+    // somewhere that still exists - out of a section that has just gone, and
+    // then onto a row of whatever section it lands in.
+    $this->router->resurface();
     $this->router->reframe();
   }
 
@@ -1276,15 +1280,18 @@ class ScreenController {
    *
    * Which rows are there at all and how each answer came to be are both facts
    * about the answers rather than about any block, so a block is told them
-   * whenever they are worked out again.
+   * whenever they are worked out again. A section carries what it holds, so a
+   * block is told what the answers say about it and about every section above
+   * it, rather than about its own rule alone.
    */
   protected function settled(): void {
     $answers = $this->answered();
+    $within = Tree::within($this->panel, $answers);
 
     foreach (Tree::panels($this->panel) as $panel) {
       foreach ($panel->blocks() as $block) {
         if ($block instanceof DependCapableInterface) {
-          $block->isActive($answers) ? $block->reveal() : $block->hide();
+          ($within[spl_object_id($block)] ?? TRUE) ? $block->reveal() : $block->hide();
         }
       }
     }

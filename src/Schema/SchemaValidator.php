@@ -14,10 +14,11 @@ use DrevOps\Tui\Translation\Translator;
  * Validates an answer set against the configuration.
  *
  * Checks value types, option membership and required questions, and skips
- * questions whose `when` condition is not met by the answer set. A question
- * whose options follow the answers is checked against the set those very
- * answers resolve to. Returns a list of actionable error messages (empty when
- * the set is valid).
+ * questions the answer set leaves off the form - the ones whose own `when`
+ * condition it does not meet, and the ones inside a section it takes away. A
+ * question whose options follow the answers is checked against the set those
+ * very answers resolve to. Returns a list of actionable error messages (empty
+ * when the set is valid).
  *
  * @package DrevOps\Tui\Schema
  */
@@ -52,6 +53,7 @@ class SchemaValidator {
     // shows is still an id the form knows, so a stray value for one is ignored
     // rather than reported as a question nobody asked.
     $known = array_fill_keys(Tree::ids($this->root), TRUE);
+    $within = Tree::within($this->root, $answers);
 
     foreach (Tree::fields($this->root) as $field) {
       // A display-only field (a note or a progress row) carries no answer, so
@@ -60,7 +62,7 @@ class SchemaValidator {
         continue;
       }
 
-      if (!$field->isActive($answers)) {
+      if (!($within[spl_object_id($field)] ?? TRUE)) {
         continue;
       }
 

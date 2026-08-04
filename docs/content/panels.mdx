@@ -61,6 +61,30 @@ $form = Form::create('Basket settings')
   <ThemedImage sources={{light: useBaseUrl('/nested-panels-light-animated.svg'), dark: useBaseUrl('/nested-panels-dark-animated.svg')}} alt="Nested panels demo" width="100%" />
 </p>
 
+## Conditional panels
+
+A panel comes and goes on an earlier answer exactly as a field does. Declare `->when()` inside the panel's own callback and the whole section hangs off the rule - not one row at a time:
+
+```php
+$form = Form::create('Produce order')
+  ->panel('basket', 'Basket', function (PanelBuilder $p): void {
+    $p->confirm('organic', 'Organic only?')->default(FALSE);
+
+    // The whole section appears with the answer, and leaves with it.
+    $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
+      $sp->when(new Condition('organic', eq: TRUE));
+      $sp->text('certifier', 'Certifier')->default('Soil Board');
+      $sp->calendar('renewed_on', 'Renewed on')->default('2026-07-15');
+    });
+  });
+```
+
+A section that isn't there takes everything it holds with it. Its row isn't drawn and the cursor passes over it, its questions collect nothing and refuse nothing, and none of them reach the answers - so `certifier` is absent from the result rather than present and empty. The moment the condition holds, the row is back and every question inside it is asked again, carrying whatever value it settled on. A question inside the section that carries a rule of its own waits on both, and a section inside a section goes with the one around it.
+
+Going into a section whose condition then turns false - an answer inside it flips a [fix-up](/configuration#conditional-fields), say - puts you back where the section was. A panel is somewhere you are rather than something you're looking at, so it can't merely stop being drawn while you're standing in it: the TUI leaves it the way <kbd>Esc</kbd> would, as far out as it takes to reach a section that's still there.
+
+The same rule decides a headless collection, which is the point of putting it on the panel: one declaration says which questions a form asks, whether or not anything is drawn.
+
 ## Modal panels
 
 A sub-panel usually drills in and replaces the view. Mark a panel `->modal()` and it opens as a **centered dialog over the dimmed parent** instead - the better fit for a focused aside or a decision that shouldn't lose the reader's place. The dialog carries its own **configurable submit/cancel buttons** (mandatory chrome - a modal always shows them), collects whatever fields it declares - or just shows a message - and blocks the rest of the form while it's open. **Save** keeps the edits made inside the dialog; **Discard**, <kbd>Escape</kbd> or <kbd>q</kbd> puts every answer back exactly as it was when the dialog opened. One rule: a modal can't hold sub-panels of its own.

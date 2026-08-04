@@ -61,17 +61,28 @@ $p->text('heat_level', 'Heat level')->default('mild')->when(new Condition('categ
 $p->confirm('warning_label', 'Add a heat warning?')->when(Condition::all(new Condition('category', eq: 'vegetable'), new Condition('heat_level', ne: 'mild')));
 ```
 
+The same rule gates a whole panel, a markup block and a progress row - anything that can come and go carries `->when()`. A panel declares it inside its own callback, and takes everything it holds with it: while the condition doesn't hold, its questions aren't asked, aren't drawn and aren't in the answers, and a question inside it that carries a rule of its own waits on both.
+
+```php
+$p->panel('heat', 'Heat', function (PanelBuilder $sp): void {
+  $sp->when(new Condition('category', eq: 'vegetable'));
+  $sp->select('heat_level', 'Heat level')->default('mild')->options(['mild' => 'Mild', 'hot' => 'Hot']);
+});
+```
+
 A form-level `->fixup(new Fixup(set: ..., to: ..., when: ...))` reconciles dependent answers on every settle pass - so an answer that stops making sense after another change is corrected instead of leaking through.
 
 ### Showing the dependency
 
-A conditional field renders flush with every other field, so nothing on screen says which answer brought it into view. The `indent_conditional` theme option steps each one in from the fields that decide it - one step per condition in the chain, so a field shown behind three conditions sits three steps in and an unconditional field stays at the frame edge. It is off by default:
+A conditional block renders flush with every other one, so nothing on screen says which answer brought it into view. The `indent_conditional` theme option steps each one in from the answers that decide it - one step per condition in the chain, so a block shown behind three conditions sits three steps in and an unconditional one stays at the frame edge. It is off by default:
 
 ```php
 $tui = (new Tui($form))->theme('default', ['indent_conditional' => TRUE]);
 ```
 
-The steps follow the rules rather than the declaration order: a rule naming several fields takes the deepest of them, and a field whose rule names another conditional field sits one step further in than that one. A rule that decides for itself - a closure rather than a `Condition` - names no field, so nothing can be said about what it waits on and its row sits flush like an unconditional one.
+Every kind of block steps in on the same gutter - a field, a markup block, a progress row and a panel alike - so a chain that mixes them reads as one hierarchy rather than as a row list with notes floating beside it.
+
+The steps follow the rules rather than the declaration order: a rule naming several fields takes the deepest of them, and a field whose rule names another conditional field sits one step further in than that one. A panel's own rule is one step counted once by everything the panel holds, so an unconditional field inside a conditional panel sits one step in and a conditional one inside it sits two. A rule that decides for itself - a closure rather than a `Condition` - names no field, so nothing can be said about what it waits on and its row sits where an unconditional one in the same panel does.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/conditional-indent-light-animated.svg'), dark: useBaseUrl('/conditional-indent-dark-animated.svg')}} alt="One answer opening a chain of conditional fields, each stepped in from the field that decides it" width="100%" />

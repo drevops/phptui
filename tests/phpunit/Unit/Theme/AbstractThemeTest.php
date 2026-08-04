@@ -111,7 +111,7 @@ final class AbstractThemeTest extends TestCase {
 
   public function testFloorLaysEveryRowOutAgainstTheSameGutter(): void {
     // A theme that would rather draw a flat list answers with no gutter at all.
-    $this->assertSame('', (new FloorTheme())->fieldIndent(2));
+    $this->assertSame('', (new FloorTheme())->chromeIndent(2));
   }
 
   public function testGuidanceOpensWithMarkNothingCanStrip(): void {

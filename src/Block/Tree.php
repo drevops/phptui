@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
+use DrevOps\Tui\Block\Capability\DependCapableInterface;
+
 /**
  * A declared block tree, read as a flat list.
  *
@@ -56,6 +58,45 @@ final class Tree {
     }
 
     return $panels;
+  }
+
+  /**
+   * Which blocks a panel and the panels beneath it leave on the form.
+   *
+   * A block decides for itself whether it is there, but a section carries what
+   * it holds: a block inside a section the answers took off the form is not
+   * there either, however its own rule reads. Composing the two is a question
+   * about the whole tree rather than about any one block, which is why it is
+   * answered here rather than by whoever asks.
+   *
+   * Keyed by object rather than by id, because a section and a row it holds may
+   * go by the same name and only one set of ids is ever checked for collisions.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel to walk.
+   * @param array<string,mixed> $answers
+   *   The answers every condition is measured against.
+   * @param bool $inside
+   *   Whether the sections holding this one are all there.
+   *
+   * @return array<int,bool>
+   *   TRUE for each block that is there, keyed by its object id.
+   */
+  public static function within(Panel $panel, array $answers, bool $inside = TRUE): array {
+    $there = [];
+
+    foreach ($panel->blocks() as $block) {
+      $active = $inside && (!$block instanceof DependCapableInterface || $block->isActive($answers));
+      $there[spl_object_id($block)] = $active;
+
+      if ($block instanceof Panel) {
+        foreach (self::within($block, $answers, $active) as $id => $held) {
+          $there[$id] = $held;
+        }
+      }
+    }
+
+    return $there;
   }
 
   /**

@@ -79,6 +79,13 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
   /**
    * {@inheritdoc}
    */
+  public function chromeIndent(int $depth): string {
+    return '';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function breadcrumbLabel(string $text): string {
     return $text;
   }
@@ -116,13 +123,6 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
    */
   public function fieldSelector(bool $selected): string {
     return $selected ? '>' : ' ';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function fieldIndent(int $depth): string {
-    return '';
   }
 
   /**

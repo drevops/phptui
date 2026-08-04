@@ -90,7 +90,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   protected const int PROGRESS_WIDTH = 24;
 
   /**
-   * The columns one condition of nesting indents a field by.
+   * The columns one condition of nesting indents a block by.
    *
    * Matches the gutter an unbordered note card already sits in, so an indented
    * row and a card line up on the same steps.
@@ -123,7 +123,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   protected bool $markdown;
 
   /**
-   * Whether conditional fields are indented, from "indent_conditional".
+   * Whether conditional blocks are indented, from "indent_conditional".
    */
   protected bool $indentConditional;
 
@@ -722,6 +722,18 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
+  public function chromeIndent(int $depth): string {
+    if (!$this->indentConditional) {
+      return '';
+    }
+
+    return str_repeat(' ', self::CONDITIONAL_INDENT * max(0, $depth));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
   public function breadcrumbLabel(string $text): string {
     return $this->paint(Sgr::of(Sgr::Grey), $text);
   }
@@ -775,18 +787,6 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
     }
 
     return $this->highlight($glyph);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  #[\Override]
-  public function fieldIndent(int $depth): string {
-    if (!$this->indentConditional) {
-      return '';
-    }
-
-    return str_repeat(' ', self::CONDITIONAL_INDENT * max(0, $depth));
   }
 
   /**

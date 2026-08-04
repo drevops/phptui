@@ -238,15 +238,24 @@ final class ScreenRenderer {
     $panels = [];
     $above = [];
     $below = [];
+    $windowed = FALSE;
 
     foreach ($blocks as $block) {
       if ($block instanceof Panel) {
-        $panels[] = $block;
+        // A window is how a section draws where its siblings sit beside it, so
+        // one the answers took off the form is dealt none and the row it was
+        // in closes up. Where the rows around it go is decided by where it was
+        // written rather than by whether it is there.
+        $windowed = TRUE;
+
+        if (!$block->isHidden()) {
+          $panels[] = $block;
+        }
 
         continue;
       }
 
-      if ($panels === []) {
+      if (!$windowed) {
         $above[] = $block;
 
         continue;
