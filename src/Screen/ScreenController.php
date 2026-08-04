@@ -46,7 +46,6 @@ use DrevOps\Tui\Screen\Layout\DefaultLayout;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\Capability\DimCapableInterface;
 use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
-use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 
@@ -628,7 +627,7 @@ class ScreenController {
    */
   protected function frame(Terminal $terminal): string {
     $rows = $this->rows($terminal);
-    $columns = $this->columns($terminal);
+    $columns = $this->columns();
     $helping = $this->router->helping();
 
     // Both are read out of the router rather than written beside it, so the
@@ -662,26 +661,18 @@ class ScreenController {
   /**
    * The columns a frame is laid out to.
    *
-   * A row sized past the terminal hard-wraps onto the next line and corrupts
-   * the layout below it, so a frame is never laid out wider than there is room
-   * for - nor wider than the width a panel reads well at, unless it was asked
-   * to take the whole terminal.
-   *
-   * @param \DrevOps\Tui\Render\Terminal $terminal
-   *   The terminal.
+   * The theme was built for a frame of a stated width and lays every row out
+   * to it - a right-aligned badge, a rule, a wrapped description. Drawing that
+   * frame to any other width puts the rows and the edge they were aligned
+   * against in different places, so the width is read off the theme rather
+   * than worked out a second time here; what the theme states is the room
+   * inside the frame, and the border it asks for is drawn around that.
    *
    * @return int
    *   The columns.
    */
-  protected function columns(Terminal $terminal): int {
-    $width = $terminal->width() > 0 ? $terminal->width() : DefaultTheme::DEFAULT_WIDTH;
-    $occupancy = $this->occupancy();
-
-    if ($occupancy instanceof OccupyCapableInterface && $occupancy->isFullscreen()) {
-      return $occupancy->maxWidth() > 0 ? min($width, $occupancy->maxWidth()) : $width;
-    }
-
-    return min(DefaultTheme::DEFAULT_WIDTH, $width);
+  protected function columns(): int {
+    return $this->theme->contentWidth() + ($this->border === Border::None ? 0 : ScreenRenderer::CHROME);
   }
 
   /**
@@ -1560,7 +1551,7 @@ class ScreenController {
     }
 
     $stated = $occupancy->minWidth();
-    $needed = $stated > 0 ? $stated : $this->widest() + ($this->border === Border::None ? 0 : 2 * self::FRAME_RULES);
+    $needed = $stated > 0 ? $stated : $this->widest() + ($this->border === Border::None ? 0 : ScreenRenderer::CHROME);
     $widest = $occupancy->maxWidth();
 
     // A cap is a consumer's word that a narrower frame reads well enough, and

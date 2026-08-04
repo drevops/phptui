@@ -34,8 +34,8 @@ use DrevOps\Tui\Field\Capability\SelectionBoundedTrait;
  * directory; Tab reveals or hides dot-entries. In multiple mode Space toggles
  * the highlighted selectable entry and selections accumulate across
  * directories, so the value is the chosen path (single) or the list of chosen
- * paths (multiple). An accepted pick that breaks a size limit (or, headlessly,
- * any limit) is rejected inline.
+ * paths (multiple). The constraints gate what may be browsed onto and picked;
+ * refusing a pick that breaks one belongs to the block holding the answer.
  *
  * @package DrevOps\Tui\Field
  */
@@ -327,32 +327,6 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
 
     $this->cwd = $this->parentOf($primary);
     $this->highlight($this->baseName($primary));
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * Reject a pick that breaks a type, extension or size limit before the value
-   * is accepted, then defer to the selection-count check and the base accept so
-   * the three inline errors never stack.
-   */
-  #[\Override]
-  protected function accept(mixed $value): bool {
-    $violation = $this->constraints->violation($value);
-    if ($violation !== NULL) {
-      $this->error = Translator::t('Choose @constraint.', ['@constraint' => $violation]);
-
-      return FALSE;
-    }
-
-    $selection_error = $this->selectionBoundsError($value);
-    if ($selection_error !== NULL) {
-      $this->error = $selection_error;
-
-      return FALSE;
-    }
-
-    return parent::accept($value);
   }
 
   /**

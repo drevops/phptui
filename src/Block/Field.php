@@ -28,6 +28,7 @@ use DrevOps\Tui\Input\ScopedKeyMap;
 use DrevOps\Tui\Model\DateBounds;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FilePickerConstraints;
+use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Model\OptionKind;
@@ -442,7 +443,10 @@ final class Field extends AbstractBlock implements
 
     if (!$this->accept($offered)) {
       $this->draft = $offered;
-      $this->editor = $this->editorFor($offered);
+      // Opened again on what was offered, so the reader carries on from it
+      // rather than from an answer they have already moved past, and told the
+      // reason so it is read where the answer is being given.
+      $this->editor = $this->editorFor($offered)->refused((string) $this->refusal);
     }
 
     return TRUE;
@@ -825,7 +829,7 @@ final class Field extends AbstractBlock implements
    * @return static
    *   The field.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\Model\FormException
    *   When the name could not be set portably from a shell.
    */
   public function env(string $name): static {
@@ -857,7 +861,7 @@ final class Field extends AbstractBlock implements
    * @return static
    *   The field.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\Model\FormException
    *   When a name could not be set portably from a shell, or an alias repeats
    *   a name it would never be reached behind.
    */
@@ -869,7 +873,7 @@ final class Field extends AbstractBlock implements
       $this->assertEnvName($alias);
 
       if ($alias === $this->envName || isset($seen[$alias])) {
-        throw new \InvalidArgumentException(sprintf('Field "%s" declares the environment variable "%s" twice; only the first would ever be reached, so declare it once.', $this->id, $alias));
+        throw new FormException(sprintf('Field "%s" declares the environment variable "%s" twice; only the first would ever be reached, so declare it once.', $this->id, $alias));
       }
 
       $seen[$alias] = TRUE;
@@ -1126,12 +1130,12 @@ final class Field extends AbstractBlock implements
    * @return static
    *   The field.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\Model\FormException
    *   When the length is below one character.
    */
   public function minQuery(int $length): static {
     if ($length < 1) {
-      throw new \InvalidArgumentException(sprintf('Field "%s" declares a minimum query length of %d; it must be at least one character.', $this->id, $length));
+      throw new FormException(sprintf('Field "%s" declares a minimum query length of %d; it must be at least one character.', $this->id, $length));
     }
 
     $this->queryMinLength = $length;
@@ -1430,13 +1434,13 @@ final class Field extends AbstractBlock implements
    * @return static
    *   The field.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\Model\FormException
    *   When a caption names a point outside the scale.
    */
   public function captions(array $captions): static {
     foreach (array_keys($captions) as $point) {
       if ($this->bounds instanceof NumberBounds && !$this->bounds->contains($point)) {
-        throw new \InvalidArgumentException(sprintf('Field "%s" captions the point %d, which is outside its scale of %s.', $this->id, $point, $this->bounds->describe()));
+        throw new FormException(sprintf('Field "%s" captions the point %d, which is outside its scale of %s.', $this->id, $point, $this->bounds->describe()));
       }
     }
 
@@ -1696,12 +1700,12 @@ final class Field extends AbstractBlock implements
    * @return static
    *   The field.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\Model\FormException
    *   When the size is below one row.
    */
   public function paginate(int $size): static {
     if ($size < 1) {
-      throw new \InvalidArgumentException(sprintf('Field "%s" declares a page of %d rows; a page shows at least one.', $this->id, $size));
+      throw new FormException(sprintf('Field "%s" declares a page of %d rows; a page shows at least one.', $this->id, $size));
     }
 
     $this->pageSize = $size;
@@ -1952,10 +1956,10 @@ final class Field extends AbstractBlock implements
       return $missing;
     }
 
-    $outside = $this->boundsViolation($value) ?? $this->pickerViolation($value);
+    $outside = $this->limitRefusal($value);
 
     if ($outside !== NULL) {
-      return Translator::t('must be @constraint.', ['@constraint' => $outside]);
+      return $outside;
     }
 
     // The shape is checked before the field's own validator, which reads the
@@ -1972,6 +1976,45 @@ final class Field extends AbstractBlock implements
     // A validator that answers with nothing has not said why, and a refusal
     // nobody can read is no refusal at all.
     return is_string($refusal) && $refusal !== '' ? $refusal : $this->entryError($value);
+  }
+
+  /**
+   * The reason an offered value misses a declared limit, or NULL when it fits.
+   *
+   * Each limit asks for what it wants in the voice of the answer it governs -
+   * a number is entered, a count is selected, a path is chosen - so what the
+   * reader is told to do next is what they were doing when it was refused.
+   *
+   * @param mixed $value
+   *   The offered value.
+   *
+   * @return string|null
+   *   The reason, or NULL when every declared limit is met.
+   */
+  protected function limitRefusal(mixed $value): ?string {
+    $number = $this->bounds?->violation($value);
+
+    if ($number !== NULL) {
+      return Translator::t('Enter a number @constraint.', ['@constraint' => $number]);
+    }
+
+    $date = $this->dateBounds?->violation($value);
+
+    if ($date !== NULL) {
+      return Translator::t('must be @constraint.', ['@constraint' => $date]);
+    }
+
+    // Ahead of the count, so a pick that could never have been made is named
+    // before the number of picks is counted.
+    $path = $this->pickerViolation($value);
+
+    if ($path !== NULL) {
+      return Translator::t('Choose @constraint.', ['@constraint' => $path]);
+    }
+
+    $count = $this->selectionBounds?->violation($value);
+
+    return $count === NULL ? NULL : Translator::t('Select @constraint.', ['@constraint' => $count]);
   }
 
   /**
@@ -2113,12 +2156,12 @@ final class Field extends AbstractBlock implements
    * @param string $name
    *   The declared name.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\Model\FormException
    *   When the name could not be set portably from a shell.
    */
   protected function assertEnvName(string $name): void {
     if (preg_match(self::ENV_NAME_PATTERN, $name) !== 1) {
-      throw new \InvalidArgumentException(sprintf('Field "%s" declares the environment variable name "%s", which is not portable; use letters, digits and underscores, starting with a letter or underscore.', $this->id, $name));
+      throw new FormException(sprintf('Field "%s" declares the environment variable name "%s", which is not portable; use letters, digits and underscores, starting with a letter or underscore.', $this->id, $name));
     }
   }
 
@@ -2245,16 +2288,35 @@ final class Field extends AbstractBlock implements
       $lines[] = $indent . $line;
     }
 
-    // The two share one line and never appear together: a constraint says what
-    // is acceptable, and an error replaces it the instant something is not.
-    if ($this->refusal !== NULL) {
-      $lines[] = $indent . $elements->fieldError($this->refusal);
-    }
-    elseif ($this->constraint !== NULL) {
-      $lines[] = $indent . $elements->fieldConstraint($this->constraint);
+    $trailer = $this->trailer($elements);
+
+    if ($trailer !== '') {
+      $lines[] = $indent . $trailer;
     }
 
     return implode("\n", $lines);
+  }
+
+  /**
+   * The line closing an open row: why it was refused, or what it expects.
+   *
+   * The two never appear together: a constraint says what is acceptable, and a
+   * reason replaces it the instant something is not. An editor that was handed
+   * the reason already shows it where its own expectation would have gone, so
+   * nothing is said twice.
+   *
+   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   *   The theme, narrowed to the elements a field draws with.
+   *
+   * @return string
+   *   The line, empty when there is nothing left to say.
+   */
+  protected function trailer(FieldElementsInterface $elements): string {
+    if ($this->refusal !== NULL) {
+      return $this->editor?->error() === NULL ? $elements->fieldError($this->refusal) : '';
+    }
+
+    return $this->constraint === NULL ? '' : $elements->fieldConstraint($this->constraint);
   }
 
   /**

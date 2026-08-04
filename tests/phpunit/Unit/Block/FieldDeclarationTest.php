@@ -27,7 +27,7 @@ use PHPUnit\Framework\TestCase;
 final class FieldDeclarationTest extends TestCase {
 
   public function testTreeHoldsEveryPanelAndFieldItWasDeclaredWith(): void {
-    $root = Form::create('Demo', 'Acme')
+    $root = Form::create('Demo')
       ->panel('general', 'General', function (PanelBuilder $p): void {
         $p->text('name')->default('Acme')->required();
         $p->text('email');
@@ -357,7 +357,6 @@ final class FieldDeclarationTest extends TestCase {
     $builder = Form::create('T');
     $root = $builder->root();
 
-    $this->assertSame('', $builder->currentSubject());
     $this->assertSame('', $builder->currentEnvPrefix());
     $this->assertSame([], $builder->currentFixups());
     // Form chrome defaults (the global TUI runtime lives on the Tui facade).

@@ -84,10 +84,8 @@ final class Form {
    *
    * @param string $title
    *   The application title.
-   * @param string $subject
-   *   The subject being configured.
    */
-  protected function __construct(protected string $title, protected string $subject) {
+  protected function __construct(protected string $title) {
   }
 
   /**
@@ -95,14 +93,12 @@ final class Form {
    *
    * @param string $title
    *   The application title.
-   * @param string $subject
-   *   The subject being configured.
    *
    * @return self
    *   The builder.
    */
-  public static function create(string $title, string $subject = ''): self {
-    return new self($title, $subject);
+  public static function create(string $title): self {
+    return new self($title);
   }
 
   /**
@@ -132,8 +128,13 @@ final class Form {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the form's tree has already been built.
    */
   public function buttons(bool $show, string $submit_label = 'Submit', string $cancel_label = 'Cancel'): self {
+    $this->assertUnbuilt('its buttons');
+
     $this->buttons = $show;
     $this->submitLabel = $submit_label;
     $this->cancelLabel = $cancel_label;
@@ -183,8 +184,13 @@ final class Form {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the form's tree has already been built.
    */
   public function panel(string $id, string $title, \Closure $build): self {
+    $this->assertUnbuilt('a panel');
+
     $panel = new PanelBuilder($id, $title);
     $build($panel);
     $this->panels[] = $panel;
@@ -205,8 +211,13 @@ final class Form {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the form's tree has already been built.
    */
   public function layout(int ...$rows): self {
+    $this->assertUnbuilt('a layout');
+
     $this->layout = array_values($rows);
 
     return $this;
@@ -257,16 +268,6 @@ final class Form {
   }
 
   /**
-   * The subject this form configures.
-   *
-   * @return string
-   *   The subject, empty when the form names none.
-   */
-  public function currentSubject(): string {
-    return $this->subject;
-  }
-
-  /**
    * The start banner this form opens on.
    *
    * @return string
@@ -294,6 +295,25 @@ final class Form {
    */
   public function currentFixups(): array {
     return $this->fixups;
+  }
+
+  /**
+   * Assert that nothing the tree is built from is declared after it is built.
+   *
+   * The tree is written once and handed back as it stands, so a declaration
+   * arriving after it reaches nothing - and a panel nobody can see is worse
+   * than a form that refuses to take it.
+   *
+   * @param string $declaration
+   *   What is being declared, as a fragment naming it.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the tree has already been built.
+   */
+  protected function assertUnbuilt(string $declaration): void {
+    if ($this->root instanceof Panel) {
+      throw new FormException(sprintf('Form "%s" declares %s after its tree was built; declare every panel before the form is collected or its tree is read.', $this->title, $declaration));
+    }
   }
 
   /**

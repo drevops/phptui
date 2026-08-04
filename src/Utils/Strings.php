@@ -4,22 +4,19 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Utils;
 
+use AlexSkrypnyk\Str2Name\Str2Name;
+
 /**
  * UTF-8 string helpers backed by mbstring when available.
  *
- * Every helper uses the mbstring extension when it is loaded and an
- * extension-free fallback otherwise. The fallbacks treat text as UTF-8 via
- * PCRE and match the mbstring results for valid input, except case folding,
- * which covers ASCII letters only.
+ * The mbstring detection, the byte-level fallbacks behind it and the case
+ * folding are the base class's; what is added here is the text handling a
+ * terminal needs and a name formatter does not - measuring, slicing and
+ * wrapping a line, and filling a template in.
  *
  * @package DrevOps\Tui\Utils
  */
-final class Strings {
-
-  /**
-   * Whether mbstring backs the helpers; NULL re-detects on next use.
-   */
-  protected static ?bool $mbstring = NULL;
+final class Strings extends Str2Name {
 
   /**
    * Force or reset the mbstring branch selection.
@@ -33,16 +30,6 @@ final class Strings {
   }
 
   /**
-   * Whether the mbstring-backed branch is active.
-   *
-   * @return bool
-   *   TRUE when the mbstring functions are used.
-   */
-  protected static function mbstring(): bool {
-    return self::$mbstring ??= function_exists('mb_strlen');
-  }
-
-  /**
    * Split text into a list of single characters.
    *
    * @param string $text
@@ -52,15 +39,12 @@ final class Strings {
    *   The characters.
    */
   public static function split(string $text): array {
-    if (self::mbstring()) {
-      return mb_str_split($text, 1, 'UTF-8');
-    }
+    $chars = array_values(self::mbStrSplit($text));
 
-    // PCRE rejects malformed UTF-8, where mbstring substitutes; splitting
-    // such input into bytes keeps the helper total.
-    $chars = preg_split('//u', $text, -1, PREG_SPLIT_NO_EMPTY);
-
-    return $chars === FALSE ? str_split($text) : $chars;
+    // The extension-free branch splits with PCRE, which rejects malformed
+    // UTF-8 where mbstring substitutes for it and so hands back nothing at
+    // all; splitting such input into its bytes keeps the helper total.
+    return $chars === [] && $text !== '' ? str_split($text) : $chars;
   }
 
   /**
@@ -73,7 +57,7 @@ final class Strings {
    *   The number of characters.
    */
   public static function length(string $text): int {
-    return self::mbstring() ? mb_strlen($text, 'UTF-8') : count(self::split($text));
+    return self::hasMbstring() ? self::mbStrlen($text) : count(self::split($text));
   }
 
   /**
@@ -91,33 +75,7 @@ final class Strings {
    *   The portion.
    */
   public static function substr(string $text, int $start, ?int $length = NULL): string {
-    return self::mbstring() ? mb_substr($text, $start, $length, 'UTF-8') : implode('', array_slice(self::split($text), $start, $length));
-  }
-
-  /**
-   * Lowercase text.
-   *
-   * @param string $text
-   *   The text.
-   *
-   * @return string
-   *   The lowercased text; the fallback lowercases ASCII letters only.
-   */
-  public static function lower(string $text): string {
-    return self::mbstring() ? mb_strtolower($text, 'UTF-8') : strtolower($text);
-  }
-
-  /**
-   * Uppercase text.
-   *
-   * @param string $text
-   *   The text.
-   *
-   * @return string
-   *   The uppercased text; the fallback uppercases ASCII letters only.
-   */
-  public static function upper(string $text): string {
-    return self::mbstring() ? mb_strtoupper($text, 'UTF-8') : strtoupper($text);
+    return self::hasMbstring() ? self::mbSubstr($text, $start, $length) : implode('', array_slice(self::split($text), $start, $length));
   }
 
   /**

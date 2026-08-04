@@ -76,6 +76,21 @@ interface FieldInterface {
   public function error(): ?string;
 
   /**
+   * Show why the value this field offered was refused.
+   *
+   * A field offers a value and never decides whether it stands, so the reason
+   * arrives from outside; it is drawn where the field says what an answer must
+   * be, because a reason and an expectation never both apply.
+   *
+   * @param string $reason
+   *   The reason.
+   *
+   * @return static
+   *   The field, for chaining.
+   */
+  public function refused(string $reason): static;
+
+  /**
    * A rendering of the current state, using the theme's glyphs.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme

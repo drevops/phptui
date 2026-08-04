@@ -91,6 +91,15 @@ abstract class AbstractField implements FieldInterface {
   /**
    * {@inheritdoc}
    */
+  public function refused(string $reason): static {
+    $this->error = $reason;
+
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function value(): mixed {
     return $this->complete ? $this->accepted : $this->liveValue();
   }

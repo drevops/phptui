@@ -17,7 +17,9 @@ use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\FilePickerConstraints;
 use DrevOps\Tui\Model\NumberBounds;
+use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\TerminalControl;
@@ -31,7 +33,9 @@ use DrevOps\Tui\Testing\BufferedTerminal;
 use DrevOps\Tui\Testing\ScreenTester;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
+use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -159,7 +163,7 @@ final class ScreenControllerTest extends TestCase {
     $this->assertNull($courier->refusal());
   }
 
-  public function testEditorRefusesWhatItsOwnBoundsRuleOut(): void {
+  public function testFieldRefusesTheNumberItsBoundsRuleOutAndStaysOpenOnIt(): void {
     $weight = (new Field('weight', 'Basket weight', FieldType::Number))->default(1200)->bounds(new NumberBounds(200, 9000));
     $tester = $this->tester($this->panel($weight));
 
@@ -174,7 +178,43 @@ final class ScreenControllerTest extends TestCase {
     );
 
     $this->assertStringContainsString('Enter a number between 200 and 9000.', $tester->frame());
+    // The row is still open on what was typed, so it can be corrected in place.
+    $this->assertStringContainsString('Basket weight  5', $tester->frame());
     $this->assertSame(1200, $answers->value('weight'));
+  }
+
+  public function testFieldRefusesTooFewPicksAndStaysOpenOnThem(): void {
+    $basket = (new Field('basket', 'Basket', FieldType::Select))->multiple()->selections(new SelectionBounds(2))->default([]);
+    $basket->entry('pear', 'Pear')->entry('plum', 'Plum');
+    $tester = $this->tester($this->panel($basket));
+
+    $answers = $tester->run(
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Space),
+      Key::named(KeyName::Enter),
+    );
+
+    $this->assertStringContainsString('Select at least 2 items.', $tester->frame());
+    // Said once: the reason replaces the standing guidance rather than
+    // stacking under a second copy of it.
+    $this->assertSame(1, substr_count($tester->frame(), 'Select at least 2 items.'));
+    $this->assertSame([], $answers->value('basket'));
+  }
+
+  public function testFieldRefusesThePickItsLimitsRuleOutAndStaysOpenOnIt(): void {
+    vfsStream::setup('orchard', NULL, ['prices.csv' => str_repeat('a', 200)]);
+    $manifest = (new Field('manifest', 'Manifest', FieldType::FilePicker))
+      ->startIn(vfsStream::url('orchard'))
+      ->picker(new FilePickerConstraints(maxSize: 100))
+      ->default('');
+    $tester = $this->tester($this->panel($manifest));
+
+    $answers = $tester->run(Key::named(KeyName::Enter), Key::named(KeyName::Enter));
+
+    $this->assertStringContainsString('Choose a file no larger than 100 B.', $tester->frame());
+    // The limit it missed replaces the standing statement of that limit.
+    $this->assertStringNotContainsString('Max 100 B.', $tester->frame());
+    $this->assertSame('', $answers->value('manifest'));
   }
 
   public function testEscapeClosesAnOpenFieldWithoutCommittingWhatWasTyped(): void {
@@ -517,6 +557,35 @@ final class ScreenControllerTest extends TestCase {
     $this->assertSame(1, $progress->current());
     $this->assertFalse($controller->isCancelled());
     $this->assertFalse($controller->isInterrupted());
+  }
+
+  #[DataProvider('dataProviderFrameIsDrawnToTheWidthTheThemeStates')]
+  public function testFrameIsDrawnToTheWidthTheThemeStates(Border $border, int $stated, int $columns): void {
+    // Hand-built, so nothing keeps the theme and the terminal in step: the
+    // theme states the room inside the frame and the frame is drawn around it,
+    // whatever room the terminal happens to have.
+    $theme = new DefaultTheme($stated, ['color' => FALSE, 'border' => $border->value]);
+    $controller = new ScreenController($this->panel((new Field('courier', 'Courier'))->default('Valley Runs')), $theme, border: $border);
+    $terminal = new BufferedTerminal([], 8, 200);
+
+    $controller->run($terminal);
+
+    $drawn = explode("\n", Ansi::strip(explode($this->clear(), $terminal->output())[1] ?? ''));
+
+    $this->assertSame($columns, Ansi::width($drawn[0]));
+    $this->assertSame($columns, $theme->contentWidth() + ($border === Border::None ? 0 : 4));
+  }
+
+  /**
+   * Data provider for testFrameIsDrawnToTheWidthTheThemeStates().
+   *
+   * @return \Iterator<string, array{\DrevOps\Tui\Theme\Border, int, int}>
+   *   The frame's border, the width the theme is built for, and the columns
+   *   every drawn row comes to.
+   */
+  public static function dataProviderFrameIsDrawnToTheWidthTheThemeStates(): \Iterator {
+    yield 'no border' => [Border::None, 40, 40];
+    yield 'a border, whose chrome the theme keeps out of its rows' => [Border::Line, 40, 40];
   }
 
   /**

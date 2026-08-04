@@ -10,6 +10,7 @@ use DrevOps\Tui\Block\Capability\DependCapableTrait;
 use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableTrait;
 use DrevOps\Tui\Block\Element\ProgressElementsInterface;
+use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Theme\ThemeInterface;
 
@@ -100,10 +101,13 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
    *
    * @return static
    *   The block.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the declared step count is below one.
    */
   public function steps(int $total): static {
     if ($total < 1) {
-      throw new \InvalidArgumentException('Work with no steps cannot report progress; leave the total unset for a spinner.');
+      throw new FormException(sprintf('Field "%s" declares %d progress steps; a determinate bar needs at least one step (omit steps() for a spinner).', $this->id, $total));
     }
 
     $this->total = $total;

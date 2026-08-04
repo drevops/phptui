@@ -18,6 +18,7 @@ use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\Tui\Tui;
 
 /**
  * Drives a screen from scripted keystrokes, and hands back what it drew.
@@ -497,9 +498,14 @@ final class ScreenTester {
    *   The controller.
    */
   protected function controller(): ScreenController {
+    $options = $this->themeOptions();
+
     return new ScreenController(
       $this->panel,
-      $this->theme ?? new DefaultTheme($this->width(), $this->themeOptions()),
+      // The same width resolution the facade applies, against the scripted
+      // terminal's columns: the theme is what every width is read off, so it
+      // is the one place a terminal's size is turned into a frame's.
+      $this->theme ?? new DefaultTheme(Tui::frameWidth($options, $this->cols), $options),
       $this->supplied,
       $this->keys,
       $this->collector,
@@ -518,31 +524,15 @@ final class ScreenTester {
    * The display options the theme is built from.
    *
    * The frame's border is stated on the tester rather than among these, and a
-   * theme that believes it is drawing a different one lays its rows out to a
-   * width the frame does not have - so a row aligned against the theme's width
-   * would stop short of the frame's edge, or run past it. Stating it here keeps
-   * the two in step, and an option a consumer sets by hand still wins.
+   * theme that believes it is drawing a different one states the room inside a
+   * frame that is not the one being drawn. Stating it here keeps the two in
+   * step, and an option a consumer sets by hand still wins.
    *
    * @return array<string,mixed>
    *   The options.
    */
   protected function themeOptions(): array {
     return $this->options + ['border' => $this->border->value];
-  }
-
-  /**
-   * The width the theme lays a frame out to.
-   *
-   * @return int
-   *   The columns: the terminal's when the frame takes the whole of it, else
-   *   the width a panel reads at, clamped to the room there is.
-   */
-  protected function width(): int {
-    if (($this->options['fullscreen'] ?? FALSE) === TRUE) {
-      return $this->cols;
-    }
-
-    return min(DefaultTheme::DEFAULT_WIDTH, $this->cols);
   }
 
 }

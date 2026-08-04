@@ -11,6 +11,7 @@ use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
+use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Screen\Assembler;
 use DrevOps\Tui\Screen\Axis;
@@ -75,8 +76,8 @@ final class BuilderGapsTest extends TestCase {
   }
 
   public function testWorkWithNoStepsCannotReportProgress(): void {
-    $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('Work with no steps cannot report progress; leave the total unset for a spinner.');
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Field "packing" declares 0 progress steps; a determinate bar needs at least one step (omit steps() for a spinner).');
 
     (new Progress('packing', 'Packing'))->steps(0);
   }

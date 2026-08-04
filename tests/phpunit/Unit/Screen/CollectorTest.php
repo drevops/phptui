@@ -118,7 +118,7 @@ final class CollectorTest extends TestCase {
     $this->assertSame(['weight' => 4000], (new Collector())->collect($panel, ['weight' => 4000]));
 
     $this->expectException(CollectException::class);
-    $this->expectExceptionMessage('Invalid value for field "weight": must be between 200 and 9000.');
+    $this->expectExceptionMessage('Invalid value for field "weight": Enter a number between 200 and 9000.');
 
     (new Collector())->collect($panel, ['weight' => 10]);
   }

@@ -36,6 +36,11 @@ use DrevOps\Tui\Theme\ThemeInterface;
 final class ScreenRenderer {
 
   /**
+   * The columns a frame spends on its own border and gutter, both sides.
+   */
+  public const int CHROME = 4;
+
+  /**
    * The columns left clear between one window of a grid and the next.
    */
   protected const int GUTTER = 2;
@@ -75,7 +80,7 @@ final class ScreenRenderer {
 
     // A frame spends a rule top and bottom, and a border column plus a gutter
     // each side, so what the layout is given is the terminal less its chrome.
-    $inside = $this->lay($screen->currentLayout(), max(0, $rows - 2), max(1, $columns - 4));
+    $inside = $this->lay($screen->currentLayout(), max(0, $rows - 2), max(1, $columns - self::CHROME));
 
     return implode("\n", $this->framed($inside, $columns));
   }
@@ -267,7 +272,7 @@ final class ScreenRenderer {
   protected function framed(array $lines, int $columns): array {
     $chrome = $this->chrome();
     $chars = Box::chars($this->border, $this->unicode());
-    $inner = max(1, $columns - 4);
+    $inner = max(1, $columns - self::CHROME);
     $bar = $chrome->chromeBorder($chars['v']);
 
     $out = [$chrome->chromeBorder(Box::rule($chars['tl'], $chars['tr'], $chars['h'], $columns))];

@@ -462,15 +462,16 @@ final class FilePickerTest extends TestCase {
     $this->assertStringContainsString('guide.md', $view);
   }
 
-  public function testMultipleRejectsBelowMinWithInlineError(): void {
+  public function testMultipleOffersTheCountOutsideItsBoundsRatherThanRefusingIt(): void {
     $field = new FilePicker($this->root, multiple: TRUE, selection_bounds: new SelectionBounds(2));
 
-    // Selecting one entry is below the minimum of two.
+    // Selecting one entry is below the minimum of two, and is still offered:
+    // how many are enough is measured where the answer is held.
     $field->handle(Key::named(KeyName::Space));
     $field->handle(Key::named(KeyName::Enter));
 
-    $this->assertFalse($field->isComplete());
-    $this->assertStringContainsString('Select at least 2 items.', $this->render($field));
+    $this->assertTrue($field->isComplete());
+    $this->assertNull($field->error());
   }
 
   public function testMultipleAcceptsWithinBounds(): void {
@@ -490,16 +491,18 @@ final class FilePickerTest extends TestCase {
     $this->assertStringContainsString('Select between 2 and 3 items.', $this->render($field));
   }
 
-  public function testRejectsOversizeFileWithInlineError(): void {
+  public function testOffersAnOversizeFileRatherThanRefusingIt(): void {
     vfsStream::setup('sized', NULL, ['big.txt' => str_repeat('a', 200), 'tiny.txt' => str_repeat('a', 10)]);
     $root = vfsStream::url('sized');
     $field = new FilePicker($root, constraints: new FilePickerConstraints(maxSize: 100));
 
-    // big.txt (200 bytes) is highlighted first and exceeds the 100-byte limit.
+    // big.txt (200 bytes) is highlighted first and exceeds the 100-byte limit,
+    // which is measured where the answer is held rather than here.
     $field->handle(Key::named(KeyName::Enter));
 
-    $this->assertFalse($field->isComplete());
-    $this->assertStringContainsString('Choose a file no larger than 100 B.', $this->render($field));
+    $this->assertTrue($field->isComplete());
+    $this->assertSame($root . '/big.txt', $field->value());
+    $this->assertNull($field->error());
   }
 
   public function testAcceptsFileWithinSizeLimit(): void {
@@ -520,15 +523,17 @@ final class FilePickerTest extends TestCase {
     $this->assertStringContainsString('Files only. Extensions: md. Max 2 MB.', $this->render($field));
   }
 
-  public function testConstraintHintGivesWayToInlineError(): void {
+  public function testConstraintHintGivesWayToTheReasonThePickWasRefused(): void {
     vfsStream::setup('sized', NULL, ['big.txt' => str_repeat('a', 200)]);
     $root = vfsStream::url('sized');
     $field = new FilePicker($root, constraints: new FilePickerConstraints(maxSize: 100));
 
-    $field->handle(Key::named(KeyName::Enter));
+    $this->assertStringContainsString('Max 100 B.', $this->render($field));
+
+    $field->refused('Choose a file no larger than 100 B.');
 
     $view = $this->render($field);
-    // The inline error replaces the persistent hint so the two never stack.
+    // The reason replaces the persistent hint so the two never stack.
     $this->assertStringContainsString('Choose a file no larger than 100 B.', $view);
     $this->assertStringNotContainsString('Max 100 B.', $view);
   }

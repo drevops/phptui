@@ -102,14 +102,14 @@ final class FieldBuilder {
   protected ?int $pickerMaxSize = NULL;
 
   /**
-   * The date field's inclusive earliest date (ISO `Y-m-d`), when declared.
+   * The date field's inclusive earliest date, when declared.
    */
-  protected ?string $minDate = NULL;
+  protected ?\DateTimeImmutable $minDate = NULL;
 
   /**
-   * The date field's inclusive latest date (ISO `Y-m-d`), when declared.
+   * The date field's inclusive latest date, when declared.
    */
-  protected ?string $maxDate = NULL;
+  protected ?\DateTimeImmutable $maxDate = NULL;
 
   /**
    * The date field's week-start day, when declared.
@@ -520,8 +520,20 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the step is not positive, or the field draws a scale whose points
+   *   are already its steps.
    */
   public function step(int $step): self {
+    if ($this->fieldType === FieldType::Rating) {
+      throw new FormException(sprintf('Field "%s" declares a step of %d on a scale whose points are its steps; remove ->step() and set the ends with ->min() and ->max().', $this->id, $step));
+    }
+
+    if ($step < 1) {
+      throw new FormException(sprintf('Field "%s" declares a non-positive step %d.', $this->id, $step));
+    }
+
     $this->step = $step;
 
     return $this;
@@ -713,9 +725,12 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the value is not a valid `Y-m-d` date.
    */
   public function minDate(string $date): self {
-    $this->minDate = $date;
+    $this->minDate = $this->parseBoundDate($date);
 
     return $this;
   }
@@ -728,9 +743,12 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the value is not a valid `Y-m-d` date.
    */
   public function maxDate(string $date): self {
-    $this->maxDate = $date;
+    $this->maxDate = $this->parseBoundDate($date);
 
     return $this;
   }
@@ -1226,7 +1244,7 @@ final class FieldBuilder {
    *   The bounds, or NULL when none were declared.
    *
    * @throws \DrevOps\Tui\Model\FormException
-   *   When min exceeds max, or the step is not positive.
+   *   When min exceeds max.
    */
   protected function buildBounds(): ?NumberBounds {
     if ($this->fieldType === FieldType::Rating) {
@@ -1239,10 +1257,6 @@ final class FieldBuilder {
 
     if ($this->min !== NULL && $this->max !== NULL && $this->min > $this->max) {
       throw new FormException(sprintf('Field "%s" declares min %d greater than max %d.', $this->id, $this->min, $this->max));
-    }
-
-    if ($this->step !== NULL && $this->step < 1) {
-      throw new FormException(sprintf('Field "%s" declares a non-positive step %d.', $this->id, $this->step));
     }
 
     return new NumberBounds($this->min, $this->max, $this->step);
@@ -1259,13 +1273,9 @@ final class FieldBuilder {
    *   The scale.
    *
    * @throws \DrevOps\Tui\Model\FormException
-   *   When a step is declared, or the range holds fewer than two points.
+   *   When the range holds fewer than two points.
    */
   protected function buildScale(): NumberBounds {
-    if ($this->step !== NULL) {
-      throw new FormException(sprintf('Field "%s" declares a step of %d on a scale whose points are its steps; remove ->step() and set the ends with ->min() and ->max().', $this->id, $this->step));
-    }
-
     $min = $this->min ?? self::RATING_MIN;
     $max = $this->max ?? self::RATING_MAX;
 
@@ -1326,8 +1336,8 @@ final class FieldBuilder {
       return NULL;
     }
 
-    $min = $this->parseBoundDate($this->minDate);
-    $max = $this->parseBoundDate($this->maxDate);
+    $min = $this->minDate;
+    $max = $this->maxDate;
 
     if ($min instanceof \DateTimeImmutable && $max instanceof \DateTimeImmutable && $min > $max) {
       throw new FormException(sprintf('Field "%s" declares min date %s after max date %s.', $this->id, $min->format('Y-m-d'), $max->format('Y-m-d')));
@@ -1339,21 +1349,18 @@ final class FieldBuilder {
   /**
    * Strictly parse a declared bound date, failing loudly on a bad value.
    *
-   * @param string|null $value
-   *   The declared date string, or NULL when the bound is open.
+   * @param string $value
+   *   The declared date string.
    *
-   * @return \DateTimeImmutable|null
-   *   The parsed date, or NULL when none was declared.
+   * @return \DateTimeImmutable
+   *   The parsed date.
    *
    * @throws \DrevOps\Tui\Model\FormException
    *   When the value is not a valid `Y-m-d` date.
    */
-  protected function parseBoundDate(?string $value): ?\DateTimeImmutable {
-    if ($value === NULL) {
-      return NULL;
-    }
-
+  protected function parseBoundDate(string $value): \DateTimeImmutable {
     $date = DateBounds::parse($value);
+
     if (!$date instanceof \DateTimeImmutable) {
       throw new FormException(sprintf('Field "%s" declares an invalid date "%s".', $this->id, $value));
     }

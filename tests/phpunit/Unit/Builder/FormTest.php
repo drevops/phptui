@@ -45,7 +45,7 @@ final class FormTest extends TestCase {
   public function testBuildsExpectedForm(): void {
     $fixup = new Fixup(set: 'a', to: 'b', when: new Condition('x', eq: 'y'));
 
-    $builder = Form::create('My app', 'the project')
+    $builder = Form::create('My app')
       ->banner('LOGO')
       ->buttons(TRUE, 'Install', 'Quit')
       ->envPrefix('APP_')
@@ -69,7 +69,6 @@ final class FormTest extends TestCase {
     $form = $builder->root();
 
     $this->assertSame('My app', $form->title());
-    $this->assertSame('the project', $builder->currentSubject());
     $this->assertSame('LOGO', $builder->currentBanner());
     $this->assertTrue($form->currentButtons()->show);
     $this->assertSame('Install', $form->currentButtons()->submitLabel);
@@ -1005,6 +1004,124 @@ final class FormTest extends TestCase {
       },
       'Every layout row of "Demo" must hold at least one panel.',
     ];
+  }
+
+  #[DataProvider('dataProviderMistakeIsRefusedWhereItIsMade')]
+  public function testMistakeIsRefusedWhereItIsMade(\Closure $declare, string $message): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage($message);
+
+    // Nothing is sealed here: a mistake needing no more than the argument it
+    // was given is refused at the call that made it.
+    $declare(new PanelBuilder('p', 'P'));
+  }
+
+  /**
+   * Data provider for testMistakeIsRefusedWhereItIsMade().
+   *
+   * @return \Iterator<string, array{\Closure, string}>
+   *   A declaration refused at the call, and the message it is refused with.
+   */
+  public static function dataProviderMistakeIsRefusedWhereItIsMade(): \Iterator {
+    yield 'non-positive number step' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->number('n')->step(0),
+      'Field "n" declares a non-positive step 0.',
+    ];
+
+    yield 'step on a rating scale' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->rating('r')->step(2),
+      'Field "r" declares a step of 2 on a scale whose points are its steps',
+    ];
+
+    yield 'unparseable earliest date' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->calendar('d')->minDate('2026-13-01'),
+      'Field "d" declares an invalid date "2026-13-01".',
+    ];
+
+    yield 'unparseable latest date' => [
+      static fn(PanelBuilder $p): FieldBuilder => $p->calendar('d')->maxDate('the-first'),
+      'Field "d" declares an invalid date "the-first".',
+    ];
+  }
+
+  #[DataProvider('dataProviderEveryRefusalIsTheSameFamily')]
+  public function testEveryRefusalIsTheSameFamily(\Closure $declare): void {
+    try {
+      $declare();
+    }
+    catch (\InvalidArgumentException $exception) {
+      // One catch covers the lot, whichever surface refused.
+      $this->assertInstanceOf(FormException::class, $exception);
+
+      return;
+    }
+
+    $this->fail('The declaration was taken rather than refused.');
+  }
+
+  /**
+   * Data provider for testEveryRefusalIsTheSameFamily().
+   *
+   * @return \Iterator<string, array{\Closure}>
+   *   A declaration refused by one of the surfaces that refuse one.
+   */
+  public static function dataProviderEveryRefusalIsTheSameFamily(): \Iterator {
+    yield 'the builder, at the call' => [static fn(): FieldBuilder => (new PanelBuilder('p', 'P'))->number('n')->step(0)];
+    yield 'the builder, at the seal' => [
+      static fn(): Panel => Form::create('T')
+        ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->number('n')->min(10)->max(1))
+        ->root(),
+    ];
+    yield 'a block guard' => [static fn(): Field => (new Field('n', 'N'))->env('ORCHARD-BASKET')];
+    yield 'a limit' => [static fn(): NumberBounds => new NumberBounds(10, 1)];
+    yield 'the form, once its tree is built' => [
+      static function (): Form {
+        $form = Form::create('T');
+        $form->root();
+
+        return $form->panel('late', 'Late', fn(PanelBuilder $p): FieldBuilder => $p->text('x'));
+      },
+    ];
+  }
+
+  #[DataProvider('dataProviderDeclarationAfterTheTreeIsBuiltIsRefused')]
+  public function testDeclarationAfterTheTreeIsBuiltIsRefused(\Closure $declare, string $message): void {
+    $form = Form::create('Orchard')->panel('basket', 'Basket', fn(PanelBuilder $p): FieldBuilder => $p->text('fruit', 'Fruit'));
+    $form->root();
+
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage($message);
+
+    $declare($form);
+  }
+
+  /**
+   * Data provider for testDeclarationAfterTheTreeIsBuiltIsRefused().
+   *
+   * @return \Iterator<string, array{\Closure, string}>
+   *   A declaration arriving too late, and the message it is refused with.
+   */
+  public static function dataProviderDeclarationAfterTheTreeIsBuiltIsRefused(): \Iterator {
+    yield 'a panel' => [
+      static fn(Form $form): Form => $form->panel('late', 'Late', fn(PanelBuilder $p): FieldBuilder => $p->text('x')),
+      'Form "Orchard" declares a panel after its tree was built; declare every panel before the form is collected or its tree is read.',
+    ];
+
+    yield 'a layout' => [
+      static fn(Form $form): Form => $form->layout(1),
+      'Form "Orchard" declares a layout after its tree was built',
+    ];
+
+    yield 'its buttons' => [
+      static fn(Form $form): Form => $form->buttons(FALSE),
+      'Form "Orchard" declares its buttons after its tree was built',
+    ];
+  }
+
+  public function testTreeIsBuiltOnceAndHandedBackAsItStands(): void {
+    $form = Form::create('Orchard')->panel('basket', 'Basket', fn(PanelBuilder $p): FieldBuilder => $p->text('fruit', 'Fruit'));
+
+    $this->assertSame($form->root(), $form->root());
   }
 
   /**

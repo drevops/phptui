@@ -18,6 +18,7 @@ use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Model\Buttons;
+use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Region;
 use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
@@ -169,7 +170,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
    * @return static
    *   The panel.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\Model\FormException
    *   When the pair is hidden on a panel that draws over what is behind it,
    *   which would strand it with no way out.
    */
@@ -304,7 +305,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
   /**
    * {@inheritdoc}
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\Model\FormException
    *   When its buttons are hidden, which would leave it drawn over everything
    *   with no way out.
    */
@@ -700,12 +701,12 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
    * @param \DrevOps\Tui\Model\Buttons $buttons
    *   The pair that closes it.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\Model\FormException
    *   When such a panel hides its buttons.
    */
   protected function assertWayOut(bool $modal, Buttons $buttons): void {
     if ($modal && !$buttons->show) {
-      throw new \InvalidArgumentException(sprintf('Panel "%s" draws over what is behind it, so its buttons are its only way out and cannot be hidden.', $this->id));
+      throw new FormException(sprintf('Panel "%s" draws over what is behind it, so its buttons are its only way out and cannot be hidden.', $this->id));
     }
   }
 
