@@ -2,12 +2,14 @@
 
 /**
  * @file
- * Every field as a field on a single form - the whole gallery in one run.
+ * Every field on a single form - the whole gallery in one run.
  *
  * Each single-field script shows one field in isolation; this montage puts
- * one of every type on one panel to walk through in sequence. The file
- * pickers keep their standalone scripts - they browse a fixture tree that
- * would drown the montage.
+ * one of every type on one panel to walk through in sequence. The markup at
+ * the top is not one of them: it is the block that asks nothing, here to show
+ * what the cursor passes over on its way down. The file pickers keep their
+ * standalone scripts - they browse a fixture tree that would drown the
+ * montage.
  *
  * Usage:
  *   php playground/02-fields-all-fields.php
@@ -27,7 +29,7 @@ require __DIR__ . '/../vendor/autoload.php';
 // single-field scripts show the same fields with real-world labels.
 $form = Form::create('Fields')
   ->panel('fields', 'Fields', function (PanelBuilder $p): void {
-    $p->note('note', 'Note')->body('A read-only card - the cursor skips it and it collects nothing.');
+    $p->markup('markup', 'A read-only block - the cursor skips it and it collects nothing.', 'Markup');
     $p->text('text', 'Text')->default('Pear');
     $p->template('template', 'Template')->pattern('{{orchard}}-{{fruit}}-{{grade}}')->default('valley-pear-a');
     $p->number('number', 'Number')->default(1200);

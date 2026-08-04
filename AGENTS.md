@@ -186,16 +186,17 @@ After a structural change, update them with the `render-tui-diagrams` skill.
 
 ### Terminal SVG assets
 
-Every field and every primitive carries a full set of terminal SVGs under
-`docs/assets/` - light and dark, in all four display modes (Unicode/ASCII,
-colour on/off) - embedded in the README and the docs pages. Anything that
-moves also carries an animated variant beside its static one; a subject with
-no motion to record (the output primitives, which write finished lines and
-return) is static-only by design. They render deterministically (no pty) from
-the scripts in `docs/util/`:
-`render-field-svgs.php` for fields, `render-progress-svgs.php` for the
-progress primitive, `render-output-svgs.php` for the output primitives (static
-only - they write finished lines, so there is no motion to record), and
+Every field, the markup block and every primitive carries a full set of
+terminal SVGs under `docs/assets/` - light and dark, in all four display modes
+(Unicode/ASCII, colour on/off) - embedded in the README and the docs pages.
+Anything that moves also carries an animated variant beside its static one; a
+subject with no motion to record (the output primitives, which write finished
+lines and return) is static-only by design. They render deterministically (no
+pty) from the scripts in `docs/util/`:
+`render-field-svgs.php` for fields and the markup block,
+`render-progress-svgs.php` for the progress primitive,
+`render-output-svgs.php` for the output primitives (static only - they write
+finished lines, so there is no motion to record), and
 `render-theme-svgs.php` for theme previews, all run by `update-assets.php`. The
 naming convention lives in `docs/assets/README.md`.
 
@@ -207,7 +208,10 @@ opening a PR:
   `render-field-svgs.php` for 16 variants; a primitive's goes in the renderer
   that suits how it draws - `progressSpecs()` in `render-progress-svgs.php`
   when it animates, `outputSpecs()` in `render-output-svgs.php` when it does
-  not. Run `php docs/util/render-<kind>-svgs.php <name>` to generate them.
+  not. Run `php docs/util/render-<kind>-svgs.php <name>` to generate them. A
+  spec whose subject is not a field names it with `subject`, so its files
+  carry the name of what they show rather than a `field-` prefix that would
+  misname it - which is what the markup specs do.
 - For a field only, regenerate the all-fields montage so the gallery includes
   it: `php docs/util/update-assets.php --record fields`. A primitive is not in
   the montage, so it skips this step.

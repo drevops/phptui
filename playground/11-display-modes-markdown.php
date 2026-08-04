@@ -2,15 +2,15 @@
 
 /**
  * @file
- * Markdown and links: rich text in descriptions and notes.
+ * Markdown and links: rich text in descriptions and markup.
  *
- * Links work everywhere - a label, a description, a note or the summary can
- * carry a `[text](url)` link, rendered as a clickable OSC 8 hyperlink on a
- * capable terminal and as `text (url)` otherwise. ->markdown() additionally
- * renders a small safe subset - **bold**, *emphasis*, `code` and `- ` bullet
- * lists - in descriptions and notes, mapped to the theme's style atoms. Both
- * honour the colour switch, so NO_COLOR (or ->color(FALSE)) degrades the whole
- * lot to clean plain text.
+ * Links work everywhere - a label, a description, a markup block or the
+ * summary can carry a `[text](url)` link, rendered as a clickable OSC 8
+ * hyperlink on a capable terminal and as `text (url)` otherwise. ->markdown()
+ * additionally renders a small safe subset - **bold**, *emphasis*, `code` and
+ * `- ` bullet lists - in descriptions and markup, mapped to the theme's atoms.
+ * Both honour the colour switch, so NO_COLOR (or ->color(FALSE)) degrades the
+ * whole lot to clean plain text.
  *
  * Usage:
  *   php playground/11-display-modes-markdown.php

@@ -6,9 +6,9 @@
  *
  * The table() call lays headers and rows into a bordered grid, sizing each
  * column to its widest cell and capping the whole thing at the terminal. It is
- * the same renderer a note field's grid uses, so a standalone table matches the
- * ones inside the panel. card() puts a grid inside a titled box when the two
- * belong together.
+ * the same renderer a markup block's grid uses, so a standalone table matches
+ * the ones inside the panel. card() puts a grid inside a titled box when the
+ * two belong together.
  *
  * Usage:
  *   php playground/18-output-table.php

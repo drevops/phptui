@@ -8,29 +8,30 @@ keywords: ['playground', 'examples', 'scripts', 'demos', 'php']
 
 Runnable examples live in [`playground/`](https://github.com/drevops/tui/tree/main/playground) - one file per example, grouped by a numbered prefix that follows this documentation's order, from the quick start to the capstone form:
 
-| Group                     | Demonstrates                                                                                                                        |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `01-quickstart`           | The fluent builder and `run()` - the form from [the quick start](/introduction#quick-start)                                         |
-| `02-fields-*`             | One script per [field](/fields), the [markup](/markup) and progress blocks beside them, plus the whole gallery on one form          |
-| `03-panels-*`             | [Nested panels](/panels), [modal dialogs](/panels#modal-panels), the border frame, sub-panel grids, the fullscreen stretch          |
-| `04-inline-editing`       | [Inline editing](/panels#inline-editing) and `->standalone()`                                                                       |
-| `05-form-logic-*`         | [Derived values](/configuration#derived-values), [conditional fields](/configuration#conditional-fields), fix-ups                   |
-| `06-field-behaviour-*`    | [Declared behavior](/field-behaviour): [required fields](/field-behaviour#required-fields), closures, handler classes               |
-| `07-discovery`            | [Discovery](/field-behaviour#discovery) against a bundled sample project                                                            |
-| `08-headless-*`           | [Unattended collection](/headless-collection), the JSON schema, validation, [agent help](/ai-agents)                                |
-| `09-themes-*`             | The [built-in themes](/themes), a custom theme class, [element overrides](/themes#patching-an-element), theme options, field styles |
-| `10-key-bindings-*`       | [Key bindings](/key-bindings): the vim preset and per-binding overrides                                                             |
-| `11-display-modes-*`      | [Display modes](/display-modes): dark/light, ASCII, no color, [markdown](/markdown)                                                 |
-| `12-translations`         | [Translations](/translations) through a consumer catalog                                                                            |
-| `12-specification-screen` | The [specification](/specification) made runnable: the levels, keys traveling inward, the same tree collected headlessly            |
-| `13-testing`              | The [test harness](/testing) driving the TUI from scripted keystrokes                                                               |
-| `14-produce-box`          | The capstone: panels, fields, logic and behavior in one real form                                                                   |
-| `15-progress-*`           | The [progress primitive](/progress): a spinner when the length is unknown, a bar when it is                                         |
-| `16-loading-data`         | [Loading a panel's data](/progress#inside-the-form) on demand, with a themed indicator while it runs                                |
-| `17-query-options`        | [Options that follow the query](/progress#options-from-a-query), cached and held back by `->minQuery()`                             |
-| `18-output-*`             | The [output primitives](/output): boxes and cards, tables, status lines, definition lists, text, rules, a banner                    |
-| `19-dynamic-options`      | [Options that follow the answers](/field-behaviour#options-from-the-answers), narrowing one field by another                        |
-| `20-layouts-*`            | [Layouts](/layouts): a layout class of your own registered by name, and a region flowing its blocks across                          |
+| Group                     | Demonstrates                                                                                                                                                                                         |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `01-quickstart`           | The fluent builder and `run()` - the form from [the quick start](/introduction#quick-start)                                                                                                          |
+| `02-fields-*`             | One script per [field](/fields), the progress block beside them, plus the whole gallery on one form                                                                                                  |
+| `02-markup-*`             | [Markup](/markup): prose, a bordered card and a grid - one block drawn three ways, collecting nothing                                                                                                |
+| `03-panels-*`             | [Nested panels](/panels), [modal dialogs](/panels#modal-panels), the border frame, the grid by name and by counts, the fullscreen stretch                                                            |
+| `04-inline-editing`       | [Inline editing](/panels#inline-editing) and `->standalone()`                                                                                                                                        |
+| `05-form-logic-*`         | [Derived values](/configuration#derived-values), [conditional fields](/configuration#conditional-fields) and whole conditional sections, fix-ups                                                     |
+| `06-field-behaviour-*`    | [Declared behavior](/field-behaviour): [required fields](/field-behaviour#required-fields), closures, handler classes                                                                                |
+| `07-discovery`            | [Discovery](/field-behaviour#discovery) against a bundled sample project                                                                                                                             |
+| `08-headless-*`           | [Unattended collection](/headless-collection), the JSON schema, validation, [agent help](/ai-agents)                                                                                                 |
+| `09-themes-*`             | The [built-in themes](/themes), a custom theme class, one built on [the floor](/themes#what-a-theme-is-allowed-to-do), [element overrides](/themes#patching-an-element), theme options, field styles |
+| `10-key-bindings-*`       | [Key bindings](/key-bindings): the vim preset and per-binding overrides                                                                                                                              |
+| `11-display-modes-*`      | [Display modes](/display-modes): dark/light, ASCII, no color, [markdown](/markdown)                                                                                                                  |
+| `12-translations`         | [Translations](/translations) through a consumer catalog                                                                                                                                             |
+| `12-specification-screen` | The [specification](/specification) made runnable: the levels, keys traveling inward, the same tree collected headlessly                                                                             |
+| `13-testing`              | The [test harness](/testing) driving the TUI from scripted keystrokes                                                                                                                                |
+| `14-produce-box`          | The capstone: panels, fields, logic and behavior in one real form                                                                                                                                    |
+| `15-progress-*`           | The [progress primitive](/progress): a spinner when the length is unknown, a bar when it is                                                                                                          |
+| `16-loading-data`         | [Loading a panel's data](/progress#inside-the-form) on demand, with a themed indicator while it runs                                                                                                 |
+| `17-query-options`        | [Options that follow the query](/progress#options-from-a-query), cached and held back by `->minQuery()`                                                                                              |
+| `18-output-*`             | The [output primitives](/output): boxes and cards, tables, status lines, definition lists, text, rules, a banner                                                                                     |
+| `19-dynamic-options`      | [Options that follow the answers](/field-behaviour#options-from-the-answers), narrowing one field by another                                                                                         |
+| `20-layouts-*`            | [Layouts](/layouts): a layout class of your own registered by name, and a region flowing its blocks across, packed from either end                                                                   |
 
 The reusable helper classes the scripts load sit beside them - `themes/`, `layouts/` and `handlers/` - with the fixtures the examples read from in `sample-project/` and `translations/`.
 

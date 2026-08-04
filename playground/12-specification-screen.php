@@ -113,7 +113,7 @@ catch (CollectException $exception) {
 print "\nA warning beside the breadcrumb, without nesting a layout\n\n";
 
 // Blocks run across the header rather than down it, so two sit side by side.
-$screen->in('header')->flow(Axis::Columns)->add(new Markup('note', '(read-only preview)'));
+$screen->in('header')->flow(Axis::Columns)->add(new Markup('preview', '(read-only preview)'));
 print (new ScreenRenderer($theme))->render($screen, 10, 72) . "\n";
 
 print "\nDriven as a session, from the first frame to the submit\n\n";

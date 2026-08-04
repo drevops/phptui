@@ -864,6 +864,10 @@ EXPECT;
 /**
  * The expect body driving the panel-layout grid TUI.
  *
+ * Both routes into the one grid class are opened in turn, so the recording
+ * carries the difference between them: a name deals nothing into rows, counts
+ * deal windows side by side.
+ *
  * @return string
  *   The expect script body.
  */
@@ -875,16 +879,23 @@ expect "Summary" {
     arrow_down
 }
 
-# Walk the second row, then open Produce's own side-by-side layout.
+# Across to Delivery and into it: arranged by the name "grid", which carries
+# no shape, so its two windows run one under the other.
 pause 800
 arrow_right
-pause 800
+pause 600
+safe_send "\r"
+pause 2000
+press_escape
+
+# Back across to Produce, whose layout(2) deals its two windows into one row.
+pause 1000
 arrow_left
 pause 600
 safe_send "\r"
+pause 2000
 
 # Back out and submit via Place order.
-pause 1500
 press_escape
 pause 800
 arrow_down
