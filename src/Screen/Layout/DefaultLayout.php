@@ -22,9 +22,9 @@ final class DefaultLayout extends AbstractLayout {
   public function __construct() {
     parent::__construct(Axis::Rows);
 
-    $this->region('header')->fixed(1);
-    $this->region('content')->scrolls();
-    $this->region('footer')->fixed(1);
+    $this->region(self::HEADER)->fixed(1);
+    $this->region(self::CONTENT)->scrolls();
+    $this->region(self::FOOTER)->fixed(1);
   }
 
 }

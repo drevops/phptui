@@ -102,6 +102,71 @@ final class Tree {
   }
 
   /**
+   * Which blocks are there once the answers nobody was asked for stop counting.
+   *
+   * The companion to {@see within()} for a whole answer set read in one go. A
+   * value belonging to a block the answers took off the form is a value the
+   * form never asked for, so it cannot be what puts another block on it -
+   * measuring the conditions against the raw set would let one do exactly that.
+   * Dropping a value can take a further block away, so the reading is repeated
+   * until nothing moves.
+   *
+   * Keyed by object rather than by id, for the reason {@see within()} is.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel to walk.
+   * @param array<string,mixed> $answers
+   *   The answers every condition is measured against.
+   *
+   * @return array<int,bool>
+   *   TRUE for each block that is there, keyed by its object id.
+   */
+  public static function settled(Panel $panel, array $answers): array {
+    $there = self::within($panel, $answers);
+    // A settled reading exits below, so the bound only guards a set that never
+    // settles: one pass per field covers the longest chain of blocks that can
+    // take each other away, plus one to confirm nothing moved.
+    $limit = count(self::fields($panel)) + 1;
+
+    for ($pass = 0; $pass < $limit; $pass++) {
+      $next = self::within($panel, self::held($panel, $answers, $there));
+
+      if ($next === $there) {
+        return $there;
+      }
+
+      $there = $next;
+    }
+
+    return $there;
+  }
+
+  /**
+   * The answers left once the ones nobody was asked for are dropped.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel to walk.
+   * @param array<string,mixed> $answers
+   *   The answers as they were supplied.
+   * @param array<int,bool> $there
+   *   Which blocks are there, keyed by object id.
+   *
+   * @return array<string,mixed>
+   *   The answers, less the ones belonging to a block that is not there. A
+   *   value under an id the tree does not know is left alone, because whether
+   *   it belongs to the form at all is somebody else's question.
+   */
+  protected static function held(Panel $panel, array $answers, array $there): array {
+    foreach (self::fields($panel) as $field) {
+      if (!($there[spl_object_id($field)] ?? TRUE)) {
+        unset($answers[$field->id()]);
+      }
+    }
+
+    return $answers;
+  }
+
+  /**
    * The one rule deciding whether each block is there, as it can be read.
    *
    * The companion to {@see within()}: where that measures the composed rule

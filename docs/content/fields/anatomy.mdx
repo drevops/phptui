@@ -313,7 +313,7 @@ The [primitives](/output) collect nothing and never run inside a panel, so they 
 | `renderSpinner()`     | an indeterminate spinner beside its caption               |
 | `renderProgressBar()` | a determinate bar with its step count and label           |
 
-`renderCard()` and `renderTable()` are each the single renderer behind both the standalone piece and its in-panel counterpart, so restyling one restyles a [markup block's card](/markup) or [its grid](/markup#tables) at the same time. Every method here takes plain strings and arrays: a renderer that reached for a field, a panel or an answer set could only ever be used from inside a form.
+`renderCard()` is the single renderer behind both the standalone card and the one a [markup block](/markup) draws in a panel - [grid](/markup#tables) included, since a markup grid is a card with a grid in it - so overriding it restyles the two together. `renderTable()` draws the standalone grid. Every method here takes plain strings and arrays: a renderer that reached for a field, a panel or an answer set could only ever be used from inside a form.
 
 ## Patching an element
 

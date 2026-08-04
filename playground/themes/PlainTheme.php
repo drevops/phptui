@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Playground\Themes;
 
 use DrevOps\Tui\Theme\AbstractTheme;
+use DrevOps\Tui\Utils\Strings;
 
 /**
  * A theme built on the floor rather than on the default one.
@@ -37,7 +38,9 @@ final class PlainTheme extends AbstractTheme {
    */
   #[\Override]
   public function panelTitle(string $text): string {
-    return strtoupper($text);
+    // A title arrives already translated, so the case fold has to reach past
+    // ASCII: strtoupper() would leave every non-Latin title untouched.
+    return Strings::upper($text);
   }
 
 }

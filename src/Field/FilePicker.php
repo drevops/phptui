@@ -34,8 +34,10 @@ use DrevOps\Tui\Field\Capability\SelectionBoundedTrait;
  * directory; Tab reveals or hides dot-entries. In multiple mode Space toggles
  * the highlighted selectable entry and selections accumulate across
  * directories, so the value is the chosen path (single) or the list of chosen
- * paths (multiple). The constraints gate what may be browsed onto and picked;
- * refusing a pick that breaks one belongs to the block holding the answer.
+ * paths (multiple). The type and extension limits gate what may be browsed
+ * onto and picked; the size limit is weighed against the final value by the
+ * block holding the answer, so an oversized file is offered here rather than
+ * refused.
  *
  * @package DrevOps\Tui\Field
  */

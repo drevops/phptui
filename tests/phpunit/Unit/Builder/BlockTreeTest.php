@@ -16,9 +16,8 @@ use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\TableSpec;
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Layout\AbstractLayout;
 use DrevOps\Tui\Screen\Layout\LayoutManager;
+use DrevOps\Tui\Tests\Fixtures\Screen\Layout\RegionlessLayout;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -398,7 +397,7 @@ final class BlockTreeTest extends TestCase {
   }
 
   public function testLayoutDeclaringNoRegionHasNowhereToPutBlock(): void {
-    LayoutManager::register('bare', BareLayoutFixture::class);
+    LayoutManager::register('bare', RegionlessLayout::class);
 
     $this->expectException(FormException::class);
     $this->expectExceptionMessage('Panel "main" is arranged by a layout declaring no region');
@@ -423,20 +422,6 @@ final class BlockTreeTest extends TestCase {
     $builder->seal();
 
     return $builder->block();
-  }
-
-}
-
-/**
- * An arrangement with nowhere to put anything.
- */
-final class BareLayoutFixture extends AbstractLayout {
-
-  /**
-   * Construct the layout.
-   */
-  public function __construct() {
-    parent::__construct(Axis::Rows);
   }
 
 }

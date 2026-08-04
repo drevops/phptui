@@ -14,11 +14,11 @@ use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Screen\Assembler;
-use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Collector;
-use DrevOps\Tui\Screen\Furniture;
-use DrevOps\Tui\Screen\Layout\AbstractLayout;
 use DrevOps\Tui\Screen\ScreenRenderer;
+use DrevOps\Tui\Tests\Fixtures\Screen\Layout\BareLayout;
+use DrevOps\Tui\Tests\Fixtures\Screen\Layout\HomelessLayout;
+use DrevOps\Tui\Tests\Fixtures\Screen\Layout\StallLayout;
 use DrevOps\Tui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -89,7 +89,7 @@ final class BuilderTest extends TestCase {
       $p->text('courier', 'Courier')->default('Valley Runs');
     });
 
-    $screen = (new Assembler())->assemble($panel, StallLayoutFixture::class);
+    $screen = (new Assembler())->assemble($panel, StallLayout::class);
 
     // It declares neither a header nor a footer and still shows the trail,
     // because it says where the trail goes rather than being read for names.
@@ -100,7 +100,7 @@ final class BuilderTest extends TestCase {
   }
 
   public function testLayoutThatRefusesFurnitureIsDrawnWithoutIt(): void {
-    $screen = (new Assembler())->assemble($this->panel(), BareLayoutFixture::class);
+    $screen = (new Assembler())->assemble($this->panel(), BareLayout::class);
 
     // Refusing is not the same as having nowhere: the regions are there, and
     // the layout still keeps the trail and the keys off the screen.
@@ -113,7 +113,7 @@ final class BuilderTest extends TestCase {
     $this->expectException(FormException::class);
     $this->expectExceptionMessage('keeps no place for the form itself, so there is nowhere to draw it');
 
-    (new Assembler())->assemble($this->panel(), HomelessLayoutFixture::class);
+    (new Assembler())->assemble($this->panel(), HomelessLayout::class);
   }
 
   public function testAnAssembledScreenDrawsEndToEnd(): void {
@@ -157,81 +157,6 @@ final class BuilderTest extends TestCase {
     $builder->seal();
 
     return $builder->block();
-  }
-
-}
-
-/**
- * A layout that calls its regions something else and says what goes in them.
- */
-final class StallLayoutFixture extends AbstractLayout {
-
-  /**
-   * Construct the layout.
-   */
-  public function __construct() {
-    parent::__construct(Axis::Columns);
-
-    $this->region('aside')->fixed(24);
-    $this->region('main')->flex(1)->scrolls();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  #[\Override]
-  public function furnishes(Furniture $piece): string {
-    return $piece === Furniture::Body ? 'main' : 'aside';
-  }
-
-}
-
-/**
- * A layout that keeps the trail and the keys off the screen.
- */
-final class BareLayoutFixture extends AbstractLayout {
-
-  /**
-   * Construct the layout.
-   */
-  public function __construct() {
-    parent::__construct(Axis::Rows);
-
-    $this->region('header')->fixed(1);
-    $this->region('content')->scrolls();
-    $this->region('footer')->fixed(1);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  #[\Override]
-  public function furnishes(Furniture $piece): ?string {
-    return $piece === Furniture::Body ? parent::furnishes($piece) : NULL;
-  }
-
-}
-
-/**
- * A layout with regions that keeps no place for the form itself.
- */
-final class HomelessLayoutFixture extends AbstractLayout {
-
-  /**
-   * Construct the layout.
-   */
-  public function __construct() {
-    parent::__construct(Axis::Rows);
-
-    $this->region('content')->scrolls();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  #[\Override]
-  public function furnishes(Furniture $piece): ?string {
-    return $piece === Furniture::Body ? NULL : parent::furnishes($piece);
   }
 
 }

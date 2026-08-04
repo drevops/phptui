@@ -49,15 +49,11 @@ final class ThemeManager {
    *   The theme class name.
    *
    * @throws \InvalidArgumentException
-   *   When the class is not a theme - registration fails early rather than at
-   *   the later create() call.
+   *   When the class is not a theme, or is one nothing can instantiate -
+   *   registration fails early rather than at the later create() call.
    */
   public static function register(string $name, string $class): void {
-    if (!is_a($class, ThemeInterface::class, TRUE)) {
-      throw new \InvalidArgumentException(sprintf('Theme class "%s" must implement %s.', $class, ThemeInterface::class));
-    }
-
-    self::$registry[$name] = $class;
+    self::$registry[$name] = self::vouch($class);
   }
 
   /**
@@ -82,18 +78,49 @@ final class ThemeManager {
    *   The theme instance.
    *
    * @throws \InvalidArgumentException
-   *   When the name is neither registered nor a theme class name.
+   *   When the name is neither registered nor a theme class name, or names a
+   *   theme class nothing can instantiate.
    */
   public static function create(string $name = 'default', int $width = DefaultTheme::DEFAULT_WIDTH, array $options = []): ThemeInterface {
     $name = $name === '' ? 'default' : $name;
 
-    $class = self::$registry[$name] ?? (is_a($name, ThemeInterface::class, TRUE) ? $name : NULL);
+    $class = self::$registry[$name] ?? NULL;
 
     if ($class === NULL) {
-      throw new \InvalidArgumentException(sprintf('Unknown theme "%s". Use a registered name (%s), register one with ThemeManager::register(), or pass a theme class name.', $name, implode(', ', array_keys(self::$registry))));
+      if (!is_a($name, ThemeInterface::class, TRUE)) {
+        throw new \InvalidArgumentException(sprintf('Unknown theme "%s". Use a registered name (%s), register one with ThemeManager::register(), or pass a theme class name.', $name, implode(', ', array_keys(self::$registry))));
+      }
+
+      $class = self::vouch($name);
     }
 
     return new $class($width, $options);
+  }
+
+  /**
+   * Vouch for a theme class, or say why it is not one that can be built.
+   *
+   * @param string $class
+   *   The class name.
+   *
+   * @return class-string<\DrevOps\Tui\Theme\ThemeInterface>
+   *   The class.
+   *
+   * @throws \InvalidArgumentException
+   *   When the class is not a theme, or is one nothing can instantiate.
+   */
+  protected static function vouch(string $class): string {
+    if (!is_a($class, ThemeInterface::class, TRUE)) {
+      throw new \InvalidArgumentException(sprintf('Theme class "%s" must implement %s.', $class, ThemeInterface::class));
+    }
+
+    // An abstract theme passes the type check and then fatals on the first
+    // create(): refusing it here names the class rather than the call site.
+    if (!(new \ReflectionClass($class))->isInstantiable()) {
+      throw new \InvalidArgumentException(sprintf('Theme class "%s" cannot be instantiated.', $class));
+    }
+
+    return $class;
   }
 
 }

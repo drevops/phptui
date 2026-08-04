@@ -1217,8 +1217,10 @@ final class FormTest extends TestCase {
     try {
       $declare();
     }
-    catch (\InvalidArgumentException $exception) {
-      // One catch covers the lot, whichever surface refused.
+    catch (\Throwable $exception) {
+      // One catch covers the lot, whichever surface refused - and it is the
+      // widest one, so a refusal that left the family fails the assertion
+      // rather than escaping as an error nobody reads.
       $this->assertInstanceOf(FormException::class, $exception);
 
       return;

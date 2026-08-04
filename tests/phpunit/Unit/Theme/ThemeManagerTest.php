@@ -9,6 +9,7 @@ use DrevOps\Tui\Tests\Fixtures\Theme\FloorOptionTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\FloorTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\OceanTheme;
 use DrevOps\Tui\Tests\Traits\ResetsRegistriesTrait;
+use DrevOps\Tui\Theme\AbstractTheme;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\MidnightTheme;
 use DrevOps\Tui\Theme\Mode;
@@ -79,6 +80,22 @@ final class ThemeManagerTest extends TestCase {
     $this->expectExceptionMessage('must implement');
 
     ThemeManager::register('bogus', \stdClass::class);
+  }
+
+  public function testRegisterUninstantiableThemeClassThrows(): void {
+    // The floor is a theme by type and a class nothing can build, so it is
+    // named here rather than fatalling on the first create().
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Theme class "' . AbstractTheme::class . '" cannot be instantiated.');
+
+    ThemeManager::register('floor', AbstractTheme::class);
+  }
+
+  public function testCreateUninstantiableThemeClassThrows(): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Theme class "' . AbstractTheme::class . '" cannot be instantiated.');
+
+    ThemeManager::create(AbstractTheme::class);
   }
 
   public function testCreateFromClassName(): void {

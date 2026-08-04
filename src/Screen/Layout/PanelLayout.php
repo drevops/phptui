@@ -23,7 +23,7 @@ final class PanelLayout extends AbstractLayout {
   public function __construct() {
     parent::__construct(Axis::Rows);
 
-    $this->region('content')->scrolls();
+    $this->region(self::CONTENT)->scrolls();
   }
 
 }

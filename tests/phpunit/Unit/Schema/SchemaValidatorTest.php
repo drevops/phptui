@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Tests\Unit\Schema;
 
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
@@ -23,6 +24,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the schema validator.
  */
 #[CoversClass(SchemaValidator::class)]
+#[CoversClass(Tree::class)]
 #[Group('schema')]
 final class SchemaValidatorTest extends TestCase {
 
@@ -183,6 +185,42 @@ final class SchemaValidatorTest extends TestCase {
     // The very same payload plus the answer that puts the section on the form
     // now owes the question, and the refusal names it.
     $this->assertSame(['Missing required question "certifier".'], (new SchemaValidator($this->gatedForm()))->validate(['organic' => TRUE]));
+  }
+
+  public function testValueTheAnswersTakeAwayCannotAskForAnythingElse(): void {
+    // The section is not there, so the value the payload carries for a question
+    // inside it was never asked for - and a value nobody was asked for cannot
+    // be what puts a required question elsewhere on the form.
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->confirm('organic', 'Organic only?');
+
+        $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
+          $sp->when(new Condition('organic', eq: TRUE));
+          $sp->text('certifier', 'Certifier');
+        });
+
+        $p->text('auditor', 'Auditor')->required()->when(new Condition('certifier', eq: 'Valley Orchard'));
+      })
+      ->root();
+
+    $this->assertSame([], (new SchemaValidator($form))->validate(['organic' => FALSE, 'certifier' => 'Valley Orchard']));
+    // The same chain still owes the question once the section is there.
+    $this->assertSame(['Missing required question "auditor".'], (new SchemaValidator($form))->validate(['organic' => TRUE, 'certifier' => 'Valley Orchard']));
+  }
+
+  public function testQuestionsThatTakeEachOtherAwaySettleRatherThanSpin(): void {
+    // Each rule holds only while the other's answer is absent, so dropping one
+    // puts the other back and the reading has no fixed point. It is bounded
+    // for exactly this, so the set is answered rather than spun on.
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('crate', 'Crate')->when(new Condition('pallet', ne: 'B'));
+        $p->text('pallet', 'Pallet')->when(new Condition('crate', ne: 'A'));
+      })
+      ->root();
+
+    $this->assertSame([], (new SchemaValidator($form))->validate(['crate' => 'A', 'pallet' => 'B']));
   }
 
   /**

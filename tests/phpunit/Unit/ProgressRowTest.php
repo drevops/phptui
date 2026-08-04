@@ -18,6 +18,7 @@ use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Tui;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -42,10 +43,24 @@ final class ProgressRowTest extends TestCase {
     $this->assertInstanceOf(\Closure::class, $block->workload());
   }
 
-  public function testNonPositiveStepsAreRejected(): void {
+  #[DataProvider('dataProviderNonPositiveStepsAreRejected')]
+  public function testNonPositiveStepsAreRejected(int $total): void {
     $this->expectException(FormException::class);
 
-    (new Progress('apply', 'Apply'))->steps(-1);
+    (new Progress('apply', 'Apply'))->steps($total);
+  }
+
+  /**
+   * Data provider for testNonPositiveStepsAreRejected().
+   *
+   * @return \Iterator<string,array{int}>
+   *   A total a determinate bar cannot be drawn from.
+   */
+  public static function dataProviderNonPositiveStepsAreRejected(): \Iterator {
+    // Zero is the boundary the rule turns on, so it is stated beside the
+    // negative rather than left to the one that is obviously out.
+    yield 'no steps at all' => [0];
+    yield 'fewer than none' => [-1];
   }
 
   public function testActivatingDeterminateRowRunsTheWorkAndCollectsNoAnswer(): void {

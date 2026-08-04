@@ -59,7 +59,11 @@ class SchemaValidator {
     // shows is still an id the form knows, so a stray value for one is ignored
     // rather than reported as a question nobody asked.
     $known = array_fill_keys(Tree::ids($this->root), TRUE);
-    $within = Tree::within($this->root, $answers);
+    // Settled rather than read once: a value inside a section the payload takes
+    // away is a value the form never asked for, and collection drops it before
+    // the conditions are measured again. Reading it once would owe a question
+    // that a run of the same payload never asks.
+    $within = Tree::settled($this->root, $answers);
 
     foreach (Tree::fields($this->root) as $field) {
       if (!($within[spl_object_id($field)] ?? TRUE)) {

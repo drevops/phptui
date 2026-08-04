@@ -159,7 +159,7 @@ composer install
 
 ### Writing Tests
 
-Tests should use PHPUnit 11 features:
+Tests should use PHPUnit 12 features:
 
 - Coverage attributes: `#[CoversClass(ClassName::class)]`
 - Test attributes: `#[Test]` (optional, using `test` prefix is also fine)

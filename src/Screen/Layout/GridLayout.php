@@ -57,7 +57,7 @@ final class GridLayout extends AbstractLayout {
     }
 
     $this->shape = array_values($rows);
-    $this->region('content')->scrolls();
+    $this->region(self::CONTENT)->scrolls();
   }
 
   /**
