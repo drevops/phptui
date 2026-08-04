@@ -115,7 +115,7 @@ php playground/15-progress-bar.php 2>&1 | cat
 - **Preloading a panel.** `->preload(closure)` on a panel runs once, before the panel's fields first draw - prep the panel needs, fetched on entry rather than up front, so one fetch can feed several fields.
 - **[Options that follow the query](#options-from-a-query).** `->optionsFrom()` is called again on every query change rather than once, for candidates that live behind a search API.
 - **[Options that follow the answers](/field-behaviour#options-from-the-answers).** The same `->options()` callback, but asking for the run context: it is called again whenever the answers change, so one field's choices narrow by another's answer. It resolves during the form settling rather than on entry, so it shows no indicator - keep it cheap.
-- **The [progress block](/fields/progress).** A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself. Unlike `progress()`, it lives among the fields - and unlike a field, it collects no value.
+- **The [progress row](/progress-row).** A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself. Unlike `progress()`, it lives among the fields - and unlike a field, it collects no value.
 
 ```php
 $form->panel('order', 'New order', function (PanelBuilder $p) use ($pack): void {
@@ -127,7 +127,7 @@ $form->panel('order', 'New order', function (PanelBuilder $p) use ($pack): void 
 });
 ```
 
-Runnable in [`playground/16-loading-data.php`](https://github.com/drevops/tui/blob/main/playground/16-loading-data.php) and [`playground/02-fields-progress.php`](https://github.com/drevops/tui/blob/main/playground/02-fields-progress.php).
+Runnable in [`playground/16-loading-data.php`](https://github.com/drevops/tui/blob/main/playground/16-loading-data.php) and [`playground/02-progress-row.php`](https://github.com/drevops/tui/blob/main/playground/02-progress-row.php).
 
 ## Options from a query
 

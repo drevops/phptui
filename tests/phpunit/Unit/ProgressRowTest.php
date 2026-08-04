@@ -22,7 +22,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests the progress field: a display row that runs work when activated.
+ * Tests the progress row: a display row that runs work when activated.
  */
 #[CoversClass(PanelBuilder::class)]
 #[CoversClass(Progress::class)]
@@ -32,7 +32,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ProgressReporter::class)]
 #[CoversClass(AgentHelp::class)]
 #[Group('tui')]
-final class ProgressFieldTest extends TestCase {
+final class ProgressRowTest extends TestCase {
 
   public function testBuilderStoresTheStepsAndWork(): void {
     $block = $this->form($this->work(), 3)->root()->children()[0]->in('content')->blocks()[0];

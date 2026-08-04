@@ -3,7 +3,7 @@
 
 /**
  * @file
- * Render the per-field and per-markup animated SVGs deterministically.
+ * Render the per-field and per-block animated SVGs deterministically.
  *
  * The full-demo montages and panel walkthroughs are recorded from a live pty
  * (see update-assets.php), but these assets are one-block forms that the
@@ -21,7 +21,7 @@
  * @code
  * php docs/util/render-field-svgs.php            # every spec
  * php docs/util/render-field-svgs.php confirm    # one or more by name
- * php docs/util/render-field-svgs.php markup     # the markup block
+ * php docs/util/render-field-svgs.php markup     # a block, by its own name
  * @endcode
  */
 
@@ -254,10 +254,11 @@ function fieldSpecs(string $tree): array {
       'rows' => 16,
       'subject' => 'markup-table',
     ],
-    'progress' => [
-      'form' => static fn(): Form => Form::create('Progress field')->panel('main', 'Progress', function (PanelBuilder $p) use ($pack): void { $p->progress('pack', 'Packing the box')->steps(6)->work($pack); }),
+    'progress-row' => [
+      'form' => static fn(): Form => Form::create('Progress row')->panel('main', 'Progress', function (PanelBuilder $p) use ($pack): void { $p->progress('pack', 'Packing the box')->steps(6)->work($pack); }),
       'keys' => [$enter, $enter],
       'rows' => 6,
+      'subject' => 'progress-row',
     ],
     'filepicker' => [
       'form' => static fn(): Form => Form::create('File picker field')->panel('main', 'File picker', function (PanelBuilder $p) use ($tree): void { $p->filePicker('price_list', 'Price list')->startIn($tree)->filesOnly()->extensions(['csv'])->maxSize(2097152); }),

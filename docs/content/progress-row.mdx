@@ -1,16 +1,16 @@
 ---
-title: Progress
+title: Progress row
 description: 'A panel row that runs work when activated, filling a bar or ticking a spinner in place.'
-keywords: ['progress', 'bar', 'spinner', 'block']
+keywords: ['progress', 'row', 'bar', 'spinner', 'block']
 ---
 
 import ThemedImage from '@theme/ThemedImage';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-# Progress
+# Progress row
 
 <p align="center">
-  <ThemedImage sources={{light: useBaseUrl('/field-progress-light-animated.svg'), dark: useBaseUrl('/field-progress-dark-animated.svg')}} alt="Progress field" />
+  <ThemedImage sources={{light: useBaseUrl('/progress-row-light-animated.svg'), dark: useBaseUrl('/progress-row-dark-animated.svg')}} alt="Progress row" />
 </p>
 
 A place to do work inside the form: select the row, press <kbd>Enter</kbd>, and its work runs with a **determinate bar** (when it declares a step count) or an **indeterminate spinner** (when it does not), drawn in the row itself as the work advances. It collects **no value** - it sits beside the fields it depends on, not among the answers, so it's a block of its own rather than a kind of field.
@@ -28,7 +28,7 @@ $p->progress('pack', 'Packing the box')
   });
 ```
 
-Runnable script: [`playground/02-fields-progress.php`](https://github.com/drevops/tui/blob/main/playground/02-fields-progress.php).
+Runnable script: [`playground/02-progress-row.php`](https://github.com/drevops/tui/blob/main/playground/02-progress-row.php).
 
 ## Options
 
@@ -62,12 +62,12 @@ In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
   </tr>
   <tr>
     <td align="right"><strong>Unicode</strong></td>
-    <td><ThemedImage sources={{light: useBaseUrl('/field-progress-light-static.svg'), dark: useBaseUrl('/field-progress-dark-static.svg')}} alt="Progress: Unicode + ANSI" /></td>
-    <td><ThemedImage sources={{light: useBaseUrl('/field-progress-light-static-no-ansi.svg'), dark: useBaseUrl('/field-progress-dark-static-no-ansi.svg')}} alt="Progress: Unicode + No ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/progress-row-light-static.svg'), dark: useBaseUrl('/progress-row-dark-static.svg')}} alt="Progress: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/progress-row-light-static-no-ansi.svg'), dark: useBaseUrl('/progress-row-dark-static-no-ansi.svg')}} alt="Progress: Unicode + No ANSI" /></td>
   </tr>
   <tr>
     <td align="right"><strong>ASCII</strong></td>
-    <td><ThemedImage sources={{light: useBaseUrl('/field-progress-light-static-ascii.svg'), dark: useBaseUrl('/field-progress-dark-static-ascii.svg')}} alt="Progress: ASCII + ANSI" /></td>
-    <td><ThemedImage sources={{light: useBaseUrl('/field-progress-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/field-progress-dark-static-ascii-no-ansi.svg')}} alt="Progress: ASCII + No ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/progress-row-light-static-ascii.svg'), dark: useBaseUrl('/progress-row-dark-static-ascii.svg')}} alt="Progress: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/progress-row-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/progress-row-dark-static-ascii-no-ansi.svg')}} alt="Progress: ASCII + No ANSI" /></td>
   </tr>
 </table>

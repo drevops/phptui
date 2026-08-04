@@ -192,8 +192,8 @@ There's a field for most things you'd want to ask: text entry, numbers and dates
 <td><strong><a href="https://phptui.dev/fields/pause">Pause</a></strong><br>An acknowledgment gate; <kbd>Enter</kbd> or <kbd>Space</kbd> accepts. Unattended runs auto-acknowledge it, so it never blocks automation.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-progress-dark-animated.svg"><img src="docs/assets/field-progress-light-animated.svg" width="100%" alt="Progress field"></picture></td>
-<td><strong><a href="https://phptui.dev/fields/progress">Progress</a></strong><br>A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself; it collects no value.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/progress-row-dark-animated.svg"><img src="docs/assets/progress-row-light-animated.svg" width="100%" alt="Progress row"></picture></td>
+<td><strong><a href="https://phptui.dev/progress-row">Progress</a></strong><br>A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself; it collects no value.</td>
 </tr>
 <tr>
 <td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-rating-dark-animated.svg"><img src="docs/assets/field-rating-light-animated.svg" width="100%" alt="Rating field"></picture></td>

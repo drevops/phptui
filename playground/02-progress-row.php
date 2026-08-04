@@ -2,15 +2,18 @@
 
 /**
  * @file
- * Progress field: a panel row that runs work when activated, drawn in place.
+ * Progress row: a block that runs work when activated, drawn in place.
  *
  * Selecting the row and pressing Enter runs its work; the bar fills in the row
  * itself as each advance() lands (drop ->steps() for an indeterminate spinner).
  * The row collects no value - it is a place to do work inside the form, beside
- * the fields it depends on. Unattended runs skip it.
+ * the fields it depends on, which is what makes it a block of its own rather
+ * than a kind of field. Unattended runs skip it. The progress primitive
+ * (playground/15-progress-*) is the same indicator for slow work that happens
+ * around a form rather than in one.
  *
  * Usage:
- *   php playground/02-fields-progress.php
+ *   php playground/02-progress-row.php
  */
 
 declare(strict_types=1);
@@ -25,8 +28,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $items = ['Apple', 'Carrot', 'Tomato', 'Spinach', 'Pear', 'Beet'];
 
-// One field on one panel: the smallest form that exercises the field.
-$form = Form::create('Progress field')
+// One block on one panel: the smallest form that exercises the row.
+$form = Form::create('Progress row')
   ->panel('main', 'Progress', function (PanelBuilder $p) use ($items): void {
     $p->progress('pack', 'Packing the box')->steps(count($items))->work(function (ProgressReporter $reporter) use ($items): void {
       foreach ($items as $item) {
