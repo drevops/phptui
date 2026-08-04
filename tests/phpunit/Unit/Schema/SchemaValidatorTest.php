@@ -211,6 +211,23 @@ final class SchemaValidatorTest extends TestCase {
     $this->assertStringContainsString('variety', implode(' ', $refusals));
   }
 
+  public function testValueUnderShowOnlyIdCannotWidenAnotherQuestionsOptions(): void {
+    // A markup id is known, so a stray value for it is tolerated - but it
+    // collects nothing, so collection never answers with it and a resolver
+    // reading it here would see what a run of the same payload never sees.
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->markup('intro', 'Pick the produce.');
+
+        $p->select('variety', 'Variety')->options(static fn(Context $context): array => ($context->answers['intro'] ?? '') === 'stone' ? ['plum' => 'Plum'] : ['apple' => 'Apple']);
+      });
+
+    $refusals = (new SchemaValidator($form->root()))->validate(['intro' => 'stone', 'variety' => 'plum']);
+
+    $this->assertNotSame([], $refusals);
+    $this->assertStringContainsString('variety', implode(' ', $refusals));
+  }
+
   public function testValueTheAnswersTakeAwayCannotAskForAnythingElse(): void {
     // The section is not there, so the value the payload carries for a question
     // inside it was never asked for - and a value nobody was asked for cannot

@@ -64,12 +64,16 @@ class SchemaValidator {
     // the conditions are measured again. Reading it once would owe a question
     // that a run of the same payload never asks.
     $within = Tree::settled($this->root, $answers);
+    $fields = Tree::fields($this->root);
     // What the form actually asks with: a value inside a section the payload
-    // took away must not feed another field's option list, or membership here
-    // would allow what collection refuses.
-    $asked = Tree::held($this->root, $answers, $within);
+    // took away - or one keyed by a block that collects nothing - must not feed
+    // another field's option list, or membership here would allow what
+    // collection refuses. Collection only ever answers with fields, so the
+    // resolver context is narrowed to the same set.
+    $ids = array_fill_keys(array_map(static fn(Field $field): string => $field->id(), $fields), TRUE);
+    $asked = array_intersect_key(Tree::held($this->root, $answers, $within), $ids);
 
-    foreach (Tree::fields($this->root) as $field) {
+    foreach ($fields as $field) {
       if (!($within[spl_object_id($field)] ?? TRUE)) {
         continue;
       }
