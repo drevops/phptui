@@ -58,9 +58,9 @@ final class BlockTest extends TestCase {
   }
 
   public function testLegendReadsAsKeyThenWhatItDoes(): void {
-    $legend = (new Legend())->entry('↵', 'accept')->entry('ESC', 'cancel');
+    $legend = (new Legend())->advertise(KeyMapManager::create()->navigation(), new Hint('accept', Action::Activate), new Hint('cancel', Action::Quit));
 
-    $this->assertSame('↵ to accept · ESC to cancel', $legend->render($this->theme()));
+    $this->assertSame('↵ to accept · Q to cancel', $legend->render($this->theme()));
   }
 
   public function testLegendWithNoKeysDrawsNothing(): void {
@@ -85,11 +85,13 @@ final class BlockTest extends TestCase {
     $this->assertSame('Q to quit', $legend->render($this->theme()));
   }
 
-  public function testAdvertisedKeysReplaceTheOnesWrittenByHand(): void {
-    $legend = (new Legend())->entry('↵', 'accept');
+  public function testAdvertisingAgainReplacesWhatAppliedBefore(): void {
+    $keys = KeyMapManager::create()->navigation();
+    $legend = (new Legend())->advertise($keys, new Hint('move', Action::MoveUp));
 
-    $legend->advertise(KeyMapManager::create()->navigation(), new Hint('quit', Action::Quit));
-    $this->assertSame('Q to quit', $legend->render($this->theme()));
+    // A legend says what applies right now, so advertising a second set is what
+    // it says from then on rather than a line that grows as focus moves.
+    $this->assertSame('Q to quit', $legend->advertise($keys, new Hint('quit', Action::Quit))->render($this->theme()));
 
     $this->assertSame('', $legend->clear()->render($this->theme()));
   }
@@ -106,7 +108,7 @@ final class BlockTest extends TestCase {
   }
 
   public function testLegendOutOfRoomDropsWholeHintsFromTheEnd(): void {
-    $legend = (new Legend())->entry('↑/↓', 'move')->entry('↵', 'accept')->entry('ESC', 'cancel');
+    $legend = (new Legend())->advertise(KeyMapManager::create()->navigation(), new Hint('move', Action::MoveUp, Action::MoveDown), new Hint('accept', Action::Activate), new Hint('cancel', Action::Quit));
     $whole = $legend->render($this->theme());
 
     // A hint cut mid-word reads as a different word, so a narrow frame loses
@@ -236,7 +238,7 @@ final class BlockTest extends TestCase {
 
   public static function dataProviderEveryBlockRefusesThemeThatCannotDrawIt(): \Iterator {
     yield 'breadcrumb' => [static fn(): Breadcrumb => new Breadcrumb('Orchard'), 'cannot draw a breadcrumb'];
-    yield 'legend' => [static fn(): Legend => (new Legend())->entry('↵', 'accept'), 'cannot draw a legend'];
+    yield 'legend' => [static fn(): Legend => (new Legend())->advertise(KeyMapManager::create()->navigation(), new Hint('accept', Action::Activate)), 'cannot draw a legend'];
     yield 'markup' => [static fn(): Markup => new Markup('intro', 'Pick the produce.'), 'cannot draw markup'];
     yield 'actions' => [static fn(): Actions => (new Actions())->action('submit', 'Submit'), 'cannot draw actions'];
     yield 'progress' => [static fn(): Progress => new Progress('packing', 'Packing'), 'cannot draw progress'];

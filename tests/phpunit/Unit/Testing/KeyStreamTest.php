@@ -71,4 +71,13 @@ final class KeyStreamTest extends TestCase {
     $this->assertSame('char:a', Key::char('a')->token());
   }
 
+  public function testLabelSpellsOutKeyNobodyCanType(): void {
+    // A control character is a key press with no character to show for it, so
+    // the value object is where it is spelled - anything writing a key down
+    // takes the spelling rather than inventing one.
+    $this->assertSame('Enter', Key::named(KeyName::Enter)->label());
+    $this->assertSame('j', Key::char('j')->label());
+    $this->assertSame('ctrl-e', Key::char("\x05")->label());
+  }
+
 }

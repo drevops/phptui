@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Theme;
 
-use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
 use DrevOps\Tui\Primitive\Status;
@@ -56,11 +55,6 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
 
   use ColorSchemeCapableTrait;
   use UnicodeCapableTrait;
-
-  /**
-   * The default frame width, used when a caller does not specify one.
-   */
-  public const int DEFAULT_WIDTH = 76;
 
   /**
    * The nominal width of a boxed or underlined input field, in columns.
@@ -149,7 +143,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    *   on), "spacing" (a SPACING_* value), "border" (a BORDER_* value), plus any
    *   option a concrete theme declares.
    */
-  public function __construct(int $width = self::DEFAULT_WIDTH, array $options = []) {
+  public function __construct(int $width = ThemeInterface::DEFAULT_WIDTH, array $options = []) {
     parent::__construct($width, $options);
     $this->validateOptions();
 
@@ -675,14 +669,12 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function keyGlyph(Key $key): string {
-    $name = $key->name;
-
-    if (!$name instanceof KeyName) {
-      return $key->label();
+  public function keyGlyph(KeyName|string $key): string {
+    if (!$key instanceof KeyName) {
+      return $key;
     }
 
-    return match ($name) {
+    return match ($key) {
       KeyName::Up, KeyName::MouseWheelUp => $this->glyph('↑', '^'),
       KeyName::Down, KeyName::MouseWheelDown => $this->glyph('↓', 'v'),
       KeyName::Left => $this->glyph('←', '<'),

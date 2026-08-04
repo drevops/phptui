@@ -218,7 +218,7 @@ The lowest-friction route to using it: name the class directly on the facade, no
 $tui = (new \DrevOps\Tui\Tui($form))->theme(AquaTheme::class);
 ```
 
-Or register a short alias with `ThemeManager::register('aqua', AquaTheme::class)`, then `->theme('aqua')`. Either way the class must implement `ThemeInterface` and take a frame width and an options array - which is what extending `AbstractTheme` or `DefaultTheme` gives you - and registration says so up front rather than failing at the first frame. The [playground's ocean theme](https://github.com/drevops/tui/blob/main/playground/09-themes-custom.php) goes further, repainting many voices and elements for a distinct look with a start banner:
+Or register a short alias with `ThemeManager::register('aqua', AquaTheme::class)`, then `->theme('aqua')`. Either way the class must implement `ThemeInterface`, take a frame width and an options array, and answer for every element a form is drawn from - all of which is what extending `AbstractTheme` or `DefaultTheme` gives you - and both naming and registering say so up front rather than failing at the first frame. The [playground's ocean theme](https://github.com/drevops/tui/blob/main/playground/09-themes-custom.php) goes further, repainting many voices and elements for a distinct look with a start banner:
 
 <p align="center">
   <img src="/theme-ocean-dark-animated.svg" width="100%" alt="Custom ocean theme with a banner" />
@@ -243,7 +243,7 @@ Two of the six carry a **trait** with the plumbing, so a theme states a flag and
 
 `DefaultTheme` declares all six, so a subclass of it inherits every facility and never has to think about this. `AbstractTheme` declares none: it hands back the strings it was given and the ASCII stand-ins that read without them. That is the floor, and it is why a form renders in a terminal that supports nothing.
 
-A theme built on the floor is selected like any other - `->theme(MyFloorTheme::class)`, or a short name you registered - because `ThemeManager` builds anything implementing `ThemeInterface` from a frame width and an options array. What it doesn't declare, the driver does without: no frame is drawn around it, no blank row shows between blocks, nothing recedes behind a modal, and an [element patch](#patching-an-element) is dropped rather than deciding the theme can't draw. The [output and progress primitives](/output) are the exception - a card, a grid and a status line are composed rather than styled, so they want `PrimitiveElementsInterface`, and a theme without it is named in the error rather than drawn blank.
+A theme built on the floor is selected like any other - `->theme(MyFloorTheme::class)`, or a short name you registered - because `ThemeManager` builds anything implementing `ThemeInterface` from a frame width and an options array. It checks both of those where the theme is picked, along with the elements a form is drawn from, so a class that can't be built that way or can't draw a row is refused by name there rather than partway through a frame. What it doesn't declare, the driver does without: no frame is drawn around it, no blank row shows between blocks, nothing recedes behind a modal, and an [element patch](#patching-an-element) is dropped rather than deciding the theme can't draw. The [output and progress primitives](/output) are the exception - a card, a grid and a status line are composed rather than styled, so they want `PrimitiveElementsInterface`, and a theme without it is named in the error rather than drawn blank.
 
 ## Patching an element
 

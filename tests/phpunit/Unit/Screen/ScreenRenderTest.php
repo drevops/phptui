@@ -8,6 +8,9 @@ use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Input\Action;
+use DrevOps\Tui\Input\Hint;
+use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Layout\AbstractLayout;
 use DrevOps\Tui\Screen\Layout\DefaultLayout;
@@ -35,7 +38,7 @@ final class ScreenRenderTest extends TestCase {
     $screen = (new Screen())->layout(new DefaultLayout());
     $screen->in('header')->add(new Breadcrumb('Orchard', 'Delivery'));
     $screen->in('content')->add(new Markup('intro', 'Pick the produce.'));
-    $screen->in('footer')->add((new Legend())->entry('↵', 'accept'));
+    $screen->in('footer')->add((new Legend())->advertise(KeyMapManager::create()->navigation(), new Hint('accept', Action::Activate)));
 
     $lines = $this->render($screen, 6, 40);
 
@@ -310,7 +313,7 @@ final class ScreenRenderTest extends TestCase {
     $layout->in('footer')->flow(Axis::Columns);
 
     $screen = (new Screen())->layout($layout);
-    $screen->in('footer')->add((new Legend())->entry('↵', 'accept'))->tail(new Markup('version', 'v1.2.3'));
+    $screen->in('footer')->add((new Legend())->advertise(KeyMapManager::create()->navigation(), new Hint('accept', Action::Activate)))->tail(new Markup('version', 'v1.2.3'));
 
     // A footer flows its key hints from one end and a version string from the
     // other, without a second arrangement to put them there.

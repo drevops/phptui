@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Tests\Fixtures\Theme\FloorTheme;
 use DrevOps\Tui\Theme\AbstractTheme;
@@ -77,7 +76,7 @@ final class AbstractThemeTest extends TestCase {
     yield 'panel descend' => [static fn(FloorTheme $t): string => $t->panelDescend()];
     yield 'panel summary separator' => [static fn(FloorTheme $t): string => $t->panelSummarySeparator()];
     yield 'markup bullet' => [static fn(FloorTheme $t): string => $t->markupBullet()];
-    yield 'key glyph' => [static fn(FloorTheme $t): string => $t->keyGlyph(Key::named(KeyName::Escape))];
+    yield 'key glyph' => [static fn(FloorTheme $t): string => $t->keyGlyph(KeyName::Escape)];
     yield 'progress spinner' => [static fn(FloorTheme $t): string => $t->progressSpinner(0)];
     yield 'progress track' => [static fn(FloorTheme $t): string => $t->progressTrack(4, 10)];
   }

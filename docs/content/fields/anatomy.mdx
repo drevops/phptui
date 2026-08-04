@@ -42,7 +42,7 @@ The chrome is the same whatever the form asks. You declare it once - the form's 
 
 </div>
 
-The **legend** (5) is the one atom of the chrome that changes as you work: it lists the keys that apply where you are, so an open field advertises different keys from the panel around it. That's also why a **legend key** (6) needs no weight of its own. Case alone tells <kbd>ESC</kbd> from the words beside it, and the `KEY to action` wording of a **legend description** (7) makes an entry read as a sentence rather than two words abutted.
+The **legend** (5) is the one atom of the chrome that changes as you work: it lists the keys that apply where you are, so an open field advertises different keys from the panel around it. It's written from the live bindings and never by hand - it's handed the map a key press resolves against and reads the glyphs back out of it - so a rebound key changes the line advertising it rather than drifting from it. That's also why a **legend key** (6) needs no weight of its own. Case alone tells <kbd>ESC</kbd> from the words beside it, and the `KEY to action` wording of a **legend description** (7) makes an entry read as a sentence rather than two words abutted.
 
 A **legend** (5) with more entries than the frame has room for drops them whole, from the end, keeping at least one however narrow the frame gets. An entry cut mid-word reads as a different word, and the entries a reader reaches for first are the ones declared first, so the line sheds from the far end rather than wrapping or clipping.
 
@@ -182,11 +182,11 @@ That's also why they're built differently. The first is an unframed phrase - `a 
 
 ## Elements: what a theme actually implements
 
-An atom is what you see. An **element** is the method a theme answers with, and every one of them takes plain strings and scalars and returns a styled string. That is the whole contract: order, spacing and how many elements there are belong to the block; color and glyph belong to the theme.
+An atom is what you see. An **element** is the method a theme answers with, and every one of them takes plain strings, scalars and enum cases, and returns a styled string. That is the whole contract: order, spacing and how many elements there are belong to the block; color and glyph belong to the theme.
 
 Elements are grouped by the block that declares them, in one interface per block, and each is prefixed with its owner's name so a theme can implement every interface on one class without a collision. A theme that doesn't implement a block's interface can't draw that block, and it says so by name rather than leaving a blank line.
 
-`ThemeInterface` itself carries only two methods, because only two belong to no block at all: `contentWidth()`, the one width every block lays out against, and `keyGlyph(Key $key)`, so the legend, a field naming a key in a prompt and the notice saying how to quit all spell the same key the same way.
+`ThemeInterface` itself carries only two methods, because only two belong to no block at all: `contentWidth()`, the one width every block lays out against, and `keyGlyph(KeyName|string $key)`, so the legend, a field naming a key in a prompt and the notice saying how to quit all spell the same key the same way. The two theme-wide methods take what an element takes and nothing more - a named key travels as its `KeyName` and a typed one as the character it writes, so the value object an input layer carries a press around in stops where it was built.
 
 ### The chrome
 

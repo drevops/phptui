@@ -32,6 +32,7 @@ use DrevOps\Tui\Render\TerminalControl;
 use DrevOps\Tui\Testing\BufferedTerminal;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
+use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Theme\ThemeManager;
 
 require dirname(__DIR__, 2) . '/vendor/autoload.php';
@@ -126,7 +127,7 @@ function outputSpecs(): array {
  */
 function renderOutput(string $name, callable $spec, string $assets_dir, string $util_dir, string $tmp_dir): void {
   foreach (DISPLAY_MODES as $suffix => $mode) {
-    $theme = ThemeManager::create('default', DefaultTheme::DEFAULT_WIDTH, ['color' => $mode['color'], 'unicode' => $mode['unicode'], 'mode' => Mode::Dark]);
+    $theme = ThemeManager::create('default', ThemeInterface::DEFAULT_WIDTH, ['color' => $mode['color'], 'unicode' => $mode['unicode'], 'mode' => Mode::Dark]);
     $lines = captureLines($theme, $spec);
 
     if ($lines === []) {

@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
+use DrevOps\Tui\Block\Element\ActionsElementsInterface;
 use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Tests\Fixtures\Theme\AccentOptionTheme;
+use DrevOps\Tui\Tests\Fixtures\Theme\BlankTheme;
+use DrevOps\Tui\Tests\Fixtures\Theme\CapableTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\FloorOptionTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\FloorTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\OceanTheme;
+use DrevOps\Tui\Tests\Fixtures\Theme\UnbuildableTheme;
 use DrevOps\Tui\Tests\Traits\ResetsRegistriesTrait;
 use DrevOps\Tui\Theme\AbstractTheme;
 use DrevOps\Tui\Theme\DefaultTheme;
@@ -96,6 +101,60 @@ final class ThemeManagerTest extends TestCase {
     $this->expectExceptionMessage('Theme class "' . AbstractTheme::class . '" cannot be instantiated.');
 
     ThemeManager::create(AbstractTheme::class);
+  }
+
+  #[DataProvider('dataProviderThemeThatCannotBeBuiltFromWidthAndOptionsThrows')]
+  public function testThemeThatCannotBeBuiltFromWidthAndOptionsThrows(string $class): void {
+    // The factory has a width and an options array and nothing else to offer,
+    // so a theme that will not take those two is named where it is picked.
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Theme class "' . $class . '" must take a frame width and an options array.');
+
+    ThemeManager::create($class);
+  }
+
+  public static function dataProviderThemeThatCannotBeBuiltFromWidthAndOptionsThrows(): \Iterator {
+    yield 'a first argument that is not a width' => [CapableTheme::class];
+    yield 'options and nothing else' => [AccentOptionTheme::class];
+    yield 'an argument nothing can supply' => [UnbuildableTheme::class];
+  }
+
+  public function testThemeThatDrawsNoElementThrows(): void {
+    // A theme by type alone reaches the first frame and fails there, so what a
+    // form is drawn from is checked where the theme is picked instead.
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Theme class "' . BlankTheme::class . '" cannot draw a form: it does not implement ' . ActionsElementsInterface::class);
+
+    ThemeManager::create(BlankTheme::class);
+  }
+
+  public function testRegisteringThemeThatCannotDrawIsRefusedThere(): void {
+    // Both ways of picking a theme ask the same of it, so a name registered
+    // now and used later fails at the registration rather than at the frame.
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('cannot draw a form');
+
+    ThemeManager::register('blank', BlankTheme::class);
+  }
+
+  public function testEveryElementTheFormIsDrawnFromIsAsked(): void {
+    // The floor answers for every element the blocks and the frame declare, so
+    // what a theme has to draw is read off it rather than listed twice.
+    $missing = array_diff(class_implements(AbstractTheme::class) ?: [], class_implements(BlankTheme::class) ?: []);
+    $refusal = '';
+
+    try {
+      ThemeManager::create(BlankTheme::class);
+    }
+    catch (\InvalidArgumentException $exception) {
+      $refusal = $exception->getMessage();
+    }
+
+    $this->assertNotSame([], $missing);
+
+    foreach ($missing as $interface) {
+      $this->assertStringContainsString($interface, $refusal);
+    }
   }
 
   public function testCreateFromClassName(): void {

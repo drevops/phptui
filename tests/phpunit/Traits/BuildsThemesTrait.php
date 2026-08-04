@@ -8,6 +8,7 @@ use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\Spacing;
+use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Theme\ThemeManager;
 
 /**
@@ -27,7 +28,7 @@ trait BuildsThemesTrait {
    *   The theme.
    */
   protected function theme(bool $color = TRUE, bool $unicode = TRUE): DefaultTheme {
-    return $this->builtin('default', DefaultTheme::DEFAULT_WIDTH, ['color' => $color, 'unicode' => $unicode, 'mode' => Mode::Dark]);
+    return $this->builtin('default', ThemeInterface::DEFAULT_WIDTH, ['color' => $color, 'unicode' => $unicode, 'mode' => Mode::Dark]);
   }
 
   /**
@@ -47,7 +48,7 @@ trait BuildsThemesTrait {
    * @return \DrevOps\Tui\Theme\DefaultTheme
    *   The theme.
    */
-  protected function builtin(string $name, int $width = DefaultTheme::DEFAULT_WIDTH, array $options = []): DefaultTheme {
+  protected function builtin(string $name, int $width = ThemeInterface::DEFAULT_WIDTH, array $options = []): DefaultTheme {
     $theme = ThemeManager::create($name, $width, $options);
 
     $this->assertInstanceOf(DefaultTheme::class, $theme);

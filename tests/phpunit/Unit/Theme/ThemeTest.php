@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
 use DrevOps\Tui\Block\Prose;
-use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Theme\Border;
@@ -200,7 +199,7 @@ final class ThemeTest extends TestCase {
     yield 'unicode descend' => [TRUE, static fn(DefaultTheme $t): string => $t->panelDescend(), '›'];
     yield 'ascii descend' => [FALSE, static fn(DefaultTheme $t): string => $t->panelDescend(), '>'];
     yield 'unicode breadcrumb separator' => [TRUE, static fn(DefaultTheme $t): string => $t->breadcrumbSeparator(), '›'];
-    yield 'unicode enter' => [TRUE, static fn(DefaultTheme $t): string => $t->keyGlyph(Key::named(KeyName::Enter)), '↵'];
+    yield 'unicode enter' => [TRUE, static fn(DefaultTheme $t): string => $t->keyGlyph(KeyName::Enter), '↵'];
     yield 'unicode summary separator' => [TRUE, static fn(DefaultTheme $t): string => $t->panelSummarySeparator(), '·'];
     yield 'unicode caret' => [TRUE, static fn(DefaultTheme $t): string => $t->fieldCaret(), '█'];
     yield 'ascii caret' => [FALSE, static fn(DefaultTheme $t): string => $t->fieldCaret(), '|'];

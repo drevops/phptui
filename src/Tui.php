@@ -26,7 +26,6 @@ use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
 use DrevOps\Tui\Theme\Capability\OverrideCapableInterface;
-use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\Override\Overrides;
 use DrevOps\Tui\Theme\ThemeBuilder;
@@ -477,7 +476,7 @@ final class Tui {
 
     $terminal ??= self::primitiveTerminal();
 
-    $theme = $this->buildTheme('', DefaultTheme::DEFAULT_WIDTH, $this->primitiveThemeOptions());
+    $theme = $this->buildTheme('', ThemeInterface::DEFAULT_WIDTH, $this->primitiveThemeOptions());
 
     return (new Progress($terminal, self::pieces($theme), $terminal->isOutputTty(), $total, $caption))->run($work);
   }
@@ -610,7 +609,7 @@ final class Tui {
    *   Public for the {@see \DrevOps\Tui\Testing\TuiTester} harness; consumers
    *   collect through run(), collect() or interact().
    */
-  public function controller(array $options, string $theme = '', string $banner = '', string $version = '', string $directory = '', int $width = DefaultTheme::DEFAULT_WIDTH, bool $update = FALSE): ScreenController {
+  public function controller(array $options, string $theme = '', string $banner = '', string $version = '', string $directory = '', int $width = ThemeInterface::DEFAULT_WIDTH, bool $update = FALSE): ScreenController {
     // Restore this facade's language before rendering (see collect()).
     Translator::setShared($this->translator);
 
@@ -658,7 +657,7 @@ final class Tui {
       return $terminal_width;
     }
 
-    return $terminal_width > 0 ? min(DefaultTheme::DEFAULT_WIDTH, $terminal_width) : DefaultTheme::DEFAULT_WIDTH;
+    return $terminal_width > 0 ? min(ThemeInterface::DEFAULT_WIDTH, $terminal_width) : ThemeInterface::DEFAULT_WIDTH;
   }
 
   /**

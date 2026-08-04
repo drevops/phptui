@@ -228,7 +228,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
     // The keys that move it, so the mark says what to press rather than
     // inventing a second vocabulary for the same two directions.
     if ($current && $this->grabbed) {
-      return $theme->keyGlyph(Key::named(KeyName::Up)) . $theme->keyGlyph(Key::named(KeyName::Down));
+      return $theme->keyGlyph(KeyName::Up) . $theme->keyGlyph(KeyName::Down);
     }
 
     return $this->elements($theme)->fieldEntrySelector($current) . ' ';

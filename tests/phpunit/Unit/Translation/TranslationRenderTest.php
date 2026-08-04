@@ -23,6 +23,7 @@ use DrevOps\Tui\Schema\SchemaValidator;
 use DrevOps\Tui\Testing\ScreenTester;
 use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -178,7 +179,7 @@ final class TranslationRenderTest extends TestCase {
     foreach (array_keys($wide->frames()) as $at) {
       $composed = $this->legend($wide->frame($at));
 
-      $this->assertLessThanOrEqual(DefaultTheme::DEFAULT_WIDTH, Ansi::width($composed));
+      $this->assertLessThanOrEqual(ThemeInterface::DEFAULT_WIDTH, Ansi::width($composed));
       $this->assertSame($composed, $this->legend($narrow->frame($at)));
     }
   }
@@ -188,12 +189,12 @@ final class TranslationRenderTest extends TestCase {
 
     $picker = new FilePicker(__DIR__);
     $legend = (new Legend())->advertise(KeyMapManager::create()->forField(FieldType::FilePicker), ...$picker->hints());
-    $composed = Ansi::strip($legend->render(new DefaultTheme(DefaultTheme::DEFAULT_WIDTH * 2, ['color' => FALSE, 'unicode' => TRUE])));
+    $composed = Ansi::strip($legend->render(new DefaultTheme(ThemeInterface::DEFAULT_WIDTH * 2, ['color' => FALSE, 'unicode' => TRUE])));
 
     // The longest list anything here advertises: browsing adds a way in, a way
     // out and a way to see what is hidden on top of the four every field has.
     $this->assertSame('↑/↓ рух · → відкрити · ← вгору · ↵ вибрати · TAB приховані · ESC скасувати', $composed);
-    $this->assertLessThanOrEqual(DefaultTheme::DEFAULT_WIDTH, Ansi::width($composed));
+    $this->assertLessThanOrEqual(ThemeInterface::DEFAULT_WIDTH, Ansi::width($composed));
   }
 
   public function testUkrainianRowStatesItsRefusalAndWhereItsValueCameFrom(): void {

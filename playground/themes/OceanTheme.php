@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Playground\Themes;
 
-use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Sgr;
@@ -97,8 +96,8 @@ class OceanTheme extends DefaultTheme {
    * {@inheritdoc}
    */
   #[\Override]
-  public function keyGlyph(Key $key): string {
-    if ($key->is(KeyName::Enter)) {
+  public function keyGlyph(KeyName|string $key): string {
+    if ($key === KeyName::Enter) {
       return $this->hasUnicode() ? '⏎' : '<';
     }
 

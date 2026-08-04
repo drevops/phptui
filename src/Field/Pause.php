@@ -55,8 +55,11 @@ class Pause extends AbstractField {
    */
   protected function renderBody(ThemeInterface $theme): string {
     $key = $this->keys()->primary(Action::Accept) ?? Key::named(KeyName::Enter);
+    // A named key travels as its name and a typed one as what it writes, so
+    // nothing an input layer holds a key in reaches the theme.
+    $glyph = $theme->keyGlyph($key->name ?? $key->label());
 
-    return Translator::t('Press @key to continue', ['@key' => $this->entryLabel($theme, $theme->keyGlyph($key), TRUE)]);
+    return Translator::t('Press @key to continue', ['@key' => $this->entryLabel($theme, $glyph, TRUE)]);
   }
 
   /**

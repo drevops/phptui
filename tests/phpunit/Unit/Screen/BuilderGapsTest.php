@@ -11,6 +11,9 @@ use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
+use DrevOps\Tui\Input\Action;
+use DrevOps\Tui\Input\Hint;
+use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Screen\Assembler;
@@ -76,7 +79,7 @@ final class BuilderGapsTest extends TestCase {
   }
 
   public function testLegendForgetsWhatNoLongerApplies(): void {
-    $legend = (new Legend())->entry('↵', 'accept');
+    $legend = (new Legend())->advertise(KeyMapManager::create()->navigation(), new Hint('accept', Action::Activate));
 
     $this->assertSame('', $legend->clear()->render($this->theme()));
   }
