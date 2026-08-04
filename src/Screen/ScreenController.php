@@ -57,13 +57,20 @@ use DrevOps\Tui\Translation\Translator;
  * terminal, and then does one thing at a time - draw the screen, read a key,
  * hand it to the router, draw again - until the form ends.
  *
- * Three kinds of key stop here rather than reaching the router, and all three
- * for the same reason: they act on something outside the screen. Pressing a
- * button ends the form or closes the dialog it belongs to, activating work runs
- * it against the terminal a step at a time, and leaving is about the session
- * rather than about anything in it. A panel knows about none of them, and a
- * block never learns where it is drawn, so the cooperative repaint between one
- * step of the work and the next belongs to whoever owns the terminal.
+ * Four kinds of key stop here rather than reaching the router, and all four for
+ * the same reason: none of them acts on a block. Pressing a button ends the
+ * form or closes the dialog it belongs to, activating work runs it against the
+ * terminal a step at a time, leaving is about the session rather than about
+ * anything in it, and the wheel moves the region the cursor is in. A panel
+ * knows about none of them, and a block never learns where it is drawn, so the
+ * cooperative repaint between one step of the work and the next belongs to
+ * whoever owns the terminal.
+ *
+ * What it draws around the form - the trail, the keys, the buttons that end it,
+ * the dialog a modal panel is drawn on - is the session's own and lives on the
+ * screen. One declaration outlives the session driving it, so a session that
+ * wrote its furniture into the panel tree would hand the next one a form nobody
+ * declared.
  *
  * Every answer taken re-settles the form: rows that follow the answers resolve
  * again, computed values recompute, conditions decide who is there at all and
@@ -85,11 +92,6 @@ class ScreenController {
   protected const string CONTENT = 'content';
 
   /**
-   * The id of the row saying why the form cannot be ended yet.
-   */
-  protected const string NOTICE = 'screen-notice';
-
-  /**
    * The rules a frame spends on the border it is drawn in, top and bottom.
    */
   protected const int FRAME_RULES = 2;
@@ -108,6 +110,16 @@ class ScreenController {
    * The screen the panel is drawn on.
    */
   protected Screen $screen;
+
+  /**
+   * The region of that screen the form itself is drawn in.
+   */
+  protected string $body;
+
+  /**
+   * What puts the standard furniture on a screen.
+   */
+  protected Assembler $assembler;
 
   /**
    * The screen a field's help is drawn on instead.
@@ -138,11 +150,6 @@ class ScreenController {
    * The buttons that end the form.
    */
   protected Actions $actions;
-
-  /**
-   * Why the form cannot be ended yet, drawn above those buttons.
-   */
-  protected Markup $notice;
 
   /**
    * The help of the field offering it, drawn while it is showing.
@@ -191,9 +198,14 @@ class ScreenController {
   /**
    * The dialogs standing open, with the answers each was opened over.
    *
-   * @var list<array{panel:\DrevOps\Tui\Block\Panel,values:array<string,mixed>,provenance:array<string,\DrevOps\Tui\Answers\Provenance>}>
+   * @var list<array{panel:\DrevOps\Tui\Block\Panel,screen:\DrevOps\Tui\Screen\Screen,values:array<string,mixed>,provenance:array<string,\DrevOps\Tui\Answers\Provenance>}>
    */
   protected array $dialogs = [];
+
+  /**
+   * Whether the row the cursor is on is kept in sight.
+   */
+  protected bool $following = TRUE;
 
   /**
    * The narrowest terminal the frame can be read in, once it was measured.
@@ -269,23 +281,34 @@ class ScreenController {
     $this->scroller = new Scroller();
     $this->renderer = new ScreenRenderer($theme, $border);
 
-    $assembler = new Assembler();
-    $this->screen = $assembler->assemble($panel, $this->layout);
+    $this->assembler = new Assembler();
+    $this->screen = $this->assembler->assemble($panel, $this->layout);
+    $arranged = $this->screen->currentLayout();
+    // The assembler refuses a layout with nowhere to draw the form, so by here
+    // there is always a region holding it.
+    $this->body = $arranged->furnishes(Furniture::Body) ?? self::CONTENT;
+
     // A layout keeping no place for a piece still gets a live one: the trail
     // and the keys keep tracking the session, they are just never drawn.
-    $this->breadcrumb = $this->furniture('header', Breadcrumb::class) ?? new Breadcrumb($panel->title());
-    $this->legend = $this->furniture('footer', Legend::class) ?? (new Legend())->advertise($panel->bindings(), ...$panel->hints());
+    $this->breadcrumb = $this->furniture($arranged->furnishes(Furniture::Trail), Breadcrumb::class) ?? new Breadcrumb($panel->title());
+    $this->legend = $this->furniture($arranged->furnishes(Furniture::Keys), Legend::class) ?? (new Legend())->advertise($panel->bindings(), ...$panel->hints());
 
-    $this->actions = $this->buttons($assembler, $panel);
-    // A session opens on a form nobody has been refused yet, so whatever the
-    // last one left standing there is cleared rather than carried in.
-    $this->notice = ($this->stated($panel) ?? new Markup(self::NOTICE, ''))->body('');
+    $placed = $this->furniture($this->body, Actions::class);
+    // A form that hides its buttons still has a live pair to be refused on, so
+    // what withholds the end of it has somewhere to stand.
+    $this->actions = $placed ?? $this->assembler->actions($panel->currentButtons());
     $this->help = (new Markup('screen-help', ''))->bordered();
     $this->overlay = $this->helpScreen();
 
-    $this->dress($assembler);
+    $this->equip();
 
     $this->router = (new KeyRouter($panel))->bind($this->keys);
+
+    // The cursor reaches the buttons where they are drawn, which is beside the
+    // panel rather than among its rows - so the router is told about them.
+    if ($placed instanceof Actions) {
+      $this->router->furnish($panel, $placed);
+    }
 
     $this->seed();
   }
@@ -314,7 +337,7 @@ class ScreenController {
 
       // The outermost panel is opened by the session starting rather than by a
       // key, so what it owes is fetched before the first frame is read.
-      $this->furnish();
+      $this->fetch();
 
       while (!$this->done && !$this->interrupted) {
         $this->paint();
@@ -395,6 +418,16 @@ class ScreenController {
       return;
     }
 
+    // The wheel moves what is in sight rather than where the cursor is, so it
+    // is spent here and the row under the cursor stays the row it was on.
+    if ($this->wheeled($key)) {
+      return;
+    }
+
+    // Anything else can move the cursor, so the rule that keeps it in sight is
+    // back in force.
+    $this->following = TRUE;
+
     $focused = $this->router->focused();
 
     if ($focused instanceof Actions && $this->pressed($focused, $key)) {
@@ -416,7 +449,7 @@ class ScreenController {
     $this->handoff($open);
     $this->stamp($open);
     $this->synchronize();
-    $this->furnish();
+    $this->fetch();
   }
 
   /**
@@ -647,8 +680,10 @@ class ScreenController {
       return $this->renderer->render($this->stage($alone), $rows, $columns);
     }
 
-    if ($this->router->current()->isModal()) {
-      return $this->overlaid($rows, $columns);
+    $staging = $this->staging();
+
+    if ($staging instanceof Screen) {
+      return $this->overlaid($staging, $rows, $columns);
     }
 
     return $this->renderer->render($this->screen, $rows, $columns);
@@ -694,6 +729,82 @@ class ScreenController {
    *   The terminal rows.
    */
   protected function follow(int $rows): void {
+    // Turning the wheel is a reader looking somewhere other than where they
+    // are, so the rule that keeps the cursor in sight stands aside until they
+    // move it again - which is the moment it wins back.
+    if (!$this->following) {
+      return;
+    }
+
+    foreach ($this->viewports($rows) as [$region, $total, $row, $height]) {
+      $region->scrollTo($this->scroller->follow($total, $height, $row, $region->offset($total, $height))->offset);
+    }
+  }
+
+  /**
+   * Do what the wheel does, if that is what a key is.
+   *
+   * @param \DrevOps\Tui\Input\Key $key
+   *   The key.
+   *
+   * @return bool
+   *   TRUE when the key was spent here, so it travels no further.
+   */
+  protected function wheeled(Key $key): bool {
+    $bindings = $this->router->current()->bindings();
+    $delta = 0;
+
+    if ($bindings->matches($key, Action::ScrollUp)) {
+      $delta = -1;
+    }
+    elseif ($bindings->matches($key, Action::ScrollDown)) {
+      $delta = 1;
+    }
+
+    if ($delta === 0) {
+      return FALSE;
+    }
+
+    $this->following = FALSE;
+    $this->scroll($delta);
+
+    return TRUE;
+  }
+
+  /**
+   * Move the region the wheel points at by a row, leaving the cursor alone.
+   *
+   * @param int $delta
+   *   The rows to move by: negative towards the top of the contents.
+   */
+  protected function scroll(int $delta): void {
+    $terminal = $this->terminal;
+
+    // A region is moved against the room it has, and until a session is
+    // running there is no terminal to say how much that is.
+    if (!$terminal instanceof Terminal) {
+      return;
+    }
+
+    foreach ($this->viewports($this->rows($terminal)) as [$region, $total, , $height]) {
+      $region->scrollTo($this->scroller->viewport($region->offset($total, $height) + $delta, $total, $height)->offset);
+    }
+  }
+
+  /**
+   * The scrolling region the cursor is in, and what it is showing of what.
+   *
+   * The one the wheel points at too: a reader turning it is looking at the
+   * region they are working in, which is the region the cursor is in.
+   *
+   * @param int $rows
+   *   The terminal rows.
+   *
+   * @return \Generator<int,array{\DrevOps\Tui\Screen\Region,int,int,int}>
+   *   The region, the rows its contents come to, the row the cursor is on, and
+   *   the rows it was given.
+   */
+  protected function viewports(int $rows): \Generator {
     $panel = $this->router->current();
     $focused = $this->router->focused();
     $sizes = $panel->currentLayout()->arrange($this->content($rows));
@@ -713,8 +824,7 @@ class ScreenController {
         continue;
       }
 
-      $height = $sizes[$name] ?? 0;
-      $region->scrollTo($this->scroller->follow($total, $height, $row, $region->offset($total, $height))->offset);
+      yield [$region, $total, $row, $sizes[$name] ?? 0];
     }
   }
 
@@ -722,7 +832,9 @@ class ScreenController {
    * The rows the panel you are in is drawn into.
    *
    * Every panel entered on the way in is given the whole of the region it sits
-   * in, so how deep the cursor has gone changes nothing about the arithmetic.
+   * in, so how deep the cursor has gone changes nothing about the arithmetic -
+   * beyond the outermost one, which shares the region with the buttons that
+   * end the form.
    *
    * @param int $rows
    *   The terminal rows.
@@ -734,8 +846,9 @@ class ScreenController {
     // A frame spends a rule top and bottom, so what the layout is given is the
     // terminal less its chrome.
     $inside = $this->border === Border::None ? $rows : max(0, $rows - self::FRAME_RULES);
+    $region = $this->screen->currentLayout()->arrange($inside)[$this->body] ?? $inside;
 
-    return $this->screen->currentLayout()->arrange($inside)[self::CONTENT] ?? $inside;
+    return $this->renderer->room($this->screen->in($this->body), $this->panel, $region);
   }
 
   /**
@@ -861,7 +974,6 @@ class ScreenController {
     $owed = $ending === Ending::Cancel ? NULL : $this->owed();
 
     $actions->refuse($owed);
-    $this->notice->body((string) $owed);
 
     if (!$actions->activate()) {
       return;
@@ -926,7 +1038,7 @@ class ScreenController {
    * opened rather than when the form starts, so walking into one is what pays
    * for it - and the row says it is still coming while the call blocks.
    */
-  protected function furnish(): void {
+  protected function fetch(): void {
     if ($this->collector->load($this->router->current(), $this->paint(...))) {
       $this->resettle();
     }
@@ -1049,7 +1161,6 @@ class ScreenController {
     // pressed, so a change of any kind retires it rather than leaving it to
     // contradict what the screen now shows.
     $this->actions->refuse(NULL);
-    $this->notice->body('');
 
     $this->resettle();
   }
@@ -1068,8 +1179,12 @@ class ScreenController {
     // Going into a dialog is where the answers behind it are remembered, so
     // that whatever it does to them can be put back.
     if ($current->isModal() && $this->standing() !== $current) {
-      $this->dialogs[] = ['panel' => $current, 'values' => $this->values(), 'provenance' => $this->provenance];
-      $this->reset($current);
+      $this->dialogs[] = [
+        'panel' => $current,
+        'screen' => $this->dress($current),
+        'values' => $this->values(),
+        'provenance' => $this->provenance,
+      ];
 
       return;
     }
@@ -1133,19 +1248,13 @@ class ScreenController {
   }
 
   /**
-   * Rest a panel's own buttons back on the first of them.
+   * The screen the dialog standing open is drawn on, if one is.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
-   *   The panel.
+   * @return \DrevOps\Tui\Screen\Screen|null
+   *   The screen, or NULL when no dialog is open.
    */
-  protected function reset(Panel $panel): void {
-    foreach ($panel->place()->blocks() as $block) {
-      if ($block instanceof Actions) {
-        $block->select(Ending::Submit->value);
-
-        return;
-      }
-    }
+  protected function staging(): ?Screen {
+    return $this->dialogs === [] ? NULL : $this->dialogs[count($this->dialogs) - 1]['screen'];
   }
 
   /**
@@ -1387,6 +1496,8 @@ class ScreenController {
   /**
    * Draw the open dialog over the screen it was opened from.
    *
+   * @param \DrevOps\Tui\Screen\Screen $staging
+   *   The screen the dialog is drawn on.
    * @param int $rows
    *   The terminal rows.
    * @param int $columns
@@ -1395,7 +1506,7 @@ class ScreenController {
    * @return string
    *   The frame.
    */
-  protected function overlaid(int $rows, int $columns): string {
+  protected function overlaid(Screen $staging, int $rows, int $columns): string {
     $modal = $this->router->current();
 
     // What is behind the dialog is the screen as it was before it opened, the
@@ -1406,7 +1517,7 @@ class ScreenController {
 
     $inset = max(2, intdiv($columns, self::DIALOG_INSET));
     $width = max(1, $columns - 2 * $inset);
-    $box = explode("\n", $this->dialog($modal, $rows, $width));
+    $box = explode("\n", $this->dialog($staging, $rows, $width));
 
     // Only plain text can be sliced by column, and what shows through beside
     // the dialog is sliced on every row it covers.
@@ -1420,8 +1531,8 @@ class ScreenController {
   /**
    * Draw the dialog itself: its title over what it holds, inside a border.
    *
-   * @param \DrevOps\Tui\Block\Panel $modal
-   *   The panel the dialog is.
+   * @param \DrevOps\Tui\Screen\Screen $staging
+   *   The screen the dialog is drawn on.
    * @param int $rows
    *   The terminal rows.
    * @param int $columns
@@ -1430,43 +1541,64 @@ class ScreenController {
    * @return string
    *   The dialog.
    */
-  protected function dialog(Panel $modal, int $rows, int $columns): string {
-    // A dialog is one thing to read under its title, whatever arrangement the
-    // session behind it uses.
-    $screen = (new Screen())->layout(new DefaultLayout());
-
-    $screen->in('header')->add(new Breadcrumb($modal->title()));
-    $screen->in(self::CONTENT)->add($modal);
-
+  protected function dialog(Screen $staging, int $rows, int $columns): string {
     // A dialog is as tall as what it holds - it is one thing to read rather
     // than a list to scroll - up to as much of it as the terminal can show.
-    $height = min($rows, $this->depth($modal) + self::FRAME_RULES + self::DIALOG_RULES);
+    $height = min($rows, $this->depth($staging) + self::FRAME_RULES + self::DIALOG_RULES);
 
     // A dialog with no edge is a dialog nobody can see the edge of, so a form
     // that draws no frame still draws one around what floats over it.
     $renderer = new ScreenRenderer($this->theme, $this->border === Border::None ? Border::Line : $this->border);
 
-    return $renderer->render($screen, $height, $columns);
+    return $renderer->render($staging, $height, $columns);
   }
 
   /**
-   * The rows a panel's own blocks come to.
+   * The rows what a dialog holds comes to, its way out included.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
-   *   The panel.
+   * @param \DrevOps\Tui\Screen\Screen $staging
+   *   The screen the dialog is drawn on.
    *
    * @return int
    *   The rows.
    */
-  protected function depth(Panel $panel): int {
-    $rows = 0;
-
-    foreach ($panel->currentLayout()->names() as $name) {
-      [$total] = $this->renderer->extent($panel->currentLayout(), $name);
-      $rows += $total;
-    }
+  protected function depth(Screen $staging): int {
+    [$rows] = $this->renderer->extent($staging->currentLayout(), self::CONTENT);
 
     return $rows;
+  }
+
+  /**
+   * The screen a panel drawn over the form is drawn on.
+   *
+   * A dialog is one thing to read under its title, whatever arrangement the
+   * session behind it uses - and its way out is the session's rather than the
+   * panel's, so the buttons stand beside the panel here instead of being
+   * written into what the form declared.
+   *
+   * @param \DrevOps\Tui\Block\Panel $modal
+   *   The panel the dialog is.
+   *
+   * @return \DrevOps\Tui\Screen\Screen
+   *   The screen.
+   */
+  protected function dress(Panel $modal): Screen {
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('header')->add(new Breadcrumb($modal->title()));
+
+    $region = $screen->in(self::CONTENT);
+
+    // A dialog that only says something says it here: its standing text is its
+    // whole content, where a panel you walk into has rows instead.
+    if ($modal->descriptionText() !== '') {
+      $region->add(new Markup($modal->id() . '-description', $modal->descriptionText()));
+    }
+
+    $actions = $this->assembler->actions($modal->currentButtons());
+    $region->add($modal)->add($actions);
+    $this->router->furnish($modal, $actions);
+
+    return $screen;
   }
 
   /**
@@ -1594,123 +1726,13 @@ class ScreenController {
   }
 
   /**
-   * Put the way out into each panel that has one of its own.
-   *
-   * @param \DrevOps\Tui\Screen\Assembler $assembler
-   *   The assembler that builds the standard pair.
+   * Tell every row what this session can offer it.
    */
-  protected function dress(Assembler $assembler): void {
-    // The buttons end the form rather than the panel the cursor happens to be
-    // in, so they go among the outermost panel's own rows: going into a nested
-    // one leaves them behind exactly as it leaves that panel's siblings behind.
-    if ($this->panel->currentButtons()->show && !$this->carries($this->panel)) {
-      $this->panel->place()->add($this->notice)->add($this->actions);
-    }
-
-    foreach (Tree::panels($this->panel) as $panel) {
-      // The outermost panel is not somewhere you opened, so it has nothing of
-      // its own to close: the buttons in it are the form's.
-      if ($panel === $this->panel) {
-        continue;
-      }
-      if (!$panel->isModal()) {
-        continue;
-      }
-      if ($this->carries($panel)) {
-        continue;
-      }
-
-      $region = $panel->place();
-
-      // A dialog that only says something says it here: its standing text is
-      // its whole content, where a panel you walk into has rows instead.
-      if ($panel->descriptionText() !== '') {
-        $region->prepend(new Markup($panel->id() . '-description', $panel->descriptionText()));
-      }
-
-      $region->add($this->buttons($assembler, $panel));
-    }
-
+  protected function equip(): void {
     foreach (Tree::fields($this->panel) as $field) {
       $field->handoff($this->externalEditor->isAvailable());
       $field->reuse(...$this->collector->reusable($field->id()));
     }
-  }
-
-  /**
-   * The buttons that close a panel, labelled as it declares them.
-   *
-   * @param \DrevOps\Tui\Screen\Assembler $assembler
-   *   The assembler that builds the standard pair.
-   * @param \DrevOps\Tui\Block\Panel $panel
-   *   The panel they close.
-   *
-   * @return \DrevOps\Tui\Block\Actions
-   *   The buttons.
-   */
-  protected function buttons(Assembler $assembler, Panel $panel): Actions {
-    $declared = $panel->currentButtons();
-
-    // The assembler says which buttons a form has; the panel says what they
-    // read, so a form that renamed its submit gets the name it chose.
-    return ($this->placed($panel) ?? $assembler->actions())
-      ->action(Ending::Submit->value, Translator::t($declared->submitLabel))
-      ->action(Ending::Cancel->value, Translator::t($declared->cancelLabel));
-  }
-
-  /**
-   * The way out a panel is already carrying, if it has been given one.
-   *
-   * One declaration outlives the session driving it, so a second run over the
-   * same panels takes on the buttons that are there rather than putting a
-   * second pair beside them.
-   *
-   * @param \DrevOps\Tui\Block\Panel $panel
-   *   The panel.
-   *
-   * @return \DrevOps\Tui\Block\Actions|null
-   *   The buttons, or NULL when the panel carries none.
-   */
-  protected function placed(Panel $panel): ?Actions {
-    foreach ($panel->place()->blocks() as $block) {
-      if ($block instanceof Actions) {
-        return $block;
-      }
-    }
-
-    return NULL;
-  }
-
-  /**
-   * The row a panel is already carrying for what withholds its end.
-   *
-   * @param \DrevOps\Tui\Block\Panel $panel
-   *   The panel.
-   *
-   * @return \DrevOps\Tui\Block\Markup|null
-   *   The row, or NULL when the panel carries none.
-   */
-  protected function stated(Panel $panel): ?Markup {
-    foreach ($panel->place()->blocks() as $block) {
-      if ($block instanceof Markup && $block->id() === self::NOTICE) {
-        return $block;
-      }
-    }
-
-    return NULL;
-  }
-
-  /**
-   * Whether a panel already carries the way out of it.
-   *
-   * @param \DrevOps\Tui\Block\Panel $panel
-   *   The panel.
-   *
-   * @return bool
-   *   TRUE when it does.
-   */
-  protected function carries(Panel $panel): bool {
-    return $this->placed($panel) instanceof Actions;
   }
 
   /**
@@ -1737,21 +1759,18 @@ class ScreenController {
   /**
    * A piece of standard furniture the assembler put in a region.
    *
-   * @param string $name
-   *   The region name.
+   * @param string|null $name
+   *   The region the layout keeps for it, or NULL when it keeps none.
    * @param class-string<T> $kind
    *   The kind of block it is.
    *
-   * @return T
-   *   The block.
-   *
-   * @throws \LogicException
-   *   When the region holds no block of that kind.
+   * @return T|null
+   *   The block, or NULL when the screen carries no such piece.
    *
    * @template T of \DrevOps\Tui\Block\BlockInterface
    */
-  protected function furniture(string $name, string $kind): ?object {
-    if (!in_array($name, $this->screen->currentLayout()->names(), TRUE)) {
+  protected function furniture(?string $name, string $kind): ?object {
+    if ($name === NULL) {
       return NULL;
     }
 
@@ -1761,11 +1780,7 @@ class ScreenController {
       }
     }
 
-    // The assembler puts one of each into every region it furnishes, so a
-    // furnished region missing its piece never reaches a frame.
-    // @codeCoverageIgnoreStart
-    throw new \LogicException(sprintf('The assembled screen holds no %s in its "%s" region.', $kind, $name));
-    // @codeCoverageIgnoreEnd
+    return NULL;
   }
 
 }

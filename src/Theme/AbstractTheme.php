@@ -427,6 +427,13 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
   /**
    * {@inheritdoc}
    */
+  public function actionRefusal(string $reason): string {
+    return $reason;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function progressCaption(string $text): string {
     return $text;
   }

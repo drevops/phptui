@@ -4,14 +4,20 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Screen;
 
+use DrevOps\Tui\Block\Actions;
 use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\Model\Buttons;
+use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Screen\Assembler;
+use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Collector;
+use DrevOps\Tui\Screen\Furniture;
+use DrevOps\Tui\Screen\Layout\AbstractLayout;
 use DrevOps\Tui\Screen\ScreenRenderer;
 use DrevOps\Tui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -58,10 +64,56 @@ final class BuilderTest extends TestCase {
     $screen = (new Assembler())->assemble($panel);
 
     // The layout declared three regions and named no block; the assembler put
-    // the standard furniture in them.
+    // the standard furniture in them - the buttons beside the panel rather
+    // than among the rows it declared.
     $this->assertInstanceOf(Breadcrumb::class, $screen->in('header')->blocks()[0]);
     $this->assertInstanceOf(Legend::class, $screen->in('footer')->blocks()[0]);
-    $this->assertSame([$panel], $screen->in('content')->blocks());
+    $this->assertSame($panel, $screen->in('content')->blocks()[0]);
+    $this->assertInstanceOf(Actions::class, $screen->in('content')->blocks()[1]);
+
+    // And nothing at all in the panel: the form declared one row, and one row
+    // is what it still holds.
+    $this->assertCount(1, $panel->in('content')->blocks());
+  }
+
+  public function testFormThatHidesItsButtonsIsAssembledWithNone(): void {
+    $panel = $this->panel(function (PanelBuilder $p): void {
+      $p->text('courier', 'Courier')->default('Valley Runs');
+    })->buttons(new Buttons(FALSE));
+
+    $this->assertSame([$panel], (new Assembler())->assemble($panel)->in('content')->blocks());
+  }
+
+  public function testLayoutSendsEachPieceWhereItSaysRatherThanWhereItsNamesSuggest(): void {
+    $panel = $this->panel(function (PanelBuilder $p): void {
+      $p->text('courier', 'Courier')->default('Valley Runs');
+    });
+
+    $screen = (new Assembler())->assemble($panel, StallLayoutFixture::class);
+
+    // It declares neither a header nor a footer and still shows the trail,
+    // because it says where the trail goes rather than being read for names.
+    $this->assertInstanceOf(Breadcrumb::class, $screen->in('aside')->blocks()[0]);
+    $this->assertInstanceOf(Legend::class, $screen->in('aside')->blocks()[1]);
+    $this->assertSame($panel, $screen->in('main')->blocks()[0]);
+    $this->assertInstanceOf(Actions::class, $screen->in('main')->blocks()[1]);
+  }
+
+  public function testLayoutThatRefusesFurnitureIsDrawnWithoutIt(): void {
+    $screen = (new Assembler())->assemble($this->panel(), BareLayoutFixture::class);
+
+    // Refusing is not the same as having nowhere: the regions are there, and
+    // the layout still keeps the trail and the keys off the screen.
+    $this->assertSame([], $screen->in('header')->blocks());
+    $this->assertSame([], $screen->in('footer')->blocks());
+    $this->assertCount(2, $screen->in('content')->blocks());
+  }
+
+  public function testLayoutWithNowhereToDrawTheFormIsRefusedWhereItIsNamed(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('keeps no place for the form itself, so there is nowhere to draw it');
+
+    (new Assembler())->assemble($this->panel(), HomelessLayoutFixture::class);
   }
 
   public function testAnAssembledScreenDrawsEndToEnd(): void {
@@ -105,6 +157,81 @@ final class BuilderTest extends TestCase {
     $builder->seal();
 
     return $builder->block();
+  }
+
+}
+
+/**
+ * A layout that calls its regions something else and says what goes in them.
+ */
+final class StallLayoutFixture extends AbstractLayout {
+
+  /**
+   * Construct the layout.
+   */
+  public function __construct() {
+    parent::__construct(Axis::Columns);
+
+    $this->region('aside')->fixed(24);
+    $this->region('main')->flex(1)->scrolls();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function furnishes(Furniture $piece): string {
+    return $piece === Furniture::Body ? 'main' : 'aside';
+  }
+
+}
+
+/**
+ * A layout that keeps the trail and the keys off the screen.
+ */
+final class BareLayoutFixture extends AbstractLayout {
+
+  /**
+   * Construct the layout.
+   */
+  public function __construct() {
+    parent::__construct(Axis::Rows);
+
+    $this->region('header')->fixed(1);
+    $this->region('content')->scrolls();
+    $this->region('footer')->fixed(1);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function furnishes(Furniture $piece): ?string {
+    return $piece === Furniture::Body ? parent::furnishes($piece) : NULL;
+  }
+
+}
+
+/**
+ * A layout with regions that keeps no place for the form itself.
+ */
+final class HomelessLayoutFixture extends AbstractLayout {
+
+  /**
+   * Construct the layout.
+   */
+  public function __construct() {
+    parent::__construct(Axis::Rows);
+
+    $this->region('content')->scrolls();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function furnishes(Furniture $piece): ?string {
+    return $piece === Furniture::Body ? NULL : parent::furnishes($piece);
   }
 
 }

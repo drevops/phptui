@@ -54,6 +54,13 @@ final class KeyRouter {
   protected array $trail = [];
 
   /**
+   * The blocks a session draws beside a panel, keyed by the panel.
+   *
+   * @var array<int,list<\DrevOps\Tui\Block\Capability\FocusCapableInterface>>
+   */
+  protected array $furniture = [];
+
+  /**
    * Construct a key router.
    *
    * @param \DrevOps\Tui\Block\Panel $panel
@@ -83,6 +90,29 @@ final class KeyRouter {
    */
   public function bind(KeyMap $keys): self {
     $this->rebind($keys, $this->panel);
+
+    return $this;
+  }
+
+  /**
+   * Say what a session draws beside a panel.
+   *
+   * The buttons that end a form are not among the rows it declares - a session
+   * draws them around it - so the cursor could not reach them by walking the
+   * panel alone. It reaches them last, after everything the panel holds,
+   * because that is where they are drawn.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel they stand beside.
+   * @param \DrevOps\Tui\Block\Capability\FocusCapableInterface ...$blocks
+   *   The blocks.
+   *
+   * @return $this
+   *   The router.
+   */
+  public function furnish(Panel $panel, FocusCapableInterface ...$blocks): self {
+    $this->furniture[spl_object_id($panel)] = array_values($blocks);
+    $this->settle();
 
     return $this;
   }
@@ -570,7 +600,8 @@ final class KeyRouter {
    * The blocks the cursor can land on, in the order they are drawn.
    *
    * @return list<\DrevOps\Tui\Block\Capability\FocusCapableInterface>
-   *   The blocks.
+   *   The blocks: everything the panel you are in holds, then whatever the
+   *   session draws beside it.
    */
   protected function focusable(): array {
     $blocks = [];
@@ -591,7 +622,7 @@ final class KeyRouter {
       }
     }
 
-    return $blocks;
+    return [...$blocks, ...($this->furniture[spl_object_id($this->panel)] ?? [])];
   }
 
 }

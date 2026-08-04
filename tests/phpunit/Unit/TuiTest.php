@@ -259,9 +259,11 @@ final class TuiTest extends TestCase {
     $this->assertSame($tui->root(), $panel($first));
     $this->assertSame($panel($first), $panel($second));
 
-    // Driving it twice leaves one way out of the form rather than two.
+    // And drives it as it was declared: the way out of the form is the
+    // session's own, so neither session wrote one into the tree for the next
+    // one to inherit.
     $actions = array_filter($tui->root()->place()->blocks(), static fn(object $block): bool => $block instanceof Actions);
-    $this->assertCount(1, $actions);
+    $this->assertCount(0, $actions);
   }
 
   #[DataProvider('dataProviderControllerCarriesTheThemeBorderIntoTheFrame')]

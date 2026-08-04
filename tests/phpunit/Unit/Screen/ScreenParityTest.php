@@ -822,17 +822,33 @@ final class ScreenParityTest extends TestCase {
     $tester = $this->tester($panel);
     $answers = $tester->run(
       Key::named(KeyName::Down),
-      Key::named(KeyName::Down),
       Key::named(KeyName::Enter),
       '!',
       Key::named(KeyName::Enter),
     );
 
     // Which end it was packed from says where it is drawn and nothing else, so
-    // the cursor reaches it in the order it is drawn in - after the buttons
-    // that end the form, which the session puts among the panel's own rows.
+    // the cursor reaches it in the order it is drawn in - before the buttons
+    // that end the form, which the session draws beside the panel rather than
+    // among its rows.
     $this->assertStringContainsString('Basket weight', $tester->frame());
     $this->assertSame('1200!', $answers->value('weight'));
+  }
+
+  public function testButtonsAreDrawnBelowEverythingThePanelHoldsTailIncluded(): void {
+    $panel = $this->panel((new Field('courier', 'Courier'))->default('Valley Runs'));
+    $panel->in('content')->tail(new Markup('version', 'v1.2.3'));
+
+    $tester = $this->tester($panel);
+    $tester->run();
+
+    // The rows that carry something, down to the pinned footer under them.
+    $rows = array_slice(array_values(array_filter(array_map(rtrim(...), explode("\n", $tester->frame())))), 1, 3);
+
+    // What packs from the end of the panel's own flow is still inside it, and
+    // the buttons stand beside the panel rather than in it - so they come
+    // after everything it holds, whichever end it was packed from.
+    $this->assertSame(['❯ Courier  Valley Runs', 'v1.2.3', '[ Submit ]  [ Cancel ]'], $rows);
   }
 
   public function testPanelRowCountsThePicksItHasNoRoomToList(): void {
@@ -964,6 +980,32 @@ final class ScreenParityTest extends TestCase {
     $this->assertStringContainsString('[ Надіслати ]  [ Скасувати ]', $tester->frame());
     $this->assertStringContainsString('перемістити', $tester->frame());
     $this->assertStringContainsString('змінено', $tester->frame());
+  }
+
+  public function testWithheldSubmitSaysWhyOnTheRowAboveTheButtons(): void {
+    $tester = $this->tester($this->panel((new Field('courier', 'Courier'))->required()));
+    $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Enter));
+
+    $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
+    $at = array_search('Courier is required.', $rows, TRUE);
+
+    // The reason and the buttons it withholds are one thing, so nothing stands
+    // between them - not even the air the theme puts between two rows.
+    $this->assertIsInt($at);
+    $this->assertSame('[ Submit ]  [ Cancel ]', $rows[$at + 1]);
+  }
+
+  public function testWithheldSubmitSaysWhyInTheActiveLanguage(): void {
+    Translator::setShared(new Translator('uk'));
+
+    $tester = $this->tester($this->nested('main', 'Постачання', (new Field('courier', 'Кур\'єр'))->required()));
+    $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Enter));
+
+    $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
+    $at = array_search('Кур\'єр є обов\'язковим полем.', $rows, TRUE);
+
+    $this->assertIsInt($at);
+    $this->assertSame('[ Надіслати ]  [ Скасувати ]', $rows[$at + 1]);
   }
 
   public function testUpdateModeBadgesTheAnswersItDetected(): void {

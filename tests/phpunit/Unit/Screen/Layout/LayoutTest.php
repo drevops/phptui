@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Screen\Layout;
 
 use DrevOps\Tui\Screen\Axis;
+use DrevOps\Tui\Screen\Furniture;
 use DrevOps\Tui\Screen\Layout\AbstractLayout;
 use DrevOps\Tui\Screen\Layout\DefaultLayout;
 use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Screen\Region;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -165,6 +167,40 @@ final class LayoutTest extends TestCase {
     // stands however many blocks are stacked under it.
     $this->assertSame([], $layout->deal());
     $this->assertSame(40, $layout->share(40, 1));
+  }
+
+  #[DataProvider('dataProviderLayoutSaysWhereEachPieceOfFurnitureGoes')]
+  public function testLayoutSaysWhereEachPieceOfFurnitureGoes(Furniture $piece, ?string $default, ?string $columns): void {
+    $this->assertSame($default, (new DefaultLayout())->furnishes($piece));
+    $this->assertSame($columns, (new TwoColumnLayout())->furnishes($piece));
+  }
+
+  /**
+   * Data provider for testLayoutSaysWhereEachPieceOfFurnitureGoes().
+   *
+   * @return \Iterator<string, array{\DrevOps\Tui\Screen\Furniture, string|null, string|null}>
+   *   The piece, the region the default layout keeps for it, and the region
+   *   the two-column layout keeps for it.
+   */
+  public static function dataProviderLayoutSaysWhereEachPieceOfFurnitureGoes(): \Iterator {
+    // The conventional names, and what a layout using none of them answers: it
+    // has nowhere for the trail or the keys, and the form goes in the region
+    // it declared first, because a form has to be drawn somewhere.
+    yield 'the trail' => [Furniture::Trail, 'header', NULL];
+    yield 'the form' => [Furniture::Body, 'content', 'left'];
+    yield 'the keys' => [Furniture::Keys, 'footer', NULL];
+  }
+
+  public function testLayoutWithNoRegionsKeepsNoPlaceForTheFormEither(): void {
+    $layout = new class() extends AbstractLayout {
+
+      public function __construct() {
+        parent::__construct(Axis::Rows);
+      }
+
+    };
+
+    $this->assertNull($layout->furnishes(Furniture::Body));
   }
 
   public function testLayoutNamesNoBlockItMightHold(): void {

@@ -210,6 +210,8 @@ Two axes exist - `Axis::Rows` and `Axis::Columns` - and that is the whole set. D
 
 Overriding the arithmetic is the other reason to subclass - a layout that packs its regions to fit, or gives the focused one extra room - and `arrange(int $available): array<string,int>` is the method that does it. Two more sit beside it for the arithmetic that runs across a region rather than along the axis: `deal(): array<int>` says how many of its blocks share each visual row, and `share(int $available, int $count): int` how much of the region each of them takes. `GridLayout` is the one shipped layout that answers either with anything but "one block, the whole width".
 
+A fourth is not arithmetic at all: `furnishes(Furniture $piece): ?string` says which region each piece of the [standard furniture](#where-the-standard-furniture-goes) belongs in. A layout using the conventional names inherits the answer.
+
 ## Registering one
 
 Three ways reach a layout, and they are the same three a [theme](/themes) offers:
@@ -231,17 +233,47 @@ Both routes are in [`playground/20-layouts-custom.php`](https://github.com/drevo
 
 ## Where the standard furniture goes
 
-A layout names no block, so something else has to decide that a breadcrumb belongs at the top. That is the facade's job, and it places three pieces by region name:
+A layout names no block, so something else has to decide that a breadcrumb belongs at the top. That is the facade's job - and it asks the layout, one **role** at a time, rather than going looking for names it hopes are there:
 
-| Region    | Gets                                             |
-| --------- | ------------------------------------------------ |
-| `header`  | the breadcrumb - the trail of panels you entered |
-| `content` | the panel, and the buttons that end the form     |
-| `footer`  | the legend - the keys that apply right now       |
+| Role               | Gets                                             | Where `AbstractLayout` puts it |
+| ------------------ | ------------------------------------------------ | ------------------------------ |
+| `Furniture::Trail` | the breadcrumb - the trail of panels you entered | `header`                       |
+| `Furniture::Body`  | the panel, and the buttons that end the form     | `content`                      |
+| `Furniture::Keys`  | the legend - the keys that apply right now       | `footer`                       |
 
-Furniture goes only where the named layout keeps a place for it. A layout with no `header` shows no trail rather than being refused, and one with no `content` puts the panel in whichever region it declared first - which is why `two-column` works as a screen layout even though it has neither name. The trail and the keys keep tracking the session either way; they are just never drawn.
+Those are the conventional names, so a layout that uses them is furnished without writing a line. A layout with no `header` shows no trail rather than being refused, and one with no `content` puts the form in whichever region it declared first - which is why `two-column` works as a screen layout even though it has neither name. The trail and the keys keep tracking the session either way; they are just never drawn.
 
-So a layout meant to replace `default` keeps those three names. A layout meant to arrange a panel's own blocks can name its regions anything, because nothing is placed in it but what the form places itself.
+A layout that calls its regions something else, or wants a piece somewhere else, says so:
+
+```php
+use DrevOps\Tui\Screen\Furniture;
+
+final class StallLayout extends AbstractLayout {
+
+  public function __construct() {
+    parent::__construct(Axis::Columns);
+
+    $this->region('produce')->flex(3)->scrolls();
+    $this->region('delivery')->flex(2);
+  }
+
+  #[\Override]
+  public function furnishes(Furniture $piece): ?string {
+    // The trail runs down the narrow column beside the form, and the keys are
+    // refused outright rather than being lost to a name nobody looked for.
+    return match ($piece) {
+      Furniture::Body => 'produce',
+      Furniture::Trail => 'delivery',
+      Furniture::Keys => NULL,
+    };
+  }
+
+}
+```
+
+`NULL` is a refusal: the piece is never drawn. Only `Furniture::Body` has to be answered, because a screen with nowhere to draw the form is refused where the layout is named rather than opening on an empty frame.
+
+Everything the facade places goes into the **screen's** regions, never into the panels the form declared - so a second run over the same declaration opens on the same first frame rather than on the last run's furniture. A layout meant to arrange a panel's own blocks can name its regions anything, because nothing is placed in it but what the form places itself.
 
 ## What a layout does not touch
 

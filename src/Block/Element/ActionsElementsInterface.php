@@ -11,6 +11,10 @@ namespace DrevOps\Tui\Block\Element;
  * that frames a button differently changes one method, and the block goes on
  * knowing only that it has labels and one of them has focus.
  *
+ * Withholding the submit reads as one thing with the buttons it withholds, so
+ * the reason is an element here rather than a note somebody else draws above
+ * them: nothing can come between a refusal and what it refuses.
+ *
  * @package DrevOps\Tui\Block\Element
  */
 interface ActionsElementsInterface {
@@ -44,5 +48,16 @@ interface ActionsElementsInterface {
    *   The styled separator.
    */
   public function actionSeparator(): string;
+
+  /**
+   * Style the reason the form cannot be ended yet.
+   *
+   * @param string $reason
+   *   The reason.
+   *
+   * @return string
+   *   The styled reason.
+   */
+  public function actionRefusal(string $reason): string;
 
 }

@@ -21,6 +21,7 @@ use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Model\FormException;
+use DrevOps\Tui\Screen\Furniture;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Region;
 use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
@@ -526,14 +527,15 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * The region this panel's own rows are drawn in.
    *
+   * Where the form goes on a screen and where a panel's rows go inside it are
+   * the same question asked of two layouts, so both read the same answer off
+   * the layout rather than each going looking for a name.
+   *
    * @return \DrevOps\Tui\Screen\Region
-   *   The region: the one its layout names for a panel's rows, else the first
-   *   region it declares.
+   *   The region.
    */
   public function place(): Region {
-    $names = $this->currentLayout()->names();
-
-    return $this->in(in_array(self::ROWS, $names, TRUE) ? self::ROWS : ($names[0] ?? self::ROWS));
+    return $this->in($this->currentLayout()->furnishes(Furniture::Body) ?? self::ROWS);
   }
 
   /**

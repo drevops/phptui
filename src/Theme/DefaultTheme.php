@@ -1210,6 +1210,14 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   }
 
   /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function actionRefusal(string $reason): string {
+    return $this->error($reason);
+  }
+
+  /**
    * Frame an action's label.
    *
    * The framing is the theme's rather than the block's, so a theme that draws a

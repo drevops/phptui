@@ -12,6 +12,7 @@ use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Layout\AbstractLayout;
 use DrevOps\Tui\Screen\Layout\DefaultLayout;
 use DrevOps\Tui\Screen\Layout\GridLayout;
+use DrevOps\Tui\Screen\Layout\PanelLayout;
 use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Screen\Screen;
 use DrevOps\Tui\Screen\ScreenRenderer;
@@ -220,6 +221,39 @@ final class ScreenRenderTest extends TestCase {
     // The panel is where the second layout starts, which is where depth comes
     // from rather than a fifth level.
     $this->assertSame('left      right', $lines[1]);
+  }
+
+  public function testEnteredPanelTakesWhatTheBlocksBesideItLeave(): void {
+    $inner = (new Panel('main', 'Delivery'))->layout(new PanelLayout())->enter();
+    $inner->in('content')->add(new Markup('l', "one\ntwo"));
+
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('content')->add(new Markup('over', 'above'))->add($inner)->add(new Markup('under', 'below'));
+    $screen->in('content')->tail(new Markup('version', 'v1.2.3'));
+
+    $lines = $this->render($screen, 9, 20);
+
+    // The panel takes the rows its own layout comes to and no more, so what
+    // was placed after it follows its last row rather than the region's - and
+    // what packs from the end still packs from the end.
+    $this->assertSame(['', 'above', '', 'one', 'two', '', 'below', 'v1.2.3', ''], array_map(rtrim(...), $lines));
+  }
+
+  public function testEnteredPanelTakesTheRegionWholeOnceYouGoDeeper(): void {
+    $deeper = (new Panel('advanced', 'Advanced'))->layout(new PanelLayout())->enter();
+    $deeper->in('content')->add(new Markup('c', 'certifier'));
+
+    $inner = (new Panel('main', 'Delivery'))->layout(new PanelLayout())->enter();
+    $inner->in('content')->add(new Markup('l', 'courier'))->add($deeper);
+
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('content')->add($inner)->add(new Markup('under', 'below'));
+
+    $lines = $this->render($screen, 6, 20);
+
+    // Going deeper replaces the view: the rows beside the panel go with it,
+    // wherever they were placed.
+    $this->assertSame(['', 'certifier', '', '', '', ''], array_map(rtrim(...), $lines));
   }
 
   public function testNestedPanelDrawsRowYouSelect(): void {

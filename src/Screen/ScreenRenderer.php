@@ -79,14 +79,44 @@ final class ScreenRenderer {
    */
   public function render(Screen $screen, int $rows, int $columns): string {
     if ($this->border === Border::None) {
-      return implode("\n", $this->lay($screen->currentLayout(), $rows, $columns));
+      return implode("\n", $this->lay($screen->currentLayout(), $rows, $columns, TRUE));
     }
 
     // A frame spends a rule top and bottom, and a border column plus a gutter
     // each side, so what the layout is given is the terminal less its chrome.
-    $inside = $this->lay($screen->currentLayout(), max(0, $rows - 2), max(1, $columns - self::CHROME));
+    $inside = $this->lay($screen->currentLayout(), max(0, $rows - 2), max(1, $columns - self::CHROME), TRUE);
 
     return implode("\n", $this->framed($inside, $columns));
+  }
+
+  /**
+   * The rows the panel a region was entered through takes of it.
+   *
+   * A block takes the size it drew and the region deals with what is left, and
+   * the panel you are in is no different: it takes what its own layout comes
+   * to, and never more than the blocks drawn beside it leave - which is the
+   * room it scrolls inside when it holds more than that.
+   *
+   * @param \DrevOps\Tui\Screen\Region $region
+   *   The region the panel is drawn in.
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel placed in it.
+   * @param int $rows
+   *   The rows the region was given.
+   *
+   * @return int
+   *   The rows.
+   */
+  public function room(Region $region, Panel $panel, int $rows): int {
+    // A panel you walked into is drawn where the furniture is not, so it takes
+    // the region whole however much of it the furniture would have wanted.
+    if ($this->deeper($panel)) {
+      return $rows;
+    }
+
+    [$above, $below] = $this->beside($region, $panel);
+
+    return $this->fit($panel, [...$above, ...$below], $rows);
   }
 
   /**
@@ -183,15 +213,53 @@ final class ScreenRenderer {
   protected function stacked(array $blocks): array {
     $pieces = [];
 
-    foreach ($this->rendered($blocks) as $index => $rendered) {
+    foreach ($blocks as $block) {
+      // The panel you are in draws its own layout in place of its row, so what
+      // it comes to is what that layout comes to.
+      if ($block instanceof Panel && $block->isEntered()) {
+        $pieces[] = ['height' => $this->height($block->currentLayout()), 'blocks' => [$block], 'offsets' => [0]];
+
+        continue;
+      }
+
+      $rendered = $this->rendered([$block])[0] ?? NULL;
+
+      if ($rendered === NULL) {
+        continue;
+      }
+
       $pieces[] = [
         'height' => substr_count($rendered, "\n") + 1,
-        'blocks' => [$blocks[$index]],
+        'blocks' => [$block],
         'offsets' => [0],
       ];
     }
 
     return $pieces;
+  }
+
+  /**
+   * The rows a layout's regions come to when nothing has sized them.
+   *
+   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   *   The layout.
+   *
+   * @return int
+   *   The rows: what its regions come to together down the axis, and what the
+   *   deepest of them comes to across it, where they share the rows instead.
+   */
+  protected function height(LayoutInterface $layout): int {
+    $rows = 0;
+
+    foreach ($layout->names() as $name) {
+      $region = $layout->in($name);
+      // A region declared a size takes it whatever it holds, which is the whole
+      // of what fixing a size means.
+      $held = $region->fixedSize() ?? $this->extent($layout, $name)[0];
+      $rows = $layout->axis() === Axis::Rows ? $rows + $held : max($rows, $held);
+    }
+
+    return $rows;
   }
 
   /**
@@ -348,11 +416,15 @@ final class ScreenRenderer {
    *   The rows it may fill.
    * @param int $columns
    *   The columns it may fill.
+   * @param bool $furnished
+   *   Whether its regions hold the furniture a session puts around a form,
+   *   which stands beside the panel you are in rather than being replaced by
+   *   it. True of a screen's own regions and of nothing else.
    *
    * @return list<string>
    *   The rows.
    */
-  protected function lay(LayoutInterface $layout, int $rows, int $columns): array {
+  protected function lay(LayoutInterface $layout, int $rows, int $columns, bool $furnished = FALSE): array {
     $names = $layout->names();
 
     if ($names === []) {
@@ -368,7 +440,7 @@ final class ScreenRenderer {
       $out = [];
 
       foreach ($sizes as $name => $size) {
-        foreach ($this->fill($layout, $layout->in($name), $size, $columns) as $line) {
+        foreach ($this->fill($layout, $layout->in($name), $size, $columns, $furnished) as $line) {
           $out[] = $line;
         }
       }
@@ -379,7 +451,7 @@ final class ScreenRenderer {
     $columns_out = [];
 
     foreach ($sizes as $name => $size) {
-      $columns_out[] = $this->fill($layout, $layout->in($name), $rows, $size);
+      $columns_out[] = $this->fill($layout, $layout->in($name), $rows, $size, $furnished);
     }
 
     return $this->paste($columns_out, $sizes, $rows);
@@ -396,12 +468,14 @@ final class ScreenRenderer {
    *   The rows it was given.
    * @param int $columns
    *   The columns it was given.
+   * @param bool $furnished
+   *   Whether it holds the furniture a session puts around a form.
    *
    * @return list<string>
    *   Exactly $rows rows, padded or clipped to fit.
    */
-  protected function fill(LayoutInterface $layout, Region $region, int $rows, int $columns): array {
-    $lines = $this->arrange($layout, $region, $rows, $columns);
+  protected function fill(LayoutInterface $layout, Region $region, int $rows, int $columns, bool $furnished = FALSE): array {
+    $lines = $this->arrange($layout, $region, $rows, $columns, $furnished);
     $tail = $this->tailed($region);
 
     // Its contents are its own problem once it has a size: it scrolls if it was
@@ -441,11 +515,12 @@ final class ScreenRenderer {
    * comes from rather than a fifth level. Only the renderer knows the box it
    * has to fit into, so the recursion happens here.
    *
-   * Going into a panel replaces the screen with its contents, so the panel
-   * takes the whole region and the rows placed beside it are the ones you left
-   * behind - the sibling rows of the panel you came from, and the buttons that
-   * end the form, which sit among the outermost panel's own rows. Coming back
-   * out draws every one of them again.
+   * Going into a panel replaces what its region held with the panel's own
+   * contents, so the rows placed beside it are the ones you left behind - the
+   * sibling rows of the panel you came from. A screen's regions are the
+   * exception, because what stands beside the panel there is the furniture the
+   * session drew around the form rather than anything the form declared.
+   * Coming back out draws every one of them again.
    *
    * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
    *   The layout the region belongs to.
@@ -455,15 +530,17 @@ final class ScreenRenderer {
    *   The rows it was given.
    * @param int $columns
    *   The columns it was given.
+   * @param bool $furnished
+   *   Whether it holds the furniture a session puts around a form.
    *
    * @return list<string>
    *   The rows, before the region is sized to the space it has.
    */
-  protected function arrange(LayoutInterface $layout, Region $region, int $rows, int $columns): array {
-    foreach ($region->blocks() as $block) {
-      if ($block instanceof Panel && $block->isEntered()) {
-        return $this->lay($block->currentLayout(), $rows, $columns);
-      }
+  protected function arrange(LayoutInterface $layout, Region $region, int $rows, int $columns, bool $furnished = FALSE): array {
+    $entered = $this->entered($region);
+
+    if ($entered instanceof Panel) {
+      return $furnished ? $this->within($region, $entered, $rows, $columns) : $this->lay($entered->currentLayout(), $rows, $columns);
     }
 
     $head = $region->headBlocks();
@@ -479,6 +556,137 @@ final class ScreenRenderer {
     }
 
     return $this->across($drawn, array_values($this->rendered($region->tailBlocks())), $columns);
+  }
+
+  /**
+   * The panel a region was entered through, if it holds one.
+   *
+   * @param \DrevOps\Tui\Screen\Region $region
+   *   The region.
+   *
+   * @return \DrevOps\Tui\Block\Panel|null
+   *   The panel, or NULL when nothing in it has been gone into.
+   */
+  protected function entered(Region $region): ?Panel {
+    foreach ($region->blocks() as $block) {
+      if ($block instanceof Panel && $block->isEntered()) {
+        return $block;
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Whether the panel you are in is deeper than a given one.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel.
+   *
+   * @return bool
+   *   TRUE when a panel it holds has been gone into as well.
+   */
+  protected function deeper(Panel $panel): bool {
+    foreach ($panel->blocks() as $block) {
+      if ($block instanceof Panel && $block->isEntered()) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Draw the panel a furnished region holds, and what stands beside it.
+   *
+   * @param \DrevOps\Tui\Screen\Region $region
+   *   The region.
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel it was entered through.
+   * @param int $rows
+   *   The rows it was given.
+   * @param int $columns
+   *   The columns it was given.
+   *
+   * @return list<string>
+   *   The rows.
+   */
+  protected function within(Region $region, Panel $panel, int $rows, int $columns): array {
+    // Going deeper replaces the view, so the furniture goes with the rows it
+    // stood beside: what is in front of the reader is the panel they walked
+    // into and nothing else.
+    if ($this->deeper($panel)) {
+      return $this->lay($panel->currentLayout(), $rows, $columns);
+    }
+
+    [$above, $below] = $this->beside($region, $panel);
+    $drawn = $this->lay($panel->currentLayout(), $this->fit($panel, [...$above, ...$below], $rows), $columns);
+
+    // The panel stacks as one more block, so what shows between it and what
+    // stands beside it is the air that shows between any two of them.
+    return $this->down([...$above, ...($drawn === [] ? [] : [implode("\n", $drawn)]), ...$below]);
+  }
+
+  /**
+   * What a region draws before the panel it holds, and what it draws after it.
+   *
+   * @param \DrevOps\Tui\Screen\Region $region
+   *   The region.
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel.
+   *
+   * @return array{list<string>,list<string>}
+   *   What each of them drew, in the order they were placed.
+   */
+  protected function beside(Region $region, Panel $panel): array {
+    $above = [];
+    $below = [];
+    $seen = FALSE;
+
+    foreach ($region->headBlocks() as $block) {
+      if ($block === $panel) {
+        $seen = TRUE;
+
+        continue;
+      }
+
+      if ($seen) {
+        $below[] = $block;
+
+        continue;
+      }
+
+      $above[] = $block;
+    }
+
+    return [array_values($this->rendered($above)), array_values($this->rendered($below))];
+  }
+
+  /**
+   * The rows a panel takes of a region, once its neighbours have theirs.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel.
+   * @param list<string> $beside
+   *   What the blocks drawn beside it drew.
+   * @param int $rows
+   *   The rows the region was given.
+   *
+   * @return int
+   *   The rows.
+   */
+  protected function fit(Panel $panel, array $beside, int $rows): int {
+    $spent = 0;
+
+    foreach ($beside as $drawn) {
+      $spent += substr_count($drawn, "\n") + 1;
+    }
+
+    // Every piece past the first is told apart from the one above it, and the
+    // panel is one of them.
+    $spent += $this->spaced() ? count($beside) : 0;
+
+    return max(0, min($rows - $spent, $this->height($panel->currentLayout())));
   }
 
   /**

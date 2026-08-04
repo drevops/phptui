@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Screen\Layout;
 
 use DrevOps\Tui\Screen\Axis;
+use DrevOps\Tui\Screen\Furniture;
 use DrevOps\Tui\Screen\Region;
 
 /**
- * The sizing arithmetic every layout inherits.
+ * The sizing arithmetic every layout inherits, and the conventional names.
  *
  * A subclass declares an axis and its regions and inherits every line of this,
  * which is what makes writing a layout a matter of saying where things go
@@ -21,6 +22,21 @@ use DrevOps\Tui\Screen\Region;
  * @package DrevOps\Tui\Screen\Layout
  */
 abstract class AbstractLayout implements LayoutInterface {
+
+  /**
+   * The region a trail conventionally goes in.
+   */
+  protected const string HEADER = 'header';
+
+  /**
+   * The region a form conventionally goes in.
+   */
+  protected const string CONTENT = 'content';
+
+  /**
+   * The region the keys on offer conventionally go in.
+   */
+  protected const string FOOTER = 'footer';
 
   /**
    * The regions, keyed by name, in declaration order.
@@ -63,6 +79,30 @@ abstract class AbstractLayout implements LayoutInterface {
     }
 
     return $this->regions[$name];
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * The conventional names, which is what makes them conventional: a layout
+   * declaring a header gets the trail in it, one declaring none shows no trail.
+   * The form itself is the exception - it has to be drawn somewhere, so a
+   * layout that names no content region draws it in whichever it declared
+   * first. Override to send a piece somewhere else, or to answer NULL and keep
+   * it off the screen entirely.
+   */
+  public function furnishes(Furniture $piece): ?string {
+    $conventional = match ($piece) {
+      Furniture::Trail => self::HEADER,
+      Furniture::Body => self::CONTENT,
+      Furniture::Keys => self::FOOTER,
+    };
+
+    if (isset($this->regions[$conventional])) {
+      return $conventional;
+    }
+
+    return $piece === Furniture::Body ? ($this->names()[0] ?? NULL) : NULL;
   }
 
   /**
