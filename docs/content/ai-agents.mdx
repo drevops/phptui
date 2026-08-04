@@ -51,6 +51,13 @@ The schema the produce-order form emits:
       "title": "Organic only?",
       "default": false,
       "env": "TUI_ORGANIC"
+    },
+    "certifier": {
+      "type": "string",
+      "title": "Certifier",
+      "x-asked-when": {"field": "organic", "eq": true},
+      "x-required-when-asked": true,
+      "env": "TUI_CERTIFIER"
     }
   },
   "required": ["name"],
@@ -59,6 +66,14 @@ The schema the produce-order form emits:
 ```
 
 Each `env` is the variable that sets its answer - the uppercased id under the active prefix, which defaults to `TUI_` and changes with `->envPrefix('MYAPP_')` on the form or `new Tui($form, env_prefix: 'MYAPP_')`. A field that names its own variable advertises that name instead, and any further names it answers to appear beside it in `x-env-aliases` - see [naming the variables](/headless-collection#naming-the-variables). The root `x-precedence` is the resolution order described below.
+
+### Required, and required when asked
+
+The root `required` array is an assertion a JSON Schema validator acts on, so it lists only the questions **every** run asks. A question the answers can take off the form - `certifier` above, which exists only while `organic` is true - stays out of it, because listing it would refuse a payload that correctly omits a question nobody asked.
+
+What such a question owes travels with the property instead: `x-asked-when` says when it's asked and `x-required-when-asked` says it's owed on exactly those runs. Read together they say what `required` can't, and neither ever rejects a payload the form itself accepts. So an agent resolves requiredness in two steps - satisfy `required` always, and satisfy `x-required-when-asked` whenever the matching `x-asked-when` holds against the answers it has.
+
+`if`/`then` composition would express this in standard keywords, and it isn't available honestly: a `contains` condition reads a list or a substring depending on what the answer turns out to be, and a bare field reference tests for a truthy value, so neither has one JSON Schema form. A partial translation would be worse than none, because an agent would trust it. `validate()` composes the real rules against a real answer set and stays the authority on whether a payload is complete.
 
 A field's other two [guidance texts](/field-behaviour#guidance-texts) travel beside its `description` as extension keywords, so an agent reads all three rather than one merged text:
 
@@ -132,7 +147,7 @@ A [conditional panel](/panels#conditional-panels) takes everything it holds off 
 "depends_on": ["organic", "certifier"]
 ```
 
-The answer schema carries the same rule as `x-asked-when` on the property, and omits the key for a question nothing gates.
+Here `required` is the flag as declared - what the question owes **when it is asked** - so a required prompt carrying an `asked_when` is read as owing an answer only on the runs that rule allows. The answer schema carries the same rule as `x-asked-when`, omits it for a question nothing gates, and marks the gated-but-required ones with `x-required-when-asked` as described [above](#required-and-required-when-asked).
 
 `validate()` checks an answer set against those rules before collection, so an agent can confirm a payload without running the form. Each violation is one message; an empty list means the answers are valid:
 
@@ -142,6 +157,18 @@ $errors = $tui->validate(['name' => 'Weekly Box', 'fruit' => 'grape', 'quantity'
 //   'Question "fruit": value "grape" is not one of: apple, banana, cherry.',
 //   'Question "quantity" must be between 1 and 99.',
 // ]
+```
+
+Because it has real answers to resolve the rules against, it's the one place a payload is finally judged complete - and it composes a section's rule with a question's own exactly as `asked_when` describes:
+
+```php
+// The section is not there, so nothing owes an answer for the question inside it.
+$tui->validate(['name' => 'Weekly Box', 'organic' => false]);
+// []
+
+// The same payload plus the answer that puts the section on the form.
+$tui->validate(['name' => 'Weekly Box', 'organic' => true]);
+// ['Missing required question "certifier".']
 ```
 
 ## Precedence and environment variables

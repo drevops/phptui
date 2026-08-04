@@ -20,6 +20,12 @@ use DrevOps\Tui\Translation\Translator;
  * very answers resolve to. Returns a list of actionable error messages (empty
  * when the set is valid).
  *
+ * This is where a payload is finally judged complete, because only here is
+ * there an answer set to measure the rules against: a question is owed when the
+ * answers put it on the form and it is required, and owed nothing otherwise.
+ * The published schemas describe those rules but cannot resolve them, so what
+ * they say about requiredness is written to never refuse a set this accepts.
+ *
  * @package DrevOps\Tui\Schema
  */
 class SchemaValidator {

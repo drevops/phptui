@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Model;
 
-use DrevOps\Tui\Translation\Translator;
-
 /**
  * The kinds of answer a field collects.
  *
@@ -32,35 +30,6 @@ enum FieldType: string {
   case Reorder = 'reorder';
   case FilePicker = 'filepicker';
   case Pause = 'pause';
-
-  /**
-   * The human label in the active language.
-   *
-   * A literal per case, rather than translating the backing value, so each
-   * label is a discoverable chrome key in the catalog template.
-   *
-   * @return string
-   *   The translated label.
-   */
-  public function label(): string {
-    return match ($this) {
-      self::Text => Translator::t('Text'),
-      self::Template => Translator::t('Template'),
-      self::Select => Translator::t('Select'),
-      self::Confirm => Translator::t('Confirm'),
-      self::Toggle => Translator::t('Toggle'),
-      self::Suggest => Translator::t('Suggest'),
-      self::Number => Translator::t('Number'),
-      self::Rating => Translator::t('Rating'),
-      self::Calendar => Translator::t('Calendar'),
-      self::Textarea => Translator::t('Textarea'),
-      self::Password => Translator::t('Password'),
-      self::Search => Translator::t('Search'),
-      self::Reorder => Translator::t('Reorder'),
-      self::FilePicker => Translator::t('File picker'),
-      self::Pause => Translator::t('Pause'),
-    };
-  }
 
   /**
    * Whether the field's answer is a whole number rather than text.

@@ -21,7 +21,10 @@ use DrevOps\Tui\Resolver\EnvNameResolver;
  * declaration. A section carries what it holds, so `when` alone would say too
  * little about a prompt inside one: `asked_when` is the whole rule that decides
  * whether the question is asked, and `depends_on` names every answer that rule
- * reads. A closure default is resolved against the context (see
+ * reads. `required` is the flag as declared and says what the question owes
+ * when it is asked, which is why the two are read together: a required prompt
+ * carrying an `asked_when` owes an answer only on the runs that rule allows.
+ * A closure default is resolved against the context (see
  * {@see DefaultResolver}) so a computed default advertises a real value, and
  * options that follow the answers resolve against the same context (see
  * {@see OptionsResolver}) and are flagged as `options_dynamic`, so tooling can

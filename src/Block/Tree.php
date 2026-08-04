@@ -142,6 +142,43 @@ final class Tree {
   }
 
   /**
+   * Whether anything at all decides that each block is there.
+   *
+   * The question {@see gates()} cannot answer. A rule a block decides for
+   * itself is a real rule that simply cannot be read, so gates() hands back
+   * nothing for it - and anything that took "no rule to publish" for "asked on
+   * every run" would state something false about the form. This says only
+   * whether a block waits on anything, which is answerable either way.
+   *
+   * Keyed by object rather than by id, for the reason {@see within()} is.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel to walk.
+   * @param bool $inside
+   *   Whether the sections holding this one already wait on something.
+   *
+   * @return array<int,bool>
+   *   TRUE for each block the answers can take off the form, keyed by its
+   *   object id.
+   */
+  public static function gated(Panel $panel, bool $inside = FALSE): array {
+    $gated = [];
+
+    foreach ($panel->blocks() as $block) {
+      $waits = $inside || ($block instanceof DependCapableInterface && $block->condition() !== NULL);
+      $gated[spl_object_id($block)] = $waits;
+
+      if ($block instanceof Panel) {
+        foreach (self::gated($block, $waits) as $id => $held) {
+          $gated[$id] = $held;
+        }
+      }
+    }
+
+    return $gated;
+  }
+
+  /**
    * The single rule two rules amount to.
    *
    * @param \DrevOps\Tui\Condition\ConditionInterface|null $outer

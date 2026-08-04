@@ -164,6 +164,25 @@ final class EntryTest extends TestCase {
     yield 'text' => [FieldType::Text, FALSE];
   }
 
+  #[DataProvider('dataProviderSupportsPlaceholder')]
+  public function testSupportsPlaceholder(FieldType $type, bool $expected): void {
+    $this->assertSame($expected, $type->supportsPlaceholder());
+  }
+
+  public static function dataProviderSupportsPlaceholder(): \Iterator {
+    yield 'text' => [FieldType::Text, TRUE];
+    yield 'number' => [FieldType::Number, TRUE];
+    yield 'textarea' => [FieldType::Textarea, TRUE];
+    yield 'password' => [FieldType::Password, TRUE];
+    yield 'suggest' => [FieldType::Suggest, TRUE];
+    yield 'search' => [FieldType::Search, TRUE];
+    // A template ghosts each empty slot with that slot's own label, so a
+    // field-level placeholder would compete with it.
+    yield 'template' => [FieldType::Template, FALSE];
+    yield 'select' => [FieldType::Select, FALSE];
+    yield 'confirm' => [FieldType::Confirm, FALSE];
+  }
+
   public function testDeclaringMultipleOnUnsupportedTypeIsRefused(): void {
     $this->expectException(FormException::class);
     $this->expectExceptionMessage('Field "n" of type "number" does not collect several values');

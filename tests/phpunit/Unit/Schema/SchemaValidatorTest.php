@@ -173,6 +173,37 @@ final class SchemaValidatorTest extends TestCase {
     $this->assertSame([], (new SchemaValidator($panel))->validate(['name' => 'not-a-real-path']));
   }
 
+  public function testRequiredQuestionTheAnswersNeverAskIsNotOwed(): void {
+    // The section is not there, so the question inside it was never asked and
+    // a payload that leaves it out is complete.
+    $this->assertSame([], (new SchemaValidator($this->gatedForm()))->validate(['organic' => FALSE]));
+  }
+
+  public function testRequiredQuestionTheAnswersDoAskIsOwed(): void {
+    // The very same payload plus the answer that puts the section on the form
+    // now owes the question, and the refusal names it.
+    $this->assertSame(['Missing required question "certifier".'], (new SchemaValidator($this->gatedForm()))->validate(['organic' => TRUE]));
+  }
+
+  /**
+   * A form whose required question is asked only behind an earlier answer.
+   *
+   * @return \DrevOps\Tui\Block\Panel
+   *   The panel every declared panel hangs from.
+   */
+  protected function gatedForm(): Panel {
+    return Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->confirm('organic', 'Organic only?');
+
+        $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
+          $sp->when(new Condition('organic', eq: TRUE));
+          $sp->text('certifier', 'Certifier')->required();
+        });
+      })
+      ->root();
+  }
+
   /**
    * Build a form exercising every validation branch.
    */
