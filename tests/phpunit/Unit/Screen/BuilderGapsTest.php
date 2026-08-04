@@ -11,11 +11,13 @@ use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
+use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Screen\Assembler;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\Layout\AbstractLayout;
+use DrevOps\Tui\Screen\Layout\PanelLayout;
 use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -63,6 +65,16 @@ final class BuilderGapsTest extends TestCase {
     $this->assertNull($actions->refuse(NULL)->refusal());
   }
 
+  public function testWithheldSubmitIsSaidOnTheRowAboveTheButtons(): void {
+    $actions = (new Actions())->action('submit', 'Submit')->action('cancel', 'Cancel');
+
+    // The reason belongs to the buttons it withholds, so it is drawn against
+    // them rather than left to whatever else the region holds - and it goes
+    // the moment they are allowed through again.
+    $this->assertSame("Basket contents is required.\n[ Submit ]  [ Cancel ]", $actions->refuse('Basket contents is required.')->render($this->theme()));
+    $this->assertSame('[ Submit ]  [ Cancel ]', $actions->refuse(NULL)->render($this->theme()));
+  }
+
   public function testLegendForgetsWhatNoLongerApplies(): void {
     $legend = (new Legend())->entry('↵', 'accept');
 
@@ -75,8 +87,8 @@ final class BuilderGapsTest extends TestCase {
   }
 
   public function testWorkWithNoStepsCannotReportProgress(): void {
-    $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('Work with no steps cannot report progress; leave the total unset for a spinner.');
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Progress row "packing" declares 0 steps; a determinate bar needs at least one step (omit steps() for a spinner).');
 
     (new Progress('packing', 'Packing'))->steps(0);
   }
@@ -85,6 +97,14 @@ final class BuilderGapsTest extends TestCase {
     $panel = (new Panel('advanced', 'Advanced'))->layout(new TwoColumnLayout())->enter();
 
     $this->assertSame('  Advanced ›', $panel->leave()->render($this->theme()));
+  }
+
+  public function testPanelReadsWhereItsOwnRowsGoOffItsLayout(): void {
+    // The same question a screen asks its layout, asked of a panel's own: this
+    // one names no content region, so its rows go in the one it declared
+    // first rather than being lost.
+    $this->assertSame('content', (new Panel('main', 'Delivery'))->layout(new PanelLayout())->place()->name());
+    $this->assertSame('left', (new Panel('main', 'Delivery'))->layout(new TwoColumnLayout())->place()->name());
   }
 
   public function testBuilderPlacesBlocksInWhicheverRegionWasNamed(): void {

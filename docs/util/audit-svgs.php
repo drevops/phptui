@@ -43,6 +43,14 @@ const EXPECT_MARKERS = ['invalid command name', 'while executing', 'usage: ', 'T
 // stand-ins most likely to sneak back in through copied examples.
 const TECH_WORDS = ['Redis', 'Solr', 'ClamAV', 'Drupal', 'docker', 'npm '];
 
+// This project's own name, which the produce theme has no word for. A demo
+// resolving an answer against the run context reads the directory it was run
+// from, so a checkout named for the library paints that name into the frame
+// unless the recording is pinned somewhere else. Matched whole-word and with
+// any trailing digits a clone's directory carries, so a name merely containing
+// the letters never trips it.
+const PROJECT_NAMES = ['tui'];
+
 // The provenance badge labels; a wrap tears them apart at a line boundary.
 const BADGE_WORDS = ['edited', 'derived', 'discovered', 'default'];
 
@@ -133,6 +141,14 @@ function auditFile(string $file, array $names): array {
     }
   }
 
+  $words = spacedText($content);
+
+  foreach (PROJECT_NAMES as $project) {
+    if (preg_match('/\b' . preg_quote($project, '/') . '\d*\b/i', $words, $found) === 1) {
+      $issues[] = sprintf('%s: project name "%s" in a frame - the recording read its own directory', $name, $found[0]);
+    }
+  }
+
   foreach (wrapSignatures($content) as $signature) {
     $issues[] = sprintf('%s: %s', $name, $signature);
   }
@@ -165,6 +181,24 @@ function auditFile(string $file, array $names): array {
   }
 
   return $issues;
+}
+
+/**
+ * An SVG's text with the runs kept apart.
+ *
+ * The renderer emits one text node per styled run, so stripping the markup
+ * runs neighbouring words together and a word boundary stops meaning
+ * anything. Replacing each tag with a space keeps the boundaries a pattern can
+ * be written against.
+ *
+ * @param string $content
+ *   The SVG markup.
+ *
+ * @return string
+ *   The text content, one space between runs.
+ */
+function spacedText(string $content): string {
+  return html_entity_decode((string) preg_replace('/<[^>]*>/', ' ', $content));
 }
 
 /**

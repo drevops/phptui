@@ -6,7 +6,7 @@ keywords: ['testing', 'test harness', 'scripted keystrokes', 'phpunit', 'asserti
 
 # Testing
 
-Three harnesses ship, one per scope. All of them push keystrokes onto a scripted terminal's input pipe and run the **real** loop, so you assert on the answers and on what was drawn without a terminal anywhere in sight.
+Three harnesses ship, one per scope, and each runs the **real** thing at its own scope - so you assert on the answers and on what was drawn without a terminal anywhere in sight. The first two push keystrokes onto a scripted terminal's input pipe and run the session loop; the third hands them straight to one field, since a field on its own has no session to run.
 
 | Harness        | Drives                      | Reach for it when                                 |
 | -------------- | --------------------------- | ------------------------------------------------- |
@@ -91,7 +91,7 @@ Everything a session is built from can be set on it, which is what makes it the 
 | `externalEditor(...)`     | what hands a passage of text to an editor of the reader's own        |
 | `rows(int)` / `cols(int)` | the reported terminal size                                           |
 
-`theme()` takes a `ThemeInterface` instance rather than a name, which is the seam for a theme built on `AbstractTheme` - the facade resolves names through the theme registry, and that wants a `DefaultTheme`. See [Themes](/themes#what-a-theme-is-allowed-to-do).
+`theme()` takes a `ThemeInterface` instance rather than a name, so a theme built for one test - an anonymous class overriding a single element, say - goes straight in with no registration and no construction contract to satisfy. A theme that is a real class is better named on the facade, floor or not; see [Themes](/themes#what-a-theme-is-allowed-to-do).
 
 ## One field
 

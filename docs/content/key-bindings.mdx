@@ -26,7 +26,7 @@ The actions are the fixed set of intents the fields understand - the bindings be
 | `Activate`                                       | Open the focused field, go into the focused panel, or press a button |
 | `Back`                                           | Come back out of the panel you are in                                |
 | `Quit`                                           | Close the dialog that is open, else end the session                  |
-| `ScrollUp` / `ScrollDown`                        | Scroll a panel without moving the cursor                             |
+| `ScrollUp` / `ScrollDown`                        | Move a scrolling region without moving the cursor                    |
 | `Help`                                           | Show the focused field's help on a page of its own                   |
 | `DeleteBack`                                     | Delete the character before the caret                                |
 | `InsertSpace`                                    | Type a space                                                         |
@@ -82,7 +82,7 @@ The last row is why a field's own help stays reachable while it is open. Where t
 
 Not everything on the keyboard routes through the map: a few field keys are fixed. The calendar's month and edge jumps (<kbd>PageUp</kbd>/<kbd>PageDown</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>) have no action behind them and always keep their keys. <kbd>Ctrl-C</kbd> is fixed the other way round - it is answered above the routing, so it aborts from anywhere, including from inside an open field.
 
-`ScrollUp` and `ScrollDown` are declared by the preset but nothing acts on them yet: a panel longer than the frame scrolls to keep the focused row in view, so the wheel changes nothing. The bindings are listed because they are what the map holds, not because the wheel does something.
+`ScrollUp` and `ScrollDown` are what the wheel is bound to, and they move what you are looking at rather than where you are: the viewport shifts by a row, the overflow marks follow it, and the cursor stays on the row it was on. A region that was not declared to scroll ignores them, because there is nothing to move through. The next key that could move the cursor puts the region back under it, so looking ahead never costs you your place.
 
 ## Per-field-type overrides
 

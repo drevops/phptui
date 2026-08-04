@@ -80,12 +80,11 @@ final class SelectTest extends TestCase {
     $this->assertSame('b', $field->value());
   }
 
-  public function testValidatorErrorShownInView(): void {
-    $field = (new Select(['a' => 'A', 'b' => 'B'], 'a'))->setHandlers(validate: static fn (mixed $value): string => 'Not allowed.');
+  public function testRefusalIsShownUnderTheList(): void {
+    $field = new Select(['a' => 'A', 'b' => 'B'], 'a');
 
-    $field->handle(Key::named(KeyName::Enter));
+    $field->refused('Not allowed.');
 
-    $this->assertFalse($field->isComplete());
     $this->assertStringContainsString('Not allowed.', Ansi::strip($field->view(new DefaultTheme())));
   }
 
@@ -441,28 +440,30 @@ final class SelectTest extends TestCase {
     $this->assertPagesAndFollowsCursor(static fn(int $size): Select => new Select(self::pagingOptions(), [], TRUE, page_size: $size));
   }
 
-  public function testMultipleRejectsBelowMinWithInlineError(): void {
+  public function testMultipleOffersTheCountOutsideItsBoundsRatherThanRefusingIt(): void {
     $field = new Select(['a' => 'A', 'b' => 'B', 'c' => 'C'], [], TRUE, selection_bounds: new SelectionBounds(2));
 
-    // One selection is below the minimum of two, so the accept is rejected.
+    // One selection is below the minimum of two, and is still offered: how many
+    // are enough is measured where the answer is held.
     $field->handle(Key::named(KeyName::Space));
     $field->handle(Key::named(KeyName::Enter));
 
-    $this->assertFalse($field->isComplete());
-    $this->assertStringContainsString('Select at least 2 items.', Ansi::strip($field->view(new DefaultTheme())));
+    $this->assertTrue($field->isComplete());
+    $this->assertSame(['a'], $field->value());
+    $this->assertNull($field->error());
   }
 
-  public function testMultipleRejectsAboveMaxWithInlineError(): void {
+  public function testMultipleStatesItsBoundsUntilOneIsMissed(): void {
     $field = new Select(['a' => 'A', 'b' => 'B'], [], TRUE, selection_bounds: new SelectionBounds(NULL, 1));
 
-    // Two selections exceed the maximum of one.
-    $field->handle(Key::named(KeyName::Space));
-    $field->handle(Key::named(KeyName::Down));
-    $field->handle(Key::named(KeyName::Space));
-    $field->handle(Key::named(KeyName::Enter));
-
-    $this->assertFalse($field->isComplete());
     $this->assertStringContainsString('Select at most 1 item.', Ansi::strip($field->view(new DefaultTheme())));
+
+    // The reason gives way to nothing else: it lands where the standing
+    // statement of the same limit was, so the two never stack.
+    $field->refused('Select at most 1 item.');
+    $view = Ansi::strip($field->view(new DefaultTheme()));
+
+    $this->assertSame(1, substr_count($view, 'Select at most 1 item.'));
   }
 
   public function testMultipleAcceptsWithinBounds(): void {

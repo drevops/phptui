@@ -150,23 +150,24 @@ final class NumberTest extends TestCase {
     $this->assertTrue($field->isComplete());
   }
 
-  public function testRejectsOutOfRangeInline(): void {
+  public function testOffersAnOutOfRangeValueRatherThanRefusingIt(): void {
     $field = new Number('', bounds: new NumberBounds(1, 10));
 
     $field->handle(Key::char('5'));
     $field->handle(Key::char('0'));
     $field->handle(Key::named(KeyName::Enter));
 
-    $this->assertFalse($field->isComplete());
-    $this->assertStringContainsString('Enter a number between 1 and 10.', $field->view(new DefaultTheme()));
+    // The bounds move the value here and never measure one: what an answer
+    // must be is measured where the answer is held.
+    $this->assertTrue($field->isComplete());
+    $this->assertSame(50, $field->value());
+    $this->assertNull($field->error());
   }
 
   public function testSteppingClearsStaleError(): void {
-    $field = new Number('', bounds: new NumberBounds(1, 10));
+    $field = new Number('50', bounds: new NumberBounds(1, 10));
 
-    $field->handle(Key::char('5'));
-    $field->handle(Key::char('0'));
-    $field->handle(Key::named(KeyName::Enter));
+    $field->refused('Enter a number between 1 and 10.');
     $this->assertStringContainsString('Enter a number', $field->view(new DefaultTheme()));
 
     // Stepping produces a clamped, in-range value, so the error clears.

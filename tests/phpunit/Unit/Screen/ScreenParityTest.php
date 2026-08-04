@@ -28,6 +28,8 @@ use DrevOps\Tui\Render\ExternalEditor;
 use DrevOps\Tui\Render\Terminal;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\KeyRouter;
+use DrevOps\Tui\Screen\Layout\GridLayout;
+use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
 use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Screen\ScreenRenderer;
@@ -66,7 +68,7 @@ final class ScreenParityTest extends TestCase {
 
   public function testDependentRowAppearsTheMomentItsConditionHolds(): void {
     $panel = $this->panel(
-      new Field('intro', 'Pick the produce.', FieldType::Note),
+      new Markup('intro', 'Pick the produce.'),
       (new Field('organic', 'Organic only?', FieldType::Confirm))->default(FALSE),
       (new Field('certifier', 'Certifier'))->default('Soil Board')->when(new Condition('organic', eq: TRUE)),
     );
@@ -98,6 +100,103 @@ final class ScreenParityTest extends TestCase {
 
     $this->assertStringNotContainsString('Certifier', $tester->frame());
     $this->assertFalse($answers->has('certifier'));
+  }
+
+  public function testSectionAppearsTheMomentItsConditionHolds(): void {
+    $certification = $this->nested('certification', 'Certification', (new Field('certifier', 'Certifier'))->default('Soil Board'));
+    $panel = $this->panel(
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(FALSE),
+      $certification->when(new Condition('organic', eq: TRUE)),
+    );
+
+    $tester = $this->tester($panel);
+    $answers = $tester->run(Key::named(KeyName::Enter), Key::char('y'), Key::named(KeyName::Enter));
+
+    // A whole section comes and goes exactly as one row does, and what it holds
+    // reaches the answers only once it is there.
+    $this->assertStringNotContainsString('Certification', $tester->frame(0));
+    $this->assertStringContainsString('Certification', $tester->frame());
+    $this->assertSame('Soil Board', $answers->value('certifier'));
+  }
+
+  public function testSectionThatLeavesTakesTheCursorOntoRowThatIsThere(): void {
+    $certification = $this->nested('certification', 'Certification', (new Field('certifier', 'Certifier'))->default('Soil Board'));
+    $panel = $this->panel(
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(TRUE),
+      $certification->when(new Condition('organic', eq: TRUE)),
+    );
+
+    $tester = $this->tester($panel);
+    $answers = $tester->run(
+      Key::named(KeyName::Down),
+      Key::named(KeyName::Up),
+      Key::named(KeyName::Enter),
+      Key::char('n'),
+      Key::named(KeyName::Enter),
+    );
+
+    $this->assertStringNotContainsString('Certification', $tester->frame());
+    $this->assertStringContainsString('❯ Organic only?', $tester->frame());
+    $this->assertFalse($answers->has('certifier'));
+  }
+
+  public function testSectionThatGoesWhileYouAreInsideItPutsYouBackOutsideIt(): void {
+    $form = Form::create('Delivery')
+      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
+        $p->confirm('organic', 'Organic only?')->default(TRUE);
+
+        $p->panel('certification', 'Certification', static function (PanelBuilder $sp): void {
+          $sp->when(new Condition('organic', eq: TRUE));
+          $sp->text('certifier', 'Certifier');
+        });
+      });
+
+    // The answer that decides the section is written by a rule rather than
+    // typed, which is how an answer given inside a section can take it away.
+    $fixup = new Fixup(set: 'organic', to: FALSE, when: new Condition('certifier', eq: 'none'));
+    $tester = (new ScreenTester($form->root()))->rows(14)->cols(60)->collector(new Collector(NULL, [$fixup]));
+    $answers = $tester->run(
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Down),
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Enter),
+      'none',
+      Key::named(KeyName::Enter),
+    );
+
+    // The section is where the reader was standing, so it cannot simply stop
+    // being drawn: the way out is the way in, as far as the nearest section
+    // that is still there.
+    $this->assertStringContainsString('Delivery › Produce order', $tester->frame());
+    $this->assertStringNotContainsString('Certifier', $tester->frame());
+    $this->assertStringContainsString('Organic only?', $tester->frame());
+    $this->assertFalse($answers->has('certifier'));
+  }
+
+  public function testSectionTheAnswersRemovedIsDealtNoWindowEither(): void {
+    $form = Form::create('Market stall')
+      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
+        $p->layout(2);
+        $p->confirm('organic', 'Organic only?')->default(FALSE);
+
+        $p->panel('fruit', 'Fruit', static function (PanelBuilder $sp): void {
+          $sp->select('fruit', 'Fruit')->default('apple')->options(['apple' => 'Apple', 'pear' => 'Pear']);
+        });
+
+        $p->panel('certification', 'Certification', static function (PanelBuilder $sp): void {
+          $sp->when(new Condition('organic', eq: TRUE));
+          $sp->text('certifier', 'Certifier')->default('Soil Board');
+        });
+      });
+
+    $tester = (new ScreenTester($form->root()))->rows(16)->cols(70);
+    $tester->run(Key::named(KeyName::Enter));
+
+    // A window is how a section draws where its siblings sit beside it, so a
+    // section that is not there is dealt none and the row closes up.
+    $this->assertStringContainsString('Fruit', $tester->frame());
+    $this->assertStringNotContainsString('Certification', $tester->frame());
+    $this->assertStringNotContainsString('Certifier', $tester->frame());
   }
 
   public function testComputedAnswerRecomputesAsTheAnswerItReadsChanges(): void {
@@ -231,6 +330,21 @@ final class ScreenParityTest extends TestCase {
     $this->assertTrue($notes->hasHandoff());
     $this->assertSame('Weighed at the bench', $answers->value('notes'));
     $this->assertInstanceOf(Terminal::class, $editor->suspended);
+  }
+
+  public function testWhatComesBackFromTheEditorIsMeasuredLikeAnythingTyped(): void {
+    $notes = (new Field('notes', 'Packing notes', FieldType::Textarea))
+      ->default('Weighed')
+      ->externalEditor()
+      ->validate(static fn(mixed $value): ?string => $value === 'Weighed at the bench' ? 'Say where, not what.' : NULL);
+
+    $tester = $this->tester($this->panel($notes))->externalEditor(new EditorFixture(TRUE));
+    $answers = $tester->run(Key::named(KeyName::Enter), Key::char("\x05"), Key::named(KeyName::Tab));
+
+    // Text written somewhere else is still an offer: the row measures it and
+    // stays open on it, exactly as it does with text typed into the frame.
+    $this->assertStringContainsString('Say where, not what.', $tester->frame());
+    $this->assertSame('Weighed', $answers->value('notes'));
   }
 
   public function testFieldOffersNoHandoffWhereThereIsNoEditorToHandOffTo(): void {
@@ -503,7 +617,7 @@ final class ScreenParityTest extends TestCase {
   public function testRowThatOnlyShowsNeverTakesTheCursor(): void {
     $courier = new Field('courier', 'Courier');
     $weight = new Field('weight', 'Basket weight');
-    $panel = $this->panel($courier, new Field('intro', 'Pick the produce.', FieldType::Note), $weight);
+    $panel = $this->panel($courier, new Markup('intro', 'Pick the produce.'), $weight);
 
     $this->tester($panel)->run(Key::named(KeyName::Down));
 
@@ -640,8 +754,7 @@ final class ScreenParityTest extends TestCase {
   public function testNestedPanelsSitSideBySideWhereTheFormArrangesThemThatWay(): void {
     $fruit = $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple'));
     $veg = $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot'));
-    $panel = $this->panel((new Field('name', 'Order name'))->default('Weekly Box'), $fruit, $veg);
-    $panel->grid(2);
+    $panel = $this->dealt([2], (new Field('name', 'Order name'))->default('Weekly Box'), $fruit, $veg);
 
     $tester = $this->tester($panel)->cols(60);
     $tester->run();
@@ -655,12 +768,12 @@ final class ScreenParityTest extends TestCase {
   }
 
   public function testGridDealsItsPanelsIntoTheVisualRowsTheFormDeclares(): void {
-    $panel = $this->panel(
+    $panel = $this->dealt(
+      [1, 2],
       $this->nested('summary', 'Summary', (new Field('name', 'Order name'))->default('Weekly Box')),
       $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple')),
       $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot')),
     );
-    $panel->grid(1, 2);
 
     $tester = $this->tester($panel)->rows(16)->cols(60);
     $tester->run();
@@ -673,12 +786,12 @@ final class ScreenParityTest extends TestCase {
   }
 
   public function testCursorMovesSpatiallyAcrossTheGridOfWindows(): void {
-    $panel = $this->panel(
+    $panel = $this->dealt(
+      [1, 2],
       $this->nested('summary', 'Summary', (new Field('name', 'Order name'))->default('Weekly Box')),
       $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple')),
       $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot')),
     );
-    $panel->grid(1, 2);
 
     $tester = $this->tester($panel)->rows(16)->cols(60);
 
@@ -700,6 +813,42 @@ final class ScreenParityTest extends TestCase {
 
     // A grid is moved through in two directions, so the legend says so.
     $this->assertStringContainsString('←/→', $tester->frame());
+  }
+
+  public function testRowPackedFromTheEndOfFlowIsStillOneYouLandOn(): void {
+    $panel = $this->panel((new Field('courier', 'Courier'))->default('Valley Runs'));
+    $panel->in('content')->tail((new Field('weight', 'Basket weight'))->default('1200'));
+
+    $tester = $this->tester($panel);
+    $answers = $tester->run(
+      Key::named(KeyName::Down),
+      Key::named(KeyName::Enter),
+      '!',
+      Key::named(KeyName::Enter),
+    );
+
+    // Which end it was packed from says where it is drawn and nothing else, so
+    // the cursor reaches it in the order it is drawn in - before the buttons
+    // that end the form, which the session draws beside the panel rather than
+    // among its rows.
+    $this->assertStringContainsString('Basket weight', $tester->frame());
+    $this->assertSame('1200!', $answers->value('weight'));
+  }
+
+  public function testButtonsAreDrawnBelowEverythingThePanelHoldsTailIncluded(): void {
+    $panel = $this->panel((new Field('courier', 'Courier'))->default('Valley Runs'));
+    $panel->in('content')->tail(new Markup('version', 'v1.2.3'));
+
+    $tester = $this->tester($panel);
+    $tester->run();
+
+    // The rows that carry something, down to the pinned footer under them.
+    $rows = array_slice(array_values(array_filter(array_map(rtrim(...), explode("\n", $tester->frame())))), 1, 3);
+
+    // What packs from the end of the panel's own flow is still inside it, and
+    // the buttons stand beside the panel rather than in it - so they come
+    // after everything it holds, whichever end it was packed from.
+    $this->assertSame(['❯ Courier  Valley Runs', 'v1.2.3', '[ Submit ]  [ Cancel ]'], $rows);
   }
 
   public function testPanelRowCountsThePicksItHasNoRoomToList(): void {
@@ -763,6 +912,50 @@ final class ScreenParityTest extends TestCase {
     $this->assertContains('  Weekly delivery?  yes', array_map(rtrim(...), explode("\n", $flush->frame())));
   }
 
+  #[DataProvider('dataProviderEveryKindOfRowInChainStepsInWithIt')]
+  public function testEveryKindOfRowInChainStepsInWithIt(array $options, array $expected): void {
+    $form = Form::create('Conditional indentation')
+      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
+        $p->confirm('weekly', 'Weekly delivery?')->default(TRUE);
+        // One condition, three kinds of row: whatever a rule can take off the
+        // form steps in behind the answer that brought it back.
+        $p->text('courier', 'Courier note')->default('Leave at the gate')->when(new Condition('weekly', eq: TRUE));
+        $p->markup('crates', 'Weekly crates are packed the evening before.')->when(new Condition('weekly', eq: TRUE));
+        $p->text('gate', 'Gate code')->default('4821')->when(new Condition('weekly', eq: TRUE));
+      });
+
+    $tester = (new ScreenTester($form->root()))->rows(16)->cols(70)->options($options);
+    $tester->run(Key::named(KeyName::Enter));
+
+    $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
+
+    foreach ($expected as $row) {
+      $this->assertContains($row, $rows);
+    }
+  }
+
+  public static function dataProviderEveryKindOfRowInChainStepsInWithIt(): \Iterator {
+    yield 'stepped' => [
+      ['indent_conditional' => TRUE],
+      [
+        '❯ Weekly delivery?  yes',
+        '    Courier note  Leave at the gate',
+        '  Weekly crates are packed the evening before.',
+        '    Gate code  4821',
+      ],
+    ];
+
+    yield 'flush' => [
+      [],
+      [
+        '❯ Weekly delivery?  yes',
+        '  Courier note  Leave at the gate',
+        'Weekly crates are packed the evening before.',
+        '  Gate code  4821',
+      ],
+    ];
+  }
+
   public function testFormThatHidesItsLegendAdvertisesNothing(): void {
     $shown = $this->tester($this->panel(new Field('courier', 'Courier')));
     $shown->run();
@@ -785,8 +978,34 @@ final class ScreenParityTest extends TestCase {
     // the language the run was given.
     $this->assertStringContainsString('Постачання', $tester->frame());
     $this->assertStringContainsString('[ Надіслати ]  [ Скасувати ]', $tester->frame());
-    $this->assertStringContainsString('перемістити', $tester->frame());
+    $this->assertStringContainsString('↑/↓ рух', $tester->frame());
     $this->assertStringContainsString('змінено', $tester->frame());
+  }
+
+  public function testWithheldSubmitSaysWhyOnTheRowAboveTheButtons(): void {
+    $tester = $this->tester($this->panel((new Field('courier', 'Courier'))->required()));
+    $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Enter));
+
+    $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
+    $at = array_search('Courier is required.', $rows, TRUE);
+
+    // The reason and the buttons it withholds are one thing, so nothing stands
+    // between them - not even the air the theme puts between two rows.
+    $this->assertIsInt($at);
+    $this->assertSame('[ Submit ]  [ Cancel ]', $rows[$at + 1]);
+  }
+
+  public function testWithheldSubmitSaysWhyInTheActiveLanguage(): void {
+    Translator::setShared(new Translator('uk'));
+
+    $tester = $this->tester($this->nested('main', 'Постачання', (new Field('courier', 'Кур\'єр'))->required()));
+    $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Enter));
+
+    $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
+    $at = array_search('Кур\'єр є обов\'язковим полем.', $rows, TRUE);
+
+    $this->assertIsInt($at);
+    $this->assertSame('[ Надіслати ]  [ Скасувати ]', $rows[$at + 1]);
   }
 
   public function testUpdateModeBadgesTheAnswersItDetected(): void {
@@ -865,7 +1084,21 @@ final class ScreenParityTest extends TestCase {
    * A panel holding the given blocks in its content region.
    */
   protected function nested(string $id, string $title, object ...$blocks): Panel {
-    $panel = (new Panel($id, $title))->layout(new PanelLayout());
+    return $this->arranged(new PanelLayout(), $id, $title, ...$blocks);
+  }
+
+  /**
+   * The panel a screen starts in, arranged as a grid of windows.
+   */
+  protected function dealt(array $shape, object ...$blocks): Panel {
+    return $this->arranged(new GridLayout(...$shape), 'main', 'Delivery', ...$blocks);
+  }
+
+  /**
+   * A panel holding the given blocks, arranged by a layout of its own.
+   */
+  protected function arranged(LayoutInterface $layout, string $id, string $title, object ...$blocks): Panel {
+    $panel = (new Panel($id, $title))->layout($layout);
 
     foreach ($blocks as $block) {
       /** @var \DrevOps\Tui\Block\BlockInterface $block */

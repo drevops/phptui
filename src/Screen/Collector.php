@@ -39,6 +39,11 @@ use DrevOps\Tui\Translation\Translator;
  * is a supplied value measured, because until the set has settled there is
  * nothing final to measure it against.
  *
+ * A condition decides a whole section as readily as a single question, and a
+ * section that is not there is never asked for anything it holds: its questions
+ * are not collected, not refused and not in the result, and they re-enter the
+ * settling the moment the condition holds again.
+ *
  * @package DrevOps\Tui\Screen
  */
 final class Collector {
@@ -219,7 +224,7 @@ final class Collector {
   public function resettle(Panel $panel, array $values, array $pinned = [], ?Context $context = NULL): array {
     $fields = Tree::fields($panel);
 
-    [$active, $values] = $this->stabilize($this->shows($panel, $fields), $fields, $values, $this->ruleMap($fields), $pinned, $context ?? new Context(), []);
+    [$active, $values] = $this->stabilize($panel, $this->shows($panel, $fields), $fields, $values, $this->ruleMap($fields), $pinned, $context ?? new Context(), []);
 
     return [$values, $active];
   }
@@ -321,7 +326,7 @@ final class Collector {
     [$values, $sources] = $this->resolveAll($fields, $supplied, $context);
     $values = $this->transformSupplied($fields, $values, $sources);
     [$rules, $pinned] = $this->deriveRules($fields, $sources);
-    [$active, $values] = $this->stabilize($this->shows($panel, $fields), $fields, $values, $rules, $pinned, $context, $this->suppliedFields($sources));
+    [$active, $values] = $this->stabilize($panel, $this->shows($panel, $fields), $fields, $values, $rules, $pinned, $context, $this->suppliedFields($sources));
 
     return [$fields, $values, $sources, $active];
   }
@@ -341,9 +346,7 @@ final class Collector {
     $shows = array_fill_keys(Tree::ids($panel), TRUE);
 
     foreach ($fields as $field) {
-      if (!$field->type()->isDisplayOnly()) {
-        $shows[$field->id()] = FALSE;
-      }
+      $shows[$field->id()] = FALSE;
     }
 
     return $shows;
@@ -367,13 +370,6 @@ final class Collector {
     $sources = [];
 
     foreach ($fields as $field) {
-      // A field that only shows carries no answer, so it never enters the
-      // values: it is neither resolved nor allowed to colour what a later
-      // field is resolved against.
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       $resolved = new Context($context->directory, $values, $context->update, $context->version);
       [$value, $source] = $this->resolveInitial($field, $supplied, $resolved);
       $sources[$field->id()] = $source;
@@ -532,12 +528,6 @@ final class Collector {
     $rules = [];
 
     foreach ($fields as $field) {
-      // A field that only shows is absent from the values, so a rule on it
-      // would compute against something that is not there.
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       $derive = $field->derivation();
 
       if ($derive instanceof Derive) {
@@ -564,6 +554,8 @@ final class Collector {
   /**
    * Settle computed values, who is there at all, and the fix-ups.
    *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel being collected.
    * @param array<string,bool> $shows
    *   Whether each row the tree holds only shows something, keyed by id.
    * @param list<\DrevOps\Tui\Block\Field> $fields
@@ -582,7 +574,7 @@ final class Collector {
    * @return array{array<string,bool>,array<string,mixed>}
    *   Which fields are there, and the settled values.
    */
-  protected function stabilize(array $shows, array $fields, array $values, array $rules, array $pinned, Context $context, array $supplied): array {
+  protected function stabilize(Panel $panel, array $shows, array $fields, array $values, array $rules, array $pinned, Context $context, array $supplied): array {
     $active = [];
 
     foreach ($fields as $field) {
@@ -603,9 +595,12 @@ final class Collector {
 
       $next_active = [];
       $answers = $this->activeAnswers($fields, $derived, $active);
+      // A field answers for itself, and the sections holding it answer for
+      // whether it is asked at all, so the two are resolved as one.
+      $within = Tree::within($panel, $answers);
 
       foreach ($fields as $field) {
-        $next_active[$field->id()] = $field->isActive($answers);
+        $next_active[$field->id()] = $within[spl_object_id($field)] ?? TRUE;
       }
 
       $next_values = $this->applyFixups($shows, $derived, $this->activeAnswers($fields, $derived, $next_active));
@@ -936,10 +931,6 @@ final class Collector {
     $answers = [];
 
     foreach ($fields as $field) {
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       if ($active[$field->id()] ?? FALSE) {
         $answers[$field->id()] = $values[$field->id()] ?? NULL;
       }
@@ -965,10 +956,6 @@ final class Collector {
     $provenance = [];
 
     foreach ($fields as $field) {
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       if (!($active[$field->id()] ?? FALSE)) {
         continue;
       }

@@ -332,31 +332,6 @@ final class FieldFactoryTest extends TestCase {
     yield 'template' => [(new BlockField('f', 'F', FieldType::Template))->pattern(new TemplateModel('{{a}}-{{b}}')), '', Template::class];
   }
 
-  /**
-   * Tests the kinds that only draw and so have nothing to open onto.
-   *
-   * @param \DrevOps\Tui\Model\FieldType $type
-   *   The kind.
-   */
-  #[DataProvider('dataProviderKindThatOnlyDrawsCannotBeOpened')]
-  public function testKindThatOnlyDrawsCannotBeOpened(FieldType $type): void {
-    $this->expectException(\LogicException::class);
-    $this->expectExceptionMessage('only draws, so there is nothing to open it onto');
-
-    (new FieldFactory())->open(new BlockField('f', 'F', $type));
-  }
-
-  /**
-   * Data provider for testKindThatOnlyDrawsCannotBeOpened().
-   *
-   * @return \Iterator<string, array{\DrevOps\Tui\Model\FieldType}>
-   *   The kinds.
-   */
-  public static function dataProviderKindThatOnlyDrawsCannotBeOpened(): \Iterator {
-    yield 'note' => [FieldType::Note];
-    yield 'progress' => [FieldType::Progress];
-  }
-
   public function testOpeningTheBlockCarriesItsDeclarationOntoTheField(): void {
     $block = (new BlockField('f', 'F', FieldType::Select))
       ->multiple()

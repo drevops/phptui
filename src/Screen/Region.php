@@ -13,6 +13,10 @@ use DrevOps\Tui\Block\BlockInterface;
  * how a block says where it goes, so nothing depends on the order things were
  * declared in.
  *
+ * The blocks run along one axis and are packed from either end of it, which is
+ * placement rather than sizing: a block takes the space it drew whichever end
+ * it was packed from.
+ *
  * It declares a size without computing one: the arithmetic belongs to the
  * layout, which is the only thing that sees every sibling.
  *
@@ -36,23 +40,23 @@ final class Region {
   protected Axis $flow = Axis::Rows;
 
   /**
-   * How the panels inside it sit side by side, one entry per visual row.
-   *
-   * @var list<int>
-   */
-  protected array $grid = [];
-
-  /**
    * Whether its contents may outrun it.
    */
   protected bool $scrolls = FALSE;
 
   /**
-   * The blocks drawn in it, in the order they were added.
+   * The blocks packed from the start of its flow, in the order they were added.
    *
    * @var list<\DrevOps\Tui\Block\BlockInterface>
    */
   protected array $blocks = [];
+
+  /**
+   * The blocks packed from the end of its flow, in the order they were added.
+   *
+   * @var list<\DrevOps\Tui\Block\BlockInterface>
+   */
+  protected array $tail = [];
 
   /**
    * The first row of its contents that is visible.
@@ -172,36 +176,6 @@ final class Region {
   }
 
   /**
-   * Sit the panels inside this region side by side.
-   *
-   * A shape rather than a direction, which is why it is stated apart from the
-   * flow: the rows a region holds still run down it, and only the panels among
-   * them are dealt into the visual rows declared here.
-   *
-   * @param int ...$rows
-   *   One entry per visual row, naming how many panels share it, top to
-   *   bottom; none leaves them one under another.
-   *
-   * @return $this
-   *   The region.
-   */
-  public function grid(int ...$rows): self {
-    $this->grid = array_values($rows);
-
-    return $this;
-  }
-
-  /**
-   * How the panels inside this region sit side by side.
-   *
-   * @return list<int>
-   *   The count of each visual row, empty when they run one under another.
-   */
-  public function gridRows(): array {
-    return $this->grid;
-  }
-
-  /**
    * Let this region's contents outrun it.
    *
    * @return $this
@@ -261,13 +235,53 @@ final class Region {
   }
 
   /**
-   * The blocks drawn in this region, in the order they were added.
+   * Draw a block at the far end of this region's flow.
+   *
+   * Where {@see self::add()} packs from the start of the axis the blocks run
+   * along, this packs from the end of it - so a footer flowing across keeps its
+   * key hints at the left and a version string at the right, and one flowing
+   * down keeps a standing note on its last row.
+   *
+   * @param \DrevOps\Tui\Block\BlockInterface $block
+   *   The block.
+   *
+   * @return $this
+   *   The region.
+   */
+  public function tail(BlockInterface $block): self {
+    $this->tail[] = $block;
+
+    return $this;
+  }
+
+  /**
+   * The blocks drawn in this region, in the order they are drawn.
+   *
+   * @return list<\DrevOps\Tui\Block\BlockInterface>
+   *   The blocks packed from the start, then the ones packed from the end.
+   */
+  public function blocks(): array {
+    return [...$this->blocks, ...$this->tail];
+  }
+
+  /**
+   * The blocks packed from the start of this region's flow.
    *
    * @return list<\DrevOps\Tui\Block\BlockInterface>
    *   The blocks.
    */
-  public function blocks(): array {
+  public function headBlocks(): array {
     return $this->blocks;
+  }
+
+  /**
+   * The blocks packed from the end of this region's flow.
+   *
+   * @return list<\DrevOps\Tui\Block\BlockInterface>
+   *   The blocks, none when everything it holds runs from the start.
+   */
+  public function tailBlocks(): array {
+    return $this->tail;
   }
 
   /**

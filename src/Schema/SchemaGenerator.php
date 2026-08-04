@@ -18,7 +18,13 @@ use DrevOps\Tui\Resolver\EnvNameResolver;
  * options, default, required}` plus the declared bounds, the environment
  * variables that answer it and the `when`, `derive` and `discover` rules, so
  * external tooling can drive or validate the form without loading the PHP
- * declaration. A closure default is resolved against the context (see
+ * declaration. A section carries what it holds, so `when` alone would say too
+ * little about a prompt inside one: `asked_when` is the whole rule that decides
+ * whether the question is asked, and `depends_on` names every answer that rule
+ * reads. `required` is the flag as declared and says what the question owes
+ * when it is asked, which is why the two are read together: a required prompt
+ * carrying an `asked_when` owes an answer only on the runs that rule allows.
+ * A closure default is resolved against the context (see
  * {@see DefaultResolver}) so a computed default advertises a real value, and
  * options that follow the answers resolve against the same context (see
  * {@see OptionsResolver}) and are flagged as `options_dynamic`, so tooling can
@@ -52,16 +58,12 @@ class SchemaGenerator {
    */
   public function generate(): array {
     $names = new EnvNameResolver($this->envPrefix);
+    $gates = Tree::gates($this->root);
     $prompts = [];
 
     foreach (Tree::fields($this->root) as $field) {
-      // A display-only field (a note or a progress row) collects no answer, so
-      // it is not a prompt external tooling drives or validates.
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       $rule = $field->rule();
+      $gate = $gates[spl_object_id($field)] ?? NULL;
       $bounds = $field->numberBounds();
       $dates = $field->dateBounds();
       $discover = $field->discovery();
@@ -90,9 +92,10 @@ class SchemaGenerator {
         'template' => $field->template()?->pattern(),
         'placeholders' => $field->template()?->placeholders() ?? [],
         'when' => $rule?->toArray(),
+        'asked_when' => $gate?->toArray(),
         'derive' => $field->derivation()?->toArray(),
         'discover' => $discover instanceof DiscoverInterface ? $discover->toArray() : NULL,
-        'depends_on' => $rule === NULL ? [] : $rule->fields(),
+        'depends_on' => $gate === NULL ? [] : $gate->fields(),
       ];
     }
 

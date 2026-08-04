@@ -67,7 +67,7 @@ In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
 ## Table
 
-`table()` lays headers and rows into a bordered grid, sizing each column to its widest cell and capping the whole thing at the terminal. It is the same renderer a [note field's grid](/fields/table) uses, so a standalone table matches the ones inside the panel.
+`table()` lays headers and rows into a bordered grid, sizing each column to its widest cell and capping the whole thing at the terminal. It is the same renderer a [markup block's grid](/markup#tables) uses, so a standalone table matches the ones inside the panel.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/output-table-light-static.svg'), dark: useBaseUrl('/output-table-dark-static.svg')}} alt="Output table" />
@@ -105,7 +105,7 @@ Runnable in [`playground/18-output-table.php`](https://github.com/drevops/tui/bl
 
 ## Card
 
-`card()` is the full form of `box()`: a title, a body and a grid, boxed together when the three belong to one another. It is the same renderer behind a [note field's card](/fields/note), so a standalone card and a note card are the same object drawn twice.
+`card()` is the full form of `box()`: a title, a body and a grid, boxed together when the three belong to one another. It is the same renderer behind a [markup block's card](/markup), so a standalone card and an in-form card are the same object drawn twice.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/output-card-light-static.svg'), dark: useBaseUrl('/output-card-dark-static.svg')}} alt="Output card" />
@@ -118,7 +118,7 @@ $out->card('Loaded for delivery', 'Everything below leaves the shed at seven.', 
 ]);
 ```
 
-The grid is sized to fit inside the card's own border, so the two frames never collide. Pass `bordered: false` for the indented card a note field draws without `->border()`.
+The grid is sized to fit inside the card's own border, so the two frames never collide. Pass `bordered: false` for the indented card - the shape a [markup block](/markup) draws when it carries a grid without asking for a border.
 
 ## Status lines
 
@@ -234,7 +234,7 @@ The colors and glyphs come from the active [theme](/themes), the same way every 
 
 To go further and restyle one piece outright, override its `render*()` method on your theme - `renderCard()`, `renderTable()`, `renderStatus()`, `renderDefinitions()`, `renderText()` or `renderBanner()`.
 
-`renderCard()` and `renderTable()` are each the single renderer behind both the standalone piece and its in-panel counterpart, so overriding one restyles the note card - or the note grid - at the same time. None of them takes a field, a panel or an answer set: they take plain strings and arrays, which is what makes them usable outside a form at all.
+`renderCard()` is the single renderer behind both the standalone card and the one a [markup block](/markup) draws in a panel - grid included, since a markup grid is a card with a grid in it - so overriding it restyles the two together. `renderTable()` draws the standalone grid. None of them takes a field, a panel or an answer set: they take plain strings and arrays, which is what makes them usable outside a form at all.
 
 ## Degrading off a TTY
 

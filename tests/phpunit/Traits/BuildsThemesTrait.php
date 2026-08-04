@@ -27,7 +27,32 @@ trait BuildsThemesTrait {
    *   The theme.
    */
   protected function theme(bool $color = TRUE, bool $unicode = TRUE): DefaultTheme {
-    return ThemeManager::create('default', DefaultTheme::DEFAULT_WIDTH, ['color' => $color, 'unicode' => $unicode, 'mode' => Mode::Dark]);
+    return $this->builtin('default', DefaultTheme::DEFAULT_WIDTH, ['color' => $color, 'unicode' => $unicode, 'mode' => Mode::Dark]);
+  }
+
+  /**
+   * A shipped theme, resolved through the registry by the name it ships under.
+   *
+   * The factory answers with the surface every theme has rather than the class
+   * the shipped ones happen to share, so a test reading a palette back off one
+   * says which theme it is holding before it reads.
+   *
+   * @param string $name
+   *   The theme name.
+   * @param int $width
+   *   The frame width.
+   * @param array<string,mixed> $options
+   *   The display options.
+   *
+   * @return \DrevOps\Tui\Theme\DefaultTheme
+   *   The theme.
+   */
+  protected function builtin(string $name, int $width = DefaultTheme::DEFAULT_WIDTH, array $options = []): DefaultTheme {
+    $theme = ThemeManager::create($name, $width, $options);
+
+    $this->assertInstanceOf(DefaultTheme::class, $theme);
+
+    return $theme;
   }
 
   /**

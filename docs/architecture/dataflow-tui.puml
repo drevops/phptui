@@ -25,8 +25,10 @@ participant "Collector" as Col
 
 SC -> Asm: assemble(panel, layout)
 activate SC
+Asm -> Screen: furnishes(Trail), furnishes(Body), furnishes(Keys)
+Screen --> Asm: the region each piece goes in, or none
 Asm --> SC: Screen with the standard furniture
-note right of SC: a breadcrumb in 'header', the panel and its\nbuttons in 'content', a legend in 'footer' -\nwherever the named layout keeps a place
+note right of SC: the trail, the panel with its buttons, the keys -\nplaced in the screen's own regions, so the\ndeclared tree is left exactly as it was
 
 SC -> Term: setup() raw mode, alt screen
 SC -> Col: seed(panel, supplied, context)
@@ -41,7 +43,8 @@ loop until the form ends
     activate SR
     SR -> Screen: arrange(available)
     Screen --> SR: a size for each Region
-    SR -> Screen: flow the Region's blocks, scroll if declared
+    SR -> Screen: deal() and share(), where a grid puts blocks side by side
+    SR -> Screen: flow the Region's blocks from both ends, scroll if declared
     SR -> Block: render(theme)
     Block -> Theme: elements for what it draws
     Theme --> Block: styled strings
@@ -58,8 +61,8 @@ loop until the form ends
 
   alt the interrupt key
     note right of SC: aborts from anywhere, including an open field
-  else a button, work to run, or leaving
-    note right of SC: held here: each acts on something outside\nthe screen, which no block knows about
+  else a button, work to run, leaving, or the wheel
+    note right of SC: held here: none of the four acts on a block -\nthe wheel moves the region the cursor is in,\nleaving the cursor on the row it was on
   else anything else
     SC -> KR: handle(key)
     activate KR
@@ -72,7 +75,7 @@ loop until the form ends
     opt an answer was just taken
       SC -> Col: resettle(panel, values, pinned, context)
       Col --> SC: settled values + who is there
-      note right of SC: rows that follow the answers re-resolve,\ncomputed values recompute, conditions\nshow and hide rows, fix-ups apply
+      note right of SC: rows that follow the answers re-resolve,\ncomputed values recompute, conditions show and\nhide rows and whole sections, fix-ups apply
     end
   end
 

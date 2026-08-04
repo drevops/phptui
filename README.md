@@ -81,7 +81,7 @@ Every feature has a reference page and a runnable, self-contained example in [`p
 | 🧭 Layouts | `->layout('two-column')` arranges a screen or a panel into named regions, each with its own size, flow and scrolling; register a layout class of your own and pick it by name | [layouts](https://phptui.dev/layouts) | [`20-layouts-*`](playground) |
 | 🖥️ Fullscreen mode | `->fullscreen()` stretches the frame to the whole terminal; `halign`/`valign` anchor the content and min/max size options guard small or very wide terminals | [panels](https://phptui.dev/panels#fullscreen) | [`03-panels-*`](playground) |
 | ⚡ Inline editing | A field's editor opens in place on the panel row; `->standalone()` opts a field out to full-screen | [panels](https://phptui.dev/panels#inline-editing) | [`04-inline-editing`](playground/04-inline-editing.php) |
-| 🧩 Fields | 17 field types: text, template, number, rating, calendar, textarea, password, select, reorder, suggest, search, file picker, confirm, toggle, pause, plus note and progress rows that collect nothing | [fields](https://phptui.dev/fields) | [`02-fields-*`](playground) |
+| 🧩 Fields | 15 field types: text, template, number, rating, calendar, textarea, password, select, reorder, suggest, search, file picker, confirm, toggle, pause - plus markup and progress blocks, which collect nothing | [fields](https://phptui.dev/fields) | [`02-fields-*`](playground) |
 | 🏗️ Builder-driven | The form is declared in PHP with a fluent builder; the common cases need no code | [configuration](https://phptui.dev/configuration) | [`01-quickstart`](playground/01-quickstart.php) |
 | 🎛️ Interactive or unattended | `run()` picks the mode: keyboard on a terminal, otherwise JSON payload + `TUI_<ID>` environment variables | [headless collection](https://phptui.dev/headless-collection) | [`08-headless-*`](playground) |
 | 🔗 Derived values | Fields computed from other answers via `{{field}}` templates and str2name transforms, settling to a fixpoint | [configuration](https://phptui.dev/configuration#derived-values) | [`05-form-logic-*`](playground) |
@@ -192,8 +192,8 @@ There's a field for most things you'd want to ask: text entry, numbers and dates
 <td><strong><a href="https://phptui.dev/fields/pause">Pause</a></strong><br>An acknowledgment gate; <kbd>Enter</kbd> or <kbd>Space</kbd> accepts. Unattended runs auto-acknowledge it, so it never blocks automation.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-progress-dark-animated.svg"><img src="docs/assets/field-progress-light-animated.svg" width="100%" alt="Progress field"></picture></td>
-<td><strong><a href="https://phptui.dev/fields/progress">Progress</a></strong><br>A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself; it collects no value.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/progress-row-dark-animated.svg"><img src="docs/assets/progress-row-light-animated.svg" width="100%" alt="Progress row"></picture></td>
+<td><strong><a href="https://phptui.dev/progress-row">Progress</a></strong><br>A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself; it collects no value.</td>
 </tr>
 <tr>
 <td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-rating-dark-animated.svg"><img src="docs/assets/field-rating-light-animated.svg" width="100%" alt="Rating field"></picture></td>

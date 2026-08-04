@@ -303,10 +303,10 @@
   padding: .05em .38em; border-radius: 5px; white-space: nowrap;
 }
 
-/* widgets */
-.widgetsHead { margin-bottom: clamp(1.8rem, 4vw, 2.6rem); }
+/* fields */
+.fieldsHead { margin-bottom: clamp(1.8rem, 4vw, 2.6rem); }
 .wgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem; }
-/* Widget cards are informational, not clickable - so no hover affordance. */
+/* Field cards are informational, not clickable - so no hover affordance. */
 .wcard {
   background: linear-gradient(180deg, rgba(40, 44, 52, .7), rgba(33, 37, 43, .6));
   border: 1px solid var(--line-soft); border-radius: 12px; overflow: hidden;

@@ -14,10 +14,17 @@ use DrevOps\Tui\Translation\Translator;
  * Validates an answer set against the configuration.
  *
  * Checks value types, option membership and required questions, and skips
- * questions whose `when` condition is not met by the answer set. A question
- * whose options follow the answers is checked against the set those very
- * answers resolve to. Returns a list of actionable error messages (empty when
- * the set is valid).
+ * questions the answer set leaves off the form - the ones whose own `when`
+ * condition it does not meet, and the ones inside a section it takes away. A
+ * question whose options follow the answers is checked against the set those
+ * very answers resolve to. Returns a list of actionable error messages (empty
+ * when the set is valid).
+ *
+ * This is where a payload is finally judged complete, because only here is
+ * there an answer set to measure the rules against: a question is owed when the
+ * answers put it on the form and it is required, and owed nothing otherwise.
+ * The published schemas describe those rules but cannot resolve them, so what
+ * they say about requiredness is written to never refuse a set this accepts.
  *
  * @package DrevOps\Tui\Schema
  */
@@ -52,15 +59,22 @@ class SchemaValidator {
     // shows is still an id the form knows, so a stray value for one is ignored
     // rather than reported as a question nobody asked.
     $known = array_fill_keys(Tree::ids($this->root), TRUE);
+    // Settled rather than read once: a value inside a section the payload takes
+    // away is a value the form never asked for, and collection drops it before
+    // the conditions are measured again. Reading it once would owe a question
+    // that a run of the same payload never asks.
+    $within = Tree::settled($this->root, $answers);
+    $fields = Tree::fields($this->root);
+    // What the form actually asks with: a value inside a section the payload
+    // took away - or one keyed by a block that collects nothing - must not feed
+    // another field's option list, or membership here would allow what
+    // collection refuses. Collection only ever answers with fields, so the
+    // resolver context is narrowed to the same set.
+    $ids = array_fill_keys(array_map(static fn(Field $field): string => $field->id(), $fields), TRUE);
+    $asked = array_intersect_key(Tree::held($this->root, $answers, $within), $ids);
 
-    foreach (Tree::fields($this->root) as $field) {
-      // A display-only field (a note or a progress row) carries no answer, so
-      // it is never required and any value supplied for it is ignored.
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
-      if (!$field->isActive($answers)) {
+    foreach ($fields as $field) {
+      if (!($within[spl_object_id($field)] ?? TRUE)) {
         continue;
       }
 
@@ -76,7 +90,7 @@ class SchemaValidator {
       // allows, so they are settled against it - carried on the run context, so
       // a resolver reading the directory or the update flag sees what it would
       // see during collection - before membership is checked.
-      OptionsResolver::resolve($field, new Context($this->context->directory, $answers, $this->context->update, $this->context->version));
+      OptionsResolver::resolve($field, new Context($this->context->directory, $asked, $this->context->update, $this->context->version));
 
       $error = $this->validateValue($field, $answers[$field->id()]);
       if ($error !== NULL) {

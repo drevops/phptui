@@ -25,6 +25,7 @@ package "Block - the one tree" #E3F2FD {
   [Legend]
   [Actions]
   [Progress]
+  [Tree]
   [Block\\Capability]
   [Block\\Element]
 }
@@ -33,8 +34,10 @@ package "Arranging" #FFEBEE {
   [Screen]
   interface LayoutInterface
   [AbstractLayout]
+  [GridLayout]
   [LayoutManager]
   [Region]
+  [Furniture]
 }
 
 package "Driving" #FFF3E0 {
@@ -55,6 +58,7 @@ package "Collecting" #E8F5E9 {
   [Answers]
   [SchemaGenerator]
   [SchemaValidator]
+  [AgentHelp]
 }
 
 package "Behaviour" #F3E5F5 {
@@ -67,6 +71,7 @@ package "Theme" #ECEFF1 {
   [AbstractTheme]
   [DefaultTheme]
   [Theme\\Capability]
+  [Theme\\Override]
   [ThemeManager]
   [ThemeBuilder]
 }
@@ -91,6 +96,8 @@ BlockInterface --> [Block\\Element]
 [Screen] --> LayoutInterface
 [AbstractLayout] --> LayoutInterface
 [AbstractLayout] *-- [Region]
+[AbstractLayout] --> [Furniture]
+[GridLayout] --> [AbstractLayout]
 [LayoutManager] --> LayoutInterface
 [Region] --> BlockInterface
 
@@ -107,25 +114,31 @@ BlockInterface --> [Block\\Element]
 [ScreenController] --> [KeyMap]
 [ScreenController] --> [Terminal]
 [Assembler] --> [LayoutManager]
+[Assembler] --> [Furniture]
 [KeyRouter] --> [Panel]
 [ScreenRenderer] --> [Screen]
+[ScreenRenderer] --> LayoutInterface
 [ScreenRenderer] --> ThemeInterface
 
-[Collector] --> [Panel]
+[Collector] --> [Tree]
 [Collector] --> [Discovery]
 [Collector] --> [Deriver]
 [Collector] --> [Condition]
 [Collector] --> [HandlerRegistry]
 [Collector] --> [Context]
 [Collector] --> [Answers]
-[SchemaGenerator] --> [Panel]
-[SchemaValidator] --> [Panel]
+[SchemaGenerator] --> [Tree]
+[SchemaValidator] --> [Tree]
+[AgentHelp] --> [Tree]
+[Tree] --> [Panel]
 
 [AbstractTheme] --> ThemeInterface
 [AbstractTheme] --> [Block\\Element]
 [DefaultTheme] --> [AbstractTheme]
 [DefaultTheme] --> [Theme\\Capability]
-[ThemeManager] --> [DefaultTheme]
-[ThemeBuilder] --> [DefaultTheme]
+[Theme\\Capability] --> [Theme\\Override]
+[ThemeManager] --> ThemeInterface
+[ThemeBuilder] --> [Theme\\Override]
+[Tui] --> [ThemeBuilder]
 BlockInterface --> ThemeInterface
 @enduml

@@ -47,10 +47,6 @@ class FieldFactory {
   /**
    * Build the field a block opens onto, seeded with the value it holds.
    *
-   * Nothing here is wired with a validator: what a block will not take is the
-   * block's own to refuse, so an offered value is measured once, where the
-   * answer is held, rather than twice with two chances to disagree.
-   *
    * @param \DrevOps\Tui\Block\Field $block
    *   The block being opened.
    * @param mixed $current
@@ -62,7 +58,8 @@ class FieldFactory {
    *   The field.
    *
    * @throws \LogicException
-   *   When the block's kind only draws, so there is nothing to open onto.
+   *   When the block's kind needs a declaration it was not given, so there is
+   *   nothing complete enough to open onto.
    */
   public function open(Field $block, mixed $current = NULL, array $answers = []): FieldInterface {
     $entries = $this->translate($block->entries());
@@ -83,7 +80,6 @@ class FieldFactory {
       FieldType::Pause => new Pause(),
       FieldType::Text => new Text($this->text($current), $this->completions($block, $answers)),
       FieldType::Template => new Template($this->template($block), $this->text($current)),
-      FieldType::Note, FieldType::Progress => throw new \LogicException(sprintf('Field "%s" only draws, so there is nothing to open it onto.', $block->id())),
     };
 
     if ($field instanceof QueryOptionsCapableInterface && $block->source() instanceof \Closure) {

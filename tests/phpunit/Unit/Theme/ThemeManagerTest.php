@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
 use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Tests\Fixtures\Theme\FloorOptionTheme;
+use DrevOps\Tui\Tests\Fixtures\Theme\FloorTheme;
+use DrevOps\Tui\Tests\Fixtures\Theme\OceanTheme;
 use DrevOps\Tui\Tests\Traits\ResetsRegistriesTrait;
+use DrevOps\Tui\Theme\AbstractTheme;
 use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\Tui\Theme\MidnightTheme;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\ThemeManager;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -72,9 +77,25 @@ final class ThemeManagerTest extends TestCase {
 
   public function testRegisterNonThemeClassThrows(): void {
     $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('must extend');
+    $this->expectExceptionMessage('must implement');
 
     ThemeManager::register('bogus', \stdClass::class);
+  }
+
+  public function testRegisterUninstantiableThemeClassThrows(): void {
+    // The floor is a theme by type and a class nothing can build, so it is
+    // named here rather than fatalling on the first create().
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Theme class "' . AbstractTheme::class . '" cannot be instantiated.');
+
+    ThemeManager::register('floor', AbstractTheme::class);
+  }
+
+  public function testCreateUninstantiableThemeClassThrows(): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Theme class "' . AbstractTheme::class . '" cannot be instantiated.');
+
+    ThemeManager::create(AbstractTheme::class);
   }
 
   public function testCreateFromClassName(): void {
@@ -82,13 +103,49 @@ final class ThemeManagerTest extends TestCase {
     $this->assertInstanceOf(DefaultTheme::class, ThemeManager::create(DefaultTheme::class));
   }
 
+  #[DataProvider('dataProviderCreateResolves')]
+  public function testCreateResolves(string $name, string $expected): void {
+    $this->snapshotRegistry(ThemeManager::class);
+    ThemeManager::register('orchard', FloorTheme::class);
+
+    $built = ThemeManager::create($name, 40);
+
+    $this->assertSame($built::class, $expected);
+  }
+
+  public static function dataProviderCreateResolves(): \Iterator {
+    // Every way of naming a theme resolves, and what the theme is built on is
+    // none of the factory's business.
+    yield 'shipped name' => ['midnight', MidnightTheme::class];
+    yield 'empty name' => ['', DefaultTheme::class];
+    yield 'registered name' => ['orchard', FloorTheme::class];
+    yield 'class name' => [OceanTheme::class, OceanTheme::class];
+    yield 'class name on the floor' => [FloorTheme::class, FloorTheme::class];
+  }
+
+  public function testCreateBuildsThemesOnTheFloor(): void {
+    $theme = ThemeManager::create(FloorTheme::class, 40);
+
+    // The width is the one thing no theme can work out for itself, so the floor
+    // is told it exactly as the theme that ships is.
+    $this->assertSame(40, $theme->contentWidth());
+  }
+
+  public function testCreateHandsTheFloorTheStatedOptions(): void {
+    $theme = ThemeManager::create(FloorOptionTheme::class, 40, ['lead' => '# ']);
+
+    $this->assertInstanceOf(FloorOptionTheme::class, $theme);
+    $this->assertSame('# Basket', $theme->fieldLabel('Basket'));
+  }
+
   public function testCreatePassesOptions(): void {
     $theme = ThemeManager::create('default', 40, ['color' => FALSE, 'unicode' => FALSE]);
+    $default = ThemeManager::create('default');
 
+    $this->assertInstanceOf(DefaultTheme::class, $theme);
+    $this->assertInstanceOf(DefaultTheme::class, $default);
     $this->assertFalse($theme->hasColor());
     $this->assertFalse($theme->hasUnicode());
-
-    $default = ThemeManager::create('default');
     $this->assertTrue($default->hasColor());
     $this->assertTrue($default->hasUnicode());
   }

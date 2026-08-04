@@ -35,23 +35,6 @@ interface FieldElementsInterface {
   public function fieldSelector(bool $selected): string;
 
   /**
-   * The blank gutter a field's rows are laid out after.
-   *
-   * A question asked only once an earlier one is answered steps in from the
-   * questions that decide it, so a panel reads as a hierarchy rather than as a
-   * flat list. Every row the field contributes is laid out after this same
-   * gutter, and a theme that would rather draw a flat list answers with none.
-   *
-   * @param int $depth
-   *   How many answers had to be given before this one is asked at all; zero
-   *   for a question that is always asked.
-   *
-   * @return string
-   *   The gutter, empty when nothing steps in.
-   */
-  public function fieldIndent(int $depth): string;
-
-  /**
    * Style a field's name.
    *
    * @param string $text
@@ -214,6 +197,21 @@ interface FieldElementsInterface {
    *   The styled mark.
    */
   public function fieldEntrySeparator(): string;
+
+  /**
+   * The mark saying a list runs past the page it is windowed to.
+   *
+   * Its own element rather than a reuse of the chrome's: one says a list the
+   * field owns outran its page and the other that a region outran the space it
+   * was given, so a theme can restyle either without touching the other.
+   *
+   * @param bool $above
+   *   Whether the entries it points at are above rather than below.
+   *
+   * @return string
+   *   The styled mark.
+   */
+  public function fieldOverflowMarker(bool $above): string;
 
   /**
    * Style what a field will accept, before anything is refused.

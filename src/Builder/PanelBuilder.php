@@ -7,9 +7,13 @@ namespace DrevOps\Tui\Builder;
 use DrevOps\Tui\Block\BlockInterface;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\Progress;
+use DrevOps\Tui\Condition\ConditionInterface;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormException;
+use DrevOps\Tui\Screen\Layout\GridLayout;
+use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Layout\LayoutManager;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
 
@@ -86,7 +90,11 @@ final class PanelBuilder {
    *   When the declared grid does not match the panels it arranges.
    */
   public function seal(): void {
-    LayoutGuard::assert($this->panel->gridRows(), count($this->panels), $this->id);
+    $layout = $this->panel->currentLayout();
+
+    if ($layout instanceof GridLayout) {
+      $layout->assertDeals(count($this->panels), $this->id);
+    }
 
     foreach ($this->fields as $field) {
       $field->seal();
@@ -108,6 +116,25 @@ final class PanelBuilder {
    */
   public function description(string $description): self {
     $this->panel->description($description);
+
+    return $this;
+  }
+
+  /**
+   * Set the conditional-visibility rule.
+   *
+   * A section comes and goes exactly as a field does, and takes everything it
+   * holds with it: while the condition does not hold, its questions are not
+   * asked, not drawn and not in the answers.
+   *
+   * @param \DrevOps\Tui\Condition\ConditionInterface $condition
+   *   The condition gating the panel, evaluated as the answers settle.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function when(ConditionInterface $condition): self {
+    $this->panel->when($condition);
 
     return $this;
   }
@@ -391,25 +418,22 @@ final class PanelBuilder {
   }
 
   /**
-   * Add a note: a non-interactive informational card.
+   * Add a titled note: markup written title first.
    *
-   * The note renders its title and body inline but collects no value - the
-   * selection cursor skips it and it never appears in the answers. The body is
-   * set with ->description(); ->border() draws the card inside a box; ->table()
-   * renders an aligned grid beneath it.
+   * Sugar over {@see markup()} for the common shape of a card, where the title
+   * is what you write first and the body follows through `->body()`. It builds
+   * the same block, so every markup call is available on it.
    *
    * @param string $id
-   *   The field id.
+   *   The block id.
    * @param string $title
-   *   The card title (optional; an empty title renders the body alone).
+   *   The title (optional; an empty title draws the body alone).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
-   *   The field builder.
+   * @return \DrevOps\Tui\Block\Markup
+   *   The markup block.
    */
-  public function note(string $id, string $title = ''): FieldBuilder {
-    // A note's title is genuinely optional, so unlike other fields it is not
-    // filled from the id when omitted.
-    return $this->field($id, $title, FieldType::Note, FALSE);
+  public function note(string $id, string $title = ''): Markup {
+    return $this->markup($id, '', $title);
   }
 
   /**
@@ -441,19 +465,22 @@ final class PanelBuilder {
    * Add a progress row that runs work when activated, showing an indicator.
    *
    * Chain `->steps(int)` for a determinate bar (omit it for a spinner) and
-   * `->run(callable)` for the work; the callback drives the indicator through
+   * `->work(\Closure)` for the work; the callback drives the indicator through
    * the {@see \DrevOps\Tui\Primitive\ProgressReporter} it receives.
    *
    * @param string $id
-   *   The field id.
-   * @param string $label
+   *   The block id.
+   * @param string $caption
    *   The caption shown beside the indicator (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
-   *   The field builder.
+   * @return \DrevOps\Tui\Block\Progress
+   *   The progress block.
    */
-  public function progress(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Progress);
+  public function progress(string $id, string $caption = ''): Progress {
+    $progress = new Progress($id, $caption === '' ? $id : $caption);
+    $this->add($progress);
+
+    return $progress;
   }
 
   /**
@@ -501,8 +528,9 @@ final class PanelBuilder {
    *   The builder.
    *
    * @throws \DrevOps\Tui\Model\FormException
-   *   When a name is mixed with counts, more than one name is given, or the
-   *   panel already holds blocks the named layout has nowhere to put.
+   *   When a name is mixed with counts, more than one name is given, a visual
+   *   row holds fewer than one sub-panel, or the panel already holds blocks
+   *   the named layout has nowhere to put.
    */
   public function layout(int|string ...$rows): self {
     $counts = [];
@@ -519,16 +547,18 @@ final class PanelBuilder {
     }
 
     if ($names === []) {
-      $this->panel->grid(...$counts);
-
-      return $this;
+      return $this->arrange(new GridLayout(...$counts));
     }
 
     if ($counts !== []) {
       throw new FormException(sprintf('Panel "%s" declares a layout name beside a grid of sub-panels; a panel is arranged one way or the other.', $this->id));
     }
 
-    return $this->arrange($names);
+    if (count($names) > 1) {
+      throw new FormException(sprintf('Panel "%s" declares %d layouts; a panel is arranged by one.', $this->id, count($names)));
+    }
+
+    return $this->arrange(LayoutManager::create($names[0]));
   }
 
   /**
@@ -570,28 +600,23 @@ final class PanelBuilder {
   }
 
   /**
-   * Arrange the panel's own blocks with a named layout.
+   * Arrange the panel with a layout.
    *
-   * @param list<string> $names
-   *   The declared names.
+   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   *   The layout.
    *
    * @return $this
    *   The builder.
    *
    * @throws \DrevOps\Tui\Model\FormException
-   *   When more than one name is given, or the panel already holds blocks the
-   *   named layout has nowhere to put.
+   *   When the panel already holds blocks the layout has nowhere to put.
    */
-  protected function arrange(array $names): self {
-    if (count($names) > 1) {
-      throw new FormException(sprintf('Panel "%s" declares %d layouts; a panel is arranged by one.', $this->id, count($names)));
-    }
-
+  protected function arrange(LayoutInterface $layout): self {
     if ($this->placed) {
       throw new FormException(sprintf('Panel "%s" declares a layout after placing blocks in the one it had; declare the layout first, so every block knows the regions it may go in.', $this->id));
     }
 
-    $this->panel->layout(LayoutManager::create($names[0]));
+    $this->panel->layout($layout);
     $this->region = $this->firstRegion();
 
     return $this;
@@ -626,15 +651,12 @@ final class PanelBuilder {
    *   The label (defaults to the id).
    * @param \DrevOps\Tui\Model\FieldType $type
    *   The field type.
-   * @param bool $label_fallback
-   *   Whether an empty label falls back to the id (the default); FALSE keeps an
-   *   empty label empty, for a note whose title is optional.
    *
    * @return \DrevOps\Tui\Builder\FieldBuilder
    *   The field builder.
    */
-  protected function field(string $id, string $label, FieldType $type, bool $label_fallback = TRUE): FieldBuilder {
-    $field = new FieldBuilder($id, $label === '' && $label_fallback ? $id : $label, $type);
+  protected function field(string $id, string $label, FieldType $type): FieldBuilder {
+    $field = new FieldBuilder($id, $label === '' ? $id : $label, $type);
     $this->fields[] = $field;
     $this->add($field->block());
 

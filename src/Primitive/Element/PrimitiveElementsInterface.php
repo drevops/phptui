@@ -17,9 +17,9 @@ use DrevOps\Tui\Primitive\Status;
  * reached for a field, a panel or an answer could only ever be used from inside
  * one.
  *
- * {@see renderCard()} and {@see renderTable()} are each the single renderer
- * behind both the standalone piece and its in-form counterpart, so restyling
- * one restyles the pair.
+ * {@see renderCard()} is the single renderer behind both the standalone card
+ * and the one a markup block draws in a panel, grid included, so overriding it
+ * restyles the two together. {@see renderTable()} draws the standalone grid.
  *
  * The prefix follows the rule the block interfaces do: every method is named
  * for what it draws, so a theme implements this and every element interface on

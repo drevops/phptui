@@ -32,7 +32,7 @@ use DrevOps\Tui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$form = Form::create('Discovery demo', 'an existing box')
+$form = Form::create('Discovery demo')
   // Per-field env overrides read BOX_<ID> instead of the default TUI_<ID>.
   ->envPrefix('BOX_')
   ->panel('box', 'Box', function (PanelBuilder $p): void {

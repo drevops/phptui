@@ -11,7 +11,6 @@ use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Utils\Strings;
 use DrevOps\Tui\Field\Capability\PlaceholderCapableInterface;
 use DrevOps\Tui\Field\Capability\PlaceholderCapableTrait;
@@ -23,8 +22,9 @@ use DrevOps\Tui\Field\Capability\TextEditCapableTrait;
  * Integer input: digits with an optional leading minus, accepted as an int.
  *
  * With bounds supplied, Up/Down adjust the value by the step clamped to the
- * range and an out-of-range entry is rejected inline; without bounds the field
- * is a plain integer text entry with the arrow keys inert.
+ * range; without bounds the field is a plain integer text entry with the arrow
+ * keys inert. The bounds move the value here and never refuse one: what the
+ * answer must be is measured where the answer is held.
  *
  * @package DrevOps\Tui\Field
  */
@@ -109,21 +109,6 @@ class Number extends AbstractField implements TextEditCapableInterface, StepCapa
    */
   protected function liveValue(): mixed {
     return (int) $this->buffer;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  #[\Override]
-  protected function accept(mixed $value): bool {
-    $violation = $this->bounds?->violation($value);
-    if ($violation !== NULL) {
-      $this->error = Translator::t('Enter a number @constraint.', ['@constraint' => $violation]);
-
-      return FALSE;
-    }
-
-    return parent::accept($value);
   }
 
   /**

@@ -1,0 +1,160 @@
+---
+title: Markup
+description: 'Formatted content in the form flow, drawn as prose, as a bordered card or as an aligned table, collecting nothing.'
+keywords: ['markup', 'note', 'card', 'table', 'grid', 'read-only', 'block']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Markup
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/markup-light-animated.svg'), dark: useBaseUrl('/markup-dark-animated.svg')}} alt="Markup" />
+</p>
+
+Markup renders formatted content and does nothing else. It's the block you reach for when a form has something to say rather than something to ask: an introduction, a standing warning, a summary of what's about to happen. It collects **nothing** - the selection cursor skips it, it never appears in the answers, it's absent from headless collection, and it's absent from the machine-readable schemas, so an agent is never asked to provide one.
+
+```php
+$p->markup('weighing', 'Every crate is weighed at the packing bench.');
+```
+
+The title and body take the same `{{field}}` templating derived values use, so markup can reflect earlier answers, and `->when()` gates it on one.
+
+Runnable scripts: [`playground/02-markup.php`](https://github.com/drevops/tui/blob/main/playground/02-markup.php) and [`playground/02-markup-table.php`](https://github.com/drevops/tui/blob/main/playground/02-markup-table.php).
+
+## Three presentations, one block
+
+How markup is laid out on the page is a presentation choice rather than a capability, so prose, a bordered card and a table are the same block drawn three ways. A table isn't a block of its own: it's markup laid out as a table.
+
+```php
+// Prose: bare lines in the flow of the form.
+$p->markup('weighing', 'Every crate is weighed at the packing bench.');
+
+// The same block in a bordered card.
+$p->markup('notice', 'Deliveries leave at dawn.')->bordered();
+
+// The same block again, laid out as a grid under a title.
+$p->markup('yields', '', 'Yields per crate')
+  ->table(['Produce', 'Crates'], [['Apple', '12'], ['Carrot', '8']]);
+```
+
+A card and a grid both go to the theme's card renderer - the same one behind [`card()`](/output) on the output primitive, since a grid here is a card with a grid in it - so restyling a standalone card restyles an in-form one with it.
+
+## Builder surface
+
+| Method                    | Effect                                                                |
+| ------------------------- | --------------------------------------------------------------------- |
+| `markup(id, body, title)` | Declares the block. The body is the content; newlines separate lines. |
+| `note(id, title)`         | The same block written title first, for the shape of a card.          |
+| `->body(text)`            | Sets the content.                                                     |
+| `->title(text)`           | Sets the title drawn above the body.                                  |
+| `->bordered()`            | Frames it in the theme's box with minimal padding.                    |
+| `->table(headers, rows)`  | Lays an aligned grid beneath the body.                                |
+| `->when(condition)`       | Puts it on the form only when an earlier answer calls for it.         |
+
+`note()` is sugar for the common shape of a card, where the title is what you write first:
+
+```php
+$p->note('intro', 'Fresh produce order')
+  ->body('A read-only card - the cursor skips it.');
+
+$p->text('item', 'Produce name')->default('Pear');
+
+// The body reflects the earlier answer; ->bordered() frames the card.
+$p->note('summary', 'Ready to pack')
+  ->body('Packing {{item}} into the basket.')
+  ->bordered();
+```
+
+Both titles are optional: markup with an empty title draws its body alone.
+
+## Tables
+
+`->table(headers, rows)` draws an aligned, bordered grid beneath the title and body.
+
+```php
+$p->note('stock', 'Basket contents')
+  ->body('Everything picked so far:')
+  ->table(['Fruit', 'Color', 'In stock'], [
+    ['Apple', 'Red', '12'],
+    ['Pear', 'Green', '5'],
+    ['Plum', 'Purple', '120'],
+  ]);
+```
+
+| Argument  | Effect                                                                                              |
+| --------- | --------------------------------------------------------------------------------------------------- |
+| `headers` | The header cells. An empty list (`[]`) draws the grid with no header row.                           |
+| `rows`    | The body rows, each a list of cells. A short row pads with empty cells; a long one widens the grid. |
+
+Each column sizes to its widest cell, and the whole grid is capped at the frame width - an over-wide table shrinks its widest columns and truncates the clipped cells with an ellipsis, so its borders always stay whole. Cells are coerced to strings, so numbers and booleans need no pre-formatting, and any line breaks in a cell fold to a space so it stays a single row. The cells carry the same `{{field}}` templating the title and body do, so a grid can reflect earlier answers.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/markup-table-light-animated.svg'), dark: useBaseUrl('/markup-table-dark-animated.svg')}} alt="Markup laid out as a table" />
+</p>
+
+## Markdown
+
+A body can carry a `[text](url)` link, and when the enclosing TUI is configured with [`->markdown()`](/markdown) it also renders bold, emphasis, inline code and bullet lists - all degrading to clean plain text where the terminal can't show them.
+
+```php
+$p->note('order', 'Fresh produce order')
+  ->body('Pick what is **ripe** today:' . PHP_EOL . '- crisp `apples`' . PHP_EOL . '- sweet *pears*')
+  ->bordered();
+```
+
+## Appearing on an answer
+
+Markup claims _Depend_ like any other block, which is what lets a standing warning appear only when an answer calls for it - so a warning needs no block of its own:
+
+```php
+$p->markup('certified', 'Organic crates need current certification.')
+  ->when(new Condition('organic', eq: TRUE));
+```
+
+## Keyboard
+
+Markup is non-interactive: the selection cursor skips over it, so it has no keys of its own.
+
+## Display modes
+
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/markup-light-static.svg'), dark: useBaseUrl('/markup-dark-static.svg')}} alt="Markup: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/markup-light-static-no-ansi.svg'), dark: useBaseUrl('/markup-dark-static-no-ansi.svg')}} alt="Markup: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/markup-light-static-ascii.svg'), dark: useBaseUrl('/markup-dark-static-ascii.svg')}} alt="Markup: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/markup-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/markup-dark-static-ascii-no-ansi.svg')}} alt="Markup: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+The same four, laid out as a table:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/markup-table-light-static.svg'), dark: useBaseUrl('/markup-table-dark-static.svg')}} alt="Table: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/markup-table-light-static-no-ansi.svg'), dark: useBaseUrl('/markup-table-dark-static-no-ansi.svg')}} alt="Table: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/markup-table-light-static-ascii.svg'), dark: useBaseUrl('/markup-table-dark-static-ascii.svg')}} alt="Table: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/markup-table-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/markup-table-dark-static-ascii-no-ansi.svg')}} alt="Table: ASCII + No ANSI" /></td>
+  </tr>
+</table>

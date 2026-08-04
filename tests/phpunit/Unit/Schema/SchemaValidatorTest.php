@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Schema;
 
+use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
+use DrevOps\Tui\Handler\Context;
+use DrevOps\Tui\Model\FilePickerConstraints;
 use DrevOps\Tui\Schema\SchemaValidator;
+use DrevOps\Tui\Screen\Layout\PanelLayout;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -20,6 +25,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the schema validator.
  */
 #[CoversClass(SchemaValidator::class)]
+#[CoversClass(Tree::class)]
 #[Group('schema')]
 final class SchemaValidatorTest extends TestCase {
 
@@ -161,13 +167,120 @@ final class SchemaValidatorTest extends TestCase {
   }
 
   public function testFilePickerConstraintsIgnoredOnNonPickerField(): void {
-    // A picker limit mistakenly set on a non-picker field never applies: the
-    // field's plain string value is not weighed as a filesystem path.
+    // A hand-built field takes a picker limit its kind never weighs a value
+    // against, so the plain string value passes rather than being read as a
+    // filesystem path.
+    $panel = (new Panel('p', 'p'))->layout(new PanelLayout());
+    $panel->in('content')->add((new Field('name', 'Name'))->picker(new FilePickerConstraints(maxSize: 100)));
+
+    $this->assertSame([], (new SchemaValidator($panel))->validate(['name' => 'not-a-real-path']));
+  }
+
+  public function testRequiredQuestionTheAnswersNeverAskIsNotOwed(): void {
+    // The section is not there, so the question inside it was never asked and
+    // a payload that leaves it out is complete.
+    $this->assertSame([], (new SchemaValidator($this->gatedForm()))->validate(['organic' => FALSE]));
+  }
+
+  public function testRequiredQuestionTheAnswersDoAskIsOwed(): void {
+    // The very same payload plus the answer that puts the section on the form
+    // now owes the question, and the refusal names it.
+    $this->assertSame(['Missing required question "certifier".'], (new SchemaValidator($this->gatedForm()))->validate(['organic' => TRUE]));
+  }
+
+  public function testValueTheAnswersTakeAwayCannotWidenAnotherQuestionsOptions(): void {
+    // The category sits in a section this payload switches off, so collection
+    // drops it before the variety's options resolve - membership here has to
+    // read the same dropped set, or the validator allows a pick the form
+    // refuses.
     $form = Form::create('T')
-      ->panel('p', 'p', fn(PanelBuilder $p): FieldBuilder => $p->text('name')->maxSize(100))
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->confirm('organic', 'Organic only?');
+
+        $p->panel('sourcing', 'Sourcing', function (PanelBuilder $sp): void {
+          $sp->when(new Condition('organic', eq: TRUE));
+          $sp->text('category', 'Category');
+        });
+
+        $p->select('variety', 'Variety')->options(static fn(Context $context): array => ($context->answers['category'] ?? '') === 'stone' ? ['plum' => 'Plum'] : ['apple' => 'Apple']);
+      });
+
+    $refusals = (new SchemaValidator($form->root()))->validate(['organic' => FALSE, 'category' => 'stone', 'variety' => 'plum']);
+
+    $this->assertNotSame([], $refusals);
+    $this->assertStringContainsString('variety', implode(' ', $refusals));
+  }
+
+  public function testValueUnderShowOnlyIdCannotWidenAnotherQuestionsOptions(): void {
+    // A markup id is known, so a stray value for it is tolerated - but it
+    // collects nothing, so collection never answers with it and a resolver
+    // reading it here would see what a run of the same payload never sees.
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->markup('intro', 'Pick the produce.');
+
+        $p->select('variety', 'Variety')->options(static fn(Context $context): array => ($context->answers['intro'] ?? '') === 'stone' ? ['plum' => 'Plum'] : ['apple' => 'Apple']);
+      });
+
+    $refusals = (new SchemaValidator($form->root()))->validate(['intro' => 'stone', 'variety' => 'plum']);
+
+    $this->assertNotSame([], $refusals);
+    $this->assertStringContainsString('variety', implode(' ', $refusals));
+  }
+
+  public function testValueTheAnswersTakeAwayCannotAskForAnythingElse(): void {
+    // The section is not there, so the value the payload carries for a question
+    // inside it was never asked for - and a value nobody was asked for cannot
+    // be what puts a required question elsewhere on the form.
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->confirm('organic', 'Organic only?');
+
+        $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
+          $sp->when(new Condition('organic', eq: TRUE));
+          $sp->text('certifier', 'Certifier');
+        });
+
+        $p->text('auditor', 'Auditor')->required()->when(new Condition('certifier', eq: 'Valley Orchard'));
+      })
       ->root();
 
-    $this->assertSame([], (new SchemaValidator($form))->validate(['name' => 'not-a-real-path']));
+    $this->assertSame([], (new SchemaValidator($form))->validate(['organic' => FALSE, 'certifier' => 'Valley Orchard']));
+    // The same chain still owes the question once the section is there.
+    $this->assertSame(['Missing required question "auditor".'], (new SchemaValidator($form))->validate(['organic' => TRUE, 'certifier' => 'Valley Orchard']));
+  }
+
+  public function testQuestionsThatTakeEachOtherAwaySettleRatherThanSpin(): void {
+    // Each rule holds only while the other's answer is absent, so dropping one
+    // puts the other back and the reading has no fixed point. It is bounded
+    // for exactly this, so the set is answered rather than spun on.
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->text('crate', 'Crate')->when(new Condition('pallet', ne: 'B'));
+        $p->text('pallet', 'Pallet')->when(new Condition('crate', ne: 'A'));
+      })
+      ->root();
+
+    $this->assertSame([], (new SchemaValidator($form))->validate(['crate' => 'A', 'pallet' => 'B']));
+  }
+
+  /**
+   * A form whose required question is asked only behind an earlier answer.
+   *
+   * @return \DrevOps\Tui\Block\Panel
+   *   The panel every declared panel hangs from.
+   */
+  protected function gatedForm(): Panel {
+    return Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->confirm('organic', 'Organic only?');
+
+        $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
+          $sp->when(new Condition('organic', eq: TRUE));
+          $sp->text('certifier', 'Certifier')->required();
+        });
+      })
+      ->root();
   }
 
   /**
@@ -176,7 +289,7 @@ final class SchemaValidatorTest extends TestCase {
   protected function form(): Panel {
     return Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->note('intro', 'Intro')->description('Welcome.');
+        $p->note('intro', 'Intro')->body('Welcome.');
         $p->text('name')->required();
         $p->select('profile')->option('standard')->option('minimal')->option('demo', 'Demo', disabled: TRUE, disabled_reason: 'unavailable');
         $p->confirm('agree');

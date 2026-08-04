@@ -12,6 +12,7 @@ use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Input\KeyMap;
 use DrevOps\Tui\Input\KeyMapManager;
+use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
 use DrevOps\Tui\Primitive\Output;
 use DrevOps\Tui\Primitive\Progress;
 use DrevOps\Tui\Render\Terminal;
@@ -22,10 +23,14 @@ use DrevOps\Tui\Schema\SchemaValidator;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\Layout\LayoutManager;
 use DrevOps\Tui\Screen\ScreenController;
+use DrevOps\Tui\Theme\Border;
+use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
+use DrevOps\Tui\Theme\Capability\OverrideCapableInterface;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\Override\Overrides;
 use DrevOps\Tui\Theme\ThemeBuilder;
+use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Theme\ThemeManager;
 use DrevOps\Tui\Translation\Translator;
 
@@ -194,13 +199,19 @@ final class Tui {
    * @param array<string,mixed> $options
    *   The resolved display options.
    *
-   * @return \DrevOps\Tui\Theme\DefaultTheme
+   * @return \DrevOps\Tui\Theme\ThemeInterface
    *   The theme.
    */
-  protected function buildTheme(string $name, int $width, array $options): DefaultTheme {
+  protected function buildTheme(string $name, int $width, array $options): ThemeInterface {
     $theme = ThemeManager::create($this->resolveTheme($name), $width, $options);
 
-    return $this->themeOverrides instanceof Overrides ? $theme->overrides($this->themeOverrides) : $theme;
+    // A patch is a facility a theme declares, so a theme with nowhere to put
+    // one keeps its own answers rather than the patch deciding it cannot draw.
+    if (!$this->themeOverrides instanceof Overrides || !$theme instanceof OverrideCapableInterface) {
+      return $theme;
+    }
+
+    return $theme->overrides($this->themeOverrides);
   }
 
   /**
@@ -468,7 +479,7 @@ final class Tui {
 
     $theme = $this->buildTheme('', DefaultTheme::DEFAULT_WIDTH, $this->primitiveThemeOptions());
 
-    return (new Progress($terminal, $theme, $terminal->isOutputTty(), $total, $caption))->run($work);
+    return (new Progress($terminal, self::pieces($theme), $terminal->isOutputTty(), $total, $caption))->run($work);
   }
 
   /**
@@ -496,7 +507,33 @@ final class Tui {
     $options = $this->primitiveThemeOptions($terminal->isOutputTty());
     $theme = $this->buildTheme('', self::frameWidth($options, $terminal->width()), $options);
 
-    return new Output($terminal, $theme);
+    return new Output($terminal, self::pieces($theme));
+  }
+
+  /**
+   * The theme, narrowed to the finished pieces a primitive writes.
+   *
+   * A card, a grid, a status line and a bar are composed rather than styled, so
+   * a theme that answers for none of them says so by name here rather than
+   * failing on the first line it is asked to write.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   *
+   * @return \DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface
+   *   The theme, able to draw them.
+   *
+   * @throws \InvalidArgumentException
+   *   When the theme does not implement the elements.
+   */
+  protected static function pieces(ThemeInterface $theme): PrimitiveElementsInterface {
+    if (!$theme instanceof PrimitiveElementsInterface) {
+      $elements = PrimitiveElementsInterface::class;
+
+      throw new \InvalidArgumentException(sprintf('%s cannot draw a primitive: it does not implement %s.', $theme::class, $elements));
+    }
+
+    return $theme;
   }
 
   /**
@@ -588,9 +625,10 @@ final class Tui {
       $this->context($directory, $update, $version),
       // The frame the theme was told to lay its rows out to is the frame that
       // has to be drawn around them, so the border is read back off it rather
-      // than resolved a second time here.
+      // than resolved a second time here. A theme that says nothing about the
+      // room it takes gets no edge drawn around it.
       layout: $this->layout,
-      border: $drawn->borderStyle(),
+      border: $drawn instanceof OccupyCapableInterface ? $drawn->borderStyle() : Border::None,
       clearOnExit: $this->clearOnExit,
       footer: $this->footer,
       banner: $banner !== '' ? $banner : $this->form->currentBanner(),

@@ -32,7 +32,7 @@ final class AllFieldsForm {
   public static function create(string $picker_start = ''): Form {
     return Form::create('All fields')
       ->panel('fields', 'Fields', function (PanelBuilder $p) use ($picker_start): void {
-        $p->note('note', 'Note')->description('A read-only note field.');
+        $p->note('note', 'Note')->body('A read-only note field.');
         $p->text('text', 'Text')->default('txt');
         $p->template('template', 'Template')->pattern('{{head}}-{{tail}}')->default('a-b');
         $p->number('number', 'Number')->default(7);
@@ -51,7 +51,7 @@ final class AllFieldsForm {
         $p->filePicker('filepicker', 'FilePicker')->startIn($picker_start);
         $p->filePicker('multifilepicker', 'MultiFilePicker')->multiple()->startIn($picker_start);
         $p->pause('pause', 'Pause');
-        $p->progress('progress', 'Progress')->steps(3)->run(static function (ProgressReporter $reporter): void {
+        $p->progress('progress', 'Progress')->steps(3)->work(static function (ProgressReporter $reporter): void {
           for ($step = 1; $step <= 3; $step++) {
             $reporter->advance('step ' . $step);
           }

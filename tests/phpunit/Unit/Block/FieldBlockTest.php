@@ -90,13 +90,6 @@ final class FieldBlockTest extends TestCase {
     $this->assertNotInstanceOf(FieldInterface::class, $courier->close()->editor());
   }
 
-  public function testKindThatOnlyDrawsHasNothingToOpenOnto(): void {
-    $note = new Field('weighing', 'Weighed at the bench.', FieldType::Note);
-
-    $this->assertSame(Mode::View, $note->open()->mode());
-    $this->assertNotInstanceOf(FieldInterface::class, $note->editor());
-  }
-
   public function testOnlyWhatWasAcceptedReachesTheResult(): void {
     $field = new Field('courier', 'Courier');
 
@@ -459,10 +452,36 @@ final class FieldBlockTest extends TestCase {
     $field = (new Field('weight', 'Weight', FieldType::Number))->default(1200)->bounds(new NumberBounds(200, 9000));
 
     $this->assertFalse($field->accept(10));
-    $this->assertSame('must be between 200 and 9000.', $field->refusal());
+    $this->assertSame('Enter a number between 200 and 9000.', $field->refusal());
     $this->assertSame(1200, $field->value());
 
     $this->assertTrue($field->accept(400));
+  }
+
+  #[DataProvider('dataProviderLimitIsRefusedInTheVoiceOfWhatItGoverns')]
+  public function testLimitIsRefusedInTheVoiceOfWhatItGoverns(Field $field, mixed $value, string $says): void {
+    $this->assertFalse($field->accept($value));
+    $this->assertSame($says, $field->refusal());
+  }
+
+  public static function dataProviderLimitIsRefusedInTheVoiceOfWhatItGoverns(): \Iterator {
+    yield 'a number is entered' => [
+      (new Field('weight', 'Weight', FieldType::Number))->bounds(new NumberBounds(200, 9000)),
+      10,
+      'Enter a number between 200 and 9000.',
+    ];
+
+    yield 'a date is what it must be' => [
+      (new Field('harvest', 'Harvest date', FieldType::Calendar))->dates(new DateBounds(new \DateTimeImmutable('2026-01-01'), new \DateTimeImmutable('2026-12-31'))),
+      '2025-07-15',
+      'must be between 2026-01-01 and 2026-12-31.',
+    ];
+
+    yield 'a count is selected' => [
+      (new Field('basket', 'Basket contents', FieldType::Select))->multiple()->selections(new SelectionBounds(2, 3)),
+      ['apple'],
+      'Select between 2 and 3 items.',
+    ];
   }
 
   #[DataProvider('dataProviderRequiredFieldRefusesAnEmptyAnswer')]
@@ -692,6 +711,27 @@ final class FieldBlockTest extends TestCase {
     $this->assertStringContainsString('does not match the template', (string) $field->refusal());
   }
 
+  public function testShapeIsMeasuredAndNormalizedWhole(): void {
+    $seen = NULL;
+    $field = (new Field('crate', 'Crate code', FieldType::Template))
+      ->pattern(new Template('{{orchard}}-{{fruit}}'))
+      ->validate(static function (mixed $value) use (&$seen): ?string {
+        $seen = $value;
+
+        return $value === 'valley-apple' ? NULL : 'Unknown crate.';
+      })
+      ->transform(static fn(mixed $value): string => is_string($value) ? strtoupper($value) : '');
+
+    // The shape is filled in slot by slot and refused or normalized whole, so
+    // neither ever sees a part of it.
+    $this->assertFalse($field->accept('valley-pear'));
+    $this->assertSame('valley-pear', $seen);
+    $this->assertSame('Unknown crate.', $field->refusal());
+
+    $this->assertTrue($field->accept('valley-apple'));
+    $this->assertSame('VALLEY-APPLE', $field->value());
+  }
+
   public function testPathOutsideTheDeclaredLimitsIsRefused(): void {
     $field = (new Field('manifest', 'Manifest', FieldType::FilePicker))
       ->picker(new FilePickerConstraints(FilePickerMode::File, ['csv']));
@@ -702,7 +742,7 @@ final class FieldBlockTest extends TestCase {
     $this->assertNull((new Field('courier', 'Courier'))->picker($field->pickerConstraints())->pickerViolation('/orchard/missing.csv'));
 
     $this->assertFalse($field->accept('/orchard/missing.csv'));
-    $this->assertSame('must be an existing file.', $field->refusal());
+    $this->assertSame('Choose an existing file.', $field->refusal());
   }
 
   #[DataProvider('dataProviderDeclarationThatCouldNotBeHonouredIsRefused')]
@@ -845,7 +885,7 @@ final class FieldBlockTest extends TestCase {
     $this->assertFalse($field->accept(10));
 
     $rendered = $field->render($this->theme());
-    $this->assertStringContainsString('must be between 200 and 9000.', $rendered);
+    $this->assertStringContainsString('Enter a number between 200 and 9000.', $rendered);
     $this->assertStringNotContainsString('a weight between 200 and 9000', $rendered);
   }
 

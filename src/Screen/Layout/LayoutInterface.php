@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Screen\Layout;
 
 use DrevOps\Tui\Screen\Axis;
+use DrevOps\Tui\Screen\Furniture;
 use DrevOps\Tui\Screen\Region;
 
 /**
@@ -17,7 +18,9 @@ use DrevOps\Tui\Screen\Region;
  *
  * It draws nothing and names no block. Naming one would cost it the reuse that
  * is the reason it is a class of its own - one definition serving a screen and
- * a panel that know nothing of each other.
+ * a panel that know nothing of each other. What it does say is which of its
+ * regions each piece of the standard furniture belongs in: a role rather than a
+ * block, so the answer is still arrangement.
  *
  * {@see AbstractLayout} carries the sizing arithmetic every layout inherits.
  *
@@ -53,6 +56,18 @@ interface LayoutInterface {
   public function in(string $name): Region;
 
   /**
+   * The region a piece of the standard furniture goes in.
+   *
+   * @param \DrevOps\Tui\Screen\Furniture $piece
+   *   The piece.
+   *
+   * @return string|null
+   *   The region name, or NULL when this layout keeps no place for the piece -
+   *   which is a refusal rather than an oversight: the piece is never drawn.
+   */
+  public function furnishes(Furniture $piece): ?string;
+
+  /**
    * Work out how much of the axis each region gets.
    *
    * @param int $available
@@ -62,5 +77,27 @@ interface LayoutInterface {
    *   The cells each region gets, keyed by name.
    */
   public function arrange(int $available): array;
+
+  /**
+   * How this layout deals the blocks a region flows into visual rows.
+   *
+   * @return list<int>
+   *   How many blocks share each visual row, top to bottom; empty runs them
+   *   one under another, which is what every arrangement but a grid does.
+   */
+  public function deal(): array;
+
+  /**
+   * Work out how much of a region each block sharing one visual row gets.
+   *
+   * @param int $available
+   *   The cells across the region.
+   * @param int $count
+   *   How many blocks share the row.
+   *
+   * @return int
+   *   The cells each of them gets.
+   */
+  public function share(int $available, int $count): int;
 
 }

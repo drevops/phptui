@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Block;
 
 use DrevOps\Tui\Block\Capability\DependCapableInterface;
 use DrevOps\Tui\Block\Capability\DependCapableTrait;
+use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Model\TableSpec;
 use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
@@ -175,6 +176,7 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
    */
   public function render(ThemeInterface $theme): string {
     $elements = $this->elements($theme, MarkupElementsInterface::class, 'markup');
+    $gutter = $this->elements($theme, ChromeElementsInterface::class, 'a conditional row')->chromeIndent($this->depth);
 
     if ($this->bordered || $this->table instanceof TableSpec) {
       // An empty body is no body at all here: a card that was handed one blank
@@ -187,7 +189,7 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
       // restyled together rather than drifting apart.
       $pieces = $this->elements($theme, PrimitiveElementsInterface::class, 'a card');
 
-      return implode("\n", $pieces->renderCard(Translator::t($this->title), $body, $headers, $rows, $this->bordered));
+      return $this->stepped(implode("\n", $pieces->renderCard(Translator::t($this->title), $body, $headers, $rows, $this->bordered)), $gutter);
     }
 
     $lines = [];
@@ -200,7 +202,7 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
       $lines[] = $line;
     }
 
-    return implode("\n", $lines);
+    return $this->stepped(implode("\n", $lines), $gutter);
   }
 
   /**

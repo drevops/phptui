@@ -5,18 +5,19 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Builder;
 
 use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
+use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\TableSpec;
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Layout\AbstractLayout;
 use DrevOps\Tui\Screen\Layout\LayoutManager;
+use DrevOps\Tui\Tests\Fixtures\Screen\Layout\RegionlessLayout;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -63,9 +64,9 @@ final class BlockTreeTest extends TestCase {
   public static function dataProviderDeclarationWritesTheBlockItsAnswerNeeds(): \Iterator {
     yield 'a question collects' => [static fn(PanelBuilder $p): FieldBuilder => $p->text('courier', 'Courier'), Field::class];
     yield 'a choice collects' => [static fn(PanelBuilder $p): FieldBuilder => $p->select('basket', 'Basket'), Field::class];
-    yield 'a note only shows' => [static fn(PanelBuilder $p): FieldBuilder => $p->note('intro', 'Fresh produce'), Markup::class];
+    yield 'a note only shows' => [static fn(PanelBuilder $p): Markup => $p->note('intro', 'Fresh produce'), Markup::class];
     yield 'markup only shows' => [static fn(PanelBuilder $p): Markup => $p->markup('intro', 'Fresh produce'), Markup::class];
-    yield 'a progress row only runs' => [static fn(PanelBuilder $p): FieldBuilder => $p->progress('packing', 'Packing'), Progress::class];
+    yield 'a progress row only runs' => [static fn(PanelBuilder $p): Progress => $p->progress('packing', 'Packing'), Progress::class];
   }
 
   public function testBlocksAreInTheRegionInTheOrderTheyWereWritten(): void {
@@ -123,7 +124,7 @@ final class BlockTreeTest extends TestCase {
       $p->panel('right', 'Right', static fn(PanelBuilder $sp): FieldBuilder => $sp->text('two', 'Two'));
     });
 
-    $this->assertSame([2], $panel->gridRows());
+    $this->assertSame([2], $panel->currentLayout()->deal());
     $this->assertSame(['content'], $panel->currentLayout()->names());
     $this->assertCount(2, $panel->children());
   }
@@ -171,6 +172,21 @@ final class BlockTreeTest extends TestCase {
         $p->layout('two-column');
       },
       'Panel "main" declares a layout after placing blocks in the one it had',
+    ];
+
+    yield 'a grid after the blocks' => [
+      static function (PanelBuilder $p): void {
+        $p->text('courier', 'Courier');
+        $p->layout(2);
+      },
+      'Panel "main" declares a layout after placing blocks in the one it had',
+    ];
+
+    yield 'a visual row nothing could be dealt into' => [
+      static function (PanelBuilder $p): void {
+        $p->layout(0, 2);
+      },
+      'Every visual row of a grid holds at least one window.',
     ];
   }
 
@@ -226,7 +242,7 @@ final class BlockTreeTest extends TestCase {
 
     yield 'a note is the same block' => [
       static function (PanelBuilder $p): void {
-        $p->note('packing', 'Ready to pack')->description('Framed with a border.')->border();
+        $p->note('packing', 'Ready to pack')->body('Framed with a border.')->bordered();
       },
       TRUE,
       FALSE,
@@ -235,7 +251,7 @@ final class BlockTreeTest extends TestCase {
 
   public function testNoteAndMarkupCarryTheSameTitleAndBody(): void {
     $panel = $this->panel(static function (PanelBuilder $p): void {
-      $p->note('note', 'Ready to pack')->description('Packed at dawn.');
+      $p->note('note', 'Ready to pack')->body('Packed at dawn.');
       $p->markup('markup', 'Packed at dawn.', 'Ready to pack');
     });
 
@@ -256,6 +272,87 @@ final class BlockTreeTest extends TestCase {
     $this->assertInstanceOf(Markup::class, $block);
     $this->assertTrue($block->isActive(['organic' => TRUE]));
     $this->assertFalse($block->isActive(['organic' => FALSE]));
+  }
+
+  public function testSectionAppearsOnlyWhenAnEarlierAnswerCallsForIt(): void {
+    $panel = $this->panel(static function (PanelBuilder $p): void {
+      $p->panel('certification', 'Certification', static function (PanelBuilder $sp): void {
+        $sp->when(new Condition('organic', eq: TRUE));
+        $sp->text('certifier', 'Certifier');
+      });
+    });
+
+    $section = $panel->children()[0];
+
+    $this->assertTrue($section->isActive(['organic' => TRUE]));
+    $this->assertFalse($section->isActive(['organic' => FALSE]));
+  }
+
+  public function testChainOfRulesStepsEveryBlockInFromWhatItWaitsOn(): void {
+    $form = Form::create('Orchard')
+      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
+        $p->confirm('organic', 'Organic only?');
+        $p->text('certifier', 'Certifier')->when(new Condition('organic', eq: TRUE));
+        $p->markup('crates', 'Certified crates are packed apart.')->when(new Condition('certifier', ne: ''));
+
+        $p->panel('renewal', 'Renewal', static function (PanelBuilder $sp): void {
+          $sp->when(new Condition('certifier', ne: ''));
+          $sp->text('renewed_on', 'Renewed on');
+          $sp->confirm('reminder', 'Send a reminder?')->when(new Condition('renewed_on', ne: ''));
+        });
+
+        $p->number('quantity', 'Quantity');
+        // Nothing can take a legend off the form, so it waits on no answer and
+        // the walk passes over it rather than stamping a chain on it.
+        $p->add(new Legend());
+      });
+
+    $depths = [];
+
+    foreach (Tree::panels($form->root()->children()[0]) as $section) {
+      $depths[$section->id()] = $section->nesting();
+
+      foreach ($section->blocks() as $block) {
+        if ($block instanceof Field || $block instanceof Markup) {
+          $depths[$block->id()] = $block->nesting();
+        }
+      }
+    }
+
+    // One step per rule in the chain, whatever kind of block carries it: a
+    // section's rule is one such step, counted once by everything it holds, and
+    // a block with a rule of its own is the next step in from there.
+    $this->assertSame([
+      'order' => 0,
+      'organic' => 0,
+      'certifier' => 1,
+      'crates' => 2,
+      'quantity' => 0,
+      'renewal' => 2,
+      'renewed_on' => 2,
+      'reminder' => 3,
+    ], $depths);
+  }
+
+  public function testRulesThatNameEachOtherStopRatherThanDeepenForever(): void {
+    $form = Form::create('Orchard')
+      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
+        $p->confirm('organic', 'Organic only?')->when(new Condition('certified', eq: TRUE));
+        $p->confirm('certified', 'Certified?')->when(new Condition('organic', eq: TRUE));
+      });
+
+    $depths = [];
+
+    foreach ($form->root()->children()[0]->in('content')->blocks() as $block) {
+      if ($block instanceof Field) {
+        $depths[$block->id()] = $block->nesting();
+      }
+    }
+
+    // Each rule names the other, so the walk reaches a block it is already on:
+    // that step back contributes nothing and the chain ends there rather than
+    // deepening forever.
+    $this->assertSame(['organic' => 2, 'certified' => 1], $depths);
   }
 
   public function testNestedPanelIsBlockInTheRegionAndPanelYouCanGoInto(): void {
@@ -300,7 +397,7 @@ final class BlockTreeTest extends TestCase {
   }
 
   public function testLayoutDeclaringNoRegionHasNowhereToPutBlock(): void {
-    LayoutManager::register('bare', BareLayoutFixture::class);
+    LayoutManager::register('bare', RegionlessLayout::class);
 
     $this->expectException(FormException::class);
     $this->expectExceptionMessage('Panel "main" is arranged by a layout declaring no region');
@@ -325,20 +422,6 @@ final class BlockTreeTest extends TestCase {
     $builder->seal();
 
     return $builder->block();
-  }
-
-}
-
-/**
- * An arrangement with nowhere to put anything.
- */
-final class BareLayoutFixture extends AbstractLayout {
-
-  /**
-   * Construct the layout.
-   */
-  public function __construct() {
-    parent::__construct(Axis::Rows);
   }
 
 }

@@ -27,7 +27,7 @@ use PHPUnit\Framework\TestCase;
 final class FieldDeclarationTest extends TestCase {
 
   public function testTreeHoldsEveryPanelAndFieldItWasDeclaredWith(): void {
-    $root = Form::create('Demo', 'Acme')
+    $root = Form::create('Demo')
       ->panel('general', 'General', function (PanelBuilder $p): void {
         $p->text('name')->default('Acme')->required();
         $p->text('email');
@@ -272,6 +272,41 @@ final class FieldDeclarationTest extends TestCase {
     })->root();
   }
 
+  /**
+   * Tests the rows a hand-built field of the wrong kind is refused.
+   *
+   * @param \Closure $declare
+   *   The declaration, given the field it lands on.
+   * @param string $message
+   *   The message the finished tree is refused with.
+   */
+  #[DataProvider('dataProviderOptionsOnFieldWithNoListThrow')]
+  public function testOptionsOnFieldWithNoListThrow(\Closure $declare, string $message): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage($message);
+
+    Form::create('T')->panel('p', 'P', static function (PanelBuilder $p) use ($declare): void {
+      $p->add($declare(new Field('f', 'F')));
+    })->root();
+  }
+
+  /**
+   * Data provider for testOptionsOnFieldWithNoListThrow().
+   *
+   * @return \Iterator<string, array{\Closure, string}>
+   *   The declaration and the message refusing it.
+   */
+  public static function dataProviderOptionsOnFieldWithNoListThrow(): \Iterator {
+    yield 'a declared row' => [
+      static fn(Field $field): Field => $field->entry('apple', 'Apple'),
+      'Field "f" of type "text" shows no options; only select, search, suggest, toggle and reorder fields have a list.',
+    ];
+    yield 'a query source' => [
+      static fn(Field $field): Field => $field->query(static fn(string $query, array $answers): array => []),
+      'Field "f" of type "text" cannot source its options from a query; only search and suggest fields show one.',
+    ];
+  }
+
   public function testCaptionsOnAnUnboundedRatingAreKept(): void {
     // The builder always closes a rating's scale; a hand-built field without
     // one has no range to check a caption against, so every point passes.
@@ -357,7 +392,6 @@ final class FieldDeclarationTest extends TestCase {
     $builder = Form::create('T');
     $root = $builder->root();
 
-    $this->assertSame('', $builder->currentSubject());
     $this->assertSame('', $builder->currentEnvPrefix());
     $this->assertSame([], $builder->currentFixups());
     // Form chrome defaults (the global TUI runtime lives on the Tui facade).

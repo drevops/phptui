@@ -16,6 +16,10 @@ use DrevOps\Tui\Condition\ConditionInterface;
  * It is answered against the answers collected so far, because other answers
  * are the only thing a dependency can be about.
  *
+ * How deep the block sits belongs here too - one link per rule in the chain
+ * leading to it - because a block nothing can take off the form waits on no
+ * answer and so has no chain to count.
+ *
  * {@see DependCapableTrait} carries the default implementation.
  *
  * @package DrevOps\Tui\Block\Capability
@@ -52,6 +56,31 @@ interface DependCapableInterface {
    *   TRUE when it is.
    */
   public function isActive(array $answers = []): bool;
+
+  /**
+   * Say how many answers had to be given before this block is there at all.
+   *
+   * A rule may name a question on any panel, and a section carries what it
+   * holds, so how deep a block sits is a fact about the whole form rather than
+   * about the block or the panel holding it: it can only be worked out once the
+   * tree is finished, and it is written back here.
+   *
+   * @param int $depth
+   *   The links in the chain of rules leading to this block; zero for one that
+   *   is always there.
+   *
+   * @return static
+   *   The block.
+   */
+  public function nest(int $depth): static;
+
+  /**
+   * How many answers had to be given before this block is there at all.
+   *
+   * @return int
+   *   The links in the chain, zero for a block that is always there.
+   */
+  public function nesting(): int;
 
   /**
    * Take this block off the screen, because the answers say it is not there.

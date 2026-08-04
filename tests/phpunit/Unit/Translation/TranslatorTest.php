@@ -68,10 +68,10 @@ final class TranslatorTest extends TestCase {
     yield 'inline map for another locale is a no-op' => ['es', [['de' => ['Submit' => 'Senden']]], 'Submit', [], 'Submit'];
     yield 'inline map non-array section ignored' => ['es', [['es' => 'oops']], 'Submit', [], 'Submit'];
     yield 'inline map overrides earlier directory' => ['es', ['translations', ['es' => ['Submit' => 'Enviar (inline)']]], 'Submit', [], 'Enviar (inline)'];
-    yield 'bundled chrome loads with no sources' => ['uk', [], 'Password', [], 'Пароль'];
+    yield 'bundled chrome loads with no sources' => ['uk', [], 'Files only', [], 'Лише файли'];
     yield 'bundled english template is identity' => ['en', [], 'Submit', [], 'Submit'];
     yield 'inline map overrides bundled chrome' => ['uk', [['uk' => ['Submit' => 'Готово']]], 'Submit', [], 'Готово'];
-    yield 'bundled chrome persists beside overrides' => ['uk', [['uk' => ['Submit' => 'Готово']]], 'Password', [], 'Пароль'];
+    yield 'bundled chrome persists beside overrides' => ['uk', [['uk' => ['Submit' => 'Готово']]], 'Files only', [], 'Лише файли'];
   }
 
   public function testMissingSourceThrows(): void {
@@ -218,7 +218,7 @@ final class TranslatorTest extends TestCase {
     Translator::setShared(new Translator('uk'));
 
     // Chrome and the default button labels resolve from the bundled catalog.
-    $this->assertSame('Пароль', Translator::t('Password'));
+    $this->assertSame('Лише файли', Translator::t('Files only'));
     $this->assertSame('Надіслати', Translator::t('Submit'));
 
     // The plural message renders its one/few/many forms by the bundled rule.

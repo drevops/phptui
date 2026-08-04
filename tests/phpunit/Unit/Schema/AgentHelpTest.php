@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Schema;
 
+use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Schema\AgentHelp;
+use DrevOps\Tui\Screen\Layout\PanelLayout;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -17,6 +22,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the agent help generator.
  */
 #[CoversClass(AgentHelp::class)]
+#[CoversClass(Tree::class)]
 #[Group('schema')]
 final class AgentHelpTest extends TestCase {
 
@@ -328,10 +334,68 @@ final class AgentHelpTest extends TestCase {
     yield 'note' => [
       static function (PanelBuilder $p): void {
         $p->text('name', 'Name')->required();
-        $p->note('intro', 'Intro')->description('Welcome.');
+        $p->note('intro', 'Intro')->body('Welcome.');
       },
       'intro',
     ];
+  }
+
+  public function testCarriesTheWholeRuleGatingTheQuestion(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->confirm('organic', 'Organic only?');
+        $p->text('courier', 'Courier');
+
+        $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
+          $sp->when(new Condition('organic', eq: TRUE));
+          $sp->text('certifier', 'Certifier');
+        });
+      })
+      ->root();
+
+    $help = (new AgentHelp($form))->generate();
+
+    // The section's rule reaches the question it holds, and a question outside
+    // every section carries no rule at all.
+    $this->assertMatchesRegularExpression('/"certifier":\s*\{[^}]*"x-asked-when":\s*\{\s*"field":\s*"organic",\s*"eq":\s*true\s*\}/', $help);
+    $this->assertDoesNotMatchRegularExpression('/"courier":\s*\{[^}]*"x-asked-when"/', $help);
+  }
+
+  public function testGatedRequiredQuestionStaysOutOfTheRequiredList(): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->confirm('organic', 'Organic only?');
+        $p->text('name', 'Order name')->required();
+
+        $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
+          $sp->when(new Condition('organic', eq: TRUE));
+          $sp->text('certifier', 'Certifier')->required();
+        });
+      })
+      ->root();
+
+    $help = (new AgentHelp($form))->generate();
+
+    // Only the question every run asks is asserted at the root, so a payload
+    // answering "organic": false and nothing else still satisfies the schema.
+    $this->assertMatchesRegularExpression('/"required":\s*\[\s*"name"\s*\]/', $help);
+
+    // What the gated question owes travels with it instead.
+    $this->assertMatchesRegularExpression('/"certifier":[\s\S]*?"x-required-when-asked":\s*true/', $help);
+    $this->assertDoesNotMatchRegularExpression('/"name":\s*\{[^}]*"x-required-when-asked"/', $help);
+  }
+
+  public function testRuleNobodyCanReadStillKeepsTheQuestionOutOfRequired(): void {
+    // A rule the block decides for itself cannot be published, and treating it
+    // as no rule would assert an answer the form may never ask for.
+    $panel = (new Panel('p', 'p'))->layout(new PanelLayout());
+    $panel->in('content')->add((new Field('certifier', 'Certifier'))->required()->when(static fn(array $answers): bool => FALSE));
+
+    $help = (new AgentHelp($panel))->generate();
+
+    $this->assertStringNotContainsString('"required"', $help);
+    $this->assertStringContainsString('"x-required-when-asked": true', $help);
+    $this->assertStringNotContainsString('"x-asked-when"', $help);
   }
 
   /**

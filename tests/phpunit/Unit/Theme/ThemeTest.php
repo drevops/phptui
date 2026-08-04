@@ -206,6 +206,9 @@ final class ThemeTest extends TestCase {
     yield 'ascii caret' => [FALSE, static fn(DefaultTheme $t): string => $t->fieldCaret(), '|'];
     yield 'unicode mask' => [TRUE, static fn(DefaultTheme $t): string => $t->fieldMask(), '•'];
     yield 'unicode overflow marker' => [TRUE, static fn(DefaultTheme $t): string => $t->chromeOverflowMarker(TRUE), '▲'];
+    yield 'ascii overflow marker' => [FALSE, static fn(DefaultTheme $t): string => $t->chromeOverflowMarker(TRUE), '^'];
+    yield 'unicode field overflow marker' => [TRUE, static fn(DefaultTheme $t): string => $t->fieldOverflowMarker(FALSE), '▼'];
+    yield 'ascii field overflow marker' => [FALSE, static fn(DefaultTheme $t): string => $t->fieldOverflowMarker(FALSE), 'v'];
   }
 
   public function testSelectorAndMarkerGlyphs(): void {

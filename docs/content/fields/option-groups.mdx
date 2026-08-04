@@ -9,7 +9,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Option groups, separators and disabled options
 
-The choice fields - [`select`](/fields/select) and [`search`](/fields/search), single-choice or with `->multiple()` - accept more than a flat list. Alongside the `->options(['value' => 'Label'])` map shorthand, you can declare options one at a time, mark them disabled, and add non-selectable structure.
+Every field that draws a list - [`select`](/fields/select), [`search`](/fields/search), [`suggest`](/fields/suggest), [`toggle`](/fields/toggle) and [`reorder`](/fields/reorder), single-choice or with `->multiple()` - accepts more than a flat one. Alongside the `->options(['value' => 'Label'])` map shorthand, you can declare options one at a time, mark them disabled, and add non-selectable structure. Declaring any of them on a kind that shows no list throws where it is written.
 
 ```php
 $p->select('item', 'Item')
@@ -35,7 +35,7 @@ Runnable scripts: [`playground/02-fields-select-groups.php`](https://github.com/
 
 ## Behavior
 
-Headings, separators and disabled options are **visual only**: navigation skips them, so the cursor lands only on selectable options, and they can never be highlighted or selected. A disabled option shows its reason beside the label, dimmed. Every kind is theme-driven - override `heading()`, `divider()` or `disabled()` on a theme to restyle it.
+Headings, separators and disabled options are **visual only**: navigation skips them, so the cursor lands only on selectable options, and they can never be highlighted or selected. A disabled option shows its reason beside the label, dimmed. Every kind is theme-driven: a heading and a disabled label are drawn by `fieldEntry()`, a divider by `fieldEntrySeparator()` and a disabled reason by `fieldEntryNote()`, so overriding one of those [elements](/fields/anatomy#elements-what-a-theme-actually-implements) restyles it.
 
 Non-selectable rows never leak into the answer: a disabled value is dropped from a multiple-choice default, absent from the collected value, and excluded from the JSON schema (`Tui::schema()` lists selectable options only). Supplying a disabled - or otherwise unknown - option value [headlessly](/headless-collection) (via `--prompts` JSON or an environment override) fails collection with a clear error naming the value.
 

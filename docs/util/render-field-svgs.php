@@ -3,14 +3,14 @@
 
 /**
  * @file
- * Render the README's per-field animated SVGs deterministically.
+ * Render the per-field and per-block animated SVGs deterministically.
  *
  * The full-demo montages and panel walkthroughs are recorded from a live pty
- * (see update-assets.php), but the per-field assets are single-field forms
- * that the library's own scripted-keystroke harness drives with no terminal at
- * all. For each field, in all four glyph and colour display modes, this renders
- * both an animation (every rendered frame captured, laid out into an asciicast
- * and handed to the shared svg-term renderer; the unicode-colour one is the hero
+ * (see update-assets.php), but these assets are one-block forms that the
+ * library's own scripted-keystroke harness drives with no terminal at all. For
+ * each of them, in all four glyph and colour display modes, this renders both
+ * an animation (every rendered frame captured, laid out into an asciicast and
+ * handed to the shared svg-term renderer; the unicode-colour one is the hero
  * README.md and the docs pages embed) and a static screenshot of the opened
  * editor (the four the docs grid shows). The result is reproducible on any
  * machine (and in CI), unlike a pty recording.
@@ -19,8 +19,9 @@
  *
  * Usage:
  * @code
- * php docs/util/render-field-svgs.php            # all fields
+ * php docs/util/render-field-svgs.php            # every spec
  * php docs/util/render-field-svgs.php confirm    # one or more by name
+ * php docs/util/render-field-svgs.php markup     # a block, by its own name
  * @endcode
  */
 
@@ -57,9 +58,9 @@ const DISPLAY_MODES = [
 ];
 
 /**
- * The per-field forms and the keystrokes that drive them.
+ * The per-subject forms and the keystrokes that drive them.
  *
- * Each single-field form mirrors its playground/02-fields-* script - same ids,
+ * Each single-block form mirrors its playground/02-* script - same ids,
  * labels, defaults and options - so the rendered cards match the code a
  * reader runs. The keystrokes follow the panel model: Enter drills the hub
  * into the panel, a second Enter opens the field editor, then the
@@ -73,9 +74,11 @@ const DISPLAY_MODES = [
  * @param string $tree
  *   The fixture directory the file-picker fields browse.
  *
- * @return array<string, array{form: callable(): \DrevOps\Tui\Builder\Form, keys: list<string|\DrevOps\Tui\Input\Key>, rows: int, static_keys?: list<string|\DrevOps\Tui\Input\Key>}>
- *   The field specs keyed by asset name. A spec may add "static_keys" when the
- *   opened editor needs a keystroke before its static frame is worth capturing.
+ * @return array<string, array{form: callable(): \DrevOps\Tui\Builder\Form, keys: list<string|\DrevOps\Tui\Input\Key>, rows: int, static_keys?: list<string|\DrevOps\Tui\Input\Key>, subject?: string}>
+ *   The specs keyed by name. A spec may add "static_keys" when the opened
+ *   editor needs a keystroke before its static frame is worth capturing, and
+ *   "subject" when what it draws is not a field, so its assets carry the name
+ *   of what they show rather than a field prefix that would misname it.
  */
 function fieldSpecs(string $tree): array {
   $enter = Key::named(KeyName::Enter);
@@ -221,25 +224,27 @@ function fieldSpecs(string $tree): array {
       'keys' => [$enter],
       'rows' => 6,
     ],
-    'note' => [
-      'form' => static fn(): Form => Form::create('Note field')->panel('main', 'Note', function (PanelBuilder $p): void {
-        $p->note('intro', 'Fresh produce order')->description('A read-only card - the cursor skips it.');
-        $p->note('packing', 'Ready to pack')->description('Framed with a border.')->border();
+    'markup' => [
+      'form' => static fn(): Form => Form::create('Markup')->panel('main', 'Note', function (PanelBuilder $p): void {
+        $p->note('intro', 'Fresh produce order')->body('A read-only card - the cursor skips it.');
+        $p->note('packing', 'Ready to pack')->body('Framed with a border.')->bordered();
       }),
       'keys' => [$enter],
       'rows' => 14,
+      'subject' => 'markup',
     ],
-    'note-markdown' => [
+    'markup-markdown' => [
       'form' => static fn(): Form => Form::create('Markdown note')->panel('main', 'Note', function (PanelBuilder $p): void {
-        $p->note('order', 'Fresh produce order')->description('Pick what is **ripe** today:' . chr(10) . '- crisp `apples`' . chr(10) . '- sweet *pears*' . chr(10) . 'See the [seasonal guide](https://example.com/guide).')->border();
+        $p->note('order', 'Fresh produce order')->body('Pick what is **ripe** today:' . chr(10) . '- crisp `apples`' . chr(10) . '- sweet *pears*' . chr(10) . 'See the [seasonal guide](https://example.com/guide).')->bordered();
       }),
       'keys' => [$enter],
       'rows' => 14,
       'options' => ['markdown' => TRUE],
+      'subject' => 'markup-markdown',
     ],
-    'table' => [
-      'form' => static fn(): Form => Form::create('Table field')->panel('main', 'Stock', function (PanelBuilder $p): void {
-        $p->note('stock', 'Basket contents')->description('Everything picked so far:')->table(['Fruit', 'Color', 'In stock'], [
+    'markup-table' => [
+      'form' => static fn(): Form => Form::create('Markup table')->panel('main', 'Stock', function (PanelBuilder $p): void {
+        $p->note('stock', 'Basket contents')->body('Everything picked so far:')->table(['Fruit', 'Color', 'In stock'], [
           ['Apple', 'Red', '12'],
           ['Pear', 'Green', '5'],
           ['Plum', 'Purple', '120'],
@@ -247,11 +252,13 @@ function fieldSpecs(string $tree): array {
       }),
       'keys' => [$enter],
       'rows' => 16,
+      'subject' => 'markup-table',
     ],
-    'progress' => [
-      'form' => static fn(): Form => Form::create('Progress field')->panel('main', 'Progress', function (PanelBuilder $p) use ($pack): void { $p->progress('pack', 'Packing the box')->steps(6)->run($pack); }),
+    'progress-row' => [
+      'form' => static fn(): Form => Form::create('Progress row')->panel('main', 'Progress', function (PanelBuilder $p) use ($pack): void { $p->progress('pack', 'Packing the box')->steps(6)->work($pack); }),
       'keys' => [$enter, $enter],
       'rows' => 6,
+      'subject' => 'progress-row',
     ],
     'filepicker' => [
       'form' => static fn(): Form => Form::create('File picker field')->panel('main', 'File picker', function (PanelBuilder $p) use ($tree): void { $p->filePicker('price_list', 'Price list')->startIn($tree)->filesOnly()->extensions(['csv'])->maxSize(2097152); }),
@@ -275,9 +282,9 @@ function fieldSpecs(string $tree): array {
  * Drive one field and write its animated SVG.
  *
  * @param string $name
- *   The asset name.
+ *   The spec name.
  * @param array{form: callable(): \DrevOps\Tui\Builder\Form, keys: list<string|\DrevOps\Tui\Input\Key>, rows: int} $spec
- *   The field spec.
+ *   The spec.
  * @param string $assets_dir
  *   The output directory.
  * @param string $util_dir
@@ -286,6 +293,8 @@ function fieldSpecs(string $tree): array {
  *   A scratch directory for the intermediate cast.
  */
 function renderField(string $name, array $spec, string $assets_dir, string $util_dir, string $tmp_dir): void {
+  $subject = assetSubject($name, $spec);
+
   foreach (DISPLAY_MODES as $suffix => $mode) {
     // The animated hero cards render at the default look - the padded
     // rounded border every panel demo shares. The border adds a row above
@@ -298,25 +307,40 @@ function renderField(string $name, array $spec, string $assets_dir, string $util
     $frames = splitFrames($tester->output());
 
     if (count($frames) < 2) {
-      throw new \RuntimeException(sprintf('Field "%s" (%s) produced %d frame(s); an animation needs at least two.', $name, $suffix === '' ? 'default' : $suffix, count($frames)));
+      throw new \RuntimeException(sprintf('Spec "%s" (%s) produced %d frame(s); an animation needs at least two.', $name, $suffix === '' ? 'default' : $suffix, count($frames)));
     }
 
-    $cast_file = $tmp_dir . '/field-' . $name . '-animated' . $suffix . '.cast';
+    $cast_file = $tmp_dir . '/' . $subject . '-animated' . $suffix . '.cast';
     file_put_contents($cast_file, buildCast($frames, $spec['rows'] + 4));
 
     // The unmarked mode is the unicode, colour hero README.md embeds; the
     // light twin derives in the same pass.
-    $svg_file = $assets_dir . '/field-' . $name . '-dark-animated' . $suffix . '.svg';
+    $svg_file = $assets_dir . '/' . $subject . '-dark-animated' . $suffix . '.svg';
     renderCast($cast_file, $svg_file, $util_dir);
     file_put_contents($svg_file, slowAnimation((string) file_get_contents($svg_file), ANIMATION_SLOWDOWN));
     deriveLightTwin($svg_file);
   }
 
-  printf("  field-%s-dark-animated*.svg (4 display modes)\n", $name);
+  printf("  %s-dark-animated*.svg (4 display modes)\n", $subject);
 }
 
 /**
- * Render a field's static display-mode screenshots.
+ * The subject a spec's assets are named for.
+ *
+ * @param string $name
+ *   The spec name.
+ * @param array{subject?: string} $spec
+ *   The spec.
+ *
+ * @return string
+ *   The filename stem the display-mode and motion segments follow.
+ */
+function assetSubject(string $name, array $spec): string {
+  return $spec['subject'] ?? 'field-' . $name;
+}
+
+/**
+ * Render a spec's static display-mode screenshots.
  *
  * The documentation page shows each field's editor, opened on its default, in
  * all four glyph and colour combinations. Every frame comes from the same
@@ -324,9 +348,9 @@ function renderField(string $name, array $spec, string $assets_dir, string $util
  * hero above it.
  *
  * @param string $name
- *   The asset name.
+ *   The spec name.
  * @param array{form: callable(): \DrevOps\Tui\Builder\Form, keys: list<string|\DrevOps\Tui\Input\Key>, rows: int} $spec
- *   The field spec.
+ *   The spec.
  * @param string $assets_dir
  *   The output directory.
  * @param string $util_dir
@@ -335,11 +359,12 @@ function renderField(string $name, array $spec, string $assets_dir, string $util
  *   A scratch directory for the intermediate cast.
  */
 function renderStaticVariants(string $name, array $spec, string $assets_dir, string $util_dir, string $tmp_dir): void {
-  // A gate settles one Enter in and a note is non-interactive, so both open
+  // A gate settles one Enter in and markup is non-interactive, so both open
   // with a single drill into the panel; every other field opens its editor
   // with the hub-into-panel-into-field drill.
   $enter = Key::named(KeyName::Enter);
-  $open = in_array($name, ['pause', 'note', 'note-markdown', 'table'], TRUE) ? [$enter] : [$enter, $enter];
+  $subject = assetSubject($name, $spec);
+  $open = in_array($name, ['pause', 'markup', 'markup-markdown', 'markup-table'], TRUE) ? [$enter] : [$enter, $enter];
   // A field whose opened editor shows nothing worth a screenshot until a key
   // is pressed (suggest highlights no row until you arrow into the list)
   // declares the keystrokes its static frame settles on.
@@ -356,16 +381,16 @@ function renderStaticVariants(string $name, array $spec, string $assets_dir, str
 
     $frames = splitFrames($tester->output());
     if ($frames === []) {
-      throw new \RuntimeException(sprintf('Field "%s" static "%s" produced no frame.', $name, $suffix === '' ? 'default' : $suffix));
+      throw new \RuntimeException(sprintf('Spec "%s" static "%s" produced no frame.', $name, $suffix === '' ? 'default' : $suffix));
     }
 
     $frame = $frames[count($frames) - 1];
     $cast = json_encode(['version' => 2, 'width' => castWidth([$frame]), 'height' => $spec['rows'] + 4]) . "\n"
       . json_encode([0.0, 'o', $clear . $frame]) . "\n";
-    $cast_file = $tmp_dir . '/field-' . $name . '-static' . $suffix . '.cast';
+    $cast_file = $tmp_dir . '/' . $subject . '-static' . $suffix . '.cast';
     file_put_contents($cast_file, $cast);
 
-    $svg_file = $assets_dir . '/field-' . $name . '-dark-static' . $suffix . '.svg';
+    $svg_file = $assets_dir . '/' . $subject . '-dark-static' . $suffix . '.svg';
     renderCast($cast_file, $svg_file, $util_dir, 0);
     deriveLightTwin($svg_file);
   }
@@ -512,11 +537,11 @@ $specs = fieldSpecs($tree);
 $only = array_slice($argv, 1);
 $names = $only === [] ? array_keys($specs) : $only;
 
-info('Rendering ' . count($names) . ' field animation(s)...');
+info('Rendering ' . count($names) . ' animation(s)...');
 
 foreach ($names as $name) {
   if (!isset($specs[$name])) {
-    throw new \RuntimeException('Unknown field: ' . $name);
+    throw new \RuntimeException('Unknown spec: ' . $name);
   }
 
   renderField($name, $specs[$name], $assets_dir, $util_dir, $tmp_dir);

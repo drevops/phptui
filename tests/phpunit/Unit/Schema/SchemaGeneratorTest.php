@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Schema;
 
+use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
@@ -20,6 +21,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the schema generator.
  */
 #[CoversClass(SchemaGenerator::class)]
+#[CoversClass(Tree::class)]
 #[Group('schema')]
 final class SchemaGeneratorTest extends TestCase {
 
@@ -65,6 +67,7 @@ final class SchemaGeneratorTest extends TestCase {
           'template' => NULL,
           'placeholders' => [],
           'when' => NULL,
+          'asked_when' => NULL,
           'derive' => NULL,
           'discover' => NULL,
           'depends_on' => [],
@@ -93,6 +96,7 @@ final class SchemaGeneratorTest extends TestCase {
           'template' => NULL,
           'placeholders' => [],
           'when' => ['field' => 'profile', 'eq' => 'standard'],
+          'asked_when' => ['field' => 'profile', 'eq' => 'standard'],
           'derive' => ['template' => '{{profile}}'],
           'discover' => NULL,
           'depends_on' => ['profile'],
@@ -121,6 +125,7 @@ final class SchemaGeneratorTest extends TestCase {
           'template' => NULL,
           'placeholders' => [],
           'when' => NULL,
+          'asked_when' => NULL,
           'derive' => NULL,
           'discover' => NULL,
           'depends_on' => [],
@@ -149,6 +154,7 @@ final class SchemaGeneratorTest extends TestCase {
           'template' => NULL,
           'placeholders' => [],
           'when' => NULL,
+          'asked_when' => NULL,
           'derive' => NULL,
           'discover' => NULL,
           'depends_on' => [],
@@ -209,6 +215,78 @@ final class SchemaGeneratorTest extends TestCase {
     ];
 
     $this->assertSame($expected, (new SchemaGenerator($form))->generate());
+  }
+
+  /**
+   * Tests the rule published for a prompt, and the answers it names.
+   *
+   * @param string $id
+   *   The prompt to read.
+   * @param array<string,mixed>|null $expected_when
+   *   The prompt's own rule.
+   * @param array<string,mixed>|null $expected_asked
+   *   The whole rule deciding whether it is asked.
+   * @param list<string> $expected_depends
+   *   The answers that rule reads.
+   */
+  #[DataProvider('dataProviderCarriesTheSectionsRule')]
+  public function testCarriesTheSectionsRule(string $id, ?array $expected_when, ?array $expected_asked, array $expected_depends): void {
+    $form = Form::create('T')
+      ->panel('p', 'p', function (PanelBuilder $p): void {
+        $p->confirm('organic', 'Organic only?');
+        $p->text('courier', 'Courier');
+
+        $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
+          $sp->when(new Condition('organic', eq: TRUE));
+          $sp->text('certifier', 'Certifier');
+          $sp->text('expiry', 'Expiry')->when(new Condition('certifier', eq: 'Soil Board'));
+        });
+      })
+      ->root();
+
+    $prompts = (new SchemaGenerator($form))->generate()['prompts'];
+    $this->assertIsArray($prompts);
+
+    $found = NULL;
+
+    foreach ($prompts as $prompt) {
+      $this->assertIsArray($prompt);
+
+      if ($prompt['id'] === $id) {
+        $found = $prompt;
+      }
+    }
+
+    $this->assertIsArray($found);
+    $this->assertSame($expected_when, $found['when']);
+    $this->assertSame($expected_asked, $found['asked_when']);
+    $this->assertSame($expected_depends, $found['depends_on']);
+  }
+
+  /**
+   * Data provider for testCarriesTheSectionsRule().
+   *
+   * @return \Iterator<string, array{string, array<string,mixed>|null, array<string,mixed>|null, list<string>}>
+   *   The prompt id, its own rule, the whole rule and the answers it reads.
+   */
+  public static function dataProviderCarriesTheSectionsRule(): \Iterator {
+    yield 'a prompt nothing gates' => ['courier', NULL, NULL, []];
+
+    yield 'a prompt only its section gates' => [
+      'certifier',
+      NULL,
+      ['field' => 'organic', 'eq' => TRUE],
+      ['organic'],
+    ];
+
+    // Both rules have to hold, so they travel as one condition an agent can
+    // evaluate with whatever already evaluates `when`.
+    yield 'a prompt its section and its own rule gate' => [
+      'expiry',
+      ['field' => 'certifier', 'eq' => 'Soil Board'],
+      ['all' => [['field' => 'organic', 'eq' => TRUE], ['field' => 'certifier', 'eq' => 'Soil Board']]],
+      ['organic', 'certifier'],
+    ];
   }
 
   #[DataProvider('dataProviderDescribesFieldInJson')]
@@ -368,7 +446,7 @@ final class SchemaGeneratorTest extends TestCase {
   public function testExcludesPresentationalNote(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->note('intro', 'Intro')->description('Welcome.');
+        $p->note('intro', 'Intro')->body('Welcome.');
         $p->text('name', 'Name');
       })
       ->root();
@@ -432,6 +510,7 @@ final class SchemaGeneratorTest extends TestCase {
       'template' => NULL,
       'placeholders' => [],
       'when' => NULL,
+      'asked_when' => NULL,
       'derive' => NULL,
       'discover' => NULL,
       'depends_on' => [],

@@ -54,6 +54,13 @@ final class KeyRouter {
   protected array $trail = [];
 
   /**
+   * The blocks a session draws beside a panel, keyed by the panel.
+   *
+   * @var array<int,list<\DrevOps\Tui\Block\Capability\FocusCapableInterface>>
+   */
+  protected array $furniture = [];
+
+  /**
    * Construct a key router.
    *
    * @param \DrevOps\Tui\Block\Panel $panel
@@ -83,6 +90,29 @@ final class KeyRouter {
    */
   public function bind(KeyMap $keys): self {
     $this->rebind($keys, $this->panel);
+
+    return $this;
+  }
+
+  /**
+   * Say what a session draws beside a panel.
+   *
+   * The buttons that end a form are not among the rows it declares - a session
+   * draws them around it - so the cursor could not reach them by walking the
+   * panel alone. It reaches them last, after everything the panel holds,
+   * because that is where they are drawn.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel they stand beside.
+   * @param \DrevOps\Tui\Block\Capability\FocusCapableInterface ...$blocks
+   *   The blocks.
+   *
+   * @return $this
+   *   The router.
+   */
+  public function furnish(Panel $panel, FocusCapableInterface ...$blocks): self {
+    $this->furniture[spl_object_id($panel)] = array_values($blocks);
+    $this->settle();
 
     return $this;
   }
@@ -205,6 +235,21 @@ final class KeyRouter {
   public function reframe(): void {
     $this->cursor = max(0, min($this->cursor, max(0, count($this->focusable()) - 1)));
     $this->settle();
+  }
+
+  /**
+   * Come back out of every section the answers have taken off the form.
+   *
+   * A section is somewhere you are rather than something you are looking at, so
+   * one that stops being there while you are inside it cannot simply stop being
+   * drawn: there would be nowhere left to stand. The way out is the way you
+   * came in, as far out as it takes to reach a section that is still there -
+   * and never past the outermost one, which is not somewhere you came from.
+   */
+  public function resurface(): void {
+    while ($this->panel->isHidden() && $this->trail !== []) {
+      $this->ascend();
+    }
   }
 
   /**
@@ -474,10 +519,13 @@ final class KeyRouter {
    *
    * @return list<list<int>>
    *   One entry per visual row, naming the focusable blocks the windows of that
-   *   row are; empty when the panel arranges no grid.
+   *   row are; empty when the panel is arranged by no grid.
    */
   protected function windowRows(): array {
-    $grid = $this->panel->place()->gridRows();
+    // Read off the arrangement rather than off the panel, because how what a
+    // panel holds sits on screen is the layout's to say and the panel nests one
+    // precisely so it never has to know.
+    $grid = $this->panel->currentLayout()->deal();
 
     if ($grid === []) {
       return [];
@@ -552,7 +600,8 @@ final class KeyRouter {
    * The blocks the cursor can land on, in the order they are drawn.
    *
    * @return list<\DrevOps\Tui\Block\Capability\FocusCapableInterface>
-   *   The blocks.
+   *   The blocks: everything the panel you are in holds, then whatever the
+   *   session draws beside it.
    */
   protected function focusable(): array {
     $blocks = [];
@@ -565,13 +614,6 @@ final class KeyRouter {
           continue;
         }
 
-        // A field of a kind that only shows is a field by declaration and a
-        // passage of text by behaviour: there is nothing to open, so the cursor
-        // passes over it exactly as it passes over markup.
-        if ($block instanceof Field && $block->type()->isPresentational()) {
-          continue;
-        }
-
         // A block that does not claim the cursor is skipped rather than landed
         // on, which is what lets markup sit between two fields.
         if ($block instanceof FocusCapableInterface) {
@@ -580,7 +622,7 @@ final class KeyRouter {
       }
     }
 
-    return $blocks;
+    return [...$blocks, ...($this->furniture[spl_object_id($this->panel)] ?? [])];
   }
 
 }

@@ -161,25 +161,6 @@ final class TemplateTest extends TestCase {
     $this->assertSame('one-two-x', $value);
   }
 
-  public function testFieldValidatorRunsAgainstTheAssembledValue(): void {
-    $field = (new Template(new TemplateModel('{{a}}-{{b}}')))
-      ->setHandlers(validate: static fn(mixed $value): ?string => $value === 'one-two' ? NULL : 'Unknown crate.');
-    $theme = new DefaultTheme();
-
-    $field->handle(Key::named(KeyName::Enter));
-    $this->assertFalse($field->isComplete());
-    $this->assertStringContainsString('Unknown crate.', $field->view($theme));
-  }
-
-  public function testTransformerAppliesToTheAssembledValue(): void {
-    $field = (new Template(new TemplateModel('{{a}}-{{b}}'), 'one-two'))
-      ->setHandlers(transform: static fn(mixed $value): string => is_string($value) ? strtoupper($value) : '');
-
-    $value = FieldRunner::run($field, ArrayKeyStream::of(Key::named(KeyName::Enter)));
-
-    $this->assertSame('ONE-TWO', $value);
-  }
-
   public function testCancel(): void {
     $field = new Template(new TemplateModel('{{a}}-{{b}}'), 'one-two');
 

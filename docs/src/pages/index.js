@@ -23,7 +23,7 @@ prismIncludeLanguages(Prism);
 const TITLE_PHRASES = [
   'Terminal user interfaces for PHP',
   'Dark and light terminal UIs, auto-detected',
-  'Terminal UI widgets for every use case',
+  'Terminal UI fields for every use case',
   'Build multi-lingual terminal UIs with ease',
   'Testable terminal UIs for your PHP projects',
 ];
@@ -148,16 +148,16 @@ $answers = (new Tui($form))
   {
     idx: '03',
     icon: 'layout-grid',
-    name: 'Widget library',
+    name: 'Field library',
     desc: <>Text, numbers, dates, single and multiple choice, fuzzy search, file browsing, reordering and gates.</>,
     demo: {
-      svg: 'widgets-dark-animated.svg',
-      alt: 'Animated recording of every widget type walked through on one panel',
-      caption: 'Every widget on one panel, walked field by field',
-      script: 'playground/02-widgets-all-widgets.php',
-      doc: '/widgets',
-      code: `$form = Form::create('Widgets')
-  ->panel('widgets', 'Widgets', function (PanelBuilder $p): void {
+      svg: 'fields-dark-animated.svg',
+      alt: 'Animated recording of every field type walked through on one panel',
+      caption: 'Every field on one panel, walked one by one',
+      script: 'playground/02-fields-all-fields.php',
+      doc: '/fields',
+      code: `$form = Form::create('Fields')
+  ->panel('fields', 'Fields', function (PanelBuilder $p): void {
     $p->text('text', 'Text')->default('Pear');
     $p->number('number', 'Number')->default(1200);
     $p->calendar('calendar', 'Calendar')->default('2026-07-15')->standalone();
@@ -302,7 +302,7 @@ $answers = (new Tui($form))->theme('midnight')->run();`,
     idx: '09',
     icon: 'command',
     name: 'Key bindings',
-    desc: <>Remap navigation, edit, accept and cancel keys per widget type; ships a vim-style preset.</>,
+    desc: <>Remap navigation, edit, accept and cancel keys per field type; ships a vim-style preset.</>,
     demo: {
       svg: 'key-bindings-vim-dark-animated.svg',
       alt: 'Animated recording of a form navigated with the vim keys and its help overlay',
@@ -353,8 +353,8 @@ $answers = (new Tui($form))->translator($translator)->run();`,
     name: 'Display modes',
     desc: <>A dark or light palette read from the terminal background, Unicode or ASCII glyphs, colour dropped under <code className={styles.tok}>NO_COLOR</code> - auto-detected, or pinned.</>,
     demo: {
-      svg: 'widgets-dark-animated-ascii-no-ansi.svg',
-      alt: 'Animated recording of the widget montage degraded to ASCII glyphs without colour',
+      svg: 'fields-dark-animated-ascii-no-ansi.svg',
+      alt: 'Animated recording of the field montage degraded to ASCII glyphs without colour',
       caption: 'The montage under LC_ALL=C and NO_COLOR',
       script: 'playground/11-display-modes-ascii.php',
       doc: '/display-modes',
@@ -400,20 +400,22 @@ echo $answers->value('name');`,
   },
 ];
 
-const WIDGETS = [
-  {name: 'Calendar', file: 'widget-calendar-dark-animated.svg', desc: <>A month calendar returning a normalized ISO <code className={styles.tok}>YYYY-MM-DD</code>; arrows move by day and week.</>},
-  {name: 'Confirm', file: 'widget-confirm-dark-animated.svg', desc: <>Yes/No toggle; arrows or Space switch, <code className={styles.tok}>y</code>/<code className={styles.tok}>n</code> set the choice directly, Enter accepts.</>},
-  {name: 'File picker', file: 'widget-filepicker-dark-animated.svg', desc: <>Browse the filesystem for a path, or several with <code className={styles.tok}>{'->multiple()'}</code>; <code className={styles.tok}>{'->'}</code> enters a directory, <code className={styles.tok}>{'<-'}</code> returns to its parent.</>},
-  {name: 'Number', file: 'widget-number-dark-animated.svg', desc: <>Integer entry accepted as an <code className={styles.tok}>int</code>, with optional min, max and step.</>},
-  {name: 'Password', file: 'widget-password-dark-animated.svg', desc: <>Text rendered as a mask everywhere; the accepted value stays plain for the consumer, and can be made revealable.</>},
-  {name: 'Pause', file: 'widget-pause-dark-animated.svg', desc: <>An acknowledgement gate; Enter or Space accepts. Unattended runs auto-acknowledge it.</>},
-  {name: 'Reorder', file: 'widget-reorder-dark-animated.svg', desc: <>Rank a list by moving items; Space picks an item up, arrows carry it, Enter accepts.</>},
-  {name: 'Search', file: 'widget-search-dark-animated.svg', desc: <>Single choice with a visible filter line; typing fuzzy-matches and ranks the labels.</>},
-  {name: 'Select', file: 'widget-select-dark-animated.svg', desc: <>Single choice from a list; arrows move, Enter accepts, long lists page around the cursor.</>},
-  {name: 'Suggest', file: 'widget-suggest-dark-animated.svg', desc: <>Free text with autocomplete over a fixed option set; suggestions fuzzy-matched and ranked.</>},
-  {name: 'Text', file: 'widget-text-dark-animated.svg', desc: <>Single-line input with a movable caret; type to insert, arrows move, Backspace deletes.</>},
-  {name: 'Textarea', file: 'widget-textarea-dark-animated.svg', desc: <>Multi-line input; Enter inserts a newline, Tab accepts, with an external-editor handoff.</>},
-  {name: 'Toggle', file: 'widget-toggle-dark-animated.svg', desc: <>An inline switch between two labelled values; arrows or Space flip, first letter sets it directly.</>},
+const FIELDS = [
+  {name: 'Calendar', file: 'field-calendar-dark-animated.svg', desc: <>A month calendar returning a normalized ISO <code className={styles.tok}>YYYY-MM-DD</code>; arrows move by day and week.</>},
+  {name: 'Confirm', file: 'field-confirm-dark-animated.svg', desc: <>Yes/No toggle; arrows or Space switch, <code className={styles.tok}>y</code>/<code className={styles.tok}>n</code> set the choice directly, Enter accepts.</>},
+  {name: 'File picker', file: 'field-filepicker-dark-animated.svg', desc: <>Browse the filesystem for a path, or several with <code className={styles.tok}>{'->multiple()'}</code>; <code className={styles.tok}>{'->'}</code> enters a directory, <code className={styles.tok}>{'<-'}</code> returns to its parent.</>},
+  {name: 'Number', file: 'field-number-dark-animated.svg', desc: <>Integer entry accepted as an <code className={styles.tok}>int</code>, with optional min, max and step.</>},
+  {name: 'Password', file: 'field-password-dark-animated.svg', desc: <>Text rendered as a mask everywhere; the accepted value stays plain for the consumer, and can be made revealable.</>},
+  {name: 'Pause', file: 'field-pause-dark-animated.svg', desc: <>An acknowledgement gate; Enter or Space accepts. Unattended runs auto-acknowledge it.</>},
+  {name: 'Rating', file: 'field-rating-dark-animated.svg', desc: <>A graded answer picked off a scale of points, collected as an <code className={styles.tok}>int</code>; arrows walk the scale and points may carry captions.</>},
+  {name: 'Reorder', file: 'field-reorder-dark-animated.svg', desc: <>Rank a list by moving items; Space picks an item up, arrows carry it, Enter accepts.</>},
+  {name: 'Search', file: 'field-search-dark-animated.svg', desc: <>Single choice with a visible filter line; typing fuzzy-matches and ranks the labels.</>},
+  {name: 'Select', file: 'field-select-dark-animated.svg', desc: <>Single choice from a list; arrows move, Enter accepts, long lists page around the cursor.</>},
+  {name: 'Suggest', file: 'field-suggest-dark-animated.svg', desc: <>Free text with autocomplete over a fixed option set; suggestions fuzzy-matched and ranked.</>},
+  {name: 'Template', file: 'field-template-dark-animated.svg', desc: <>A fixed shape with named slots; Tab moves between them and the assembled string is collected alongside its parts.</>},
+  {name: 'Text', file: 'field-text-dark-animated.svg', desc: <>Single-line input with a movable caret; type to insert, arrows move, Backspace deletes.</>},
+  {name: 'Textarea', file: 'field-textarea-dark-animated.svg', desc: <>Multi-line input; Enter inserts a newline, Tab accepts, with an external-editor handoff.</>},
+  {name: 'Toggle', file: 'field-toggle-dark-animated.svg', desc: <>An inline switch between two labelled values; arrows or Space flip, first letter sets it directly.</>},
 ];
 
 const MODES = [
@@ -916,23 +918,23 @@ export default function Home() {
             </div>
           </section>
 
-          {/* widgets */}
-          <section id="widgets" className={styles.section} aria-labelledby="widgets-title">
+          {/* fields */}
+          <section id="fields" className={styles.section} aria-labelledby="fields-title">
             <div className={styles.wrap}>
-              <div className={styles.widgetsHead}>
-                <span className={clsx(styles.kicker, styles.revealUp)}>widgets</span>
-                <h2 id="widgets-title" className={clsx(styles.h2, styles.revealUp)} style={{'--i': 1}}>One layer, every field type</h2>
+              <div className={styles.fieldsHead}>
+                <span className={clsx(styles.kicker, styles.revealUp)}>fields</span>
+                <h2 id="fields-title" className={clsx(styles.h2, styles.revealUp)} style={{'--i': 1}}>One layer, every field type</h2>
                 <p className={clsx(styles.lead, styles.revealUp)} style={{'--i': 2}}>Text, numbers, dates, single and multiple choice, fuzzy search, file browsing, reordering and gates.</p>
               </div>
               <div className={styles.wgrid}>
-                {WIDGETS.map((widget) => (
-                  <article key={widget.name} className={clsx(styles.wcard, styles.revealUp)}>
+                {FIELDS.map((field) => (
+                  <article key={field.name} className={clsx(styles.wcard, styles.revealUp)}>
                     <div className={styles.wcardScreen}>
-                      <img src={withBaseUrl('/' + widget.file)} alt={`Animated demo of the ${widget.name} widget`} loading="lazy" decoding="async" />
+                      <img src={withBaseUrl('/' + field.file)} alt={`Animated demo of the ${field.name} field`} loading="lazy" decoding="async" />
                     </div>
                     <div className={styles.wcardMeta}>
-                      <h3 className={styles.wcardName}>{widget.name}</h3>
-                      <p className={styles.wcardDesc}>{widget.desc}</p>
+                      <h3 className={styles.wcardName}>{field.name}</h3>
+                      <p className={styles.wcardDesc}>{field.desc}</p>
                     </div>
                   </article>
                 ))}

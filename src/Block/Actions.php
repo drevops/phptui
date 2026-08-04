@@ -10,6 +10,7 @@ use DrevOps\Tui\Block\Capability\FocusCapableTrait;
 use DrevOps\Tui\Block\Capability\RejectCapableInterface;
 use DrevOps\Tui\Block\Element\ActionsElementsInterface;
 use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\Tui\Translation\Translator;
 
 /**
  * The buttons that end the form.
@@ -18,7 +19,8 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * than reveals something, which is what it activates for. It is the only block
  * other than a field that refuses anything - the submit is withheld while a
  * required field is empty - and unlike a field it holds no value while doing
- * so.
+ * so. Withholding it is drawn here too: the reason a form cannot be ended yet
+ * is what the buttons say about themselves.
  *
  * @package DrevOps\Tui\Block
  */
@@ -163,7 +165,15 @@ final class Actions extends AbstractBlock implements ActivateCapableInterface, F
       $parts[] = $name === $this->selected ? $elements->actionSelected($label) : $elements->actionButton($label);
     }
 
-    return implode($elements->actionSeparator(), $parts);
+    $buttons = implode($elements->actionSeparator(), $parts);
+
+    if ($this->refusal === NULL) {
+      return $buttons;
+    }
+
+    // Against the buttons rather than a row away from them: the reason is what
+    // the button now says, so nothing is allowed to stand between the two.
+    return $elements->actionRefusal(Translator::t($this->refusal)) . "\n" . $buttons;
   }
 
 }

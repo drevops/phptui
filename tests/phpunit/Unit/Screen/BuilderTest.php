@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Screen;
 
+use DrevOps\Tui\Block\Actions;
 use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\Model\Buttons;
+use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Screen\Assembler;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\ScreenRenderer;
+use DrevOps\Tui\Tests\Fixtures\Screen\Layout\BareLayout;
+use DrevOps\Tui\Tests\Fixtures\Screen\Layout\HomelessLayout;
+use DrevOps\Tui\Tests\Fixtures\Screen\Layout\StallLayout;
 use DrevOps\Tui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -58,10 +64,56 @@ final class BuilderTest extends TestCase {
     $screen = (new Assembler())->assemble($panel);
 
     // The layout declared three regions and named no block; the assembler put
-    // the standard furniture in them.
+    // the standard furniture in them - the buttons beside the panel rather
+    // than among the rows it declared.
     $this->assertInstanceOf(Breadcrumb::class, $screen->in('header')->blocks()[0]);
     $this->assertInstanceOf(Legend::class, $screen->in('footer')->blocks()[0]);
-    $this->assertSame([$panel], $screen->in('content')->blocks());
+    $this->assertSame($panel, $screen->in('content')->blocks()[0]);
+    $this->assertInstanceOf(Actions::class, $screen->in('content')->blocks()[1]);
+
+    // And nothing at all in the panel: the form declared one row, and one row
+    // is what it still holds.
+    $this->assertCount(1, $panel->in('content')->blocks());
+  }
+
+  public function testFormThatHidesItsButtonsIsAssembledWithNone(): void {
+    $panel = $this->panel(function (PanelBuilder $p): void {
+      $p->text('courier', 'Courier')->default('Valley Runs');
+    })->buttons(new Buttons(FALSE));
+
+    $this->assertSame([$panel], (new Assembler())->assemble($panel)->in('content')->blocks());
+  }
+
+  public function testLayoutSendsEachPieceWhereItSaysRatherThanWhereItsNamesSuggest(): void {
+    $panel = $this->panel(function (PanelBuilder $p): void {
+      $p->text('courier', 'Courier')->default('Valley Runs');
+    });
+
+    $screen = (new Assembler())->assemble($panel, StallLayout::class);
+
+    // It declares neither a header nor a footer and still shows the trail,
+    // because it says where the trail goes rather than being read for names.
+    $this->assertInstanceOf(Breadcrumb::class, $screen->in('aside')->blocks()[0]);
+    $this->assertInstanceOf(Legend::class, $screen->in('aside')->blocks()[1]);
+    $this->assertSame($panel, $screen->in('main')->blocks()[0]);
+    $this->assertInstanceOf(Actions::class, $screen->in('main')->blocks()[1]);
+  }
+
+  public function testLayoutThatRefusesFurnitureIsDrawnWithoutIt(): void {
+    $screen = (new Assembler())->assemble($this->panel(), BareLayout::class);
+
+    // Refusing is not the same as having nowhere: the regions are there, and
+    // the layout still keeps the trail and the keys off the screen.
+    $this->assertSame([], $screen->in('header')->blocks());
+    $this->assertSame([], $screen->in('footer')->blocks());
+    $this->assertCount(2, $screen->in('content')->blocks());
+  }
+
+  public function testLayoutWithNowhereToDrawTheFormIsRefusedWhereItIsNamed(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('keeps no place for the form itself, so there is nowhere to draw it');
+
+    (new Assembler())->assemble($this->panel(), HomelessLayout::class);
   }
 
   public function testAnAssembledScreenDrawsEndToEnd(): void {

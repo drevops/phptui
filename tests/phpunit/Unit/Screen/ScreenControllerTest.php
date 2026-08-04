@@ -9,6 +9,7 @@ use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
+use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\CancelException;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Derive\Derive;
@@ -17,12 +18,15 @@ use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Model\Buttons;
 use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Model\FilePickerConstraints;
 use DrevOps\Tui\Model\NumberBounds;
+use DrevOps\Tui\Model\SelectionBounds;
 use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\TerminalControl;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Collector;
+use DrevOps\Tui\Screen\Furniture;
 use DrevOps\Tui\Screen\Layout\AbstractLayout;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
 use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
@@ -31,7 +35,9 @@ use DrevOps\Tui\Testing\BufferedTerminal;
 use DrevOps\Tui\Testing\ScreenTester;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
+use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -159,7 +165,7 @@ final class ScreenControllerTest extends TestCase {
     $this->assertNull($courier->refusal());
   }
 
-  public function testEditorRefusesWhatItsOwnBoundsRuleOut(): void {
+  public function testFieldRefusesTheNumberItsBoundsRuleOutAndStaysOpenOnIt(): void {
     $weight = (new Field('weight', 'Basket weight', FieldType::Number))->default(1200)->bounds(new NumberBounds(200, 9000));
     $tester = $this->tester($this->panel($weight));
 
@@ -174,7 +180,43 @@ final class ScreenControllerTest extends TestCase {
     );
 
     $this->assertStringContainsString('Enter a number between 200 and 9000.', $tester->frame());
+    // The row is still open on what was typed, so it can be corrected in place.
+    $this->assertStringContainsString('Basket weight  5', $tester->frame());
     $this->assertSame(1200, $answers->value('weight'));
+  }
+
+  public function testFieldRefusesTooFewPicksAndStaysOpenOnThem(): void {
+    $basket = (new Field('basket', 'Basket', FieldType::Select))->multiple()->selections(new SelectionBounds(2))->default([]);
+    $basket->entry('pear', 'Pear')->entry('plum', 'Plum');
+    $tester = $this->tester($this->panel($basket));
+
+    $answers = $tester->run(
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Space),
+      Key::named(KeyName::Enter),
+    );
+
+    $this->assertStringContainsString('Select at least 2 items.', $tester->frame());
+    // Said once: the reason replaces the standing guidance rather than
+    // stacking under a second copy of it.
+    $this->assertSame(1, substr_count($tester->frame(), 'Select at least 2 items.'));
+    $this->assertSame([], $answers->value('basket'));
+  }
+
+  public function testFieldRefusesThePickItsLimitsRuleOutAndStaysOpenOnIt(): void {
+    vfsStream::setup('orchard', NULL, ['prices.csv' => str_repeat('a', 200)]);
+    $manifest = (new Field('manifest', 'Manifest', FieldType::FilePicker))
+      ->startIn(vfsStream::url('orchard'))
+      ->picker(new FilePickerConstraints(maxSize: 100))
+      ->default('');
+    $tester = $this->tester($this->panel($manifest));
+
+    $answers = $tester->run(Key::named(KeyName::Enter), Key::named(KeyName::Enter));
+
+    $this->assertStringContainsString('Choose a file no larger than 100 B.', $tester->frame());
+    // The limit it missed replaces the standing statement of that limit.
+    $this->assertStringNotContainsString('Max 100 B.', $tester->frame());
+    $this->assertSame('', $answers->value('manifest'));
   }
 
   public function testEscapeClosesAnOpenFieldWithoutCommittingWhatWasTyped(): void {
@@ -229,6 +271,66 @@ final class ScreenControllerTest extends TestCase {
     $this->assertStringContainsString('▲', $tester->frame());
   }
 
+  public function testWheelMovesTheRegionItPointsAtWithoutMovingTheCursor(): void {
+    $crates = $this->crates(10);
+    $tester = $this->tester($this->panel(...$crates))->rows(8);
+    $tester->run(Key::named(KeyName::MouseWheelDown));
+
+    // The viewport moved by one row - the first row of the contents is off the
+    // top and the mark says so - and the row the cursor is on never changed.
+    $this->assertStringContainsString('Crate 1 ', $tester->frame(0));
+    $this->assertStringNotContainsString('▲', $tester->frame(0));
+    $this->assertStringNotContainsString('Crate 1 ', $tester->frame(1));
+    $this->assertStringContainsString('▲', $tester->frame(1));
+    $this->assertTrue($crates[0]->isFocused());
+  }
+
+  public function testFollowingTheCursorWinsBackTheNextTimeItCouldMove(): void {
+    $crates = $this->crates(10);
+    $tester = $this->tester($this->panel(...$crates))->rows(8);
+
+    $tester->run(
+      Key::named(KeyName::MouseWheelDown),
+      Key::named(KeyName::MouseWheelDown),
+      Key::named(KeyName::MouseWheelDown),
+      Key::named(KeyName::MouseWheelUp),
+      Key::named(KeyName::Up),
+    );
+
+    // Three rows down and one back up leaves the row the cursor is on out of
+    // sight, and it stays out of sight until a key that could move the cursor
+    // puts the region back under it.
+    $this->assertStringNotContainsString('Crate 1 ', $tester->frame(4));
+    $this->assertStringContainsString('Crate 1 ', $tester->frame());
+    $this->assertStringNotContainsString('▲', $tester->frame());
+    $this->assertTrue($crates[0]->isFocused());
+  }
+
+  public function testRegionThatDoesNotScrollIgnoresTheWheel(): void {
+    $panel = (new Panel('main', 'Delivery'))->layout(new TwoColumnLayout());
+
+    foreach ($this->crates(10) as $crate) {
+      $panel->in('left')->add($crate);
+    }
+
+    $tester = $this->tester($panel)->rows(8);
+    $tester->run(Key::named(KeyName::MouseWheelDown));
+
+    // Nothing to move through, so nothing moved.
+    $this->assertSame($tester->frame(0), $tester->frame(1));
+  }
+
+  public function testTurningTheWheelWithNoTerminalMovesNothing(): void {
+    $panel = $this->panel(...$this->crates(10));
+    $controller = new ScreenController($panel, new DefaultTheme(40, ['color' => FALSE]));
+
+    $controller->handle(Key::named(KeyName::MouseWheelDown));
+
+    // A region is moved against the room it has, and one key at a time is
+    // driven with no terminal to say how much that is.
+    $this->assertSame(0, $panel->in('content')->offset(20, 4));
+  }
+
   public function testSubmitIsWithheldWhileTheFieldIsOwedAnAnswer(): void {
     $tester = $this->tester($this->panel((new Field('courier', 'Courier'))->required()));
 
@@ -242,7 +344,7 @@ final class ScreenControllerTest extends TestCase {
 
   public function testRowThatOnlyShowsIsNeitherCollectedNorOwedAnAnswer(): void {
     $panel = $this->panel(
-      (new Field('intro', 'Pick the produce.', FieldType::Note))->required(),
+      new Markup('intro', 'Pick the produce.'),
       (new Field('courier', 'Courier'))->default('Valley Runs'),
     );
 
@@ -337,6 +439,29 @@ final class ScreenControllerTest extends TestCase {
     }
 
     $this->assertStringContainsString('[ Cancel ]', $tester->frame());
+  }
+
+  public function testSessionLeavesTheDeclaredTreeExactlyAsItWasDeclared(): void {
+    $gift = $this->nested('gift', 'Gift options', (new Field('note', 'Gift message'))->default('Enjoy'));
+    $gift->description('Wrap this order as a gift.')->buttons(new Buttons(TRUE, 'Save', 'Discard'))->modal();
+
+    $panel = $this->panel((new Field('item', 'Item'))->default('Pear'), $gift);
+    $declared = $this->declared($panel);
+    $tester = $this->tester($panel)->rows(16);
+
+    // A session that walked into the dialog, saw its way out and left again.
+    $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Enter), Key::char('q'));
+    $first = $tester->frame(0);
+
+    $this->assertSame($declared, $this->declared($panel));
+
+    $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Enter), Key::char('q'));
+
+    // What the session drew around the form is the session's own, so the tree
+    // holds what the form declared and nothing else - and the second session
+    // opens on the very frame the first one did.
+    $this->assertSame($declared, $this->declared($panel));
+    $this->assertSame($first, $tester->frame(0));
   }
 
   public function testFormThatHidesItsButtonsDrawsNone(): void {
@@ -475,13 +600,38 @@ final class ScreenControllerTest extends TestCase {
     }
   }
 
-  public function testPanelThatNamesItsRegionsAnythingElseTakesTheButtonsInTheFirst(): void {
+  public function testPanelThatNamesItsRegionsAnythingElseStillGetsTheButtons(): void {
     $panel = (new Panel('main', 'Delivery'))->layout(new TwoColumnLayout());
     $panel->in('left')->add(new Field('courier', 'Courier'));
 
     $tester = $this->tester($panel);
     $tester->run();
 
+    // They stand beside the panel rather than in one of its regions, so what
+    // it calls them never comes into it.
+    $this->assertStringContainsString('[ Submit ]', $tester->frame());
+  }
+
+  public function testScreenLayoutThatKeepsNoPlaceForFurnitureDrawsNoneOfIt(): void {
+    $tester = $this->tester($this->panel((new Field('courier', 'Courier'))->default('Valley Runs')))->layout('two-column');
+    $tester->run();
+
+    // Two columns and no header: the trail keeps tracking the session and is
+    // simply never drawn, and the form goes in the region declared first.
+    $this->assertStringNotContainsString('Delivery', $tester->frame());
+    $this->assertStringContainsString('Courier  Valley Runs', $tester->frame());
+    $this->assertStringContainsString('[ Submit ]', $tester->frame());
+  }
+
+  public function testScreenLayoutSaysWhereEachPieceOfFurnitureGoes(): void {
+    $tester = $this->tester($this->panel((new Field('courier', 'Courier'))->default('Valley Runs')))->layout(SidebarLayoutFixture::class);
+    $tester->run();
+
+    // It declares neither a header nor a footer and shows the trail and the
+    // keys all the same, because it says where they go.
+    $this->assertStringContainsString('Delivery', $tester->frame());
+    $this->assertStringContainsString('to move', $tester->frame());
+    $this->assertStringContainsString('Courier  Valley Runs', $tester->frame());
     $this->assertStringContainsString('[ Submit ]', $tester->frame());
   }
 
@@ -519,6 +669,35 @@ final class ScreenControllerTest extends TestCase {
     $this->assertFalse($controller->isInterrupted());
   }
 
+  #[DataProvider('dataProviderFrameIsDrawnToTheWidthTheThemeStates')]
+  public function testFrameIsDrawnToTheWidthTheThemeStates(Border $border, int $stated, int $columns): void {
+    // Hand-built, so nothing keeps the theme and the terminal in step: the
+    // theme states the room inside the frame and the frame is drawn around it,
+    // whatever room the terminal happens to have.
+    $theme = new DefaultTheme($stated, ['color' => FALSE, 'border' => $border->value]);
+    $controller = new ScreenController($this->panel((new Field('courier', 'Courier'))->default('Valley Runs')), $theme, border: $border);
+    $terminal = new BufferedTerminal([], 8, 200);
+
+    $controller->run($terminal);
+
+    $drawn = explode("\n", Ansi::strip(explode($this->clear(), $terminal->output())[1] ?? ''));
+
+    $this->assertSame($columns, Ansi::width($drawn[0]));
+    $this->assertSame($columns, $theme->contentWidth() + ($border === Border::None ? 0 : 4));
+  }
+
+  /**
+   * Data provider for testFrameIsDrawnToTheWidthTheThemeStates().
+   *
+   * @return \Iterator<string, array{\DrevOps\Tui\Theme\Border, int, int}>
+   *   The frame's border, the width the theme is built for, and the columns
+   *   every drawn row comes to.
+   */
+  public static function dataProviderFrameIsDrawnToTheWidthTheThemeStates(): \Iterator {
+    yield 'no border' => [Border::None, 40, 40];
+    yield 'a border, whose chrome the theme keeps out of its rows' => [Border::Line, 40, 40];
+  }
+
   /**
    * The sequence every frame is written behind.
    *
@@ -537,6 +716,38 @@ final class ScreenControllerTest extends TestCase {
    */
   protected function tester(Panel $panel): ScreenTester {
     return (new ScreenTester($panel))->rows(14)->cols(60);
+  }
+
+  /**
+   * A run of rows, more of them than any frame here has room for.
+   *
+   * @return list<\DrevOps\Tui\Block\Field>
+   *   The fields.
+   */
+  protected function crates(int $count): array {
+    $fields = [];
+
+    foreach (range(1, $count) as $index) {
+      $fields[] = new Field('crate' . $index, 'Crate ' . $index);
+    }
+
+    return $fields;
+  }
+
+  /**
+   * Everything each panel of a tree holds, keyed by the panel it belongs to.
+   *
+   * @return array<string,list<\DrevOps\Tui\Block\BlockInterface>>
+   *   The blocks.
+   */
+  protected function declared(Panel $panel): array {
+    $blocks = [];
+
+    foreach (Tree::panels($panel) as $nested) {
+      $blocks[$nested->id()] = $nested->blocks();
+    }
+
+    return $blocks;
   }
 
   /**
@@ -575,6 +786,31 @@ final class TwoScrollingRowsLayoutFixture extends AbstractLayout {
 
     $this->region('top')->flex(1)->scrolls();
     $this->region('bottom')->flex(1)->scrolls();
+  }
+
+}
+
+/**
+ * A layout that calls its regions something else and says what goes in them.
+ */
+final class SidebarLayoutFixture extends AbstractLayout {
+
+  /**
+   * Construct the layout.
+   */
+  public function __construct() {
+    parent::__construct(Axis::Columns);
+
+    $this->region('sidebar')->fixed(20);
+    $this->region('body')->flex(1)->scrolls();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function furnishes(Furniture $piece): string {
+    return $piece === Furniture::Body ? 'body' : 'sidebar';
   }
 
 }

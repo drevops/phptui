@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Builder;
 
 use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Condition\ConditionInterface;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\DiscoverInterface;
@@ -21,14 +19,17 @@ use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Model\Weekday;
 
 /**
- * A fluent builder for a single block that answers, shows or runs.
+ * A fluent builder for a single field: the block that collects.
  *
- * What is declared lands on a block as it is written, and the kind of block is
- * the kind of answer asked for: a question builds the field that collects one,
- * a note builds the markup that shows content, and a progress row builds the
- * block that runs work. A declaration stated in parts - a range, a shape, a set
- * of limits - is assembled when the declaration is finished, because only a
- * finished one can be measured for the contradictions it must not hold.
+ * What is declared lands on the field as it is written. A declaration stated in
+ * parts - a range, a shape, a set of limits - is assembled when the declaration
+ * is finished, because only a finished one can be measured for the
+ * contradictions it must not hold.
+ *
+ * Most of what can be declared belongs to some kinds of answer and not to
+ * others, and a declaration the kind has nowhere to put is refused where it was
+ * written rather than quietly dropped - so a mistake is read at the line that
+ * made it.
  *
  * @package DrevOps\Tui\Builder
  */
@@ -45,9 +46,9 @@ final class FieldBuilder {
   protected const int RATING_MAX = 5;
 
   /**
-   * The block carrying the declaration.
+   * The field carrying the declaration.
    */
-  protected Field|Markup|Progress $block;
+  protected Field $block;
 
   /**
    * Whether an explicit default was set (otherwise the type default is used).
@@ -102,14 +103,14 @@ final class FieldBuilder {
   protected ?int $pickerMaxSize = NULL;
 
   /**
-   * The date field's inclusive earliest date (ISO `Y-m-d`), when declared.
+   * The date field's inclusive earliest date, when declared.
    */
-  protected ?string $minDate = NULL;
+  protected ?\DateTimeImmutable $minDate = NULL;
 
   /**
-   * The date field's inclusive latest date (ISO `Y-m-d`), when declared.
+   * The date field's inclusive latest date, when declared.
    */
-  protected ?string $maxDate = NULL;
+  protected ?\DateTimeImmutable $maxDate = NULL;
 
   /**
    * The date field's week-start day, when declared.
@@ -146,23 +147,17 @@ final class FieldBuilder {
    *   The field type.
    */
   public function __construct(protected string $id, protected string $label, protected FieldType $fieldType) {
-    $this->block = match ($fieldType) {
-      // A note only shows content, and a progress row only runs work: neither
-      // collects, so neither builds the block that does.
-      FieldType::Note => new Markup($id, '', $label),
-      FieldType::Progress => new Progress($id, $label),
-      default => new Field($id, $label, $fieldType),
-    };
+    $this->block = new Field($id, $label, $fieldType);
   }
 
   /**
    * The block this builder is declaring.
    *
-   * @return \DrevOps\Tui\Block\Field|\DrevOps\Tui\Block\Markup|\DrevOps\Tui\Block\Progress
-   *   The block, whose identity never changes, so it can be placed in a region
+   * @return \DrevOps\Tui\Block\Field
+   *   The field, whose identity never changes, so it can be placed in a region
    *   as it is declared.
    */
-  public function block(): Field|Markup|Progress {
+  public function block(): Field {
     return $this->block;
   }
 
@@ -179,10 +174,6 @@ final class FieldBuilder {
     $dates = $this->buildDateBounds();
     $selections = $this->buildSelectionBounds();
     $template = $this->buildTemplate();
-
-    if (!$this->block instanceof Field) {
-      return;
-    }
 
     $this->block->default($default)->picker($picker);
 
@@ -213,9 +204,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function description(string $description): self {
-    // A note's body is the content its card draws, so the same call fills it.
-    $this->markup()?->body($description);
-    $this->field()?->description($description);
+    $this->block->description($description);
 
     return $this;
   }
@@ -233,7 +222,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function help(string $help): self {
-    $this->field()?->help($help);
+    $this->block->help($help);
 
     return $this;
   }
@@ -242,17 +231,20 @@ final class FieldBuilder {
    * Set the ghost text shown inside the editor while its buffer is empty.
    *
    * A placeholder never becomes a value: it disappears as soon as anything is
-   * typed. Available on the text, number, textarea, password, suggest and
-   * search types; any other type throws when the field is built.
+   * typed.
    *
    * @param string $placeholder
    *   The ghost text (e.g. "E.g. Golden Beetroot").
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field draws no input buffer to ghost.
    */
   public function placeholder(string $placeholder): self {
-    $this->field()?->placeholder($placeholder);
+    $this->scoped(static fn(FieldType $type): bool => $type->supportsPlaceholder(), 'draws no input buffer to ghost', 'placeholder');
+    $this->block->placeholder($placeholder);
 
     return $this;
   }
@@ -290,7 +282,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function schemaDefault(mixed $default): self {
-    $this->field()?->schemaDefault($default);
+    $this->block->schemaDefault($default);
 
     return $this;
   }
@@ -310,7 +302,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function env(string $name): self {
-    $this->field()?->env($name);
+    $this->block->env($name);
 
     return $this;
   }
@@ -329,7 +321,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function envAliases(array $names): self {
-    $this->field()?->envAliases($names);
+    $this->block->envAliases($names);
 
     return $this;
   }
@@ -347,7 +339,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function required(bool $required = TRUE, string $message = ''): self {
-    $this->field()?->required($required, $message);
+    $this->block->required($required, $message);
 
     return $this;
   }
@@ -368,59 +360,68 @@ final class FieldBuilder {
    *   When the field type does not support collecting several values.
    */
   public function multiple(bool $multiple = TRUE): self {
-    if ($multiple && !$this->fieldType->supportsMultiple()) {
-      throw new FormException(sprintf('Field "%s" of type "%s" does not collect several values; ->multiple() applies to select, search and file picker fields.', $this->id, $this->fieldType->value));
-    }
-
-    $this->field()?->multiple($multiple);
+    $this->scoped(static fn(FieldType $type): bool => $type->supportsMultiple(), 'does not collect several values', 'multiple');
+    $this->block->multiple($multiple);
 
     return $this;
   }
 
   /**
-   * Offer a reveal/hide toggle in a password editor.
+   * Password only: offer a reveal/hide toggle over the masked value.
    *
    * @param bool $revealable
    *   Whether the toggle is enabled.
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field masks nothing to reveal.
    */
   public function revealable(bool $revealable = TRUE): self {
-    $this->field()?->revealable($revealable);
+    $this->scoped(static fn(FieldType $type): bool => $type === FieldType::Password, 'masks nothing to reveal', 'revealable');
+    $this->block->revealable($revealable);
 
     return $this;
   }
 
   /**
-   * Prompt for a password twice and reject a mismatch before accepting.
+   * Password only: ask twice and reject a mismatch before accepting.
    *
    * @param bool $confirm
    *   Whether confirmation mode is enabled.
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field keeps no secret to confirm.
    */
   public function confirmation(bool $confirm = TRUE): self {
-    $this->field()?->confirmation($confirm);
+    $this->scoped(static fn(FieldType $type): bool => $type === FieldType::Password, 'keeps no secret to confirm', 'confirmation');
+    $this->block->confirmation($confirm);
 
     return $this;
   }
 
   /**
-   * Allow the field to hand off to the user's $EDITOR.
+   * Textarea only: allow the field to hand off to the user's $EDITOR.
    *
-   * Honoured by the textarea field: an available $EDITOR (or $VISUAL) can be
-   * launched to compose the value, falling back to inline editing otherwise.
+   * An available $EDITOR (or $VISUAL) can be launched to compose the value,
+   * falling back to inline editing otherwise.
    *
    * @param bool $enabled
    *   Whether the external-editor handoff is offered.
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field composes no long-form text to hand off.
    */
   public function externalEditor(bool $enabled = TRUE): self {
-    $this->field()?->externalEditor($enabled);
+    $this->scoped(static fn(FieldType $type): bool => $type === FieldType::Textarea, 'composes no long-form text to hand off', 'externalEditor');
+    $this->block->externalEditor($enabled);
 
     return $this;
   }
@@ -441,72 +442,44 @@ final class FieldBuilder {
    *   The builder.
    */
   public function standalone(bool $standalone = TRUE): self {
-    $this->field()?->standalone($standalone);
+    $this->block->standalone($standalone);
 
     return $this;
   }
 
   /**
-   * Note only: draw the card inside a themed border with minimal padding.
-   *
-   * @param bool $bordered
-   *   Whether the note is boxed.
-   *
-   * @return $this
-   *   The builder.
-   */
-  public function border(bool $bordered = TRUE): self {
-    $this->markup()?->bordered($bordered);
-
-    return $this;
-  }
-
-  /**
-   * Note only: render a presentational table beneath the card's title and body.
-   *
-   * The cells carry the same `{{field}}` templating the title and body do, so a
-   * table can reflect earlier answers. An empty header list renders the grid
-   * with no header row, and ragged rows pad to the widest row's column count.
-   *
-   * @param list<string> $headers
-   *   The header cells.
-   * @param list<list<string>> $rows
-   *   The body rows, each a list of cell strings.
-   *
-   * @return $this
-   *   The builder.
-   */
-  public function table(array $headers, array $rows): self {
-    $this->markup()?->table($headers, $rows);
-
-    return $this;
-  }
-
-  /**
-   * Number only: set the inclusive minimum accepted value.
+   * Number and rating only: set the inclusive minimum accepted value.
    *
    * @param int $min
    *   The minimum.
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field counts through no numbers.
    */
   public function min(int $min): self {
+    $this->scoped(self::counts(), 'counts through no numbers', 'min');
     $this->min = $min;
 
     return $this;
   }
 
   /**
-   * Number only: set the inclusive maximum accepted value.
+   * Number and rating only: set the inclusive maximum accepted value.
    *
    * @param int $max
    *   The maximum.
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field counts through no numbers.
    */
   public function max(int $max): self {
+    $this->scoped(self::counts(), 'counts through no numbers', 'max');
     $this->max = $max;
 
     return $this;
@@ -520,8 +493,24 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the step is not positive, or the field draws a scale whose points
+   *   are already its steps.
    */
   public function step(int $step): self {
+    // Named ahead of the kind check: a scale does count through numbers, so
+    // what is wrong here is the increment rather than the kind.
+    if ($this->fieldType === FieldType::Rating) {
+      throw new FormException(sprintf('Field "%s" declares a step of %d on a scale whose points are its steps; remove ->step() and set the ends with ->min() and ->max().', $this->id, $step));
+    }
+
+    $this->scoped(static fn(FieldType $type): bool => $type === FieldType::Number, 'counts through no numbers', 'step');
+
+    if ($step < 1) {
+      throw new FormException(sprintf('Field "%s" declares a non-positive step %d.', $this->id, $step));
+    }
+
     $this->step = $step;
 
     return $this;
@@ -541,9 +530,13 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field draws no scale to caption.
    */
   public function captions(array $captions): self {
-    $this->field()?->captions($captions);
+    $this->scoped(static fn(FieldType $type): bool => $type === FieldType::Rating, 'draws no scale to caption', 'captions');
+    $this->block->captions($captions);
 
     return $this;
   }
@@ -556,8 +549,12 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field does not collect several values.
    */
   public function minSelections(int $min): self {
+    $this->scoped(static fn(FieldType $type): bool => $type->supportsMultiple(), 'does not collect several values', 'minSelections');
     $this->minSelections = $min;
 
     return $this;
@@ -571,8 +568,12 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field does not collect several values.
    */
   public function maxSelections(int $max): self {
+    $this->scoped(static fn(FieldType $type): bool => $type->supportsMultiple(), 'does not collect several values', 'maxSelections');
     $this->maxSelections = $max;
 
     return $this;
@@ -590,9 +591,13 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field browses no filesystem.
    */
   public function startIn(string $directory): self {
-    $this->field()?->startIn($directory);
+    $this->scoped(self::browses(), 'browses no filesystem', 'startIn');
+    $this->block->startIn($directory);
 
     return $this;
   }
@@ -604,8 +609,12 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field browses no filesystem.
    */
   public function filesOnly(): self {
+    $this->scoped(self::browses(), 'browses no filesystem', 'filesOnly');
     $this->pickerMode = FilePickerMode::File;
 
     return $this;
@@ -616,8 +625,12 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field browses no filesystem.
    */
   public function directoriesOnly(): self {
+    $this->scoped(self::browses(), 'browses no filesystem', 'directoriesOnly');
     $this->pickerMode = FilePickerMode::Directory;
 
     return $this;
@@ -632,8 +645,12 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field browses no filesystem.
    */
   public function extensions(array $extensions): self {
+    $this->scoped(self::browses(), 'browses no filesystem', 'extensions');
     $this->pickerExtensions = $extensions;
 
     return $this;
@@ -647,9 +664,13 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field browses no filesystem.
    */
   public function showHidden(bool $show = TRUE): self {
-    $this->field()?->showHidden($show);
+    $this->scoped(self::browses(), 'browses no filesystem', 'showHidden');
+    $this->block->showHidden($show);
 
     return $this;
   }
@@ -667,9 +688,11 @@ final class FieldBuilder {
    *   The builder.
    *
    * @throws \DrevOps\Tui\Model\FormException
-   *   When the size is not positive.
+   *   When the field browses no filesystem, or the size is not positive.
    */
   public function maxSize(int $bytes): self {
+    $this->scoped(self::browses(), 'browses no filesystem', 'maxSize');
+
     if ($bytes < 1) {
       throw new FormException(sprintf('Field "%s" declares a maximum file size of %d below one byte.', $this->id, $bytes));
     }
@@ -683,8 +706,6 @@ final class FieldBuilder {
    * List fields only: bound the visible option list to a page size.
    *
    * Longer lists page around the cursor rather than overflowing the viewport.
-   * Honoured by the select, suggest, search, reorder and file picker fields;
-   * ignored by other types.
    *
    * @param int $size
    *   The number of option rows shown at once; must be positive.
@@ -693,58 +714,72 @@ final class FieldBuilder {
    *   The builder.
    *
    * @throws \DrevOps\Tui\Model\FormException
-   *   When the size is not positive.
+   *   When the field draws no list to page, or the size is not positive.
    */
   public function pageSize(int $size): self {
+    $this->scoped(static fn(FieldType $type): bool => $type->supportsOptions() || $type === FieldType::FilePicker, 'draws no list to page', 'pageSize');
+
     if ($size < 1) {
       throw new FormException(sprintf('Field "%s" declares a non-positive page size %d.', $this->id, $size));
     }
 
-    $this->field()?->paginate($size);
+    $this->block->paginate($size);
 
     return $this;
   }
 
   /**
-   * Date only: set the inclusive earliest selectable date.
+   * Calendar only: set the inclusive earliest selectable date.
    *
    * @param string $date
    *   The earliest date, as an ISO `Y-m-d` string.
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field picks no date, or the value is not a valid `Y-m-d` date.
    */
   public function minDate(string $date): self {
-    $this->minDate = $date;
+    $this->scoped(self::picksDate(), 'picks no date', 'minDate');
+    $this->minDate = $this->parseBoundDate($date);
 
     return $this;
   }
 
   /**
-   * Date only: set the inclusive latest selectable date.
+   * Calendar only: set the inclusive latest selectable date.
    *
    * @param string $date
    *   The latest date, as an ISO `Y-m-d` string.
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field picks no date, or the value is not a valid `Y-m-d` date.
    */
   public function maxDate(string $date): self {
-    $this->maxDate = $date;
+    $this->scoped(self::picksDate(), 'picks no date', 'maxDate');
+    $this->maxDate = $this->parseBoundDate($date);
 
     return $this;
   }
 
   /**
-   * Date only: set the day the calendar week begins on.
+   * Calendar only: set the day the calendar week begins on.
    *
    * @param \DrevOps\Tui\Model\Weekday $weekday
    *   The week-start day.
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field picks no date.
    */
   public function weekStart(Weekday $weekday): self {
+    $this->scoped(self::picksDate(), 'picks no date', 'weekStart');
     $this->weekStart = $weekday;
 
     return $this;
@@ -775,7 +810,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function derive(Derive $derive): self {
-    $this->field()?->derive($derive);
+    $this->block->derive($derive);
 
     return $this;
   }
@@ -791,7 +826,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function discover(DiscoverInterface|\Closure $discover): self {
-    $this->field()?->discover($discover);
+    $this->block->discover($discover);
 
     return $this;
   }
@@ -807,7 +842,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function validate(\Closure $validator): self {
-    $this->field()?->validate($validator);
+    $this->block->validate($validator);
 
     return $this;
   }
@@ -823,7 +858,7 @@ final class FieldBuilder {
    *   The builder.
    */
   public function transform(\Closure $transformer): self {
-    $this->field()?->transform($transformer);
+    $this->block->transform($transformer);
 
     return $this;
   }
@@ -841,9 +876,13 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field completes no typed text.
    */
   public function complete(array|\Closure $source): self {
-    $this->field()?->complete($source);
+    $this->scoped(static fn(FieldType $type): bool => $type === FieldType::Text, 'completes no typed text', 'complete');
+    $this->block->complete($source);
 
     return $this;
   }
@@ -861,9 +900,13 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field ranks no options to preview.
    */
   public function ghost(bool $ghost = TRUE): self {
-    $this->field()?->ghost($ghost);
+    $this->scoped(static fn(FieldType $type): bool => $type === FieldType::Suggest, 'ranks no options to preview', 'ghost');
+    $this->block->ghost($ghost);
 
     return $this;
   }
@@ -880,8 +923,12 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field fills in no fixed shape.
    */
   public function pattern(string $pattern): self {
+    $this->scoped(self::fillsShape(), 'fills in no fixed shape', 'pattern');
     $this->pattern = $pattern;
 
     return $this;
@@ -902,8 +949,13 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field fills in no fixed shape.
    */
   public function slot(string $name, string $label = '', ?\Closure $validate = NULL): self {
+    $this->scoped(self::fillsShape(), 'fills in no fixed shape', 'slot');
+
     if ($label !== '') {
       $this->slotLabels[$name] = $label;
     }
@@ -931,9 +983,13 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field shows no options.
    */
   public function option(string $value, string $label = '', string $description = '', bool $disabled = FALSE, string $disabled_reason = ''): self {
-    $this->field()?->entry($value, $label, $description, $disabled, $disabled_reason);
+    $this->scoped(self::lists(), 'shows no options', 'option');
+    $this->block->entry($value, $label, $description, $disabled, $disabled_reason);
 
     return $this;
   }
@@ -943,9 +999,13 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field shows no options.
    */
   public function separator(): self {
-    $this->field()?->separator();
+    $this->scoped(self::lists(), 'shows no options', 'separator');
+    $this->block->separator();
 
     return $this;
   }
@@ -958,9 +1018,13 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field shows no options.
    */
   public function heading(string $label): self {
-    $this->field()?->heading($label);
+    $this->scoped(self::lists(), 'shows no options', 'heading');
+    $this->block->heading($label);
 
     return $this;
   }
@@ -994,16 +1058,21 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field shows no options.
    */
   public function options(array|\Closure $options): self {
+    $this->scoped(self::lists(), 'shows no options', 'options');
+
     if ($options instanceof \Closure) {
       // Reading the signature here, rather than at every call, keeps the two
       // lifecycles apart without a reflection call mid-session.
       if ((new \ReflectionFunction($options))->getNumberOfParameters() > 0) {
-        $this->field()?->resolve($options);
+        $this->block->resolve($options);
       }
       else {
-        $this->field()?->load($options);
+        $this->block->load($options);
       }
 
       return $this;
@@ -1037,9 +1106,13 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field runs no query.
    */
   public function optionsFrom(\Closure $source): self {
-    $this->field()?->query($source);
+    $this->scoped(static fn(FieldType $type): bool => $type->supportsQuerySource(), 'runs no query', 'optionsFrom');
+    $this->block->query($source);
 
     return $this;
   }
@@ -1056,94 +1129,95 @@ final class FieldBuilder {
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the field runs no query, or the length is below one character.
    */
   public function minQuery(int $length): self {
+    $this->scoped(static fn(FieldType $type): bool => $type->supportsQuerySource(), 'runs no query', 'minQuery');
+
     if ($length < 1) {
       throw new FormException(sprintf('Field "%s" declares a minimum query length of %d; it must be at least one character (omit minQuery() to query on every keystroke).', $this->id, $length));
     }
 
-    $this->field()?->minQuery($length);
+    $this->block->minQuery($length);
 
     return $this;
   }
 
   /**
-   * Set the step count of a progress row, making its indicator a bar.
+   * The kinds whose answer is a point on a numeric range.
    *
-   * Without a step count a progress row shows an indeterminate spinner; with
-   * one it shows a bar that fills as the work advances through the steps.
-   *
-   * @param int $steps
-   *   The number of steps.
-   *
-   * @return $this
-   *   The builder.
+   * @return \Closure
+   *   The `fn (FieldType $type): bool` naming them.
    */
-  public function steps(int $steps): self {
-    if ($steps < 1) {
-      throw new FormException(sprintf('Field "%s" declares %d progress steps; a determinate bar needs at least one step (omit steps() for a spinner).', $this->id, $steps));
+  protected static function counts(): \Closure {
+    return static fn(FieldType $type): bool => $type->collectsInteger();
+  }
+
+  /**
+   * The kinds that draw a list of options.
+   *
+   * @return \Closure
+   *   The `fn (FieldType $type): bool` naming them.
+   */
+  protected static function lists(): \Closure {
+    return static fn(FieldType $type): bool => $type->supportsOptions();
+  }
+
+  /**
+   * The kinds that browse the filesystem.
+   *
+   * @return \Closure
+   *   The `fn (FieldType $type): bool` naming them.
+   */
+  protected static function browses(): \Closure {
+    return static fn(FieldType $type): bool => $type === FieldType::FilePicker;
+  }
+
+  /**
+   * The kinds that pick a calendar date.
+   *
+   * @return \Closure
+   *   The `fn (FieldType $type): bool` naming them.
+   */
+  protected static function picksDate(): \Closure {
+    return static fn(FieldType $type): bool => $type === FieldType::Calendar;
+  }
+
+  /**
+   * The kinds that fill the slots of a fixed shape.
+   *
+   * @return \Closure
+   *   The `fn (FieldType $type): bool` naming them.
+   */
+  protected static function fillsShape(): \Closure {
+    return static fn(FieldType $type): bool => $type === FieldType::Template;
+  }
+
+  /**
+   * Refuse a declaration this field's kind has nowhere to put.
+   *
+   * @param \Closure $applies
+   *   An `fn (FieldType $type): bool` naming the kinds the declaration applies
+   *   to. The refusal lists them from it, so the message can never drift from
+   *   the check it explains.
+   * @param string $lacks
+   *   What this field has not got, as a fragment ("shows no options").
+   * @param string $method
+   *   The refused method, without its parentheses.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When this field's kind is not one the declaration applies to.
+   */
+  protected function scoped(\Closure $applies, string $lacks, string $method): void {
+    if ($applies($this->fieldType) === TRUE) {
+      return;
     }
 
-    $this->progress()?->steps($steps);
+    $kinds = array_map(static fn(FieldType $type): string => $type->value, array_filter(FieldType::cases(), $applies));
 
-    return $this;
-  }
-
-  /**
-   * Set the work a progress row runs when activated.
-   *
-   * @param \Closure $work
-   *   An `fn(\DrevOps\Tui\Primitive\ProgressReporter): void` that does the
-   *   work, calling `advance(?string $label)` on the reporter once per step to
-   *   move the bar and optionally set the trailing label.
-   *
-   * @return $this
-   *   The builder.
-   */
-  public function run(\Closure $work): self {
-    $this->progress()?->work($work);
-
-    return $this;
-  }
-
-  /**
-   * The block as the field that collects, when it is one.
-   *
-   * @return \DrevOps\Tui\Block\Field|null
-   *   The field, or NULL for a block that shows or runs instead.
-   */
-  protected function field(): ?Field {
-    return $this->block instanceof Field ? $this->block : NULL;
-  }
-
-  /**
-   * The block as the markup that shows, when it is one.
-   *
-   * @return \DrevOps\Tui\Block\Markup|null
-   *   The markup, or NULL for a block that collects or runs instead.
-   */
-  protected function markup(): ?Markup {
-    return $this->block instanceof Markup ? $this->block : NULL;
-  }
-
-  /**
-   * The block as the work that runs, when it is one.
-   *
-   * @return \DrevOps\Tui\Block\Progress|null
-   *   The progress row, or NULL for a block that collects or shows instead.
-   */
-  protected function progress(): ?Progress {
-    return $this->block instanceof Progress ? $this->block : NULL;
-  }
-
-  /**
-   * The rows the field opens onto, as they stand.
-   *
-   * @return list<\DrevOps\Tui\Model\Option>
-   *   The rows; empty for a block that opens onto none.
-   */
-  protected function entries(): array {
-    return $this->field()?->entries() ?? [];
+    throw new FormException(sprintf('Field "%s" of type "%s" %s; ->%s() applies to %s.', $this->id, $this->fieldType->value, $lacks, $method, implode(', ', $kinds)));
   }
 
   /**
@@ -1182,7 +1256,7 @@ final class FieldBuilder {
 
     // A multiple choice or file picker collects a list, so with nothing
     // declared it defaults to no values.
-    if ($this->field()?->isMultiple() === TRUE) {
+    if ($this->block->isMultiple()) {
       return [];
     }
 
@@ -1196,7 +1270,7 @@ final class FieldBuilder {
     // option's value rather than an empty value that would not match either.
     // The value is read off the option, not its array key, so a numeric-string
     // value like "0" is not coerced to an int.
-    $entries = $this->entries();
+    $entries = $this->block->entries();
 
     if ($this->fieldType === FieldType::Toggle && $entries !== []) {
       return reset($entries)->value;
@@ -1213,7 +1287,7 @@ final class FieldBuilder {
    *   remaining options appended in declared order.
    */
   protected function reorderDefault(): array {
-    $values = $this->field()?->selectableValues() ?? [];
+    $values = $this->block->selectableValues();
     $desired = $this->hasDefault ? Field::stringList($this->default) : [];
 
     return Field::canonicalOrder($values, $desired);
@@ -1226,7 +1300,7 @@ final class FieldBuilder {
    *   The bounds, or NULL when none were declared.
    *
    * @throws \DrevOps\Tui\Model\FormException
-   *   When min exceeds max, or the step is not positive.
+   *   When min exceeds max.
    */
   protected function buildBounds(): ?NumberBounds {
     if ($this->fieldType === FieldType::Rating) {
@@ -1239,10 +1313,6 @@ final class FieldBuilder {
 
     if ($this->min !== NULL && $this->max !== NULL && $this->min > $this->max) {
       throw new FormException(sprintf('Field "%s" declares min %d greater than max %d.', $this->id, $this->min, $this->max));
-    }
-
-    if ($this->step !== NULL && $this->step < 1) {
-      throw new FormException(sprintf('Field "%s" declares a non-positive step %d.', $this->id, $this->step));
     }
 
     return new NumberBounds($this->min, $this->max, $this->step);
@@ -1259,13 +1329,9 @@ final class FieldBuilder {
    *   The scale.
    *
    * @throws \DrevOps\Tui\Model\FormException
-   *   When a step is declared, or the range holds fewer than two points.
+   *   When the range holds fewer than two points.
    */
   protected function buildScale(): NumberBounds {
-    if ($this->step !== NULL) {
-      throw new FormException(sprintf('Field "%s" declares a step of %d on a scale whose points are its steps; remove ->step() and set the ends with ->min() and ->max().', $this->id, $this->step));
-    }
-
     $min = $this->min ?? self::RATING_MIN;
     $max = $this->max ?? self::RATING_MAX;
 
@@ -1291,7 +1357,7 @@ final class FieldBuilder {
       return NULL;
     }
 
-    if ($this->field()?->isMultiple() !== TRUE) {
+    if (!$this->block->isMultiple()) {
       throw new FormException(sprintf('Field "%s" declares selection limits but is not multiple; ->minSelections()/->maxSelections() apply to multiple select, search and file picker fields.', $this->id));
     }
 
@@ -1326,8 +1392,8 @@ final class FieldBuilder {
       return NULL;
     }
 
-    $min = $this->parseBoundDate($this->minDate);
-    $max = $this->parseBoundDate($this->maxDate);
+    $min = $this->minDate;
+    $max = $this->maxDate;
 
     if ($min instanceof \DateTimeImmutable && $max instanceof \DateTimeImmutable && $min > $max) {
       throw new FormException(sprintf('Field "%s" declares min date %s after max date %s.', $this->id, $min->format('Y-m-d'), $max->format('Y-m-d')));
@@ -1339,21 +1405,18 @@ final class FieldBuilder {
   /**
    * Strictly parse a declared bound date, failing loudly on a bad value.
    *
-   * @param string|null $value
-   *   The declared date string, or NULL when the bound is open.
+   * @param string $value
+   *   The declared date string.
    *
-   * @return \DateTimeImmutable|null
-   *   The parsed date, or NULL when none was declared.
+   * @return \DateTimeImmutable
+   *   The parsed date.
    *
    * @throws \DrevOps\Tui\Model\FormException
    *   When the value is not a valid `Y-m-d` date.
    */
-  protected function parseBoundDate(?string $value): ?\DateTimeImmutable {
-    if ($value === NULL) {
-      return NULL;
-    }
-
+  protected function parseBoundDate(string $value): \DateTimeImmutable {
     $date = DateBounds::parse($value);
+
     if (!$date instanceof \DateTimeImmutable) {
       throw new FormException(sprintf('Field "%s" declares an invalid date "%s".', $this->id, $value));
     }

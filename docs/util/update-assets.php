@@ -864,6 +864,10 @@ EXPECT;
 /**
  * The expect body driving the panel-layout grid TUI.
  *
+ * Both routes into the one grid class are opened in turn, so the recording
+ * carries the difference between them: a name deals nothing into rows, counts
+ * deal windows side by side.
+ *
  * @return string
  *   The expect script body.
  */
@@ -875,16 +879,23 @@ expect "Summary" {
     arrow_down
 }
 
-# Walk the second row, then open Produce's own side-by-side layout.
+# Across to Delivery and into it: arranged by the name "grid", which carries
+# no shape, so its two windows run one under the other.
 pause 800
 arrow_right
-pause 800
+pause 600
+safe_send "\r"
+pause 2000
+press_escape
+
+# Back across to Produce, whose layout(2) deals its two windows into one row.
+pause 1000
 arrow_left
 pause 600
 safe_send "\r"
+pause 2000
 
 # Back out and submit via Place order.
-pause 1500
 press_escape
 pause 800
 arrow_down
@@ -1020,8 +1031,9 @@ EXPECT;
  *   optionally: at_needle (text anchoring a static frame - the frame is
  *   captured FRAME_SETTLE_MS after the text first appears), at (a fixed
  *   static-frame timestamp in ms), light (render on a light surface), dos
- *   (render on the CGA blue surface), and verify (text every animated SVG
- *   must contain).
+ *   (render on the CGA blue surface), directory (a scratch directory name the
+ *   demo is recorded from, for one that reads the run context), and verify
+ *   (text every animated SVG must contain).
  */
 function getJobs(string $project_dir): array {
   $jobs = [];
@@ -1048,13 +1060,19 @@ function getJobs(string $project_dir): array {
     ];
   }
 
-  // The produce box: the capstone panel TUI demo, in all display modes.
+  // The produce box: the capstone panel TUI demo, in all display modes. Its
+  // box name is a dynamic default read off the directory the demo runs from,
+  // and the derived slug, code and label all follow it - so the run is pinned
+  // to a directory named for a box, and the whole chain reads as produce.
+  // Only an unattended run resolves TUI_* overrides, so an interactive
+  // recording cannot be pinned through the environment.
   foreach ($env_variants as $suffix => $env) {
     $jobs['produce-box' . $suffix] = [
       'command' => 'env LINES=' . TERMINAL_ROWS . ' COLUMNS=' . TERMINAL_COLS . ' ' . $env . 'php ' . $project_dir . '/playground/14-produce-box.php',
       'interact' => produceBoxInteraction(),
       'rows' => TERMINAL_ROWS,
       'cols' => TERMINAL_COLS,
+      'directory' => 'summer-box',
       'verify' => 'Contents & options',
     ];
   }
@@ -1474,6 +1492,21 @@ function processOne(string $name): void {
   $svg_file = $assets_dir . '/' . assetName($name, $static);
   $rows = $job['rows'] ?? TERMINAL_ROWS;
   $cols = $job['cols'] ?? TERMINAL_COLS;
+
+  // A demo whose answers follow the run context reads the directory it is run
+  // from, and this checkout is not part of the produce theme those answers are
+  // written in. A job saying which directory it runs from records from one
+  // named for its own content instead. Every path this worker uses is
+  // absolute, so the move reaches only the demo.
+  if (is_string($job['directory'] ?? NULL)) {
+    $directory = $tmp_dir . '/' . $job['directory'];
+
+    if (!is_dir($directory)) {
+      mkdir($directory, 0755, TRUE);
+    }
+
+    chdir($directory);
+  }
 
   createExpectScript($expect_script, $job['command'], $job['interact']);
   recordSession($cast_file, $expect_script, $rows, $cols);

@@ -58,6 +58,8 @@ final class AbstractThemeTest extends TestCase {
   public static function dataProviderEveryGlyphFallsBackToWhatAsciiCanDraw(): \Iterator {
     yield 'overflow marker above' => [static fn(FloorTheme $t): string => $t->chromeOverflowMarker(TRUE)];
     yield 'overflow marker below' => [static fn(FloorTheme $t): string => $t->chromeOverflowMarker(FALSE)];
+    yield 'field overflow marker above' => [static fn(FloorTheme $t): string => $t->fieldOverflowMarker(TRUE)];
+    yield 'field overflow marker below' => [static fn(FloorTheme $t): string => $t->fieldOverflowMarker(FALSE)];
     yield 'breadcrumb separator' => [static fn(FloorTheme $t): string => $t->breadcrumbSeparator()];
     yield 'legend separator' => [static fn(FloorTheme $t): string => $t->legendSeparator()];
     yield 'field selector' => [static fn(FloorTheme $t): string => $t->fieldSelector(TRUE)];
@@ -111,7 +113,7 @@ final class AbstractThemeTest extends TestCase {
 
   public function testFloorLaysEveryRowOutAgainstTheSameGutter(): void {
     // A theme that would rather draw a flat list answers with no gutter at all.
-    $this->assertSame('', (new FloorTheme())->fieldIndent(2));
+    $this->assertSame('', (new FloorTheme())->chromeIndent(2));
   }
 
   public function testGuidanceOpensWithMarkNothingCanStrip(): void {

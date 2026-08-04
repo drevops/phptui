@@ -380,14 +380,16 @@ final class SearchTest extends TestCase {
     $this->assertPagesAndFollowsCursor(static fn(int $size): Search => new Search(self::pagingOptions(), [], TRUE, page_size: $size));
   }
 
-  public function testMultipleRejectsBelowMinWithInlineError(): void {
+  public function testMultipleOffersTheCountOutsideItsBoundsRatherThanRefusingIt(): void {
     $field = new Search($this->services, [], TRUE, selection_bounds: new SelectionBounds(2));
 
     $field->handle(Key::named(KeyName::Space));
     $field->handle(Key::named(KeyName::Enter));
 
-    $this->assertFalse($field->isComplete());
-    $this->assertStringContainsString('Select at least 2 items.', Ansi::strip($field->view(new DefaultTheme())));
+    // How many are enough is measured where the answer is held, so one is
+    // offered rather than refused here.
+    $this->assertTrue($field->isComplete());
+    $this->assertNull($field->error());
   }
 
   public function testMultipleAcceptsWithinBounds(): void {

@@ -340,7 +340,7 @@ final class QueryOptionsTest extends TestCase {
       static function (PanelBuilder $p) use ($source): void {
         $p->select('veg', 'Vegetable')->optionsFrom($source);
       },
-      '/only search and suggest fields show one/',
+      '/of type "select" runs no query/',
     ];
 
     yield 'alongside static options' => [

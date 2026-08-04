@@ -11,7 +11,6 @@ use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\ThemeManager;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -50,7 +49,7 @@ final class ScaleRenderTest extends TestCase {
   public function testScaleCarriesTheThemeAccent(): void {
     // Ember's highlight is bold orange (1;38;5;208); the scale inherits it with
     // no per-theme override, so the accent flows through highlight().
-    $theme = ThemeManager::create('ember', DefaultTheme::DEFAULT_WIDTH, ['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
+    $theme = $this->builtin('ember', DefaultTheme::DEFAULT_WIDTH, ['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
 
     $this->assertStringContainsString("\033[1;38;5;208m", $theme->fieldScale(2, 1, 5, ''));
   }

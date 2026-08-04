@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Tests\Unit\Screen\Layout;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Layout\AbstractLayout;
 use DrevOps\Tui\Screen\Layout\DefaultLayout;
+use DrevOps\Tui\Screen\Layout\GridLayout;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Layout\LayoutManager;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
@@ -42,6 +43,7 @@ final class LayoutManagerTest extends TestCase {
 
     $this->assertSame([
       'default' => DefaultLayout::class,
+      'grid' => GridLayout::class,
       'panel' => PanelLayout::class,
       'two-column' => TwoColumnLayout::class,
     ], $built);
@@ -57,7 +59,7 @@ final class LayoutManagerTest extends TestCase {
     LayoutManager::register('sidebar', SidebarLayoutFixture::class);
 
     $this->assertInstanceOf(SidebarLayoutFixture::class, LayoutManager::create('sidebar'));
-    $this->assertSame(['default', 'panel', 'two-column', 'sidebar'], LayoutManager::names());
+    $this->assertSame(['default', 'grid', 'panel', 'two-column', 'sidebar'], LayoutManager::names());
   }
 
   public function testClassNameWorksWithoutRegistering(): void {
@@ -66,7 +68,7 @@ final class LayoutManagerTest extends TestCase {
 
   public function testAnUnknownNameListsTheOnesThereAre(): void {
     $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('Unknown layout "sidebar". Registered: default, panel, two-column.');
+    $this->expectExceptionMessage('Unknown layout "sidebar". Registered: default, grid, panel, two-column.');
 
     LayoutManager::create('sidebar');
   }

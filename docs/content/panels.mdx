@@ -9,7 +9,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Panels and navigation
 
-The interactive TUI is a full-screen panel browser. The root hub lists the form's panels with live value summaries, and each panel lists its fields with their current values and provenance badges. <kbd>Up</kbd>/<kbd>Down</kbd> move the cursor, <kbd>Left</kbd>/<kbd>Right</kbd> move across a [grid of sub-panels](#panel-layouts) and along the buttons, <kbd>Enter</kbd> edits a field in place (or goes into a sub-panel), <kbd>Esc</kbd> comes back out, and <kbd>q</kbd> leaves. All of these keys are configurable (see [Key bindings](/key-bindings)). A panel longer than the frame scrolls to keep the focused row in view. **Submit** and **Cancel** buttons live on the root panel - `->buttons(FALSE)` hides them, `->buttons(TRUE, 'Save', 'Discard')` relabels them.
+The interactive TUI is a full-screen panel browser. The root hub lists the form's panels with live value summaries, and each panel lists its fields with their current values and provenance badges. <kbd>Up</kbd>/<kbd>Down</kbd> move the cursor, <kbd>Left</kbd>/<kbd>Right</kbd> move across a [grid of sub-panels](#panel-layouts) and along the buttons, <kbd>Enter</kbd> edits a field in place (or goes into a sub-panel), <kbd>Esc</kbd> comes back out, and <kbd>q</kbd> leaves. All of these keys are configurable (see [Key bindings](/key-bindings)). A panel longer than the frame scrolls to keep the focused row in view, and the mouse wheel moves it a row at a time without moving the cursor. **Submit** and **Cancel** buttons are drawn beside the root panel, after everything it holds - `->buttons(FALSE)` hides them, `->buttons(TRUE, 'Save', 'Discard')` relabels them. They belong to the session rather than to the form's declaration, so going into a sub-panel leaves them behind and coming back out draws them again, and a form withheld from ending says why on the row directly above them.
 
 A **contextual help footer** runs along the bottom of every screen, listing exactly the keys that work right now and updating as focus moves between the hub and each open field. That is not a list somebody wrote out: it is read back off the bindings that actually apply, so a remapped key changes the line that advertises it. The hub shows move, select, back and quit. Each field adds its own bindings on top of accept/cancel: a select adds move, a multiple select adds toggle and select-all/none, a bounded number adds the step keys, a textarea adds newline and the external-editor handoff, a revealable password adds the reveal toggle. A field carrying [help](/field-behaviour#guidance-texts) adds <kbd>?</kbd>, which opens that text on a page of its own; any key dismisses it. The footer follows the active theme and key map (it degrades to ASCII glyphs and always reflects remapped keys), and the facade's `->footer(FALSE)` turns it off.
 
@@ -60,6 +60,30 @@ $form = Form::create('Basket settings')
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/nested-panels-light-animated.svg'), dark: useBaseUrl('/nested-panels-dark-animated.svg')}} alt="Nested panels demo" width="100%" />
 </p>
+
+## Conditional panels
+
+A panel comes and goes on an earlier answer exactly as a field does. Declare `->when()` inside the panel's own callback and the whole section hangs off the rule - not one row at a time:
+
+```php
+$form = Form::create('Produce order')
+  ->panel('basket', 'Basket', function (PanelBuilder $p): void {
+    $p->confirm('organic', 'Organic only?')->default(FALSE);
+
+    // The whole section appears with the answer, and leaves with it.
+    $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
+      $sp->when(new Condition('organic', eq: TRUE));
+      $sp->text('certifier', 'Certifier')->default('Soil Board');
+      $sp->calendar('renewed_on', 'Renewed on')->default('2026-07-15');
+    });
+  });
+```
+
+A section that isn't there takes everything it holds with it. Its row isn't drawn and the cursor passes over it, its questions collect nothing and refuse nothing, and none of them reach the answers - so `certifier` is absent from the result rather than present and empty. The moment the condition holds, the row is back and every question inside it is asked again, carrying whatever value it settled on. A question inside the section that carries a rule of its own waits on both, and a section inside a section goes with the one around it.
+
+Going into a section whose condition then turns false - an answer inside it flips a [fix-up](/configuration#conditional-fields), say - puts you back where the section was. A panel is somewhere you are rather than something you're looking at, so it can't merely stop being drawn while you're standing in it: the TUI leaves it the way <kbd>Esc</kbd> would, as far out as it takes to reach a section that's still there.
+
+The same rule decides a headless collection, which is the point of putting it on the panel: one declaration says which questions a form asks, whether or not anything is drawn.
 
 ## Modal panels
 
@@ -122,9 +146,9 @@ $bare = (new Tui($form))->theme('default', ['border' => 'none', 'spacing' => 'no
 
 ## Panel layouts
 
-A panel's sub-panels list vertically by default; `->layout()` given **numbers** arranges them as a grid of side-by-side windows instead. Each argument declares one visual row and says how many panels sit beside each other in it, filled in declaration order: `layout(2)` puts two panels side by side, `layout(2, 2)` makes four windows, `layout(1, 2)` one full-width panel above two columns - and `layout(2, 1)` the other way around. Every level of the panel tree declares its own, so a panel you have gone into arranges its children independently: `Form::layout()` arranges the top-level panels, `PanelBuilder::layout()` a panel's children.
+A panel's sub-panels list vertically by default; `->layout()` given **numbers** arranges the panel with a [grid layout](/layouts#a-grid-of-windows) instead, dealing them into side-by-side windows. Each argument declares one visual row and says how many panels sit beside each other in it, filled in declaration order: `layout(2)` puts two panels side by side, `layout(2, 2)` makes four windows, `layout(1, 2)` one full-width panel above two columns - and `layout(2, 1)` the other way around. Every level of the panel tree declares its own, so a panel you have gone into arranges its children independently: `Form::layout()` arranges the top-level panels, `PanelBuilder::layout()` a panel's children.
 
-Given a **name** instead, the same `PanelBuilder::layout()` arranges the panel's own blocks into named regions - `$p->layout('two-column')`, then `$p->in('left')`. That is a different feature and a separate page: see [Layouts](/layouts). Numbers deal sub-panels into a grid; a name says where every block goes. Mixing the two in one call throws.
+Given a **name** instead, the same `PanelBuilder::layout()` picks a layout that arranges the panel's own blocks into named regions - `$p->layout('two-column')`, then `$p->in('left')`. Both forms pick the layout a panel is arranged by, which is why mixing them in one call throws: a panel is arranged by one. Names are covered on [Layouts](/layouts).
 
 ```php
 $form = Form::create('Market stall')
@@ -153,7 +177,9 @@ $form = Form::create('Market stall')
   <ThemedImage sources={{light: useBaseUrl('/panel-layout-light-animated.svg'), dark: useBaseUrl('/panel-layout-dark-animated.svg')}} alt="Panels arranged as a grid: one full-width panel above two side-by-side columns" width="100%" />
 </p>
 
-Each column previews its panel - the title, the description and one row per field value, plus a drill-in row per nested panel - so the grid reads as windows into the form. The arrows move spatially: <kbd>Left</kbd>/<kbd>Right</kbd> along a row, <kbd>Up</kbd>/<kbd>Down</kbd> between rows, and out to the fields above or the buttons below. <kbd>Enter</kbd> drills into the focused panel exactly as in the row list, and fields declared on the same panel keep their normal rows above the grid. The declaration is validated when the form is built - every row must hold at least one panel and the slots must exactly cover the sub-panels - so a mismatch throws at declaration time, never mid-session.
+Each column previews its panel - the title, the description and one row per field value - so the grid reads as windows into the form. A panel nested inside a window draws the bare way into it, the title and the mark saying it leads somewhere: a window is a preview column, and the full row with a description and a summary belongs to a list, where there is a whole width to spend on it.
+
+The arrows move spatially: <kbd>Left</kbd>/<kbd>Right</kbd> along a row, <kbd>Up</kbd>/<kbd>Down</kbd> between rows, and out to the fields above or the buttons below. <kbd>Enter</kbd> drills into the focused panel exactly as in the row list, and fields declared on the same panel keep their normal rows above the grid. The declaration is refused where it is written - every visual row must hold at least one window, and the slots must exactly cover the sub-panels - so a mismatch throws at declaration time, never mid-session.
 
 ## Fullscreen
 

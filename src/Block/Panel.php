@@ -7,10 +7,12 @@ namespace DrevOps\Tui\Block;
 use DrevOps\Tui\Block\Capability\BindCapableInterface;
 use DrevOps\Tui\Block\Capability\BindCapableTrait;
 use DrevOps\Tui\Block\Capability\DependCapableInterface;
+use DrevOps\Tui\Block\Capability\DependCapableTrait;
 use DrevOps\Tui\Block\Capability\DescendCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableTrait;
 use DrevOps\Tui\Block\Capability\OverlayCapableInterface;
+use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Block\Element\PanelElementsInterface;
 use DrevOps\Tui\Input\Action;
@@ -18,6 +20,8 @@ use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Model\Buttons;
+use DrevOps\Tui\Model\FormException;
+use DrevOps\Tui\Screen\Furniture;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Region;
 use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
@@ -36,11 +40,17 @@ use DrevOps\Tui\Translation\Translator;
  * Nested inside another panel it draws a row you select. Once entered it draws
  * nothing of its own, because its blocks do.
  *
+ * A whole section can come and go with the answers, exactly as one row can: the
+ * condition decides whether the section is there at all, and a section that is
+ * not there takes everything it holds with it - so a question inside one is
+ * never asked, drawn or navigated into.
+ *
  * @package DrevOps\Tui\Block
  */
-final class Panel extends AbstractBlock implements BindCapableInterface, DescendCapableInterface, FocusCapableInterface, OverlayCapableInterface {
+final class Panel extends AbstractBlock implements BindCapableInterface, DependCapableInterface, DescendCapableInterface, FocusCapableInterface, OverlayCapableInterface {
 
   use BindCapableTrait;
+  use DependCapableTrait;
   use FocusCapableTrait;
 
   /**
@@ -92,13 +102,6 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
    * What prepares it before it is first entered, until that has been done.
    */
   protected ?\Closure $preload = NULL;
-
-  /**
-   * How the panels nested in it sit side by side, one entry per visual row.
-   *
-   * @var list<int>
-   */
-  protected array $grid = [];
 
   /**
    * Construct a panel.
@@ -169,7 +172,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
    * @return static
    *   The panel.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\Model\FormException
    *   When the pair is hidden on a panel that draws over what is behind it,
    *   which would strand it with no way out.
    */
@@ -304,7 +307,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
   /**
    * {@inheritdoc}
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\Model\FormException
    *   When its buttons are hidden, which would leave it drawn over everything
    *   with no way out.
    */
@@ -343,48 +346,16 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
   public function hints(): array {
     // Windows sitting beside each other are moved between in two directions
     // rather than one, so what the keys do depends on how they are arranged.
-    $move = $this->grid === []
-      ? new Hint('move', Action::MoveUp, Action::MoveDown)
-      : new Hint('move', Action::MoveUp, Action::MoveDown, Action::MoveLeft, Action::MoveRight);
+    $dealt = $this->layout instanceof LayoutInterface && $this->layout->deal() !== [];
+    $move = $dealt
+      ? new Hint('move', Action::MoveUp, Action::MoveDown, Action::MoveLeft, Action::MoveRight)
+      : new Hint('move', Action::MoveUp, Action::MoveDown);
 
     return [
       $move,
       new Hint('select', Action::Activate),
       new Hint('go back', Action::Back),
     ];
-  }
-
-  /**
-   * Sit the panels nested in this one side by side.
-   *
-   * @param int ...$rows
-   *   One entry per visual row, naming how many nested panels share it, top to
-   *   bottom; none leaves them one under another.
-   *
-   * @return static
-   *   The panel.
-   */
-  public function grid(int ...$rows): static {
-    $this->grid = array_values($rows);
-
-    // How its rows run is what arranges them, and what arranges the blocks in a
-    // region is the region: saying it there is what lets whatever draws one
-    // read the shape off the region it was handed.
-    if ($this->layout instanceof LayoutInterface) {
-      $this->place()->grid(...$this->grid);
-    }
-
-    return $this;
-  }
-
-  /**
-   * How the panels nested in this one sit side by side.
-   *
-   * @return list<int>
-   *   The count of each visual row, empty when they run one under another.
-   */
-  public function gridRows(): array {
-    return $this->grid;
   }
 
   /**
@@ -490,7 +461,21 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
       $lines[] = self::INDENT . $elements->panelSummary($summary);
     }
 
-    return implode("\n", $lines);
+    return $this->stepped(implode("\n", $lines), $this->gutter($theme));
+  }
+
+  /**
+   * This panel drawn as the bare way into it.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   *
+   * @return string
+   *   The row: where the cursor is, what the panel is called, and the mark
+   *   saying it leads somewhere.
+   */
+  public function wayIn(ThemeInterface $theme): string {
+    return $this->stepped($this->headline($this->guard($theme)), $this->gutter($theme));
   }
 
   /**
@@ -500,6 +485,11 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
    * themselves - which is what a panel sitting beside its siblings has the
    * space for, and what makes a grid of them read as several views of the same
    * form rather than as a list turned sideways.
+   *
+   * A window is a column previewing one panel, so a way into another panel is
+   * drawn as the line that says so and nothing more: the row spelling out a
+   * description and a summary of what is behind it belongs to a list, where
+   * there is a whole width to spend on it.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -520,7 +510,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
         continue;
       }
 
-      $drawn = $block->render($theme);
+      $drawn = $block instanceof self ? $block->wayIn($theme) : $block->render($theme);
 
       if ($drawn === '') {
         continue;
@@ -531,20 +521,21 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
       }
     }
 
-    return implode("\n", $lines);
+    return $this->stepped(implode("\n", $lines), $this->gutter($theme));
   }
 
   /**
    * The region this panel's own rows are drawn in.
    *
+   * Where the form goes on a screen and where a panel's rows go inside it are
+   * the same question asked of two layouts, so both read the same answer off
+   * the layout rather than each going looking for a name.
+   *
    * @return \DrevOps\Tui\Screen\Region
-   *   The region: the one its layout names for a panel's rows, else the first
-   *   region it declares.
+   *   The region.
    */
   public function place(): Region {
-    $names = $this->currentLayout()->names();
-
-    return $this->in(in_array(self::ROWS, $names, TRUE) ? self::ROWS : ($names[0] ?? self::ROWS));
+    return $this->in($this->currentLayout()->furnishes(Furniture::Body) ?? self::ROWS);
   }
 
   /**
@@ -567,6 +558,19 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
     }
 
     return $this->elements($theme, PanelElementsInterface::class, 'a panel');
+  }
+
+  /**
+   * The gutter this panel's rows are laid out after.
+   *
+   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   *   The theme.
+   *
+   * @return string
+   *   The gutter, empty when nothing steps the section in.
+   */
+  protected function gutter(ThemeInterface $theme): string {
+    return $this->elements($theme, ChromeElementsInterface::class, 'a conditional section')->chromeIndent($this->depth);
   }
 
   /**
@@ -625,10 +629,6 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
     $answers = [];
 
     foreach ($this->fields() as $field) {
-      if ($field->type()->isDisplayOnly()) {
-        continue;
-      }
-
       // A row the answers took off the screen says nothing about the panel,
       // because it is not there to say it.
       if ($field->isHidden()) {
@@ -700,12 +700,12 @@ final class Panel extends AbstractBlock implements BindCapableInterface, Descend
    * @param \DrevOps\Tui\Model\Buttons $buttons
    *   The pair that closes it.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\Model\FormException
    *   When such a panel hides its buttons.
    */
   protected function assertWayOut(bool $modal, Buttons $buttons): void {
     if ($modal && !$buttons->show) {
-      throw new \InvalidArgumentException(sprintf('Panel "%s" draws over what is behind it, so its buttons are its only way out and cannot be hidden.', $this->id));
+      throw new FormException(sprintf('Panel "%s" draws over what is behind it, so its buttons are its only way out and cannot be hidden.', $this->id));
     }
   }
 

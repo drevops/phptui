@@ -33,7 +33,7 @@ composer lint-fix
 
 ## Tests
 
-Tests are written with PHPUnit 11 and live under `tests/phpunit/Unit/`, organized by component, with shared fixtures in `tests/phpunit/Fixtures/` and utilities in `tests/phpunit/Traits/`. Filesystem seams use vfsStream, so the suite needs no real I/O.
+Tests are written with PHPUnit 12 and live under `tests/phpunit/Unit/`, organized by component, with shared fixtures in `tests/phpunit/Fixtures/` and utilities in `tests/phpunit/Traits/`. Filesystem seams use vfsStream, so the suite needs no real I/O.
 
 ```bash
 # Run the full suite (fast, no coverage).
@@ -74,4 +74,4 @@ The terminal-demo SVGs are regenerated with `php docs/util/update-assets.php` (i
 - Keep changes focused and covered by tests.
 - Make sure `composer lint` and `composer test` pass locally before opening the PR.
 
-The CI matrix runs the linters and the test suite across PHP 8.3, 8.4 and 8.5 (normal and lowest dependency sets).
+The CI matrix runs the test suite across PHP 8.3, 8.4 and 8.5 on Ubuntu, with both the normal and the lowest dependency sets, plus Windows jobs on 8.3 and 8.4 that prove portability. The linters and the coverage upload run on one cell of it - PHP 8.4, normal dependencies, Linux - because neither varies by version or platform.

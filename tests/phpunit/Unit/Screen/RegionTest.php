@@ -81,6 +81,28 @@ final class RegionTest extends TestCase {
     $region = new Region('content');
 
     $this->assertSame($region, $region->add(new Breadcrumb()));
+    $this->assertSame($region, $region->tail(new Breadcrumb()));
+  }
+
+  public function testRegionPacksFromEitherEndOfTheAxisItRunsAlong(): void {
+    $region = new Region('footer');
+    $legend = new Breadcrumb();
+    $version = new Markup('version', 'v1.2.3');
+
+    $region->tail($version)->add($legend);
+
+    // Which end a block was packed from is what says where it sits, so the one
+    // written second still leads the region.
+    $this->assertSame([$legend], $region->headBlocks());
+    $this->assertSame([$version], $region->tailBlocks());
+    $this->assertSame([$legend, $version], $region->blocks());
+  }
+
+  public function testRegionThatPacksNothingFromTheEndHoldsOnlyItsOwnRun(): void {
+    $region = (new Region('content'))->add(new Breadcrumb());
+
+    $this->assertSame([], $region->tailBlocks());
+    $this->assertSame($region->headBlocks(), $region->blocks());
   }
 
   public function testFixedRejectsSizeNoRegionCouldHave(): void {

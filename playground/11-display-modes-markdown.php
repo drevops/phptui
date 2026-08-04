@@ -2,15 +2,15 @@
 
 /**
  * @file
- * Markdown and links: rich text in descriptions and notes.
+ * Markdown and links: rich text in descriptions and markup.
  *
- * Links work everywhere - a label, a description, a note or the summary can
- * carry a `[text](url)` link, rendered as a clickable OSC 8 hyperlink on a
- * capable terminal and as `text (url)` otherwise. ->markdown() additionally
- * renders a small safe subset - **bold**, *emphasis*, `code` and `- ` bullet
- * lists - in descriptions and notes, mapped to the theme's style atoms. Both
- * honour the colour switch, so NO_COLOR (or ->color(FALSE)) degrades the whole
- * lot to clean plain text.
+ * Links work everywhere - a label, a description, a markup block or the
+ * summary can carry a `[text](url)` link, rendered as a clickable OSC 8
+ * hyperlink on a capable terminal and as `text (url)` otherwise. ->markdown()
+ * additionally renders a small safe subset - **bold**, *emphasis*, `code` and
+ * `- ` bullet lists - in descriptions and markup, mapped to the theme's atoms.
+ * Both honour the colour switch, so NO_COLOR (or ->color(FALSE)) degrades the
+ * whole lot to clean plain text.
  *
  * Usage:
  *   php playground/11-display-modes-markdown.php
@@ -31,8 +31,8 @@ require __DIR__ . '/../vendor/autoload.php';
 $form = Form::create('Produce order')
   ->panel('order', 'New order', function (PanelBuilder $p): void {
     $p->note('intro', 'Fresh produce order')
-      ->description('Pick what is **ripe** today:' . chr(10) . '- crisp apples' . chr(10) . '- sweet pears' . chr(10) . 'See the [seasonal guide](https://example.com/seasonal-guide).')
-      ->border();
+      ->body('Pick what is **ripe** today:' . chr(10) . '- crisp apples' . chr(10) . '- sweet pears' . chr(10) . 'See the [seasonal guide](https://example.com/seasonal-guide).')
+      ->bordered();
     $p->text('item', 'Item')->default('Pear')
       ->description('Type any fruit - `Pear` and `Plum` keep well. Full list in the [orchard index](https://example.com/orchard).');
     $p->number('quantity', 'Quantity')->min(1)->max(99)->default(6)
