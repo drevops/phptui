@@ -1,0 +1,119 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DrevOps\Tui\Tests\Unit\Screen\Layout;
+
+use DrevOps\Tui\Screen\Axis;
+use DrevOps\Tui\Screen\Layout\AbstractLayout;
+use DrevOps\Tui\Screen\Layout\DefaultLayout;
+use DrevOps\Tui\Screen\Layout\LayoutInterface;
+use DrevOps\Tui\Screen\Layout\LayoutManager;
+use DrevOps\Tui\Screen\Layout\PanelLayout;
+use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Tests the layout registry: three ways to reach a layout, one per call.
+ */
+#[CoversClass(LayoutManager::class)]
+#[Group('screen')]
+final class LayoutManagerTest extends TestCase {
+
+  protected function setUp(): void {
+    LayoutManager::reset();
+  }
+
+  protected function tearDown(): void {
+    LayoutManager::reset();
+  }
+
+  public function testTheShippedLayoutsAreTheClassesThatShip(): void {
+    $built = [];
+
+    // Read from the directory rather than from a list, so a layout added to the
+    // library is reachable the moment its file is, under a name that is its
+    // class name and cannot drift from it.
+    foreach (LayoutManager::names() as $name) {
+      $built[$name] = LayoutManager::create($name)::class;
+    }
+
+    $this->assertSame([
+      'default' => DefaultLayout::class,
+      'panel' => PanelLayout::class,
+      'two-column' => TwoColumnLayout::class,
+    ], $built);
+  }
+
+  public function testEachCallHandsBackLayoutOfItsOwn(): void {
+    // Two forms picking the same layout must not share its regions, or one
+    // would see the other's blocks.
+    $this->assertNotSame(LayoutManager::create('default'), LayoutManager::create('default'));
+  }
+
+  public function testConsumerRegistersItsOwnUnderShortName(): void {
+    LayoutManager::register('sidebar', SidebarLayoutFixture::class);
+
+    $this->assertInstanceOf(SidebarLayoutFixture::class, LayoutManager::create('sidebar'));
+    $this->assertSame(['default', 'panel', 'two-column', 'sidebar'], LayoutManager::names());
+  }
+
+  public function testClassNameWorksWithoutRegistering(): void {
+    $this->assertInstanceOf(SidebarLayoutFixture::class, LayoutManager::create(SidebarLayoutFixture::class));
+  }
+
+  public function testAnUnknownNameListsTheOnesThereAre(): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Unknown layout "sidebar". Registered: default, panel, two-column.');
+
+    LayoutManager::create('sidebar');
+  }
+
+  public function testRegisteringSomethingThatIsNotLayoutIsRefused(): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Layout class "stdClass" must implement ' . LayoutInterface::class . '.');
+
+    LayoutManager::register('bogus', \stdClass::class);
+  }
+
+  public function testBuildingSomethingThatIsNotLayoutIsRefused(): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Unknown layout "stdClass".');
+
+    LayoutManager::create(\stdClass::class);
+  }
+
+  public function testArrangementNobodyCanBuildIsRefusedWhereItIsNamed(): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Layout class "' . AbstractLayout::class . '" cannot be instantiated.');
+
+    LayoutManager::register('abstract', AbstractLayout::class);
+  }
+
+  public function testBuildingArrangementNobodyCanBuildIsRefusedToo(): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Layout class "' . AbstractLayout::class . '" cannot be instantiated.');
+
+    LayoutManager::create(AbstractLayout::class);
+  }
+
+}
+
+/**
+ * A layout registered by a consumer rather than shipped.
+ */
+final class SidebarLayoutFixture extends AbstractLayout {
+
+  /**
+   * Construct the layout.
+   */
+  public function __construct() {
+    parent::__construct(Axis::Columns);
+
+    $this->region('sidebar')->fixed(24);
+    $this->region('main')->scrolls();
+  }
+
+}

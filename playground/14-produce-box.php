@@ -6,7 +6,7 @@
  *
  * The capstone example - each numbered playground directory shows one
  * feature in isolation; this walkthrough combines them the way a real
- * consumer would: two panels of mixed widgets, a derived-value chain,
+ * consumer would: two panels of mixed fields, a derived-value chain,
  * conditional fields, declared behaviour closures, and the bordered panel
  * TUI, collected through the one facade call.
  *
@@ -21,11 +21,12 @@ declare(strict_types=1);
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Engine\EngineException;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\InterruptException;
+use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -84,14 +85,14 @@ try {
   // context and run() picks interactive or unattended
   // (playground/08-headless-*).
   $answers = (new Tui($form))
-    ->theme('default', ['border' => 'rounded'])
+    ->theme('default', ['border' => Border::Rounded])
     ->run('', '1.0.0');
 }
 catch (InterruptException) {
   // Leave quietly on Ctrl-C.
   exit(130);
 }
-catch (EngineException $exception) {
+catch (CollectException $exception) {
   fwrite(STDERR, $exception->getMessage() . PHP_EOL);
   exit(1);
 }

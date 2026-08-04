@@ -5,7 +5,7 @@
  * @file
  * Render the progress primitive's animated and static SVGs deterministically.
  *
- * The progress primitive is not a keystroke-driven widget: it is a single line
+ * The progress primitive is not a keystroke-driven field: it is a single line
  * the theme redraws in place with a carriage return while a callback runs. So
  * this drives the real {@see \DrevOps\Tui\Primitive\Progress} against an
  * in-memory terminal, splits the captured output into frames on the carriage
@@ -37,7 +37,7 @@ require dirname(__DIR__, 2) . '/vendor/autoload.php';
 require_once __DIR__ . '/svg-slowdown.php';
 require_once __DIR__ . '/svg-light-twin.php';
 
-// Seconds each captured frame is held, mirroring the widget renderer's cadence.
+// Seconds each captured frame is held, mirroring the field renderer's cadence.
 const HOLD_FIRST = 1.1;
 const HOLD_STEP = 0.65;
 const HOLD_LAST = 2.2;

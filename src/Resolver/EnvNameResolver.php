@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Resolver;
 
-use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Block\Field;
 
 /**
  * Names the environment variables that answer a field.
@@ -36,33 +36,35 @@ class EnvNameResolver {
   /**
    * The variable that answers the field when several are set.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field $field
    *   The field.
    *
    * @return string
    *   The declared override, or the prefixed and uppercased field id.
    */
   public function canonical(Field $field): string {
-    return $field->envName !== '' ? $field->envName : $this->envPrefix . strtoupper($field->id);
+    $declared = $this->declaredName($field);
+
+    return $declared !== '' ? $declared : $this->envPrefix . strtoupper($field->id());
   }
 
   /**
    * The additional variables the field also answers to, in declaration order.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field $field
    *   The field.
    *
    * @return list<string>
    *   The alias names; empty when the field declares none.
    */
   public function aliases(Field $field): array {
-    return $field->envAliases;
+    return $field->aliases();
   }
 
   /**
    * Every variable that answers the field, in precedence order.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field $field
    *   The field.
    *
    * @return list<string>
@@ -80,14 +82,31 @@ class EnvNameResolver {
    * so it is not offered as an answer route. Declared aliases are absolute and
    * carry no such risk, so they stand on their own.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field $field
    *   The field.
    *
    * @return bool
    *   TRUE when the field declares its own name or a prefix namespaces it.
    */
   public function isAdvertisable(Field $field): bool {
-    return $field->envName !== '' || $this->envPrefix !== '';
+    if ($this->declaredName($field) !== '') {
+      return TRUE;
+    }
+
+    return $this->envPrefix !== '';
+  }
+
+  /**
+   * The variable name a field declares for itself.
+   *
+   * @param \DrevOps\Tui\Block\Field $field
+   *   The field.
+   *
+   * @return string
+   *   The name, empty when the mechanical one stands.
+   */
+  protected function declaredName(Field $field): string {
+    return $field->envName();
   }
 
 }

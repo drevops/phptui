@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Schema;
 
+use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Model\Field;
-use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Translation\Translator;
 
 /**
@@ -25,13 +26,14 @@ class SchemaValidator {
   /**
    * Construct a validator.
    *
-   * @param \DrevOps\Tui\Model\FormDefinition $form
-   *   The configuration to validate against.
+   * @param \DrevOps\Tui\Block\Panel $root
+   *   The declared tree to validate against, read from the panel every declared
+   *   panel hangs from.
    * @param \DrevOps\Tui\Handler\Context $context
    *   The run context an options resolver is evaluated against, its answers
    *   replaced by the set under validation; defaults to an empty context.
    */
-  public function __construct(protected FormDefinition $form, protected Context $context = new Context()) {
+  public function __construct(protected Panel $root, protected Context $context = new Context()) {
   }
 
   /**
@@ -45,24 +47,26 @@ class SchemaValidator {
    */
   public function validate(array $answers): array {
     $errors = [];
-    $known = [];
 
-    foreach ($this->form->fields() as $field) {
-      $known[$field->id] = TRUE;
+    // Every row the tree holds, including the ones that only show: an id that
+    // shows is still an id the form knows, so a stray value for one is ignored
+    // rather than reported as a question nobody asked.
+    $known = array_fill_keys(Tree::ids($this->root), TRUE);
 
+    foreach (Tree::fields($this->root) as $field) {
       // A display-only field (a note or a progress row) carries no answer, so
       // it is never required and any value supplied for it is ignored.
-      if ($field->type->isDisplayOnly()) {
+      if ($field->type()->isDisplayOnly()) {
         continue;
       }
 
-      if ($field->when !== NULL && !$field->when->matches($answers)) {
+      if (!$field->isActive($answers)) {
         continue;
       }
 
-      if (!array_key_exists($field->id, $answers)) {
-        if ($field->required) {
-          $errors[] = Translator::t('Missing required question "@id".', ['@id' => $field->id]);
+      if (!array_key_exists($field->id(), $answers)) {
+        if ($field->isRequired()) {
+          $errors[] = Translator::t('Missing required question "@id".', ['@id' => $field->id()]);
         }
 
         continue;
@@ -74,7 +78,7 @@ class SchemaValidator {
       // see during collection - before membership is checked.
       OptionsResolver::resolve($field, new Context($this->context->directory, $answers, $this->context->update, $this->context->version));
 
-      $error = $this->validateValue($field, $answers[$field->id]);
+      $error = $this->validateValue($field, $answers[$field->id()]);
       if ($error !== NULL) {
         $errors[] = $error;
       }
@@ -92,7 +96,7 @@ class SchemaValidator {
   /**
    * Validate a single value against its field.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field $field
    *   The field.
    * @param mixed $value
    *   The value.
@@ -105,7 +109,7 @@ class SchemaValidator {
     // letting NULL read as a type error or an empty list as a count violation.
     $missing = $field->requiredViolation($value);
     if ($missing !== NULL) {
-      return Translator::t('Question "@id": @error', ['@id' => $field->id, '@error' => $missing]);
+      return Translator::t('Question "@id": @error', ['@id' => $field->id(), '@error' => $missing]);
     }
 
     if (!$field->acceptsValue($value)) {
@@ -128,7 +132,7 @@ class SchemaValidator {
   /**
    * Check a value against the field's declared number or date bounds.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field $field
    *   The field.
    * @param mixed $value
    *   The value.
@@ -145,7 +149,7 @@ class SchemaValidator {
   /**
    * Check a value against the field's declared file picker constraints.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field $field
    *   The field.
    * @param mixed $value
    *   The value.
@@ -163,7 +167,7 @@ class SchemaValidator {
   /**
    * Frame a constraint fragment as a question-scoped error message.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field $field
    *   The field.
    * @param string $constraint
    *   The constraint fragment (e.g. "a string", "between 1 and 10").
@@ -172,7 +176,7 @@ class SchemaValidator {
    *   The framed message.
    */
   protected function constraintMessage(Field $field, string $constraint): string {
-    return Translator::t('Question "@id" must be @constraint.', ['@id' => $field->id, '@constraint' => $constraint]);
+    return Translator::t('Question "@id" must be @constraint.', ['@id' => $field->id(), '@constraint' => $constraint]);
   }
 
   /**
@@ -181,7 +185,7 @@ class SchemaValidator {
    * Rejects any supplied value that is not a selectable option, telling a
    * disabled option apart from an unknown one.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field $field
    *   The field.
    * @param mixed $value
    *   The value.
@@ -190,9 +194,9 @@ class SchemaValidator {
    *   An error, or NULL when valid.
    */
   protected function checkOptions(Field $field, mixed $value): ?string {
-    $error = $field->optionError($value);
+    $error = $field->entryError($value);
 
-    return $error === NULL ? NULL : Translator::t('Question "@id": @error.', ['@id' => $field->id, '@error' => $error]);
+    return $error === NULL ? NULL : Translator::t('Question "@id": @error.', ['@id' => $field->id(), '@error' => $error]);
   }
 
 }

@@ -1,0 +1,59 @@
+---
+title: Pause
+description: 'An acknowledgment gate that shows its label and waits for the reader before continuing.'
+keywords: ['pause', 'gate', 'acknowledgment', 'field']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Pause
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/field-pause-light-animated.svg'), dark: useBaseUrl('/field-pause-dark-animated.svg')}} alt="Pause field" />
+</p>
+
+An acknowledgment gate: it shows its label and waits for the reader to continue. It collects a **`bool`** - always `TRUE` once acknowledged - and holds no other value.
+
+```php
+$p->pause('ready', 'Review your basket'); // A gate; it takes no options.
+```
+
+Runnable script: [`playground/02-fields-pause.php`](https://github.com/drevops/tui/blob/main/playground/02-fields-pause.php).
+
+## Options
+
+Pause has no options of its own - it only renders its label as a gate. The shared field options (`when()`, `description()`) still apply.
+
+## Keyboard
+
+| Key                                 | Action                   |
+| ----------------------------------- | ------------------------ |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | Acknowledge and continue |
+| <kbd>Esc</kbd>                      | Cancel                   |
+
+## Headless behavior
+
+An unattended run has nothing to wait for, so a pause auto-acknowledges (`TRUE`) and never blocks automation.
+
+## Display modes
+
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-pause-light-static.svg'), dark: useBaseUrl('/field-pause-dark-static.svg')}} alt="Pause: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-pause-light-static-no-ansi.svg'), dark: useBaseUrl('/field-pause-dark-static-no-ansi.svg')}} alt="Pause: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-pause-light-static-ascii.svg'), dark: useBaseUrl('/field-pause-dark-static-ascii.svg')}} alt="Pause: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-pause-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/field-pause-dark-static-ascii-no-ansi.svg')}} alt="Pause: ASCII + No ANSI" /></td>
+  </tr>
+</table>

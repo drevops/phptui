@@ -37,17 +37,17 @@ final class ThemeManagerTest extends TestCase {
   }
 
   public static function dataProviderCreate(): \Iterator {
-    yield 'default is dark' => ['default', [], static fn(DefaultTheme $t): string => $t->title('X'), '1;36'];
-    yield 'empty is dark' => ['', [], static fn(DefaultTheme $t): string => $t->title('X'), '1;36'];
+    yield 'default is dark' => ['default', [], static fn(DefaultTheme $t): string => $t->markupTitle('X'), '1;36'];
+    yield 'empty is dark' => ['', [], static fn(DefaultTheme $t): string => $t->markupTitle('X'), '1;36'];
     // The dark/light palette is a mode option, not a separate theme.
-    yield 'light mode' => ['default', ['mode' => Mode::Light], static fn(DefaultTheme $t): string => $t->title('X'), '1;34'];
-    yield 'light mode indicator' => ['default', ['mode' => Mode::Light], static fn(DefaultTheme $t): string => $t->indicator('X'), '35'];
+    yield 'light mode' => ['default', ['mode' => Mode::Light], static fn(DefaultTheme $t): string => $t->markupTitle('X'), '1;34'];
+    yield 'light mode value' => ['default', ['mode' => Mode::Light], static fn(DefaultTheme $t): string => $t->fieldValue('X'), '32'];
     // Each curated built-in theme resolves by name to its own accent.
-    yield 'midnight resolves' => ['midnight', [], static fn(DefaultTheme $t): string => $t->title('X'), '1;38;5;141'];
-    yield 'frost resolves' => ['frost', [], static fn(DefaultTheme $t): string => $t->title('X'), '1;38;5;117'];
-    yield 'ember resolves' => ['ember', [], static fn(DefaultTheme $t): string => $t->title('X'), '1;38;5;208'];
-    yield 'mono resolves' => ['mono', [], static fn(DefaultTheme $t): string => $t->title('X'), '1;97'];
-    yield 'dos resolves' => ['dos', [], static fn(DefaultTheme $t): string => $t->title('X'), '1;97'];
+    yield 'midnight resolves' => ['midnight', [], static fn(DefaultTheme $t): string => $t->markupTitle('X'), '1;38;5;141'];
+    yield 'frost resolves' => ['frost', [], static fn(DefaultTheme $t): string => $t->markupTitle('X'), '1;38;5;117'];
+    yield 'ember resolves' => ['ember', [], static fn(DefaultTheme $t): string => $t->markupTitle('X'), '1;38;5;208'];
+    yield 'mono resolves' => ['mono', [], static fn(DefaultTheme $t): string => $t->markupTitle('X'), '1;97'];
+    yield 'dos resolves' => ['dos', [], static fn(DefaultTheme $t): string => $t->markupTitle('X'), '1;97'];
   }
 
   public function testCreateUnknownThrows(): void {

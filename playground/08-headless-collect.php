@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Engine\EngineException;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -47,7 +47,7 @@ $prompts = '{"name": "Weekly Box", "fruit": "cherry"}';
 try {
   $answers = (new Tui($form))->collect($prompts);
 }
-catch (EngineException $exception) {
+catch (CollectException $exception) {
   // A missing required answer or a value failing validation lands here.
   fwrite(STDERR, $exception->getMessage() . PHP_EOL);
   exit(1);

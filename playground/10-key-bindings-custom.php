@@ -5,7 +5,7 @@
  * Key bindings: retuning single bindings on top of a preset.
  *
  * Each override is a Binding naming a scope (the base map, navigation, or one
- * widget type), an action, and the keys that trigger it. Overrides apply on
+ * field type), an action, and the keys that trigger it. Overrides apply on
  * top of the named preset; a conflicting or un-typeable binding throws when
  * the facade is configured, not mid-session, so a bad map cannot ship.
  *
@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Engine\EngineException;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Binding;
 use DrevOps\Tui\Input\KeyName;
@@ -47,7 +47,7 @@ try {
       // Quit with x as well as q.
       new Binding(Scope::navigation(), Action::Quit, 'x'),
       // In the single-choice list, Tab accepts too (Enter still does). A
-      // scope can target one widget type without touching the others.
+      // scope can target one field type without touching the others.
       new Binding(Scope::field(FieldType::Select), Action::Accept, KeyName::Tab, KeyName::Enter),
     ])
     ->run();
@@ -56,7 +56,7 @@ catch (InterruptException) {
   // Leave quietly on Ctrl-C.
   exit(130);
 }
-catch (EngineException $exception) {
+catch (CollectException $exception) {
   fwrite(STDERR, $exception->getMessage() . PHP_EOL);
   exit(1);
 }

@@ -29,11 +29,11 @@ class AccentTheme extends DefaultTheme {
    * {@inheritdoc}
    */
   #[\Override]
-  public function value(string $text, bool $selected = FALSE): string {
+  protected function value(string $text, bool $emphatic = FALSE): string {
     return match ($this->option('accent', 'cool')) {
-      'warm' => $this->paint($this->emphasize(Sgr::of(Sgr::Yellow), $selected), $text),
-      'mono' => $this->paint($this->emphasize(Sgr::of(Sgr::Grey), $selected), $text),
-      default => parent::value($text, $selected),
+      'warm' => $this->paint($this->emphasize(Sgr::of(Sgr::Yellow), $emphatic), $text),
+      'mono' => $this->paint($this->emphasize(Sgr::of(Sgr::Grey), $emphatic), $text),
+      default => parent::value($text, $emphatic),
     };
   }
 

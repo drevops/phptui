@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Schema;
 
+use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Schema\DefaultResolver;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -100,13 +101,11 @@ final class DefaultResolverTest extends TestCase {
    * @param \Closure $configure
    *   The callback declaring one field on the panel builder.
    *
-   * @return \DrevOps\Tui\Model\Field
-   *   The built field.
+   * @return \DrevOps\Tui\Block\Field
+   *   The declared field.
    */
   protected static function field(\Closure $configure): Field {
-    $form = Form::create('T')->panel('p', 'p', $configure)->build();
-
-    return array_values($form->fields())[0];
+    return Tree::fields(Form::create('T')->panel('p', 'p', $configure)->root())[0];
   }
 
 }

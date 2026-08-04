@@ -7,9 +7,10 @@ namespace DrevOps\Tui\Model;
 /**
  * The submit/cancel action pair that closes a form or a modal.
  *
- * Shared chrome: a {@see FormDefinition} carries one for its root submit/cancel
- * row, and a {@see Modal} carries one for the dialog's own row. The labels are
- * configurable; a modal always shows its pair, while a form may hide it.
+ * Shared chrome: the outermost panel carries one for the row that ends the
+ * form, and a panel drawn over what is behind it carries one for the row that
+ * closes the dialog. The labels are configurable; a dialog always shows its
+ * pair, because it is the only way out of one, while a form may hide it.
  *
  * @package DrevOps\Tui\Model
  */

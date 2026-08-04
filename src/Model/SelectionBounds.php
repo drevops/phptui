@@ -10,8 +10,8 @@ use DrevOps\Tui\Translation\Translator;
  * Optional minimum and maximum selection counts for a multi-value field.
  *
  * Either bound may be unset (NULL), leaving that side open. The count
- * arithmetic and the human phrase live here once, so the interactive widget,
- * the headless engine and the answer-set validator all agree - mirroring
+ * arithmetic and the human phrase live here once, so the interactive field,
+ * a headless collection and the answer-set validator all agree - mirroring
  * {@see NumberBounds}, but constraining how many values a list holds rather
  * than the magnitude of a single number.
  *

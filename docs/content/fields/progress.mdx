@@ -1,0 +1,71 @@
+---
+title: Progress
+description: 'A panel row that runs work when activated, filling a bar or ticking a spinner in place.'
+keywords: ['progress', 'bar', 'spinner', 'field']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Progress
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/field-progress-light-animated.svg'), dark: useBaseUrl('/field-progress-dark-animated.svg')}} alt="Progress field" />
+</p>
+
+A place to do work inside the form: select the row, press `Enter`, and its work runs with a **determinate bar** (when it declares a step count) or an **indeterminate spinner** (when it does not), drawn in the row itself as the work advances. It collects **no value** - it sits beside the fields it depends on, not among the answers.
+
+```php
+$p->progress('pack', 'Packing the box')
+  ->steps(6) // Omit for an indeterminate spinner.
+  ->run(function (ProgressReporter $reporter) use ($items): void {
+    foreach ($items as $item) {
+      // ... one step of work ...
+      $reporter->advance(); // Fills one step of the bar (ticks the spinner).
+    }
+  });
+```
+
+Runnable script: [`playground/02-fields-progress.php`](https://github.com/drevops/tui/blob/main/playground/02-fields-progress.php).
+
+## Options
+
+| Method            | Effect                                                                                                                  |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `->steps(int)`    | The step count, making the indicator a determinate bar. Omit it for an indeterminate spinner.                           |
+| `->run(callable)` | The work run when the row is activated. The callback receives a `ProgressReporter` and calls `advance()` once per step. |
+
+The indicator is drawn by the [active theme](/themes), in its accent and Unicode/ASCII mode - the same spinner and bar as the standalone [`progress()` primitive](/progress).
+
+## Keyboard
+
+| Key     | Action             |
+| ------- | ------------------ |
+| `Enter` | Run the row's work |
+| `Esc`   | Leave the panel    |
+
+## Headless behavior
+
+A progress row is display-only: it carries no answer, is absent from the [machine schema](/headless-collection), and an unattended run skips it.
+
+## Display modes
+
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-progress-light-static.svg'), dark: useBaseUrl('/field-progress-dark-static.svg')}} alt="Progress: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-progress-light-static-no-ansi.svg'), dark: useBaseUrl('/field-progress-dark-static-no-ansi.svg')}} alt="Progress: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-progress-light-static-ascii.svg'), dark: useBaseUrl('/field-progress-dark-static-ascii.svg')}} alt="Progress: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-progress-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/field-progress-dark-static-ascii-no-ansi.svg')}} alt="Progress: ASCII + No ANSI" /></td>
+  </tr>
+</table>

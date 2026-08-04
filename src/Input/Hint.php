@@ -12,7 +12,7 @@ use DrevOps\Tui\Translation\Translator;
  * A hint pairs a human label ("move", "accept", "none/all") with the actions
  * whose live keys illustrate it, so the glyphs are rendered from the active
  * bindings - {@see \DrevOps\Tui\Theme\DefaultTheme::renderHints()} - and never
- * drift from a remap. A context - a widget or the panel hub - declares an
+ * drift from a remap. A context - a field or the panel hub - declares an
  * ordered list of these; the theme turns each into a fragment and joins them.
  * Listing two actions under one label groups their keys ("←/→ none/all").
  *

@@ -11,7 +11,7 @@ namespace DrevOps\Tui\Handler;
  * "machine_name" -> "MachineName") and looked up in the registered
  * namespaces, in order. The class is the consumer's own - typically its
  * processor for the field. When it declares a public static validate() or
- * transform(), the engine uses them as the field's reusable behaviour unless
+ * transform(), a collection uses them as the field's reusable behaviour unless
  * the form declares its own closure, which always wins.
  *
  * @package DrevOps\Tui\Handler

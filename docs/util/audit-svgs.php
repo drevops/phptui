@@ -51,7 +51,7 @@ const BADGE_WORDS = ['edited', 'derived', 'discovered', 'default'];
  *
  * A needle missing from a committed asset means the recording no longer
  * shows the moment its demo exists to show. Kept to the recorded demos;
- * the deterministic widget and theme renders verify themselves at
+ * the deterministic field and theme renders verify themselves at
  * generation time.
  *
  * @return array<string, list<string>>
@@ -59,7 +59,7 @@ const BADGE_WORDS = ['edited', 'derived', 'discovered', 'default'];
  */
 function contentNeedles(): array {
   return [
-    'widgets-dark-animated.svg' => ['Pause'],
+    'fields-dark-animated.svg' => ['Pause'],
     'produce-box-dark-animated.svg' => ['Contents'],
     'derived-values-dark-animated.svg' => ['red_plum'],
     'conditional-fields-dark-animated.svg' => ['Herb bundle'],
@@ -78,7 +78,7 @@ function contentNeedles(): array {
     'panel-layout-dark-animated.svg' => ['Vegetables'],
     'theme-ocean-dark-animated.svg' => ['Seaside stall'],
     'discovery-dark-static.svg' => ['Box name'],
-    'widget-password-reveal-dark-static.svg' => ['melon7'],
+    'field-password-reveal-dark-static.svg' => ['melon7'],
   ];
 }
 

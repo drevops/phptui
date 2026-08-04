@@ -4,61 +4,57 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Theme;
 
-use DrevOps\Tui\Answers\Answers;
-use DrevOps\Tui\Answers\Provenance;
-use DrevOps\Tui\Answers\ValueFormatter;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Input\ScopedKeyMap;
-use DrevOps\Tui\Model\Field;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\FormDefinition;
-use DrevOps\Tui\Model\Modal;
-use DrevOps\Tui\Model\Panel;
-use DrevOps\Tui\Model\TableSpec;
+use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
 use DrevOps\Tui\Primitive\Status;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Render\Box;
-use DrevOps\Tui\Render\HelpSection;
 use DrevOps\Tui\Render\Markup;
 use DrevOps\Tui\Render\MarkupKind;
 use DrevOps\Tui\Render\MarkupSegment;
-use DrevOps\Tui\Render\Navigator;
-use DrevOps\Tui\Render\Overlay;
-use DrevOps\Tui\Render\Scroller;
 use DrevOps\Tui\Render\Table;
-use DrevOps\Tui\Render\Viewport;
+use DrevOps\Tui\Theme\Capability\ColorSchemeCapableInterface;
+use DrevOps\Tui\Theme\Capability\ColorSchemeCapableTrait;
+use DrevOps\Tui\Theme\Capability\DimCapableInterface;
+use DrevOps\Tui\Theme\Capability\MarkdownCapableInterface;
+use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
+use DrevOps\Tui\Theme\Capability\UnicodeCapableInterface;
+use DrevOps\Tui\Theme\Capability\UnicodeCapableTrait;
+use DrevOps\Tui\Theme\Override\Glyph;
+use DrevOps\Tui\Theme\Override\Overrides;
+use DrevOps\Tui\Theme\Override\ThemeElement;
 use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Utils\Strings;
 
 /**
- * The default theme: the appearance atoms plus the assembly that arranges them.
+ * The theme that ships: every element painted, and the pieces they assemble.
  *
- * Two layers, one class. The **atoms** are one method per colour and glyph
- * (title(), value(), marker(), border(), caret()…) - each takes text or a flag
- * and returns it styled for the theme's mode; these are what a consumer theme
- * overrides. The **render*()** methods are the assembly: they arrange those
- * atoms into field rows, the scrolled frame and the editor. Pure box geometry
- * (character sets, width fitting) lives in {@see Box}; everything visual routes
- * through the atoms.
+ * It raises {@see AbstractTheme}'s floor by declaring colour, a scheme,
+ * Unicode, markdown, dimming and occupancy, so each element it answers for
+ * carries a palette and a glyph instead of the plain string the floor hands
+ * back. Alongside the elements it draws the pieces a primitive asks for -
+ * cards, grids, status lines - which take plain strings and arrays and nothing
+ * a form is holding, so the same piece serves standalone and in-form callers.
  *
- * A consumer theme extends this and overrides just what it wants - usually an
- * atom, occasionally a render method for a layout tweak:
+ * Where two elements must agree on one colour, they draw it from a small
+ * protected palette rather than restating it. The palette is not API: it is the
+ * one place a hue is written down, so a theme extending this repaints a family
+ * in a line rather than element by element.
  *
  * @code
  * class OceanTheme extends DefaultTheme {
- *   public function title(string $text): string { return $this->paint(Sgr::of(Sgr::Bold, Sgr::BrightCyan), $text); }
- *   public function renderPanelLine(Panel $panel, bool $selected): string {
- *     return $this->marker($selected) . ' ' . $this->label($panel->title);
- *   }
+ *   protected function accent(): string { return Sgr::of(Sgr::Bold, Sgr::BrightCyan); }
+ *   public function fieldConstraint(string $text): string { return $this->paint(Sgr::of(Sgr::Cyan), $text); }
  * }
  * @endcode
  *
  * @package DrevOps\Tui\Theme
  */
-class DefaultTheme implements ThemeInterface {
+class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, ColorSchemeCapableInterface, DimCapableInterface, MarkdownCapableInterface, OccupyCapableInterface, UnicodeCapableInterface {
+
+  use ColorSchemeCapableTrait;
+  use UnicodeCapableTrait;
 
   /**
    * The default frame width, used when a caller does not specify one.
@@ -84,22 +80,9 @@ class DefaultTheme implements ThemeInterface {
   protected const int MIN_HEIGHT = 10;
 
   /**
-   * The rows reserved for the two scroll indicators (▲/▼).
-   *
-   * The scrolled body window carries its indicators outside the viewport
-   * height, so the frame budget reserves a row for each.
-   */
-  protected const int INDICATOR_LINES = 2;
-
-  /**
    * The Unicode spinner animation frames, one glyph per tick.
    */
   protected const array SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-
-  /**
-   * The ASCII spinner animation frames used when Unicode is off.
-   */
-  protected const array SPINNER_ASCII = ['|', '/', '-', '\\'];
 
   /**
    * The determinate progress bar's width in cells.
@@ -135,16 +118,6 @@ class DefaultTheme implements ThemeInterface {
   protected const int CARD_INDENT = 2;
 
   /**
-   * Whether colour (ANSI) is enabled, resolved from the "color" option.
-   */
-  protected bool $color;
-
-  /**
-   * Whether Unicode glyphs are used, resolved from the "unicode" option.
-   */
-  protected bool $unicode;
-
-  /**
    * Whether markdown in descriptions and notes is rendered, from "markdown".
    */
   protected bool $markdown;
@@ -155,14 +128,9 @@ class DefaultTheme implements ThemeInterface {
   protected bool $indentConditional;
 
   /**
-   * Whether the dark palette is used, resolved from the "mode" option.
+   * What a consumer states differently, consulted before every element.
    */
-  protected bool $isDark;
-
-  /**
-   * The outer frame width, including the border when one is drawn.
-   */
-  protected int $outerWidth;
+  protected Overrides $overrides;
 
   /**
    * Construct a theme.
@@ -175,9 +143,11 @@ class DefaultTheme implements ThemeInterface {
    *   on), "spacing" (a SPACING_* value), "border" (a BORDER_* value), plus any
    *   option a concrete theme declares.
    */
-  public function __construct(protected int $width = self::DEFAULT_WIDTH, protected array $options = []) {
+  public function __construct(int $width = self::DEFAULT_WIDTH, protected array $options = []) {
+    $this->width = $width;
     $this->validateOptions();
 
+    $this->overrides = new Overrides();
     $this->color = is_bool($this->options['color'] ?? NULL) ? $this->options['color'] : TRUE;
     $this->unicode = is_bool($this->options['unicode'] ?? NULL) ? $this->options['unicode'] : TRUE;
     $this->markdown = is_bool($this->options['markdown'] ?? NULL) && $this->options['markdown'];
@@ -190,12 +160,10 @@ class DefaultTheme implements ThemeInterface {
       $this->width = min($this->width, $this->maxWidth());
     }
 
-    $this->outerWidth = $this->width;
-
     // A border consumes two frame columns plus a one-column gutter each side.
     // Lay rows out that much narrower to keep right-aligned badges inside it.
     if ($this->borderStyle() !== Border::None) {
-      $this->width = max(1, $this->width - 4);
+      $this->width = max(1, $this->width - self::BOX_CHROME);
     }
   }
 
@@ -379,30 +347,13 @@ class DefaultTheme implements ThemeInterface {
   }
 
   /**
-   * The frame width the renderer lays out to.
+   * Whether the markdown subset is drawn, from "markdown".
    *
-   * @return int
-   *   The width.
+   * @return bool
+   *   TRUE when it is drawn rather than left as literal text.
    */
-  protected function width(): int {
-    return $this->width;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function contentWidth(): int {
-    return $this->width;
-  }
-
-  /**
-   * The vertical spacing option.
-   *
-   * @return \DrevOps\Tui\Theme\Spacing
-   *   The spacing; padded when unset.
-   */
-  protected function spacing(): Spacing {
-    return $this->enumOption('spacing', Spacing::class, Spacing::Padded);
+  public function hasMarkdown(): bool {
+    return $this->markdown;
   }
 
   /**
@@ -412,7 +363,7 @@ class DefaultTheme implements ThemeInterface {
    *   The border style; a rounded box when unset - a form is framed unless
    *   it explicitly asks for no border.
    */
-  protected function borderStyle(): Border {
+  public function borderStyle(): Border {
     return $this->enumOption('border', Border::class, Border::Rounded);
   }
 
@@ -427,328 +378,285 @@ class DefaultTheme implements ThemeInterface {
   }
 
   /**
-   * The leading blank gutter a field's rows are laid out after.
-   *
-   * A field shown behind a `when` rule steps in from the fields that decide
-   * it, one step per condition in the chain, so the panel reads as a hierarchy
-   * rather than a flat list. The single source of the indent: every row a
-   * field contributes - its label row, its value continuation lines, its
-   * description, its note card - is laid out after this same gutter, and the
-   * width measurement adds it back.
-   *
-   * @param \DrevOps\Tui\Model\Field $field
-   *   The field.
-   *
-   * @return string
-   *   The gutter, or an empty string when the option is off or the field shows
-   *   unconditionally.
-   */
-  protected function fieldIndent(Field $field): string {
-    if (!$this->indentConditional) {
-      return '';
-    }
-
-    return str_repeat(' ', self::CONDITIONAL_INDENT * $field->conditionalDepth);
-  }
-
-  /**
-   * Whether the frame expands to the whole terminal screen.
-   *
-   * @return bool
-   *   TRUE when the "fullscreen" option is on.
+   * {@inheritdoc}
    */
   public function isFullscreen(): bool {
     return ($this->options['fullscreen'] ?? FALSE) === TRUE;
   }
 
   /**
-   * The horizontal alignment of content within the available width.
-   *
-   * @return \DrevOps\Tui\Theme\HAlign
-   *   The alignment; left when unset.
+   * {@inheritdoc}
    */
   public function halign(): HAlign {
     return $this->enumOption('halign', HAlign::class, HAlign::Left);
   }
 
   /**
-   * The vertical alignment of content within the available height.
-   *
-   * @return \DrevOps\Tui\Theme\VAlign
-   *   The alignment; top when unset.
+   * {@inheritdoc}
    */
   public function valign(): VAlign {
     return $this->enumOption('valign', VAlign::class, VAlign::Top);
   }
 
   /**
-   * The minimum terminal width fullscreen mode needs, in columns.
-   *
-   * @return int
-   *   The explicit "min_width" option, or 0 when the minimum should be
-   *   measured from the form's content instead.
+   * {@inheritdoc}
    */
   public function minWidth(): int {
     return $this->intOption('min_width', 0);
   }
 
   /**
-   * The minimum terminal height fullscreen mode needs, in rows.
-   *
-   * @return int
-   *   The minimum height.
+   * {@inheritdoc}
    */
   public function minHeight(): int {
     return $this->intOption('min_height', self::MIN_HEIGHT);
   }
 
   /**
-   * The widest frame fullscreen mode may stretch to, in columns.
-   *
-   * @return int
-   *   The cap, or 0 for uncapped.
+   * {@inheritdoc}
    */
   public function maxWidth(): int {
     return $this->intOption('max_width', 0);
   }
 
   /**
-   * The tallest frame fullscreen mode may stretch to, in rows.
-   *
-   * @return int
-   *   The cap, or 0 for uncapped.
+   * {@inheritdoc}
    */
   public function maxHeight(): int {
     return $this->intOption('max_height', 0);
   }
 
   /**
-   * The outer frame width, including the border when one is drawn.
-   *
-   * @return int
-   *   The width.
+   * {@inheritdoc}
    */
-  public function outerWidth(): int {
-    return $this->outerWidth;
+  public function spacing(): Spacing {
+    return $this->enumOption('spacing', Spacing::class, Spacing::Padded);
   }
 
   /**
-   * The background the theme washes the screen with, or NULL for none.
+   * {@inheritdoc}
    *
    * A styled span closes with a full reset, so a background opened once would
-   * not survive it. The render layer instead re-opens this background on every
-   * line and after every reset and erases each line to its end, so the whole
-   * screen - the gaps between spans and the padding past the content included -
-   * fills with it. A theme declares its background here the same way it
-   * declares a title colour.
-   *
-   * @return string|null
-   *   The background SGR parameters (e.g. "44" for blue), or NULL to keep the
-   *   terminal's own background.
+   * not survive it. The driver instead re-opens this background on every line
+   * and after every reset and erases each line to its end, so the whole screen
+   * fills with it.
    */
   public function background(): ?string {
     return NULL;
   }
 
   /**
-   * Whether colour is enabled.
-   *
-   * @return bool
-   *   TRUE when colour is enabled.
-   */
-  public function hasColor(): bool {
-    return $this->color;
-  }
-
-  /**
-   * Whether Unicode glyphs are enabled.
-   *
-   * @return bool
-   *   TRUE when Unicode glyphs are used, FALSE for the ASCII fallback.
-   */
-  public function hasUnicode(): bool {
-    return $this->unicode;
-  }
-
-  /**
-   * Wrap text in an SGR code, honouring colour-off.
-   *
-   * The single low-level helper every styler builds on.
-   *
-   * @param string $sgr
-   *   The SGR parameters (e.g. "1;36"); empty leaves the text unstyled.
-   * @param string $text
-   *   The text.
-   *
-   * @return string
-   *   The styled text (unchanged when colour is off).
-   */
-  protected function paint(string $sgr, string $text): string {
-    return Ansi::style($text, $this->color ? $sgr : '');
-  }
-
-  /**
-   * Add bold to an SGR code when an item is selected.
-   *
-   * @param string $sgr
-   *   The base SGR code.
-   * @param bool $selected
-   *   Whether the item is the selected (cursor) one.
-   *
-   * @return string
-   *   The code, made bold when selected.
-   */
-  protected function emphasize(string $sgr, bool $selected): string {
-    if (!$selected) {
-      return $sgr;
-    }
-
-    $drop = ['', Sgr::Bold->value, Sgr::Dim->value];
-    $parts = array_values(array_filter(explode(';', $sgr), static fn(string $part): bool => !in_array($part, $drop, TRUE)));
-    array_unshift($parts, Sgr::Bold->value);
-
-    return implode(';', $parts);
-  }
-
-  /**
    * {@inheritdoc}
-   */
-  public function title(string $text): string {
-    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Cyan) : Sgr::of(Sgr::Bold, Sgr::Blue), $this->linkify($text));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function label(string $text, bool $selected = FALSE): string {
-    return $this->paint($this->emphasize('', $selected), $this->linkify($text));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function value(string $text, bool $selected = FALSE): string {
-    return $this->paint($this->emphasize(Sgr::of(Sgr::Green), $selected), $text);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function description(string $text, bool $selected = FALSE): string {
-    return $this->paint($this->emphasize(Sgr::of(Sgr::Grey), $selected), $this->linkify($text));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hint(string $text, bool $selected = FALSE): string {
-    // The description's grey, italicized: guidance on how to answer is never
-    // louder than the question itself, but still reads as its own voice.
-    return $this->paint($this->emphasize(Sgr::of(Sgr::Italic, Sgr::Grey), $selected), $this->linkify($text));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function badge(string $text, bool $selected = FALSE): string {
-    return $this->paint($this->emphasize(Sgr::of(Sgr::Reverse), $selected), $text);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function cursor(string $text): string {
-    return $this->paint(Sgr::of(Sgr::Bold, Sgr::Reverse), $text);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function footer(string $text): string {
-    return $this->paint(Sgr::of(Sgr::Grey), $text);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function breadcrumb(string $text): string {
-    return $this->paint(Sgr::of(Sgr::Grey), $text);
-  }
-
-  /**
-   * Recede text into the background, so a modal reads as floating above it.
-   *
-   * @param string $text
-   *   The text.
-   *
-   * @return string
-   *   The dimmed text (unchanged when colour is off).
    */
   public function dim(string $text): string {
     return $this->paint(Sgr::of(Sgr::Dim), $text);
   }
 
   /**
-   * {@inheritdoc}
+   * Take the elements a consumer states differently.
+   *
+   * @param \DrevOps\Tui\Theme\Override\Overrides $overrides
+   *   The patch; anything it does not name keeps the theme's own answer.
+   *
+   * @return static
+   *   The theme.
    */
-  public function indicator(string $text): string {
-    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Yellow) : Sgr::of(Sgr::Magenta), $text);
+  public function overrides(Overrides $overrides): static {
+    $this->overrides = $overrides;
+
+    return $this;
   }
 
   /**
-   * {@inheritdoc}
+   * The glyph a consumer stated for an element, resolved for the display mode.
+   *
+   * @param \DrevOps\Tui\Theme\Override\ThemeElement $element
+   *   The element.
+   *
+   * @return string|null
+   *   The glyph, or NULL when nobody stated one.
    */
-  public function highlight(string $text): string {
-    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Cyan) : Sgr::of(Sgr::Bold, Sgr::Blue), $text);
+  protected function overriddenGlyph(ThemeElement $element): ?string {
+    $override = $this->overrides->glyph($element);
+
+    return $override instanceof Glyph ? $this->glyph($override->glyph, $override->ascii) : NULL;
   }
 
   /**
-   * {@inheritdoc}
+   * The hue that says "here", "now" or "picked".
+   *
+   * The one colour a theme is recognised by, so it is written once: the cursor,
+   * the caret, an exclusive mark and every indicator of work in progress all
+   * carry it, and a theme repaints the family by repainting this.
+   *
+   * @return string
+   *   The SGR parameters.
    */
-  public function highlightMatch(string $text): string {
-    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Yellow) : Sgr::of(Sgr::Bold, Sgr::Magenta), $text);
+  protected function accent(): string {
+    return $this->isDark ? Sgr::of(Sgr::Bold, Sgr::Cyan) : Sgr::of(Sgr::Bold, Sgr::Blue);
   }
 
   /**
-   * {@inheritdoc}
+   * Draw text in the accent hue.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The painted text.
    */
-  public function heading(string $text): string {
+  protected function highlight(string $text): string {
+    return $this->paint($this->accent(), $text);
+  }
+
+  /**
+   * The hue the guidance voice speaks in.
+   *
+   * A step along the grey ramp rather than a hue of its own: a coloured
+   * guidance line reads as output the field produced rather than as chrome
+   * telling you what it expects.
+   *
+   * @return string
+   *   The SGR parameters.
+   */
+  protected function guidance(): string {
+    return Sgr::of(Sgr::Italic, Sgr::Pewter);
+  }
+
+  /**
+   * Draw a heading: a name for what follows it.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The painted text.
+   */
+  protected function title(string $text): string {
+    return $this->paint($this->accent(), $this->linkify($text));
+  }
+
+  /**
+   * Draw a name: what something is called, rather than what it holds.
+   *
+   * @param string $text
+   *   The text.
+   * @param bool $emphatic
+   *   Whether it is weighted above the names around it.
+   *
+   * @return string
+   *   The painted text.
+   */
+  protected function label(string $text, bool $emphatic = FALSE): string {
+    return $this->paint($this->emphasize('', $emphatic), $this->linkify($text));
+  }
+
+  /**
+   * Draw an answer: what something holds, rather than what it is called.
+   *
+   * @param string $text
+   *   The text.
+   * @param bool $emphatic
+   *   Whether it is weighted above the answers around it.
+   *
+   * @return string
+   *   The painted text.
+   */
+  protected function value(string $text, bool $emphatic = FALSE): string {
+    return $this->paint($this->emphasize(Sgr::of(Sgr::Green), $emphatic), $text);
+  }
+
+  /**
+   * Draw prose: what explains something, rather than what it says.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The painted text.
+   */
+  protected function description(string $text): string {
+    // Secondary text stays secondary wherever it appears: weighting it puts an
+    // explanation at the same weight as the thing it explains.
+    return $this->paint(Sgr::of(Sgr::Grey), $this->linkify($text));
+  }
+
+  /**
+   * Draw an aside: quieter than prose, and never the point of the line.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The painted text.
+   */
+  protected function footer(string $text): string {
+    return $this->paint(Sgr::of(Sgr::Grey), $text);
+  }
+
+  /**
+   * Draw a heading over a run of rows.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The painted text.
+   */
+  protected function heading(string $text): string {
     return $this->paint(Sgr::of(Sgr::Bold, Sgr::Grey), $this->linkify($text));
   }
 
   /**
-   * {@inheritdoc}
+   * Draw box-drawing characters.
+   *
+   * @param string $text
+   *   The run of glyphs.
+   *
+   * @return string
+   *   The painted run.
    */
-  public function strong(string $text): string {
-    return $this->paint(Sgr::of(Sgr::Bold), $text);
+  protected function border(string $text): string {
+    return $this->paint($this->isDark ? Sgr::of(Sgr::Cyan) : Sgr::of(Sgr::Blue), $text);
   }
 
   /**
-   * {@inheritdoc}
+   * Draw a mark that wants attention without claiming something failed.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The painted text.
    */
-  public function emphasis(string $text): string {
-    return $this->paint(Sgr::of(Sgr::Italic), $text);
+  protected function indicator(string $text): string {
+    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Yellow) : Sgr::of(Sgr::Magenta), $text);
   }
 
   /**
-   * {@inheritdoc}
+   * Draw a statement that something failed.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The painted text.
    */
-  public function code(string $text): string {
-    return $this->paint($this->isDark ? Sgr::of(Sgr::BrightYellow) : Sgr::of(Sgr::Magenta), $text);
+  protected function error(string $text): string {
+    return $this->paint(Sgr::of(Sgr::Red), $text);
   }
 
   /**
-   * {@inheritdoc}
+   * The cursor mark, or the gap standing in its place.
+   *
+   * @param bool $selected
+   *   Whether the cursor rests here.
+   *
+   * @return string
+   *   The mark.
    */
-  public function link(string $text, string $url): string {
-    return Markup::hyperlink($text, $url, $this->color);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function bullet(): string {
-    return $this->unicode ? '•' : '-';
+  protected function marker(bool $selected): string {
+    return $selected ? $this->highlight($this->glyph('❯', '>')) : ' ';
   }
 
   /**
@@ -765,211 +673,337 @@ class DefaultTheme implements ThemeInterface {
   }
 
   /**
-   * Render description or note-body text as themed physical lines.
-   *
-   * Links resolve on every terminal; the rest of the markdown subset - bold,
-   * emphasis, inline code and bullet lists - is rendered only when the
-   * "markdown" option is on, and otherwise left as literal text. Each span is
-   * styled by its own atom, so a custom theme restyles markup by overriding
-   * those atoms.
-   *
-   * @param string $source
-   *   The source text; newlines separate physical lines.
-   * @param bool $selected
-   *   Whether the owning row is selected.
-   *
-   * @return list<string>
-   *   The rendered lines.
+   * {@inheritdoc}
    */
-  protected function markupBody(string $source, bool $selected): array {
-    $lines = [];
+  #[\Override]
+  public function keyGlyph(Key $key): string {
+    $name = $key->name;
 
-    foreach (Markup::parse($source, $this->markdown) as $line) {
-      $rendered = $line->bullet ? $this->description($this->bullet() . ' ', $selected) : '';
-
-      foreach ($line->segments as $segment) {
-        $rendered .= $this->markupSegment($segment, $selected);
-      }
-
-      $lines[] = $rendered;
+    if (!$name instanceof KeyName) {
+      return $key->label();
     }
 
-    return $lines;
-  }
-
-  /**
-   * Style one parsed markup span with its atom.
-   *
-   * Plain text is the description atom, so a theme that restyles description
-   * text restyles the body of a description and a note with it - not only the
-   * one-line rows that call the atom directly.
-   *
-   * @param \DrevOps\Tui\Render\MarkupSegment $segment
-   *   The span.
-   * @param bool $selected
-   *   Whether the owning row is selected.
-   *
-   * @return string
-   *   The styled span.
-   */
-  protected function markupSegment(MarkupSegment $segment, bool $selected): string {
-    return match ($segment->kind) {
-      MarkupKind::Bold => $this->strong($segment->text),
-      MarkupKind::Emphasis => $this->emphasis($segment->text),
-      MarkupKind::Code => $this->code($segment->text),
-      MarkupKind::Link => $this->link($segment->text, $segment->url),
-      // The parser has already split every link into its own span, so the
-      // atom's own link resolution finds nothing left to do here.
-      MarkupKind::Text => $this->description($segment->text, $selected),
+    return match ($name) {
+      KeyName::Up, KeyName::MouseWheelUp => $this->glyph('↑', '^'),
+      KeyName::Down, KeyName::MouseWheelDown => $this->glyph('↓', 'v'),
+      KeyName::Left => $this->glyph('←', '<'),
+      KeyName::Right => $this->glyph('→', '>'),
+      KeyName::Enter => $this->glyph('↵', '<'),
+      KeyName::Escape => Translator::t('esc'),
+      KeyName::Interrupt => Translator::t('ctrl-c'),
+      KeyName::Tab => Translator::t('tab'),
+      KeyName::Space => Translator::t('space'),
+      KeyName::Backspace => $this->glyph('⌫', Translator::t('bksp')),
+      KeyName::Delete => Translator::t('del'),
+      KeyName::Home => Translator::t('home'),
+      KeyName::End => Translator::t('end'),
+      KeyName::PageUp => Translator::t('pgup'),
+      KeyName::PageDown => Translator::t('pgdn'),
     };
   }
 
   /**
    * {@inheritdoc}
    */
-  public function divider(): string {
-    return $this->footer(str_repeat($this->unicode ? '─' : '-', max(1, $this->width)));
+  #[\Override]
+  public function chromeBorder(string $text): string {
+    return $this->border($text);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function disabled(string $text): string {
+  #[\Override]
+  public function chromeOverflowMarker(bool $above): string {
+    return $this->indicator($above ? $this->glyph('▲', '^') : $this->glyph('▼', 'v'));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function breadcrumbLabel(string $text): string {
     return $this->paint(Sgr::of(Sgr::Grey), $text);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function error(string $text): string {
-    return $this->paint(Sgr::of(Sgr::Red), $text);
+  #[\Override]
+  public function breadcrumbSeparator(): string {
+    return $this->overriddenGlyph(ThemeElement::BreadcrumbSeparator) ?? $this->glyph('›', '>');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function rule(string $text): string {
+  #[\Override]
+  public function legendKey(string $text): string {
+    // Case is what sets a key apart from what it does, so the legend needs no
+    // weight to carry it. Uppercased here rather than at each source, so a
+    // translated key name is uppercased with the rest.
+    return $this->paint($this->overrides->style(ThemeElement::LegendKey) ?? Sgr::of(Sgr::Grey), Strings::upper($text));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function legendDescription(string $text): string {
     return $this->paint(Sgr::of(Sgr::Grey), $text);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function border(string $text): string {
-    return $this->paint($this->isDark ? Sgr::of(Sgr::Cyan) : Sgr::of(Sgr::Blue), $text);
+  #[\Override]
+  public function legendSeparator(): string {
+    return $this->paint(Sgr::of(Sgr::Ash), $this->overriddenGlyph(ThemeElement::LegendSeparator) ?? $this->glyph('·', '*'));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function marker(bool $selected): string {
-    return $selected ? $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Cyan) : Sgr::of(Sgr::Bold, Sgr::Blue), $this->unicode ? '❯' : '>') : ' ';
+  #[\Override]
+  public function fieldSelector(bool $selected): string {
+    $glyph = $this->overriddenGlyph(ThemeElement::FieldSelector);
+
+    // An override names the mark, not the palette: the cursor and everything
+    // else the theme accents stay one signal, whichever glyph carries it.
+    if ($glyph === NULL || !$selected) {
+      return $this->marker($selected);
+    }
+
+    return $this->highlight($glyph);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function arrow(): string {
-    return $this->unicode ? '›' : '>';
+  #[\Override]
+  public function fieldIndent(int $depth): string {
+    if (!$this->indentConditional) {
+      return '';
+    }
+
+    return str_repeat(' ', self::CONDITIONAL_INDENT * max(0, $depth));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function separator(): string {
-    return $this->unicode ? '›' : '>';
+  #[\Override]
+  public function fieldLabel(string $text): string {
+    return $this->label($text);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function arrowUp(): string {
-    return $this->unicode ? '↑' : '^';
+  #[\Override]
+  public function fieldHelpMarker(): string {
+    // The label's own colour and never weighted: the mark belongs to the label
+    // it follows, and weighting it would have it competing with the label
+    // instead of hanging off it.
+    //
+    // A superscript rather than an enclosed glyph. An enclosed question mark
+    // either has no glyph in a monospace font at all (⍰ renders as a
+    // missing-character box) or is naturally wider than one cell and gets
+    // squeezed out of shape by a surface that pins each cell to a fixed
+    // advance (ⓘ, ℹ). A superscript is narrow by design, so it survives both.
+    return $this->overriddenGlyph(ThemeElement::FieldHelpMarker) ?? $this->paint('', $this->glyph('ⁱ', '[?]'));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function arrowDown(): string {
-    return $this->unicode ? '↓' : 'v';
+  #[\Override]
+  public function fieldValue(string $text): string {
+    return $this->value($text);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function arrowLeft(): string {
-    return $this->unicode ? '←' : '<';
+  #[\Override]
+  public function fieldValueSeparator(): string {
+    return $this->overrides->text(ThemeElement::FieldValueSeparator) ?? ', ';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function arrowRight(): string {
-    return $this->unicode ? '→' : '>';
+  #[\Override]
+  public function fieldMask(): string {
+    return $this->glyph('•', '*');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function enter(): string {
-    return $this->unicode ? '↵' : '<';
+  #[\Override]
+  public function fieldBadge(string $text): string {
+    return $this->paint(Sgr::of(Sgr::Reverse), $text);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function dot(): string {
-    return $this->unicode ? '·' : '*';
+  #[\Override]
+  public function fieldDescription(string $text): string {
+    return $this->description($text);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function indicatorUp(): string {
-    return $this->unicode ? '▲' : '^';
+  #[\Override]
+  public function fieldEntry(string $text, bool $chosen, bool $focused = FALSE): string {
+    // Where the cursor rests is the louder of the two facts, and the only one
+    // that moves, so it takes the accent and picking takes weight.
+    if ($focused) {
+      return $this->highlight($text);
+    }
+
+    return $this->label($text, $chosen);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function indicatorDown(): string {
-    return $this->unicode ? '▼' : 'v';
+  #[\Override]
+  public function fieldEntryMatch(string $text): string {
+    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Yellow) : Sgr::of(Sgr::Bold, Sgr::Magenta), $text);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function radio(bool $on): string {
-    return $on ? $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Cyan) : Sgr::of(Sgr::Bold, Sgr::Blue), $this->unicode ? '●' : '(*)') : ($this->unicode ? '○' : '( )');
+  #[\Override]
+  public function fieldEntrySelector(bool $selected): string {
+    $glyph = $this->overriddenGlyph(ThemeElement::FieldEntrySelector);
+
+    if ($glyph === NULL || !$selected) {
+      return $this->marker($selected);
+    }
+
+    return $this->highlight($glyph);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function check(bool $on): string {
-    return $on ? $this->value($this->unicode ? '◼' : '[x]') : ($this->unicode ? '◻' : '[ ]');
+  #[\Override]
+  public function fieldEntryMarker(bool $chosen, bool $exclusive = FALSE): string {
+    $glyph = $this->overriddenGlyph(ThemeElement::FieldEntryMarker);
+
+    // Only the picked state is stated, so an entry nobody picked keeps the
+    // mark the theme draws for it and the patch stays a patch.
+    if ($glyph !== NULL && $chosen) {
+      return $exclusive ? $this->paint($this->accent(), $glyph) : $this->value($glyph);
+    }
+
+    // A round mark for a question that takes one answer and a square one for a
+    // question that takes several, so the shape says how many before anything
+    // has been picked at all.
+    if ($exclusive) {
+      return $chosen ? $this->paint($this->accent(), $this->glyph('●', '(*)')) : $this->glyph('○', '( )');
+    }
+
+    return $chosen ? $this->value($this->glyph('◼', '[x]')) : $this->glyph('◻', '[ ]');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function caret(): string {
-    return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Cyan) : Sgr::of(Sgr::Bold, Sgr::Blue), $this->unicode ? '█' : '|');
+  #[\Override]
+  public function fieldEntryNote(string $text): string {
+    return $this->paint(Sgr::of(Sgr::Grey), $text);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function ghost(string $text): string {
+  #[\Override]
+  public function fieldEntryDescription(string $text): string {
+    // Slanted against the description's grey: it says the same kind of thing
+    // about a smaller subject, and the slant marks it as belonging to the entry
+    // above rather than to the field.
+    return $this->paint(Sgr::of(Sgr::Italic, Sgr::Grey), $this->linkify($text));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldEntrySeparator(): string {
+    return $this->renderRule();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldConstraint(string $text): string {
+    // Guidance on how to answer is never louder than the question itself, but
+    // still reads as its own voice - and it sits directly beneath an entry's
+    // own description, so the two must not be mistaken for each other on any
+    // surface. Slant reinforces the hue where the surface honours it, and where
+    // neither survives the voice falls back to a mark, which nothing can strip.
+    $marked = $this->hasColor() ? $text : $this->glyph('› ', '> ') . $text;
+
+    return $this->paint($this->guidance(), $this->linkify($marked));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldError(string $text): string {
+    return $this->error($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldCaret(): string {
+    $glyph = $this->overriddenGlyph(ThemeElement::FieldCaret);
+
+    return $this->highlight($glyph ?? $this->glyph('█', '|'));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldDraft(string $text): string {
+    // What is being typed takes no colour of its own: the caret is what says
+    // where you are in it, and painting it would read as an accepted answer.
+    return $text;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldGhost(string $text): string {
     return $this->color ? $this->paint(Sgr::of(Sgr::Grey), $text) : '';
   }
 
   /**
    * {@inheritdoc}
+   *
+   * The flat style is the draft with a plain caret. The boxed and underline
+   * styles wrap it in a fixed-width filled or underlined field, so the entry
+   * area reads as an input the way an MS-DOS form marked its fields: the fill
+   * runs behind the value text, and a reverse-video caret sits over the
+   * character it is on, so the letter still shows.
    */
-  public function renderInput(string $before, string $after, string $ghost = ''): string {
+  #[\Override]
+  public function fieldInput(string $before, string $after, string $ghost = ''): string {
     if (!$this->color || $this->field() === FieldStyle::Flat) {
-      return $before . $this->caret() . $after . ($ghost === '' ? '' : $this->ghost($ghost));
+      return $this->fieldDraft($before) . $this->fieldCaret() . $this->fieldDraft($after) . ($ghost === '' ? '' : $this->fieldGhost($ghost));
     }
 
     // The caret reverses the character it sits on (a space at the line end), so
@@ -998,61 +1032,19 @@ class DefaultTheme implements ThemeInterface {
   /**
    * {@inheritdoc}
    */
-  public function mask(): string {
-    return $this->unicode ? '•' : '*';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function renderSpinner(int $frame, string $caption): string {
-    // The glyph carries the theme's accent through highlight(), so every theme
-    // spins in its own palette with no per-theme override. This method is
-    // public, so a direct call may pass a negative frame; fold it into range.
-    $frames = $this->unicode ? self::SPINNER_FRAMES : self::SPINNER_ASCII;
-    $glyph = $this->highlight($frames[abs($frame) % count($frames)]);
-    $caption = $this->oneLine($caption);
-
-    return $caption === '' ? $glyph : $glyph . ' ' . $caption;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function renderProgressBar(int $current, int $total, string $caption, string $label): string {
-    // The filled run carries the theme's accent through highlight(); the empty
-    // track and the count stay plain, so the bar reads with colour off and in
-    // ASCII alike.
-    [$fill, $track] = $this->unicode ? ['█', '░'] : ['#', '-'];
-    $caption = $this->oneLine($caption);
-    $label = $this->oneLine($label);
-
-    // Clamp to the bar width: this method is public, so a direct call with
-    // current past total must not hand str_repeat() a negative track length.
-    $ratio = $total > 0 ? $current / $total : 1.0;
-    $filled = max(0, min(self::PROGRESS_WIDTH, (int) round($ratio * self::PROGRESS_WIDTH)));
-
-    $bar = ($filled > 0 ? $this->highlight(str_repeat($fill, $filled)) : '') . str_repeat($track, self::PROGRESS_WIDTH - $filled);
-    $line = ($caption === '' ? '' : $caption . ' ') . '[' . $bar . '] ' . $current . '/' . $total;
-
-    return $label === '' ? $line : $line . ' ' . $label;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function renderScale(int $current, int $min, int $max, string $caption): string {
-    // The filled run carries the theme's accent through highlight(); the empty
-    // remainder and the readout stay plain, so the scale reads with colour off
-    // and in ASCII alike.
+  #[\Override]
+  public function fieldScale(int $current, int $min, int $max, string $caption): string {
+    // The filled run carries the theme's accent; the empty remainder and the
+    // readout stay plain, so the scale reads with colour off and in ASCII
+    // alike.
     [$on, $off] = $this->unicode ? ['●', '○'] : ['*', '-'];
     $caption = $this->oneLine($caption);
 
-    // Clamp onto the scale: this method is public, so a direct call with a
-    // point outside the range must not hand str_repeat() a negative count. The
-    // lowest point still fills one, because it is a point like any other. The
-    // frame bounds the run because nothing wider than it can be drawn anyway,
-    // so an absurd range costs a truncated line rather than the whole heap.
+    // Clamp onto the scale: a point outside the range must not ask for a run
+    // of negative length. The lowest point still fills one, because it is a
+    // point like any other. The frame bounds the run because nothing wider can
+    // be drawn anyway, so an absurd range costs a truncated line rather than
+    // the whole heap.
     $points = max(1, min($this->width, $max - $min + 1));
     $filled = max(1, min($points, $current - $min + 1));
 
@@ -1064,13 +1056,241 @@ class DefaultTheme implements ThemeInterface {
   /**
    * {@inheritdoc}
    */
-  public function renderLoading(string $caption): string {
-    // The ellipsis carries the theme's accent through highlight(), matching the
-    // spinner and bar; the caption stays plain.
-    $dots = $this->highlight($this->unicode ? '…' : '...');
-    $caption = $this->oneLine($caption);
+  #[\Override]
+  public function fieldLoading(): string {
+    return $this->highlight($this->glyph('…', '...'));
+  }
 
-    return $caption === '' ? $dots : $caption . ' ' . $dots;
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldState(string $text): string {
+    return $this->footer($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function fieldCaption(string $text): string {
+    // The guidance hue at a different weight: a caption and a constraint are
+    // both the field speaking about the list rather than listing it, so they
+    // read as a pair - but weight against slant keeps them apart, and keeps the
+    // caption from being read as the panel's own trail.
+    return $this->paint(Sgr::of(Sgr::Bold, Sgr::Steel), $text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function panelSelector(bool $selected): string {
+    return $this->marker($selected);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function panelTitle(string $text): string {
+    return $this->title($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function panelDescend(): string {
+    return $this->description($this->glyph('›', '>'));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function panelDescription(string $text): string {
+    return $this->description($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function panelSummary(string $text): string {
+    return $this->value($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function panelSummarySeparator(): string {
+    return $this->description($this->glyph('·', '*'));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function markupTitle(string $text): string {
+    return $this->title($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function markupLine(string $text): string {
+    return $this->description($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function markupStrong(string $text): string {
+    return $this->paint(Sgr::of(Sgr::Bold), $text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function markupEmphasis(string $text): string {
+    return $this->paint(Sgr::of(Sgr::Italic), $text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function markupCode(string $text): string {
+    return $this->paint($this->isDark ? Sgr::of(Sgr::BrightYellow) : Sgr::of(Sgr::Magenta), $text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function markupLink(string $text, string $url): string {
+    return Markup::hyperlink($text, $url, $this->color);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function markupBullet(): string {
+    return $this->glyph('•', '-');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function actionButton(string $label): string {
+    return $this->value($this->frameAction($label));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function actionSelected(string $label): string {
+    return $this->paint(Sgr::of(Sgr::Bold, Sgr::Reverse), $this->frameAction($label));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function actionSeparator(): string {
+    return '  ';
+  }
+
+  /**
+   * Frame an action's label.
+   *
+   * The framing is the theme's rather than the block's, so a theme that draws a
+   * button differently changes this alone and the block goes on knowing only
+   * that it has labels.
+   *
+   * @param string $label
+   *   The label.
+   *
+   * @return string
+   *   The framed label.
+   */
+  protected function frameAction(string $label): string {
+    return '[ ' . $label . ' ]';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function progressCaption(string $text): string {
+    return $this->oneLine($text);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function progressSpinner(int $frame): string {
+    $frames = $this->unicode ? self::SPINNER_FRAMES : self::SPINNER_ASCII;
+
+    return $this->highlight($frames[abs($frame) % count($frames)]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function progressTrack(int $filled, int $width): string {
+    [$fill, $track] = $this->unicode ? ['█', '░'] : ['#', '-'];
+    $filled = max(0, min($width, $filled));
+
+    return '[' . ($filled > 0 ? $this->highlight(str_repeat($fill, $filled)) : '') . str_repeat($track, $width - $filled) . ']';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function progressCount(int $current, int $total): string {
+    return $current . '/' . $total;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderSpinner(int $frame, string $caption): string {
+    // Composed from the same elements the in-form indicator draws, so a theme
+    // that restyles the glyph restyles it everywhere it turns up.
+    $glyph = $this->progressSpinner($frame);
+    $caption = $this->progressCaption($caption);
+
+    return $caption === '' ? $glyph : $glyph . ' ' . $caption;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderProgressBar(int $current, int $total, string $caption, string $label): string {
+    // Composed from the same elements the in-form bar draws, so a theme that
+    // restyles the track or the count restyles both places it appears.
+    $caption = $this->progressCaption($caption);
+    $label = $this->oneLine($label);
+
+    // A total of zero has no ratio to take, and the bar reads as finished
+    // rather than as empty: there was nothing left to do.
+    $ratio = $total > 0 ? $current / $total : 1.0;
+    $bar = $this->progressTrack((int) round($ratio * self::PROGRESS_WIDTH), self::PROGRESS_WIDTH);
+    $line = ($caption === '' ? '' : $caption . ' ') . $bar . ' ' . $this->progressCount($current, $total);
+
+    return $label === '' ? $line : $line . ' ' . $label;
   }
 
   /**
@@ -1128,89 +1348,28 @@ class DefaultTheme implements ThemeInterface {
   }
 
   /**
-   * A card's grid, set off from any title and body above it by a blank line.
-   *
-   * @param list<string> $headers
-   *   The header cells.
-   * @param list<list<string>> $rows
-   *   The body rows.
-   * @param int $width
-   *   The width available inside the card's own chrome.
-   * @param bool $spaced
-   *   Whether a blank line precedes the grid; FALSE when the grid opens the
-   *   card and so has nothing above to be set off from.
-   *
-   * @return list<string>
-   *   The grid's lines, empty when there is no grid.
+   * {@inheritdoc}
    */
-  protected function cardTable(array $headers, array $rows, int $width, bool $spaced): array {
-    if ($headers === [] && $rows === []) {
-      return [];
-    }
-
-    $table = $this->tableLines($headers, $rows, $width);
-
-    if ($table === [] || !$spaced) {
-      return $table;
-    }
-
-    return array_merge([''], $table);
+  public function renderRule(): string {
+    return $this->footer(str_repeat($this->glyph('─', '-'), max(1, $this->width)));
   }
 
   /**
-   * Wrap source text to a width and style each physical line as markup.
-   *
-   * @param string $text
-   *   The source text; its own newlines split it into physical lines first.
-   * @param int $width
-   *   The width to wrap to.
-   *
-   * @return list<string>
-   *   The styled lines, each fitting the width.
+   * {@inheritdoc}
    */
-  protected function wrapMarkup(string $text, int $width): array {
+  public function renderBanner(string $logo, string $version): string {
     $lines = [];
 
-    foreach ($this->wrapLines($text, $width) as $chunk) {
-      if ($chunk === '') {
-        $lines[] = '';
-
-        continue;
-      }
-
-      foreach ($this->markupBody($chunk, FALSE) as $rendered) {
-        $lines[] = $rendered;
-      }
+    foreach (explode("\n", $logo) as $line) {
+      $lines[] = $this->title($line);
     }
 
-    return $lines;
-  }
-
-  /**
-   * Split source text into physical lines and word-wrap each to a width.
-   *
-   * @param string $text
-   *   The source text; its own line endings split it first.
-   * @param int $width
-   *   The width to wrap to.
-   *
-   * @return list<string>
-   *   The wrapped lines, unstyled.
-   */
-  protected function wrapLines(string $text, int $width): array {
-    $lines = [];
-
-    foreach (explode("\n", $this->normalizeLines($text)) as $physical) {
-      $wrapped = Strings::wrap($physical, $width);
-
-      // A line with no visible characters wraps to nothing; keeping it blank
-      // lets a caller space the content out.
-      foreach ($wrapped === [] ? [''] : $wrapped as $line) {
-        $lines[] = $line;
-      }
+    if ($version !== '') {
+      $lines[] = '';
+      $lines[] = $this->footer(Translator::t('Version: @version', ['@version' => $version]));
     }
 
-    return $lines;
+    return implode("\n", $lines);
   }
 
   /**
@@ -1227,27 +1386,6 @@ class DefaultTheme implements ThemeInterface {
       Status::Success => $this->value($line),
       Status::Warning => $this->indicator($line),
       Status::Error => $this->error($line),
-    };
-  }
-
-  /**
-   * The glyph that leads a status line.
-   *
-   * @param \DrevOps\Tui\Primitive\Status $status
-   *   The kind of status.
-   *
-   * @return string
-   *   The glyph, respecting the theme's Unicode mode.
-   */
-  protected function statusSymbol(Status $status): string {
-    // Every glyph is one column wide in any terminal - none has an emoji
-    // presentation or an East Asian width - so a run of status lines aligns.
-    return match ($status) {
-      Status::Note => $this->unicode ? '•' : '-',
-      Status::Info => $this->unicode ? '›' : '>',
-      Status::Success => $this->unicode ? '✓' : '+',
-      Status::Warning => '!',
-      Status::Error => $this->unicode ? '✗' : 'x',
     };
   }
 
@@ -1290,6 +1428,27 @@ class DefaultTheme implements ThemeInterface {
   }
 
   /**
+   * The glyph that leads a status line.
+   *
+   * @param \DrevOps\Tui\Primitive\Status $status
+   *   The kind of status.
+   *
+   * @return string
+   *   The glyph, respecting the theme's Unicode mode.
+   */
+  protected function statusSymbol(Status $status): string {
+    // Every glyph is one column wide in any terminal - none has an emoji
+    // presentation or an East Asian width - so a run of status lines aligns.
+    return match ($status) {
+      Status::Note => $this->glyph('•', '-'),
+      Status::Info => $this->glyph('›', '>'),
+      Status::Success => $this->glyph('✓', '+'),
+      Status::Warning => '!',
+      Status::Error => $this->glyph('✗', 'x'),
+    };
+  }
+
+  /**
    * Render one definition: its label, its value, and any wrapped continuation.
    *
    * @param string $label
@@ -1327,429 +1486,63 @@ class DefaultTheme implements ThemeInterface {
   }
 
   /**
-   * Fold a caption or label to a single physical line for the indicators.
+   * A card's grid, set off from any title and body above it by a blank line.
    *
-   * The spinner and bar redraw in place with carriage returns, so a CR or LF
-   * would reposition the cursor or leave a stale row behind; newlines collapse
-   * to a space.
-   *
-   * @param string $text
-   *   The text.
-   *
-   * @return string
-   *   The text with its line breaks folded to spaces.
-   */
-  protected function oneLine(string $text): string {
-    return str_replace(["\r\n", "\r", "\n"], ' ', $text);
-  }
-
-  /**
-   * Build the body lines and the line index of the selected item.
-   *
-   * @param \DrevOps\Tui\Model\Panel $panel
-   *   The panel.
-   * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The current answers.
-   * @param int $cursor
-   *   The selected item index.
-   * @param \DrevOps\Tui\Model\Field|null $editing
-   *   The field whose editor is expanded inline in the panel, or NULL when no
-   *   field is being edited inline.
-   * @param string $editorView
-   *   The inline editor's rendered view, spliced in at the editing field's row
-   *   in place of its summary.
-   *
-   * @return array{list<string>,int}
-   *   The body lines and the selected item's first line index.
-   */
-  public function renderBody(Panel $panel, Answers $answers, int $cursor, ?Field $editing = NULL, string $editorView = ''): array {
-    $lines = [];
-    $cursor_line = 0;
-    $index = 0;
-    $rendered = 0;
-
-    $spacing = $this->spacing();
-    $gap = $spacing === Spacing::Padded ? 1 : 0;
-    $verbose = $spacing !== Spacing::Compact;
-
-    foreach ($panel->fields as $field) {
-      // A presentational field renders as a card but is not navigable: it
-      // takes no cursor slot, and a leading gap only when it has output.
-      if ($field->type->isPresentational()) {
-        $note = $this->renderNoteLines($field, $answers);
-
-        if ($note === []) {
-          continue;
-        }
-
-        if ($rendered > 0 && $gap > 0) {
-          $lines[] = '';
-        }
-
-        foreach ($note as $line) {
-          $lines[] = $line;
-        }
-
-        $rendered++;
-
-        continue;
-      }
-
-      if ($rendered > 0 && $gap > 0) {
-        $lines[] = '';
-      }
-
-      if ($index === $cursor) {
-        $cursor_line = count($lines);
-      }
-
-      // The row methods lay a field's own rows out after its gutter; the
-      // shared description block knows no field, so it is stepped in here.
-      $indent = $this->fieldIndent($field);
-
-      if ($editing instanceof Field && $field->id === $editing->id) {
-        foreach ($this->renderInlineEditor($field, $editorView, $index === $cursor) as $line) {
-          $lines[] = $line;
-        }
-
-        if ($verbose) {
-          foreach ($this->renderFieldGuidance($field, $index === $cursor) as $guidance_line) {
-            $lines[] = $indent . $guidance_line;
-          }
-        }
-
-        $index++;
-        $rendered++;
-
-        continue;
-      }
-
-      foreach ($this->renderFieldLine($field, $answers, $index === $cursor) as $line) {
-        $lines[] = $line;
-      }
-
-      if ($verbose) {
-        foreach ($this->renderFieldGuidance($field, $index === $cursor) as $guidance_line) {
-          $lines[] = $indent . $guidance_line;
-        }
-      }
-
-      $index++;
-      $rendered++;
-    }
-
-    if ($panel->layout !== []) {
-      if ($rendered > 0) {
-        $lines[] = '';
-      }
-
-      [$grid, $selected_line] = $this->renderPanelGrid($panel, $answers, $cursor - $index);
-
-      if ($selected_line >= 0) {
-        $cursor_line = count($lines) + $selected_line;
-      }
-
-      return [array_merge($lines, $grid), $cursor_line];
-    }
-
-    foreach ($panel->panels as $subpanel) {
-      if ($rendered > 0 && $gap > 0) {
-        $lines[] = '';
-      }
-
-      if ($index === $cursor) {
-        $cursor_line = count($lines);
-      }
-
-      $lines[] = $this->renderPanelLine($subpanel, $index === $cursor);
-
-      if ($verbose && $subpanel->description !== '') {
-        foreach ($this->renderDescriptionBlock(Translator::t($subpanel->description), $index === $cursor) as $description_line) {
-          $lines[] = $description_line;
-        }
-      }
-
-      $summary = $verbose ? $this->summarizePanel($subpanel, $answers) : '';
-      if ($summary !== '') {
-        $lines[] = $this->renderSummaryLine($summary, $index === $cursor);
-      }
-
-      $index++;
-      $rendered++;
-    }
-
-    return [$lines, $cursor_line];
-  }
-
-  /**
-   * Build the grid of side-by-side sub-panel columns a layout declares.
-   *
-   * Each layout row takes its share of sub-panels in declaration order and
-   * zips their preview blocks side by side at an equal column width; a blank
-   * line separates the rows. Selection is by whole column, so the selected
-   * block's first line is the row it starts on.
-   *
-   * @param \DrevOps\Tui\Model\Panel $panel
-   *   The panel whose layout and sub-panels are rendered.
-   * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The current answers.
-   * @param int $selected
-   *   The selected sub-panel offset, or negative for none.
-   *
-   * @return array{list<string>,int}
-   *   The grid lines and the selected block's first line index (-1 when no
-   *   sub-panel is selected).
-   */
-  protected function renderPanelGrid(Panel $panel, Answers $answers, int $selected): array {
-    $lines = [];
-    $selected_line = -1;
-    $offset = 0;
-
-    foreach ($panel->layout as $row => $columns) {
-      if ($row > 0) {
-        $lines[] = '';
-      }
-
-      $column_width = max(1, intdiv($this->width - ($columns - 1) * 2, $columns));
-      $blocks = [];
-      $height = 0;
-
-      foreach (array_slice($panel->panels, $offset, $columns) as $subpanel) {
-        if ($offset === $selected) {
-          $selected_line = count($lines);
-        }
-
-        $block = $this->renderColumnBlock($subpanel, $answers, $offset === $selected);
-        $height = max($height, count($block));
-        $blocks[] = $block;
-        $offset++;
-      }
-
-      for ($line = 0; $line < $height; $line++) {
-        $cells = [];
-
-        foreach ($blocks as $block) {
-          $cells[] = Box::fit($block[$line] ?? '', $column_width);
-        }
-
-        // The gutters can outgrow a tiny frame even at one-column cells, so
-        // the assembled row is clamped to the frame width as a whole.
-        $lines[] = rtrim(Box::fit(implode('  ', $cells), $this->width));
-      }
-    }
-
-    return [$lines, $selected_line];
-  }
-
-  /**
-   * Render one sub-panel's preview block for a grid column.
-   *
-   * The block carries what the row list spreads over its rows - the title,
-   * the description and, instead of the one-line summary, one row per field
-   * value - plus a drill-in row per nested sub-panel, so a column reads as a
-   * window into the panel.
-   *
-   * @param \DrevOps\Tui\Model\Panel $panel
-   *   The sub-panel.
-   * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The current answers.
-   * @param bool $selected
-   *   Whether the panel holds the cursor.
+   * @param list<string> $headers
+   *   The header cells.
+   * @param list<list<string>> $rows
+   *   The body rows.
+   * @param int $width
+   *   The width available inside the card's own chrome.
+   * @param bool $spaced
+   *   Whether a blank line precedes the grid; FALSE when the grid opens the
+   *   card and so has nothing above to be set off from.
    *
    * @return list<string>
-   *   The block lines; the grid clips them to the column width.
+   *   The grid's lines, empty when there is no grid.
    */
-  protected function renderColumnBlock(Panel $panel, Answers $answers, bool $selected): array {
-    $lines = [$this->renderPanelLine($panel, $selected)];
-    $verbose = $this->spacing() !== Spacing::Compact;
-
-    if ($verbose && $panel->description !== '') {
-      $lines[] = $this->renderDescriptionLine(Translator::t($panel->description), $selected);
+  protected function cardTable(array $headers, array $rows, int $width, bool $spaced): array {
+    if ($headers === [] && $rows === []) {
+      return [];
     }
 
-    foreach ($panel->fields as $field) {
-      $indent = $this->fieldIndent($field);
+    $table = $this->tableLines($headers, $rows, $width);
 
-      // A presentational field carries no value; it previews as its title.
-      if ($field->type->isPresentational()) {
-        $title = $this->noteTitleFirstLine($field, $answers);
-        if ($title !== '') {
-          $lines[] = $indent . '  ' . $this->heading($title);
-        }
-
-        continue;
-      }
-
-      $value = $this->columnValuePreview($field, $answers);
-      $lines[] = $indent . '  ' . $this->description(Translator::t($field->label), $selected) . '  ' . $this->value($value, $selected);
+    if ($table === [] || !$spaced) {
+      return $table;
     }
 
-    foreach ($panel->panels as $subpanel) {
-      $lines[] = '  ' . $this->description(Translator::t($subpanel->title) . ' ' . $this->arrow(), $selected);
-    }
-
-    return $lines;
+    return array_merge([''], $table);
   }
 
   /**
-   * A field's value as one grid cell: first line, marked when there is more.
+   * Render a table at an explicit width cap, styled with the theme's palette.
    *
-   * A grid cell is one physical row, so a multi-line value previews as its
-   * first line - an embedded newline would desync the column zip - followed by
-   * a marker so the cell does not read as the whole value. Rendering and
-   * measuring both route through here, so a column can never be sized without
-   * the room its marker needs.
-   *
-   * @param \DrevOps\Tui\Model\Field $field
-   *   The field to preview.
-   * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The collected answers.
-   *
-   * @return string
-   *   The previewed value.
-   */
-  protected function columnValuePreview(Field $field, Answers $answers): string {
-    $value_lines = explode("\n", $this->normalizeLines($this->renderFieldValue($field, $answers->value($field->id))));
-    $more = $this->unicode ? '…' : '...';
-
-    return $value_lines[0] . (count($value_lines) > 1 ? $more : '');
-  }
-
-  /**
-   * Render a field row, one entry per physical line.
-   *
-   * A single-line value is one row: the label, then the value. A multi-line
-   * value (a textarea) spans one row per line - the first rides the label row,
-   * the rest align under the value column - so no row ever carries an embedded
-   * newline that would desync the box border and scroll maths. Each line is
-   * styled on its own, so no colour span crosses a row boundary. The rows sit
-   * after the field's own gutter, so the value column follows the indent
-   * rather than the frame edge.
-   *
-   * @param \DrevOps\Tui\Model\Field $field
-   *   The field.
-   * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The current answers.
-   * @param bool $selected
-   *   Whether the row is selected.
+   * @param list<string> $headers
+   *   The header cells.
+   * @param list<list<string>> $rows
+   *   The body rows.
+   * @param int $max_width
+   *   The widest the table may be, in columns.
    *
    * @return list<string>
-   *   The field's rows: the label row carrying the value's first line, then any
-   *   further value lines indented to the value column.
+   *   The styled table lines.
    */
-  public function renderFieldLine(Field $field, Answers $answers, bool $selected): array {
-    $prefix = $this->fieldIndent($field) . $this->marker($selected) . ' ' . $this->label(Translator::t($field->label), $selected) . '  ';
-    $indent = str_repeat(' ', Ansi::width($prefix));
+  protected function tableLines(array $headers, array $rows, int $max_width): array {
+    // An explicit table always draws its grid, so a None frame falls back to
+    // the single-line box, exactly as a bordered note does.
+    $style = $this->borderStyle() === Border::None ? Border::Line : $this->borderStyle();
 
-    $lines = [];
-
-    foreach (explode("\n", $this->normalizeLines($this->renderFieldValue($field, $answers->value($field->id)))) as $index => $value_line) {
-      $lines[] = ($index === 0 ? $prefix : $indent) . $this->value($value_line, $selected);
-    }
-
-    $provenance = $answers->provenanceOf($field->id);
-
-    if ($provenance !== Provenance::Default) {
-      $lines[0] = Ansi::alignRight($lines[0], $this->badge(' ' . $provenance->label() . ' ', $selected), $this->width);
-    }
-
-    return $lines;
-  }
-
-  /**
-   * Render a field's editor in place of its value: the label, then the view.
-   *
-   * The field keeps its label and marker; the widget's own rendered view takes
-   * the place of the summary value, on the label row and, when it spans
-   * several lines, aligning the rest under that value column - so the field
-   * reads as its editor opened in place, the rest of the panel still around it.
-   *
-   * @param \DrevOps\Tui\Model\Field $field
-   *   The field being edited.
-   * @param string $view
-   *   The widget's rendered view.
-   * @param bool $selected
-   *   Whether the field's row holds the cursor (it does while editing).
-   *
-   * @return list<string>
-   *   The label row carrying the view's first line, then any further view lines
-   *   indented to the value column.
-   */
-  public function renderInlineEditor(Field $field, string $view, bool $selected): array {
-    $prefix = $this->fieldIndent($field) . $this->marker($selected) . ' ' . $this->label(Translator::t($field->label), $selected) . '  ';
-    $indent = str_repeat(' ', Ansi::width($prefix));
-
-    $lines = [];
-
-    foreach (explode("\n", $view) as $index => $line) {
-      $lines[] = ($index === 0 ? $prefix : $indent) . $line;
-    }
-
-    return $lines;
-  }
-
-  /**
-   * Render a note card: its interpolated title and body, boxed when bordered.
-   *
-   * The title and body carry the same `{{field}}` templating derived values
-   * use, interpolated here against the current answers so a note reflects prior
-   * answers. A plain card is a heading title over grey body lines; a bordered
-   * note wraps them in the theme's box with a one-column gutter each side. The
-   * card sits after the field's own gutter, and a boxed one narrows by that
-   * much so its right edge still lands inside the frame.
-   *
-   * @param \DrevOps\Tui\Model\Field $field
-   *   The note field.
-   * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The current answers, interpolated into the title and body.
-   *
-   * @return list<string>
-   *   The card's physical lines; empty when it has neither title nor body.
-   */
-  public function renderNoteLines(Field $field, Answers $answers): array {
-    $indent = $this->fieldIndent($field);
-    $body = $this->noteText($field->description, $answers);
-
-    [$headers, $rows] = $this->noteTable($field, $answers);
-
-    $lines = $this->renderCard(
-      $this->noteText($field->label, $answers),
-      $body === '' ? [] : [$body],
+    return Table::render(
       $headers,
       $rows,
-      $field->bordered,
-      Ansi::width($indent),
+      $style,
+      $this->unicode,
+      $max_width,
+      fn(string $cell): string => $this->heading($cell),
+      fn(string $cell): string => $this->value($cell),
+      fn(string $glyphs): string => $this->border($glyphs),
     );
-
-    return array_map(static fn(string $line): string => $indent . $line, $lines);
-  }
-
-  /**
-   * A note's table cells, interpolated against the current answers.
-   *
-   * @param \DrevOps\Tui\Model\Field $field
-   *   The note field.
-   * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The current answers, interpolated into each cell.
-   *
-   * @return array{list<string>,list<list<string>>}
-   *   The headers and rows, both empty when the note has no table.
-   */
-  protected function noteTable(Field $field, Answers $answers): array {
-    $spec = $field->table;
-
-    if (!$spec instanceof TableSpec) {
-      return [[], []];
-    }
-
-    $interpolate = fn(string $cell): string => $this->noteText($cell, $answers);
-
-    $rows = [];
-    foreach ($spec->rows as $row) {
-      $rows[] = array_map($interpolate, $row);
-    }
-
-    return [array_map($interpolate, $spec->headers), $rows];
   }
 
   /**
@@ -1783,699 +1576,17 @@ class DefaultTheme implements ThemeInterface {
 
     // boxLine adds a one-column gutter and a border column each side, so the
     // outer width is the content width plus four columns of chrome.
-    $outer = min(max(1, $this->width - $reserved), $inner + 4);
+    $outer = min(max(1, $this->width - $reserved), $inner + self::BOX_CHROME);
 
-    $lines = [$this->borderRule($chars['tl'], $chars['tr'], $chars['h'], $outer)];
+    $lines = [$this->border(Box::rule($chars['tl'], $chars['tr'], $chars['h'], $outer))];
 
     foreach ($content as $line) {
       $lines[] = $this->boxLine($line, $chars['v'], $outer);
     }
 
-    $lines[] = $this->borderRule($chars['bl'], $chars['br'], $chars['h'], $outer);
+    $lines[] = $this->border(Box::rule($chars['bl'], $chars['br'], $chars['h'], $outer));
 
     return $lines;
-  }
-
-  /**
-   * Render a table at an explicit width cap, styled with the theme's atoms.
-   *
-   * @param list<string> $headers
-   *   The header cells.
-   * @param list<list<string>> $rows
-   *   The body rows.
-   * @param int $max_width
-   *   The widest the table may be, in columns.
-   *
-   * @return list<string>
-   *   The styled table lines.
-   */
-  protected function tableLines(array $headers, array $rows, int $max_width): array {
-    // An explicit table always draws its grid, so a None frame falls back to
-    // the single-line box, exactly as a bordered note does.
-    $style = $this->borderStyle() === Border::None ? Border::Line : $this->borderStyle();
-
-    return Table::render(
-      $headers,
-      $rows,
-      $style,
-      $this->unicode,
-      $max_width,
-      fn(string $cell): string => $this->heading($cell),
-      fn(string $cell): string => $this->value($cell),
-      fn(string $glyphs): string => $this->border($glyphs),
-    );
-  }
-
-  /**
-   * Interpolate a translated note source string against the current answers.
-   *
-   * @param string $source
-   *   The note's title or body source text.
-   * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The current answers, interpolated into its `{{field}}` tokens.
-   *
-   * @return string
-   *   The translated, interpolated text.
-   */
-  protected function noteText(string $source, Answers $answers): string {
-    return Strings::interpolate(Translator::t($source), $answers->values);
-  }
-
-  /**
-   * The first physical line of a note's interpolated title.
-   *
-   * A grid cell is one row, so a multi-line title collapses to its first line.
-   *
-   * @param \DrevOps\Tui\Model\Field $field
-   *   The note field.
-   * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The current answers.
-   *
-   * @return string
-   *   The interpolated first line, empty when the title is empty.
-   */
-  protected function noteTitleFirstLine(Field $field, Answers $answers): string {
-    $title = $this->noteText($field->label, $answers);
-
-    return $title === '' ? '' : explode("\n", $this->normalizeLines($title))[0];
-  }
-
-  /**
-   * Render a sub-panel row.
-   *
-   * @param \DrevOps\Tui\Model\Panel $panel
-   *   The sub-panel.
-   * @param bool $selected
-   *   Whether the row is selected.
-   *
-   * @return string
-   *   The row.
-   */
-  public function renderPanelLine(Panel $panel, bool $selected): string {
-    return $this->marker($selected) . ' ' . $this->label(Translator::t($panel->title), $selected) . ' ' . $this->description($this->arrow(), $selected);
-  }
-
-  /**
-   * Render a description row.
-   *
-   * @param string $description
-   *   The description.
-   * @param bool $selected
-   *   Whether the row's item is selected.
-   *
-   * @return string
-   *   The row.
-   */
-  public function renderDescriptionLine(string $description, bool $selected): string {
-    return '    ' . $this->description($description, $selected);
-  }
-
-  /**
-   * Render a description as indented, markup-rendered physical lines.
-   *
-   * Unlike {@see renderDescriptionLine()}, this expands the markdown subset -
-   * so a description carries bold, emphasis, inline code, links and bullet
-   * lists - and returns one entry per physical line rather than a single row.
-   *
-   * @param string $description
-   *   The description source.
-   * @param bool $selected
-   *   Whether the owning row is selected.
-   *
-   * @return list<string>
-   *   The indented description lines.
-   */
-  public function renderDescriptionBlock(string $description, bool $selected): array {
-    return array_map(static fn(string $line): string => '    ' . $line, $this->markupBody($description, $selected));
-  }
-
-  /**
-   * The guidance beneath a field's row: its description, then its hint.
-   *
-   * @param \DrevOps\Tui\Model\Field $field
-   *   The field.
-   * @param bool $selected
-   *   Whether the field's row is selected.
-   *
-   * @return list<string>
-   *   The rendered lines; empty when the field declares neither text.
-   */
-  protected function renderFieldGuidance(Field $field, bool $selected): array {
-    $lines = [];
-
-    if ($field->description !== '') {
-      foreach ($this->renderDescriptionBlock(Translator::t($field->description), $selected) as $line) {
-        $lines[] = $line;
-      }
-    }
-
-    if ($field->hint !== '') {
-      foreach ($this->renderFieldHint(Translator::t($field->hint), $selected) as $line) {
-        $lines[] = $line;
-      }
-    }
-
-    return $lines;
-  }
-
-  /**
-   * Render a field's hint as indented lines, in the hint style.
-   *
-   * Plain text rather than the description's markup subset: a hint is one short
-   * instruction, so it carries no formatting of its own and reads uniformly
-   * against the description above it.
-   *
-   * @param string $hint
-   *   The hint source; newlines separate physical lines.
-   * @param bool $selected
-   *   Whether the owning row is selected.
-   *
-   * @return list<string>
-   *   The indented hint lines.
-   */
-  public function renderFieldHint(string $hint, bool $selected): array {
-    // Fold CRLF and lone-CR endings the way the markup parser does for a
-    // description: a surviving carriage return would send the cursor back to
-    // column 0 mid-frame and overwrite the row it sits on.
-    return array_map(fn(string $line): string => '    ' . $this->hint($line, $selected), explode("\n", $this->normalizeLines($hint)));
-  }
-
-  /**
-   * Summarize a sub-panel's active field values into one line, for the hub.
-   *
-   * @param \DrevOps\Tui\Model\Panel $panel
-   *   The sub-panel.
-   * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The current answers.
-   *
-   * @return string
-   *   The summary, or an empty string when the panel has no active fields.
-   */
-  public function summarizePanel(Panel $panel, Answers $answers): string {
-    $parts = [];
-
-    foreach ($panel->fields as $field) {
-      if (!$answers->has($field->id)) {
-        continue;
-      }
-
-      $value = $answers->value($field->id);
-      $rendered = is_array($value) && count($value) > 3
-        ? Translator::formatPlural(count($value), '1 item selected', '@count items selected')
-        : $this->renderFieldValue($field, $value);
-
-      // A summary is one line, so a multi-line value (a textarea) folds to a
-      // single row rather than breaking the row it sits on.
-      $parts[] = str_replace("\n", ' ', $this->normalizeLines($rendered));
-
-      if (count($parts) >= 4) {
-        break;
-      }
-    }
-
-    return implode(' ' . $this->dot() . ' ', $parts);
-  }
-
-  /**
-   * Render a sub-panel value-summary row.
-   *
-   * @param string $summary
-   *   The summary text.
-   * @param bool $selected
-   *   Whether the row's item is selected.
-   *
-   * @return string
-   *   The row.
-   */
-  public function renderSummaryLine(string $summary, bool $selected): string {
-    $max = max(1, $this->width - 4);
-
-    if (Strings::length($summary) > $max) {
-      // Only the Unicode marker fits the budget in one column; ASCII clips to
-      // the full width instead, as a table cell does.
-      $clipped = $this->unicode ? Strings::substr($summary, 0, $max - 1) . '…' : Strings::substr($summary, 0, $max);
-    }
-    else {
-      $clipped = $summary;
-    }
-
-    return '    ' . $this->value($clipped, $selected);
-  }
-
-  /**
-   * Render a breadcrumb line for the navigator.
-   *
-   * @param \DrevOps\Tui\Render\Navigator $navigator
-   *   The navigator.
-   *
-   * @return string
-   *   The breadcrumb line.
-   */
-  public function renderBreadcrumbLine(Navigator $navigator): string {
-    return $this->breadcrumb(implode(' ' . $this->separator() . ' ', array_map(Translator::t(...), $navigator->breadcrumb())));
-  }
-
-  /**
-   * Measure the natural width of the widest content row across a form.
-   *
-   * Walks every panel - nested ones included - at its unpadded row widths
-   * (marker, label, value, badge, description and summary columns) plus the
-   * button bar when the form shows one, and adds the border chrome: the
-   * narrowest frame that shows the initial content unclipped. Editors adapt
-   * to the frame width, so they do not join the measurement.
-   *
-   * @param \DrevOps\Tui\Model\FormDefinition $form
-   *   The form.
-   * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The initial answers.
-   *
-   * @return int
-   *   The natural outer width, in columns.
-   */
-  public function measureContentWidth(FormDefinition $form, Answers $answers): int {
-    $width = $form->buttons->show ? Ansi::width($this->renderButtonBar([
-      Translator::t($form->buttons->submitLabel),
-      Translator::t($form->buttons->cancelLabel),
-    ], -1)) : 0;
-
-    $stack = [new Panel('hub', $form->title, '', [], $form->panels, NULL, $form->layout)];
-
-    while ($stack !== []) {
-      $panel = array_shift($stack);
-      $width = max($width, $this->measureBody($panel, $answers));
-      $stack = array_merge($stack, $panel->panels);
-    }
-
-    return $width + ($this->borderStyle() === Border::None ? 0 : 4);
-  }
-
-  /**
-   * Measure the natural width of a panel body's widest row.
-   *
-   * Mirrors renderBody()'s row anatomy without its width-dependent padding:
-   * a field row is the marker, label and value columns plus the provenance
-   * badge; description, sub-panel and summary rows carry their own indents.
-   *
-   * @param \DrevOps\Tui\Model\Panel $panel
-   *   The panel.
-   * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The current answers.
-   *
-   * @return int
-   *   The widest row's visible width, in columns.
-   */
-  protected function measureBody(Panel $panel, Answers $answers): int {
-    $width = 0;
-    $verbose = $this->spacing() !== Spacing::Compact;
-
-    foreach ($panel->fields as $field) {
-      // A note renders as a card, not a label/value row; measure its actual
-      // lines so the frame fits its title and body (and box, when bordered).
-      if ($field->type->isPresentational()) {
-        foreach ($this->renderNoteLines($field, $answers) as $line) {
-          $width = max($width, Ansi::width($line));
-        }
-
-        continue;
-      }
-
-      $indent = Ansi::width($this->fieldIndent($field));
-
-      // A multi-line value renders one physical row per line, all under the
-      // value column, so the widest single line is what the row needs.
-      $row = $indent + 4 + Markup::width(Translator::t($field->label), FALSE, $this->color) + $this->measureValueWidth($field, $answers);
-
-      $provenance = $answers->provenanceOf($field->id);
-      if ($provenance !== Provenance::Default) {
-        $row += 3 + Strings::length($provenance->label());
-      }
-
-      $width = max($width, $row);
-
-      if (!$verbose) {
-        continue;
-      }
-
-      if ($field->description !== '') {
-        $width = max($width, $indent + 4 + Markup::width(Translator::t($field->description), $this->markdown, $this->color));
-      }
-
-      if ($field->hint !== '') {
-        $width = max($width, $indent + 4 + Markup::width(Translator::t($field->hint), FALSE, $this->color));
-      }
-    }
-
-    if ($panel->layout !== []) {
-      // Grid rows lay their columns out at one shared width, so a row needs
-      // its widest block times its column count, plus the gutters.
-      $offset = 0;
-
-      foreach ($panel->layout as $columns) {
-        $widest = 0;
-
-        foreach (array_slice($panel->panels, $offset, $columns) as $subpanel) {
-          $widest = max($widest, $this->measureColumnBlock($subpanel, $answers));
-        }
-
-        $width = max($width, $columns * $widest + 2 * ($columns - 1));
-        $offset += $columns;
-      }
-
-      return $width;
-    }
-
-    foreach ($panel->panels as $subpanel) {
-      $width = max($width, 4 + Markup::width(Translator::t($subpanel->title), FALSE, $this->color));
-
-      if (!$verbose) {
-        continue;
-      }
-
-      if ($subpanel->description !== '') {
-        $width = max($width, 4 + Markup::width(Translator::t($subpanel->description), $this->markdown, $this->color));
-      }
-
-      $summary = $this->summarizePanel($subpanel, $answers);
-      if ($summary !== '') {
-        $width = max($width, 4 + Ansi::width($summary));
-      }
-    }
-
-    return $width;
-  }
-
-  /**
-   * Measure the natural width of a sub-panel's grid preview block.
-   *
-   * Mirrors renderColumnBlock()'s row anatomy at unpadded widths: the title
-   * and drill-in rows with their marker and arrow gutters, the description
-   * indent, and the label/value field rows.
-   *
-   * @param \DrevOps\Tui\Model\Panel $panel
-   *   The sub-panel.
-   * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The current answers.
-   *
-   * @return int
-   *   The widest block row's visible width, in columns.
-   */
-  protected function measureColumnBlock(Panel $panel, Answers $answers): int {
-    $width = 4 + Markup::width(Translator::t($panel->title), FALSE, $this->color);
-
-    if ($this->spacing() !== Spacing::Compact && $panel->description !== '') {
-      $width = max($width, 4 + Markup::width(Translator::t($panel->description), $this->markdown, $this->color));
-    }
-
-    foreach ($panel->fields as $field) {
-      $indent = Ansi::width($this->fieldIndent($field));
-
-      if ($field->type->isPresentational()) {
-        $title = $this->noteTitleFirstLine($field, $answers);
-        if ($title !== '') {
-          $width = max($width, $indent + 2 + Markup::width($title, FALSE, $this->color));
-        }
-
-        continue;
-      }
-
-      $width = max($width, $indent + 4 + Markup::width(Translator::t($field->label), FALSE, $this->color) + Ansi::width($this->columnValuePreview($field, $answers)));
-    }
-
-    foreach ($panel->panels as $subpanel) {
-      $width = max($width, 4 + Markup::width(Translator::t($subpanel->title), FALSE, $this->color));
-    }
-
-    return $width;
-  }
-
-  /**
-   * Measure a field value's widest physical line.
-   *
-   * A multi-line value never renders as one long row - the row list stacks
-   * its lines under the value column and a grid cell previews only the first
-   * - so measuring the whole string would overstate the width it needs.
-   *
-   * @param \DrevOps\Tui\Model\Field $field
-   *   The field the value belongs to.
-   * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The current answers.
-   *
-   * @return int
-   *   The widest line's visible width, in columns.
-   */
-  protected function measureValueWidth(Field $field, Answers $answers): int {
-    $width = 0;
-
-    foreach (explode("\n", $this->normalizeLines($this->renderFieldValue($field, $answers->value($field->id)))) as $line) {
-      $width = max($width, Ansi::width($line));
-    }
-
-    return $width;
-  }
-
-  /**
-   * The chrome rows a frame adds around the scrolled body window.
-   *
-   * Everything renderFrame() emits that is neither a header/footer line nor a
-   * body-window line: border rules and spacing pads for a boxed frame, the
-   * footer gap for a borderless one - plus the reserved scroll-indicator rows.
-   * The single home of the frame-height budget, so a caller sizing the body
-   * viewport to the terminal never overflows it.
-   *
-   * @param bool $has_footer
-   *   Whether the frame draws footer lines (a boxed frame separates them with
-   *   an extra rule).
-   *
-   * @return int
-   *   The chrome row count.
-   */
-  public function chromeHeight(bool $has_footer): int {
-    if ($this->borderStyle() === Border::None) {
-      return ($this->spacing() === Spacing::Compact ? 0 : 1) + self::INDICATOR_LINES;
-    }
-
-    $pad = $this->spacing() === Spacing::Padded ? 2 : 0;
-
-    return 3 + ($has_footer ? 1 : 0) + $pad + self::INDICATOR_LINES;
-  }
-
-  /**
-   * Compose a frame: pinned header, scrolled body with indicators, footer.
-   *
-   * In fullscreen the body window stretches to its full budget - the block
-   * aligns per the halign/valign options and the frame fills the terminal
-   * exactly; otherwise the frame stays as tall as its content.
-   *
-   * @param list<string> $header
-   *   The pinned header lines.
-   * @param list<string> $body
-   *   The full body lines.
-   * @param list<string> $footer
-   *   The pinned footer lines.
-   * @param \DrevOps\Tui\Render\Viewport $viewport
-   *   The computed viewport.
-   * @param int $height
-   *   The body viewport height.
-   *
-   * @return string
-   *   The composed frame.
-   */
-  public function renderFrame(array $header, array $body, array $footer, Viewport $viewport, int $height): string {
-    return $this->renderBoxed($header, $body, $footer, $viewport, $height, $this->outerWidth, $this->borderStyle(), $this->isFullscreen());
-  }
-
-  /**
-   * Compose a frame at an explicit width and border, else the same as a frame.
-   *
-   * The width/border are parameters so a modal can reuse the theme's boxing in
-   * a narrower box; the standard frame passes its own outer width and border.
-   *
-   * @param list<string> $header
-   *   The pinned header lines.
-   * @param list<string> $body
-   *   The full body lines.
-   * @param list<string> $footer
-   *   The pinned footer lines.
-   * @param \DrevOps\Tui\Render\Viewport $viewport
-   *   The computed viewport.
-   * @param int $height
-   *   The body viewport height.
-   * @param int $outer_width
-   *   The outer width, including the border columns.
-   * @param \DrevOps\Tui\Theme\Border $border
-   *   The border style to draw.
-   * @param bool $stretch
-   *   Whether the body window stretches to its full budget with the block
-   *   aligned inside it (the fullscreen frame), rather than hugging the
-   *   content (a modal dialog's box).
-   *
-   * @return string
-   *   The composed frame.
-   */
-  protected function renderBoxed(array $header, array $body, array $footer, Viewport $viewport, int $height, int $outer_width, Border $border, bool $stretch = FALSE): string {
-    if ($border === Border::None) {
-      return $this->renderBorderless($header, $body, $footer, $viewport, $height, $stretch);
-    }
-
-    $chars = Box::chars($border, $this->unicode);
-    $middle = $this->scrolledBody($body, $viewport, $height);
-    $pad = $this->spacing() === Spacing::Padded;
-
-    if ($stretch) {
-      $middle = $this->alignBlock($middle, max(1, $outer_width - 4), $height + self::INDICATOR_LINES);
-    }
-
-    $out = [$this->borderRule($chars['tl'], $chars['tr'], $chars['h'], $outer_width)];
-
-    foreach ($header as $line) {
-      $out[] = $this->boxLine($line, $chars['v'], $outer_width);
-    }
-
-    $out[] = $this->borderRule($chars['ml'], $chars['mr'], $chars['h'], $outer_width);
-
-    if ($pad) {
-      $out[] = $this->boxLine('', $chars['v'], $outer_width);
-    }
-
-    foreach ($middle as $line) {
-      $out[] = $this->boxLine($line, $chars['v'], $outer_width);
-    }
-
-    if ($pad) {
-      $out[] = $this->boxLine('', $chars['v'], $outer_width);
-    }
-
-    if ($footer !== []) {
-      $out[] = $this->borderRule($chars['ml'], $chars['mr'], $chars['h'], $outer_width);
-
-      foreach ($footer as $line) {
-        $out[] = $this->boxLine($line, $chars['v'], $outer_width);
-      }
-    }
-
-    $out[] = $this->borderRule($chars['bl'], $chars['br'], $chars['h'], $outer_width);
-
-    return implode("\n", $out);
-  }
-
-  /**
-   * Compose a borderless frame, detaching the status line by spacing.
-   *
-   * @param list<string> $header
-   *   The header lines.
-   * @param list<string> $body
-   *   The body lines.
-   * @param list<string> $footer
-   *   The footer lines.
-   * @param \DrevOps\Tui\Render\Viewport $viewport
-   *   The viewport.
-   * @param int $height
-   *   The body viewport height.
-   * @param bool $stretch
-   *   Whether the body window stretches to its full budget with the block
-   *   aligned inside it.
-   *
-   * @return string
-   *   The composed frame.
-   */
-  protected function renderBorderless(array $header, array $body, array $footer, Viewport $viewport, int $height, bool $stretch = FALSE): string {
-    $middle = $this->scrolledBody($body, $viewport, $height);
-
-    if ($stretch) {
-      $middle = $this->alignBlock($middle, $this->width, $height + self::INDICATOR_LINES);
-    }
-
-    $lines = array_merge($header, $middle);
-
-    if ($this->spacing() !== Spacing::Compact) {
-      $lines[] = '';
-    }
-
-    return implode("\n", array_merge($lines, $footer));
-  }
-
-  /**
-   * Align a block of lines within an area, padding it to the area's size.
-   *
-   * The lines move as one unit - their left edges stay mutually aligned - to
-   * the anchor the halign/valign options pick: blank rows pad the block to the
-   * target height and a uniform indent shifts it across the width.
-   *
-   * @param list<string> $lines
-   *   The block lines (may carry ANSI codes).
-   * @param int $inner_width
-   *   The width of the area the block aligns within.
-   * @param int $target_height
-   *   The height the block pads to.
-   *
-   * @return list<string>
-   *   The aligned lines, exactly the target height when the block fits it.
-   */
-  protected function alignBlock(array $lines, int $inner_width, int $target_height): array {
-    $block_width = Ansi::blockWidth($lines);
-
-    [$top, $left] = Overlay::place($inner_width, $target_height, $block_width, count($lines), $this->halign(), $this->valign());
-
-    $indent = str_repeat(' ', $left);
-    $out = array_fill(0, $top, '');
-
-    foreach ($lines as $line) {
-      $out[] = $line === '' ? '' : $indent . $line;
-    }
-
-    while (count($out) < $target_height) {
-      $out[] = '';
-    }
-
-    return $out;
-  }
-
-  /**
-   * The visible body window, wrapped with the scroll indicators.
-   *
-   * @param list<string> $body
-   *   The full body lines.
-   * @param \DrevOps\Tui\Render\Viewport $viewport
-   *   The computed viewport.
-   * @param int $height
-   *   The body viewport height.
-   *
-   * @return list<string>
-   *   The visible lines, with an indicator line for each hidden side.
-   */
-  protected function scrolledBody(array $body, Viewport $viewport, int $height): array {
-    $lines = [];
-
-    if ($viewport->hasAbove) {
-      $lines[] = $this->indicator('  ' . $this->indicatorUp());
-    }
-
-    $lines = array_merge($lines, (new Scroller())->slice($body, $viewport->offset, $height));
-
-    if ($viewport->hasBelow) {
-      $lines[] = $this->indicator('  ' . $this->indicatorDown());
-    }
-
-    return $lines;
-  }
-
-  /**
-   * Build a horizontal border rule, coloured with the border atom.
-   *
-   * @param string $left
-   *   The left corner or junction glyph.
-   * @param string $right
-   *   The right corner or junction glyph.
-   * @param string $fill
-   *   The horizontal fill glyph.
-   * @param int $outer_width
-   *   The total width the rule spans.
-   *
-   * @return string
-   *   The styled rule.
-   */
-  protected function borderRule(string $left, string $right, string $fill, int $outer_width): string {
-    return $this->border(Box::rule($left, $right, $fill, $outer_width));
   }
 
   /**
@@ -2494,346 +1605,130 @@ class DefaultTheme implements ThemeInterface {
   protected function boxLine(string $content, string $vertical, int $outer_width): string {
     $bar = $this->border($vertical);
 
-    return $bar . ' ' . Box::fit($content, max(1, $outer_width - 4)) . ' ' . $bar;
+    return $bar . ' ' . Box::fit($content, max(1, $outer_width - self::BOX_CHROME)) . ' ' . $bar;
   }
 
   /**
-   * {@inheritdoc}
+   * Wrap source text to a width and style each physical line as markup.
+   *
+   * @param string $text
+   *   The source text; its own newlines split it into physical lines first.
+   * @param int $width
+   *   The width to wrap to.
+   *
+   * @return list<string>
+   *   The styled lines, each fitting the width.
    */
-  public function renderBanner(string $logo, string $version): string {
+  protected function wrapMarkup(string $text, int $width): array {
     $lines = [];
 
-    foreach (explode("\n", $logo) as $line) {
-      $lines[] = $this->title($line);
+    foreach ($this->wrapLines($text, $width) as $chunk) {
+      if ($chunk === '') {
+        $lines[] = '';
+
+        continue;
+      }
+
+      foreach ($this->markupBody($chunk) as $rendered) {
+        $lines[] = $rendered;
+      }
     }
 
-    if ($version !== '') {
-      $lines[] = '';
-      $lines[] = $this->footer(Translator::t('Version: @version', ['@version' => $version]));
-    }
-
-    return implode("\n", $lines);
+    return $lines;
   }
 
   /**
-   * {@inheritdoc}
+   * Split source text into physical lines and word-wrap each to a width.
+   *
+   * @param string $text
+   *   The source text; its own line endings split it first.
+   * @param int $width
+   *   The width to wrap to.
+   *
+   * @return list<string>
+   *   The wrapped lines, unstyled.
    */
-  public function keyHint(Key $key): string {
-    $name = $key->name;
+  protected function wrapLines(string $text, int $width): array {
+    $lines = [];
 
-    if (!$name instanceof KeyName) {
-      return $key->label();
+    foreach (explode("\n", $this->normalizeLines($text)) as $physical) {
+      $wrapped = Strings::wrap($physical, $width);
+
+      // A line with no visible characters wraps to nothing; keeping it blank
+      // lets a caller space the content out.
+      foreach ($wrapped === [] ? [''] : $wrapped as $line) {
+        $lines[] = $line;
+      }
     }
 
-    return match ($name) {
-      KeyName::Up, KeyName::MouseWheelUp => $this->arrowUp(),
-      KeyName::Down, KeyName::MouseWheelDown => $this->arrowDown(),
-      KeyName::Left => $this->arrowLeft(),
-      KeyName::Right => $this->arrowRight(),
-      KeyName::Enter => $this->enter(),
-      KeyName::Escape => Translator::t('esc'),
-      KeyName::Interrupt => Translator::t('ctrl-c'),
-      KeyName::Tab => Translator::t('tab'),
-      KeyName::Space => Translator::t('space'),
-      KeyName::Backspace => $this->unicode ? '⌫' : Translator::t('bksp'),
-      KeyName::Delete => Translator::t('del'),
-      KeyName::Home => Translator::t('home'),
-      KeyName::End => Translator::t('end'),
-      KeyName::PageUp => Translator::t('pgup'),
-      KeyName::PageDown => Translator::t('pgdn'),
+    return $lines;
+  }
+
+  /**
+   * Render passage text as themed physical lines.
+   *
+   * Links resolve on every terminal; the rest of the markdown subset - bold,
+   * emphasis, inline code and bullet lists - is rendered only when the
+   * "markdown" option is on, and otherwise left as literal text.
+   *
+   * @param string $source
+   *   The source text; newlines separate physical lines.
+   *
+   * @return list<string>
+   *   The rendered lines.
+   */
+  protected function markupBody(string $source): array {
+    $lines = [];
+
+    foreach (Markup::parse($source, $this->markdown) as $line) {
+      $rendered = $line->bullet ? $this->markupLine($this->markupBullet() . ' ') : '';
+
+      foreach ($line->segments as $segment) {
+        $rendered .= $this->markupSegment($segment);
+      }
+
+      $lines[] = $rendered;
+    }
+
+    return $lines;
+  }
+
+  /**
+   * Style one parsed markup span with its element.
+   *
+   * @param \DrevOps\Tui\Render\MarkupSegment $segment
+   *   The span.
+   *
+   * @return string
+   *   The styled span.
+   */
+  protected function markupSegment(MarkupSegment $segment): string {
+    return match ($segment->kind) {
+      MarkupKind::Bold => $this->markupStrong($segment->text),
+      MarkupKind::Emphasis => $this->markupEmphasis($segment->text),
+      MarkupKind::Code => $this->markupCode($segment->text),
+      MarkupKind::Link => $this->markupLink($segment->text, $segment->url),
+      // The parser has already split every link into its own span, so the
+      // element's own link resolution finds nothing left to do here.
+      MarkupKind::Text => $this->markupLine($segment->text),
     };
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function keysHint(ScopedKeyMap $keys, string $label, Action ...$actions): string {
-    $glyphs = [];
-
-    foreach ($actions as $action) {
-      $key = $keys->primary($action);
-
-      if ($key instanceof Key) {
-        $glyphs[] = $this->keyHint($key);
-      }
-    }
-
-    return $glyphs === [] ? '' : implode('/', $glyphs) . ' ' . $label;
-  }
-
-  /**
-   * Render a context's hint fragments as one dot-joined footer line.
+   * Fold a caption or label to a single physical line for the indicators.
    *
-   * Each {@see Hint} becomes a labelled fragment drawn from the live bindings,
-   * so the line never contradicts a remapped key. Fragments whose actions are
-   * all unbound drop out, and an entirely unbound context yields an empty line.
+   * The spinner and bar redraw in place with carriage returns, so a CR or LF
+   * would reposition the cursor or leave a stale row behind; newlines collapse
+   * to a space.
    *
-   * @param \DrevOps\Tui\Input\ScopedKeyMap $keys
-   *   The active scope's bindings.
-   * @param \DrevOps\Tui\Input\Hint ...$hints
-   *   The hint fragments, in display order.
+   * @param string $text
+   *   The text.
    *
    * @return string
-   *   The themed hint line, or an empty string when nothing is bound.
+   *   The text with its line breaks folded to spaces.
    */
-  public function renderHints(ScopedKeyMap $keys, Hint ...$hints): string {
-    $fragments = [];
-
-    foreach ($hints as $hint) {
-      $fragment = $this->keysHint($keys, $hint->label, ...$hint->actions);
-
-      if ($fragment !== '') {
-        $fragments[] = $fragment;
-      }
-    }
-
-    return $fragments === [] ? '' : $this->renderHintLine(...$fragments);
-  }
-
-  /**
-   * Render a dimmed line of key hints, joined with the dot glyph.
-   *
-   * @param string ...$hints
-   *   The hint fragments (e.g. "enter accept", "esc cancel"). Empty fragments -
-   *   an unbound action - are dropped so the line has no dangling separators.
-   *
-   * @return string
-   *   The themed hint line.
-   */
-  public function renderHintLine(string ...$hints): string {
-    return $this->footer(implode(' ' . $this->dot() . ' ', array_filter($hints)));
-  }
-
-  /**
-   * Render the header shown above a field's editor: its label, underlined.
-   *
-   * @param string $label
-   *   The field label.
-   *
-   * @return string
-   *   The two-line themed header.
-   */
-  public function renderEditorHeader(string $label): string {
-    $underline = str_repeat($this->unicode ? '─' : '-', max(1, Markup::width($label, FALSE, $this->color)));
-
-    return $this->title($label) . "\n" . $this->rule($underline);
-  }
-
-  /**
-   * Compose a field's editor screen: the label, the widget view and its hints.
-   *
-   * @param string $label
-   *   The field label.
-   * @param string $view
-   *   The widget's rendered view.
-   * @param list<\DrevOps\Tui\Input\Hint> $hints
-   *   The widget's hint fragments; an empty list draws no hint line, so the
-   *   footer can be turned off form-wide.
-   * @param \DrevOps\Tui\Input\ScopedKeyMap|null $keys
-   *   The editor's scope bindings, so the hint glyphs reflect the active keys.
-   * @param int $rows
-   *   The terminal rows a fullscreen editor stretches its frame to; 0 keeps
-   *   the screen as tall as its content.
-   *
-   * @return string
-   *   The editor screen - boxed when the theme has a border, stretched to the
-   *   given rows in fullscreen, else plain.
-   */
-  public function renderEditor(string $label, string $view, array $hints = [], ?ScopedKeyMap $keys = NULL, int $rows = 0): string {
-    $hint = $keys instanceof ScopedKeyMap ? $this->renderHints($keys, ...$hints) : '';
-    $footer = $hint === '' ? [] : [$hint];
-    $stretch = $this->isFullscreen() && $rows > 0;
-
-    if ($this->borderStyle() !== Border::None || $stretch) {
-      $body = explode("\n", $view);
-      $height = count($body);
-
-      // A borderless editor keeps its label-over-rule header inside the frame.
-      $header = $this->borderStyle() === Border::None ? explode("\n", $this->renderEditorHeader($label)) : [$this->title($label)];
-
-      // A fullscreen editor stretches its frame like the hub does - the hint
-      // footer pins to the bottom row. A view taller than the budget keeps
-      // its full height - widgets page inside themselves, so slicing here
-      // would hide rows they expect to show.
-      if ($stretch) {
-        $height = max($height, $rows - count($header) - count($footer) - $this->chromeHeight($footer !== []));
-      }
-
-      return $this->renderFrame($header, $body, $footer, new Viewport(0, FALSE, FALSE), $height);
-    }
-
-    $screen = $this->renderEditorHeader($label) . "\n" . $view;
-
-    return $hint === '' ? $screen : $screen . "\n\n" . $hint;
-  }
-
-  /**
-   * Compose the full-screen key-binding help overlay.
-   *
-   * @param \DrevOps\Tui\Input\ScopedKeyMap $nav
-   *   The navigation bindings, for the close hint.
-   * @param \DrevOps\Tui\Render\HelpSection ...$sections
-   *   The contexts to list, each a heading with its bindings and hints.
-   *
-   * @return string
-   *   The rendered overlay.
-   */
-  public function renderHelp(ScopedKeyMap $nav, HelpSection ...$sections): string {
-    $lines = [$this->title(Translator::t('Keyboard help')), ''];
-
-    foreach ($sections as $section) {
-      $lines[] = $this->label($section->title);
-      $hint = $this->renderHints($section->keys, ...$section->hints);
-
-      if ($hint !== '') {
-        $lines[] = $hint;
-      }
-
-      $lines[] = '';
-    }
-
-    $lines[] = $this->renderHints($nav, new Hint('close', Action::Help));
-
-    return implode("\n", $lines);
-  }
-
-  /**
-   * Compose a modal dialog: a centered box floating over the dimmed backdrop.
-   *
-   * The dialog's description text, its fields and its own submit/cancel buttons
-   * are boxed in a narrower frame, then spliced centered over the backdrop so
-   * the dimmed parent shows through the padding on every side.
-   *
-   * @param \DrevOps\Tui\Model\Panel $modal
-   *   The modal panel (carrying its {@see \DrevOps\Tui\Model\Modal} config).
-   * @param \DrevOps\Tui\Answers\Answers $answers
-   *   The current answers.
-   * @param int $cursor
-   *   The selected item index within the dialog.
-   * @param \DrevOps\Tui\Model\Field|null $editing
-   *   The field whose editor is expanded inline in the dialog, or NULL.
-   * @param string $editorView
-   *   The inline editor's rendered view.
-   * @param int $selectedButton
-   *   The index of the selected dialog button, or -1 when none is selected.
-   * @param string $backdrop
-   *   The rendered parent frame to dim and overlay the dialog on.
-   * @param int $height
-   *   The screen height, bounding the dialog so its footer never clips.
-   *
-   * @return string
-   *   The composited screen.
-   */
-  public function renderModal(Panel $modal, Answers $answers, int $cursor, ?Field $editing, string $editorView, int $selectedButton, string $backdrop, int $height): string {
-    $config = $modal->modal;
-
-    if (!$config instanceof Modal) {
-      // @codeCoverageIgnoreStart
-      return $backdrop;
-      // @codeCoverageIgnoreEnd
-    }
-
-    [$fields, $field_cursor] = $this->renderBody($modal, $answers, $cursor, $editing, $editorView);
-
-    $lead = [];
-    if ($modal->description !== '') {
-      foreach (explode("\n", Translator::t($modal->description)) as $line) {
-        $lead[] = $this->label($line);
-      }
-
-      if ($fields !== []) {
-        $lead[] = '';
-      }
-    }
-
-    $body = array_merge($lead, $fields);
-
-    // The buttons pin to a footer so a dialog taller than the terminal never
-    // clips its only way out; the body scrolls under them to keep the cursor
-    // in view.
-    $footer = [
-      $this->renderButtonBar([
-        Translator::t($config->buttons->submitLabel),
-        Translator::t($config->buttons->cancelLabel),
-      ], $selectedButton),
-    ];
-
-    $inset = max(2, intdiv($this->outerWidth, 8));
-    $modal_width = max(1, $this->outerWidth - 2 * $inset);
-    $border = $this->borderStyle() === Border::None ? Border::Line : $this->borderStyle();
-
-    // Fit the dialog within the screen height so the pinned button footer is
-    // never clipped, reserving the box chrome (four rules, the title, the
-    // footer and any spacing pad). Only the body scrolls; the footer stays put.
-    $pad = $this->spacing() === Spacing::Padded ? 1 : 0;
-    $room = max(0, $height - 6 - 2 * $pad);
-
-    if (count($body) > $room && $room >= 3) {
-      // The body overflows and there is room to scroll it under the footer.
-      $cursor_line = $selectedButton >= 0 ? max(0, count($body) - 1) : count($lead) + $field_cursor;
-      $body_height = $room - 2;
-      $viewport = (new Scroller())->follow(count($body), $body_height, $cursor_line, 0);
-    }
-    else {
-      // The body fits, or there is too little room to scroll: show what fits.
-      $body = array_slice($body, 0, $room);
-      $viewport = new Viewport(0, FALSE, FALSE);
-      $body_height = count($body);
-    }
-
-    $box = explode("\n", $this->renderBoxed([$this->title(Translator::t($modal->title))], $body, $footer, $viewport, $body_height, $modal_width, $border));
-
-    // Pad the backdrop so a short parent frame still gives the dialog room to
-    // sit over, rather than shrinking it.
-    $backdrop_lines = array_map(fn(string $line): string => Box::fit(Ansi::strip($line), $this->outerWidth), explode("\n", $backdrop));
-    $area_height = max(count($backdrop_lines), count($box));
-
-    while (count($backdrop_lines) < $area_height) {
-      $backdrop_lines[] = str_repeat(' ', $this->outerWidth);
-    }
-
-    [$top, $left] = Overlay::center($this->outerWidth, $area_height, $modal_width, count($box));
-
-    return implode("\n", Overlay::composite($backdrop_lines, $box, $modal_width, $top, $left, fn(string $segment): string => $this->dim($segment)));
-  }
-
-  /**
-   * Render a panel-level error row, aligned with the rows above it.
-   *
-   * The message is a declared string, so it may carry line breaks; they fold to
-   * spaces because the caller counts this as one body row and a second physical
-   * line would push the frame past the height it laid out for.
-   *
-   * @param string $message
-   *   The message.
-   *
-   * @return string
-   *   The themed error row.
-   */
-  public function renderPanelError(string $message): string {
-    return '  ' . $this->error($this->oneLine($message));
-  }
-
-  /**
-   * Render a row of inline submit/cancel buttons.
-   *
-   * @param list<string> $labels
-   *   The button labels, in order.
-   * @param int $selected
-   *   The index of the selected button, or -1 for none.
-   *
-   * @return string
-   *   The themed button row with the buttons side by side.
-   */
-  public function renderButtonBar(array $labels, int $selected): string {
-    $parts = [];
-
-    foreach ($labels as $index => $label) {
-      $text = '[ ' . $label . ' ]';
-      $parts[] = $index === $selected ? $this->cursor($text) : $this->value($text);
-    }
-
-    return '  ' . implode('  ', $parts);
+  protected function oneLine(string $text): string {
+    return str_replace(["\r\n", "\r", "\n"], ' ', $text);
   }
 
   /**
@@ -2853,84 +1748,6 @@ class DefaultTheme implements ThemeInterface {
    */
   protected function normalizeLines(string $value): string {
     return str_replace(["\r\n", "\r"], "\n", $value);
-  }
-
-  /**
-   * Render a field's value readably, masking secret values.
-   *
-   * @param \DrevOps\Tui\Model\Field $field
-   *   The field the value belongs to.
-   * @param mixed $value
-   *   The value.
-   *
-   * @return string
-   *   The rendered value.
-   */
-  protected function renderFieldValue(Field $field, mixed $value): string {
-    // A field whose options have not yet loaded reads as loading, not empty.
-    if ($field->optionsLoader instanceof \Closure) {
-      return $this->renderLoading('');
-    }
-
-    if ($field->type === FieldType::Progress) {
-      return $this->renderProgress($field);
-    }
-
-    if ($field->type === FieldType::Password) {
-      return is_string($value) && $value !== '' ? ValueFormatter::mask($this->mask()) : '';
-    }
-
-    if ($field->type === FieldType::Rating) {
-      return $this->renderRating($field, $value);
-    }
-
-    return ValueFormatter::format($value);
-  }
-
-  /**
-   * Render a rating row's scale from the field's declared points.
-   *
-   * A collapsed row shows the scale rather than the bare number, so the grade
-   * reads the same whether or not the editor is open.
-   *
-   * @param \DrevOps\Tui\Model\Field $field
-   *   The rating field.
-   * @param mixed $value
-   *   The chosen point.
-   *
-   * @return string
-   *   The rendered scale.
-   */
-  protected function renderRating(Field $field, mixed $value): string {
-    // The builder always closes a rating's scale, so the fallbacks only catch a
-    // hand-built field: a row degrades to a single point rather than crashing
-    // the frame it is drawn in.
-    $min = $field->bounds->min ?? 0;
-    $point = is_int($value) || is_float($value) ? (int) $value : $min;
-    $caption = $field->ratingCaptions[$point] ?? '';
-
-    return $this->renderScale($point, $min, $field->bounds->max ?? 0, $caption === '' ? '' : Translator::t($caption));
-  }
-
-  /**
-   * Render a progress row's indicator from its live state.
-   *
-   * A determinate row draws a bar that reads empty before the work runs and
-   * fills as it advances; an indeterminate row draws a spinner that sits on its
-   * first frame until the work ticks it.
-   *
-   * @param \DrevOps\Tui\Model\Field $field
-   *   The progress field.
-   *
-   * @return string
-   *   The rendered indicator.
-   */
-  protected function renderProgress(Field $field): string {
-    if ($field->progressSteps === NULL) {
-      return $this->renderSpinner($field->progressCurrent ?? 0, $field->progressLabel);
-    }
-
-    return $this->renderProgressBar($field->progressCurrent ?? 0, $field->progressSteps, '', $field->progressLabel);
   }
 
 }

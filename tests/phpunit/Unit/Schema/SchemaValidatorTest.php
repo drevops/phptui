@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Schema;
 
+use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Schema\SchemaValidator;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -113,7 +113,7 @@ final class SchemaValidatorTest extends TestCase {
         $p->text('plot', 'Garden plot name')->required(message: 'The garden plot name is required.');
         $p->text('note', 'Delivery note');
       })
-      ->build();
+      ->root();
 
     $answers = ['name' => 'Pear', 'crates' => ['a'], 'plot' => 'North bed', 'note' => ''];
     $answers[$id] = $value;
@@ -139,7 +139,7 @@ final class SchemaValidatorTest extends TestCase {
   public function testNumericStringOptionMembership(): void {
     $form = Form::create('T')
       ->panel('p', 'p', fn(PanelBuilder $p): FieldBuilder => $p->toggle('flag')->option('0', 'Off')->option('1', 'On'))
-      ->build();
+      ->root();
     $validator = new SchemaValidator($form);
 
     // A numeric-string value stays valid: values are compared as strings.
@@ -152,7 +152,7 @@ final class SchemaValidatorTest extends TestCase {
     $root = vfsStream::url('root');
     $form = Form::create('T')
       ->panel('p', 'p', fn(PanelBuilder $p): FieldBuilder => $p->filePicker('cfg')->filesOnly()->extensions(['yml'])->maxSize(100))
-      ->build();
+      ->root();
     $validator = new SchemaValidator($form);
 
     $this->assertSame([], $validator->validate(['cfg' => $root . '/ok.yml']));
@@ -165,7 +165,7 @@ final class SchemaValidatorTest extends TestCase {
     // field's plain string value is not weighed as a filesystem path.
     $form = Form::create('T')
       ->panel('p', 'p', fn(PanelBuilder $p): FieldBuilder => $p->text('name')->maxSize(100))
-      ->build();
+      ->root();
 
     $this->assertSame([], (new SchemaValidator($form))->validate(['name' => 'not-a-real-path']));
   }
@@ -173,7 +173,7 @@ final class SchemaValidatorTest extends TestCase {
   /**
    * Build a form exercising every validation branch.
    */
-  protected function form(): FormDefinition {
+  protected function form(): Panel {
     return Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
         $p->note('intro', 'Intro')->description('Welcome.');
@@ -193,7 +193,7 @@ final class SchemaValidatorTest extends TestCase {
         $p->filePicker('paths')->multiple();
         $p->reorder('ranking')->option('x')->option('y')->option('z');
       })
-      ->build();
+      ->root();
   }
 
 }

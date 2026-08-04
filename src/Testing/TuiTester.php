@@ -6,8 +6,9 @@ namespace DrevOps\Tui\Testing;
 
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Builder\Form;
+use DrevOps\Tui\CancelException;
 use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Model\FormDefinition;
+use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Render\Ansi;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Tui;
@@ -15,7 +16,7 @@ use DrevOps\Tui\Tui;
 /**
  * Drives a form's interactive panel TUI from scripted keystrokes.
  *
- * The form-level companion to {@see \DrevOps\Tui\Testing\WidgetRunner}: it
+ * The form-level companion to {@see \DrevOps\Tui\Testing\FieldRunner}: it
  * feeds keystrokes through a scripted terminal's read() and runs the real
  * panel loop, so a consumer can assert on the collected answers and on what
  * was rendered - without a real TTY. Keystrokes are supplied as raw byte
@@ -101,14 +102,14 @@ final class TuiTester {
   /**
    * Construct a tester for a form.
    *
-   * @param \DrevOps\Tui\Model\FormDefinition|\DrevOps\Tui\Builder\Form $form
-   *   The form under test: a Form builder or its built definition.
+   * @param \DrevOps\Tui\Builder\Form $form
+   *   The form under test.
    * @param string[] $handler_namespaces
    *   Namespaces searched for per-field consumer classes.
    * @param string $env_prefix
    *   The env-variable prefix for per-question overrides.
    */
-  public function __construct(FormDefinition|Form $form, array $handler_namespaces = [], string $env_prefix = '') {
+  public function __construct(Form $form, array $handler_namespaces = [], string $env_prefix = '') {
     $this->tui = new Tui($form, $handler_namespaces, $env_prefix);
   }
 
@@ -123,6 +124,21 @@ final class TuiTester {
    */
   public function theme(string $theme): self {
     $this->theme = $theme;
+
+    return $this;
+  }
+
+  /**
+   * Set the layout the screen is arranged by.
+   *
+   * @param string $layout
+   *   The layout name or class.
+   *
+   * @return $this
+   *   The tester.
+   */
+  public function layout(string $layout): self {
+    $this->tui->layout($layout);
 
     return $this;
   }
@@ -249,10 +265,27 @@ final class TuiTester {
 
     $controller = $this->tui->controller($this->options, $this->theme, '', $this->version, $this->directory, $width, $this->update);
 
-    $this->answers = $controller->run($terminal);
-    $this->output = $terminal->output();
-    $this->cancelled = $controller->isCancelled();
-    $this->interrupted = $controller->isInterrupted();
+    $this->cancelled = FALSE;
+    $this->interrupted = FALSE;
+
+    // A session that ends without a submit raises rather than returning, and a
+    // test asserting on how a run ended is asking a question about it rather
+    // than being surprised by it - so the ending is recorded and the answers as
+    // they stood are handed back either way.
+    try {
+      $this->answers = $controller->run($terminal);
+    }
+    catch (CancelException) {
+      $this->cancelled = TRUE;
+      $this->answers = $controller->answers();
+    }
+    catch (InterruptException) {
+      $this->interrupted = TRUE;
+      $this->answers = $controller->answers();
+    }
+    finally {
+      $this->output = $terminal->output();
+    }
 
     return $this->answers;
   }

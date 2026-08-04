@@ -28,11 +28,11 @@ final class SchemaGeneratorTest extends TestCase {
       ->panel('p', 'p', function (PanelBuilder $p): void {
         $profile = $p->select('profile', 'Profile')->description('The profile')->default('standard')->required();
         $profile->option('standard', 'Standard', 'Std')->option('minimal', 'Minimal');
-        $p->text('theme')->hint('Leave empty to follow the profile.')->placeholder('E.g. Golden Beetroot')->derive(new Derive('{{profile}}'))->when(new Condition('profile', eq: 'standard'));
+        $p->text('theme')->help('Leave empty to follow the profile.')->placeholder('E.g. Golden Beetroot')->derive(new Derive('{{profile}}'))->when(new Condition('profile', eq: 'standard'));
         $p->number('port', 'Port')->min(1)->max(65535)->step(5);
         $p->calendar('release', 'Release date')->minDate('2000-01-01')->maxDate('2030-12-31')->weekStart(Weekday::Sunday);
       })
-      ->build();
+      ->root();
 
     // Spelled out in full rather than through prompt(): this is the one place
     // that documents the complete shape of a generated prompt.
@@ -43,7 +43,7 @@ final class SchemaGeneratorTest extends TestCase {
           'type' => 'select',
           'label' => 'Profile',
           'description' => 'The profile',
-          'hint' => '',
+          'help' => '',
           'placeholder' => '',
           'options' => [
             ['value' => 'standard', 'label' => 'Standard', 'description' => 'Std'],
@@ -74,7 +74,7 @@ final class SchemaGeneratorTest extends TestCase {
           'type' => 'text',
           'label' => 'theme',
           'description' => '',
-          'hint' => 'Leave empty to follow the profile.',
+          'help' => 'Leave empty to follow the profile.',
           'placeholder' => 'E.g. Golden Beetroot',
           'options' => [],
           'options_dynamic' => FALSE,
@@ -102,7 +102,7 @@ final class SchemaGeneratorTest extends TestCase {
           'type' => 'number',
           'label' => 'Port',
           'description' => '',
-          'hint' => '',
+          'help' => '',
           'placeholder' => '',
           'options' => [],
           'options_dynamic' => FALSE,
@@ -130,7 +130,7 @@ final class SchemaGeneratorTest extends TestCase {
           'type' => 'calendar',
           'label' => 'Release date',
           'description' => '',
-          'hint' => '',
+          'help' => '',
           'placeholder' => '',
           'options' => [],
           'options_dynamic' => FALSE,
@@ -164,7 +164,7 @@ final class SchemaGeneratorTest extends TestCase {
       ->panel('p', 'p', function (PanelBuilder $p): void {
         $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{grade}}')->default('valley-a');
       })
-      ->build();
+      ->root();
 
     // The pattern travels as declared, with its slots named in shape order, so
     // external tooling can drive the field rather than guess at its shape.
@@ -193,7 +193,7 @@ final class SchemaGeneratorTest extends TestCase {
           ->separator()
           ->option('demo', 'Demo', disabled: TRUE, disabled_reason: 'nope');
       })
-      ->build();
+      ->root();
 
     $expected = [
       'prompts' => [
@@ -213,7 +213,7 @@ final class SchemaGeneratorTest extends TestCase {
 
   #[DataProvider('dataProviderDescribesFieldInJson')]
   public function testDescribesFieldInJson(\Closure $declare, array $fragments): void {
-    $form = Form::create('T')->panel('p', 'p', $declare)->build();
+    $form = Form::create('T')->panel('p', 'p', $declare)->root();
 
     $json = (string) json_encode((new SchemaGenerator($form))->generate());
 
@@ -271,7 +271,7 @@ final class SchemaGeneratorTest extends TestCase {
 
   #[DataProvider('dataProviderResolvesDefault')]
   public function testResolvesDefault(\Closure $declare, Context $context, mixed $expected): void {
-    $form = Form::create('T')->panel('p', 'p', $declare)->build();
+    $form = Form::create('T')->panel('p', 'p', $declare)->root();
 
     $prompts = (new SchemaGenerator($form, $context))->generate()['prompts'];
     $this->assertIsArray($prompts);
@@ -325,7 +325,7 @@ final class SchemaGeneratorTest extends TestCase {
 
   #[DataProvider('dataProviderDescribesEnvironmentVariables')]
   public function testDescribesEnvironmentVariables(\Closure $declare, string $prefix, int $index, ?string $env, array $aliases): void {
-    $form = Form::create('T')->panel('p', 'p', $declare)->build();
+    $form = Form::create('T')->panel('p', 'p', $declare)->root();
 
     $prompts = (new SchemaGenerator($form, new Context(), $prefix))->generate()['prompts'];
     $this->assertIsArray($prompts);
@@ -371,7 +371,7 @@ final class SchemaGeneratorTest extends TestCase {
         $p->note('intro', 'Intro')->description('Welcome.');
         $p->text('name', 'Name');
       })
-      ->build();
+      ->root();
 
     $schema = (new SchemaGenerator($form))->generate();
 
@@ -387,7 +387,7 @@ final class SchemaGeneratorTest extends TestCase {
       ->panel('p', 'p', function (PanelBuilder $p): void {
         $p->confirm('x')->default(TRUE);
       })
-      ->build();
+      ->root();
 
     $schema = (new SchemaGenerator($form))->generate();
     $decoded = json_decode((string) json_encode($schema), TRUE);
@@ -413,7 +413,7 @@ final class SchemaGeneratorTest extends TestCase {
       'type' => '',
       'label' => '',
       'description' => '',
-      'hint' => '',
+      'help' => '',
       'placeholder' => '',
       'options' => [],
       'options_dynamic' => FALSE,

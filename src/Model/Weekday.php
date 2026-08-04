@@ -9,7 +9,7 @@ use DrevOps\Tui\Translation\Translator;
 /**
  * A day of the week, backed by its ISO-8601 number (Monday = 1 ... Sunday = 7).
  *
- * The calendar's week-start day is one of these, and the widget builds its
+ * The calendar's week-start day is one of these, and the field builds its
  * weekday header and column layout from the sequence starting at that day.
  *
  * @package DrevOps\Tui\Model

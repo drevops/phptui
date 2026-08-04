@@ -15,7 +15,7 @@ alone:
 
 | Segment     | Values                 | Meaning                                            |
 |-------------|------------------------|----------------------------------------------------|
-| `subject`   | e.g. `widget-text`, `theme-midnight`, `progress-bar` | What is shown (a widget, a panel demo, a theme preview, a primitive) |
+| `subject`   | e.g. `field-text`, `theme-midnight`, `progress-bar` | What is shown (a field, a panel demo, a theme preview, a primitive) |
 | `mode`      | `dark` \| `light`      | Colour scheme                                      |
 | `motion`    | `animated` \| `static` | An animation, or a single frame                    |
 | `-bordered` | present when set       | Inside the rounded border frame (theme previews)   |
@@ -24,9 +24,9 @@ alone:
 
 A theme preview's subject carries the theme name (`theme-midnight`), so its
 `mode` segment still reads dark or light: `theme-midnight-dark-static.svg`.
-Unicode and colour are the unmarked defaults, so `widget-text-dark-animated.svg`
+Unicode and colour are the unmarked defaults, so `field-text-dark-animated.svg`
 is the dark, Unicode, colour animation, and
-`widget-text-dark-static-ascii-no-ansi.svg` is its ASCII, no-colour static twin.
+`field-text-dark-static-ascii-no-ansi.svg` is its ASCII, no-colour static twin.
 Animated demos render inside the rounded border frame by design and carry no
 marker; the `-bordered` marker distinguishes the theme previews' framed statics
 from their borderless twins.
@@ -35,30 +35,30 @@ from their borderless twins.
 
 `update-assets.php` is the single entry point: run without arguments it records every live-terminal job in parallel and spawns the four deterministic sibling generators alongside them, so one command regenerates the whole set.
 
-- **`update-assets.php`** - the full panel demos, the widget montage and the
+- **`update-assets.php`** - the full panel demos, the field montage and the
   option-group / password-reveal / discovery frames, recorded from a live
   terminal (`--record <job>` re-runs one job).
-- **`render-widget-svgs.php`** - every per-widget asset, driven deterministically
+- **`render-field-svgs.php`** - every per-field asset, driven deterministically
   through the library's own keystroke harness with no terminal: the animated
-  cards in all four display modes (`widget-*-dark-animated*.svg`, the unmarked one
+  cards in all four display modes (`field-*-dark-animated*.svg`, the unmarked one
   being the hero, framed by the rounded border) and the matching static
-  screenshots (`widget-*-dark-static*.svg`, borderless).
+  screenshots (`field-*-dark-static*.svg`, borderless).
 - **`render-theme-svgs.php`** - the built-in theme previews, also through the
   keystroke harness: `theme-<name>-<dark|light>-static[-bordered].svg` for the
   adaptive themes, and the dark/light pair for `dos` (which draws its own window
   on its own surface, so it has no bordered twin).
 - **`render-progress-svgs.php`** - the progress primitive's spinner and bar
   assets (`progress-spinner-*`, `progress-bar-*`). The primitive is not a
-  keystroke widget: it is a single line the theme redraws in place, so this
+  keystroke field: it is a single line the theme redraws in place, so this
   drives the real primitive against an in-memory terminal, splits the output
   into frames on the carriage return, and renders both the animation and a
   single mid-run static frame in all four display modes, borderless like the
-  widget statics.
+  field statics.
 - **`render-output-svgs.php`** - the output primitives' assets (`output-box-*`,
   `output-card-*`, `output-table-*`, `output-status-*`,
   `output-definitions-*`, `output-text-*`), driven through the real primitive
   against an in-memory terminal in all four display modes, borderless like the
-  widget statics. These are the one subject with no `-animated` variant: the
+  field statics. These are the one subject with no `-animated` variant: the
   output primitives write finished lines and return, so there is no motion to
   record.
 - **`render-social-card.php`** - the one non-SVG asset: `social-card.png`, the

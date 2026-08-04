@@ -1,68 +1,89 @@
 @startuml
 ' drevops/tui - data flow for headless collection.
-' Traced from src/Engine/Engine.php (collect -> resolveAll -> transformInputs -> stabilize -> guardInputs).
+' Traced from src/Tui.php (collect) and src/Screen/Collector.php
+' (answers -> fetched -> settle -> resolveAll -> transformSupplied -> stabilize
+' -> refusal).
 ' Regenerate every SVG with:  plantuml -tsvg docs/architecture/*.puml
 !theme plain
 skinparam backgroundColor white
 skinparam defaultFontName Helvetica
 skinparam shadowing false
-title Data flow: headless collection (Engine::collect)
+title Data flow: headless collection (Tui::collect)
 
 participant "Caller" as Caller
+participant "Tui" as Tui
 participant "InputResolver" as IR
-participant "Engine" as Eng
+participant "Collector" as Col
+participant "Block tree\n(Panel -> Field)" as Tree
 participant "Field behaviour\n(closure or static)" as B
 participant "Discovery spec" as Disc
 participant "Deriver\n+ Derive" as Der
 participant "Condition" as CE
 participant "Answers" as Ans
 
-Caller -> IR: resolve(fields, prompts, env)
+Caller -> Tui: collect(prompts, directory, update, version)
+activate Tui
+
+Tui -> Tree: root()
+Tree --> Tui: the declared Panel
+
+Tui -> IR: resolve(fields, prompts, env)
 activate IR
-IR --> Caller: input values
+IR --> Tui: supplied values
 deactivate IR
 
-Caller -> Eng: collect(inputs, context)
-activate Eng
+Tui -> Col: answers(panel, supplied, context)
+activate Col
 
-loop each field, in order
-  alt update mode and no input
-    Eng -> Disc: discover(directory)
-    Disc --> Eng: discovered value
-    note right of Eng: adopted only when it passes the field's\nemptiness, type, bounds and options
+Col -> Tree: fields(panel)
+note right of Col: no Screen, Layout or Region is built,\nand no block that only shows
+
+loop each field whose rows are loaded
+  Col -> B: options callback()
+  B --> Col: value => label rows
+  note right of Col: nothing would open a field, so a loader\nis asked here or its rows never arrive
+end
+
+loop each field, in declaration order
+  alt update mode and nothing supplied
+    Col -> Disc: discover(directory)
+    Disc --> Col: detected value
+    note right of Col: adopted only when it passes the field's\nemptiness, type, bounds and rows
   end
-  note right of Eng: input > discovered > declared default > static default
+  note right of Col: supplied > detected > declared default > static default
 end
 
-loop each field with a supplied input
-  Eng -> B: transform(value)
-  B --> Eng: normalized value
-  note right of Eng: inputs normalize first, so derivation,\nactivation and fix-ups see the final value
+loop each field with a supplied value
+  Col -> B: transform(value)
+  B --> Col: normalized value
+  note right of Col: supplied values normalize first, so derivation,\nconditions and fix-ups see the final value
 end
 
-loop each field whose options follow the answers
-  Eng -> B: options callback(context)
-  B --> Eng: value => label map
-  note right of Eng: resolved before conditions evaluate; a value the\nset no longer holds is dropped unless it was supplied
-end
-
-Eng -> Der: derive(rules, values, pinned)
+Col -> Der: derive(rules, values, pinned)
 activate Der
-Der --> Eng: derived values (fixpoint)
+Der --> Col: derived values (fixpoint)
 deactivate Der
-Eng -> CE: matches(answers)
+Col -> CE: matches(answers)
 activate CE
-CE --> Eng: active / inactive per field
+CE --> Col: there / not there, per field
 deactivate CE
-note right of Eng: apply fix-ups; repeat until stable
+note right of Col: rows that follow the answers re-resolve,\nfix-ups apply; repeat until nothing moves
 
-loop each active field with a supplied input
-  Eng -> B: validate(value)
-  B --> Eng: error or null
-  note right of Eng: a required field's emptiness, then type\nand bounds; the first error throws
+loop each field that is there and was supplied
+  Col -> B: validate(value)
+  B --> Col: reason or null
+  note right of Col: emptiness on a required field first,\nthen type, bounds and rows
 end
 
-Eng -> Ans: build(values, provenance)
-Eng --> Caller: Answers
-deactivate Eng
+alt a value was refused
+  Col --> Tui: CollectException naming the field and the reason
+else every value stands
+  Col -> Ans: forTree(panel, values, provenance)
+  Ans --> Col: the self-describing set
+  Col --> Tui: Answers
+end
+deactivate Col
+
+Tui --> Caller: Answers
+deactivate Tui
 @enduml

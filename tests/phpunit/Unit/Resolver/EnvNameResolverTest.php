@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Resolver;
 
-use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Resolver\EnvNameResolver;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -21,9 +21,7 @@ final class EnvNameResolverTest extends TestCase {
 
   #[DataProvider('dataProviderCanonical')]
   public function testCanonical(string $prefix, string $env_name, string $expected): void {
-    $field = new Field('crate_size', 'Crate size', '', FieldType::Text, '', envName: $env_name);
-
-    $this->assertSame($expected, (new EnvNameResolver($prefix))->canonical($field));
+    $this->assertSame($expected, (new EnvNameResolver($prefix))->canonical(self::field($env_name)));
   }
 
   public static function dataProviderCanonical(): \Iterator {
@@ -37,15 +35,11 @@ final class EnvNameResolverTest extends TestCase {
   }
 
   public function testAliasesAreReportedInDeclarationOrder(): void {
-    $field = new Field('crate_size', 'Crate size', '', FieldType::Text, '', envAliases: ['OLD_CRATE', 'OLDER_CRATE']);
-
-    $this->assertSame(['OLD_CRATE', 'OLDER_CRATE'], (new EnvNameResolver('APP_'))->aliases($field));
+    $this->assertSame(['OLD_CRATE', 'OLDER_CRATE'], (new EnvNameResolver('APP_'))->aliases(self::field('', ['OLD_CRATE', 'OLDER_CRATE'])));
   }
 
   public function testAliasesAreEmptyWhenNoneDeclared(): void {
-    $field = new Field('crate_size', 'Crate size', '', FieldType::Text, '');
-
-    $this->assertSame([], (new EnvNameResolver('APP_'))->aliases($field));
+    $this->assertSame([], (new EnvNameResolver('APP_'))->aliases(self::field()));
   }
 
   /**
@@ -60,9 +54,7 @@ final class EnvNameResolverTest extends TestCase {
    */
   #[DataProvider('dataProviderAll')]
   public function testAll(string $env_name, array $aliases, array $expected): void {
-    $field = new Field('crate_size', 'Crate size', '', FieldType::Text, '', envName: $env_name, envAliases: $aliases);
-
-    $this->assertSame($expected, (new EnvNameResolver('APP_'))->all($field));
+    $this->assertSame($expected, (new EnvNameResolver('APP_'))->all(self::field($env_name, $aliases)));
   }
 
   public static function dataProviderAll(): \Iterator {
@@ -73,9 +65,7 @@ final class EnvNameResolverTest extends TestCase {
 
   #[DataProvider('dataProviderIsAdvertisable')]
   public function testIsAdvertisable(string $prefix, string $env_name, bool $expected): void {
-    $field = new Field('crate_size', 'Crate size', '', FieldType::Text, '', envName: $env_name);
-
-    $this->assertSame($expected, (new EnvNameResolver($prefix))->isAdvertisable($field));
+    $this->assertSame($expected, (new EnvNameResolver($prefix))->isAdvertisable(self::field($env_name)));
   }
 
   public static function dataProviderIsAdvertisable(): \Iterator {
@@ -85,6 +75,31 @@ final class EnvNameResolverTest extends TestCase {
     // A bare, unnamespaced variable collides with anything else in the
     // environment, so it is not offered as an answer route.
     yield 'a bare mechanical name is not advertised' => ['', '', FALSE];
+  }
+
+  /**
+   * A field declaring the environment names under test.
+   *
+   * @param string $env_name
+   *   The declared name, or empty to keep the mechanical one.
+   * @param list<string> $aliases
+   *   The declared aliases.
+   *
+   * @return \DrevOps\Tui\Block\Field
+   *   The field.
+   */
+  protected static function field(string $env_name = '', array $aliases = []): Field {
+    $field = new Field('crate_size', 'Crate size', FieldType::Text);
+
+    if ($env_name !== '') {
+      $field->env($env_name);
+    }
+
+    if ($aliases !== []) {
+      $field->envAliases($aliases);
+    }
+
+    return $field;
   }
 
 }

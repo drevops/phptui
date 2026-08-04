@@ -38,8 +38,8 @@ final class SummaryFormatterTest extends TestCase {
       ->panel('empty', 'Empty', function (PanelBuilder $p): void {
         $p->text('gone', 'Gone')->when(new Condition('name', eq: 'never'));
       })
-      ->build();
-    $answers = Answers::forForm(
+      ->root();
+    $answers = Answers::forTree(
       $form,
       ['name' => 'Acme', 'machine' => 'acme', 'profile' => 'standard', 'debug' => TRUE],
       ['name' => Provenance::Edited, 'machine' => Provenance::Derived, 'profile' => Provenance::Default, 'debug' => Provenance::Edited],
@@ -68,8 +68,8 @@ final class SummaryFormatterTest extends TestCase {
       ->panel('p', 'P', function (PanelBuilder $p): void {
         $p->select('mods', 'Mods')->multiple();
       })
-      ->build();
-    $answers = Answers::forForm($form, ['mods' => ['a', 'b']], ['mods' => Provenance::Edited]);
+      ->root();
+    $answers = Answers::forTree($form, ['mods' => ['a', 'b']], ['mods' => Provenance::Edited]);
 
     $summary = (new SummaryFormatter())->format($answers);
 
@@ -82,8 +82,8 @@ final class SummaryFormatterTest extends TestCase {
         $p->password('token', 'Token');
         $p->password('unset', 'Unset');
       })
-      ->build();
-    $answers = Answers::forForm($form, ['token' => 's3cret-long', 'unset' => ''], ['token' => Provenance::Edited, 'unset' => Provenance::Default]);
+      ->root();
+    $answers = Answers::forTree($form, ['token' => 's3cret-long', 'unset' => ''], ['token' => Provenance::Edited, 'unset' => Provenance::Default]);
 
     $summary = (new SummaryFormatter())->format($answers);
 
@@ -103,8 +103,8 @@ final class SummaryFormatterTest extends TestCase {
       ->panel('p', 'See [Orchard](https://example.com/orchard)', function (PanelBuilder $p): void {
         $p->text('name', 'Order at [Basket](https://example.com/basket)');
       })
-      ->build();
-    $answers = Answers::forForm($form, ['name' => 'Weekly'], ['name' => Provenance::Edited]);
+      ->root();
+    $answers = Answers::forTree($form, ['name' => 'Weekly'], ['name' => Provenance::Edited]);
 
     // Without hyperlink support the label and heading degrade to text (url).
     $plain = (new SummaryFormatter())->format($answers);

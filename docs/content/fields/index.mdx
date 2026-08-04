@@ -1,0 +1,46 @@
+---
+title: Fields
+description: 'The field gallery: text entry, choices, filesystem browsing and gates, each shown in all four display modes.'
+keywords: ['fields', 'gallery', 'fields', 'input', 'tui']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Fields
+
+The fields cover text entry, choices, filesystem browsing and gates. Every field of the form opens its field in an editor, and the same fields also run standalone (see [`playground/02-fields-*`](https://github.com/drevops/tui/tree/main/playground)). Fields pull their glyphs and colors from the theme, so each one is shown in all four display modes.
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/fields-light-animated.svg'), dark: useBaseUrl('/fields-dark-animated.svg')}} alt="All fields, one after another" width="100%" />
+</p>
+
+## Text entry
+
+- [Calendar](/fields/calendar) - a month calendar returning an ISO date.
+- [Number](/fields/number) - integer input with optional bounds and step keys.
+- [Password](/fields/password) - masked input with optional reveal and confirm.
+- [Template](/fields/template) - fill the named slots of a fixed shape.
+- [Text](/fields/text) - single-line input, with optional ghost-text autocomplete.
+- [Textarea](/fields/textarea) - multi-line input with optional external-editor handoff.
+
+## Choices
+
+- [Option groups](/fields/option-groups) - headings, separators and disabled options.
+- [Rating](/fields/rating) - a graded answer picked from a scale of points.
+- [Reorder](/fields/reorder) - rank a list by moving items into order.
+- [Search](/fields/search) - single or multiple choice with a filter line.
+- [Select](/fields/select) - single or multiple choice from a list.
+- [Suggest](/fields/suggest) - free text with autocomplete over a fixed set.
+
+## Filesystem
+
+- [FilePicker](/fields/filepicker) - browse for one path, or several with `->multiple()`.
+
+## Toggles, gates and cards
+
+- [Confirm](/fields/confirm) - a Yes/No toggle.
+- [Note](/fields/note) - a read-only informational card that collects nothing.
+- [Pause](/fields/pause) - an acknowledgment gate.
+- [Progress](/fields/progress) - a row that runs work, showing a bar or spinner.
+- [Toggle](/fields/toggle) - an inline switch between two labeled values.

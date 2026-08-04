@@ -1,0 +1,157 @@
+---
+title: FilePicker
+description: 'Browse the filesystem for one path - or several with ->multiple() - entering directories and returning to their parents.'
+keywords: ['file picker', 'filesystem', 'path', 'field']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# FilePicker
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/field-filepicker-light-animated.svg'), dark: useBaseUrl('/field-filepicker-dark-animated.svg')}} alt="FilePicker field" />
+</p>
+
+Browse the filesystem for a single path. It collects the **chosen path** (a `string`).
+
+```php
+$p->filePicker('list', 'Price list')
+  ->startIn(getcwd())    // Directory to open in (and the floor for ←).
+  ->filesOnly()          // Only files are selectable; directories stay navigable.
+  ->extensions(['csv'])  // Limit selectable files to these extensions.
+  ->maxSize(5_000_000)   // Reject a selected file larger than this many bytes.
+  ->showHidden();        // Show hidden (dot) entries when the browser opens.
+```
+
+Runnable scripts: [`playground/02-fields-filepicker.php`](https://github.com/drevops/tui/blob/main/playground/02-fields-filepicker.php) and [`filepicker-multiple.php`](https://github.com/drevops/tui/blob/main/playground/02-fields-filepicker-multiple.php).
+
+## Options
+
+| Name                | Description                                                                 | Required | Default               |
+| ------------------- | --------------------------------------------------------------------------- | -------- | --------------------- |
+| `startIn()`         | Directory the browser opens in, and the floor it cannot ascend above.       | No       | Current directory     |
+| `filesOnly()`       | Only files are selectable; directories stay navigable.                      | No       | Files and directories |
+| `directoriesOnly()` | Only directories are selectable.                                            | No       | Files and directories |
+| `extensions()`      | Restrict selectable files to these extensions (dot-less, case-insensitive). | No       | All                   |
+| `maxSize()`         | Reject any selected file larger than this many bytes.                       | No       | No limit              |
+| `showHidden()`      | Show hidden (dot) entries when the browser opens.                           | No       | Off                   |
+| `pageSize()`        | Entries shown before the list pages around the cursor.                      | No       | `10`                  |
+
+`filesOnly()` and `directoriesOnly()` are mutually exclusive - the last one set wins.
+
+## Keyboard
+
+| Key                         | Action                                                                           |
+| --------------------------- | -------------------------------------------------------------------------------- |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Move the highlight                                                               |
+| <kbd>→</kbd>                | Descend into the highlighted directory                                           |
+| <kbd>←</kbd>                | Ascend to the parent (never above the start directory)                           |
+| printable keys              | Filter the current directory                                                     |
+| <kbd>Tab</kbd>              | Toggle hidden entries                                                            |
+| <kbd>Backspace</kbd>        | Delete a filter character, or ascend when the filter is empty                    |
+| <kbd>Enter</kbd>            | Select the highlighted entry if selectable, otherwise descend into the directory |
+| <kbd>Esc</kbd>              | Cancel                                                                           |
+
+## Display modes
+
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-filepicker-light-static.svg'), dark: useBaseUrl('/field-filepicker-dark-static.svg')}} alt="File picker: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-filepicker-light-static-no-ansi.svg'), dark: useBaseUrl('/field-filepicker-dark-static-no-ansi.svg')}} alt="File picker: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-filepicker-light-static-ascii.svg'), dark: useBaseUrl('/field-filepicker-dark-static-ascii.svg')}} alt="File picker: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-filepicker-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/field-filepicker-dark-static-ascii-no-ansi.svg')}} alt="File picker: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+## Type and size constraints
+
+Constrain what counts as a valid pick with `->filesOnly()` / `->directoriesOnly()`, `->extensions()` and `->maxSize()`. The active limits show as a hint below the browser, a pick that breaks one is rejected inline when you accept, and the same limits are enforced in [headless collection](/headless-collection).
+
+```php
+$p->filePicker('list', 'Price list')
+  ->filesOnly()          // A directory (or a missing path) is not a valid pick.
+  ->extensions(['csv'])  // Only .csv files may be chosen.
+  ->maxSize(5_000_000);  // Reject a file larger than 5 MB.
+```
+
+A missing path, a directory where a file is required (or the reverse), a disallowed extension, or an oversized file each fail with a message naming the unmet limit.
+
+## Multiple selection
+
+Add `->multiple()` to accumulate **several paths** (a `list<string>`) instead of one: <kbd>Space</kbd> toggles the highlighted entry, selections stick as you browse between directories, and <kbd>Enter</kbd> accepts them all.
+
+```php
+$p->filePicker('lists', 'Price lists')
+  ->multiple()
+  ->startIn(getcwd())
+  ->extensions(['csv']);
+```
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/field-filepicker-multiple-light-animated.svg'), dark: useBaseUrl('/field-filepicker-multiple-dark-animated.svg')}} alt="FilePicker field in multiple mode" />
+</p>
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-filepicker-multiple-light-static.svg'), dark: useBaseUrl('/field-filepicker-multiple-dark-static.svg')}} alt="File picker (multiple): Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-filepicker-multiple-light-static-no-ansi.svg'), dark: useBaseUrl('/field-filepicker-multiple-dark-static-no-ansi.svg')}} alt="File picker (multiple): Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-filepicker-multiple-light-static-ascii.svg'), dark: useBaseUrl('/field-filepicker-multiple-dark-static-ascii.svg')}} alt="File picker (multiple): ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-filepicker-multiple-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/field-filepicker-multiple-dark-static-ascii-no-ansi.svg')}} alt="File picker (multiple): ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+## Selection limits
+
+Bound how many paths a multiple file picker collects with `->minSelections()` and `->maxSelections()`. The active limit shows as a hint below the browser, an out-of-range selection is rejected inline when you accept, and the same bounds are enforced in [headless collection](/headless-collection).
+
+```php
+$p->filePicker('price_lists', 'Price lists')
+  ->multiple()
+  ->minSelections(2) // Reject fewer than two paths.
+  ->maxSelections(3); // Reject more than three paths.
+```
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/field-filepicker-multiple-limited-light-animated.svg'), dark: useBaseUrl('/field-filepicker-multiple-limited-dark-animated.svg')}} alt="File picker in multiple mode with selection limits" />
+</p>
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-filepicker-multiple-limited-light-static.svg'), dark: useBaseUrl('/field-filepicker-multiple-limited-dark-static.svg')}} alt="Selection limits: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-filepicker-multiple-limited-light-static-no-ansi.svg'), dark: useBaseUrl('/field-filepicker-multiple-limited-dark-static-no-ansi.svg')}} alt="Selection limits: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-filepicker-multiple-limited-light-static-ascii.svg'), dark: useBaseUrl('/field-filepicker-multiple-limited-dark-static-ascii.svg')}} alt="Selection limits: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-filepicker-multiple-limited-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/field-filepicker-multiple-limited-dark-static-ascii-no-ansi.svg')}} alt="Selection limits: ASCII + No ANSI" /></td>
+  </tr>
+</table>
+
+Runnable script: [`playground/02-fields-filepicker-multiple-limited.php`](https://github.com/drevops/tui/blob/main/playground/02-fields-filepicker-multiple-limited.php).

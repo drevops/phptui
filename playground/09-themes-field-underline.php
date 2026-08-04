@@ -2,13 +2,13 @@
 
 /**
  * @file
- * The 'underline' field style: the input line drawn as an underline.
+ * The underline field style: the input line drawn as an underline.
  *
  * The 'field' theme option styles the input line of the single-line editors
- * (text, number, password) while a value is typed: 'underline' underlines
- * the entry area. 'flat' (a plain caret) is the default and 'boxed' is the
- * filled-bar style (see field-boxed.php). Press Enter on a field to open its
- * editor and see the style.
+ * (text, number, password) while a value is typed: FieldStyle::Underline
+ * underlines the entry area. FieldStyle::Flat (a plain caret) is the default
+ * and FieldStyle::Boxed is the filled-bar style (see field-boxed.php). Press
+ * Enter on a field to open its editor and see the style.
  *
  * Usage:
  *   php playground/09-themes-field-underline.php
@@ -18,8 +18,9 @@ declare(strict_types=1);
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Engine\EngineException;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\InterruptException;
+use DrevOps\Tui\Theme\FieldStyle;
 use DrevOps\Tui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -35,13 +36,13 @@ $form = Form::create('Field styles')
   });
 
 try {
-  $answers = (new Tui($form))->theme('default', ['field' => 'underline'])->run();
+  $answers = (new Tui($form))->theme('default', ['field' => FieldStyle::Underline])->run();
 }
 catch (InterruptException) {
   // Leave quietly on Ctrl-C.
   exit(130);
 }
-catch (EngineException $exception) {
+catch (CollectException $exception) {
   fwrite(STDERR, $exception->getMessage() . PHP_EOL);
   exit(1);
 }

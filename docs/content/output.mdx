@@ -1,6 +1,6 @@
 ---
 title: Output
-description: 'Boxes, status lines and definition lists you can draw outside a form run - theme-drawn, and dropping their colour when piped.'
+description: 'Boxes, status lines and definition lists you can draw outside a form run - theme-drawn, and dropping their color when piped.'
 keywords: ['output', 'box', 'status', 'definition list', 'primitive', 'chrome']
 ---
 
@@ -45,7 +45,7 @@ Long lines wrap inside the border rather than being clipped by it, so you can ha
 
 Runnable in [`playground/18-output-box.php`](https://github.com/drevops/tui/blob/main/playground/18-output-box.php).
 
-In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off:
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
 <table>
   <tr>
@@ -67,7 +67,7 @@ In all four [display modes](/display-modes) - Unicode or ASCII, colour on or off
 
 ## Table
 
-`table()` lays headers and rows into a bordered grid, sizing each column to its widest cell and capping the whole thing at the terminal. It is the same renderer a [note field's grid](/widgets/table) uses, so a standalone table matches the ones inside the panel.
+`table()` lays headers and rows into a bordered grid, sizing each column to its widest cell and capping the whole thing at the terminal. It is the same renderer a [note field's grid](/fields/table) uses, so a standalone table matches the ones inside the panel.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/output-table-light-static.svg'), dark: useBaseUrl('/output-table-dark-static.svg')}} alt="Output table" />
@@ -105,7 +105,7 @@ Runnable in [`playground/18-output-table.php`](https://github.com/drevops/tui/bl
 
 ## Card
 
-`card()` is the full form of `box()`: a title, a body and a grid, boxed together when the three belong to one another. It is the same renderer behind a [note field's card](/widgets/note), so a standalone card and a note card are the same object drawn twice.
+`card()` is the full form of `box()`: a title, a body and a grid, boxed together when the three belong to one another. It is the same renderer behind a [note field's card](/fields/note), so a standalone card and a note card are the same object drawn twice.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/output-card-light-static.svg'), dark: useBaseUrl('/output-card-dark-static.svg')}} alt="Output card" />
@@ -122,7 +122,7 @@ The grid is sized to fit inside the card's own border, so the two frames never c
 
 ## Status lines
 
-Five kinds, each with its own glyph and its own colour: `note()`, `info()`, `success()`, `warning()` and `error()`.
+Five kinds, each with its own glyph and its own color: `note()`, `info()`, `success()`, `warning()` and `error()`.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/output-status-light-static.svg'), dark: useBaseUrl('/output-status-dark-static.svg')}} alt="Status lines" />
@@ -136,7 +136,7 @@ $out->info('Checking the morning harvest')
   ->note('Anything short is refunded, never substituted');
 ```
 
-The glyph carries the meaning on its own, so the five stay distinguishable with colour off and in ASCII alike. Every glyph is one column wide in any terminal, so a run of status lines always aligns.
+The glyph carries the meaning on its own, so the five stay distinguishable with color off and in ASCII alike. Every glyph is one column wide in any terminal, so a run of status lines always aligns.
 
 To choose the kind at runtime, pass a `Status` case to `status()`:
 
@@ -230,7 +230,7 @@ Runnable in [`playground/18-output-text.php`](https://github.com/drevops/tui/blo
 
 ## Theme-drawn
 
-The colours and glyphs come from the active [theme](/themes), the same way every widget does, and the pieces reuse the atoms the panel already styles: a box takes the frame's border and heading, a success line the value colour, an info line the theme's accent. So `->theme('ember')` prints info lines in ember's orange and `->theme('frost')` in frost's blue, with no extra configuration and nothing a custom theme has to override to inherit its own palette.
+The colors and glyphs come from the active [theme](/themes), the same way every field does, and the pieces reuse the voices the panel already speaks in: a box takes the frame's border and heading, a success line the value color, an info line the theme's accent. So `->theme('ember')` prints info lines in ember's orange and `->theme('frost')` in frost's blue, with no extra configuration and nothing a custom theme has to override to inherit its own palette.
 
 To go further and restyle one piece outright, override its `render*()` method on your theme - `renderCard()`, `renderTable()`, `renderStatus()`, `renderDefinitions()`, `renderText()` or `renderBanner()`.
 
@@ -238,7 +238,7 @@ To go further and restyle one piece outright, override its `render*()` method on
 
 ## Degrading off a TTY
 
-Output is chrome, not data, so it is written to standard error and leaves standard output for your program's own results. Piped, redirected or captured, the escape codes would land in the text rather than on a terminal, so the colour is dropped and the plain lines remain:
+Output is chrome, not data, so it is written to standard error and leaves standard output for your program's own results. Piped, redirected or captured, the escape codes would land in the text rather than on a terminal, so the color is dropped and the plain lines remain:
 
 ```bash
 php playground/18-output-status.php 2>&1 | cat
@@ -247,7 +247,7 @@ php playground/18-output-status.php 2>&1 | cat
 # ! Only two crates of pears left
 ```
 
-The frames, glyphs and alignment survive, because they are text. Forcing wins over the detection either way, and both switches are set on the facade before you reach for `output()`: `$tui->color(true)->output()` keeps the colour in a captured log, and `$tui->unicode(false)->output()` draws the ASCII glyphs on a capable terminal. See [display modes](/display-modes) for the full set of switches.
+The frames, glyphs and alignment survive, because they are text. Forcing wins over the detection either way, and both switches are set on the facade before you reach for `output()`: `$tui->color(true)->output()` keeps the color in a captured log, and `$tui->unicode(false)->output()` draws the ASCII glyphs on a capable terminal. See [display modes](/display-modes) for the full set of switches.
 
 To write somewhere other than standard error - standard output, or a stream you control - pass your own terminal:
 

@@ -4,8 +4,8 @@
  * @file
  * Borderless panels: the same form as bordered.php, without the frame.
  *
- * The default look is a padded rounded box; the explicit 'none' border and
- * 'normal' spacing strip it back to bare rows. Run this next to bordered.php to
+ * The default look is a padded rounded box; an explicit Border::None and
+ * Spacing::Normal strip it back to bare rows. Run this next to bordered.php to
  * compare the two looks; the form, fields and keys are identical.
  *
  * Usage:
@@ -16,8 +16,10 @@ declare(strict_types=1);
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Engine\EngineException;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\InterruptException;
+use DrevOps\Tui\Theme\Border;
+use DrevOps\Tui\Theme\Spacing;
 use DrevOps\Tui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -51,13 +53,13 @@ $form = Form::create('Fruit basket')
 try {
   // The default look is a padded rounded box; this demo opts out of both
   // explicitly to show the bare, frameless rendering.
-  $answers = (new Tui($form))->theme('default', ['border' => 'none', 'spacing' => 'normal'])->clearOnExit(FALSE)->run();
+  $answers = (new Tui($form))->theme('default', ['border' => Border::None, 'spacing' => Spacing::Normal])->clearOnExit(FALSE)->run();
 }
 catch (InterruptException) {
   // Leave quietly on Ctrl-C.
   exit(130);
 }
-catch (EngineException $exception) {
+catch (CollectException $exception) {
   fwrite(STDERR, $exception->getMessage() . PHP_EOL);
   exit(1);
 }

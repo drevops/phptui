@@ -1,0 +1,586 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DrevOps\Tui\Screen;
+
+use DrevOps\Tui\Block\Capability\BindCapableInterface;
+use DrevOps\Tui\Block\Capability\DependCapableInterface;
+use DrevOps\Tui\Block\Capability\FocusCapableInterface;
+use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\Legend;
+use DrevOps\Tui\Block\Mode;
+use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\Tree;
+use DrevOps\Tui\Input\Action;
+use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\KeyMap;
+use DrevOps\Tui\Input\ScopedKeyMap;
+
+/**
+ * Sends a key to the innermost thing that binds it.
+ *
+ * Keys travel inward and drawing travels outward. A key goes to the focused
+ * block if that block binds it, and only outward from there to the panel it
+ * sits in.
+ *
+ * That one rule accounts for what would otherwise read as a special case: an
+ * open text field binds every printable key, because each is something you are
+ * typing, so the help key reaches it and becomes a character. Close the field
+ * and it binds none, so the same key travels outward and opens help. The same
+ * rule is why a nested panel does not swallow the keys that move the cursor
+ * past it: until you have gone into it, it is a row rather than somewhere you
+ * are.
+ *
+ * @package DrevOps\Tui\Screen
+ */
+final class KeyRouter {
+
+  /**
+   * Which of the focusable blocks has the cursor.
+   */
+  protected int $cursor = 0;
+
+  /**
+   * The field whose help is showing, if any is.
+   */
+  protected ?Field $help = NULL;
+
+  /**
+   * The panels left behind on the way in, with the row each was left on.
+   *
+   * @var list<array{panel:\DrevOps\Tui\Block\Panel,cursor:int}>
+   */
+  protected array $trail = [];
+
+  /**
+   * Construct a key router.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel it moves around, which is the panel you are in.
+   */
+  public function __construct(
+    protected Panel $panel,
+  ) {
+    // One declaration outlives the session driving it, so a session opens on a
+    // form nobody has walked into rather than wherever the last one stopped.
+    foreach (Tree::panels($this->panel) as $panel) {
+      $panel->leave();
+    }
+
+    $this->panel->enter();
+    $this->settle();
+  }
+
+  /**
+   * Make every block in the panel answer to one set of bindings.
+   *
+   * @param \DrevOps\Tui\Input\KeyMap $keys
+   *   The resolved bindings for the whole form.
+   *
+   * @return $this
+   *   The router.
+   */
+  public function bind(KeyMap $keys): self {
+    $this->rebind($keys, $this->panel);
+
+    return $this;
+  }
+
+  /**
+   * The panel you are in.
+   *
+   * @return \DrevOps\Tui\Block\Panel
+   *   The panel, which is whichever one was gone into last.
+   */
+  public function current(): Panel {
+    return $this->panel;
+  }
+
+  /**
+   * The titles of the panels entered to get here, outermost first.
+   *
+   * @return list<string>
+   *   The trail.
+   */
+  public function trail(): array {
+    $titles = array_map(static fn(array $step): string => $step['panel']->title(), $this->trail);
+    $titles[] = $this->panel->title();
+
+    return $titles;
+  }
+
+  /**
+   * The block the cursor is on.
+   *
+   * @return \DrevOps\Tui\Block\Capability\FocusCapableInterface|null
+   *   The block, or NULL when nothing in the panel takes focus.
+   */
+  public function focused(): ?FocusCapableInterface {
+    return $this->focusable()[$this->cursor] ?? NULL;
+  }
+
+  /**
+   * The innermost thing a key reaches right now.
+   *
+   * @return \DrevOps\Tui\Block\Capability\BindCapableInterface
+   *   The open block under the cursor, else the panel around it.
+   */
+  public function binder(): BindCapableInterface {
+    $focused = $this->focused();
+
+    return $focused instanceof Field && $focused->mode() === Mode::Edit ? $focused : $this->panel;
+  }
+
+  /**
+   * The keys that apply right now.
+   *
+   * @return \DrevOps\Tui\Input\ScopedKeyMap
+   *   The innermost binder's bindings.
+   */
+  public function bindings(): ScopedKeyMap {
+    return $this->binder()->bindings();
+  }
+
+  /**
+   * What those keys do, as labelled fragments.
+   *
+   * @return list<\DrevOps\Tui\Input\Hint>
+   *   The fragments.
+   */
+  public function hints(): array {
+    return $this->binder()->hints();
+  }
+
+  /**
+   * Rewrite a legend from the keys that apply right now.
+   *
+   * @param \DrevOps\Tui\Block\Legend $legend
+   *   The legend.
+   *
+   * @return \DrevOps\Tui\Block\Legend
+   *   The same legend, now advertising the innermost binder's keys.
+   */
+  public function refresh(Legend $legend): Legend {
+    return $legend->advertise($this->bindings(), ...$this->hints());
+  }
+
+  /**
+   * Whether a field's help is showing.
+   *
+   * @return bool
+   *   TRUE when it is.
+   */
+  public function isShowingHelp(): bool {
+    return $this->help instanceof Field;
+  }
+
+  /**
+   * The field whose help is showing.
+   *
+   * @return \DrevOps\Tui\Block\Field|null
+   *   The field, or NULL when none is showing.
+   */
+  public function helping(): ?Field {
+    return $this->help;
+  }
+
+  /**
+   * Come back out of the panel you are in, as the key that does would.
+   *
+   * @return bool
+   *   TRUE when there was somewhere to come back to.
+   */
+  public function leave(): bool {
+    return $this->ascend();
+  }
+
+  /**
+   * Put the cursor back on a row that is there, after some stopped being.
+   *
+   * The answers decide which rows are there at all, so a row can leave from
+   * under the cursor - and a cursor counting to a row that is gone is on
+   * nothing at all.
+   */
+  public function reframe(): void {
+    $this->cursor = max(0, min($this->cursor, max(0, count($this->focusable()) - 1)));
+    $this->settle();
+  }
+
+  /**
+   * Send a key where it belongs.
+   *
+   * @param \DrevOps\Tui\Input\Key $key
+   *   The key.
+   */
+  public function handle(Key $key): void {
+    if ($this->help instanceof Field) {
+      // Any key dismisses help, so a reader never has to find the way out.
+      $this->help = NULL;
+
+      return;
+    }
+
+    $focused = $this->focused();
+
+    if ($focused instanceof Field && $focused->binds($key)) {
+      $focused->capture($key);
+
+      return;
+    }
+
+    if ($this->panel->binds($key)) {
+      $this->inPanel($focused, $key);
+    }
+
+    // A key neither of them binds has reached the screen, which claims none of
+    // its own.
+  }
+
+  /**
+   * Handle a key that travelled outward to the panel.
+   *
+   * @param \DrevOps\Tui\Block\Capability\FocusCapableInterface|null $focused
+   *   The block with the cursor, if any has it.
+   * @param \DrevOps\Tui\Input\Key $key
+   *   The key.
+   */
+  protected function inPanel(?FocusCapableInterface $focused, Key $key): void {
+    $bindings = $this->panel->bindings();
+
+    if ($bindings->matches($key, Action::MoveDown)) {
+      $this->moveBy(1);
+
+      return;
+    }
+
+    if ($bindings->matches($key, Action::MoveUp)) {
+      $this->moveBy(-1);
+
+      return;
+    }
+
+    if ($bindings->matches($key, Action::MoveRight)) {
+      $this->moveAcross(1);
+
+      return;
+    }
+
+    if ($bindings->matches($key, Action::MoveLeft)) {
+      $this->moveAcross(-1);
+
+      return;
+    }
+
+    if ($bindings->matches($key, Action::Activate)) {
+      $this->activate($focused);
+
+      return;
+    }
+
+    if ($bindings->matches($key, Action::Back)) {
+      $this->ascend();
+
+      return;
+    }
+
+    // Help is only offered where it leads somewhere, so a field carrying none
+    // leaves the key doing nothing rather than opening a blank page.
+    if ($bindings->matches($key, Action::Help) && $focused instanceof Field && $focused->helpText() !== '') {
+      $this->help = $focused;
+    }
+  }
+
+  /**
+   * Do what selecting the block under the cursor does.
+   *
+   * @param \DrevOps\Tui\Block\Capability\FocusCapableInterface|null $focused
+   *   The block with the cursor, if any has it.
+   */
+  protected function activate(?FocusCapableInterface $focused): void {
+    if ($focused instanceof Field) {
+      $focused->open();
+
+      return;
+    }
+
+    if ($focused instanceof Panel) {
+      $this->descend($focused);
+    }
+  }
+
+  /**
+   * Go into a nested panel, so the screen becomes its contents.
+   *
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel to go into.
+   */
+  protected function descend(Panel $panel): void {
+    $panel->prepare();
+
+    $this->trail[] = ['panel' => $this->panel, 'cursor' => $this->cursor];
+    $this->panel = $panel->enter();
+    $this->cursor = 0;
+    $this->settle();
+  }
+
+  /**
+   * Come back out of a panel, restoring the screen and the row it was left on.
+   *
+   * @return bool
+   *   TRUE when there was somewhere to come back to.
+   */
+  protected function ascend(): bool {
+    // The outermost panel is not somewhere you came from, so there is nowhere
+    // to go back to and the key does nothing.
+    if ($this->trail === []) {
+      return FALSE;
+    }
+
+    $step = array_pop($this->trail);
+
+    $this->panel->leave();
+    $this->panel = $step['panel'];
+    $this->cursor = $step['cursor'];
+    $this->settle();
+
+    return TRUE;
+  }
+
+  /**
+   * Move the cursor, stopping at the ends rather than wrapping.
+   *
+   * @param int $delta
+   *   The rows to move by.
+   */
+  protected function moveBy(int $delta): void {
+    $count = count($this->focusable());
+
+    if ($count === 0) {
+      return;
+    }
+
+    $this->cursor = $this->stepped($delta) ?? max(0, min($this->cursor + $delta, $count - 1));
+    $this->settle();
+  }
+
+  /**
+   * Move the cursor along the visual row of windows it is on.
+   *
+   * Windows sit beside each other, so what is next to one is a neighbour rather
+   * than the next row: moving across walks the row and stops at its ends, and
+   * anywhere else there is nothing beside the cursor to move to.
+   *
+   * @param int $delta
+   *   The windows to move by.
+   */
+  protected function moveAcross(int $delta): void {
+    $at = $this->windowAt();
+
+    if ($at === NULL) {
+      return;
+    }
+
+    [$row, $column] = $at;
+    $windows = $this->windowRows();
+    $next = $column + $delta;
+
+    if ($next < 0 || $next >= count($windows[$row])) {
+      return;
+    }
+
+    $this->cursor = $windows[$row][$next];
+    $this->settle();
+  }
+
+  /**
+   * Where the cursor lands when it steps off a row of windows, if it is on one.
+   *
+   * @param int $delta
+   *   The visual rows to move by.
+   *
+   * @return int|null
+   *   The block to land on, or NULL when the cursor is not on a window and the
+   *   move is the ordinary one from a row to the row after it.
+   */
+  protected function stepped(int $delta): ?int {
+    $at = $this->windowAt();
+
+    if ($at === NULL) {
+      return NULL;
+    }
+
+    [$row, $column] = $at;
+    $windows = $this->windowRows();
+    $next = $row + $delta;
+
+    // Off the top or the bottom of the grid is out of it: the whole grid is one
+    // step, so what is above or below it is the row beside the grid rather than
+    // the window the cursor happened to be under.
+    if (!isset($windows[$next])) {
+      return $this->beside($windows, $delta);
+    }
+
+    // A shorter row cannot be entered past its end, so the cursor lands on the
+    // window nearest the column it came from.
+    return $windows[$next][min($column, count($windows[$next]) - 1)];
+  }
+
+  /**
+   * The block on the far side of the grid, in the direction of a move.
+   *
+   * @param list<list<int>> $windows
+   *   The blocks of each visual row of windows.
+   * @param int $delta
+   *   The direction: below the grid when positive, above it when negative.
+   *
+   * @return int|null
+   *   The block to land on, or NULL when there is nothing beyond the grid.
+   */
+  protected function beside(array $windows, int $delta): ?int {
+    $placed = $windows === [] ? [] : array_merge(...$windows);
+
+    if ($placed === []) {
+      return NULL;
+    }
+
+    $count = count($this->focusable());
+    $index = $delta > 0 ? max($placed) + 1 : min($placed) - 1;
+
+    return $index >= 0 && $index < $count ? $index : NULL;
+  }
+
+  /**
+   * Which window of the grid the cursor is on, if it is on one.
+   *
+   * @return array{int,int}|null
+   *   The visual row and the place in it, or NULL when the cursor is not on a
+   *   window.
+   */
+  protected function windowAt(): ?array {
+    foreach ($this->windowRows() as $row => $blocks) {
+      $column = array_search($this->cursor, $blocks, TRUE);
+
+      if (is_int($column)) {
+        return [$row, $column];
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * The blocks of each visual row of windows, in the order they are drawn.
+   *
+   * @return list<list<int>>
+   *   One entry per visual row, naming the focusable blocks the windows of that
+   *   row are; empty when the panel arranges no grid.
+   */
+  protected function windowRows(): array {
+    $grid = $this->panel->place()->gridRows();
+
+    if ($grid === []) {
+      return [];
+    }
+
+    $windows = [];
+
+    foreach ($this->focusable() as $index => $block) {
+      if ($block instanceof Panel) {
+        $windows[] = $index;
+      }
+    }
+
+    $rows = [];
+    $taken = 0;
+
+    foreach ($grid as $count) {
+      $row = array_slice($windows, $taken, $count);
+
+      if ($row !== []) {
+        $rows[] = $row;
+      }
+
+      $taken += $count;
+    }
+
+    return $rows;
+  }
+
+  /**
+   * Put the cursor on the block it is counting to, and take it off the rest.
+   */
+  protected function settle(): void {
+    foreach ($this->focusable() as $index => $block) {
+      if ($index === $this->cursor) {
+        $block->focus();
+
+        continue;
+      }
+
+      $block->blur();
+    }
+  }
+
+  /**
+   * Make a panel and everything in it answer to one set of bindings.
+   *
+   * @param \DrevOps\Tui\Input\KeyMap $keys
+   *   The resolved bindings.
+   * @param \DrevOps\Tui\Block\Panel $panel
+   *   The panel to spread them through.
+   */
+  protected function rebind(KeyMap $keys, Panel $panel): void {
+    $panel->bind($keys);
+
+    foreach ($panel->currentLayout()->names() as $name) {
+      foreach ($panel->currentLayout()->in($name)->blocks() as $block) {
+        if ($block instanceof Panel) {
+          $this->rebind($keys, $block);
+
+          continue;
+        }
+
+        if ($block instanceof BindCapableInterface) {
+          $block->bind($keys);
+        }
+      }
+    }
+  }
+
+  /**
+   * The blocks the cursor can land on, in the order they are drawn.
+   *
+   * @return list<\DrevOps\Tui\Block\Capability\FocusCapableInterface>
+   *   The blocks.
+   */
+  protected function focusable(): array {
+    $blocks = [];
+
+    foreach ($this->panel->currentLayout()->names() as $name) {
+      foreach ($this->panel->currentLayout()->in($name)->blocks() as $block) {
+        // A row the answers took off the screen is not somewhere the cursor can
+        // be, because it is not anywhere.
+        if ($block instanceof DependCapableInterface && $block->isHidden()) {
+          continue;
+        }
+
+        // A field of a kind that only shows is a field by declaration and a
+        // passage of text by behaviour: there is nothing to open, so the cursor
+        // passes over it exactly as it passes over markup.
+        if ($block instanceof Field && $block->type()->isPresentational()) {
+          continue;
+        }
+
+        // A block that does not claim the cursor is skipped rather than landed
+        // on, which is what lets markup sit between two fields.
+        if ($block instanceof FocusCapableInterface) {
+          $blocks[] = $block;
+        }
+      }
+    }
+
+    return $blocks;
+  }
+
+}

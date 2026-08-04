@@ -8,21 +8,21 @@ use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Engine\Engine;
-use DrevOps\Tui\Engine\EngineException;
+use DrevOps\Tui\Screen\Collector;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Model\Field;
+use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Render\PanelController;
+use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Tui;
-use DrevOps\Tui\Widget\Capability\QueryOptionsCapableTrait;
-use DrevOps\Tui\Widget\SearchWidget;
-use DrevOps\Tui\Widget\SuggestWidget;
-use DrevOps\Tui\Widget\WidgetFactory;
+use DrevOps\Tui\Field\Capability\QueryOptionsCapableTrait;
+use DrevOps\Tui\Field\Search;
+use DrevOps\Tui\Field\Suggest;
+use DrevOps\Tui\Field\FieldFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -36,11 +36,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Field::class)]
 #[CoversClass(FieldType::class)]
 #[CoversClass(Option::class)]
-#[CoversClass(Engine::class)]
-#[CoversClass(PanelController::class)]
-#[CoversClass(WidgetFactory::class)]
-#[CoversClass(SearchWidget::class)]
-#[CoversClass(SuggestWidget::class)]
+#[CoversClass(Collector::class)]
+#[CoversClass(ScreenController::class)]
+#[CoversClass(FieldFactory::class)]
+#[CoversClass(Search::class)]
+#[CoversClass(Suggest::class)]
 #[CoversTrait(QueryOptionsCapableTrait::class)]
 #[Group('tui')]
 final class QueryOptionsTest extends TestCase {
@@ -210,7 +210,7 @@ final class QueryOptionsTest extends TestCase {
   }
 
   public function testHeadlessRejectsValueNoQueryProduces(): void {
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessageMatches('/"turnip" was not found/');
 
     (new Tui($this->form()))->collect('{"veg":"turnip"}');
@@ -219,7 +219,7 @@ final class QueryOptionsTest extends TestCase {
   public function testHeadlessRejectsValueTheQueryAnswersWithout(): void {
     // The lookup returns rows, just not the one asked for, so the message can
     // name what was allowed.
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessageMatches('/not one of: carrot/');
 
     (new Tui($this->form(static fn(string $query): array => ['carrot' => 'Carrot'])))->collect('{"veg":"turnip"}');
@@ -236,12 +236,12 @@ final class QueryOptionsTest extends TestCase {
     $this->assertSame(['carrot', 'onion'], $this->queries);
   }
 
-  public function testHeadlessTurnsSourceFailureIntoEngineError(): void {
+  public function testHeadlessTurnsSourceFailureIntoCollectError(): void {
     $form = $this->form(static function (string $query): array {
       throw new \RuntimeException('The pantry is unreachable.');
     });
 
-    $this->expectException(EngineException::class);
+    $this->expectException(CollectException::class);
     $this->expectExceptionMessageMatches('/Could not load options for field "veg": The pantry is unreachable\./');
 
     (new Tui($form))->collect('{"veg":"potato"}');
@@ -287,35 +287,35 @@ final class QueryOptionsTest extends TestCase {
     $this->assertStringNotContainsString('Carrot', $tester->display());
   }
 
-  public function testWidgetWithNoSourceNeverAsksForQuery(): void {
-    $widget = new SearchWidget(['carrot' => 'Carrot']);
-    $widget->handle(Key::char('c'));
+  public function testFieldWithNoSourceNeverAsksForQuery(): void {
+    $field = new Search(['carrot' => 'Carrot']);
+    $field->handle(Key::char('c'));
 
-    $this->assertFalse($widget->isQueryDriven());
-    $this->assertNull($widget->pendingQuery());
+    $this->assertFalse($field->isQueryDriven());
+    $this->assertNull($field->pendingQuery());
   }
 
   public function testTheOldestCachedQueryIsDroppedOnceTheCacheIsFull(): void {
-    $widget = new SearchWidget([]);
-    $widget->driveByQuery();
+    $field = new Search([]);
+    $field->driveByQuery();
 
     // Each character makes the query one longer, so typing fills the cache with
     // one more distinct query than it holds.
     $queries = [];
-    for ($i = 0; $i <= SearchWidget::QUERY_CACHE_SIZE; $i++) {
-      $widget->handle(Key::char('a'));
-      $query = $widget->pendingQuery();
+    for ($i = 0; $i <= Search::QUERY_CACHE_SIZE; $i++) {
+      $field->handle(Key::char('a'));
+      $query = $field->pendingQuery();
       $this->assertIsString($query);
       $queries[] = $query;
-      $widget->applyQuery($query, []);
+      $field->applyQuery($query, []);
     }
 
     // Stepping back lands on cached queries until the very first one, which the
     // newest insert evicted and which therefore has to be asked for again.
     for ($i = count($queries) - 1; $i > 0; $i--) {
-      $widget->handle(Key::named(KeyName::Backspace));
+      $field->handle(Key::named(KeyName::Backspace));
       $expected = $i === 1 ? $queries[0] : NULL;
-      $this->assertSame($expected, $widget->pendingQuery());
+      $this->assertSame($expected, $field->pendingQuery());
     }
   }
 
@@ -324,7 +324,7 @@ final class QueryOptionsTest extends TestCase {
     $this->expectException(FormException::class);
     $this->expectExceptionMessageMatches($message);
 
-    Form::create('Order')->panel('order', 'New order', $declare)->build();
+    Form::create('Order')->panel('order', 'New order', $declare)->root();
   }
 
   /**

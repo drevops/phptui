@@ -7,7 +7,7 @@ namespace DrevOps\Tui\Model;
 use DrevOps\Tui\Translation\Translator;
 
 /**
- * The set of supported field (widget) types.
+ * The set of supported field (field) types.
  *
  * @package DrevOps\Tui\Model
  */
@@ -80,9 +80,9 @@ enum FieldType: string {
    * Whether the field carries no answer into the payload or machine schema.
    *
    * Wider than {@see isPresentational()}: a note and a progress row each
-   * collect no value, so the engine, the answers and the schema skip them - but
-   * a progress row still takes the cursor (it runs work on activation), so it
-   * is not presentational.
+   * collect no value, so a collection, the answers and the schema skip them -
+   * but a progress row still takes the cursor (it runs work on activation), so
+   * it is not presentational.
    *
    * @return bool
    *   TRUE for the display-only field types.

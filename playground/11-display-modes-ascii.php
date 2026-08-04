@@ -4,7 +4,7 @@
  * @file
  * ASCII glyphs: the textual fallback for non-Unicode terminals.
  *
- * Widgets pull their glyphs from the theme as Unicode/ASCII pairs - the
+ * Fields pull their glyphs from the theme as Unicode/ASCII pairs - the
  * radio, checkbox, marker, caret and scroll indicators all degrade to plain
  * characters. Unicode support is auto-detected from the locale (LC_ALL,
  * LC_CTYPE, LANG); ->unicode(FALSE) forces the textual set to see it on any
@@ -18,7 +18,7 @@ declare(strict_types=1);
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Engine\EngineException;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Tui;
 
@@ -47,7 +47,7 @@ catch (InterruptException) {
   // Leave quietly on Ctrl-C.
   exit(130);
 }
-catch (EngineException $exception) {
+catch (CollectException $exception) {
   fwrite(STDERR, $exception->getMessage() . PHP_EOL);
   exit(1);
 }

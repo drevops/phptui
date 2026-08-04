@@ -4,23 +4,32 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Builder;
 
+use DrevOps\Tui\Block\BlockInterface;
+use DrevOps\Tui\Block\Markup;
+use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Model\Buttons;
-use DrevOps\Tui\Model\Field;
 use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Modal;
-use DrevOps\Tui\Model\Panel;
+use DrevOps\Tui\Model\FormException;
+use DrevOps\Tui\Screen\Layout\LayoutManager;
+use DrevOps\Tui\Screen\Layout\PanelLayout;
 
 /**
- * A fluent builder for a Panel and its fields and sub-panels.
+ * A fluent builder for a panel: what it holds, and how it is arranged.
+ *
+ * Every level of the hierarchy has a default, so a three-field panel names no
+ * layout and no region: it takes the one region a panel wants most of the time
+ * and the fields go in it in the order they are written. Naming a layout is
+ * what a panel does only when it needs one, and then a block says which region
+ * it belongs to rather than depending on the order it was declared in.
  *
  * @package DrevOps\Tui\Builder
  */
 final class PanelBuilder {
 
   /**
-   * The panel description.
+   * The panel being declared.
    */
-  protected string $description = '';
+  protected Panel $panel;
 
   /**
    * The field builders, in declaration order.
@@ -37,21 +46,14 @@ final class PanelBuilder {
   protected array $panels = [];
 
   /**
-   * The modal presentation config, or NULL for an ordinary drill-in panel.
+   * The region blocks are added to until another is named.
    */
-  protected ?Modal $modal = NULL;
+  protected string $region;
 
   /**
-   * The sub-panel grid rows, or empty for the row list.
-   *
-   * @var list<int>
+   * Whether anything has been placed in the panel's layout yet.
    */
-  protected array $layout = [];
-
-  /**
-   * A hook run once before the panel first opens, or NULL for none.
-   */
-  protected ?\Closure $preload = NULL;
+  protected bool $placed = FALSE;
 
   /**
    * Construct a panel builder.
@@ -62,6 +64,37 @@ final class PanelBuilder {
    *   The panel title.
    */
   public function __construct(protected string $id, protected string $title) {
+    $this->panel = (new Panel($id, $title))->layout(new PanelLayout());
+    $this->region = $this->firstRegion();
+  }
+
+  /**
+   * The panel this builder is declaring.
+   *
+   * @return \DrevOps\Tui\Block\Panel
+   *   The panel, whose identity never changes, so it can be placed in a region
+   *   as it is declared.
+   */
+  public function block(): Panel {
+    return $this->panel;
+  }
+
+  /**
+   * Finish the declaration, so everything it holds is finished too.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the declared grid does not match the panels it arranges.
+   */
+  public function seal(): void {
+    LayoutGuard::assert($this->panel->gridRows(), count($this->panels), $this->id);
+
+    foreach ($this->fields as $field) {
+      $field->seal();
+    }
+
+    foreach ($this->panels as $panel) {
+      $panel->seal();
+    }
   }
 
   /**
@@ -74,7 +107,7 @@ final class PanelBuilder {
    *   The builder.
    */
   public function description(string $description): self {
-    $this->description = $description;
+    $this->panel->description($description);
 
     return $this;
   }
@@ -95,7 +128,25 @@ final class PanelBuilder {
    *   The builder.
    */
   public function modal(string $submit_label = 'Submit', string $cancel_label = 'Cancel'): self {
-    $this->modal = new Modal(new Buttons(TRUE, $submit_label, $cancel_label));
+    $this->panel->buttons(new Buttons(TRUE, $submit_label, $cancel_label))->modal();
+
+    return $this;
+  }
+
+  /**
+   * Add blocks to a named region from here on.
+   *
+   * @param string $name
+   *   The region name.
+   *
+   * @return $this
+   *   The builder.
+   */
+  public function in(string $name): self {
+    // Reached now rather than when a block arrives, so a name that was never
+    // declared is caught where it was written.
+    $this->panel->in($name);
+    $this->region = $name;
 
     return $this;
   }
@@ -362,6 +413,31 @@ final class PanelBuilder {
   }
 
   /**
+   * Add markup: formatted content, and nothing else.
+   *
+   * Chain `->bordered()` to draw it inside a card and `->table()` to lay it out
+   * as a grid; both are presentation choices over the same block. `->when()`
+   * gates it on an earlier answer, which is what lets a warning appear only
+   * when one calls for it.
+   *
+   * @param string $id
+   *   The block id.
+   * @param string $body
+   *   The content; newlines separate lines.
+   * @param string $title
+   *   An optional title above the body.
+   *
+   * @return \DrevOps\Tui\Block\Markup
+   *   The markup block.
+   */
+  public function markup(string $id, string $body, string $title = ''): Markup {
+    $markup = new Markup($id, $body, $title);
+    $this->add($markup);
+
+    return $markup;
+  }
+
+  /**
    * Add a progress row that runs work when activated, showing an indicator.
    *
    * Chain `->steps(int)` for a determinate bar (omit it for a spinner) and
@@ -397,30 +473,62 @@ final class PanelBuilder {
     $panel = new self($id, $title);
     $build($panel);
     $this->panels[] = $panel;
+    $this->add($panel->block());
 
     return $this;
   }
 
   /**
-   * Arrange this panel's sub-panels as a grid of side-by-side columns.
+   * Arrange this panel: by a named layout, or its sub-panels as a grid.
    *
-   * Each argument declares one visual row and names how many sub-panels sit
-   * side by side in it; the sub-panels fill the rows in declaration order.
-   * `layout(2)` puts two panels beside each other, `layout(2, 2)` makes four
-   * windows, `layout(1, 2)` one full-width panel above two columns. Every
-   * level of the panel tree declares its own layout, so a drilled-in panel
-   * arranges its children independently.
+   * A name picks the arrangement of the panel's own blocks - a shipped layout,
+   * or any one a consumer registered - and each of its regions then takes the
+   * blocks that name it through
+   * {@see \DrevOps\Tui\Builder\PanelBuilder::in()}.
    *
-   * @param int ...$rows
-   *   The sub-panel count of each visual row, top to bottom.
+   * Counts arrange the sub-panels instead: each argument declares one visual
+   * row and names how many sub-panels sit side by side in it, filled in
+   * declaration order. `layout(2)` puts two panels beside each other,
+   * `layout(2, 2)` makes four windows, `layout(1, 2)` one full-width panel
+   * above two columns. Every level of the panel tree declares its own, so a
+   * drilled-in panel arranges its children independently.
+   *
+   * @param int|string ...$rows
+   *   The layout name, or the sub-panel count of each visual row, top to
+   *   bottom.
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When a name is mixed with counts, more than one name is given, or the
+   *   panel already holds blocks the named layout has nowhere to put.
    */
-  public function layout(int ...$rows): self {
-    $this->layout = array_values($rows);
+  public function layout(int|string ...$rows): self {
+    $counts = [];
+    $names = [];
 
-    return $this;
+    foreach ($rows as $row) {
+      if (is_int($row)) {
+        $counts[] = $row;
+
+        continue;
+      }
+
+      $names[] = $row;
+    }
+
+    if ($names === []) {
+      $this->panel->grid(...$counts);
+
+      return $this;
+    }
+
+    if ($counts !== []) {
+      throw new FormException(sprintf('Panel "%s" declares a layout name beside a grid of sub-panels; a panel is arranged one way or the other.', $this->id));
+    }
+
+    return $this->arrange($names);
   }
 
   /**
@@ -437,44 +545,87 @@ final class PanelBuilder {
    *   The builder.
    */
   public function preload(\Closure $work): self {
-    $this->preload = $work;
+    $this->panel->preload($work);
 
     return $this;
   }
 
   /**
-   * Build the immutable Panel.
+   * Add a block to the region in hand.
    *
-   * @return \DrevOps\Tui\Model\Panel
-   *   The panel.
+   * A region never knows which kind it was given, so anything drawn goes in the
+   * same way a field does.
    *
-   * @throws \DrevOps\Tui\Model\FormException
-   *   When the declared layout does not match the sub-panels.
+   * @param \DrevOps\Tui\Block\BlockInterface $block
+   *   The block.
+   *
+   * @return $this
+   *   The builder.
    */
-  public function build(): Panel {
-    LayoutGuard::assert($this->layout, count($this->panels), $this->id);
+  public function add(BlockInterface $block): self {
+    $this->panel->in($this->region)->add($block);
+    $this->placed = TRUE;
 
-    return new Panel(
-      $this->id,
-      $this->title,
-      $this->description,
-      array_map(static fn(FieldBuilder $field): Field => $field->build(), $this->fields),
-      array_map(static fn(PanelBuilder $panel): Panel => $panel->build(), $this->panels),
-      $this->modal,
-      $this->layout,
-      $this->preload,
-    );
+    return $this;
   }
 
   /**
-   * Create, register and return a field builder of a given type.
+   * Arrange the panel's own blocks with a named layout.
+   *
+   * @param list<string> $names
+   *   The declared names.
+   *
+   * @return $this
+   *   The builder.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When more than one name is given, or the panel already holds blocks the
+   *   named layout has nowhere to put.
+   */
+  protected function arrange(array $names): self {
+    if (count($names) > 1) {
+      throw new FormException(sprintf('Panel "%s" declares %d layouts; a panel is arranged by one.', $this->id, count($names)));
+    }
+
+    if ($this->placed) {
+      throw new FormException(sprintf('Panel "%s" declares a layout after placing blocks in the one it had; declare the layout first, so every block knows the regions it may go in.', $this->id));
+    }
+
+    $this->panel->layout(LayoutManager::create($names[0]));
+    $this->region = $this->firstRegion();
+
+    return $this;
+  }
+
+  /**
+   * The region a block goes in when it names none.
+   *
+   * @return string
+   *   The first region the panel's layout declares.
+   *
+   * @throws \DrevOps\Tui\Model\FormException
+   *   When the layout declares no region, so there is nowhere for a block to
+   *   go.
+   */
+  protected function firstRegion(): string {
+    $names = $this->panel->currentLayout()->names();
+
+    if ($names === []) {
+      throw new FormException(sprintf('Panel "%s" is arranged by a layout declaring no region, so it has nowhere to put a block.', $this->id));
+    }
+
+    return $names[0];
+  }
+
+  /**
+   * Create, register and place a field builder of a given type.
    *
    * @param string $id
    *   The field id.
    * @param string $label
    *   The label (defaults to the id).
    * @param \DrevOps\Tui\Model\FieldType $type
-   *   The widget type.
+   *   The field type.
    * @param bool $label_fallback
    *   Whether an empty label falls back to the id (the default); FALSE keeps an
    *   empty label empty, for a note whose title is optional.
@@ -485,6 +636,7 @@ final class PanelBuilder {
   protected function field(string $id, string $label, FieldType $type, bool $label_fallback = TRUE): FieldBuilder {
     $field = new FieldBuilder($id, $label === '' && $label_fallback ? $id : $label, $type);
     $this->fields[] = $field;
+    $this->add($field->block());
 
     return $field;
   }

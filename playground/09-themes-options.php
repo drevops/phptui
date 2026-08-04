@@ -2,14 +2,16 @@
 
 /**
  * @file
- * Theme options: built-in and theme-invented, all as plain strings.
+ * Theme options: the built-in ones, and one a theme invents for itself.
  *
  * Display options are one string-keyed array on ->theme(): 'spacing' and
- * 'border' are built-ins, 'accent' is declared by the AccentTheme in themes/.
- * Every value is validated against the theme's option schema, so a typo throws
- * at startup. The theme itself is registered under a short alias with
- * ThemeManager::register() - the third selection route besides a built-in name
- * and a class name (see 09-themes-custom.php).
+ * 'border' are built-ins, each carrying a case of its own enum, and 'accent'
+ * is declared by the AccentTheme in themes/, whose allowed values are the
+ * plain strings that theme enumerates in its option schema. Every value is
+ * validated against that schema, so a typo throws at startup. The theme itself
+ * is registered under a short alias with ThemeManager::register() - the third
+ * selection route besides a built-in name and a class name (see
+ * 09-themes-custom.php).
  *
  * Usage:
  *   php playground/09-themes-options.php
@@ -19,8 +21,10 @@ declare(strict_types=1);
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Engine\EngineException;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\InterruptException;
+use DrevOps\Tui\Theme\Border;
+use DrevOps\Tui\Theme\Spacing;
 use DrevOps\Tui\Theme\ThemeManager;
 use DrevOps\Tui\Tui;
 use Playground\Themes\AccentTheme;
@@ -50,8 +54,8 @@ $form = Form::create('Theme options demo')
 try {
   $answers = (new Tui($form))
     ->theme('accent', [
-      'spacing' => 'padded',
-      'border' => 'rounded',
+      'spacing' => Spacing::Padded,
+      'border' => Border::Rounded,
       'accent' => 'warm',
     ])
     ->run();
@@ -60,7 +64,7 @@ catch (InterruptException) {
   // Leave quietly on Ctrl-C.
   exit(130);
 }
-catch (EngineException $exception) {
+catch (CollectException $exception) {
   fwrite(STDERR, $exception->getMessage() . PHP_EOL);
   exit(1);
 }

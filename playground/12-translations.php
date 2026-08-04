@@ -15,15 +15,24 @@
  * hub summary, so selecting a different number of fruits shows Ukrainian's
  * one/few/many forms - see uk.php for the rule that chooses between them.
  *
+ * The catalog is not a property of the screen, so it survives having none: an
+ * unattended run resolves the answers from the defaults and prints the same
+ * localized summary, which is the whole Ukrainian session in one line of
+ * output and no terminal.
+ *
  * Usage:
  *   php playground/12-translations.php
+ *
+ *   # The same session with no terminal at all: panels, labels and summary,
+ *   # localized end to end.
+ *   php playground/12-translations.php < /dev/null
  */
 
 declare(strict_types=1);
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Engine\EngineException;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Tui;
@@ -66,11 +75,12 @@ catch (InterruptException) {
   // Leave quietly on Ctrl-C.
   exit(130);
 }
-catch (EngineException $exception) {
+catch (CollectException $exception) {
   fwrite(STDERR, $exception->getMessage() . PHP_EOL);
   exit(1);
 }
 
-// The summary renders through the same catalog; the collected values are
-// untouched - only the presentation is localized.
+// The summary renders through the same catalog, interactively or not; the
+// collected values are untouched - only the presentation is localized, so the
+// ids and the answers stay the language-neutral ones the form declared.
 echo $answers->toSummary() . PHP_EOL;

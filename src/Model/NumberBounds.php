@@ -11,8 +11,8 @@ use DrevOps\Tui\Translation\Translator;
  *
  * Any of the three may be unset (NULL): an unset min or max leaves that side
  * open, and an unset step increments by one. The range arithmetic and the
- * human range phrase live here once, so the interactive widget, the headless
- * engine and the answer-set validator all agree.
+ * human range phrase live here once, so the interactive field, the headless
+ * collection and the answer-set validator all agree.
  *
  * @package DrevOps\Tui\Model
  */

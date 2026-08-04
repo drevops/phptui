@@ -9,84 +9,123 @@ skinparam shadowing false
 skinparam componentStyle rectangle
 title drevops/tui - component architecture
 
-package "Builder" #F0F4C3 {
+package "Declaring" #F0F4C3 {
+  [Tui]
   [Form]
+  [PanelBuilder]
+  [FieldBuilder]
 }
 
-package "Model" #E3F2FD {
-  [FormDefinition]
+package "Block - the one tree" #E3F2FD {
+  interface BlockInterface
   [Panel]
   [Field]
+  [Markup]
+  [Breadcrumb]
+  [Legend]
+  [Actions]
+  [Progress]
+  [Block\\Capability]
+  [Block\\Element]
 }
 
-package "Core" #FFF3E0 {
-  [Engine]
+package "Arranging" #FFEBEE {
+  [Screen]
+  interface LayoutInterface
+  [AbstractLayout]
+  [LayoutManager]
+  [Region]
 }
 
-package "Resolution" #E8F5E9 {
+package "Driving" #FFF3E0 {
+  [ScreenController]
+  [KeyRouter]
+  [ScreenRenderer]
+  [Assembler]
+  [KeyMap]
+  [Terminal]
+}
+
+package "Collecting" #E8F5E9 {
+  [Collector]
   [InputResolver]
-  [Discover specs]
+  [Discovery]
   [Deriver]
-  [Derive]
-  [Transform]
   [Condition]
-}
-
-package "Handlers" #F3E5F5 {
-  [HandlerRegistry]
-  [Context]
-}
-
-package "Output" #ECEFF1 {
   [Answers]
   [SchemaGenerator]
   [SchemaValidator]
 }
 
-package "Interactive TUI" #FFEBEE {
-  [PanelController]
-  [ThemeManager]
-  [Theme]
-  [KeyMapManager]
-  [KeyMap]
-  [WidgetFactory]
-  interface WidgetInterface
-  [Navigator]
-  [Terminal]
-  [KeyParser]
+package "Behaviour" #F3E5F5 {
+  [HandlerRegistry]
+  [Context]
 }
 
-[Form] --> [FormDefinition]
-[FormDefinition] *-- [Panel]
-[Panel] *-- [Field]
+package "Theme" #ECEFF1 {
+  interface ThemeInterface
+  [AbstractTheme]
+  [DefaultTheme]
+  [Theme\\Capability]
+  [ThemeManager]
+  [ThemeBuilder]
+}
 
-[Engine] --> [FormDefinition]
-[Engine] --> [InputResolver]
-[Engine] --> [Discover specs]
-[Engine] --> [Deriver]
-[Deriver] --> [Derive]
-[Derive] --> [Transform]
-[Engine] --> [Condition]
-[Engine] --> [HandlerRegistry]
-[Engine] --> [Answers]
+[Tui] --> [Form]
+[Form] --> [PanelBuilder]
+[PanelBuilder] --> [FieldBuilder]
+[PanelBuilder] --> [Panel]
+[FieldBuilder] --> [Field]
 
-[SchemaGenerator] --> [FormDefinition]
-[SchemaValidator] --> [FormDefinition]
+[Panel] --> BlockInterface
+[Field] --> BlockInterface
+[Markup] --> BlockInterface
+[Breadcrumb] --> BlockInterface
+[Legend] --> BlockInterface
+[Actions] --> BlockInterface
+[Progress] --> BlockInterface
+BlockInterface --> [Block\\Capability]
+BlockInterface --> [Block\\Element]
 
-[PanelController] --> [FormDefinition]
-[PanelController] --> [Engine]
-[ThemeManager] --> [Theme]
-[PanelController] --> [Theme]
-[KeyMapManager] --> [KeyMap]
-[PanelController] --> [KeyMap]
-[PanelController] --> [WidgetFactory]
-[WidgetFactory] --> [KeyMap]
-[WidgetFactory] --> [HandlerRegistry]
-[WidgetFactory] --> WidgetInterface
-WidgetInterface --> [Theme]
-WidgetInterface --> [KeyMap]
-[PanelController] --> [Navigator]
-[PanelController] --> [Terminal]
-[PanelController] --> [KeyParser]
-[PanelController] --> [Answers]
+[Panel] --> LayoutInterface
+[Screen] --> LayoutInterface
+[AbstractLayout] --> LayoutInterface
+[AbstractLayout] *-- [Region]
+[LayoutManager] --> LayoutInterface
+[Region] --> BlockInterface
+
+[Tui] --> [Collector]
+[Tui] --> [ScreenController]
+[Tui] --> [ThemeManager]
+[Tui] --> [InputResolver]
+
+[ScreenController] --> [Screen]
+[ScreenController] --> [Assembler]
+[ScreenController] --> [KeyRouter]
+[ScreenController] --> [ScreenRenderer]
+[ScreenController] --> [Collector]
+[ScreenController] --> [KeyMap]
+[ScreenController] --> [Terminal]
+[Assembler] --> [LayoutManager]
+[KeyRouter] --> [Panel]
+[ScreenRenderer] --> [Screen]
+[ScreenRenderer] --> ThemeInterface
+
+[Collector] --> [Panel]
+[Collector] --> [Discovery]
+[Collector] --> [Deriver]
+[Collector] --> [Condition]
+[Collector] --> [HandlerRegistry]
+[Collector] --> [Context]
+[Collector] --> [Answers]
+[SchemaGenerator] --> [Panel]
+[SchemaValidator] --> [Panel]
+
+[AbstractTheme] --> ThemeInterface
+[AbstractTheme] --> [Block\\Element]
+[DefaultTheme] --> [AbstractTheme]
+[DefaultTheme] --> [Theme\\Capability]
+[ThemeManager] --> [DefaultTheme]
+[ThemeBuilder] --> [DefaultTheme]
+BlockInterface --> ThemeInterface
 @enduml

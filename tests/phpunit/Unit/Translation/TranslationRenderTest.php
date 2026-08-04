@@ -7,30 +7,37 @@ namespace DrevOps\Tui\Tests\Unit\Translation;
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Answers\SummaryFormatter;
+use DrevOps\Tui\Block\Legend;
+use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\Field\FieldFactory;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Model\Field;
-use DrevOps\Tui\Model\FormDefinition;
-use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Render\PanelController;
 use DrevOps\Tui\Schema\AgentHelp;
 use DrevOps\Tui\Schema\SchemaValidator;
+use DrevOps\Tui\Testing\ScreenTester;
 use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Translation\Translator;
-use DrevOps\Tui\Widget\WidgetFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests that chrome and questions render in the active language end to end.
+ *
+ * Two languages, for two different questions. A fixture catalog answers
+ * whether a string reaches the translator at all, and is deliberately partial
+ * so an untranslated one still shows. The bundled Ukrainian catalog answers
+ * whether the package alone, with nothing configured, puts a whole session in
+ * front of a reader in their language.
  */
-#[CoversClass(PanelController::class)]
 #[CoversClass(DefaultTheme::class)]
-#[CoversClass(WidgetFactory::class)]
+#[CoversClass(FieldFactory::class)]
+#[CoversClass(Legend::class)]
+#[CoversClass(Provenance::class)]
 #[CoversClass(SummaryFormatter::class)]
 #[CoversClass(SchemaValidator::class)]
 #[CoversClass(AgentHelp::class)]
@@ -44,7 +51,13 @@ final class TranslationRenderTest extends TestCase {
     Translator::setShared(new Translator('es', [dirname(__DIR__, 2) . '/Fixtures/translations-render']));
   }
 
-  protected function form(): FormDefinition {
+  /**
+   * The declared tree every scenario is driven against.
+   *
+   * @return \DrevOps\Tui\Block\Panel
+   *   The panel every declared panel hangs from.
+   */
+  protected function form(): Panel {
     return Form::create('Demo')
       ->panel('general', 'General', function (PanelBuilder $panel): void {
         $panel->text('name', 'Site name')->description('The name.');
@@ -52,13 +65,17 @@ final class TranslationRenderTest extends TestCase {
         $panel->rating('grade', 'Grade')->default(5)->captions([5 => 'Excellent']);
         $panel->confirm('agree', 'Agree');
       })
-      ->build();
+      ->root();
   }
 
   public function testInteractiveChromeAndQuestionsTranslated(): void {
-    $controller = new PanelController($this->form(), new DefaultTheme(60, ['color' => FALSE]));
+    $tester = (new ScreenTester($this->form()))->rows(16)->cols(60);
 
-    $root = Ansi::strip($controller->frame(16));
+    // Going into the panel is what puts its rows in front of the reader, so
+    // one run covers the form's chrome and the questions it asks.
+    $tester->run(Key::named(KeyName::Enter));
+
+    $root = $tester->frame(0);
     // The breadcrumb (form title) and the drill-in panel row (panel title).
     $this->assertStringContainsString('Demostracion', $root);
     $this->assertStringContainsString('General ES', $root);
@@ -67,38 +84,42 @@ final class TranslationRenderTest extends TestCase {
     $this->assertStringContainsString('[ Cancelar ]', $root);
     $this->assertStringContainsString('mover', $root);
 
-    // Drilling into the panel shows the field label and description translated.
-    $controller->handle(Key::named(KeyName::Enter));
-    $panel = Ansi::strip($controller->frame(16));
+    $panel = $tester->frame();
     $this->assertStringContainsString('Nombre del sitio', $panel);
     $this->assertStringContainsString('El nombre.', $panel);
   }
 
   public function testOptionLabelsTranslated(): void {
-    $field = $this->form()->field('plan');
-    $this->assertInstanceOf(Field::class, $field);
+    $tester = (new ScreenTester($this->form()))->rows(16)->cols(60);
 
-    $widget = (new WidgetFactory())->create($field, 'basic');
+    // Into the panel, down to the choice, and open it.
+    $tester->run(
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Down),
+      Key::named(KeyName::Enter),
+    );
 
-    $this->assertStringContainsString('Nivel basico', Ansi::strip($widget->view(new DefaultTheme(60, ['color' => FALSE]))));
+    $this->assertStringContainsString('Nivel basico', $tester->frame());
   }
 
   public function testRatingCaptionsTranslated(): void {
-    $field = $this->form()->field('grade');
-    $this->assertInstanceOf(Field::class, $field);
-    $theme = new DefaultTheme(60, ['color' => FALSE]);
+    $tester = (new ScreenTester($this->form()))->rows(16)->cols(60);
 
-    // The caption localizes in the editor and in the collapsed panel row alike.
-    $widget = (new WidgetFactory())->create($field, 5);
-    $this->assertStringContainsString('Excelente', Ansi::strip($widget->view($theme)));
+    // The caption localizes in the editor and in the settled row alike, so the
+    // frame the scale is opened on and the one it closes back to both say it.
+    $tester->run(
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Down),
+      Key::named(KeyName::Down),
+      Key::named(KeyName::Enter),
+    );
 
-    $controller = new PanelController($this->form(), $theme, ['grade' => 5]);
-    $controller->handle(Key::named(KeyName::Enter));
-    $this->assertStringContainsString('Excelente', Ansi::strip($controller->frame(16)));
+    $this->assertStringContainsString('Excelente', $tester->frame());
+    $this->assertStringContainsString('Excelente', $tester->frame(-2));
   }
 
   public function testSummaryTranslated(): void {
-    $answers = Answers::forForm($this->form(), ['agree' => TRUE], ['agree' => Provenance::Edited]);
+    $answers = Answers::forTree($this->form(), ['agree' => TRUE], ['agree' => Provenance::Edited]);
 
     $summary = (new SummaryFormatter())->format($answers);
 
@@ -113,11 +134,159 @@ final class TranslationRenderTest extends TestCase {
       ->panel('general', 'General', function (PanelBuilder $panel): void {
         $panel->text('name', 'Site name')->required();
       })
-      ->build();
+      ->root();
 
     // A headless validation error and the agent help both localize.
     $this->assertContains('Falta la pregunta obligatoria "name".', (new SchemaValidator($form))->validate([]));
     $this->assertStringContainsString('Nombre del sitio', (new AgentHelp($form, 'TUI_'))->generate());
+  }
+
+  public function testUkrainianLegendNamesEveryKeyItAdvertises(): void {
+    $this->ukrainian();
+
+    $form = Form::create('Produce order')
+      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
+        $panel->select('basket', 'Basket')->multiple()->options(['apple' => 'Apple', 'beet' => 'Beet']);
+        $panel->text('courier', 'Courier')->help('Weighed at the packing bench.');
+      })
+      ->root();
+
+    $tester = (new ScreenTester($form))->rows(16)->cols(80);
+    $tester->run(
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Escape),
+      Key::named(KeyName::Down),
+    );
+
+    // Closed over the panel: moving, opening a row, stepping back out, and the
+    // way out of the session itself.
+    $closed = $tester->frame(1);
+    $this->assertStringContainsString('↑/↓ перемістити', $closed);
+    $this->assertStringContainsString('↵ вибрати', $closed);
+    $this->assertStringContainsString('ESC назад', $closed);
+    $this->assertStringContainsString('Q вийти', $closed);
+
+    // Open over a multi-select: the fragments only an open list advertises.
+    $open = $tester->frame(2);
+    $this->assertStringContainsString('ПРОБІЛ вибрати', $open);
+    $this->assertStringContainsString('нічого/усе', $open);
+    $this->assertStringContainsString('↵ прийняти', $open);
+
+    // Help is offered on the row that has some, so the fragment arrives last.
+    $this->assertStringContainsString('? довідка', $tester->frame());
+  }
+
+  public function testUkrainianRowStatesItsRefusalAndWhereItsValueCameFrom(): void {
+    $this->ukrainian();
+
+    $form = Form::create('Produce order')
+      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
+        $panel->text('courier', 'Courier')->required();
+        $panel->text('crate', 'Crate')->default('Valley Runs');
+      })
+      ->root();
+
+    $tester = (new ScreenTester($form))->rows(14)->cols(70)->supplied(['crate' => 'Ridge Runs']);
+    $tester->run(
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Enter),
+      Key::named(KeyName::Enter),
+    );
+
+    // The refusal names the field and says, in Ukrainian, what it is owed; the
+    // badge beside the row it did not refuse says where that value came from.
+    $frame = $tester->frame();
+    $this->assertStringContainsString("є обов'язковим полем.", $frame);
+    $this->assertStringContainsString('змінено', $frame);
+  }
+
+  #[DataProvider('dataProviderUkrainianCountPhraseTakesTheFormTheCountCallsFor')]
+  public function testUkrainianCountPhraseTakesTheFormTheCountCallsFor(int $minimum, string $expected): void {
+    $this->ukrainian();
+
+    $form = Form::create('Produce order')
+      ->panel('order', 'Weekly box', static function (PanelBuilder $panel) use ($minimum): void {
+        $panel->select('basket', 'Basket')->multiple()->minSelections($minimum)
+          ->options(['apple' => 'Apple', 'beet' => 'Beet', 'carrot' => 'Carrot', 'date' => 'Date', 'endive' => 'Endive', 'fennel' => 'Fennel']);
+      })
+      ->root();
+
+    $tester = (new ScreenTester($form))->rows(16)->cols(70);
+    $tester->run(Key::named(KeyName::Enter), Key::named(KeyName::Enter));
+
+    $this->assertStringContainsString($expected, $tester->frame());
+  }
+
+  public static function dataProviderUkrainianCountPhraseTakesTheFormTheCountCallsFor(): \Iterator {
+    // Ukrainian's three forms, each reached through the count a bound states.
+    yield 'one' => [1, 'Виберіть щонайменше 1 елемент.'];
+    yield 'few' => [3, 'Виберіть щонайменше 3 елементи.'];
+    yield 'many' => [5, 'Виберіть щонайменше 5 елементів.'];
+  }
+
+  public function testUkrainianPanelRowCountsThePicksItHasNoRoomToList(): void {
+    $this->ukrainian();
+
+    $form = Form::create('Produce order')
+      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
+        $panel->select('basket', 'Basket')->multiple()->default(['apple', 'beet', 'carrot', 'date'])
+          ->options(['apple' => 'Apple', 'beet' => 'Beet', 'carrot' => 'Carrot', 'date' => 'Date']);
+      })
+      ->root();
+
+    $tester = (new ScreenTester($form))->rows(12)->cols(70);
+    $tester->run();
+
+    // Past a handful the row says how many were picked rather than listing
+    // them, which is the one count phrase a panel of its own renders.
+    $this->assertStringContainsString('4 елементи вибрано', $tester->frame());
+  }
+
+  public function testUkrainianCalendarNamesTheMonthItOpensOn(): void {
+    $this->ukrainian();
+
+    $form = Form::create('Produce order')
+      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
+        $panel->calendar('due', 'Due date')->default('2026-03-15');
+      })
+      ->root();
+
+    $tester = (new ScreenTester($form))->rows(16)->cols(70);
+    $tester->run(Key::named(KeyName::Enter), Key::named(KeyName::Enter));
+
+    // The heading and the weekday row are formatted from the date, not written
+    // out in the source, and both still arrive in Ukrainian.
+    $frame = $tester->frame();
+    $this->assertStringContainsString('Березень 2026', $frame);
+    $this->assertStringContainsString('Пн', $frame);
+    $this->assertStringContainsString('←/→ на день', $frame);
+    $this->assertStringContainsString('ESC скасувати', $frame);
+  }
+
+  public function testUkrainianSummaryAndHeadlessMessagesLocalize(): void {
+    $this->ukrainian();
+
+    $form = Form::create('Produce order')
+      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
+        $panel->text('courier', 'Courier')->required();
+      })
+      ->root();
+
+    $answers = Answers::forTree($form, ['courier' => 'Valley Runs'], ['courier' => Provenance::Edited]);
+
+    $this->assertStringContainsString('(змінено)', (new SummaryFormatter())->format($answers));
+    $this->assertContains('Пропущено потрібне питання "courier".', (new SchemaValidator($form))->validate([]));
+  }
+
+  /**
+   * Put the session into Ukrainian, on the package's own catalogs alone.
+   *
+   * No source is passed: what the assertions read is what a consumer gets from
+   * the package with nothing but a language named.
+   */
+  protected function ukrainian(): void {
+    Translator::setShared(new Translator('uk'));
   }
 
 }

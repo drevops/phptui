@@ -12,7 +12,8 @@ use DrevOps\Tui\CancelException;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\Dotenv;
 use DrevOps\Tui\Discovery\JsonValue;
-use DrevOps\Tui\Engine\Engine;
+use DrevOps\Tui\Block\Actions;
+use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Input\Action;
@@ -24,14 +25,18 @@ use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Primitive\Progress;
 use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Render\PanelController;
 use DrevOps\Tui\Render\Terminal;
+use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Testing\BufferedTerminal;
 use DrevOps\Tui\Testing\KeyEncoder;
+use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Tests\Traits\IsolatesEnvTrait;
 use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\Mode;
+use DrevOps\Tui\Theme\Override\BreadcrumbOverrides;
+use DrevOps\Tui\Theme\Override\FieldOverrides;
+use DrevOps\Tui\Theme\ThemeBuilder;
 use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Tui;
 use org\bovigo\vfs\vfsStream;
@@ -158,8 +163,7 @@ final class TuiTest extends TestCase {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $panel): void {
         $panel->text('version', 'Version')->default(fn (Context $context): string => $context->version);
-      })
-      ->build();
+      });
 
     $prompts = (new Tui($form))->schema(new Context(version: '4.5.6'))['prompts'];
     $this->assertIsArray($prompts);
@@ -172,8 +176,7 @@ final class TuiTest extends TestCase {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $panel): void {
         $panel->text('version', 'Version')->default(fn (Context $context): string => $context->version);
-      })
-      ->build();
+      });
 
     $help = (new Tui($form))->agentHelp(new Context(version: '4.5.6'));
 
@@ -184,8 +187,7 @@ final class TuiTest extends TestCase {
     $form = Form::create('Demo')
       ->panel('p', 'p', function (PanelBuilder $panel): void {
         $panel->text('name');
-      })
-      ->build();
+      });
 
     // No prefix anywhere falls back to the package default.
     $this->assertStringContainsString('TUI_NAME', (new Tui($form))->agentHelp());
@@ -196,8 +198,7 @@ final class TuiTest extends TestCase {
       ->envPrefix('FORM_')
       ->panel('p', 'p', function (PanelBuilder $panel): void {
         $panel->text('name');
-      })
-      ->build();
+      });
 
     // The form-declared prefix is used unless the constructor overrides it.
     $this->assertStringContainsString('FORM_NAME', (new Tui($form))->agentHelp());
@@ -212,17 +213,71 @@ final class TuiTest extends TestCase {
   public function testAccessors(): void {
     $tui = $this->tui();
 
-    $this->assertSame('Demo', $tui->form()->title);
-    $this->assertInstanceOf(Engine::class, $tui->engine());
+    $this->assertInstanceOf(Panel::class, $tui->root());
+    $this->assertSame('Demo', $tui->root()->title());
     $this->assertInstanceOf(HandlerRegistry::class, $tui->registry());
   }
 
   public function testController(): void {
     $controller = $this->tui()->controller(['color' => FALSE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
 
-    $this->assertInstanceOf(PanelController::class, $controller);
-    // The engine's resolved answers seed the controller.
+    $this->assertInstanceOf(ScreenController::class, $controller);
+    // The answers the form opens on seed the session.
     $this->assertSame('', $controller->answers()->value('name'));
+  }
+
+  public function testLayoutArrangesTheSessionItNames(): void {
+    $form = Form::create('Orchard')->panel('main', 'Delivery', function (PanelBuilder $p): void {
+      $p->text('courier', 'Courier')->default('Valley Runs');
+    });
+
+    $tester = (new TuiTester($form))->layout('two-column');
+    $tester->run("\n");
+
+    // A two-column screen has no header region, so the trail that the default
+    // layout pins up top is simply not drawn - which is only true when the
+    // named layout actually reached the session.
+    $this->assertStringNotContainsString('Orchard', $tester->output());
+  }
+
+  public function testLayoutRefusesNameNothingShipsOrRegisters(): void {
+    $this->expectException(\InvalidArgumentException::class);
+
+    $this->tui()->layout('orchard-grid');
+  }
+
+  public function testEverySessionDrivesTheOneDeclaredTree(): void {
+    $tui = $this->tui();
+
+    // The declaration is the tree, so a second session drives the very blocks
+    // the first one did rather than a copy that could disagree with it.
+    $first = $tui->controller(['color' => FALSE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
+    $second = $tui->controller(['color' => FALSE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
+
+    $panel = static fn(ScreenController $controller): mixed => (new \ReflectionProperty($controller, 'panel'))->getValue($controller);
+
+    $this->assertSame($tui->root(), $panel($first));
+    $this->assertSame($panel($first), $panel($second));
+
+    // Driving it twice leaves one way out of the form rather than two.
+    $actions = array_filter($tui->root()->place()->blocks(), static fn(object $block): bool => $block instanceof Actions);
+    $this->assertCount(1, $actions);
+  }
+
+  #[DataProvider('dataProviderControllerCarriesTheThemeBorderIntoTheFrame')]
+  public function testControllerCarriesTheThemeBorderIntoTheFrame(array $options, Border $expected): void {
+    $controller = $this->tui()->controller($options + ['color' => FALSE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
+
+    // The frame the theme lays its rows out to is the frame drawn around them,
+    // so the border reaches the session rather than the theme alone.
+    $this->assertSame($expected, (new \ReflectionProperty($controller, 'border'))->getValue($controller));
+  }
+
+  public static function dataProviderControllerCarriesTheThemeBorderIntoTheFrame(): \Iterator {
+    yield 'declared' => [['border' => Border::Double], Border::Double];
+    yield 'declared as its name' => [['border' => 'none'], Border::None];
+    // A form is framed unless it asks not to be, and the theme is what says so.
+    yield 'undeclared' => [[], Border::Rounded];
   }
 
   public function testInteractDrivesScriptedTerminal(): void {
@@ -250,9 +305,11 @@ final class TuiTest extends TestCase {
     // rather than returning the answers exactly like a submitted form.
     $this->expectException(CancelException::class);
 
-    // Down twice reaches Cancel past the panel and Submit; Enter activates it.
+    // Down reaches the row the buttons share and Right walks along it to
+    // Cancel; Enter activates it.
     $down = KeyEncoder::encode(Key::named(KeyName::Down));
-    $this->tui()->interact(terminal: new BufferedTerminal([$down, $down, KeyEncoder::encode(Key::named(KeyName::Enter))]));
+    $right = KeyEncoder::encode(Key::named(KeyName::Right));
+    $this->tui()->interact(terminal: new BufferedTerminal([$down, $right, KeyEncoder::encode(Key::named(KeyName::Enter))]));
   }
 
   public function testInteractUpdateModePreFillsDetectedValues(): void {
@@ -335,6 +392,51 @@ final class TuiTest extends TestCase {
     foreach ($lines as $line) {
       $this->assertSame(50, mb_strlen($line, 'UTF-8'));
     }
+  }
+
+  #[DataProvider('dataProviderThemeClosureStatesWhatElementsDraw')]
+  public function testThemeClosureStatesWhatElementsDraw(bool $unicode, string $separator, string $selector): void {
+    // One Enter descends into the panel, so the trail gains a segment and the
+    // rows the field selector marks are on screen.
+    $terminal = new BufferedTerminal([KeyEncoder::encode(Key::named(KeyName::Enter))], 20, 60);
+
+    $this->tui()
+      ->color(FALSE)
+      ->unicode($unicode)
+      ->theme(static fn(ThemeBuilder $builder): ThemeBuilder => $builder
+        ->breadcrumb(static fn(BreadcrumbOverrides $group): BreadcrumbOverrides => $group->separator('»', '::'))
+        ->field(static fn(FieldOverrides $group): FieldOverrides => $group->selector('→', '=>')))
+      ->interact(terminal: $terminal);
+
+    $screen = Ansi::strip($terminal->output());
+
+    $this->assertStringContainsString($separator, $screen);
+    $this->assertStringContainsString($selector, $screen);
+    // Both display modes are stated together, so neither can be set and the
+    // other silently left broken.
+    $this->assertStringNotContainsString($unicode ? '::' : '»', $screen);
+  }
+
+  public static function dataProviderThemeClosureStatesWhatElementsDraw(): \Iterator {
+    yield 'unicode' => [TRUE, '»', '→'];
+    yield 'ascii' => [FALSE, '::', '=>'];
+  }
+
+  public function testThemeClosurePatchesWhicheverThemeIsSelected(): void {
+    $terminal = new BufferedTerminal([KeyEncoder::encode(Key::named(KeyName::Enter))], 20, 60);
+
+    // A name picks the theme and a closure patches it, in either order: the
+    // patch is not a second theme.
+    $this->tui()
+      ->theme(static fn(ThemeBuilder $builder): ThemeBuilder => $builder->field(static fn(FieldOverrides $group): FieldOverrides => $group->selector('→', '=>')))
+      ->theme('mono', ['color' => TRUE, 'unicode' => TRUE])
+      ->interact(terminal: $terminal);
+
+    $output = $terminal->output();
+
+    // The glyph is the consumer's and the hue is the theme's, so an override
+    // names the mark without taking the palette with it.
+    $this->assertStringContainsString("\033[1;97m→", $output);
   }
 
   #[DataProvider('dataProviderResolveTheme')]

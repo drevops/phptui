@@ -26,7 +26,7 @@ final class AgentHelpTest extends TestCase {
         $p->text('name', 'Site name')->required();
         $p->confirm('agree', 'Agree');
       })
-      ->build();
+      ->root();
 
     $help = (new AgentHelp($form, 'APP_'))->generate();
 
@@ -43,7 +43,7 @@ final class AgentHelpTest extends TestCase {
 
   #[DataProvider('dataProviderDescribesFieldShape')]
   public function testDescribesFieldShape(\Closure $declare, array $contains, array $absent, array $matches): void {
-    $form = Form::create('T')->panel('p', 'p', $declare)->build();
+    $form = Form::create('T')->panel('p', 'p', $declare)->root();
 
     $this->assertHelp((new AgentHelp($form))->generate(), $contains, $absent, $matches);
   }
@@ -145,31 +145,31 @@ final class AgentHelpTest extends TestCase {
 
     // Each text keeps its own key, so an agent reads the same three guidance
     // texts a human does rather than one merged description.
-    yield 'hint and placeholder travel as extension keys' => [
+    yield 'help and placeholder travel as extension keys' => [
       static function (PanelBuilder $p): void {
         $p->text('name', 'Site name')
           ->description('The public name')
-          ->hint('Type a few letters to filter.')
+          ->help('Type a few letters to filter.')
           ->placeholder('E.g. Golden Beetroot');
       },
-      ['"description": "The public name"', '"x-hint": "Type a few letters to filter."', '"x-placeholder": "E.g. Golden Beetroot"'],
+      ['"description": "The public name"', '"x-help": "Type a few letters to filter."', '"x-placeholder": "E.g. Golden Beetroot"'],
       [],
       [],
     ];
 
-    yield 'undeclared hint and placeholder are omitted' => [
+    yield 'undeclared help and placeholder are omitted' => [
       static function (PanelBuilder $p): void {
         $p->text('name', 'Site name');
       },
       [],
-      ['"x-hint"', '"x-placeholder"'],
+      ['"x-help"', '"x-placeholder"'],
       [],
     ];
   }
 
   #[DataProvider('dataProviderAdvertisesEnvironmentVariables')]
   public function testAdvertisesEnvironmentVariables(\Closure $declare, string $prefix, array $contains, array $absent, array $matches): void {
-    $form = Form::create('T')->panel('p', 'p', $declare)->build();
+    $form = Form::create('T')->panel('p', 'p', $declare)->root();
 
     $this->assertHelp((new AgentHelp($form, $prefix))->generate(), $contains, $absent, $matches);
   }
@@ -250,7 +250,7 @@ final class AgentHelpTest extends TestCase {
 
   #[DataProvider('dataProviderResolvesDefault')]
   public function testResolvesDefault(\Closure $declare, Context $context, array $contains, array $absent): void {
-    $form = Form::create('T')->panel('p', 'p', $declare)->build();
+    $form = Form::create('T')->panel('p', 'p', $declare)->root();
 
     $this->assertHelp((new AgentHelp($form, '', $context))->generate(), $contains, $absent, []);
   }
@@ -304,7 +304,7 @@ final class AgentHelpTest extends TestCase {
 
   #[DataProvider('dataProviderSkipsNonAnsweringField')]
   public function testSkipsNonAnsweringField(\Closure $declare, string $absent): void {
-    $form = Form::create('T')->panel('p', 'p', $declare)->build();
+    $form = Form::create('T')->panel('p', 'p', $declare)->root();
 
     // A field that carries no answer is not one an agent is asked to provide.
     $this->assertHelp((new AgentHelp($form, 'APP_'))->generate(), ['"name"'], [$absent], []);

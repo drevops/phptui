@@ -97,20 +97,17 @@ final class ProgressRenderTest extends TestCase {
     $this->assertStringContainsString("\033[1;38;5;208m", $theme->renderProgressBar(1, 2, 'x', ''));
   }
 
-  public function testLoadingRendersCaptionWithThemedEllipsis(): void {
-    $line = $this->theme()->renderLoading('Loading fruit');
+  public function testLoadingMarkCarriesTheAccent(): void {
+    $line = $this->theme()->fieldLoading();
 
-    $this->assertStringContainsString('Loading fruit', $line);
     $this->assertStringContainsString('…', $line);
     // The ellipsis carries the accent (default dark: bold cyan).
     $this->assertStringContainsString("\033[1;36m", $line);
   }
 
-  public function testLoadingAsciiFallbackAndEmptyCaption(): void {
-    $theme = $this->theme(color: FALSE, unicode: FALSE);
-
-    $this->assertSame('...', $theme->renderLoading(''));
-    $this->assertStringContainsString('Loading ...', $theme->renderLoading('Loading'));
+  public function testLoadingMarkFallsBackToAscii(): void {
+    $this->assertSame('...', $this->theme(color: FALSE, unicode: FALSE)->fieldLoading());
+    $this->assertSame('…', $this->theme(color: FALSE)->fieldLoading());
   }
 
 }

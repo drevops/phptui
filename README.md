@@ -28,11 +28,11 @@
   </picture>
 </p>
 
-`drevops/tui` is a PHP engine for panel-based terminal forms: keyboard-driven questionnaires that collect a set of answers and hand them back to your code as typed values.
+`drevops/tui` is a PHP library for panel-based terminal forms: keyboard-driven questionnaires that collect a set of answers and hand them back to your code as typed values.
 
-- **Declarative form model.** A form is declared with a fluent builder (`Form` / `PanelBuilder` / `FieldBuilder`): panels of typed fields, each field a widget with its own options, conditions, derivation rules and behavior.
+- **Declarative form model.** A form is declared with a fluent builder (`Form` / `PanelBuilder` / `FieldBuilder`): panels of typed fields, each with its own options, conditions, derivation rules and behavior.
 - **Two collection modes, one declaration.** The same form runs as a full-screen interactive TUI on a terminal, or resolves non-interactively from a JSON payload, per-field environment variables, discovery rules and defaults.
-- **Application-agnostic.** The engine doesn't know (or care) what application it serves; questions and handlers live in your code, and applying the collected answers is your job. It collects; you apply.
+- **Application-agnostic.** The library doesn't know (or care) what application it serves; questions and handlers live in your code, and applying the collected answers is your job. It collects; you apply.
 - **Dependency-light.** The runtime dependency surface is a single string-transform package.
 
 The padded rounded border above is the default look. The same form explicitly opted out of the frame (`border` `none`, `normal` spacing):
@@ -48,6 +48,27 @@ The padded rounded border above is the default look. The same form explicitly op
 
 Full documentation lives at **[phptui.dev](https://phptui.dev)**. The in-development build, rebuilt from `main` ahead of each release, is previewed at **[tui-docs.netlify.app](https://tui-docs.netlify.app/)**.
 
+## Core concepts
+
+A screen is built from four levels, and each owns a fixed set of capabilities. When something does not obviously fit, the question is never "where does this go" but **which level owns the capability it needs**.
+
+```
+Screen        the root; occupies the terminal, or fits its contents
+└─ Layout     arranges; reusable by name
+   └─ Region  holds blocks and flows them; declares whether it scrolls
+      └─ Block   drawn in a region
+```
+
+One kind of block - a **panel** - contains a layout, which starts the chain again. That is where depth comes from, rather than from a fifth level. Seven kinds of block exist: `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions` and `Progress`. Only a field collects, so only a field reaches the answers; everything else shows, focuses or activates.
+
+Three things follow, and they are what the rest of the library is shaped by:
+
+- **One tree.** The builder writes blocks directly, so `$form->root()` is what the interactive screen draws, what the headless collector reads, and what the JSON schema describes.
+- **Blocks say what they can do.** Each declares its capabilities as interfaces, so a driver asks "does this bind keys, does it collect" rather than "which class is this".
+- **Themes say how it looks.** A block asks the theme for one **element** at a time and hands it a plain string; order and spacing belong to the block, color and glyph to the theme.
+
+The whole model is written out at **[phptui.dev/specification](https://phptui.dev/specification)**.
+
 ## Features
 
 Every feature has a reference page and a runnable, self-contained example in [`playground/`](playground):
@@ -56,10 +77,11 @@ Every feature has a reference page and a runnable, self-contained example in [`p
 |---|---|---|---|
 | 🧭 Full-screen TUI | Scrollable panel browser: hubs drill into sub-panels to any depth, contextual key-hint footer, <kbd>?</kbd> help overlay | [panels](https://phptui.dev/panels) | [`03-panels-*`](playground) |
 | 🪟 Modal panels | A panel marked `->modal()` opens as a centered dialog over its dimmed parent, with its own submit/cancel buttons | [panels](https://phptui.dev/panels#modal-panels) | [`03-panels-*`](playground) |
-| 🧱 Panel layouts | `->layout(1, 2)` arranges panels as a grid of side-by-side preview columns - rows of any width, recursively per level, with spatial arrow navigation | [panels](https://phptui.dev/panels#panel-layouts) | [`03-panels-*`](playground) |
+| 🧱 Panel grids | `->layout(1, 2)` arranges sub-panels as a grid of side-by-side preview columns - rows of any width, recursively per level, with spatial arrow navigation | [panels](https://phptui.dev/panels#panel-layouts) | [`03-panels-*`](playground) |
+| 🧭 Layouts | `->layout('two-column')` arranges a screen or a panel into named regions, each with its own size, flow and scrolling; register a layout class of your own and pick it by name | [layouts](https://phptui.dev/layouts) | [`20-layouts-*`](playground) |
 | 🖥️ Fullscreen mode | `->fullscreen()` stretches the frame to the whole terminal; `halign`/`valign` anchor the content and min/max size options guard small or very wide terminals | [panels](https://phptui.dev/panels#fullscreen) | [`03-panels-*`](playground) |
 | ⚡ Inline editing | A field's editor opens in place on the panel row; `->standalone()` opts a field out to full-screen | [panels](https://phptui.dev/panels#inline-editing) | [`04-inline-editing`](playground/04-inline-editing.php) |
-| 🧩 Widgets | 15 field types: text, template, number, rating, calendar, textarea, password, select, reorder, suggest, search, file picker, confirm, toggle, pause | [widgets](https://phptui.dev/widgets) | [`02-widgets-*`](playground) |
+| 🧩 Fields | 17 field types: text, template, number, rating, calendar, textarea, password, select, reorder, suggest, search, file picker, confirm, toggle, pause, plus note and progress rows that collect nothing | [fields](https://phptui.dev/fields) | [`02-fields-*`](playground) |
 | 🏗️ Builder-driven | The form is declared in PHP with a fluent builder; the common cases need no code | [configuration](https://phptui.dev/configuration) | [`01-quickstart`](playground/01-quickstart.php) |
 | 🎛️ Interactive or unattended | `run()` picks the mode: keyboard on a terminal, otherwise JSON payload + `TUI_<ID>` environment variables | [headless collection](https://phptui.dev/headless-collection) | [`08-headless-*`](playground) |
 | 🔗 Derived values | Fields computed from other answers via `{{field}}` templates and str2name transforms, settling to a fixpoint | [configuration](https://phptui.dev/configuration#derived-values) | [`05-form-logic-*`](playground) |
@@ -71,10 +93,10 @@ Every feature has a reference page and a runnable, self-contained example in [`p
 | 🌐 Remote-backed options | `->optionsFrom()` resolves a search or suggest field's candidates from the live query - a themed `Loading…` while it runs, a typing burst settling into one call, a per-query cache, and `->minQuery()` holding it back until the query is worth sending | [options from a query](https://phptui.dev/progress#options-from-a-query) | [`17-query-options`](playground/17-query-options.php) |
 | 🧾 Output | An `output()` primitive draws the chrome around a form: boxes and cards, tables, five status lines, definition lists, wrapped text, rules and a banner - theme-drawn, dropping their color when piped or redirected | [output](https://phptui.dev/output) | [`18-output-*`](playground) |
 | 📦 Self-describing answers | Answers carry provenance; `toSummary()` renders a badged, panel-grouped report and `toJson()` the machine result; `schema()`, `validate()` and `agentHelp()` describe the form itself | [self-describing answers](https://phptui.dev/headless-collection#self-describing-answers) | [`08-headless-*`](playground) |
-| 🎨 Themes | Six built-ins selected by name; a custom theme is a `DefaultTheme` subclass overriding palette atoms and render methods | [themes](https://phptui.dev/themes) | [`09-themes-*`](playground) |
-| ⌨️ Key bindings | Presets (`default`, `vim`, or a class) plus per-binding overrides scoped to navigation or a widget type; conflicts throw at setup | [key bindings](https://phptui.dev/key-bindings) | [`10-key-bindings-*`](playground) |
+| 🎨 Themes | Six built-ins selected by name; a custom theme is a `DefaultTheme` subclass repainting a handful of voices, and `->theme(fn(ThemeBuilder $t) => ...)` patches individual elements with no class at all | [themes](https://phptui.dev/themes) | [`09-themes-*`](playground) |
+| ⌨️ Key bindings | Presets (`default`, `vim`, or a class) plus per-binding overrides scoped to navigation or a field type; conflicts throw at setup | [key bindings](https://phptui.dev/key-bindings) | [`10-key-bindings-*`](playground) |
 | ✨ Display modes | Dark/light follows the terminal background, glyphs follow the locale, color honors `NO_COLOR`; all three can be forced | [display modes](https://phptui.dev/display-modes) | [`11-display-modes-*`](playground) |
-| 🧪 Test harness | `TuiTester` drives the real panel loop from scripted keystrokes, no TTY; assert on answers, output and rendered frames | [testing](https://phptui.dev/testing) | [`13-testing`](playground/13-testing.php) |
+| 🧪 Test harness | `TuiTester` drives a whole form from scripted keystrokes and `ScreenTester` one screen frame by frame, no TTY; assert on answers, output and every frame drawn | [testing](https://phptui.dev/testing) | [`13-testing`](playground/13-testing.php) |
 | 🌍 Translations | Bundled chrome catalogs load automatically; a directory, a single catalog file or an inline map layers your own strings and chrome overrides on top, falling back to English | [translations](https://phptui.dev/translations) | [`12-translations`](playground/12-translations.php) |
 
 ## Installation
@@ -85,7 +107,7 @@ composer require drevops/tui
 
 ## Quick start
 
-Declare a form with the `Form` builder, then drive it through the `Tui` facade - the one class that wires up the engine, resolver, schema tools and TUI for you:
+Declare a form with the `Form` builder, then drive it through the `Tui` facade - the one class that wires up collection, the input resolver, the schema tools and the interactive screen for you:
 
 ```php
 use DrevOps\Tui\Builder\Form;
@@ -133,80 +155,81 @@ The facade's surface:
 | `progress($total, $caption, $work)` | Show slow work running around the form: a spinner with no total, a determinate bar with one - a theme-drawn primitive |
 | `output()` | Draw the chrome around the form: boxes and cards, tables, status lines, definition lists, text, rules and a banner - theme-drawn primitives |
 | `schema()` / `validate($answers)` / `agentHelp()` | Describe the questions as structured metadata, validate an answer payload, emit the agent-facing answer schema |
-| `theme($theme, $options)` / `keys($preset, $overrides)` | Select the theme and key bindings |
-| `color($bool)` / `unicode($bool)` / `fullscreen($bool)` / `footer($bool)` / `clearOnExit($bool)` / `translator($t)` | Display and runtime switches |
-| `form()` / `engine()` / `registry()` | The internals, for finer control |
+| `theme($theme, $options)` | Select the theme by name or class, or pass a closure to patch individual elements |
+| `layout($layout)` / `keys($preset, $overrides)` | Arrange the screen into named regions; select the key bindings |
+| `color($bool)` / `unicode($bool)` / `markdown($bool)` / `fullscreen($bool)` / `footer($bool)` / `clearOnExit($bool)` / `translator($t)` | Display and runtime switches |
+| `root()` / `registry()` | The declared block tree, and the handler registry - for finer control |
 
 Read the [full guide at phptui.dev](https://phptui.dev), and browse [`playground/`](playground) for complete, runnable examples - the numbered scripts for each feature in the table above.
 
-## Widgets
+## Fields
 
-There's a widget for most things you'd want to ask: text entry, numbers and dates, single and multiple choice, fuzzy search, filesystem browsing, and simple gates. Each one links to its full reference on [phptui.dev](https://phptui.dev/widgets), and every card below plays back the real interaction in whichever color scheme - light or dark - your reader is using.
+There's a field for most things you'd want to ask: text entry, numbers and dates, single and multiple choice, fuzzy search, filesystem browsing, and simple gates. Each one links to its full reference on [phptui.dev](https://phptui.dev/fields), and every card below plays back the real interaction in whichever color scheme - light or dark - your reader is using.
 
 <table>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-calendar-dark-animated.svg"><img src="docs/assets/widget-calendar-light-animated.svg" width="100%" alt="Calendar widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/calendar">Calendar</a></strong><br>A month calendar returning a normalized ISO <code>YYYY-MM-DD</code>; arrows move by day and week.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-calendar-dark-animated.svg"><img src="docs/assets/field-calendar-light-animated.svg" width="100%" alt="Calendar field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/calendar">Calendar</a></strong><br>A month calendar returning a normalized ISO <code>YYYY-MM-DD</code>; arrows move by day and week.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-confirm-dark-animated.svg"><img src="docs/assets/widget-confirm-light-animated.svg" width="100%" alt="Confirm widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/confirm">Confirm</a></strong><br>Yes/No toggle; arrows or <kbd>Space</kbd> switch, <kbd>y</kbd>/<kbd>n</kbd> set the choice directly, <kbd>Enter</kbd> accepts.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-confirm-dark-animated.svg"><img src="docs/assets/field-confirm-light-animated.svg" width="100%" alt="Confirm field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/confirm">Confirm</a></strong><br>Yes/No toggle; arrows or <kbd>Space</kbd> switch, <kbd>y</kbd>/<kbd>n</kbd> set the choice directly, <kbd>Enter</kbd> accepts.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-filepicker-dark-animated.svg"><img src="docs/assets/widget-filepicker-light-animated.svg" width="100%" alt="File picker widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/filepicker">File picker</a></strong><br>Browse the filesystem for a path; arrows move, <kbd>→</kbd> enters a directory and <kbd>←</kbd> returns to its parent. Add <code>-&gt;multiple()</code> for several paths.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-filepicker-dark-animated.svg"><img src="docs/assets/field-filepicker-light-animated.svg" width="100%" alt="File picker field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/filepicker">File picker</a></strong><br>Browse the filesystem for a path; arrows move, <kbd>→</kbd> enters a directory and <kbd>←</kbd> returns to its parent. Add <code>-&gt;multiple()</code> for several paths.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-number-dark-animated.svg"><img src="docs/assets/widget-number-light-animated.svg" width="100%" alt="Number widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/number">Number</a></strong><br>Integer entry (digits with an optional leading minus) accepted as an <code>int</code>, with optional min, max and step.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-number-dark-animated.svg"><img src="docs/assets/field-number-light-animated.svg" width="100%" alt="Number field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/number">Number</a></strong><br>Integer entry (digits with an optional leading minus) accepted as an <code>int</code>, with optional min, max and step.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-password-dark-animated.svg"><img src="docs/assets/widget-password-light-animated.svg" width="100%" alt="Password widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/password">Password</a></strong><br>Text rendered as a mask in the editor, the field row and the summary; the accepted value stays plain for your code, and can be made revealable.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-password-dark-animated.svg"><img src="docs/assets/field-password-light-animated.svg" width="100%" alt="Password field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/password">Password</a></strong><br>Text rendered as a mask in the editor, the field row and the summary; the accepted value stays plain for your code, and can be made revealable.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-pause-dark-animated.svg"><img src="docs/assets/widget-pause-light-animated.svg" width="100%" alt="Pause widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/pause">Pause</a></strong><br>An acknowledgment gate; <kbd>Enter</kbd> or <kbd>Space</kbd> accepts. Unattended runs auto-acknowledge it, so it never blocks automation.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-pause-dark-animated.svg"><img src="docs/assets/field-pause-light-animated.svg" width="100%" alt="Pause field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/pause">Pause</a></strong><br>An acknowledgment gate; <kbd>Enter</kbd> or <kbd>Space</kbd> accepts. Unattended runs auto-acknowledge it, so it never blocks automation.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-progress-dark-animated.svg"><img src="docs/assets/widget-progress-light-animated.svg" width="100%" alt="Progress widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/progress">Progress</a></strong><br>A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself; it collects no value.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-progress-dark-animated.svg"><img src="docs/assets/field-progress-light-animated.svg" width="100%" alt="Progress field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/progress">Progress</a></strong><br>A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself; it collects no value.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-rating-dark-animated.svg"><img src="docs/assets/widget-rating-light-animated.svg" width="100%" alt="Rating widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/rating">Rating</a></strong><br>A graded answer picked from a scale of points, accepted as an <code>int</code>; arrows walk the scale, a digit jumps to its point, and each point can carry a caption.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-rating-dark-animated.svg"><img src="docs/assets/field-rating-light-animated.svg" width="100%" alt="Rating field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/rating">Rating</a></strong><br>A graded answer picked from a scale of points, accepted as an <code>int</code>; arrows walk the scale, a digit jumps to its point, and each point can carry a caption.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-reorder-dark-animated.svg"><img src="docs/assets/widget-reorder-light-animated.svg" width="100%" alt="Reorder widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/reorder">Reorder</a></strong><br>Rank a list by moving items into the order you want; <kbd>Space</kbd> picks an item up, arrows carry it through the list, <kbd>Enter</kbd> accepts.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-reorder-dark-animated.svg"><img src="docs/assets/field-reorder-light-animated.svg" width="100%" alt="Reorder field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/reorder">Reorder</a></strong><br>Rank a list by moving items into the order you want; <kbd>Space</kbd> picks an item up, arrows carry it through the list, <kbd>Enter</kbd> accepts.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-search-dark-animated.svg"><img src="docs/assets/widget-search-light-animated.svg" width="100%" alt="Search widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/search">Search</a></strong><br>Single choice with a visible filter line; typing fuzzy-matches and ranks the labels, exact and prefix matches leading.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-search-dark-animated.svg"><img src="docs/assets/field-search-light-animated.svg" width="100%" alt="Search field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/search">Search</a></strong><br>Single choice with a visible filter line; typing fuzzy-matches and ranks the labels, exact and prefix matches leading.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-select-dark-animated.svg"><img src="docs/assets/widget-select-light-animated.svg" width="100%" alt="Select widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/select">Select</a></strong><br>Single choice from a list; arrows move, <kbd>Enter</kbd> accepts the highlighted option, long lists page around the cursor.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-select-dark-animated.svg"><img src="docs/assets/field-select-light-animated.svg" width="100%" alt="Select field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/select">Select</a></strong><br>Single choice from a list; arrows move, <kbd>Enter</kbd> accepts the highlighted option, long lists page around the cursor.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-suggest-dark-animated.svg"><img src="docs/assets/widget-suggest-light-animated.svg" width="100%" alt="Suggest widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/suggest">Suggest</a></strong><br>Free text with autocomplete over a fixed option set: as you type, suggestions are fuzzy-matched and ranked by relevance.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-suggest-dark-animated.svg"><img src="docs/assets/field-suggest-light-animated.svg" width="100%" alt="Suggest field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/suggest">Suggest</a></strong><br>Free text with autocomplete over a fixed option set: as you type, suggestions are fuzzy-matched and ranked by relevance.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-template-dark-animated.svg"><img src="docs/assets/widget-template-light-animated.svg" width="100%" alt="Template widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/template">Template</a></strong><br>Fill the named slots of a fixed shape; the fixed text is context, <kbd>Tab</kbd> steps between slots and each one validates on its own.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-template-dark-animated.svg"><img src="docs/assets/field-template-light-animated.svg" width="100%" alt="Template field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/template">Template</a></strong><br>Fill the named slots of a fixed shape; the fixed text is context, <kbd>Tab</kbd> steps between slots and each one validates on its own.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-text-dark-animated.svg"><img src="docs/assets/widget-text-light-animated.svg" width="100%" alt="Text widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/text">Text</a></strong><br>Single-line input with a movable caret; type to insert, arrows move, <kbd>Backspace</kbd> deletes, <kbd>Enter</kbd> accepts.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-text-dark-animated.svg"><img src="docs/assets/field-text-light-animated.svg" width="100%" alt="Text field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/text">Text</a></strong><br>Single-line input with a movable caret; type to insert, arrows move, <kbd>Backspace</kbd> deletes, <kbd>Enter</kbd> accepts.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-textarea-dark-animated.svg"><img src="docs/assets/widget-textarea-light-animated.svg" width="100%" alt="Textarea widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/textarea">Textarea</a></strong><br>Multi-line input; <kbd>Enter</kbd> inserts a newline, arrows move between lines, <kbd>Tab</kbd> accepts, with an external-editor handoff.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-textarea-dark-animated.svg"><img src="docs/assets/field-textarea-light-animated.svg" width="100%" alt="Textarea field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/textarea">Textarea</a></strong><br>Multi-line input; <kbd>Enter</kbd> inserts a newline, arrows move between lines, <kbd>Tab</kbd> accepts, with an external-editor handoff.</td>
 </tr>
 <tr>
-<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/widget-toggle-dark-animated.svg"><img src="docs/assets/widget-toggle-light-animated.svg" width="100%" alt="Toggle widget"></picture></td>
-<td><strong><a href="https://phptui.dev/widgets/toggle">Toggle</a></strong><br>An inline switch between two labeled values; arrows or <kbd>Space</kbd> flip, the first letter of each label sets it directly.</td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/field-toggle-dark-animated.svg"><img src="docs/assets/field-toggle-light-animated.svg" width="100%" alt="Toggle field"></picture></td>
+<td><strong><a href="https://phptui.dev/fields/toggle">Toggle</a></strong><br>An inline switch between two labeled values; arrows or <kbd>Space</kbd> flip, the first letter of each label sets it directly.</td>
 </tr>
 </table>
 
@@ -227,7 +250,7 @@ $tui = (new Tui($form))->theme('midnight');
 | `mono` | Hue-free - bold weight, gray levels and reverse video for maximum compatibility. |
 | `dos` | Retro MS-DOS: the bright white/cyan/yellow CGA palette in a double-line window, made for a blue terminal background. |
 
-Each renders across every widget and degrades to plain text without ANSI. Here the dark palette (left) and the light palette (right); the [themes docs](https://phptui.dev/themes) also show every theme inside the rounded border frame:
+Each renders across every field and degrades to plain text without ANSI. Here the dark palette (left) and the light palette (right); the [themes docs](https://phptui.dev/themes) also show every theme inside the rounded border frame:
 
 **`midnight`**
 
@@ -264,7 +287,7 @@ Each renders across every widget and degrades to plain text without ANSI. Here t
   <img src="docs/assets/theme-dos-light-static.svg" width="48%" alt="dos theme, light terminal">
 </p>
 
-Write your own by subclassing `DefaultTheme` and overriding just its palette - see the [theming guide](https://phptui.dev/themes) and the playground's [`OceanTheme`](playground/themes/OceanTheme.php).
+Write your own by subclassing `DefaultTheme` and repainting just the voices a palette needs - see the [theming guide](https://phptui.dev/themes) and the playground's [`OceanTheme`](playground/themes/OceanTheme.php). To change a handful of glyphs and nothing else, skip the class: `->theme(fn(ThemeBuilder $t) => $t->field(fn(FieldOverrides $f) => $f->selector('▶', '=>')))` patches the selected theme in place, and anything it does not name keeps that theme's own answer.
 
 ## Contributing
 

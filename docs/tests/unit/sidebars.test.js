@@ -60,7 +60,7 @@ describe('sidebars', () => {
   });
 
   test('renders every top-level category as an always-visible section', () => {
-    expect(sidebars.tutorialSidebar.map((item) => item.label)).toEqual(['Getting started', 'Forms', 'Widgets', 'Automation', 'Customization', 'About']);
+    expect(sidebars.tutorialSidebar.map((item) => item.label)).toEqual(['Getting started', 'Forms', 'Fields', 'Automation', 'Customization', 'About']);
 
     for (const item of sidebars.tutorialSidebar) {
       expect(item.type).toBe('category');

@@ -1,14 +1,24 @@
 ---
 title: Testing
-description: 'Drive the real panel TUI from scripted keystrokes with TuiTester and assert on collected answers and rendered output - no terminal needed.'
+description: 'Drive the real TUI from scripted keystrokes with TuiTester or ScreenTester and assert on collected answers and rendered frames - no terminal needed.'
 keywords: ['testing', 'test harness', 'scripted keystrokes', 'phpunit', 'assertions']
 ---
 
 # Testing
 
-The `TuiTester` harness drives a form's interactive panel TUI from scripted keystrokes - it pushes them onto the terminal's input pipe and runs the real panel loop - so you can assert on the collected answers and on what was rendered, without a terminal anywhere in sight. It's the form-level companion to the widget-level `WidgetRunner`.
+Three harnesses ship, one per scope. All of them push keystrokes onto a scripted terminal's input pipe and run the **real** loop, so you assert on the answers and on what was drawn without a terminal anywhere in sight.
+
+| Harness        | Drives                      | Reach for it when                                 |
+| -------------- | --------------------------- | ------------------------------------------------- |
+| `TuiTester`    | a whole form, through `Tui` | you are testing a form the way a consumer runs it |
+| `ScreenTester` | one screen, from a `Panel`  | you are testing what was drawn, frame by frame    |
+| `FieldRunner`  | a single field              | you are testing one field's keys in isolation     |
 
 Keystrokes are `Key` objects and/or raw byte strings (the bytes a terminal emits for a key press), so an existing keystroke helper drops straight in.
+
+## A whole form
+
+`TuiTester` wraps the `Tui` facade, so it runs exactly what a consumer's `run()` would.
 
 ```php
 use DrevOps\Tui\Input\Key;
@@ -18,7 +28,7 @@ use DrevOps\Tui\Testing\TuiTester;
 $tester = new TuiTester($form);
 
 $answers = $tester->run(
-  Key::named(KeyName::Enter),   // drill into the first panel
+  Key::named(KeyName::Enter),   // go into the first panel
   Key::named(KeyName::Enter),   // open the "name" editor
   'Ada',                        // type a value
   Key::named(KeyName::Enter),   // accept
@@ -34,8 +44,55 @@ $this->assertStringContainsString('Ada', $tester->display());
 $this->assertFalse($tester->isCancelled());
 ```
 
-`run()` returns the collected `Answers`. `display()` is the ANSI-stripped output for substring assertions, `output()` the raw frames, and `isCancelled()` reports whether the run ended on the cancel button. `theme()`, `options()`, `rows()`, `cols()`, `version()` and `directory()` tune the run.
-
-For a single widget in isolation, `WidgetRunner::run($widget, ArrayKeyStream::of(...))` stays the lighter tool.
+`run()` returns the collected `Answers`. `display()` is the ANSI-stripped output for substring assertions, `output()` the raw frames, and `isCancelled()` / `isInterrupted()` report how the run ended. `theme()`, `layout()`, `options()`, `rows()`, `cols()`, `version()`, `directory()` and `update()` tune the run before it starts.
 
 The harness outside PHPUnit is shown in [`playground/13-testing.php`](https://github.com/drevops/tui/blob/main/playground/13-testing.php).
+
+## One screen
+
+`ScreenTester` is the screen-native companion. It takes the block tree directly - `$form->root()`, or a `Panel` you built yourself - and drives the same session loop, so it is the tool for asserting on **what was drawn** rather than on what came back.
+
+```php
+use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\Testing\ScreenTester;
+
+$tester = new ScreenTester($form->root());
+
+$answers = $tester->cols(80)->rows(24)->run(
+  Key::named(KeyName::Enter),
+  'Ada',
+  Key::named(KeyName::Enter),
+);
+
+$this->assertSame('Ada', $answers->value('courier'));
+$this->assertStringContainsString('Ada', $tester->frame());
+```
+
+Its display defaults are **fixed rather than detected** - no color, glyphs on, a dark palette, a terminal of a stated size - so a frame reads the same on every machine that runs the test.
+
+What it adds over `TuiTester` is the frames. `frames()` hands back every frame in the order it was drawn, split on the screen clear that separates one from the next; `frame($index)` returns one of them ANSI-stripped, counting back from the last when the index is negative, so `frame()` is the frame the session ended on. `output()` and `display()` cover the whole stream as before.
+
+Everything a session is built from can be set on it, which is what makes it the harness for a layout, a theme or a block you wrote yourself:
+
+| Call                      | Sets                                                                 |
+| ------------------------- | -------------------------------------------------------------------- |
+| `theme(ThemeInterface)`   | the theme the blocks draw through - any `ThemeInterface`, not a name |
+| `options(array)`          | display options merged over the deterministic defaults               |
+| `keys(KeyMap)`            | the bindings the screen answers to                                   |
+| `layout(string)`          | the [layout](/layouts) the screen is arranged by                     |
+| `border(Border)`          | the frame drawn around every region at once                          |
+| `collector(Collector)`    | what resolves the answers the form opens on                          |
+| `context(Context)`        | the run the session belongs to                                       |
+| `supplied(array)`         | values supplied for the fields, keyed by field id                    |
+| `banner(string, string)`  | what is shown before the form, and the version under it              |
+| `footer(bool)`            | whether the keys that apply right now are advertised                 |
+| `clearOnExit(bool)`       | whether the screen is cleared as the session ends                    |
+| `externalEditor(...)`     | what hands a passage of text to an editor of the reader's own        |
+| `rows(int)` / `cols(int)` | the reported terminal size                                           |
+
+`theme()` takes a `ThemeInterface` instance rather than a name, which is the seam for a theme built on `AbstractTheme` - the facade resolves names through the theme registry, and that wants a `DefaultTheme`. See [Themes](/themes#what-a-theme-is-allowed-to-do).
+
+## One field
+
+For a single field in isolation, `FieldRunner::run($field, ArrayKeyStream::of(...))` stays the lighter tool: no screen, no session, just the field and the keys you hand it.

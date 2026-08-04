@@ -10,7 +10,7 @@ declare(strict_types=1);
  * both backgrounds, so only the surface and foreground greys invert.
  * Deterministic and exact: a twin shares its dark source's geometry.
  *
- * Shared by update-assets.php and render-widget-svgs.php so every generator
+ * Shared by update-assets.php and render-field-svgs.php so every generator
  * emits its complete dark/light pair the moment a dark SVG lands - there is
  * no separate twin pass to run or subject list to maintain.
  * render-theme-svgs.php does not use it: theme previews render their light

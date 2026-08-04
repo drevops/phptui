@@ -6,7 +6,7 @@ keywords: ['ai agents', 'json schema', 'automation', 'agent help', 'validation']
 
 # AI agents
 
-A form built with this engine is self-describing: it hands an AI agent (or any automation) the questions, their allowed values and the precedence rules, so answers can arrive unattended - without the agent ever reading your form's source. The facade exposes three calls for this - `agentHelp()`, `schema()` and `validate()` - and you surface them in your own tool, so an agent can discover the form the moment it meets it.
+A form built with this library is self-describing: it hands an AI agent (or any automation) the questions, their allowed values and the precedence rules, so answers can arrive unattended - without the agent ever reading your form's source. The facade exposes three calls for this - `agentHelp()`, `schema()` and `validate()` - and you surface them in your own tool, so an agent can discover the form the moment it meets it.
 
 ## The answer schema
 
@@ -67,7 +67,7 @@ A field's other two [guidance texts](/field-behaviour#guidance-texts) travel bes
   "type": "string",
   "title": "Crop",
   "description": "The crop this basket was picked from.",
-  "x-hint": "Type a few letters to filter.",
+  "x-help": "Type a few letters to filter.",
   "x-placeholder": "E.g. Golden Beetroot",
   "env": "TUI_CROP"
 }
@@ -89,11 +89,14 @@ Dynamic defaults - the `fn (Context $c): mixed` closures from [field behavior](/
       "type": "text",
       "label": "Order name",
       "description": "",
-      "hint": "",
+      "help": "",
       "placeholder": "",
       "options": [],
+      "options_dynamic": false,
       "default": "",
       "required": true,
+      "env": "TUI_NAME",
+      "env_aliases": [],
       "min": null,
       "max": null,
       "step": null,
@@ -112,6 +115,8 @@ Dynamic defaults - the `fn (Context $c): mixed` closures from [field behavior](/
   ]
 }
 ```
+
+Every prompt carries every key, whether or not the field declares it - so a reader never has to tell a missing key from an unset one. A note and a progress row are absent: they collect no answer, so they are not prompts anything drives or validates.
 
 `validate()` checks an answer set against those rules before collection, so an agent can confirm a payload without running the form. Each violation is one message; an empty list means the answers are valid:
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Input;
 
 /**
- * Named special keys recognised by the widgets and the panel loop.
+ * Named special keys recognised by the fields and the panel loop.
  *
  * @package DrevOps\Tui\Input
  */

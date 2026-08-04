@@ -8,22 +8,31 @@ keywords: ['playground', 'examples', 'scripts', 'demos', 'php']
 
 Runnable examples live in [`playground/`](https://github.com/drevops/tui/tree/main/playground) - one file per example, grouped by a numbered prefix that follows this documentation's order, from the quick start to the capstone form:
 
-| Group                  | Demonstrates                                                                                                          |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `01-quickstart`        | The fluent builder and `run()` - the form from [the quick start](/introduction#quick-start)                           |
-| `02-widgets-*`         | One script per [widget](/widgets), plus the whole gallery on one form                                                 |
-| `03-panels-*`          | [Nested panels](/panels), [modal dialogs](/panels#modal-panels) and the border frame                                  |
-| `04-inline-editing`    | [Inline editing](/panels#inline-editing) and `->standalone()`                                                         |
-| `05-form-logic-*`      | [Derived values](/configuration#derived-values), [conditional fields](/configuration#conditional-fields), fix-ups     |
-| `06-field-behaviour-*` | [Declared behavior](/field-behaviour): [required fields](/field-behaviour#required-fields), closures, handler classes |
-| `07-discovery`         | [Discovery](/field-behaviour#discovery) against a bundled sample project                                              |
-| `08-headless-*`        | [Unattended collection](/headless-collection), the JSON schema, validation, [agent help](/ai-agents)                  |
-| `09-themes-*`          | The [built-in themes](/themes), a custom theme class, theme options, field styles                                     |
-| `10-key-bindings-*`    | [Key bindings](/key-bindings): the vim preset and per-binding overrides                                               |
-| `11-display-modes-*`   | [Display modes](/display-modes): dark/light, ASCII, no color                                                          |
-| `12-translations`      | [Translations](/translations) through a consumer catalog                                                              |
-| `13-testing`           | The [test harness](/testing) driving the TUI from scripted keystrokes                                                 |
-| `14-produce-box`       | The capstone: panels, widgets, logic and behavior in one real form                                                    |
+| Group                     | Demonstrates                                                                                                                        |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `01-quickstart`           | The fluent builder and `run()` - the form from [the quick start](/introduction#quick-start)                                         |
+| `02-fields-*`             | One script per [field](/fields), plus the whole gallery on one form                                                                 |
+| `03-panels-*`             | [Nested panels](/panels), [modal dialogs](/panels#modal-panels), the border frame, sub-panel grids, the fullscreen stretch          |
+| `04-inline-editing`       | [Inline editing](/panels#inline-editing) and `->standalone()`                                                                       |
+| `05-form-logic-*`         | [Derived values](/configuration#derived-values), [conditional fields](/configuration#conditional-fields), fix-ups                   |
+| `06-field-behaviour-*`    | [Declared behavior](/field-behaviour): [required fields](/field-behaviour#required-fields), closures, handler classes               |
+| `07-discovery`            | [Discovery](/field-behaviour#discovery) against a bundled sample project                                                            |
+| `08-headless-*`           | [Unattended collection](/headless-collection), the JSON schema, validation, [agent help](/ai-agents)                                |
+| `09-themes-*`             | The [built-in themes](/themes), a custom theme class, [element overrides](/themes#patching-an-element), theme options, field styles |
+| `10-key-bindings-*`       | [Key bindings](/key-bindings): the vim preset and per-binding overrides                                                             |
+| `11-display-modes-*`      | [Display modes](/display-modes): dark/light, ASCII, no color, [markdown](/markdown)                                                 |
+| `12-translations`         | [Translations](/translations) through a consumer catalog                                                                            |
+| `12-specification-screen` | The [specification](/specification) made runnable: the levels, keys traveling inward, the same tree collected headlessly            |
+| `13-testing`              | The [test harness](/testing) driving the TUI from scripted keystrokes                                                               |
+| `14-produce-box`          | The capstone: panels, fields, logic and behavior in one real form                                                                   |
+| `15-progress-*`           | The [progress primitive](/progress): a spinner when the length is unknown, a bar when it is                                         |
+| `16-loading-data`         | [Loading a panel's data](/progress#inside-the-form) on demand, with a themed indicator while it runs                                |
+| `17-query-options`        | [Options that follow the query](/progress#options-from-a-query), cached and held back by `->minQuery()`                             |
+| `18-output-*`             | The [output primitives](/output): boxes and cards, tables, status lines, definition lists, text, rules, a banner                    |
+| `19-dynamic-options`      | [Options that follow the answers](/field-behaviour#options-from-the-answers), narrowing one field by another                        |
+| `20-layouts-*`            | [Layouts](/layouts): a layout class of your own registered by name, and a region flowing its blocks across                          |
+
+The reusable helper classes the scripts load sit beside them - `themes/`, `layouts/` and `handlers/` - with the fixtures the examples read from in `sample-project/` and `translations/`.
 
 Every script is self-contained: it requires the Composer autoloader directly and declares its whole form inline, so you can copy any single file out as a starting point. Most take no CLI options - each demonstrates exactly one thing, variants are separate scripts, and unattended runs are driven by piping stdin and setting `TUI_<ID>` environment variables. The exception is `03-panels-fullscreen.php`, which takes `--halign`/`--valign` and `--max-width` to pick one alignment from its grid.
 
@@ -32,4 +41,4 @@ composer install
 php playground/01-quickstart.php
 ```
 
-The SVG demos throughout this documentation are generated from the playground scripts and forms: `php docs/util/update-assets.php` records the panel walkthroughs through a scripted terminal session (it needs `asciinema`, `expect`, `node` and `npm`), while `php docs/util/render-widget-svgs.php` and `php docs/util/render-theme-svgs.php` render the widget cards and theme previews deterministically through the library's own [test harness](/testing) - no terminal involved.
+The SVG demos throughout this documentation are generated from the playground scripts and forms: `php docs/util/update-assets.php` records the panel walkthroughs through a scripted terminal session (it needs `asciinema`, `expect`, `node` and `npm`), while `php docs/util/render-field-svgs.php`, `php docs/util/render-progress-svgs.php`, `php docs/util/render-output-svgs.php` and `php docs/util/render-theme-svgs.php` render the field cards, the primitives and the theme previews deterministically through the library's own [test harness](/testing) - no terminal involved.

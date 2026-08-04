@@ -12,7 +12,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 Label, description and note text is more than a flat string: it can carry a clickable link, and - when you opt in - a small, safe subset of markdown. Both adapt to the terminal, degrading to clean plain text where a terminal (or your [color switch](/display-modes)) cannot show the real thing, so the same form reads well everywhere.
 
 <p align="center">
-  <ThemedImage sources={{light: useBaseUrl('/widget-note-markdown-light-animated.svg'), dark: useBaseUrl('/widget-note-markdown-dark-animated.svg')}} alt="A bordered note rendering bold, emphasis, inline code, a bullet list and a link" />
+  <ThemedImage sources={{light: useBaseUrl('/field-note-markdown-light-animated.svg'), dark: useBaseUrl('/field-note-markdown-dark-animated.svg')}} alt="A bordered note rendering bold, emphasis, inline code, a bullet list and a link" />
 </p>
 
 ## Links
@@ -30,7 +30,7 @@ The summary resolves links too: `$answers->toSummary()` follows the terminal's c
 
 ## Markdown
 
-Turn on `->markdown()` and field descriptions and note bodies render a small subset of markdown, each construct mapped to one of the theme's [style atoms](/themes):
+Turn on `->markdown()` and field descriptions and note bodies render a small subset of markdown, each construct mapped to one of the theme's [markup elements](/fields/anatomy#a-passage-of-text):
 
 ```php
 $answers = (new Tui($form))->markdown()->run();
@@ -53,7 +53,7 @@ $p->number('quantity', 'Quantity')->min(1)->max(99)
   ->description('Baskets hold up to **99**; order more in a *second* basket.');
 ```
 
-The subset is deliberately small and inline - no headings, tables or nested blocks - so a description stays a description. Because each construct maps to a theme atom, a [custom theme](/themes) restyles bold, emphasis, code, links and bullets by overriding `strong()`, `emphasis()`, `code()`, `link()` and `bullet()`.
+The subset is deliberately small and inline - no headings, tables or nested blocks - so a description stays a description. Because each construct is its own element, a [custom theme](/themes) restyles bold, emphasis, code, links and bullets by overriding `markupStrong()`, `markupEmphasis()`, `markupCode()`, `markupLink()` and `markupBullet()` - and restyles them everywhere a passage is drawn rather than in the one place that happened to compose it.
 
 Markdown honors both the color and the Unicode switches. With color off the markers drop and the text renders plain (bold `**ripe**` becomes `ripe`, a link becomes `text (url)`); with ASCII glyphs the bullet falls back from `•` to `-`. Headless collection never renders descriptions or notes at all, so it is unaffected. Links stay recognized whether or not markdown is on - `->markdown()` only adds the rest of the subset.
 
@@ -67,13 +67,13 @@ The same markdown note in all four [display modes](/display-modes) - the color-o
   </tr>
   <tr>
     <td align="right"><strong>Unicode</strong></td>
-    <td><ThemedImage sources={{light: useBaseUrl('/widget-note-markdown-light-static.svg'), dark: useBaseUrl('/widget-note-markdown-dark-static.svg')}} alt="Markdown note: Unicode + ANSI" /></td>
-    <td><ThemedImage sources={{light: useBaseUrl('/widget-note-markdown-light-static-no-ansi.svg'), dark: useBaseUrl('/widget-note-markdown-dark-static-no-ansi.svg')}} alt="Markdown note: Unicode + No ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-note-markdown-light-static.svg'), dark: useBaseUrl('/field-note-markdown-dark-static.svg')}} alt="Markdown note: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-note-markdown-light-static-no-ansi.svg'), dark: useBaseUrl('/field-note-markdown-dark-static-no-ansi.svg')}} alt="Markdown note: Unicode + No ANSI" /></td>
   </tr>
   <tr>
     <td align="right"><strong>ASCII</strong></td>
-    <td><ThemedImage sources={{light: useBaseUrl('/widget-note-markdown-light-static-ascii.svg'), dark: useBaseUrl('/widget-note-markdown-dark-static-ascii.svg')}} alt="Markdown note: ASCII + ANSI" /></td>
-    <td><ThemedImage sources={{light: useBaseUrl('/widget-note-markdown-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/widget-note-markdown-dark-static-ascii-no-ansi.svg')}} alt="Markdown note: ASCII + No ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-note-markdown-light-static-ascii.svg'), dark: useBaseUrl('/field-note-markdown-dark-static-ascii.svg')}} alt="Markdown note: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-note-markdown-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/field-note-markdown-dark-static-ascii-no-ansi.svg')}} alt="Markdown note: ASCII + No ANSI" /></td>
   </tr>
 </table>
 

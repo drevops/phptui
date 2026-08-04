@@ -1,0 +1,84 @@
+---
+title: Rating
+description: 'A graded answer picked from a scale of points, collected as an int.'
+keywords: ['rating', 'scale', 'grade', 'field']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Rating
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/field-rating-light-animated.svg'), dark: useBaseUrl('/field-rating-dark-animated.svg')}} alt="Rating field" />
+</p>
+
+A graded answer - how fresh the produce was, how ripe a fruit is, a one-to-five score. The arrows walk a row of points and the chosen one is collected as an **`int`**.
+
+```php
+$p->rating('freshness', 'Freshness')
+  ->min(1)      // Lowest point of the scale.
+  ->max(5)      // Highest point of the scale.
+  ->default(4)  // Point the scale starts on.
+  ->captions([  // What a point means; points may be left uncaptioned.
+    1 => 'Poor',
+    3 => 'Fair',
+    5 => 'Excellent',
+  ]);
+```
+
+Runnable script: [`playground/02-fields-rating.php`](https://github.com/drevops/tui/blob/main/playground/02-fields-rating.php).
+
+## Options
+
+| Name         | Description                                                            | Required | Default      |
+| ------------ | ---------------------------------------------------------------------- | -------- | ------------ |
+| `min()`      | Lowest point of the scale.                                             | No       | `1`          |
+| `max()`      | Highest point of the scale; must be above `min()`.                     | No       | `5`          |
+| `captions()` | What a point means, keyed by the point; keys must be within the scale. | No       | No captions  |
+| `default()`  | Point the scale starts on.                                             | No       | Lowest point |
+
+A rating is always on a point of its scale, so it always returns a value. Captions are decoration, not a value set: captioning only the two ends labels the scale without claiming a reading for every step in between, and a point with no caption still answers with its number.
+
+The points _are_ the steps, so a rating takes no `step()` - declaring one is a build-time error, as is a scale whose ends leave fewer than two points.
+
+## Rating or number?
+
+Both collect an `int`. Reach for `number()` when the answer is a figure the user knows and types - a basket weight, a crate count - and for `rating()` when the answer is one of a handful of graded points that are worth showing all at once.
+
+## Keyboard
+
+| Key                                                       | Action                                        |
+| --------------------------------------------------------- | --------------------------------------------- |
+| <kbd>←</kbd> / <kbd>→</kbd> / <kbd>↑</kbd> / <kbd>↓</kbd> | Move one point along the scale                |
+| a digit                                                   | Jump to that point, when the scale reaches it |
+| <kbd>Enter</kbd>                                          | Accept the chosen point                       |
+| <kbd>Esc</kbd>                                            | Cancel                                        |
+
+The scale stops at either end rather than wrapping round - a grade has a floor and a ceiling.
+
+## Headless behavior
+
+The point is supplied directly as an integer when the form runs [headlessly](/headless-collection), and the scale is enforced there too: a value off the scale is rejected, and so is a fraction between two points, since a scale has no point between its points. It surfaces in the JSON schema as an `integer` with `minimum` and `maximum`.
+
+## Display modes
+
+In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-rating-light-static.svg'), dark: useBaseUrl('/field-rating-dark-static.svg')}} alt="Rating: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-rating-light-static-no-ansi.svg'), dark: useBaseUrl('/field-rating-dark-static-no-ansi.svg')}} alt="Rating: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-rating-light-static-ascii.svg'), dark: useBaseUrl('/field-rating-dark-static-ascii.svg')}} alt="Rating: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/field-rating-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/field-rating-dark-static-ascii-no-ansi.svg')}} alt="Rating: ASCII + No ANSI" /></td>
+  </tr>
+</table>

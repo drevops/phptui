@@ -1,0 +1,197 @@
+---
+title: Layouts
+description: 'Arrange a screen or a panel with named regions: shipped layouts, fixed and flexible sizing, per-region scrolling and flow, and layouts of your own.'
+keywords: ['layout', 'region', 'columns', 'scrolling', 'arrangement', 'screen']
+---
+
+# Layouts
+
+A form never has to name a layout. Declare a panel of fields and you get the default arrangement: a trail across the top, the fields in the middle, the key hints along the bottom. A **layout** is what you reach for when that is not the shape you want - two columns instead of one, a taller header, a sidebar that stays put while its neighbor scrolls.
+
+A layout is an **arrangement and nothing else**. It names its regions, says how big each is and which of them scroll, and stops there. It never mentions a breadcrumb, a panel or a field - a layout carrying content opinions is a layout exactly one form can use. That is what makes it reusable: the same layout can arrange a whole screen and a single panel, and neither knows about the other.
+
+A **region** is one named slot inside it. Blocks go in by name, so nothing depends on the order anything was declared in.
+
+```
+Screen        the frame
+└─ Layout     names the regions, sizes them, says which scroll
+   └─ Region  holds blocks, flows them, scrolls them
+      └─ Block   a field, a panel, a note, the key hints
+```
+
+The [specification](/specification#layout) explains why the split falls exactly there. This page is how to use it.
+
+## The layouts that ship
+
+Three, picked by name:
+
+| Name         | Axis    | Regions                                                     | For                                         |
+| ------------ | ------- | ----------------------------------------------------------- | ------------------------------------------- |
+| `default`    | rows    | `header` (fixed 1), `content` (scrolls), `footer` (fixed 1) | the screen, unless you say otherwise        |
+| `panel`      | rows    | `content` (scrolls)                                         | a panel, unless it says otherwise           |
+| `two-column` | columns | `left`, `right`                                             | anything that wants its blocks side by side |
+
+Two axes and one degenerate case cover it, because the second dimension comes from nesting rather than from a grid: a panel is a block that holds a layout, so any arrangement is rows of columns of rows, as deep as it needs to be.
+
+## Picking one
+
+Two places take a layout, and they are separate choices.
+
+**The screen** takes one on the facade, beside the theme and the key bindings - it describes the terminal rather than the questionnaire:
+
+```php
+$tui = (new Tui($form))->layout('two-column');
+```
+
+**A panel** takes one in its own declaration, before anything is placed in it:
+
+```php
+$form = Form::create('Market stall')
+  ->panel('order', 'Order', function (PanelBuilder $p): void {
+    $p->layout('two-column');
+
+    // A block says which region it belongs to; the ones after it keep that
+    // region until another is named.
+    $p->in('left');
+    $p->text('item', 'Item')->default('Pear');
+    $p->number('crates', 'Crates')->default(6)->min(1)->max(99);
+
+    $p->in('right');
+    $p->confirm('gift', 'Gift wrap?')->default(FALSE);
+  });
+```
+
+`->layout()` comes first because every block after it has to know which regions it may go in. Declaring it after placing blocks throws, naming the panel, rather than quietly dropping the rows that had nowhere to go. So does an unknown region name in `->in()`, and an unknown layout name in either `->layout()`.
+
+Both calls resolve through the same registry, which is the whole of what _reuse_ buys: one layout, named once, arranging a screen in one form and a panel in another.
+
+:::note
+
+`PanelBuilder::layout()` also takes **numbers**, and that is a different feature: `->layout(1, 2)` arranges the panel's _sub-panels_ as a [grid of side-by-side windows](/panels#panel-layouts). A name arranges the panel's own blocks; numbers deal its sub-panels into visual rows. Mixing the two in one call throws, because a panel is arranged one way or the other.
+
+:::
+
+## Sizing a region
+
+A region takes its share of the axis one of two ways, and both axes work the same:
+
+```php
+$this->region('header')->fixed(1);   // exactly one row (or column)
+$this->region('content')->flex(1);   // a share of whatever is left
+```
+
+**`fixed` is cells**, and rows are why it exists. A header is one line whatever the terminal height, and no proportion can say that: 4% of a 24-row terminal is one row, of a 50-row terminal is two. Columns rarely need it; rows almost always do at their edges.
+
+**`flex` is a share of the remainder.** Shares don't sum to anything in particular, so `30, 40, 30` and `3, 4, 3` mean the same thing. Declaring neither is `flex(1)`.
+
+The two mix without negotiating. Fixed regions come off the top first, what remains is divided by the flex values, and any cell left over by the rounding goes to the last region taking a share - so the sizes always add up to what was available. A region never sees that arithmetic; it is told a number and gets on with it.
+
+A terminal too small even for the fixed regions is a real state rather than an error: they are trimmed in declaration order, so the sizes still add up and the frame stays whole.
+
+## Scrolling
+
+Scrolling is declared **per region**, not per layout:
+
+```php
+$this->region('produce')->flex(3)->scrolls();
+$this->region('delivery')->flex(2);
+```
+
+That is what lets a long produce list outrun its column while its neighbor stays pinned, and what lets two rows scroll independently of each other. A region that was not declared to scroll clips what outruns it instead.
+
+The region does the scrolling too. Its layout hands it one number - the size it was given - and everything after that is the region's own: how tall its blocks add up to, where the viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved, which is why sizing belongs to the layout and scrolling belongs to the region.
+
+## Flow: two blocks on one line
+
+Within a region, blocks run **down** it by default. Tell it otherwise and they run **across**:
+
+```php
+$this->region('header')->fixed(1)->flow(Axis::Columns);
+```
+
+```
+flow: Axis::Rows            flow: Axis::Columns
+(the default)
+
+╭──────────────────╮        ╭──────────────────╮
+│ Breadcrumb       │        │ Breadcrumb Clock │
+│ Markup           │        ╰──────────────────╯
+╰──────────────────╯
+```
+
+This is what saves you from nesting a layout every time two things belong side by side. A trail and a standing note in one header is a flow, not a second arrangement.
+
+Flow is what a layout and a region share; sizing is what only a layout does. Both run their contents in one direction, but only a layout apportions space between them. A region's blocks take their natural size, in the order they were added.
+
+| You need                          | Use                                      |
+| --------------------------------- | ---------------------------------------- |
+| Two blocks side by side           | a flow                                   |
+| Areas you can address by name     | a layout                                 |
+| Areas at declared sizes or shares | a layout                                 |
+| Areas that scroll independently   | a layout                                 |
+| Somewhere you can navigate into   | a [panel](/panels), which nests a layout |
+
+[`playground/20-layouts-region-flow.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-region-flow.php) draws the same header three ways - down a one-row header where the note is clipped, across it where both fit, and down a two-row header where they stack.
+
+## Writing one
+
+Every layout is a class extending `AbstractLayout`, shipped ones included. `AbstractLayout` carries every line of the sizing arithmetic, so a subclass declares an axis and its regions and inherits the rest:
+
+```php
+use DrevOps\Tui\Screen\Axis;
+use DrevOps\Tui\Screen\Layout\AbstractLayout;
+
+final class StallLayout extends AbstractLayout {
+
+  public function __construct() {
+    parent::__construct(Axis::Columns);
+
+    // A share is of whatever is left over, so 3 and 2 mean the produce column
+    // takes half again what the delivery column does, at every width.
+    $this->region('produce')->flex(3)->scrolls();
+    $this->region('delivery')->flex(2);
+  }
+
+}
+```
+
+Two axes exist - `Axis::Rows` and `Axis::Columns` - and that is the whole set. Declaring the same region name twice throws, naming the layout. So does arranging a panel with a layout that declares no region at all, since there would be nowhere for a block to go.
+
+Overriding the arithmetic is the other reason to subclass - a layout that packs its regions to fit, or gives the focused one extra room - and `arrange(int $available): array<string,int>` is the one method that does it.
+
+## Registering one
+
+Three ways reach a layout, and they are the same three a [theme](/themes) offers:
+
+```php
+use DrevOps\Tui\Screen\Layout\LayoutManager;
+
+LayoutManager::create('two-column');          // shipped
+LayoutManager::register('stall', StallLayout::class);
+LayoutManager::create('stall');               // registered
+LayoutManager::create(StallLayout::class);    // the class, unregistered
+```
+
+Registered or not, the name goes wherever a shipped one does - `->layout('stall')` on the facade for the screen, `$p->layout('stall')` for a panel. Naming the class directly needs no registration at all; registering buys a short, stable alias.
+
+Each call builds its own instance, because two forms picking the same layout must not share its regions. Registration checks the class up front - it has to implement `LayoutInterface` and be instantiable - so an abstract class or a typo is refused where it is written rather than at the first frame.
+
+Both routes are in [`playground/20-layouts-custom.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-custom.php), which registers one layout for a panel and another for the screen.
+
+## Where the standard furniture goes
+
+A layout names no block, so something else has to decide that a breadcrumb belongs at the top. That is the facade's job, and it places three pieces by region name:
+
+| Region    | Gets                                             |
+| --------- | ------------------------------------------------ |
+| `header`  | the breadcrumb - the trail of panels you entered |
+| `content` | the panel, and the buttons that end the form     |
+| `footer`  | the legend - the keys that apply right now       |
+
+Furniture goes only where the named layout keeps a place for it. A layout with no `header` shows no trail rather than being refused, and one with no `content` puts the panel in whichever region it declared first - which is why `two-column` works as a screen layout even though it has neither name. The trail and the keys keep tracking the session either way; they are just never drawn.
+
+So a layout meant to replace `default` keeps those three names. A layout meant to arrange a panel's own blocks can name its regions anything, because nothing is placed in it but what the form places itself.
+
+## What a layout does not touch
+
+Arranging exists only to draw, so [headless collection](/headless-collection) ignores every word of it. The same form collects the same answers under any layout, or none - which is also why `->layout()` sits on the facade beside the theme rather than in the form declaration.

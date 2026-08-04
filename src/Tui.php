@@ -5,35 +5,39 @@ declare(strict_types=1);
 namespace DrevOps\Tui;
 
 use DrevOps\Tui\Answers\Answers;
+use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Engine\Engine;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
 use DrevOps\Tui\Input\KeyMap;
 use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Model\FormDefinition;
 use DrevOps\Tui\Primitive\Output;
 use DrevOps\Tui\Primitive\Progress;
-use DrevOps\Tui\Render\PanelController;
 use DrevOps\Tui\Render\Terminal;
 use DrevOps\Tui\Resolver\InputResolver;
 use DrevOps\Tui\Schema\AgentHelp;
 use DrevOps\Tui\Schema\SchemaGenerator;
 use DrevOps\Tui\Schema\SchemaValidator;
+use DrevOps\Tui\Screen\Collector;
+use DrevOps\Tui\Screen\Layout\LayoutManager;
+use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
+use DrevOps\Tui\Theme\Override\Overrides;
+use DrevOps\Tui\Theme\ThemeBuilder;
 use DrevOps\Tui\Theme\ThemeManager;
 use DrevOps\Tui\Translation\Translator;
 
 /**
  * The one-class entry point for collecting a form's answers.
  *
- * Wraps the engine, input resolver, schema tools and panel TUI so a consumer
+ * Wraps the collector, input resolver, schema tools and panel TUI so a consumer
  * can collect answers - headlessly or interactively - in a single call. It also
  * owns the global TUI runtime shared by every form: the theme, key bindings,
  * colour and glyph forcing, the key-hint footer, screen clearing and the active
  * language, each set through a fluent setter. Those internals stay reachable
- * via form(), engine() and registry() when a consumer wants finer control.
+ * via root() and registry() when a consumer wants finer control.
  *
  * @package DrevOps\Tui
  */
@@ -45,19 +49,14 @@ final class Tui {
   protected HandlerRegistry $registry;
 
   /**
-   * The engine.
-   */
-  protected Engine $engine;
-
-  /**
    * The effective env-variable prefix for per-question overrides.
    */
   protected string $envPrefix;
 
   /**
-   * The form definition.
+   * What collects the answers with no screen at all, once one is asked for.
    */
-  protected FormDefinition $form;
+  protected ?Collector $collector = NULL;
 
   /**
    * The theme name or class (empty for the default).
@@ -70,6 +69,16 @@ final class Tui {
    * @var array<string,mixed>
    */
   protected array $themeOptions = [];
+
+  /**
+   * What the consumer states differently, on whatever theme is selected.
+   */
+  protected ?Overrides $themeOverrides = NULL;
+
+  /**
+   * The layout the screen is arranged by.
+   */
+  protected string $layout = 'default';
 
   /**
    * The resolved key bindings; NULL uses the default preset.
@@ -114,8 +123,8 @@ final class Tui {
   /**
    * Construct a TUI.
    *
-   * @param \DrevOps\Tui\Model\FormDefinition|\DrevOps\Tui\Builder\Form $form
-   *   The form: a Form builder (built internally) or its built definition.
+   * @param \DrevOps\Tui\Builder\Form $form
+   *   The form declaring the panels and fields to collect.
    * @param string[] $handler_namespaces
    *   Namespaces searched, in order, for per-field consumer classes offering
    *   reusable static validate()/transform() behaviour.
@@ -123,30 +132,94 @@ final class Tui {
    *   The env-variable prefix for per-question overrides; wins over the
    *   form-declared prefix, which wins over the "TUI_" default.
    */
-  public function __construct(FormDefinition|Form $form, array $handler_namespaces = [], string $env_prefix = '') {
-    $this->form = $form instanceof Form ? $form->build() : $form;
-    $this->envPrefix = $env_prefix !== '' ? $env_prefix : ($this->form->envPrefix !== '' ? $this->form->envPrefix : 'TUI_');
+  public function __construct(protected Form $form, array $handler_namespaces = [], string $env_prefix = '') {
+    $declared = $form->currentEnvPrefix();
+    $this->envPrefix = $env_prefix !== '' ? $env_prefix : ($declared !== '' ? $declared : 'TUI_');
     $this->registry = new HandlerRegistry($handler_namespaces);
-    $this->engine = new Engine($this->form, $this->registry);
   }
 
   /**
-   * Set the interactive theme name and its display options.
+   * Select the theme, or state what it draws differently.
    *
-   * @param string $theme
-   *   The theme name or class. Empty (or "auto") auto-detects light/dark from
-   *   the terminal background.
+   * Two things a consumer wants at two different sizes, so one call answers
+   * both. A name picks the theme and its display options. A closure is handed a
+   * {@see \DrevOps\Tui\Theme\ThemeBuilder} and states the elements whatever
+   * theme is selected should draw differently - anything it does not name keeps
+   * the theme's own answer, which is what makes it a patch rather than a
+   * replacement. Reach for a subclass when changing a palette; reach for the
+   * closure when changing a handful of glyphs.
+   *
+   * @code
+   * $tui->theme('mono')
+   *   ->theme(fn(ThemeBuilder $t) => $t
+   *     ->breadcrumb(fn(BreadcrumbOverrides $b) => $b->separator('›', '>'))
+   *     ->field(fn(FieldOverrides $f) => $f->selector('❯', '>')));
+   * @endcode
+   *
+   * @param string|\Closure $theme
+   *   The theme name or class - empty (or "auto") auto-detects light/dark from
+   *   the terminal background - or an `fn (ThemeBuilder $t): void` stating what
+   *   the selected theme draws differently.
    * @param array<string,mixed> $options
    *   Display options for the theme, keyed by name - e.g.
    *   `['spacing' => Spacing::Padded, 'border' => Border::Rounded]` - plus any
-   *   a custom theme reads.
+   *   a custom theme reads. Ignored when a closure is given, which patches the
+   *   theme rather than choosing one.
    *
    * @return $this
    *   The facade.
    */
-  public function theme(string $theme, array $options = []): self {
+  public function theme(string|\Closure $theme, array $options = []): self {
+    if ($theme instanceof \Closure) {
+      $builder = new ThemeBuilder();
+      $theme($builder);
+      $this->themeOverrides = $builder->overrides();
+
+      return $this;
+    }
+
     $this->theme = $theme;
     $this->themeOptions = $options;
+
+    return $this;
+  }
+
+  /**
+   * Build the selected theme, carrying anything stated differently.
+   *
+   * @param string $name
+   *   The theme name or class; empty falls back to the facade's theme.
+   * @param int $width
+   *   The frame width.
+   * @param array<string,mixed> $options
+   *   The resolved display options.
+   *
+   * @return \DrevOps\Tui\Theme\DefaultTheme
+   *   The theme.
+   */
+  protected function buildTheme(string $name, int $width, array $options): DefaultTheme {
+    $theme = ThemeManager::create($this->resolveTheme($name), $width, $options);
+
+    return $this->themeOverrides instanceof Overrides ? $theme->overrides($this->themeOverrides) : $theme;
+  }
+
+  /**
+   * Set the layout the interactive screen is arranged by.
+   *
+   * The name resolves through the layout manager - a shipped layout, one
+   * registered by the consumer, or a class - and an unknown name throws here
+   * rather than mid-session. Headless collection is unaffected, since a layout
+   * exists only to arrange drawing.
+   *
+   * @param string $layout
+   *   The layout name or class. Empty selects the default layout.
+   *
+   * @return $this
+   *   The facade.
+   */
+  public function layout(string $layout): self {
+    $this->layout = $layout === '' ? 'default' : $layout;
+    LayoutManager::create($this->layout);
 
     return $this;
   }
@@ -319,8 +392,8 @@ final class Tui {
    * @return \DrevOps\Tui\Answers\Answers
    *   The collected answers.
    *
-   * @throws \DrevOps\Tui\Engine\EngineException
-   *   When the engine cannot process the configuration or answers.
+   * @throws \DrevOps\Tui\CollectException
+   *   When the answers cannot be taken as they were given.
    * @throws \DrevOps\Tui\InterruptException
    *   When the user aborts the interactive session with the interrupt key.
    * @throws \DrevOps\Tui\CancelException
@@ -351,9 +424,12 @@ final class Tui {
     // Restore this facade's language at the operation boundary: another facade
     // constructed or configured meanwhile may have replaced the shared one.
     Translator::setShared($this->translator);
-    $inputs = (new InputResolver($this->envPrefix))->resolve($this->form->fields(), $prompts, getenv());
+    $root = $this->root();
+    $inputs = (new InputResolver($this->envPrefix))->resolve(Tree::fields($root), $prompts, getenv());
 
-    return $this->engine->collect($inputs, $this->context($directory, $update, $version));
+    $this->collector ??= new Collector($this->registry, $this->form->currentFixups());
+
+    return $this->collector->answers($root, $inputs, $this->context($directory, $update, $version));
   }
 
   /**
@@ -390,7 +466,7 @@ final class Tui {
 
     $terminal ??= self::primitiveTerminal();
 
-    $theme = ThemeManager::create($this->resolveTheme(''), DefaultTheme::DEFAULT_WIDTH, $this->primitiveThemeOptions());
+    $theme = $this->buildTheme('', DefaultTheme::DEFAULT_WIDTH, $this->primitiveThemeOptions());
 
     return (new Progress($terminal, $theme, $terminal->isOutputTty(), $total, $caption))->run($work);
   }
@@ -418,7 +494,7 @@ final class Tui {
     $terminal ??= self::primitiveTerminal();
 
     $options = $this->primitiveThemeOptions($terminal->isOutputTty());
-    $theme = ThemeManager::create($this->resolveTheme(''), self::frameWidth($options, $terminal->width()), $options);
+    $theme = $this->buildTheme('', self::frameWidth($options, $terminal->width()), $options);
 
     return new Output($terminal, $theme);
   }
@@ -445,8 +521,8 @@ final class Tui {
    * @return \DrevOps\Tui\Answers\Answers
    *   The collected answers.
    *
-   * @throws \DrevOps\Tui\Engine\EngineException
-   *   When the engine cannot process the configuration or answers.
+   * @throws \DrevOps\Tui\CollectException
+   *   When the answers cannot be taken as they were given.
    * @throws \DrevOps\Tui\InterruptException
    *   When the user aborts the interactive session with the interrupt key.
    * @throws \DrevOps\Tui\CancelException
@@ -463,32 +539,16 @@ final class Tui {
     // when set, otherwise they are auto-detected from the terminal.
     $options = $this->resolveThemeOptions($terminal);
 
-    $controller = $this->controller($options, $theme, $banner, $version, $directory, self::frameWidth($options, $terminal->width()), $update);
-
-    $answers = $controller->run($terminal);
-
-    // An interrupt is an abort, not a submit: surface it so the partial answers
-    // collected before the abort are never mistaken for a completed form.
-    if ($controller->isInterrupted()) {
-      throw new InterruptException('The interactive session was interrupted.');
-    }
-
-    // The cancel button is the same abort expressed as a click: without this a
-    // cancelled session would return its answers exactly like a submitted one.
-    if ($controller->isCancelled()) {
-      throw new CancelException('The interactive session was cancelled.');
-    }
-
-    return $answers;
+    return $this->controller($options, $theme, $banner, $version, $directory, self::frameWidth($options, $terminal->width()), $update)->run($terminal);
   }
 
   /**
-   * Build the interactive panel controller for the resolved display options.
+   * Build the session that drives the form for the resolved display options.
    *
-   * Shared by interact() and the test harness: it resolves and settles every
-   * field's state through the engine, resolves the theme and banner, and wires
-   * the controller - so a caller that supplies its own terminal (a real one,
-   * or a scripted one for tests) can run the interactive loop against it.
+   * Shared by interact() and the test harness: it builds the tree the form
+   * declares, resolves the theme and banner and wires the session - so a caller
+   * that supplies its own terminal (a real one, or a scripted one for tests)
+   * can run it against that.
    *
    * @param array<string,mixed> $options
    *   The resolved theme display options (colour, Unicode, mode).
@@ -506,39 +566,35 @@ final class Tui {
    * @param bool $update
    *   Whether discovery pre-fills the initial state from an existing project.
    *
-   * @return \DrevOps\Tui\Render\PanelController
-   *   The controller, ready to run against a terminal.
+   * @return \DrevOps\Tui\Screen\ScreenController
+   *   The session, ready to run against a terminal.
    *
    * @internal
    *   Public for the {@see \DrevOps\Tui\Testing\TuiTester} harness; consumers
    *   collect through run(), collect() or interact().
    */
-  public function controller(array $options, string $theme = '', string $banner = '', string $version = '', string $directory = '', int $width = DefaultTheme::DEFAULT_WIDTH, bool $update = FALSE): PanelController {
+  public function controller(array $options, string $theme = '', string $banner = '', string $version = '', string $directory = '', int $width = DefaultTheme::DEFAULT_WIDTH, bool $update = FALSE): ScreenController {
     // Restore this facade's language before rendering (see collect()).
     Translator::setShared($this->translator);
 
-    $context = $this->context($directory, $update, $version);
+    $drawn = $this->buildTheme($theme, $width, $options);
 
-    // The full state, not collect()'s active-only answers: an inactive field
-    // keeps its settled value, so a condition satisfied mid-session surfaces
-    // the field with its default rather than an empty value.
-    [$values, $provenance] = $this->engine->resolveState([], $context);
-
-    $banner_text = $banner !== '' ? $banner : $this->form->banner;
-
-    return new PanelController(
-      $this->form,
-      ThemeManager::create($this->resolveTheme($theme), $width, $options),
-      $values,
-      $provenance,
+    return new ScreenController(
+      $this->root(),
+      $drawn,
+      [],
       $this->keymap ?? KeyMapManager::create(),
-      $this->registry,
-      footer: $this->footer,
+      new Collector($this->registry, $this->form->currentFixups()),
+      $this->context($directory, $update, $version),
+      // The frame the theme was told to lay its rows out to is the frame that
+      // has to be drawn around them, so the border is read back off it rather
+      // than resolved a second time here.
+      layout: $this->layout,
+      border: $drawn->borderStyle(),
       clearOnExit: $this->clearOnExit,
-      banner: $banner_text,
+      footer: $this->footer,
+      banner: $banner !== '' ? $banner : $this->form->currentBanner(),
       version: $version,
-      context: $context,
-      engine: $this->engine,
     );
   }
 
@@ -578,7 +634,7 @@ final class Tui {
    *   The schema.
    */
   public function schema(?Context $context = NULL): array {
-    return (new SchemaGenerator($this->form, $context ?? new Context(), $this->envPrefix))->generate();
+    return (new SchemaGenerator($this->root(), $context ?? new Context(), $this->envPrefix))->generate();
   }
 
   /**
@@ -592,7 +648,7 @@ final class Tui {
    *   The help text.
    */
   public function agentHelp(?Context $context = NULL): string {
-    return (new AgentHelp($this->form, $this->envPrefix, $context ?? new Context()))->generate();
+    return (new AgentHelp($this->root(), $this->envPrefix, $context ?? new Context()))->generate();
   }
 
   /**
@@ -608,27 +664,7 @@ final class Tui {
    *   The validation errors (empty when valid).
    */
   public function validate(array $answers, ?Context $context = NULL): array {
-    return (new SchemaValidator($this->form, $context ?? new Context()))->validate($answers);
-  }
-
-  /**
-   * The form definition.
-   *
-   * @return \DrevOps\Tui\Model\FormDefinition
-   *   The form definition.
-   */
-  public function form(): FormDefinition {
-    return $this->form;
-  }
-
-  /**
-   * The engine.
-   *
-   * @return \DrevOps\Tui\Engine\Engine
-   *   The engine.
-   */
-  public function engine(): Engine {
-    return $this->engine;
+    return (new SchemaValidator($this->root(), $context ?? new Context()))->validate($answers);
   }
 
   /**
@@ -639,6 +675,21 @@ final class Tui {
    */
   public function registry(): HandlerRegistry {
     return $this->registry;
+  }
+
+  /**
+   * The declared block tree: the panel every declared panel hangs from.
+   *
+   * The rows a form asks about are settled state - a set of entries that
+   * arrives from somewhere else settles onto the block holding it - so one tree
+   * carries the declaration and what has become of it, and every operation on
+   * this facade reads that one.
+   *
+   * @return \DrevOps\Tui\Block\Panel
+   *   The root panel.
+   */
+  public function root(): Panel {
+    return $this->form->root();
   }
 
   /**

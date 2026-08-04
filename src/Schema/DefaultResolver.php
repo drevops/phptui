@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Schema;
 
+use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Model\Field;
 
 /**
  * Resolves a field's default for machine-readable output.
@@ -23,7 +23,7 @@ final class DefaultResolver {
   /**
    * Resolve the default advertised for a field.
    *
-   * @param \DrevOps\Tui\Model\Field $field
+   * @param \DrevOps\Tui\Block\Field $field
    *   The field.
    * @param \DrevOps\Tui\Handler\Context $context
    *   The context a closure default is evaluated against; its answers are the
@@ -34,16 +34,18 @@ final class DefaultResolver {
    *   evaluated value, or NULL when a closure cannot be resolved.
    */
   public static function resolve(Field $field, Context $context): mixed {
-    if (!$field->default instanceof \Closure) {
-      return $field->default;
+    $default = $field->value();
+
+    if (!$default instanceof \Closure) {
+      return $default;
     }
 
-    if ($field->hasSchemaDefault) {
-      return $field->schemaDefault;
+    if ($field->hasSchemaDefault()) {
+      return $field->schemaDefaultValue();
     }
 
     try {
-      return ($field->default)($context);
+      return $default($context);
     }
     catch (\Throwable) {
       return NULL;
