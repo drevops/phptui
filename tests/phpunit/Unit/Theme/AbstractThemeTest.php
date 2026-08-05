@@ -153,6 +153,12 @@ final class AbstractThemeTest extends TestCase {
     $this->assertSame('[ Submit ]', $floor->actionButton('Submit'));
     $this->assertSame('[ Submit ]', $floor->actionSelected('Submit'));
     $this->assertSame('  ', $floor->actionSeparator());
+
+    // The floor spends no style, so which button would be pressed is a
+    // question it cannot answer - and the mark saying where the cursor is is
+    // the one signal that survives having nothing to paint with.
+    $this->assertSame('>', $floor->actionSelector(TRUE));
+    $this->assertSame(' ', $floor->actionSelector(FALSE));
   }
 
   public function testSeparatorsAndTalliesReadWithoutAnythingToDrawThemWith(): void {

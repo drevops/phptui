@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Tests\Unit\Screen;
 
 use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
+use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
@@ -20,8 +21,10 @@ use DrevOps\Tui\Screen\Layout\PanelLayout;
 use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Screen\Screen;
 use DrevOps\Tui\Screen\ScreenRenderer;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\Spacing;
 use DrevOps\Tui\Theme\ThemeInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -99,6 +102,22 @@ final class ScreenRenderTest extends TestCase {
     // Six rows into four leaves two: the window stops there rather than
     // scrolling the content off the top of itself.
     $this->assertSame(['', 'three                                  ▲', 'four', 'five', 'six', ''], $this->render($screen, 6, 40));
+  }
+
+  public function testMarkedRowKeepsTheStylingOfTheRowItWasCutFrom(): void {
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('content')
+      ->add((new Field('courier', 'Courier'))->default('Valley Runs of the Long Green Valley'))
+      ->add((new Field('weight', 'Weight'))->default('1200'));
+
+    $theme = new DefaultTheme(40, ['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark, 'spacing' => Spacing::Normal]);
+    $marked = explode("\n", (new ScreenRenderer($theme))->render($screen, 3, 40))[1];
+
+    // The mark sits at the region's edge, so a row already filling the width is
+    // cut to make room for it - and a row at a boundary reads exactly as the
+    // same row one line in, which costs it a column rather than its colour.
+    $this->assertStringContainsString("\033[32mValley Runs of the Long Gree\033[0m", $marked);
+    $this->assertSame(40, Ansi::width($marked));
   }
 
   public function testPinnedRegionSaysNothingAboutWhatItClipped(): void {

@@ -71,7 +71,9 @@ final class Box {
   /**
    * Fit content to an exact visible width: clip if too wide, pad if too short.
    *
-   * ANSI-aware - the visible width ignores escape codes; a clip drops styling.
+   * ANSI-aware throughout - the visible width ignores escape codes, and a clip
+   * keeps the styling of what it kept, so a row cut at an edge reads exactly
+   * as the same row one line in.
    *
    * @param string $content
    *   The content (may carry ANSI codes).
@@ -85,7 +87,7 @@ final class Box {
     $width = Ansi::width($content);
 
     if ($width > $inner_width) {
-      $content = Strings::substr(Ansi::strip($content), 0, $inner_width);
+      $content = Ansi::slice($content, $inner_width);
       $width = Ansi::width($content);
     }
 

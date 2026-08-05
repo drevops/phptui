@@ -191,14 +191,21 @@ final class BlockTest extends TestCase {
     $bar = (new Progress('packing', 'Packing crates'))->steps(10)->advance(4, 'Apples');
     $spinner = (new Progress('fetching', 'Fetching the price list'))->label('Orchards');
 
-    $this->assertSame('Packing crates [████░░░░░░] 4/10 Apples', $bar->render($this->theme()));
-    $this->assertSame('⠋ Fetching the price list Orchards', $spinner->render($this->theme()));
+    $this->assertSame('  Packing crates [████░░░░░░] 4/10 Apples', $bar->render($this->theme()));
+    $this->assertSame('  ⠋ Fetching the price list Orchards', $spinner->render($this->theme()));
   }
 
-  public function testActionsFrameEveryLabelAndMarkTheFocusedOne(): void {
+  public function testActionsFrameEveryLabelAndMarkTheRowThatHasTheCursor(): void {
     $actions = (new Actions())->action('submit', 'Submit')->action('cancel', 'Cancel');
 
-    $this->assertSame('[ Submit ]  [ Cancel ]', $actions->render($this->theme()));
+    // The buttons are a row the cursor lands on like any other, so they say so
+    // the way any other does - and a row nobody is on marks no button as the
+    // one that would be pressed, because pressing is not a key away from there.
+    $this->assertSame('  [ Submit ]  [ Cancel ]', $actions->render($this->theme()));
+
+    $actions->focus();
+
+    $this->assertSame('❯ [ Submit ]  [ Cancel ]', $actions->render($this->theme()));
   }
 
   public function testActionsTakeAnyLabelsTheFormDeclares(): void {
@@ -210,19 +217,28 @@ final class BlockTest extends TestCase {
   public function testProgressDrawsBarWhenTheWorkReportsTotal(): void {
     $progress = (new Progress('packing', 'Packing crates'))->steps(10)->advance(4);
 
-    $this->assertSame('Packing crates [████░░░░░░] 4/10', $progress->render($this->theme()));
+    $this->assertSame('  Packing crates [████░░░░░░] 4/10', $progress->render($this->theme()));
   }
 
   public function testProgressDrawsSpinnerWhenTheLengthIsUnknown(): void {
     $progress = new Progress('fetching', 'Fetching the price list');
 
-    $this->assertSame('⠋ Fetching the price list', $progress->render($this->theme()));
+    $this->assertSame('  ⠋ Fetching the price list', $progress->render($this->theme()));
+  }
+
+  public function testProgressMarksTheRowThatHasTheCursor(): void {
+    $progress = (new Progress('packing', 'Packing crates'))->steps(10)->advance(4);
+    $progress->focus();
+
+    // Starting the work is one key press away from the row, so the row says
+    // when the reader is standing on it - as every other row that acts does.
+    $this->assertSame('❯ Packing crates [████░░░░░░] 4/10', $progress->render($this->theme()));
   }
 
   public function testProgressAdvancesNoFurtherThanItsTotal(): void {
     $progress = (new Progress('packing', 'Packing'))->steps(3)->advance(9);
 
-    $this->assertSame('Packing [██████████] 3/3', $progress->render($this->theme()));
+    $this->assertSame('  Packing [██████████] 3/3', $progress->render($this->theme()));
   }
 
   #[DataProvider('dataProviderEveryBlockRefusesThemeThatCannotDrawIt')]

@@ -7,9 +7,25 @@ namespace DrevOps\Tui\Block\Element;
 /**
  * The elements the progress block composes.
  *
+ * The indicator says what the work is doing; the mark says whether the reader
+ * is standing on the row that starts it. Two questions, so the second is an
+ * element of its own - and a glyph, so a terminal drawing no colour still
+ * answers it.
+ *
  * @package DrevOps\Tui\Block\Element
  */
 interface ProgressElementsInterface {
+
+  /**
+   * The mark saying the work has focus.
+   *
+   * @param bool $selected
+   *   Whether the cursor is on it.
+   *
+   * @return string
+   *   The styled mark, or the gap standing in its place.
+   */
+  public function progressSelector(bool $selected): string;
 
   /**
    * Style the caption naming the work.

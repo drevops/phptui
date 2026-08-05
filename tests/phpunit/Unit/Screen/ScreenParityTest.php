@@ -17,6 +17,7 @@ use DrevOps\Tui\Block\Template;
 use DrevOps\Tui\Builder\Fixup;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\CancelException;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Handler\Context;
@@ -32,6 +33,7 @@ use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
 use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Screen\ScreenRenderer;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Terminal\Terminal;
 use DrevOps\Tui\Testing\ScreenTester;
 use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
@@ -497,9 +499,9 @@ final class ScreenParityTest extends TestCase {
   public static function dataProviderSpacingDecidesWhatShowsBetweenTheRows(): \Iterator {
     // The padded spacing is what a form gets without asking for one, so its
     // blank row between two answers is the shape a reader meets by default.
-    yield 'padded' => [Spacing::Padded, ['❯ Courier  Valley Runs', '', '  Basket weight  1200', '', '[ Submit ]  [ Cancel ]']];
-    yield 'normal' => [Spacing::Normal, ['❯ Courier  Valley Runs', '  Basket weight  1200', '[ Submit ]  [ Cancel ]']];
-    yield 'compact' => [Spacing::Compact, ['❯ Courier  Valley Runs', '  Basket weight  1200', '[ Submit ]  [ Cancel ]']];
+    yield 'padded' => [Spacing::Padded, ['❯ Courier  Valley Runs', '', '  Basket weight  1200', '', '  [ Submit ]  [ Cancel ]']];
+    yield 'normal' => [Spacing::Normal, ['❯ Courier  Valley Runs', '  Basket weight  1200', '  [ Submit ]  [ Cancel ]']];
+    yield 'compact' => [Spacing::Compact, ['❯ Courier  Valley Runs', '  Basket weight  1200', '  [ Submit ]  [ Cancel ]']];
   }
 
   #[DataProvider('dataProviderSettledRowReadsTheAnswerRatherThanHoldsIt')]
@@ -815,6 +817,93 @@ final class ScreenParityTest extends TestCase {
     $this->assertStringContainsString('←/→', $tester->frame());
   }
 
+  public function testSteppingOffTheGridReachesTheRowsBesideItAndThenTheButtons(): void {
+    $panel = $this->dealt(
+      [1, 2],
+      (new Field('note', 'Order note'))->default('Leave at the gate'),
+      $this->nested('summary', 'Summary', (new Field('name', 'Order name'))->default('Weekly Box')),
+      $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple')),
+      $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot')),
+      (new Field('courier', 'Courier'))->default('Valley Runs'),
+    );
+
+    $tester = $this->tester($panel)->rows(18)->cols(60);
+
+    try {
+      // Down off the grid, then on to the buttons, then across to the one that
+      // abandons the form: what the cursor reaches beyond the grid is whatever
+      // is drawn next, wherever it came from.
+      $tester->run(...[
+        Key::named(KeyName::Down),
+        Key::named(KeyName::Down),
+        Key::named(KeyName::Down),
+        Key::named(KeyName::Down),
+        Key::named(KeyName::Right),
+        Key::named(KeyName::Enter),
+      ]);
+
+      $this->fail('The cursor never reached the buttons, so the form was never abandoned.');
+    }
+    catch (CancelException) {
+      // Reaching the pair and pressing one of them is the whole assertion.
+    }
+
+    $frames = array_map(static fn(string $frame): array => array_map(rtrim(...), explode("\n", $frame)), $tester->frames());
+
+    // The row written after the last window comes before the buttons do, and
+    // the windows let the marker go as the cursor steps out of the grid.
+    $this->assertContains('❯ Fruit ›                        Vegetables ›', $frames[2]);
+    $this->assertContains('❯ Courier  Valley Runs', $frames[3]);
+    $this->assertContains('  Courier  Valley Runs', $frames[4]);
+  }
+
+  public function testTheCursorIsNeverLeftBehindInThePanelYouWalkedOutOf(): void {
+    $panel = $this->dealt(
+      [1, 2],
+      $this->nested('summary', 'Summary', (new Field('name', 'Order name'))->default('Weekly Box')),
+      $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple')),
+      $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot')),
+    );
+
+    $tester = $this->tester($panel)->rows(18)->cols(60);
+    // Into a window, back out of it, and on down past the grid.
+    $tester->run(Key::named(KeyName::Enter), Key::named(KeyName::Escape), Key::named(KeyName::Down));
+
+    // The cursor is one place on the whole form rather than one place in each
+    // panel. A panel you walked out of is still drawn - as the row leading back
+    // into it, or as the window previewing what is behind it - so a row left
+    // holding the cursor in there draws a second one.
+    foreach ($tester->frames() as $index => $frame) {
+      $this->assertSame(1, substr_count(Ansi::strip($frame), '❯'), sprintf('Frame %d marks more than the row the cursor is on.', $index));
+    }
+
+    $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
+
+    // And it is on the row the last key moved it to, not on the one it was
+    // moved off two keys ago.
+    $this->assertContains('❯ Fruit ›                        Vegetables ›', $rows);
+  }
+
+  public function testSteppingOffTheGridWithNothingBeyondItLeavesTheCursorWhereItIs(): void {
+    $panel = $this->dealt(
+      [2],
+      $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple')),
+      $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot')),
+    );
+
+    $tester = $this->tester($panel)->cols(60);
+    $tester->run(Key::named(KeyName::Right), Key::named(KeyName::Up), Key::named(KeyName::Left));
+
+    $frames = array_map(static fn(string $frame): array => array_map(rtrim(...), explode("\n", $frame)), $tester->frames());
+
+    // Nothing is written above the grid, so up is a move with nowhere to go:
+    // the cursor stays on the window it was on rather than walking the row it
+    // is on, which is what the key beside it does instead.
+    $this->assertContains('  Fruit ›                      ❯ Vegetables ›', $frames[1]);
+    $this->assertContains('  Fruit ›                      ❯ Vegetables ›', $frames[2]);
+    $this->assertContains('❯ Fruit ›                        Vegetables ›', $frames[3]);
+  }
+
   public function testGridTooTallForItsSpaceMovesEveryLineTogether(): void {
     $panel = $this->dealt(
       [1, 1, 1],
@@ -939,7 +1028,29 @@ final class ScreenParityTest extends TestCase {
     // What packs from the end of the panel's own flow is still inside it, and
     // the buttons stand beside the panel rather than in it - so they come
     // after everything it holds, whichever end it was packed from.
-    $this->assertSame(['❯ Courier  Valley Runs', 'v1.2.3', '[ Submit ]  [ Cancel ]'], $rows);
+    $this->assertSame(['❯ Courier  Valley Runs', 'v1.2.3', '  [ Submit ]  [ Cancel ]'], $rows);
+  }
+
+  #[DataProvider('dataProviderButtonsSayWhenTheCursorIsOnThem')]
+  public function testButtonsSayWhenTheCursorIsOnThem(bool $colour): void {
+    $tester = $this->tester($this->panel((new Field('courier', 'Courier'))->default('Valley Runs')))->options(['color' => $colour]);
+    $tester->run(Key::named(KeyName::Down));
+
+    $away = $this->buttons($tester->frames()[0]);
+    $arrived = $this->buttons($tester->frames()[1]);
+
+    // The buttons take the cursor, so the row has to read differently with it
+    // and without it - and it has to in every display mode, which is why the
+    // mark is a glyph rather than a colour: a terminal drawing no colour would
+    // otherwise leave the row saying the same thing either way.
+    $this->assertNotSame($away, $arrived);
+    $this->assertSame('  [ Submit ]  [ Cancel ]', Ansi::strip($away));
+    $this->assertSame('❯ [ Submit ]  [ Cancel ]', Ansi::strip($arrived));
+  }
+
+  public static function dataProviderButtonsSayWhenTheCursorIsOnThem(): \Iterator {
+    yield 'colour off' => [FALSE];
+    yield 'colour on' => [TRUE];
   }
 
   public function testPanelRowCountsThePicksItHasNoRoomToList(): void {
@@ -1078,12 +1189,13 @@ final class ScreenParityTest extends TestCase {
     $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Enter));
 
     $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
-    $at = array_search('Courier is required.', $rows, TRUE);
+    $at = array_search('  Courier is required.', $rows, TRUE);
 
     // The reason and the buttons it withholds are one thing, so nothing stands
-    // between them - not even the air the theme puts between two rows.
+    // between them - not even the air the theme puts between two rows - and
+    // the mark saying the cursor is on them is what both stand off.
     $this->assertIsInt($at);
-    $this->assertSame('[ Submit ]  [ Cancel ]', $rows[$at + 1]);
+    $this->assertSame('❯ [ Submit ]  [ Cancel ]', $rows[$at + 1]);
   }
 
   public function testWithheldSubmitSaysWhyInTheActiveLanguage(): void {
@@ -1093,10 +1205,10 @@ final class ScreenParityTest extends TestCase {
     $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Enter));
 
     $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
-    $at = array_search('Кур\'єр є обов\'язковим полем.', $rows, TRUE);
+    $at = array_search('  Кур\'єр є обов\'язковим полем.', $rows, TRUE);
 
     $this->assertIsInt($at);
-    $this->assertSame('[ Надіслати ]  [ Скасувати ]', $rows[$at + 1]);
+    $this->assertSame('❯ [ Надіслати ]  [ Скасувати ]', $rows[$at + 1]);
   }
 
   public function testUpdateModeBadgesTheAnswersItDetected(): void {
@@ -1155,6 +1267,19 @@ final class ScreenParityTest extends TestCase {
     $gift->description('Wrap this order as a gift.')->buttons(new Buttons(TRUE, 'Save', 'Discard'))->modal();
 
     return $this->nested('main', 'Basket', (new Field('item', 'Item'))->default('Pear'), $gift);
+  }
+
+  /**
+   * The row the buttons are on, out of a frame as it reached the terminal.
+   */
+  protected function buttons(string $frame): string {
+    foreach (explode("\n", $frame) as $line) {
+      if (str_contains(Ansi::strip($line), '[ Submit ]')) {
+        return rtrim($line);
+      }
+    }
+
+    return '';
   }
 
   /**

@@ -803,6 +803,8 @@ It's the only block other than a _field_ that refuses anything, and unlike a fie
 ```php
 interface ActionsElementsInterface {
 
+  public function actionSelector(bool $selected): string;
+
   public function actionButton(string $label): string;
 
   public function actionSelected(string $label): string;
@@ -819,14 +821,17 @@ interface ActionsElementsInterface {
   ─────────┬──────────
            └────────── actionRefusal()
 
-  [ Submit ]  [ Cancel ]
-  ─────┬────  ┬ ────┬───
-       │      │     └── actionButton()
-       │      └──────── actionSeparator()
-       └─────────────── actionSelected()
+❯ [ Submit ]  [ Cancel ]
+┬ ─────┬────  ┬ ────┬───
+│      │      │     └── actionButton()
+│      │      └──────── actionSeparator()
+│      └─────────────── actionSelected()
+└────────────────────── actionSelector()
 ```
 
-The refusal is the block's own row rather than a note somebody draws above it, and it sits against the buttons with nothing between them - not even the blank row the theme puts between one block and the next. A message that could drift a row away from what it refuses is a message about nothing.
+**It claims _Focus_, so it draws focused differently from not.** Where the cursor is and which button it would press are two questions and two elements: `actionSelector()` marks the row the way `fieldSelector()` and `panelSelector()` mark theirs, in the same column, so the buttons line up with every other row the cursor walks; `actionSelected()` marks the button a key press would reach, and only while the row has the cursor - off it there is no pending press to draw. The mark is a glyph rather than a color for the same reason the other two are: a terminal drawing no color would leave a row styled alone saying the same thing whether you were standing on it or three rows above it.
+
+The refusal is the block's own row rather than a note somebody draws above it, and it sits against the buttons with nothing between them - not even the blank row the theme puts between one block and the next. A message that could drift a row away from what it refuses is a message about nothing. It stands off the selector's column, which says where the cursor is and is not somewhere a message can be.
 
 The brackets belong to the element, not the block. A theme that framed a button differently changes `actionButton()` alone, and the block goes on knowing only that it has labels and one of them has focus.
 
@@ -836,6 +841,8 @@ The brackets belong to the element, not the block. A theme that framed a button 
 
 ```php
 interface ProgressElementsInterface {
+
+  public function progressSelector(bool $selected): string;
 
   public function progressCaption(string $text): string;
 
@@ -851,23 +858,27 @@ interface ProgressElementsInterface {
 It draws one of two ways, and which one is a fact about the work rather than a setting. Work that reports a total gets a bar:
 
 ```
-Packing crates  [██████████░░░░░░]  4/10
-───────┬──────   ───────┬───────    ─┬─
-       │                │            └── progressCount()
-       │                └─────────────── progressTrack()
-       └──────────────────────────────── progressCaption()
+❯  Packing crates  [██████████░░░░░░]  4/10
+┬  ───────┬──────   ───────┬───────    ─┬─
+│         │                │            └── progressCount()
+│         │                └─────────────── progressTrack()
+│         └──────────────────────────────── progressCaption()
+└────────────────────────────────────────── progressSelector()
 ```
 
-Work that can't say how long it will take gets a spinner instead, and the caption is the only element the two forms share:
+Work that can't say how long it will take gets a spinner instead, and the caption and the mark are the only elements the two forms share:
 
 ```
-⠙  Fetching the price list
-┬  ───────────┬───────────
-│             └── progressCaption()
-└──────────────── progressSpinner()
+❯  ⠙  Fetching the price list
+┬  ┬  ───────────┬───────────
+│  │             └── progressCaption()
+│  └──────────────── progressSpinner()
+└─────────────────── progressSelector()
 ```
 
 `progressSpinner()` takes the frame number rather than a glyph, so the theme owns both the animation's characters and their count - a Unicode theme can spin through ten frames where an ASCII one cycles four.
+
+**It claims _Focus_, so it draws focused differently from not**, exactly as the buttons do and for the same reason: the indicator says what the work is doing, which is a fact about the work rather than about the reader, so the row needs a mark of its own to say that starting it is one key press away. `progressSelector()` puts it in the column every other row the cursor walks marks itself in.
 
 ### On screen
 
@@ -1039,7 +1050,7 @@ key ──▸ the focused block, if it binds that key
 
 That one rule explains a behavior that otherwise looks like a special case. An open _text_ field binds every printable key, because each is something you're typing - so <kbd>?</kbd> reaches it and becomes a character. Close the field and it binds nothing printable, so the same <kbd>?</kbd> travels outward to the panel and opens help. Nobody wrote an exception; the key simply stopped at a different level.
 
-_Focus_ decides which block is innermost. It moves with <kbd>↑</kbd> and <kbd>↓</kbd> between the blocks that claim it, skipping the ones that don't - so a _markup_ block sits between two _fields_ without ever being landed on. <kbd>←</kbd> and <kbd>→</kbd> move across, which matters where sub-panels are dealt into a grid: what is beside a window is a neighbor rather than the next row, and stepping off the grid lands on the row beside it rather than under whichever window the cursor happened to be on.
+_Focus_ decides which block is innermost. It moves with <kbd>↑</kbd> and <kbd>↓</kbd> between the blocks that claim it, skipping the ones that don't - so a _markup_ block sits between two _fields_ without ever being landed on. <kbd>←</kbd> and <kbd>→</kbd> move across, which matters where sub-panels are dealt into a grid: what is beside a window is a neighbor rather than the next row, so moving across walks the row the cursor is on and stops at its ends. Stepping off the grid is the vertical move: <kbd>↑</kbd> and <kbd>↓</kbd> cross to the next row of windows, and past the last one they land on whatever is drawn beyond the grid - the row beside it rather than under whichever window the cursor happened to be on, and nowhere at all where nothing is drawn past it.
 
 Four kinds of key never reach the router, and all four for the same reason - none of them acts on a block. Pressing a button ends the form or closes the dialog it belongs to; activating work runs it against the terminal a step at a time; leaving is about the session rather than about anything in it; and the wheel moves the surface the cursor is on - a _region_, or the whole arrangement where that is what scrolls - which is not a block at all. `ScreenController` holds those, because a panel knows about none of them and a block never learns where it is drawn.
 

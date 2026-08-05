@@ -162,18 +162,23 @@ final class Actions extends AbstractBlock implements ActivateCapableInterface, F
     $parts = [];
 
     foreach ($this->buttons as $name => $label) {
-      $parts[] = $name === $this->selected ? $elements->actionSelected($label) : $elements->actionButton($label);
+      // Which button would be pressed is a question about where the cursor is,
+      // so a row nobody is on marks none of them: pressing anything from there
+      // is not something the reader is one key away from doing.
+      $parts[] = $this->isFocused() && $name === $this->selected ? $elements->actionSelected($label) : $elements->actionButton($label);
     }
 
-    $buttons = implode($elements->actionSeparator(), $parts);
+    $buttons = $elements->actionSelector($this->isFocused()) . ' ' . implode($elements->actionSeparator(), $parts);
 
     if ($this->refusal === NULL) {
       return $buttons;
     }
 
     // Against the buttons rather than a row away from them: the reason is what
-    // the button now says, so nothing is allowed to stand between the two.
-    return $elements->actionRefusal(Translator::t($this->refusal)) . "\n" . $buttons;
+    // the button now says, so nothing is allowed to stand between the two - and
+    // it stands off the mark's column, because the mark says where the cursor
+    // is and the reason is not somewhere the cursor can be.
+    return $elements->actionSelector(FALSE) . ' ' . $elements->actionRefusal(Translator::t($this->refusal)) . "\n" . $buttons;
   }
 
 }

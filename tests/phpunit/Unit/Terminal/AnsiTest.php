@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Tests\Unit\Terminal;
 
 use DrevOps\Tui\Terminal\Ansi;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -98,6 +99,42 @@ final class AnsiTest extends TestCase {
 
   public function testAlignRightMinimumPad(): void {
     $this->assertSame('abcdef X', Ansi::alignRight('abcdef', 'X', 3));
+  }
+
+  #[DataProvider('dataProviderSlice')]
+  public function testSlice(string $text, int $width, string $expected): void {
+    $this->assertSame($expected, Ansi::slice($text, $width));
+  }
+
+  public static function dataProviderSlice(): \Iterator {
+    $esc = "\033";
+
+    yield 'plain text is a plain slice' => ['abcdef', 3, 'abc'];
+    yield 'plain text that fits is untouched' => ['abc', 5, 'abc'];
+    yield 'multi-byte counts characters' => ['дуже довгий', 4, 'дуже'];
+    yield 'nothing survives a width of nothing' => ['abcdef', 0, ''];
+    yield 'nor a width below it' => ['abcdef', -2, ''];
+    yield 'a style that fits is untouched' => [$esc . '[36mab' . $esc . '[0m', 5, $esc . '[36mab' . $esc . '[0m'];
+    yield 'a style open at the cut is closed' => [$esc . '[36mabcdef' . $esc . '[0m', 3, $esc . '[36mabc' . $esc . '[0m'];
+    yield 'a style closed before the cut is not reopened' => [$esc . '[31mab' . $esc . '[0mcdef', 4, $esc . '[31mab' . $esc . '[0mcd'];
+    yield 'a sequence spanning the cut is dropped whole' => [$esc . '[31mabc' . $esc . '[0mdef', 2, $esc . '[31mab' . $esc . '[0m'];
+    yield 'each span keeps its own style' => [$esc . '[31mab' . $esc . '[0m' . $esc . '[32mcd' . $esc . '[0m', 3, $esc . '[31mab' . $esc . '[0m' . $esc . '[32mc' . $esc . '[0m'];
+    // A reset is written out of zeroes however many of them there are.
+    yield 'a padded reset still resets' => [$esc . '[31mab' . $esc . '[00;0mcdef', 4, $esc . '[31mab' . $esc . '[00;0mcd'];
+    // Only the sequences that style anything are tracked, so a line erase
+    // travels with the row it was written on and closes nothing.
+    yield 'a sequence that styles nothing is carried as it is' => [$esc . '[44mab' . $esc . '[Kcdef', 3, $esc . '[44mab' . $esc . '[Kc' . $esc . '[0m'];
+    yield 'a hyperlink open at the cut is closed' => [$esc . ']8;;https://example.com/a' . "\007" . 'Orchard' . $esc . ']8;;' . "\007", 3, $esc . ']8;;https://example.com/a' . "\007" . 'Orc' . $esc . ']8;;' . "\007"];
+    yield 'an ST-terminated hyperlink too' => [$esc . ']8;;https://example.com/a' . $esc . '\\Orchard' . $esc . ']8;;' . $esc . '\\', 3, $esc . ']8;;https://example.com/a' . $esc . '\\Orc' . $esc . ']8;;' . "\007"];
+    yield 'a hyperlink closed before the cut is not reopened' => [$esc . ']8;;https://example.com/a' . "\007" . 'Or' . $esc . ']8;;' . "\007" . 'chard', 4, $esc . ']8;;https://example.com/a' . "\007" . 'Or' . $esc . ']8;;' . "\007" . 'ch'];
+    yield 'a styled hyperlink closes both' => [$esc . '[1;36m' . $esc . ']8;;https://example.com/a' . "\007" . 'Orchard' . $esc . ']8;;' . "\007" . $esc . '[0m', 3, $esc . '[1;36m' . $esc . ']8;;https://example.com/a' . "\007" . 'Orc' . $esc . ']8;;' . "\007" . $esc . '[0m'];
+  }
+
+  public function testSliceCutsToExactlyTheVisibleWidth(): void {
+    $link = Ansi::style(Ansi::link('Orchard', 'https://example.com/orchard'), '1;36');
+
+    $this->assertSame(4, Ansi::width(Ansi::slice($link, 4)));
+    $this->assertSame('Orch', Ansi::strip(Ansi::slice($link, 4)));
   }
 
 }

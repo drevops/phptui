@@ -243,14 +243,17 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
     // The caption names the work and stays put; the label is what that work is
     // doing right now, so it trails the indicator and changes under it.
     $label = $this->label === '' ? '' : ' ' . $elements->progressCaption($this->label);
+    // The row takes the cursor and starting the work is a key press away from
+    // there, so it says where the cursor is the way every other row does.
+    $mark = $elements->progressSelector($this->isFocused()) . ' ';
 
     if ($this->total === NULL) {
-      return $this->stepped($elements->progressSpinner($this->frame) . ' ' . $caption . $label, $gutter);
+      return $this->stepped($mark . $elements->progressSpinner($this->frame) . ' ' . $caption . $label, $gutter);
     }
 
     $filled = (int) round($this->current / $this->total * self::TRACK_WIDTH);
 
-    return $this->stepped($caption . ' ' . $elements->progressTrack($filled, self::TRACK_WIDTH) . ' ' . $elements->progressCount($this->current, $this->total) . $label, $gutter);
+    return $this->stepped($mark . $caption . ' ' . $elements->progressTrack($filled, self::TRACK_WIDTH) . ' ' . $elements->progressCount($this->current, $this->total) . $label, $gutter);
   }
 
 }

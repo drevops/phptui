@@ -37,7 +37,7 @@ Runnable script: [`playground/02-progress-row.php`](https://github.com/drevops/t
 | `->steps(int)`    | The step count, making the indicator a determinate bar. Omit it for an indeterminate spinner.                          |
 | `->work(Closure)` | The work run when the row is activated. The closure receives a `ProgressReporter` and calls `advance()` once per step. |
 
-The indicator is drawn by the [active theme](/themes), in its accent and Unicode/ASCII mode - the same spinner and bar as the standalone [`progress()` primitive](/progress).
+The indicator is drawn by the [active theme](/themes), in its accent and Unicode/ASCII mode - the same spinner and bar as the standalone [`progress()` primitive](/progress). The row carries the cursor mark every other row you land on carries, in the same column: the indicator says what the work is doing, and the mark says whether pressing <kbd>Enter</kbd> would start it. The primitive takes no cursor and draws no mark.
 
 ## Keyboard
 

@@ -210,14 +210,17 @@ Elements are grouped by the block that declares them, in one interface per block
 | `LegendElementsInterface`     | `legendKey()`           | a **legend key** (chrome 6)                  |
 |                               | `legendDescription()`   | a **legend description** (chrome 7)          |
 |                               | `legendSeparator()`     | a **legend separator** (chrome 8)            |
-| `ActionsElementsInterface`    | `actionButton()`        | a button that does not have focus            |
-|                               | `actionSelected()`      | the button that has focus                    |
+| `ActionsElementsInterface`    | `actionSelector()`      | the mark saying the buttons have the cursor  |
+|                               | `actionButton()`        | a button that would not be pressed           |
+|                               | `actionSelected()`      | the button that would be pressed             |
 |                               | `actionSeparator()`     | the gap standing between two buttons         |
 |                               | `actionRefusal()`       | the reason the form cannot be ended yet      |
 
-The brackets around a button belong to `actionButton()`, not to the block. A theme that frames a button differently changes that one method, and the block goes on knowing only that it has labels and one of them has focus.
+The brackets around a button belong to `actionButton()`, not to the block. A theme that frames a button differently changes that one method, and the block goes on knowing only that it has labels and one of them would be pressed.
 
-Withholding the submit reads as one thing with the buttons it withholds, so `actionRefusal()` is an element of the same block rather than a note somebody else draws above them. The reason is drawn flush above the buttons, and nothing comes between a refusal and what it refuses.
+Where the cursor is and which button it would press are two questions, so they are two elements. `actionSelector()` answers the first the way `fieldSelector()` and `panelSelector()` answer it for the rows above - a mark in the same column, so the buttons line up with everything else the cursor walks - and it is a glyph rather than a color for the same reason those are: with [color off](/display-modes) a row that said only `actionSelected()` would read the same whether or not you were standing on it. `actionSelected()` answers the second, and only where the first is answered yes: off the row, no button is drawn as the one a key press would reach, because none of them is.
+
+Withholding the submit reads as one thing with the buttons it withholds, so `actionRefusal()` is an element of the same block rather than a note somebody else draws above them. The reason is drawn flush above the buttons, off the selector's column since it is not somewhere the cursor can be, and nothing comes between a refusal and what it refuses.
 
 ### A nested panel's row
 
@@ -291,14 +294,17 @@ Two elements draw an overflow mark, and they say different things. `fieldOverflo
 
 `ProgressElementsInterface` covers the [progress](/progress-row) row and the [progress primitive](/progress) alike.
 
-| Element             | Draws                                |
-| ------------------- | ------------------------------------ |
-| `progressCaption()` | the caption naming the work          |
-| `progressSpinner()` | the spinner glyph for a frame number |
-| `progressTrack()`   | the filled and empty run of a bar    |
-| `progressCount()`   | the tally beside it                  |
+| Element              | Draws                                   |
+| -------------------- | --------------------------------------- |
+| `progressSelector()` | the mark saying the work has the cursor |
+| `progressCaption()`  | the caption naming the work             |
+| `progressSpinner()`  | the spinner glyph for a frame number    |
+| `progressTrack()`    | the filled and empty run of a bar       |
+| `progressCount()`    | the tally beside it                     |
 
 `progressSpinner()` takes the frame number rather than a glyph, so the theme owns both the animation's characters and how many there are - a Unicode theme can spin through ten frames where an ASCII one cycles four.
+
+`progressSelector()` is the row's alone. The row takes the cursor and starting the work is a key press away from it, so it marks itself the way a field row does; the primitive takes no cursor, runs its own work and draws no mark.
 
 ### The finished pieces a primitive draws
 

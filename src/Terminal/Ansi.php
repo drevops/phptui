@@ -19,6 +19,21 @@ final class Ansi {
   public const string ESC = "\033";
 
   /**
+   * The sequence closing an OSC 8 hyperlink.
+   */
+  protected const string LINK_CLOSE = self::ESC . ']8;;' . "\007";
+
+  /**
+   * An OSC 8 hyperlink wrapper, BEL- or ST-terminated.
+   */
+  protected const string LINK_SEQUENCE = '\033\]8;[^\007\033]*(?:\007|\033\\\\)';
+
+  /**
+   * A CSI sequence, which is what carries the styling.
+   */
+  protected const string STYLE_SEQUENCE = '\033\[[0-9;?<>=]*[A-Za-z]';
+
+  /**
    * Wrap text in an SGR style, resetting afterwards.
    *
    * @param string $text
@@ -55,7 +70,7 @@ final class Ansi {
     $text = self::stripControl($text);
     $url = self::stripControl($url);
 
-    return self::ESC . ']8;;' . $url . "\007" . $text . self::ESC . ']8;;' . "\007";
+    return self::ESC . ']8;;' . $url . "\007" . $text . self::LINK_CLOSE;
   }
 
   /**
@@ -85,9 +100,65 @@ final class Ansi {
    *   The text without escape sequences.
    */
   public static function strip(string $text): string {
-    $text = (string) preg_replace('/\033\]8;[^\007\033]*(?:\007|\033\\\\)/', '', $text);
+    $text = (string) preg_replace('/' . self::LINK_SEQUENCE . '/', '', $text);
 
-    return (string) preg_replace('/\033\[[0-9;?<>=]*[A-Za-z]/', '', $text);
+    return (string) preg_replace('/' . self::STYLE_SEQUENCE . '/', '', $text);
+  }
+
+  /**
+   * Cut text to a visible width, dressed as the whole of it was.
+   *
+   * A cut that dropped the escapes would leave the same row reading one way
+   * inside a region and another at its edge, so the styling travels with the
+   * characters it dresses: every sequence before the cut is carried, and
+   * whatever is still open at the cut is closed, so nothing bleeds into what
+   * follows.
+   *
+   * @param string $text
+   *   The text (may carry ANSI codes).
+   * @param int $width
+   *   The visible width to cut to.
+   *
+   * @return string
+   *   The text, cut to the width; unchanged when it already fits, so text
+   *   carrying no escapes reads exactly as a plain slice of it.
+   */
+  public static function slice(string $text, int $width): string {
+    if (self::width($text) <= $width) {
+      return $text;
+    }
+
+    if ($width < 1) {
+      return '';
+    }
+
+    $parts = preg_split('/(' . self::LINK_SEQUENCE . '|' . self::STYLE_SEQUENCE . ')/', $text, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [];
+    $out = '';
+    $left = $width;
+    $styled = FALSE;
+    $linked = FALSE;
+
+    foreach ($parts as $index => $part) {
+      if ($left < 1) {
+        break;
+      }
+
+      // The pattern captures its one delimiter, so the pieces alternate: the
+      // even ones are what shows and the odd ones are the escapes between.
+      if ($index % 2 === 0) {
+        $taken = Strings::substr($part, 0, $left);
+        $out .= $taken;
+        $left -= Strings::length($taken);
+
+        continue;
+      }
+
+      $out .= $part;
+      $styled = self::opensStyle($part) ?? $styled;
+      $linked = self::opensLink($part) ?? $linked;
+    }
+
+    return $out . ($linked ? self::LINK_CLOSE : '') . ($styled ? self::ESC . '[0m' : '');
   }
 
   /**
@@ -172,6 +243,48 @@ final class Ansi {
     }
 
     return implode("\n", $lines);
+  }
+
+  /**
+   * Whether a sequence leaves styling open, where it is one that says.
+   *
+   * @param string $sequence
+   *   The escape sequence.
+   *
+   * @return bool|null
+   *   TRUE when it opens styling, FALSE when it resets it, and NULL when it
+   *   is not about styling at all.
+   */
+  protected static function opensStyle(string $sequence): ?bool {
+    if (!str_ends_with($sequence, 'm')) {
+      return NULL;
+    }
+
+    // A reset is written out of zeroes and the separators between them, so
+    // whatever survives those being trimmed away is a style that stands.
+    return trim(substr($sequence, 2, -1), '0;') !== '';
+  }
+
+  /**
+   * Whether a sequence leaves a hyperlink open, where it is one that says.
+   *
+   * @param string $sequence
+   *   The escape sequence.
+   *
+   * @return bool|null
+   *   TRUE when it opens a hyperlink, FALSE when it closes one, and NULL when
+   *   it is not a hyperlink at all.
+   */
+  protected static function opensLink(string $sequence): ?bool {
+    if (!str_starts_with($sequence, self::ESC . ']')) {
+      return NULL;
+    }
+
+    // The target is the last field of the sequence, so one that ends where the
+    // field begins names no target and is the wrapper closing instead.
+    $body = str_ends_with($sequence, "\007") ? substr($sequence, 0, -1) : substr($sequence, 0, -2);
+
+    return !str_ends_with($body, ';');
   }
 
 }
