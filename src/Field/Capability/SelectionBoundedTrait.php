@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field\Capability;
 
-use DrevOps\Tui\Model\SelectionBounds;
+use DrevOps\Tui\Block\SelectionBounds;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 

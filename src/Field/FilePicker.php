@@ -4,24 +4,24 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field;
 
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\FilePickerConstraints;
-use DrevOps\Tui\Model\FilePickerMode;
-use DrevOps\Tui\Model\SelectionBounds;
-use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\Block\FilePickerConstraints;
+use DrevOps\Tui\Block\FilePickerMode;
+use DrevOps\Tui\Block\SelectionBounds;
 use DrevOps\Tui\Field\Capability\FilterCapableInterface;
 use DrevOps\Tui\Field\Capability\PagingCapableInterface;
 use DrevOps\Tui\Field\Capability\PagingCapableTrait;
 use DrevOps\Tui\Field\Capability\RevealCapableInterface;
 use DrevOps\Tui\Field\Capability\SelectionBoundedTrait;
+use DrevOps\Tui\Input\Action;
+use DrevOps\Tui\Input\Hint;
+use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\Scope;
+use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\Tui\Translation\Translator;
+use DrevOps\Tui\Utils\Strings;
 
 /**
  * A filesystem browser that selects a path, or several in multiple mode.
@@ -88,7 +88,7 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
    *   The pre-selected path (single) or paths (multiple). A single path opens
    *   the browser at its directory with the entry highlighted; in multiple mode
    *   every path seeds the selection.
-   * @param \DrevOps\Tui\Model\FilePickerConstraints|null $constraints
+   * @param \DrevOps\Tui\Block\FilePickerConstraints|null $constraints
    *   The type, extension and size limits on a valid pick; NULL leaves the
    *   picker unconstrained.
    * @param bool $showHidden
@@ -98,7 +98,7 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
    * @param int|null $page_size
    *   The number of entry rows shown at once before the list pages; NULL uses
    *   the default.
-   * @param \DrevOps\Tui\Model\SelectionBounds|null $selection_bounds
+   * @param \DrevOps\Tui\Block\SelectionBounds|null $selection_bounds
    *   The minimum/maximum selection counts enforced on accept, or NULL for no
    *   count limit.
    */

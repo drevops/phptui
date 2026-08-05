@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Screen\Layout;
 
-use DrevOps\Tui\Model\FormException;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Layout\GridLayout;
 use DrevOps\Tui\Screen\Sizing;

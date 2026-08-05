@@ -59,7 +59,7 @@ trait QueryOptionsCapableTrait {
   /**
    * The rows resolved for each query so far, oldest first.
    *
-   * @var array<string,list<\DrevOps\Tui\Model\Option>>
+   * @var array<string,list<\DrevOps\Tui\Block\Option>>
    */
   protected array $queryCache = [];
 
@@ -143,7 +143,7 @@ trait QueryOptionsCapableTrait {
    *
    * @param string $query
    *   The query the rows answer.
-   * @param list<\DrevOps\Tui\Model\Option> $rows
+   * @param list<\DrevOps\Tui\Block\Option> $rows
    *   The rows to show.
    */
   protected function settle(string $query, array $rows): void {
@@ -156,7 +156,7 @@ trait QueryOptionsCapableTrait {
   /**
    * Take on a resolved query's rows as the field's own candidates.
    *
-   * @param list<\DrevOps\Tui\Model\Option> $rows
+   * @param list<\DrevOps\Tui\Block\Option> $rows
    *   The rows.
    */
   abstract protected function adoptQueryRows(array $rows): void;

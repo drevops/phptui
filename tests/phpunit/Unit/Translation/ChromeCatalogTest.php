@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Translation;
 
-use DrevOps\Tui\Model\Buttons;
+use DrevOps\Tui\Block\Buttons;
 use DrevOps\Tui\Translation\Translator;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Group;

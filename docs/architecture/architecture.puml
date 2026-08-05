@@ -46,7 +46,14 @@ package "Driving" #FFF3E0 {
   [ScreenRenderer]
   [Assembler]
   [KeyMap]
+}
+
+package "Terminal - the text machinery" #ECEFF1 {
   [Terminal]
+  [Ansi]
+  [Box]
+  [Table]
+  [Terminal\\Markup]
 }
 
 package "Collecting" #E8F5E9 {
@@ -119,6 +126,8 @@ BlockInterface --> [Block\\Element]
 [ScreenRenderer] --> [Screen]
 [ScreenRenderer] --> LayoutInterface
 [ScreenRenderer] --> ThemeInterface
+[ScreenRenderer] --> [Ansi]
+[ScreenRenderer] --> [Box]
 
 [Collector] --> [Tree]
 [Collector] --> [Discovery]
@@ -135,6 +144,10 @@ BlockInterface --> [Block\\Element]
 [AbstractTheme] --> ThemeInterface
 [AbstractTheme] --> [Block\\Element]
 [DefaultTheme] --> [AbstractTheme]
+[DefaultTheme] --> [Ansi]
+[DefaultTheme] --> [Box]
+[DefaultTheme] --> [Table]
+[DefaultTheme] --> [Terminal\\Markup]
 [DefaultTheme] --> [Theme\\Capability]
 [Theme\\Capability] --> [Theme\\Override]
 [ThemeManager] --> ThemeInterface

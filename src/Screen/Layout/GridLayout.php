@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Screen\Layout;
 
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
-use DrevOps\Tui\Model\FormException;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Screen\Axis;
 
 /**
@@ -74,7 +74,7 @@ final class GridLayout extends AbstractLayout {
    *   One entry per visual row, naming how many windows share it, top to
    *   bottom.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When no visual row is declared, or one of them holds fewer than one
    *   window - a row nothing could ever be dealt into.
    */
@@ -175,7 +175,7 @@ final class GridLayout extends AbstractLayout {
    * @param string $owner
    *   What declared the grid, as the name it goes by.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the slots do not cover the windows, which would leave one of them
    *   undrawn or a row of the grid empty.
    */

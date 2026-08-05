@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field;
 
-use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Model\OptionKind;
+use DrevOps\Tui\Block\Option;
+use DrevOps\Tui\Block\OptionKind;
 use DrevOps\Tui\Utils\Strings;
 
 /**
@@ -52,6 +52,14 @@ final class Matcher {
     $chars = Strings::split($haystack);
     $folded = array_map($this->fold(...), $chars);
     $needle_folded = array_map($this->fold(...), Strings::split($needle));
+
+    // A truncated multi-byte key press reaches the query as a lone byte, which
+    // resolves to no code point at all where nothing can decode it. Nothing
+    // embeds a query with no characters, so it matches nothing rather than
+    // being searched for.
+    if ($needle_folded === []) {
+      return NULL;
+    }
 
     $best = $this->bestSubsequence($folded, $needle_folded, $chars);
     if ($best === NULL) {
@@ -122,12 +130,12 @@ final class Matcher {
    * carry no label and drop away, so the filtered result reads as a flat
    * relevance list.
    *
-   * @param list<\DrevOps\Tui\Model\Option> $options
+   * @param list<\DrevOps\Tui\Block\Option> $options
    *   The option rows.
    * @param string $needle
    *   The query.
    *
-   * @return list<\DrevOps\Tui\Model\Option>
+   * @return list<\DrevOps\Tui\Block\Option>
    *   The matching options, most relevant first; ties keep their input order.
    */
   public function rankOptions(array $options, string $needle): array {

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field\Capability;
 
-use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Model\OptionKind;
-use DrevOps\Tui\Render\Viewport;
+use DrevOps\Tui\Block\Option;
+use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Screen\Viewport;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -24,14 +24,14 @@ trait OptionsCapableTrait {
   /**
    * The option rows in display order.
    *
-   * @var list<\DrevOps\Tui\Model\Option>
+   * @var list<\DrevOps\Tui\Block\Option>
    */
   protected array $options = [];
 
   /**
    * Normalize and store the option rows.
    *
-   * @param array<int|string,\DrevOps\Tui\Model\Option|string> $options
+   * @param array<int|string,\DrevOps\Tui\Block\Option|string> $options
    *   A list of options or the value => label shorthand map.
    */
   protected function initOptions(array $options): void {
@@ -41,7 +41,7 @@ trait OptionsCapableTrait {
   /**
    * The index of the first selectable row, or 0 when none is selectable.
    *
-   * @param list<\DrevOps\Tui\Model\Option> $rows
+   * @param list<\DrevOps\Tui\Block\Option> $rows
    *   The rows to scan.
    *
    * @return int
@@ -60,7 +60,7 @@ trait OptionsCapableTrait {
   /**
    * The cursor for a default value: its selectable row, else the first one.
    *
-   * @param list<\DrevOps\Tui\Model\Option> $rows
+   * @param list<\DrevOps\Tui\Block\Option> $rows
    *   The rows to scan.
    * @param string $default
    *   The default value to land on.
@@ -81,7 +81,7 @@ trait OptionsCapableTrait {
   /**
    * Step the cursor to the next selectable row, skipping non-selectable rows.
    *
-   * @param list<\DrevOps\Tui\Model\Option> $rows
+   * @param list<\DrevOps\Tui\Block\Option> $rows
    *   The rows to move over.
    * @param int $from
    *   The current cursor index.
@@ -108,7 +108,7 @@ trait OptionsCapableTrait {
   /**
    * The rows the field currently shows.
    *
-   * @return list<\DrevOps\Tui\Model\Option>
+   * @return list<\DrevOps\Tui\Block\Option>
    *   The visible rows.
    */
   abstract public function visible(): array;
@@ -118,7 +118,7 @@ trait OptionsCapableTrait {
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Model\Option $option
+   * @param \DrevOps\Tui\Block\Option $option
    *   The option row.
    * @param bool $current
    *   Whether the row holds the cursor.
@@ -165,9 +165,9 @@ trait OptionsCapableTrait {
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param list<\DrevOps\Tui\Model\Option> $rows
+   * @param list<\DrevOps\Tui\Block\Option> $rows
    *   The rows the field currently shows.
-   * @param \DrevOps\Tui\Render\Viewport $viewport
+   * @param \DrevOps\Tui\Screen\Viewport $viewport
    *   The paging window over the rows.
    * @param \Closure $render
    *   Renders one option row: `fn (Option $option, int $index): string`.
@@ -202,7 +202,7 @@ trait OptionsCapableTrait {
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Model\Option $option
+   * @param \DrevOps\Tui\Block\Option $option
    *   The heading row.
    *
    * @return string
@@ -230,7 +230,7 @@ trait OptionsCapableTrait {
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Model\Option $option
+   * @param \DrevOps\Tui\Block\Option $option
    *   The disabled option row.
    *
    * @return string

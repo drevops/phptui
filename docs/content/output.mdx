@@ -252,7 +252,7 @@ The frames, glyphs and alignment survive, because they are text. Forcing wins ov
 To write somewhere other than standard error - standard output, or a stream you control - pass your own terminal:
 
 ```php
-use DrevOps\Tui\Render\Terminal;
+use DrevOps\Tui\Terminal\Terminal;
 
 $out = $tui->output(new Terminal(STDOUT));
 ```

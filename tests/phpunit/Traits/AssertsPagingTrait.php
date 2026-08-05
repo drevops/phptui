@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Traits;
 
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Field\Capability\PagingCapableInterface;
 use DrevOps\Tui\Field\FieldInterface;
+use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\Tui\Theme\DefaultTheme;
 
 /**
  * Shared paging assertions for the list fields.

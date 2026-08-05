@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field\Capability;
 
-use DrevOps\Tui\Model\Option;
+use DrevOps\Tui\Block\Option;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -21,7 +21,7 @@ interface OptionsCapableInterface {
   /**
    * The rows the field currently shows.
    *
-   * @return list<\DrevOps\Tui\Model\Option>
+   * @return list<\DrevOps\Tui\Block\Option>
    *   The visible rows.
    */
   public function visible(): array;
@@ -31,7 +31,7 @@ interface OptionsCapableInterface {
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Model\Option $option
+   * @param \DrevOps\Tui\Block\Option $option
    *   The option row.
    * @param bool $current
    *   Whether the row holds the cursor.

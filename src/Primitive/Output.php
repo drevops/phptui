@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Primitive;
 
 use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
-use DrevOps\Tui\Render\Terminal;
+use DrevOps\Tui\Terminal\Terminal;
 
 /**
  * Static output primitives: a box, a status line, a definition list.
@@ -34,7 +34,7 @@ final class Output {
   /**
    * Construct an output primitive.
    *
-   * @param \DrevOps\Tui\Render\Terminal $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal $terminal
    *   The terminal the lines are written to.
    * @param \DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface $theme
    *   The theme that draws the box, the status glyphs and the list.

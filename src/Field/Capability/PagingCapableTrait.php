@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Field\Capability;
 
 use DrevOps\Tui\Block\Element\FieldElementsInterface;
-use DrevOps\Tui\Render\Scroller;
-use DrevOps\Tui\Render\Viewport;
+use DrevOps\Tui\Screen\Scroller;
+use DrevOps\Tui\Screen\Viewport;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 
@@ -75,7 +75,7 @@ trait PagingCapableTrait {
    * @param int $cursor
    *   The cursor row index (a negative cursor pins the window to the top).
    *
-   * @return \DrevOps\Tui\Render\Viewport
+   * @return \DrevOps\Tui\Screen\Viewport
    *   The window: its offset and whether rows are scrolled off above or below.
    */
   protected function pageViewport(int $total, int $cursor): Viewport {
@@ -92,7 +92,7 @@ trait PagingCapableTrait {
    *   The theme.
    * @param list<string> $rows
    *   The rendered visible rows.
-   * @param \DrevOps\Tui\Render\Viewport $viewport
+   * @param \DrevOps\Tui\Screen\Viewport $viewport
    *   The paging window.
    *
    * @return list<string>

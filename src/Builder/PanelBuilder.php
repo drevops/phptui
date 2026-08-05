@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Builder;
 
 use DrevOps\Tui\Block\BlockInterface;
+use DrevOps\Tui\Block\Buttons;
+use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Condition\ConditionInterface;
-use DrevOps\Tui\Model\Buttons;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\FormException;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Screen\Layout\GridLayout;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Layout\LayoutManager;
@@ -86,7 +86,7 @@ final class PanelBuilder {
   /**
    * Finish the declaration, so everything it holds is finished too.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the declared grid does not match the panels it arranges.
    */
   public function seal(): void {
@@ -527,7 +527,7 @@ final class PanelBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When a name is mixed with counts, more than one name is given, a visual
    *   row holds fewer than one sub-panel, or the panel already holds blocks
    *   the named layout has nowhere to put.
@@ -609,7 +609,7 @@ final class PanelBuilder {
    * @param \DrevOps\Tui\Block\Panel $panel
    *   The sub-panel.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the grid has no window left to draw it in.
    */
   protected function descend(Panel $panel): void {
@@ -645,7 +645,7 @@ final class PanelBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the panel already holds blocks the layout has nowhere to put.
    */
   protected function arrange(LayoutInterface $layout): self {
@@ -665,7 +665,7 @@ final class PanelBuilder {
    * @return string
    *   The first region the panel's layout declares.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the layout declares no region, so there is nowhere for a block to
    *   go.
    */
@@ -686,7 +686,7 @@ final class PanelBuilder {
    *   The field id.
    * @param string $label
    *   The label (defaults to the id).
-   * @param \DrevOps\Tui\Model\FieldType $type
+   * @param \DrevOps\Tui\Block\FieldType $type
    *   The field type.
    *
    * @return \DrevOps\Tui\Builder\FieldBuilder

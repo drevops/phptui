@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Answers;
 
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Render\Markup;
+use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\Terminal\Markup;
 use DrevOps\Tui\Translation\Translator;
 
 /**

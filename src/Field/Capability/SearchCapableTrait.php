@@ -22,7 +22,7 @@ trait SearchCapableTrait {
    * @param string $needle
    *   The query.
    *
-   * @return list<\DrevOps\Tui\Model\Option>
+   * @return list<\DrevOps\Tui\Block\Option>
    *   The matching option rows, most relevant first.
    */
   protected function filterOptions(string $needle): array {

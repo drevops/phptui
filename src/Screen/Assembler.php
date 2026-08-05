@@ -6,10 +6,10 @@ namespace DrevOps\Tui\Screen;
 
 use DrevOps\Tui\Block\Actions;
 use DrevOps\Tui\Block\Breadcrumb;
+use DrevOps\Tui\Block\Buttons;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Model\Buttons;
-use DrevOps\Tui\Model\FormException;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Screen\Layout\LayoutManager;
 use DrevOps\Tui\Translation\Translator;
 
@@ -45,7 +45,7 @@ final class Assembler {
    * @return \DrevOps\Tui\Screen\Screen
    *   The screen.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the layout keeps no place for the form itself.
    */
   public function assemble(Panel $panel, string $layout = 'default'): Screen {
@@ -88,7 +88,7 @@ final class Assembler {
   /**
    * The buttons that end a form, or close a panel drawn over it.
    *
-   * @param \DrevOps\Tui\Model\Buttons $declared
+   * @param \DrevOps\Tui\Block\Buttons $declared
    *   The pair as the panel they close declares it.
    *
    * @return \DrevOps\Tui\Block\Actions

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Schema;
 
 use DrevOps\Tui\Block\Tree;
+use DrevOps\Tui\Block\Weekday;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Model\Weekday;
 use DrevOps\Tui\Schema\SchemaGenerator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;

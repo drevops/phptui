@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Answers;
 
-use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Block\FieldType;
 
 /**
  * A single collected answer with a snapshot of the question it answers.
@@ -28,7 +28,7 @@ final readonly class Answer {
    *   How the value came to be.
    * @param string $label
    *   The question's human-readable label.
-   * @param \DrevOps\Tui\Model\FieldType $type
+   * @param \DrevOps\Tui\Block\FieldType $type
    *   The question kind.
    * @param list<string> $panels
    *   The titles of the panels the question lives under, outermost first.

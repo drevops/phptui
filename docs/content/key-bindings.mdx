@@ -89,7 +89,7 @@ Not everything on the keyboard routes through the map: a few field keys are fixe
 Bindings are layered by **scope**: a base layer shared by every field, a navigation layer for the panel browser, and one layer per field type that overrides the base only where it differs (<kbd>Enter</kbd> inserts a newline in a textarea, <kbd>Space</kbd> toggles a checkbox option). To retune individual bindings, pass overrides on top of a preset - each names a scope, an action and its keys. Later bindings win, so re-declaring a scope-and-action pair replaces the preset's keys for it:
 
 ```php
-use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Binding;
 use DrevOps\Tui\Input\KeyName;

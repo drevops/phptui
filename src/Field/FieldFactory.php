@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Field;
 
 use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\Block\NumberBounds;
+use DrevOps\Tui\Block\Option;
+use DrevOps\Tui\Block\Template as TemplateModel;
 use DrevOps\Tui\Field\Capability\PlaceholderCapableInterface;
 use DrevOps\Tui\Field\Capability\QueryOptionsCapableInterface;
 use DrevOps\Tui\Input\KeyMap;
 use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\NumberBounds;
-use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Model\Template as TemplateModel;
 use DrevOps\Tui\Translation\Translator;
 
 /**
@@ -138,7 +138,7 @@ class FieldFactory {
    * @param \DrevOps\Tui\Block\Field $block
    *   The block.
    *
-   * @return \DrevOps\Tui\Model\Template
+   * @return \DrevOps\Tui\Block\Template
    *   The template.
    */
   protected function template(Field $block): TemplateModel {
@@ -214,7 +214,7 @@ class FieldFactory {
   /**
    * The selectable value => label map for a set of options.
    *
-   * @param list<\DrevOps\Tui\Model\Option> $options
+   * @param list<\DrevOps\Tui\Block\Option> $options
    *   The localized options.
    *
    * @return array<string,string>
@@ -239,10 +239,10 @@ class FieldFactory {
    * field searches identical to the list it shows, so a match runs against the
    * same text the user reads.
    *
-   * @param list<\DrevOps\Tui\Model\Option> $options
+   * @param list<\DrevOps\Tui\Block\Option> $options
    *   The options in display order.
    *
-   * @return list<\DrevOps\Tui\Model\Option>
+   * @return list<\DrevOps\Tui\Block\Option>
    *   The options in display order, localized to the active language.
    */
   protected function translate(array $options): array {
@@ -262,7 +262,7 @@ class FieldFactory {
    * For the value-based suggest field, which carries no option rows: the
    * localized per-option description keyed by its value.
    *
-   * @param list<\DrevOps\Tui\Model\Option> $options
+   * @param list<\DrevOps\Tui\Block\Option> $options
    *   The localized options.
    *
    * @return array<string,string>

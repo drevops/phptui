@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Schema;
 
 use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\Block\NumberBounds;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\SelectionBounds;
+use DrevOps\Tui\Block\Template;
 use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Condition\ConditionInterface;
 use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\NumberBounds;
-use DrevOps\Tui\Model\SelectionBounds;
-use DrevOps\Tui\Model\Template;
 use DrevOps\Tui\Resolver\EnvNameResolver;
 use DrevOps\Tui\Translation\Translator;
 

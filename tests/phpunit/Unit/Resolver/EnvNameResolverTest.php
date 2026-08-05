@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Resolver;
 
 use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Resolver\EnvNameResolver;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;

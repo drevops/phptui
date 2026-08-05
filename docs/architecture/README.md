@@ -19,6 +19,8 @@ Read it as three concerns around that tree:
 - **The tree itself.** `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions` and `Progress` all implement `BlockInterface`, and each declares what it can do as a capability interface (`Block\Capability`) and what it needs drawn as an elements interface (`Block\Element`). `Tree` is the one walk of it, so the collector, the screen and the schema tools read one order and one answer to which blocks are there.
 - **Running it.** `Collector` collects the tree with no screen at all. `ScreenController` drives it through a terminal, arranging it with a `Screen`, a layout and its regions, sending each key inward with `KeyRouter` and drawing outward with `ScreenRenderer`. Both paths settle the same rules and produce the same `Answers`.
 
+Under all three sits the terminal. `Terminal` is the device - raw mode, the alternate screen, the size it reports - and beside it is the text machinery every drawn line passes through: `Ansi` for escape sequences, `Box` and `Table` for the geometry of a frame and a grid, and `Markup` for the markdown subset. All of it takes plain strings and hands plain strings back, so nothing above it has to know how a glyph reaches the screen.
+
 ## Step 1 - describe the questions
 
 You declare the questions in PHP with the fluent `Form` builder: panels holding fields. A field has an `id`, a type (`text`, `select`, `suggest`, `search`, `filepicker`, `confirm` and the rest; `select`, `search` and `filepicker` collect a list with `->multiple()`) and optional rules - `default`, `required`, `options`, `when` (show it only when a condition holds), `derive` (compute it from other fields) and `discover` (detect it from the target directory).

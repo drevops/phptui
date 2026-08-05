@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Field;
 
-use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Model\OptionKind;
+use DrevOps\Tui\Block\Option;
+use DrevOps\Tui\Block\OptionKind;
 use DrevOps\Tui\Field\Matcher;
 use DrevOps\Tui\Field\MatchResult;
 use DrevOps\Tui\Field\MatchTier;
+use DrevOps\Tui\Utils\Strings;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -22,6 +23,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(MatchTier::class)]
 #[Group('field')]
 final class MatcherTest extends TestCase {
+
+  protected function tearDown(): void {
+    Strings::useMbstring(NULL);
+    parent::tearDown();
+  }
 
   public function testEmptyNeedleMatchesWithZeroScore(): void {
     $result = (new Matcher())->match('anything', '');
@@ -42,6 +48,12 @@ final class MatcherTest extends TestCase {
     yield 'missing character' => ['GitHub Actions', 'ghz'];
     yield 'wrong order' => ['abc', 'cba'];
     yield 'needle longer than haystack' => ['ab', 'abc'];
+  }
+
+  public function testMatchRejectsQueryThatResolvesToNoCharacters(): void {
+    Strings::useMbstring(FALSE);
+
+    $this->assertNotInstanceOf(MatchResult::class, (new Matcher())->match('apple', "\xC3"));
   }
 
   #[DataProvider('dataProviderTighterMatchesRankAhead')]

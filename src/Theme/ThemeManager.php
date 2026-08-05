@@ -13,7 +13,7 @@ namespace DrevOps\Tui\Theme;
  * {@see create()} also accepts a fully-qualified theme class name directly, so
  * a one-off theme needs no registration at all. Terminal-capability detection
  * (colour, Unicode, dark/light background) lives on
- * {@see \DrevOps\Tui\Render\Terminal}.
+ * {@see \DrevOps\Tui\Terminal\Terminal}.
  *
  * What it asks of a theme is the floor and nothing above it: a
  * {@see ThemeInterface} that can be built from a frame width and the options a

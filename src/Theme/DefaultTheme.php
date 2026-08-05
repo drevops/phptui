@@ -7,12 +7,12 @@ namespace DrevOps\Tui\Theme;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
 use DrevOps\Tui\Primitive\Status;
-use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Render\Box;
-use DrevOps\Tui\Render\Markup;
-use DrevOps\Tui\Render\MarkupKind;
-use DrevOps\Tui\Render\MarkupSegment;
-use DrevOps\Tui\Render\Table;
+use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\Tui\Terminal\Box;
+use DrevOps\Tui\Terminal\Markup;
+use DrevOps\Tui\Terminal\MarkupKind;
+use DrevOps\Tui\Terminal\MarkupSegment;
+use DrevOps\Tui\Terminal\Table;
 use DrevOps\Tui\Theme\Capability\ColorSchemeCapableInterface;
 use DrevOps\Tui\Theme\Capability\ColorSchemeCapableTrait;
 use DrevOps\Tui\Theme\Capability\DimCapableInterface;
@@ -1711,7 +1711,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   /**
    * Style one parsed markup span with its element.
    *
-   * @param \DrevOps\Tui\Render\MarkupSegment $segment
+   * @param \DrevOps\Tui\Terminal\MarkupSegment $segment
    *   The span.
    *
    * @return string

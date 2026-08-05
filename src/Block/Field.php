@@ -22,21 +22,12 @@ use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\DiscoverInterface;
 use DrevOps\Tui\Field\FieldFactory;
 use DrevOps\Tui\Field\FieldInterface;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Input\ScopedKeyMap;
-use DrevOps\Tui\Model\DateBounds;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\FilePickerConstraints;
-use DrevOps\Tui\Model\FormException;
-use DrevOps\Tui\Model\NumberBounds;
-use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Model\OptionKind;
-use DrevOps\Tui\Model\RenderMode;
-use DrevOps\Tui\Model\SelectionBounds;
-use DrevOps\Tui\Model\Template;
-use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
 use DrevOps\Tui\Theme\Spacing;
 use DrevOps\Tui\Theme\ThemeInterface;
@@ -106,7 +97,7 @@ final class Field extends AbstractBlock implements
   /**
    * The rows edit mode opens onto, in the order they were declared.
    *
-   * @var list<\DrevOps\Tui\Model\Option>
+   * @var list<\DrevOps\Tui\Block\Option>
    */
   protected array $entries = [];
 
@@ -331,7 +322,7 @@ final class Field extends AbstractBlock implements
    *   The id it is addressed by.
    * @param string $label
    *   The name it draws.
-   * @param \DrevOps\Tui\Model\FieldType $fieldType
+   * @param \DrevOps\Tui\Block\FieldType $fieldType
    *   The kind of answer it collects, which is what decides the editor it
    *   opens onto and the keys that editor binds.
    */
@@ -363,7 +354,7 @@ final class Field extends AbstractBlock implements
   /**
    * The kind of answer this field collects.
    *
-   * @return \DrevOps\Tui\Model\FieldType
+   * @return \DrevOps\Tui\Block\FieldType
    *   The type.
    */
   public function type(): FieldType {
@@ -819,7 +810,7 @@ final class Field extends AbstractBlock implements
    * @return static
    *   The field.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the name could not be set portably from a shell.
    */
   public function env(string $name): static {
@@ -851,7 +842,7 @@ final class Field extends AbstractBlock implements
    * @return static
    *   The field.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When a name could not be set portably from a shell, or an alias repeats
    *   a name it would never be reached behind.
    */
@@ -989,7 +980,7 @@ final class Field extends AbstractBlock implements
   /**
    * The rows edit mode opens onto.
    *
-   * @return list<\DrevOps\Tui\Model\Option>
+   * @return list<\DrevOps\Tui\Block\Option>
    *   The rows, in the order they were declared.
    */
   public function entries(): array {
@@ -1005,7 +996,7 @@ final class Field extends AbstractBlock implements
    * @param string $value
    *   The value.
    *
-   * @return \DrevOps\Tui\Model\Option|null
+   * @return \DrevOps\Tui\Block\Option|null
    *   The entry, or NULL when nothing carries that value. Headings and
    *   separators carry none and are never returned.
    */
@@ -1120,7 +1111,7 @@ final class Field extends AbstractBlock implements
    * @return static
    *   The field.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the length is below one character.
    */
   public function minQuery(int $length): static {
@@ -1259,7 +1250,7 @@ final class Field extends AbstractBlock implements
   /**
    * Limit what may be picked from the filesystem.
    *
-   * @param \DrevOps\Tui\Model\FilePickerConstraints $constraints
+   * @param \DrevOps\Tui\Block\FilePickerConstraints $constraints
    *   The type, extension and size limits.
    *
    * @return static
@@ -1274,7 +1265,7 @@ final class Field extends AbstractBlock implements
   /**
    * What may be picked from the filesystem.
    *
-   * @return \DrevOps\Tui\Model\FilePickerConstraints
+   * @return \DrevOps\Tui\Block\FilePickerConstraints
    *   The limits; unconstrained when none were declared.
    */
   public function pickerConstraints(): FilePickerConstraints {
@@ -1354,7 +1345,7 @@ final class Field extends AbstractBlock implements
   /**
    * Fix the shape of the answer, leaving named slots to fill in.
    *
-   * @param \DrevOps\Tui\Model\Template $template
+   * @param \DrevOps\Tui\Block\Template $template
    *   The shape.
    *
    * @return static
@@ -1369,7 +1360,7 @@ final class Field extends AbstractBlock implements
   /**
    * The shape the answer is filled into.
    *
-   * @return \DrevOps\Tui\Model\Template|null
+   * @return \DrevOps\Tui\Block\Template|null
    *   The template, or NULL when the answer has no fixed shape.
    */
   public function template(): ?Template {
@@ -1424,7 +1415,7 @@ final class Field extends AbstractBlock implements
    * @return static
    *   The field.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When a caption names a point outside the scale.
    */
   public function captions(array $captions): static {
@@ -1659,7 +1650,7 @@ final class Field extends AbstractBlock implements
    * @return static
    *   The field.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the size is below one row.
    */
   public function paginate(int $size): static {
@@ -1803,7 +1794,7 @@ final class Field extends AbstractBlock implements
   /**
    * Where the editor is drawn.
    *
-   * @return \DrevOps\Tui\Model\RenderMode
+   * @return \DrevOps\Tui\Block\RenderMode
    *   In place on the panel, or full-screen on its own.
    */
   public function renderMode(): RenderMode {
@@ -2116,7 +2107,7 @@ final class Field extends AbstractBlock implements
    * @param string $name
    *   The declared name.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the name could not be set portably from a shell.
    */
   protected function assertEnvName(string $name): void {
@@ -2337,7 +2328,7 @@ final class Field extends AbstractBlock implements
    *
    * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Model\Option $entry
+   * @param \DrevOps\Tui\Block\Option $entry
    *   The entry.
    *
    * @return string
@@ -2365,7 +2356,7 @@ final class Field extends AbstractBlock implements
   /**
    * Whether an entry is the one picked.
    *
-   * @param \DrevOps\Tui\Model\Option $entry
+   * @param \DrevOps\Tui\Block\Option $entry
    *   The entry.
    *
    * @return bool

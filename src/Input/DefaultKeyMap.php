@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Input;
 
-use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Block\FieldType;
 
 /**
  * The built-in key bindings: the defaults every form uses unless it opts out.

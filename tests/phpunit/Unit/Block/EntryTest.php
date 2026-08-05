@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Block;
 
 use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\Block\Option;
+use DrevOps\Tui\Block\OptionKind;
 use DrevOps\Tui\Builder\FieldBuilder;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\FormException;
-use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Model\OptionKind;
+use DrevOps\Tui\FormException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -269,11 +269,11 @@ final class EntryTest extends TestCase {
   /**
    * A field offering the given rows, each declared as the kind of row it is.
    *
-   * @param \DrevOps\Tui\Model\FieldType $type
+   * @param \DrevOps\Tui\Block\FieldType $type
    *   The kind of answer it collects.
    * @param bool $multiple
    *   Whether it collects several values.
-   * @param array<array-key,\DrevOps\Tui\Model\Option> $options
+   * @param array<array-key,\DrevOps\Tui\Block\Option> $options
    *   The rows it offers.
    *
    * @return \DrevOps\Tui\Block\Field

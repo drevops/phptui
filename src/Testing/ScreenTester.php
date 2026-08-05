@@ -9,11 +9,11 @@ use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyMap;
-use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Render\ExternalEditor;
-use DrevOps\Tui\Render\TerminalControl;
 use DrevOps\Tui\Screen\Collector;
+use DrevOps\Tui\Screen\ExternalEditor;
 use DrevOps\Tui\Screen\ScreenController;
+use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\Tui\Terminal\TerminalControl;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
@@ -320,7 +320,7 @@ final class ScreenTester {
   /**
    * Set what hands a passage of text to an editor of the reader's own.
    *
-   * @param \DrevOps\Tui\Render\ExternalEditor $editor
+   * @param \DrevOps\Tui\Screen\ExternalEditor $editor
    *   The editor service, so a test can answer for one without launching a
    *   program or depending on the environment naming one.
    *

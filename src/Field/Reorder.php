@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field;
 
+use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\Block\Option;
+use DrevOps\Tui\Field\Capability\OptionsCapableInterface;
+use DrevOps\Tui\Field\Capability\PagingCapableInterface;
+use DrevOps\Tui\Field\Capability\PagingCapableTrait;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Field\Capability\OptionsCapableInterface;
-use DrevOps\Tui\Field\Capability\PagingCapableInterface;
-use DrevOps\Tui\Field\Capability\PagingCapableTrait;
 
 /**
  * A ranking list: pick up the highlighted item and move it to reorder.
@@ -34,7 +34,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
   /**
    * The items in their current arrangement.
    *
-   * @var list<\DrevOps\Tui\Model\Option>
+   * @var list<\DrevOps\Tui\Block\Option>
    */
   protected array $items;
 
@@ -51,7 +51,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
   /**
    * Construct a reorder field.
    *
-   * @param array<int|string,\DrevOps\Tui\Model\Option|string> $options
+   * @param array<int|string,\DrevOps\Tui\Block\Option|string> $options
    *   The items to rank, in display order - a list of options or the
    *   value => label shorthand map.
    * @param list<string> $default
@@ -153,7 +153,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
   /**
    * The rows currently shown: the full arrangement, in its current order.
    *
-   * @return list<\DrevOps\Tui\Model\Option>
+   * @return list<\DrevOps\Tui\Block\Option>
    *   The visible rows.
    */
   public function visible(): array {
@@ -198,7 +198,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Model\Option $option
+   * @param \DrevOps\Tui\Block\Option $option
    *   The item row.
    * @param bool $current
    *   Whether the row holds the cursor.

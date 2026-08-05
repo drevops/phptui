@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
 use DrevOps\Tui\Block\Element\ActionsElementsInterface;
-use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Tests\Fixtures\Theme\AccentOptionTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\BlankTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\CapableTheme;

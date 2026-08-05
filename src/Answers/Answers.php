@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Answers;
 
 use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Render\Terminal;
+use DrevOps\Tui\Terminal\Terminal;
 
 /**
  * The collected answer set: values plus provenance, keyed by question id.

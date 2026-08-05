@@ -26,8 +26,8 @@
 declare(strict_types=1);
 
 use DrevOps\Tui\Primitive\Progress;
-use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Render\TerminalControl;
+use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\Tui\Terminal\TerminalControl;
 use DrevOps\Tui\Testing\BufferedTerminal;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;

@@ -9,7 +9,7 @@ use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\CancelException;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Tui;
 

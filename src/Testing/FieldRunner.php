@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Testing;
 
-use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Field\FieldInterface;
+use DrevOps\Tui\Input\Key;
 
 /**
  * Drives a field to completion from a key stream.

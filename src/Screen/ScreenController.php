@@ -14,8 +14,11 @@ use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Mode;
+use DrevOps\Tui\Block\Option;
+use DrevOps\Tui\Block\OptionKind;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
+use DrevOps\Tui\Block\RenderMode;
 use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\CancelException;
 use DrevOps\Tui\Derive\Derive;
@@ -30,19 +33,13 @@ use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Input\KeyParser;
 use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Model\OptionKind;
-use DrevOps\Tui\Model\RenderMode;
 use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
 use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Primitive\Status;
-use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Render\Box;
-use DrevOps\Tui\Render\ExternalEditor;
-use DrevOps\Tui\Render\Overlay;
-use DrevOps\Tui\Render\Scroller;
-use DrevOps\Tui\Render\Terminal;
 use DrevOps\Tui\Screen\Layout\DefaultLayout;
+use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\Tui\Terminal\Box;
+use DrevOps\Tui\Terminal\Terminal;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\Capability\DimCapableInterface;
 use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
@@ -256,7 +253,7 @@ class ScreenController {
    *   onto the first frame.
    * @param string $version
    *   The version shown under that banner.
-   * @param \DrevOps\Tui\Render\ExternalEditor|null $external_editor
+   * @param \DrevOps\Tui\Screen\ExternalEditor|null $external_editor
    *   What hands a passage of text to an editor of the reader's own, or NULL
    *   for one that launches whatever the environment names.
    */
@@ -316,7 +313,7 @@ class ScreenController {
   /**
    * Run the session against a terminal until the form ends.
    *
-   * @param \DrevOps\Tui\Render\Terminal $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal $terminal
    *   The terminal.
    *
    * @return \DrevOps\Tui\Answers\Answers
@@ -524,7 +521,7 @@ class ScreenController {
    * because the anchor places content on a screen the frame fits, which this
    * one is not.
    *
-   * @param \DrevOps\Tui\Render\Terminal $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal $terminal
    *   The terminal.
    *
    * @return string
@@ -572,7 +569,7 @@ class ScreenController {
    *
    * @param string $frame
    *   The drawn frame.
-   * @param \DrevOps\Tui\Render\Terminal $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal $terminal
    *   The terminal.
    *
    * @return string
@@ -603,7 +600,7 @@ class ScreenController {
   /**
    * Show what precedes the form, and wait for the key that dismisses it.
    *
-   * @param \DrevOps\Tui\Render\Terminal $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal $terminal
    *   The terminal.
    * @param \DrevOps\Tui\Input\KeyParser $parser
    *   What reads keys out of the bytes the terminal delivers.
@@ -648,7 +645,7 @@ class ScreenController {
   /**
    * The frame as it stands: the furniture rewritten, then drawn outward.
    *
-   * @param \DrevOps\Tui\Render\Terminal $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal $terminal
    *   The terminal the frame is sized against.
    *
    * @return string
@@ -709,7 +706,7 @@ class ScreenController {
   /**
    * The rows a frame is laid out to.
    *
-   * @param \DrevOps\Tui\Render\Terminal $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal $terminal
    *   The terminal.
    *
    * @return int
@@ -1108,7 +1105,7 @@ class ScreenController {
    *
    * @param \DrevOps\Tui\Block\Field $field
    *   The field.
-   * @param list<\DrevOps\Tui\Model\Option> $rows
+   * @param list<\DrevOps\Tui\Block\Option> $rows
    *   What the latest query answered.
    *
    * @return array<string,string>

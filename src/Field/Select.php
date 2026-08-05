@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field;
 
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Model\OptionKind;
-use DrevOps\Tui\Model\SelectionBounds;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\Block\Option;
+use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\SelectionBounds;
 use DrevOps\Tui\Field\Capability\FilterCapableInterface;
 use DrevOps\Tui\Field\Capability\FilterCapableTrait;
 use DrevOps\Tui\Field\Capability\OptionsCapableInterface;
@@ -19,6 +17,8 @@ use DrevOps\Tui\Field\Capability\PagingCapableTrait;
 use DrevOps\Tui\Field\Capability\SelectionBoundedTrait;
 use DrevOps\Tui\Field\Capability\SelectionCapableInterface;
 use DrevOps\Tui\Field\Capability\SelectionCapableTrait;
+use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\Tui\Utils\Strings;
 
 /**
  * A single-choice or multiple-choice list of options.
@@ -39,7 +39,7 @@ class Select extends AbstractField implements OptionsCapableInterface, Selection
   /**
    * Construct a select field.
    *
-   * @param array<int|string,\DrevOps\Tui\Model\Option|string> $options
+   * @param array<int|string,\DrevOps\Tui\Block\Option|string> $options
    *   Option rows in display order - a list of options or the value => label
    *   shorthand map.
    * @param string|list<string> $default
@@ -49,7 +49,7 @@ class Select extends AbstractField implements OptionsCapableInterface, Selection
    * @param int|null $page_size
    *   The number of option rows shown at once before the list pages; NULL uses
    *   the default.
-   * @param \DrevOps\Tui\Model\SelectionBounds|null $selection_bounds
+   * @param \DrevOps\Tui\Block\SelectionBounds|null $selection_bounds
    *   The minimum/maximum selection counts enforced on accept, or NULL for no
    *   count limit.
    */
@@ -62,7 +62,7 @@ class Select extends AbstractField implements OptionsCapableInterface, Selection
   /**
    * The field type this field binds its keys under.
    *
-   * @return \DrevOps\Tui\Model\FieldType
+   * @return \DrevOps\Tui\Block\FieldType
    *   The select field type.
    */
   protected function choiceType(): FieldType {
@@ -75,7 +75,7 @@ class Select extends AbstractField implements OptionsCapableInterface, Selection
    * @param string $needle
    *   The query.
    *
-   * @return list<\DrevOps\Tui\Model\Option>
+   * @return list<\DrevOps\Tui\Block\Option>
    *   The matching option rows.
    */
   protected function filterOptions(string $needle): array {

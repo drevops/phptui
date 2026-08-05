@@ -11,7 +11,7 @@ use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableTrait;
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Element\ProgressElementsInterface;
-use DrevOps\Tui\Model\FormException;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Theme\ThemeInterface;
 
@@ -103,7 +103,7 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
    * @return static
    *   The block.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the declared step count is below one.
    */
   public function steps(int $total): static {
