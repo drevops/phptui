@@ -1196,6 +1196,14 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
+  public function actionSelector(bool $selected): string {
+    return $this->marker($selected);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
   public function actionButton(string $label): string {
     return $this->value($this->frameAction($label));
   }
@@ -1239,6 +1247,14 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    */
   protected function frameAction(string $label): string {
     return '[ ' . $label . ' ]';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function progressSelector(bool $selected): string {
+    return $this->marker($selected);
   }
 
   /**

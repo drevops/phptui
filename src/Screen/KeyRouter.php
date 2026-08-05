@@ -47,6 +47,11 @@ final class KeyRouter {
   protected ?Field $help = NULL;
 
   /**
+   * The panel the whole form hangs from, whichever one you are in.
+   */
+  protected Panel $root;
+
+  /**
    * The panels left behind on the way in, with the row each was left on.
    *
    * @var list<array{panel:\DrevOps\Tui\Block\Panel,cursor:int}>
@@ -69,6 +74,8 @@ final class KeyRouter {
   public function __construct(
     protected Panel $panel,
   ) {
+    $this->root = $panel;
+
     // One declaration outlives the session driving it, so a session opens on a
     // form nobody has walked into rather than wherever the last one stopped.
     foreach (Tree::panels($this->panel) as $panel) {
@@ -461,9 +468,11 @@ final class KeyRouter {
 
     // Off the top or the bottom of the grid is out of it: the whole grid is one
     // step, so what is above or below it is the row beside the grid rather than
-    // the window the cursor happened to be under.
+    // the window the cursor happened to be under. Where there is nothing beyond
+    // it the move stops, because the ordinary step to the next row would walk
+    // the windows sideways - which is what moving across is for.
     if (!isset($windows[$next])) {
-      return $this->beside($windows, $delta);
+      return $this->beside($windows, $delta) ?? $this->cursor;
     }
 
     // A shorter row cannot be entered past its end, so the cursor lands on the
@@ -490,9 +499,18 @@ final class KeyRouter {
     }
 
     $count = count($this->focusable());
-    $index = $delta > 0 ? max($placed) + 1 : min($placed) - 1;
 
-    return $index >= 0 && $index < $count ? $index : NULL;
+    // Whatever the next thing that takes the cursor is: the rows the panel
+    // wrote either side of its windows, then whatever a session drew beside the
+    // panel. What kind of block it is never comes into it - only that it is the
+    // next one the cursor can be on once every window is behind it.
+    for ($index = ($delta > 0 ? max($placed) : min($placed)) + $delta; $index >= 0 && $index < $count; $index += $delta) {
+      if (!in_array($index, $placed, TRUE)) {
+        return $index;
+      }
+    }
+
+    return NULL;
   }
 
   /**
@@ -566,10 +584,17 @@ final class KeyRouter {
 
   /**
    * Put the cursor on the block it is counting to, and take it off the rest.
+   *
+   * The rest is the whole form rather than the panel you are in. A panel you
+   * walked out of goes on being drawn - as the row that leads back into it, or
+   * as a window previewing what is behind it - so a row left holding the cursor
+   * in there would go on drawing one, and a reader would see two.
    */
   protected function settle(): void {
-    foreach ($this->focusable() as $index => $block) {
-      if ($index === $this->cursor) {
+    $on = $this->focused();
+
+    foreach ($this->everywhere() as $block) {
+      if ($block === $on) {
         $block->focus();
 
         continue;
@@ -577,6 +602,35 @@ final class KeyRouter {
 
       $block->blur();
     }
+  }
+
+  /**
+   * Every block on the form the cursor can be on, wherever that is.
+   *
+   * @return list<\DrevOps\Tui\Block\Capability\FocusCapableInterface>
+   *   The blocks: everything every panel of the form holds, and everything a
+   *   session draws beside one of them.
+   */
+  protected function everywhere(): array {
+    $blocks = [];
+
+    foreach (Tree::panels($this->root) as $panel) {
+      foreach ($panel->blocks() as $block) {
+        if ($block instanceof FocusCapableInterface) {
+          $blocks[] = $block;
+        }
+      }
+    }
+
+    // The furniture is drawn beside the form rather than declared in it, so no
+    // walk of the tree reaches it.
+    foreach ($this->furniture as $beside) {
+      foreach ($beside as $block) {
+        $blocks[] = $block;
+      }
+    }
+
+    return $blocks;
   }
 
   /**

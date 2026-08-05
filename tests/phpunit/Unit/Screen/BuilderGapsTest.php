@@ -41,16 +41,29 @@ use PHPUnit\Framework\TestCase;
 final class BuilderGapsTest extends TestCase {
 
   public function testTheFirstActionDeclaredIsSelectedUntilAnotherIsGiven(): void {
-    // Drawn with colour, since selected and unselected differ by style alone.
+    // Drawn with colour and with the cursor on the row, since which button
+    // would be pressed is a question about the row that has it, and the answer
+    // is carried by style alone.
     $theme = new DefaultTheme(80);
     $actions = (new Actions())->action('submit', 'Submit')->action('cancel', 'Cancel');
+    $actions->focus();
 
     $first = $actions->render($theme);
     $second = $actions->select('cancel')->render($theme);
 
     $this->assertNotSame($first, $second);
-    $this->assertSame('[ Submit ]  [ Cancel ]', Ansi::strip($second));
+    $this->assertSame('❯ [ Submit ]  [ Cancel ]', Ansi::strip($second));
     $this->assertStringContainsString($theme->actionSelected('Cancel'), $second);
+  }
+
+  public function testButtonsNobodyIsOnMarkNoneOfThemselves(): void {
+    $theme = new DefaultTheme(80);
+    $actions = (new Actions())->action('submit', 'Submit')->action('cancel', 'Cancel');
+
+    // Off the row there is no button a key press would reach, so none of them
+    // is drawn as the one it would reach.
+    $this->assertStringNotContainsString($theme->actionSelected('Submit'), $actions->render($theme));
+    $this->assertStringContainsString($theme->actionButton('Submit'), $actions->render($theme));
   }
 
   public function testSelectingAnActionThatWasNeverDeclaredSaysWhichExist(): void {
@@ -74,8 +87,8 @@ final class BuilderGapsTest extends TestCase {
     // The reason belongs to the buttons it withholds, so it is drawn against
     // them rather than left to whatever else the region holds - and it goes
     // the moment they are allowed through again.
-    $this->assertSame("Basket contents is required.\n[ Submit ]  [ Cancel ]", $actions->refuse('Basket contents is required.')->render($this->theme()));
-    $this->assertSame('[ Submit ]  [ Cancel ]', $actions->refuse(NULL)->render($this->theme()));
+    $this->assertSame("  Basket contents is required.\n  [ Submit ]  [ Cancel ]", $actions->refuse('Basket contents is required.')->render($this->theme()));
+    $this->assertSame('  [ Submit ]  [ Cancel ]', $actions->refuse(NULL)->render($this->theme()));
   }
 
   public function testLegendForgetsWhatNoLongerApplies(): void {

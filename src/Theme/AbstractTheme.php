@@ -431,6 +431,13 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
   /**
    * {@inheritdoc}
    */
+  public function actionSelector(bool $selected): string {
+    return $selected ? '>' : ' ';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function actionButton(string $label): string {
     return '[ ' . $label . ' ]';
   }
@@ -456,6 +463,13 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
    */
   public function actionRefusal(string $reason): string {
     return $reason;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function progressSelector(bool $selected): string {
+    return $selected ? '>' : ' ';
   }
 
   /**

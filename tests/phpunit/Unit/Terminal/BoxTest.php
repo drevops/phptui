@@ -72,9 +72,24 @@ final class BoxTest extends TestCase {
     yield 'empty pads full' => ['', 3, '   '];
   }
 
-  public function testFitClipDropsAnsiStyling(): void {
-    // A too-wide styled string is clipped to plain text at the visible width.
-    $this->assertSame('abc', Box::fit(Ansi::style('abcdef', '36'), 3));
+  public function testFitClipKeepsAnsiStyling(): void {
+    // A row cut at a region's edge reads as the same row one line in, so the
+    // styling travels with the characters that survived the cut.
+    $this->assertSame("\033[36mabc\033[0m", Box::fit(Ansi::style('abcdef', '36'), 3));
+    $this->assertSame(3, Ansi::width(Box::fit(Ansi::style('abcdef', '36'), 3)));
+  }
+
+  public function testFitClipLeavesNoDanglingHyperlink(): void {
+    $link = Ansi::link('Orchard', 'https://example.com/orchard');
+
+    $this->assertSame("\033]8;;https://example.com/orchard\007Orc\033]8;;\007", Box::fit($link, 3));
+  }
+
+  public function testFitClipOfPlainTextSlicesItPlainly(): void {
+    // Ten other callers stack the result, so text carrying no escapes has to
+    // come back byte for byte as it always did.
+    $this->assertSame('abc', Box::fit('abcdef', 3));
+    $this->assertSame('дуж', Box::fit('дуже довгий', 3));
   }
 
   public function testFitKeepsAnsiWhenItAlreadyFits(): void {
