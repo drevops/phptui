@@ -5,23 +5,34 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Theme;
 
 /**
- * The types a theme's constructor is handed, as PHP names them.
+ * What a theme's constructor is handed.
  *
  * The factory has a frame width and an options array to offer and nothing
- * else, so what a constructor may declare for either of them is a closed set:
- * the two themselves, and the one type that rules nothing out.
+ * else, so what a constructor may ask for is a closed set of two - and each of
+ * them is satisfied by more than one declared type, since a parameter widening
+ * what it accepts still accepts what it is given.
  *
  * @package DrevOps\Tui\Theme
  */
-enum ArgumentType: string {
+enum ArgumentType {
 
-  // The frame width.
-  case Width = 'int';
+  // The frame width the theme lays its rows out to.
+  case Width;
 
   // The display options, keyed by name.
-  case Options = 'array';
+  case Options;
 
-  // A parameter that refuses nothing, so it takes either of them.
-  case Anything = 'mixed';
+  /**
+   * The types a parameter can declare and still take this argument.
+   *
+   * @return list<\DrevOps\Tui\Theme\DeclaredType>
+   *   The types.
+   */
+  public function accepted(): array {
+    return match ($this) {
+      self::Width => [DeclaredType::Int, DeclaredType::Float, DeclaredType::Mixed],
+      self::Options => [DeclaredType::Array, DeclaredType::Iterable, DeclaredType::Mixed],
+    };
+  }
 
 }

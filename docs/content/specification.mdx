@@ -510,7 +510,7 @@ The _panel_ in the middle of that is a block like any other. It takes the rows i
 
 _Scroll_ is per surface rather than per layout class, which is why a two-column layout can pin one column while its neighbor scrolls, and why two rows can scroll independently of each other. Each region instance declares whether it scrolls - and so does the arrangement itself, where its lines have to move together.
 
-A surface also _does_ its own scrolling. A region is handed one number - the size it was given - and everything after that is its own work: how tall its blocks add up to, where the viewport sits, whether an overflow marker is due, and how the cursor or the wheel moves it. An arrangement answers the same questions about the lines it stacks. No sibling is involved either way, which is what makes _Scroll_ the surface's own capability rather than something apportioned to it.
+A surface holds where it has been moved to, within the one number it was given. What it holds is measured and marked where things are drawn, and moved by whatever is driving the screen - but the offset is the surface's own, over its blocks where it is a region and over its lines where it is an arrangement. No sibling is involved either way, which is what makes _Scroll_ the surface's own capability rather than something apportioned to it.
 
 A region knows only that it holds blocks. It never knows which kinds - which is why the three calls above are indistinguishable to it, and why a _breadcrumb_ can go wherever a _field_ can.
 

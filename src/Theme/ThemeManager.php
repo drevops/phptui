@@ -201,12 +201,12 @@ final class ThemeManager {
   }
 
   /**
-   * Whether one declared type accepts a value of the given type.
+   * Whether one declared type accepts the argument a caller hands it.
    *
    * @param \ReflectionType $declared
    *   The declared type.
    * @param \DrevOps\Tui\Theme\ArgumentType $type
-   *   The type a caller hands it.
+   *   The argument a caller hands it.
    *
    * @return bool
    *   TRUE when it does.
@@ -216,7 +216,7 @@ final class ThemeManager {
       return FALSE;
     }
 
-    $accepted = [$type->value, ArgumentType::Anything->value];
+    $accepted = array_map(static fn(DeclaredType $accepts): string => $accepts->value, $type->accepted());
 
     return in_array($declared->getName(), $accepted, TRUE);
   }

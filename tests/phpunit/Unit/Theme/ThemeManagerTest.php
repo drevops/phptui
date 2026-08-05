@@ -14,6 +14,7 @@ use DrevOps\Tui\Tests\Fixtures\Theme\FloorOptionTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\FloorTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\IntersectedWidthTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\LenientWidthTheme;
+use DrevOps\Tui\Tests\Fixtures\Theme\WidenedWidthTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\OceanTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\UnbuildableTheme;
 use DrevOps\Tui\Tests\Traits\ResetsRegistriesTrait;
@@ -132,6 +133,15 @@ final class ThemeManagerTest extends TestCase {
     // A parameter is refused for what it will not take rather than for what
     // else it would have taken, so alternatives including a width are a width.
     $this->assertInstanceOf(LenientWidthTheme::class, $theme);
+    $this->assertSame(40, $theme->contentWidth());
+  }
+
+  public function testThemeAskingForMoreThanItIsGivenIsBuilt(): void {
+    $theme = ThemeManager::create(WidenedWidthTheme::class, 40);
+
+    // A parameter that accepts more than the factory hands it still accepts
+    // what it is handed, so widening one is not a reason to refuse a theme.
+    $this->assertInstanceOf(WidenedWidthTheme::class, $theme);
     $this->assertSame(40, $theme->contentWidth());
   }
 
