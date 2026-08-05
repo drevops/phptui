@@ -7,10 +7,13 @@ namespace DrevOps\Tui\Tests\Unit\Theme;
 use DrevOps\Tui\Block\Element\ActionsElementsInterface;
 use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Tests\Fixtures\Theme\AccentOptionTheme;
+use DrevOps\Tui\Tests\Fixtures\Theme\AlternativeWidthTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\BlankTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\CapableTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\FloorOptionTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\FloorTheme;
+use DrevOps\Tui\Tests\Fixtures\Theme\IntersectedWidthTheme;
+use DrevOps\Tui\Tests\Fixtures\Theme\LenientWidthTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\OceanTheme;
 use DrevOps\Tui\Tests\Fixtures\Theme\UnbuildableTheme;
 use DrevOps\Tui\Tests\Traits\ResetsRegistriesTrait;
@@ -117,6 +120,19 @@ final class ThemeManagerTest extends TestCase {
     yield 'a first argument that is not a width' => [CapableTheme::class];
     yield 'options and nothing else' => [AccentOptionTheme::class];
     yield 'an argument nothing can supply' => [UnbuildableTheme::class];
+    // A parameter declaring alternatives still declares what it will not take,
+    // and one declaring an intersection asks for something no width can be.
+    yield 'alternatives that exclude a width' => [AlternativeWidthTheme::class];
+    yield 'an intersection no width can satisfy' => [IntersectedWidthTheme::class];
+  }
+
+  public function testThemeTakingWidthAmongOtherThingsIsBuilt(): void {
+    $theme = ThemeManager::create(LenientWidthTheme::class, 40);
+
+    // A parameter is refused for what it will not take rather than for what
+    // else it would have taken, so alternatives including a width are a width.
+    $this->assertInstanceOf(LenientWidthTheme::class, $theme);
+    $this->assertSame(40, $theme->contentWidth());
   }
 
   public function testThemeThatDrawsNoElementThrows(): void {

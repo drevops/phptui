@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Screen;
 
 use DrevOps\Tui\Block\Breadcrumb;
+use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
@@ -337,6 +338,68 @@ final class ScreenRenderTest extends TestCase {
     // The same statement with the axis turned: the end of a flow running down
     // a region is its last row.
     $this->assertSame(['Pick the produce.', '', '', '', '', 'v1.2.3'], $this->render($screen, 6, 40));
+  }
+
+  public function testWindowPackedFromTheEndIsDrawnTheWayItWasMeasured(): void {
+    $layout = new class() extends AbstractLayout {
+
+      public function __construct() {
+        parent::__construct(Axis::Rows);
+
+        $this->region('content')->content()->previews();
+      }
+
+    };
+
+    $window = (new Panel('fruit', 'Fruit'))->layout(new DefaultLayout());
+    $window->in('content')->add(new Markup('note', "apples\npears"));
+
+    $screen = (new Screen())->layout($layout);
+    $screen->in('content')->tail($window);
+
+    $renderer = new ScreenRenderer(new DefaultTheme(40, ['color' => FALSE]));
+
+    // A window shows what is behind it whichever end of the flow it was packed
+    // from, so the rows it is counted at are the rows it draws.
+    $this->assertSame(3, $renderer->extent($layout, 'content')[0]);
+    $this->assertSame(['  Fruit ›', 'apples', 'pears'], $this->render($screen, 3, 40));
+  }
+
+  public function testLineIsAsDeepAsTheDeepestRegionDrawnOnIt(): void {
+    $layout = new class() extends AbstractLayout {
+
+      public function __construct() {
+        parent::__construct(Axis::Rows);
+
+        $this->region('left')->content();
+        $this->region('right')->content();
+      }
+
+      #[\Override]
+      public function lines(): array {
+        return [['left', 'right']];
+      }
+
+      #[\Override]
+      public function arrange(int $available, array $measured = []): array {
+        return ['left' => 1, 'right' => 3];
+      }
+
+      #[\Override]
+      public function share(int $available, int $count, ChromeElementsInterface $chrome): int {
+        return intdiv($available, max(1, $count));
+      }
+
+    };
+
+    $screen = (new Screen())->layout($layout);
+    $screen->in('left')->add(new Markup('one', 'pears'));
+    $screen->in('right')->add(new Markup('two', "apples\ncherries\nplums"));
+
+    // An arrangement of a consumer's own can give the regions of a line sizes
+    // of their own, and the line has to reach the deepest of them rather than
+    // however deep whichever of them is named first happens to be.
+    $this->assertSame(['pears                 apples', '                      cherries', '                      plums'], $this->render($screen, 3, 40));
   }
 
   public function testWhereTheTwoEndsMeetTheHeadKeepsItsSpaceAndTheTailIsCut(): void {

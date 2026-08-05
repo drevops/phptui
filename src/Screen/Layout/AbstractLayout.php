@@ -150,8 +150,10 @@ abstract class AbstractLayout implements LayoutInterface {
 
     // A terminal too small for the sized lines alone is a real state, not an
     // error: they are trimmed in declaration order so the sizes still add up.
+    // The trim is handed the whole of the space, because how many lines come
+    // out of it is what says how many cells were owed to telling them apart.
     if ($taken > $room) {
-      return $this->spread($lines, $this->trim($sizes, $room));
+      return $this->spread($lines, $this->trim($sizes, $available));
     }
 
     if ($shares === []) {
@@ -312,17 +314,26 @@ abstract class AbstractLayout implements LayoutInterface {
    * @param array<int,int> $sizes
    *   The sizes asked for.
    * @param int $available
-   *   The cells there are.
+   *   The cells there are, before anything is spent telling lines apart.
    *
    * @return array<int,int>
    *   The sizes granted.
    */
   protected function trim(array $sizes, int $available): array {
     $left = max(0, $available);
+    $drawn = FALSE;
 
-    foreach ($sizes as $name => $size) {
-      $sizes[$name] = min($size, $left);
-      $left -= $sizes[$name];
+    foreach ($sizes as $index => $size) {
+      // The cell telling one line from the next is owed only once a line has
+      // been granted something to be told apart from, so the last cells go to
+      // a line rather than to the air above one there is no room to draw.
+      $room = max(0, $drawn ? $left - $this->separator() : $left);
+      $sizes[$index] = min($size, $room);
+
+      if ($sizes[$index] > 0) {
+        $left = $room - $sizes[$index];
+        $drawn = TRUE;
+      }
     }
 
     return $sizes;

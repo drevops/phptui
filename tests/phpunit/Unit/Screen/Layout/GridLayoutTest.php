@@ -86,6 +86,19 @@ final class GridLayoutTest extends TestCase {
     $this->assertSame(4, $layout->natural(['window-1' => 4, 'window-2' => 2]));
   }
 
+  public function testRowTheGridCannotBeToldApartOnStillGoesToWindow(): void {
+    $layout = new GridLayout(1, 1);
+    $measured = ['above' => 0, 'window-1' => 1, 'window-2' => 1, 'below' => 0];
+
+    // The row telling one visual row from the next is owed only where there is
+    // a second row to tell apart, so a terminal with a single row to give hands
+    // it to the first window rather than to the air above a window it has no
+    // room to draw.
+    $this->assertSame(['above' => 0, 'window-1' => 1, 'window-2' => 0, 'below' => 0], $layout->arrange(1, $measured));
+    $this->assertSame(['above' => 0, 'window-1' => 1, 'window-2' => 0, 'below' => 0], $layout->arrange(2, $measured));
+    $this->assertSame(['above' => 0, 'window-1' => 2, 'window-2' => 1, 'below' => 0], $layout->arrange(3, $measured));
+  }
+
   /**
    * Tests that the windows of a visual row divide the width between them.
    *

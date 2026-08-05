@@ -65,11 +65,6 @@ final class Region implements ScrollCapableInterface {
   protected array $tail = [];
 
   /**
-   * The first row of its contents that is visible.
-   */
-  protected int $offset = 0;
-
-  /**
    * Construct a region.
    *
    * @param string $name

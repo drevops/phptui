@@ -12,8 +12,8 @@ namespace DrevOps\Tui\Screen\Capability;
  * once. The second is not a region's to do, because no region sees its
  * siblings - which is the same reason sizing belongs to the arrangement.
  *
- * Either way the surface only holds the offset and clamps it. What it is
- * showing of what is measured where things are drawn, and moving it is the
+ * Either way the surface only holds the offset and clamps it. What the offset
+ * is an offset into is measured where things are drawn, and moving it is the
  * driver's, so the rule that keeps the cursor in sight lives in one place
  * whatever it is moving.
  *

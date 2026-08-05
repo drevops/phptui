@@ -164,7 +164,7 @@ final class ThemeManager {
       }
     }
 
-    return self::takes($parameters[0], 'int') && self::takes($parameters[1], 'array');
+    return self::takes($parameters[0], ArgumentType::Width) && self::takes($parameters[1], ArgumentType::Options);
   }
 
   /**
@@ -172,18 +172,53 @@ final class ThemeManager {
    *
    * @param \ReflectionParameter $parameter
    *   The parameter.
-   * @param string $type
-   *   The type name a caller hands it.
+   * @param \DrevOps\Tui\Theme\ArgumentType $type
+   *   The type a caller hands it.
    *
    * @return bool
    *   TRUE when it accepts one.
    */
-  protected static function takes(\ReflectionParameter $parameter, string $type): bool {
+  protected static function takes(\ReflectionParameter $parameter, ArgumentType $type): bool {
     $declared = $parameter->getType();
 
-    // Only a single declared type can rule a value out: one that declares
-    // nothing, or declares alternatives, still takes what it is handed.
-    return !$declared instanceof \ReflectionNamedType || in_array($declared->getName(), [$type, 'mixed'], TRUE);
+    // A parameter declaring nothing takes whatever it is handed.
+    if (!$declared instanceof \ReflectionType) {
+      return TRUE;
+    }
+
+    // Alternatives are satisfied by any one of them. Anything else standing
+    // where a single type would is a set of interfaces to satisfy at once,
+    // which is nothing a width or an options array can be.
+    $alternatives = $declared instanceof \ReflectionUnionType ? $declared->getTypes() : [$declared];
+
+    foreach ($alternatives as $alternative) {
+      if (self::named($alternative, $type)) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Whether one declared type accepts a value of the given type.
+   *
+   * @param \ReflectionType $declared
+   *   The declared type.
+   * @param \DrevOps\Tui\Theme\ArgumentType $type
+   *   The type a caller hands it.
+   *
+   * @return bool
+   *   TRUE when it does.
+   */
+  protected static function named(\ReflectionType $declared, ArgumentType $type): bool {
+    if (!$declared instanceof \ReflectionNamedType) {
+      return FALSE;
+    }
+
+    $accepted = [$type->value, ArgumentType::Anything->value];
+
+    return in_array($declared->getName(), $accepted, TRUE);
   }
 
   /**

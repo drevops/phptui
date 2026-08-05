@@ -151,7 +151,16 @@ final class ScreenRenderer {
    *   when no region of it holds any such block.
    */
   public function reach(LayoutInterface $layout, ?BlockInterface $of = NULL): array {
-    $measured = $this->measured($layout);
+    $measured = [];
+    $rows = [];
+
+    // Measuring a region draws its blocks, so each is walked once and both
+    // answers are kept: what it comes to, for the arrangement to divide the
+    // axis by, and where the block sits in it.
+    foreach ($layout->names() as $name) {
+      [$measured[$name], $rows[$name]] = $this->extent($layout, $name, $of);
+    }
+
     $sizes = $layout->arrange($layout->natural($measured), $measured);
     $total = 0;
     $row = -1;
@@ -160,10 +169,8 @@ final class ScreenRenderer {
       $held = 0;
 
       foreach ($line as $name) {
-        [, $at] = $this->extent($layout, $name, $of);
-
-        if ($at >= 0) {
-          $row = $total + $at;
+        if (($rows[$name] ?? -1) >= 0) {
+          $row = $total + $rows[$name];
         }
 
         $held = max($held, $sizes[$name] ?? 0);
@@ -500,7 +507,10 @@ final class ScreenRenderer {
       return [];
     }
 
-    $rows = $sizes[$names[0]] ?? 0;
+    // A line is as deep as the deepest region on it, so which of them happens
+    // to be named first, and which the answers left there to be named, changes
+    // nothing about how far the line reaches.
+    $rows = max(0, ...array_map(static fn(string $name): int => $sizes[$name] ?? 0, $names));
 
     if (count($names) === 1) {
       return $this->fill($layout->in($names[0]), $rows, $columns, $furnished);
@@ -642,7 +652,7 @@ final class ScreenRenderer {
       return $this->down($drawn);
     }
 
-    return $this->across($drawn, array_values($this->rendered($region->tailBlocks())), $columns);
+    return $this->across($drawn, array_values($this->rendered($region->tailBlocks(), $region->isPreviewing())), $columns);
   }
 
   /**
@@ -792,7 +802,7 @@ final class ScreenRenderer {
       return [];
     }
 
-    return $this->down(array_values($this->rendered($region->tailBlocks())));
+    return $this->down(array_values($this->rendered($region->tailBlocks(), $region->isPreviewing())));
   }
 
   /**
