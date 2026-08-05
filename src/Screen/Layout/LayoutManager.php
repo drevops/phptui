@@ -16,7 +16,9 @@ use AlexSkrypnyk\Str2Name\Str2Name;
  *
  * Three ways reach a layout - a shipped name, a name a consumer registered, or
  * the class itself - and each call builds its own, because two forms picking
- * the same layout must not share its regions.
+ * the same layout must not share its regions. All three hand over a name and
+ * nothing else, so an arrangement built from anything a name cannot carry is
+ * reached none of these ways: it is built where that something is written.
  *
  * @package DrevOps\Tui\Screen\Layout
  */
@@ -117,8 +119,9 @@ final class LayoutManager {
         continue;
       }
 
-      // An arrangement nobody can build is not one a form can pick.
-      if (!(new \ReflectionClass($class))->isInstantiable()) {
+      // An arrangement nobody can build from its name alone is not one a form
+      // can pick by name.
+      if (!self::nameable($class)) {
         continue;
       }
 
@@ -161,13 +164,34 @@ final class LayoutManager {
       throw new \InvalidArgumentException(sprintf('Layout class "%s" must implement %s.', $class, LayoutInterface::class));
     }
 
-    // An abstract layout passes the type check and then fatals on the first
-    // create(): refusing it here names the class rather than the call site.
-    if (!(new \ReflectionClass($class))->isInstantiable()) {
-      throw new \InvalidArgumentException(sprintf('Layout class "%s" cannot be instantiated.', $class));
+    // An abstract layout, or one built from something a name cannot carry,
+    // passes the type check and then fatals on the first create(): refusing it
+    // here names the class rather than the call site.
+    if (!self::nameable($class)) {
+      throw new \InvalidArgumentException(sprintf('Layout class "%s" cannot be built from a name alone.', $class));
     }
 
     return $class;
+  }
+
+  /**
+   * Whether a layout class is one a name is enough to build.
+   *
+   * All three routes hand over a name and nothing else, so an arrangement they
+   * can build is one that asks for nothing else either. A grid is the standing
+   * example of what that rules out: its shape is what it arranges, two grids of
+   * different shapes are different arrangements, and no name says which.
+   *
+   * @param class-string $class
+   *   The class name.
+   *
+   * @return bool
+   *   TRUE when it can.
+   */
+  protected static function nameable(string $class): bool {
+    $reflection = new \ReflectionClass($class);
+
+    return $reflection->isInstantiable() && ($reflection->getConstructor()?->getNumberOfParameters() ?? 0) === 0;
   }
 
 }

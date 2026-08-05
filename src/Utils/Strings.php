@@ -36,15 +36,10 @@ final class Strings extends Str2Name {
    *   The text.
    *
    * @return list<string>
-   *   The characters.
+   *   The characters; empty when the text cannot be resolved into code points.
    */
   public static function split(string $text): array {
-    $chars = array_values(self::mbStrSplit($text));
-
-    // The extension-free branch splits with PCRE, which rejects malformed
-    // UTF-8 where mbstring substitutes for it and so hands back nothing at
-    // all; splitting such input into its bytes keeps the helper total.
-    return $chars === [] && $text !== '' ? str_split($text) : $chars;
+    return array_values(self::mbStrSplit($text));
   }
 
   /**

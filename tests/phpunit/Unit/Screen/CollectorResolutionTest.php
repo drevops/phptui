@@ -8,20 +8,20 @@ use DrevOps\Tui\Answers\Answer;
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Tree;
+use DrevOps\Tui\Builder\Fixup;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Discovery\Dotenv;
 use DrevOps\Tui\Discovery\JsonValue;
-use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Fixup;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
 use org\bovigo\vfs\vfsStream;
@@ -667,7 +667,7 @@ final class CollectorResolutionTest extends TestCase {
   /**
    * The rule stripping the wrapping off anything that is not a gift.
    *
-   * @return \DrevOps\Tui\Model\Fixup
+   * @return \DrevOps\Tui\Builder\Fixup
    *   The rule.
    */
   protected function wrapRule(): Fixup {

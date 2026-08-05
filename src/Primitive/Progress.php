@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Primitive;
 
-use DrevOps\Tui\Render\Terminal;
-use DrevOps\Tui\Render\TerminalControl;
 use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
+use DrevOps\Tui\Terminal\Terminal;
+use DrevOps\Tui\Terminal\TerminalControl;
 
 /**
  * A progress primitive for slow work: a spinner, or a determinate bar.
@@ -51,7 +51,7 @@ final class Progress {
   /**
    * Construct a progress primitive.
    *
-   * @param \DrevOps\Tui\Render\Terminal $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal $terminal
    *   The terminal the line is drawn on.
    * @param \DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface $theme
    *   The theme that draws the spinner glyphs and the bar.

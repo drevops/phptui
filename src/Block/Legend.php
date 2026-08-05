@@ -8,7 +8,7 @@ use DrevOps\Tui\Block\Element\LegendElementsInterface;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\ScopedKeyMap;
-use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 
@@ -20,22 +20,16 @@ use DrevOps\Tui\Translation\Translator;
  *
  * A key written down twice - once where it is bound and once where it is
  * advertised - is a key that drifts. So a legend is written from the bindings
- * themselves: it is handed the map a key press resolves against and the
- * fragments naming what those keys do, and reads the glyphs back out of it.
+ * themselves and never by hand: it is handed the map a key press resolves
+ * against and the fragments naming what those keys do, and reads the glyphs
+ * back out of it.
  *
  * @package DrevOps\Tui\Block
  */
 final class Legend extends AbstractBlock {
 
   /**
-   * The entries written out by hand, each a key and what it does.
-   *
-   * @var list<array{key:string,does:string}>
-   */
-  protected array $entries = [];
-
-  /**
-   * The bindings the entries are read out of, once it has some.
+   * The bindings the keys are read out of, once it has some.
    */
   protected ?ScopedKeyMap $keyMap = NULL;
 
@@ -45,23 +39,6 @@ final class Legend extends AbstractBlock {
    * @var list<\DrevOps\Tui\Input\Hint>
    */
   protected array $hints = [];
-
-  /**
-   * Advertise a key.
-   *
-   * @param string $key
-   *   The key as it is written.
-   * @param string $does
-   *   What pressing it does.
-   *
-   * @return $this
-   *   The block.
-   */
-  public function entry(string $key, string $does): self {
-    $this->entries[] = ['key' => $key, 'does' => $does];
-
-    return $this;
-  }
 
   /**
    * Advertise whatever a set of bindings makes live.
@@ -89,7 +66,6 @@ final class Legend extends AbstractBlock {
    *   The block.
    */
   public function clear(): self {
-    $this->entries = [];
     $this->keyMap = NULL;
     $this->hints = [];
 
@@ -126,7 +102,7 @@ final class Legend extends AbstractBlock {
   }
 
   /**
-   * The entries to draw: the ones written by hand, else the bound ones.
+   * The entries to draw, one per fragment the bindings can illustrate.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme, which is what says how a key is written.
@@ -135,10 +111,6 @@ final class Legend extends AbstractBlock {
    *   The entries.
    */
   protected function written(ThemeInterface $theme): array {
-    if (!$this->keyMap instanceof ScopedKeyMap) {
-      return $this->entries;
-    }
-
     $out = [];
 
     foreach ($this->hints as $hint) {
@@ -174,7 +146,9 @@ final class Legend extends AbstractBlock {
       $key = $this->keyMap?->primary($action);
 
       if ($key instanceof Key) {
-        $glyphs[] = $theme->keyGlyph($key);
+        // A named key travels as its name and a typed one as what it writes,
+        // so nothing an input layer holds a key in reaches the theme.
+        $glyphs[] = $theme->keyGlyph($key->name ?? $key->label());
       }
     }
 

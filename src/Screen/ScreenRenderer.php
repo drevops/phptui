@@ -8,9 +8,9 @@ use DrevOps\Tui\Block\BlockInterface;
 use DrevOps\Tui\Block\Capability\DependCapableInterface;
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Render\Box;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
+use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\Tui\Terminal\Box;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
 use DrevOps\Tui\Theme\Capability\UnicodeCapableInterface;
@@ -23,13 +23,17 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * Each step hands down exactly one thing and knows nothing of the step after
  * it: the screen gives the layout its space, the layout works out a size for
  * each region, the region flows its blocks into that size, and a block reaches
- * the theme for elements. Nothing reaches back up.
+ * the theme for elements. Nothing reaches back up. The one thing that travels
+ * the other way is a count: what a region's contents come to can only be known
+ * where they are drawn, so it is measured here and handed to the layout, which
+ * apportions the axis by it without learning that blocks exist.
  *
- * Three things are drawn here rather than by any block: the frame around every
- * region at once, the mark saying a region's contents outran it, and the air
- * the theme asks for between one block and the next. None is anything a block
- * could ask for, because a block only ever fills the space it is given and
- * never learns where that space ends or what is drawn beside it.
+ * Four things are drawn here rather than by any block: the frame around every
+ * region at once, the mark saying a region's contents outran it, the air the
+ * theme asks for between one block and the next, and the gutter it asks for
+ * between two regions drawn side by side. None is anything a block could ask
+ * for, because a block only ever fills the space it is given and never learns
+ * where that space ends or what is drawn beside it.
  *
  * @package DrevOps\Tui\Screen
  */
@@ -39,15 +43,6 @@ final class ScreenRenderer {
    * The columns a frame spends on its own border and gutter, both sides.
    */
   public const int CHROME = 4;
-
-  /**
-   * The columns left clear between two things drawn side by side.
-   *
-   * The air between them, in the family of the blank row that shows between
-   * one block and the next: a layout takes it off the width before dividing
-   * what is left, and leaving it is what drawing them does.
-   */
-  protected const int GUTTER = 2;
 
   /**
    * Construct a renderer.
@@ -120,6 +115,74 @@ final class ScreenRenderer {
   }
 
   /**
+   * Work out how much of the axis each region of a layout gets.
+   *
+   * Measuring and apportioning are two jobs and this is where they meet: what
+   * a region's contents come to is counted here, because here is where blocks
+   * are drawn, and the layout is handed the numbers and divides the axis by
+   * them. Neither has to learn the other's business.
+   *
+   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   *   The layout.
+   * @param int $available
+   *   The cells to divide.
+   *
+   * @return array<string,int>
+   *   The cells each region gets, keyed by name.
+   */
+  public function sizes(LayoutInterface $layout, int $available): array {
+    return $layout->arrange($available, $this->measured($layout));
+  }
+
+  /**
+   * The rows an arrangement comes to, and which one a block starts on.
+   *
+   * What {@see self::extent()} answers about one region, answered about every
+   * line of an arrangement at once - which is what an arrangement that moves as
+   * one surface has to be measured against.
+   *
+   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   *   The layout.
+   * @param \DrevOps\Tui\Block\BlockInterface|null $of
+   *   The block to locate, if one is being looked for.
+   *
+   * @return array{int,int}
+   *   The rows its lines come to, and the first row of the given block - or -1
+   *   when no region of it holds any such block.
+   */
+  public function reach(LayoutInterface $layout, ?BlockInterface $of = NULL): array {
+    $measured = [];
+    $rows = [];
+
+    // Measuring a region draws its blocks, so each is walked once and both
+    // answers are kept: what it comes to, for the arrangement to divide the
+    // axis by, and where the block sits in it.
+    foreach ($layout->names() as $name) {
+      [$measured[$name], $rows[$name]] = $this->extent($layout, $name, $of);
+    }
+
+    $sizes = $layout->arrange($layout->natural($measured), $measured);
+    $total = 0;
+    $row = -1;
+
+    foreach ($layout->lines() as $line) {
+      $held = 0;
+
+      foreach ($line as $name) {
+        if (($rows[$name] ?? -1) >= 0) {
+          $row = $total + $rows[$name];
+        }
+
+        $held = max($held, $sizes[$name] ?? 0);
+      }
+
+      $total += $held;
+    }
+
+    return [$total, $row];
+  }
+
+  /**
    * The rows a region's blocks come to, and which one a block starts on.
    *
    * The same walk a frame makes, counted rather than drawn: a region that
@@ -130,8 +193,7 @@ final class ScreenRenderer {
    * row is counted.
    *
    * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
-   *   The layout the region belongs to, which is what says how it deals what
-   *   it holds.
+   *   The layout the region belongs to.
    * @param string $name
    *   The region name.
    * @param \DrevOps\Tui\Block\BlockInterface|null $of
@@ -146,7 +208,7 @@ final class ScreenRenderer {
     $row = -1;
     $spaced = $this->spaced();
 
-    foreach ($this->pieces($layout, $layout->in($name)) as $piece) {
+    foreach ($this->pieces($layout->in($name)) as $piece) {
       // Every piece that draws at all costs a row, so anything past zero is a
       // piece with air owed above it.
       if ($spaced && $total > 0) {
@@ -168,13 +230,6 @@ final class ScreenRenderer {
   /**
    * What a region stacks, piece by piece.
    *
-   * A grid stacks as one piece however many windows it deals into it, which is
-   * exactly how it draws: windows sitting beside each other share the rows they
-   * are drawn on, so counting them one under another would say the region is
-   * several times as deep as anyone can see.
-   *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
-   *   The layout the region belongs to.
    * @param \DrevOps\Tui\Screen\Region $region
    *   The region.
    *
@@ -182,22 +237,10 @@ final class ScreenRenderer {
    *   Each piece: the rows it comes to, the blocks drawn in it, and the row
    *   each of those starts on within it.
    */
-  protected function pieces(LayoutInterface $layout, Region $region): array {
-    $shape = $layout->deal();
-    $tail = $this->stacked($region->tailBlocks());
-
-    if ($shape === []) {
-      return [...$this->stacked($region->headBlocks()), ...$tail];
-    }
-
-    [$panels, $above, $below] = $this->split($region->headBlocks());
-    $windows = $this->windowPiece($panels, $shape);
-
+  protected function pieces(Region $region): array {
     return [
-      ...$this->stacked($above),
-      ...($windows['height'] > 0 ? [$windows] : []),
-      ...$this->stacked($below),
-      ...$tail,
+      ...$this->stacked($region->headBlocks(), $region->isPreviewing()),
+      ...$this->stacked($region->tailBlocks(), $region->isPreviewing()),
     ];
   }
 
@@ -206,11 +249,13 @@ final class ScreenRenderer {
    *
    * @param list<\DrevOps\Tui\Block\BlockInterface> $blocks
    *   The blocks.
+   * @param bool $previews
+   *   Whether a panel among them shows what is behind it rather than a row.
    *
    * @return list<array{height:int,blocks:list<\DrevOps\Tui\Block\BlockInterface>,offsets:list<int>}>
    *   The pieces.
    */
-  protected function stacked(array $blocks): array {
+  protected function stacked(array $blocks, bool $previews = FALSE): array {
     $pieces = [];
 
     foreach ($blocks as $block) {
@@ -222,7 +267,7 @@ final class ScreenRenderer {
         continue;
       }
 
-      $rendered = $this->rendered([$block])[0] ?? NULL;
+      $rendered = $this->rendered([$block], $previews)[0] ?? NULL;
 
       if ($rendered === NULL) {
         continue;
@@ -239,115 +284,35 @@ final class ScreenRenderer {
   }
 
   /**
-   * The rows a layout's regions come to when nothing has sized them.
+   * The rows a layout comes to when nothing has sized it.
    *
    * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
    *   The layout.
    *
    * @return int
-   *   The rows: what its regions come to together down the axis, and what the
-   *   deepest of them comes to across it, where they share the rows instead.
+   *   The rows.
    */
   protected function height(LayoutInterface $layout): int {
-    $rows = 0;
+    return $layout->natural($this->measured($layout));
+  }
+
+  /**
+   * The rows each of a layout's regions comes to, keyed by name.
+   *
+   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   *   The layout.
+   *
+   * @return array<string,int>
+   *   The rows.
+   */
+  protected function measured(LayoutInterface $layout): array {
+    $measured = [];
 
     foreach ($layout->names() as $name) {
-      $region = $layout->in($name);
-      // A region declared a size takes it whatever it holds, which is the whole
-      // of what fixing a size means.
-      $held = $region->fixedSize() ?? $this->extent($layout, $name)[0];
-      $rows = $layout->axis() === Axis::Rows ? $rows + $held : max($rows, $held);
+      $measured[$name] = $this->extent($layout, $name)[0];
     }
 
-    return $rows;
-  }
-
-  /**
-   * The one piece a grid of windows stacks as.
-   *
-   * @param list<\DrevOps\Tui\Block\Panel> $panels
-   *   The panels, in the order they were placed.
-   * @param list<int> $grid
-   *   How many of them share each visual row.
-   *
-   * @return array{height:int,blocks:list<\DrevOps\Tui\Block\BlockInterface>,offsets:list<int>}
-   *   The rows the grid comes to, its windows, and the row each starts on.
-   */
-  protected function windowPiece(array $panels, array $grid): array {
-    $blocks = [];
-    $offsets = [];
-    $height = 0;
-    $taken = 0;
-
-    foreach ($grid as $count) {
-      // Every visual row after the first is told apart from the one above it,
-      // exactly as it is drawn.
-      if ($height > 0) {
-        $height++;
-      }
-
-      $tallest = 0;
-
-      foreach (array_slice($panels, $taken, $count) as $panel) {
-        $blocks[] = $panel;
-        $offsets[] = $height;
-        $tallest = max($tallest, substr_count($panel->preview($this->theme), "\n") + 1);
-        $taken += 1;
-      }
-
-      $height += $tallest;
-    }
-
-    return ['height' => $height, 'blocks' => $blocks, 'offsets' => $offsets];
-  }
-
-  /**
-   * Tell a region's windows apart from the rows around them.
-   *
-   * A window is a way into a panel, so which blocks a grid deals is the same
-   * question the recursion already asks - and the only one left here, now that
-   * how wide they are is the layout's.
-   *
-   * @param list<\DrevOps\Tui\Block\BlockInterface> $blocks
-   *   The blocks.
-   *
-   * @return array{list<\DrevOps\Tui\Block\Panel>,list<\DrevOps\Tui\Block\BlockInterface>,list<\DrevOps\Tui\Block\BlockInterface>}
-   *   The panels the grid deals, the rows above it, and the rows below it. A
-   *   row placed before the first window stays above the grid and one placed
-   *   after the last stays below it, so nothing moves past a row it was
-   *   written above.
-   */
-  protected function split(array $blocks): array {
-    $panels = [];
-    $above = [];
-    $below = [];
-    $seen = FALSE;
-
-    foreach ($blocks as $block) {
-      if ($block instanceof Panel) {
-        // A window is how a section draws where its siblings sit beside it, so
-        // one the answers took off the form is dealt none and the row it was
-        // in closes up. Where the rows around it go is decided by where it was
-        // written rather than by whether it is there.
-        $seen = TRUE;
-
-        if (!$block->isHidden()) {
-          $panels[] = $block;
-        }
-
-        continue;
-      }
-
-      if (!$seen) {
-        $above[] = $block;
-
-        continue;
-      }
-
-      $below[] = $block;
-    }
-
-    return [$panels, $above, $below];
+    return $measured;
   }
 
   /**
@@ -425,43 +390,183 @@ final class ScreenRenderer {
    *   The rows.
    */
   protected function lay(LayoutInterface $layout, int $rows, int $columns, bool $furnished = FALSE): array {
-    $names = $layout->names();
+    $lines = $layout->lines();
 
-    if ($names === []) {
+    if ($lines === []) {
       return [];
     }
 
-    $down = $layout->axis() === Axis::Rows;
-    $sizes = $layout->arrange($down ? $rows : $columns);
+    $window = $furnished ? NULL : $this->windowed($layout);
 
-    // A rows layout stacks its regions; a columns layout draws each into its
-    // own width and then pastes them side by side onto shared rows.
+    // A window is a way into a panel, so going in leaves behind what it was a
+    // window onto: the panel takes the whole arrangement rather than the cell
+    // it was previewed in.
+    if ($window instanceof Panel) {
+      return $this->lay($window->currentLayout(), $rows, $columns);
+    }
+
+    $down = $layout->axis() === Axis::Rows;
+    $measured = $this->measured($layout);
+    $moves = $down && $layout->isScrolling();
+
+    // An arrangement that moves as one is drawn whole and then moved against
+    // the space it has, exactly as a region is with the blocks it holds: every
+    // line takes the cells it comes to, and what is shown of the stack is a
+    // second question asked afterwards.
+    $sizes = $layout->arrange($moves ? max($rows, $layout->natural($measured)) : ($down ? $rows : $columns), $measured);
+
+    // A rows layout stacks its lines; a columns layout draws each region into
+    // its own width and then pastes them side by side onto shared rows.
     if ($down) {
       $out = [];
 
-      foreach ($sizes as $name => $size) {
-        foreach ($this->fill($layout, $layout->in($name), $size, $columns, $furnished) as $line) {
-          $out[] = $line;
+      foreach ($lines as $line) {
+        foreach ($this->abreast($layout, $this->present($line, $measured), $sizes, $columns, $furnished) as $drawn) {
+          $out[] = $drawn;
         }
       }
 
-      return $out;
+      return $moves ? $this->moved($layout, $out, $rows, $columns) : $out;
     }
 
     $columns_out = [];
 
     foreach ($sizes as $name => $size) {
-      $columns_out[] = $this->fill($layout, $layout->in($name), $rows, $size, $furnished);
+      $columns_out[] = $this->fill($layout->in($name), $rows, $size, $furnished);
     }
 
     return $this->paste($columns_out, $sizes, $rows);
   }
 
   /**
-   * Draw a region's blocks into the space it was given.
+   * The regions of a line that draw anything.
+   *
+   * A window the answers took off the form is not there at all, so the line it
+   * was on closes up around it: the windows left share the width between them,
+   * rather than one of them standing in an empty slot.
+   *
+   * @param list<string> $line
+   *   The regions drawn on the line.
+   * @param array<string,int> $measured
+   *   The rows each region's contents come to, keyed by name.
+   *
+   * @return list<string>
+   *   The regions still there. A line of one is not narrowed by this: it is
+   *   the whole line whether it draws anything or not.
+   */
+  protected function present(array $line, array $measured): array {
+    if (count($line) < 2) {
+      return $line;
+    }
+
+    return array_values(array_filter($line, static fn(string $name): bool => ($measured[$name] ?? 0) > 0));
+  }
+
+  /**
+   * Show the part of an arrangement its space has room for.
    *
    * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
-   *   The layout the region belongs to.
+   *   The arrangement, which is what holds the offset.
+   * @param list<string> $lines
+   *   Every row it drew.
+   * @param int $rows
+   *   The rows it was given.
+   * @param int $columns
+   *   The columns it was given.
+   *
+   * @return list<string>
+   *   The rows in sight, marked at whichever edges they outran.
+   */
+  protected function moved(LayoutInterface $layout, array $lines, int $rows, int $columns): array {
+    $content = count($lines);
+    $from = $layout->offset($content, $rows);
+    $shown = array_slice($lines, $from, max(0, $rows));
+
+    return $this->marked($shown, $columns, $from > 0, $from + $rows < $content);
+  }
+
+  /**
+   * Draw the regions sharing one line of the axis, side by side.
+   *
+   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   *   The layout, which is what says how much of the line each region takes.
+   * @param list<string> $names
+   *   The regions drawn on it.
+   * @param array<string,int> $sizes
+   *   The cells of the axis each region was given, keyed by name.
+   * @param int $columns
+   *   The columns across the line.
+   * @param bool $furnished
+   *   Whether the regions hold the furniture a session puts around a form.
+   *
+   * @return list<string>
+   *   The rows.
+   */
+  protected function abreast(LayoutInterface $layout, array $names, array $sizes, int $columns, bool $furnished): array {
+    if ($names === []) {
+      return [];
+    }
+
+    // A line is as deep as the deepest region on it, so which of them happens
+    // to be named first, and which the answers left there to be named, changes
+    // nothing about how far the line reaches.
+    $rows = max(0, ...array_map(static fn(string $name): int => $sizes[$name] ?? 0, $names));
+
+    if (count($names) === 1) {
+      return $this->fill($layout->in($names[0]), $rows, $columns, $furnished);
+    }
+
+    $width = $layout->share($columns, count($names), $this->chrome());
+    $cells = [];
+
+    foreach ($names as $name) {
+      $cells[] = $this->fill($layout->in($name), $rows, $width, $furnished);
+    }
+
+    $gutter = str_repeat(' ', max(0, $this->chrome()->chromeGutter()));
+    $lines = [];
+
+    for ($row = 0; $row < $rows; $row++) {
+      $parts = array_map(static fn(array $cell): string => $cell[$row] ?? '', $cells);
+
+      // The gutters can outgrow a tiny frame even at one-column cells, so the
+      // assembled row is clamped to the line as a whole.
+      $lines[] = Box::fit(implode($gutter, $parts), $columns);
+    }
+
+    return $lines;
+  }
+
+  /**
+   * The panel a window of an arrangement was gone into, if one was.
+   *
+   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   *   The layout.
+   *
+   * @return \DrevOps\Tui\Block\Panel|null
+   *   The panel, or NULL when no window of it has been gone into.
+   */
+  protected function windowed(LayoutInterface $layout): ?Panel {
+    foreach ($layout->names() as $name) {
+      $region = $layout->in($name);
+
+      if (!$region->isPreviewing()) {
+        continue;
+      }
+
+      $entered = $this->entered($region);
+
+      if ($entered instanceof Panel) {
+        return $entered;
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Draw a region's blocks into the space it was given.
+   *
    * @param \DrevOps\Tui\Screen\Region $region
    *   The region.
    * @param int $rows
@@ -474,8 +579,8 @@ final class ScreenRenderer {
    * @return list<string>
    *   Exactly $rows rows, padded or clipped to fit.
    */
-  protected function fill(LayoutInterface $layout, Region $region, int $rows, int $columns, bool $furnished = FALSE): array {
-    $lines = $this->arrange($layout, $region, $rows, $columns, $furnished);
+  protected function fill(Region $region, int $rows, int $columns, bool $furnished = FALSE): array {
+    $lines = $this->arrange($region, $rows, $columns, $furnished);
     $tail = $this->tailed($region);
 
     // Its contents are its own problem once it has a size: it scrolls if it was
@@ -522,8 +627,6 @@ final class ScreenRenderer {
    * session drew around the form rather than anything the form declared.
    * Coming back out draws every one of them again.
    *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
-   *   The layout the region belongs to.
    * @param \DrevOps\Tui\Screen\Region $region
    *   The region.
    * @param int $rows
@@ -536,26 +639,20 @@ final class ScreenRenderer {
    * @return list<string>
    *   The rows, before the region is sized to the space it has.
    */
-  protected function arrange(LayoutInterface $layout, Region $region, int $rows, int $columns, bool $furnished = FALSE): array {
+  protected function arrange(Region $region, int $rows, int $columns, bool $furnished = FALSE): array {
     $entered = $this->entered($region);
 
     if ($entered instanceof Panel) {
       return $furnished ? $this->within($region, $entered, $rows, $columns) : $this->lay($entered->currentLayout(), $rows, $columns);
     }
 
-    $head = $region->headBlocks();
-
-    if ($layout->deal() !== []) {
-      return $this->dealt($layout, $head, $columns);
-    }
-
-    $drawn = array_values($this->rendered($head));
+    $drawn = array_values($this->rendered($region->headBlocks(), $region->isPreviewing()));
 
     if ($region->flowAxis() !== Axis::Columns) {
       return $this->down($drawn);
     }
 
-    return $this->across($drawn, array_values($this->rendered($region->tailBlocks())), $columns);
+    return $this->across($drawn, array_values($this->rendered($region->tailBlocks(), $region->isPreviewing())), $columns);
   }
 
   /**
@@ -690,84 +787,6 @@ final class ScreenRenderer {
   }
 
   /**
-   * Stack a region's own rows, then deal its windows into visual rows.
-   *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
-   *   The layout, which is what says how many windows share a visual row and
-   *   how much of the region each of them takes.
-   * @param list<\DrevOps\Tui\Block\BlockInterface> $blocks
-   *   The blocks.
-   * @param int $columns
-   *   The columns the region was given.
-   *
-   * @return list<string>
-   *   The rows.
-   */
-  protected function dealt(LayoutInterface $layout, array $blocks, int $columns): array {
-    [$panels, $above, $below] = $this->split($blocks);
-    $windows = implode("\n", $this->windows($layout, $panels, $columns));
-
-    // The whole grid stacks as one more block, so what shows between it and
-    // the rows around it is the same air that shows between any two of them.
-    return $this->down([
-      ...array_values($this->rendered($above)),
-      ...($windows === '' ? [] : [$windows]),
-      ...array_values($this->rendered($below)),
-    ]);
-  }
-
-  /**
-   * Paste each visual row's windows side by side at the width they were given.
-   *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
-   *   The layout.
-   * @param list<\DrevOps\Tui\Block\Panel> $panels
-   *   The panels, in the order they were placed.
-   * @param int $columns
-   *   The columns the region was given.
-   *
-   * @return list<string>
-   *   The rows.
-   */
-  protected function windows(LayoutInterface $layout, array $panels, int $columns): array {
-    $lines = [];
-    $taken = 0;
-
-    foreach ($layout->deal() as $count) {
-      // Every visual row after the first is told apart from the one above it,
-      // whatever the theme says about the air between one block and the next.
-      if ($lines !== []) {
-        $lines[] = '';
-      }
-
-      $width = $layout->share($columns, $count);
-      $windows = [];
-      $height = 0;
-
-      foreach (array_slice($panels, $taken, $count) as $panel) {
-        $window = explode("\n", $panel->preview($this->theme));
-        $height = max($height, count($window));
-        $windows[] = $window;
-        $taken += 1;
-      }
-
-      for ($row = 0; $row < $height; $row++) {
-        $cells = [];
-
-        foreach ($windows as $window) {
-          $cells[] = Box::fit($window[$row] ?? '', $width);
-        }
-
-        // The gutters can outgrow a tiny frame even at one-column cells, so the
-        // assembled row is clamped to the region as a whole.
-        $lines[] = rtrim(Box::fit(implode(str_repeat(' ', self::GUTTER), $cells), $columns));
-      }
-    }
-
-    return $lines;
-  }
-
-  /**
    * What a region draws at the far end of its flow, once it runs down it.
    *
    * @param \DrevOps\Tui\Screen\Region $region
@@ -783,7 +802,7 @@ final class ScreenRenderer {
       return [];
     }
 
-    return $this->down(array_values($this->rendered($region->tailBlocks())));
+    return $this->down(array_values($this->rendered($region->tailBlocks(), $region->isPreviewing())));
   }
 
   /**
@@ -886,11 +905,13 @@ final class ScreenRenderer {
    *
    * @param list<\DrevOps\Tui\Block\BlockInterface> $blocks
    *   The blocks.
+   * @param bool $previews
+   *   Whether a panel among them shows what is behind it rather than a row.
    *
    * @return array<int,string>
    *   What each block that drew anything drew.
    */
-  protected function rendered(array $blocks): array {
+  protected function rendered(array $blocks, bool $previews = FALSE): array {
     $drawn = [];
 
     foreach ($blocks as $index => $block) {
@@ -900,7 +921,7 @@ final class ScreenRenderer {
         continue;
       }
 
-      $rendered = $block->render($this->theme);
+      $rendered = $previews && $block instanceof Panel ? $block->preview($this->theme) : $block->render($this->theme);
 
       // Nor is a block with nothing to say: what shows between one row and the
       // next is the flow's to decide, so a block that drew nothing must not

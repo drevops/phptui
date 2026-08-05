@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Testing;
 
-use DrevOps\Tui\Render\Terminal;
+use DrevOps\Tui\Terminal\Terminal;
 
 /**
  * A terminal that feeds scripted keystrokes and captures rendered output.

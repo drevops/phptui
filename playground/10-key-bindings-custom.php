@@ -15,6 +15,7 @@
 
 declare(strict_types=1);
 
+use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\CollectException;
@@ -23,7 +24,6 @@ use DrevOps\Tui\Input\Binding;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';

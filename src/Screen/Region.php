@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Screen;
 
 use DrevOps\Tui\Block\BlockInterface;
+use DrevOps\Tui\Screen\Capability\ScrollCapableInterface;
+use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
 
 /**
  * A named container inside a layout.
@@ -18,21 +20,25 @@ use DrevOps\Tui\Block\BlockInterface;
  * it was packed from.
  *
  * It declares a size without computing one: the arithmetic belongs to the
- * layout, which is the only thing that sees every sibling.
+ * layout, which is the only thing that sees every sibling. Even a region as
+ * deep as what it holds only says so - what it holds is counted where blocks
+ * are drawn, and the layout is handed the number.
  *
  * @package DrevOps\Tui\Screen
  */
-final class Region {
+final class Region implements ScrollCapableInterface {
+
+  use ScrollCapableTrait;
 
   /**
-   * The cells this region takes, or NULL when it takes a share instead.
+   * How it asks for its share of the axis.
    */
-  protected ?int $fixed = NULL;
+  protected Sizing $sizing = Sizing::Flex;
 
   /**
-   * The share of the remainder this region takes, or NULL when it is fixed.
+   * The cells it asked for, or the share it takes; nothing when it is measured.
    */
-  protected ?int $flex = 1;
+  protected int $size = 1;
 
   /**
    * The direction the blocks inside it run.
@@ -40,9 +46,9 @@ final class Region {
   protected Axis $flow = Axis::Rows;
 
   /**
-   * Whether its contents may outrun it.
+   * Whether a panel in it shows what is behind it rather than a row.
    */
-  protected bool $scrolls = FALSE;
+  protected bool $previews = FALSE;
 
   /**
    * The blocks packed from the start of its flow, in the order they were added.
@@ -57,11 +63,6 @@ final class Region {
    * @var list<\DrevOps\Tui\Block\BlockInterface>
    */
   protected array $tail = [];
-
-  /**
-   * The first row of its contents that is visible.
-   */
-  protected int $offset = 0;
 
   /**
    * Construct a region.
@@ -101,8 +102,8 @@ final class Region {
       throw new \InvalidArgumentException('A fixed size is a count of cells, so it cannot be 0.');
     }
 
-    $this->fixed = $cells;
-    $this->flex = NULL;
+    $this->sizing = Sizing::Fixed;
+    $this->size = $cells;
 
     return $this;
   }
@@ -124,30 +125,48 @@ final class Region {
       throw new \InvalidArgumentException('A flex share divides the remainder, so it cannot be 0.');
     }
 
-    $this->flex = $share;
-    $this->fixed = NULL;
+    $this->sizing = Sizing::Flex;
+    $this->size = $share;
 
     return $this;
   }
 
   /**
-   * The cells this region was declared to take.
+   * Take as much of the axis as what this region holds comes to.
    *
-   * @return int|null
-   *   The cells, or NULL when it takes a share instead.
+   * A window is as deep as the rows behind it, and neither a count of cells nor
+   * a share of the remainder can say that. What it comes to is measured where
+   * blocks are drawn and handed to the layout, so this stays a declaration like
+   * the other two rather than a measurement.
+   *
+   * @return $this
+   *   The region.
    */
-  public function fixedSize(): ?int {
-    return $this->fixed;
+  public function content(): self {
+    $this->sizing = Sizing::Content;
+    $this->size = 0;
+
+    return $this;
   }
 
   /**
-   * The share of the remainder this region was declared to take.
+   * How this region asks for its share of the axis.
    *
-   * @return int|null
-   *   The share, or NULL when it takes a fixed size instead.
+   * @return \DrevOps\Tui\Screen\Sizing
+   *   The kind.
    */
-  public function flexShare(): ?int {
-    return $this->flex;
+  public function sizing(): Sizing {
+    return $this->sizing;
+  }
+
+  /**
+   * The cells this region asked for, or the share it takes.
+   *
+   * @return int
+   *   The number, which is nothing at all when it is measured instead.
+   */
+  public function size(): int {
+    return $this->size;
   }
 
   /**
@@ -176,25 +195,30 @@ final class Region {
   }
 
   /**
-   * Let this region's contents outrun it.
+   * Show a panel in this region as a window onto it rather than as a row.
+   *
+   * A row has one line to say what is behind a panel and a window has the depth
+   * to show it, so which of the two a panel draws is a question about the space
+   * rather than about the panel. Only the arrangement knows which the space is,
+   * which is why it is declared here and not on the block.
    *
    * @return $this
    *   The region.
    */
-  public function scrolls(): self {
-    $this->scrolls = TRUE;
+  public function previews(): self {
+    $this->previews = TRUE;
 
     return $this;
   }
 
   /**
-   * Whether this region's contents may outrun it.
+   * Whether a panel in this region shows what is behind it rather than a row.
    *
    * @return bool
-   *   TRUE when they may.
+   *   TRUE when it does.
    */
-  public function isScrolling(): bool {
-    return $this->scrolls;
+  public function isPreviewing(): bool {
+    return $this->previews;
   }
 
   /**
@@ -285,37 +309,10 @@ final class Region {
   }
 
   /**
-   * Move the window onto this region's contents.
-   *
-   * @param int $row
-   *   The first row of the contents to show.
-   *
-   * @return $this
-   *   The region.
+   * {@inheritdoc}
    */
-  public function scrollTo(int $row): self {
-    if (!$this->scrolls) {
-      throw new \LogicException(sprintf('Region "%s" does not scroll, so it cannot be scrolled to row %d.', $this->name, $row));
-    }
-
-    $this->offset = max(0, $row);
-
-    return $this;
-  }
-
-  /**
-   * The first row of this region's contents that is visible.
-   *
-   * @param int $content
-   *   The rows its contents come to.
-   * @param int $visible
-   *   The rows it was given.
-   *
-   * @return int
-   *   The offset, never far enough to scroll the contents off their own end.
-   */
-  public function offset(int $content, int $visible): int {
-    return min($this->offset, max(0, $content - $visible));
+  protected function surface(): string {
+    return sprintf('Region "%s"', $this->name);
   }
 
 }

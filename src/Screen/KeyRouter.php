@@ -524,32 +524,41 @@ final class KeyRouter {
   protected function windowRows(): array {
     // Read off the arrangement rather than off the panel, because how what a
     // panel holds sits on screen is the layout's to say and the panel nests one
-    // precisely so it never has to know.
-    $grid = $this->panel->currentLayout()->deal();
+    // precisely so it never has to know. A window is a region there, so which
+    // of them sit beside each other is the shape of its lines.
+    $layout = $this->panel->currentLayout();
+    $numbered = [];
+    $index = 0;
 
-    if ($grid === []) {
-      return [];
-    }
+    foreach ($this->held() as $name => $blocks) {
+      $numbered[$name] = [];
 
-    $windows = [];
-
-    foreach ($this->focusable() as $index => $block) {
-      if ($block instanceof Panel) {
-        $windows[] = $index;
+      foreach ($blocks as $block) {
+        $numbered[$name][] = $index;
+        $index++;
       }
     }
 
     $rows = [];
-    $taken = 0;
 
-    foreach ($grid as $count) {
-      $row = array_slice($windows, $taken, $count);
+    foreach ($layout->lines() as $line) {
+      $row = [];
+
+      foreach ($line as $name) {
+        // A region drawing rows is walked a step at a time like any other, so
+        // only the ones showing what is behind them are windows.
+        if (!$layout->in($name)->isPreviewing()) {
+          continue;
+        }
+
+        foreach ($numbered[$name] ?? [] as $place) {
+          $row[] = $place;
+        }
+      }
 
       if ($row !== []) {
         $rows[] = $row;
       }
-
-      $taken += $count;
     }
 
     return $rows;
@@ -606,8 +615,29 @@ final class KeyRouter {
   protected function focusable(): array {
     $blocks = [];
 
-    foreach ($this->panel->currentLayout()->names() as $name) {
-      foreach ($this->panel->currentLayout()->in($name)->blocks() as $block) {
+    foreach ($this->held() as $held) {
+      foreach ($held as $block) {
+        $blocks[] = $block;
+      }
+    }
+
+    return [...$blocks, ...($this->furniture[spl_object_id($this->panel)] ?? [])];
+  }
+
+  /**
+   * The blocks the cursor can land on, region by region.
+   *
+   * @return array<string,list<\DrevOps\Tui\Block\Capability\FocusCapableInterface>>
+   *   The blocks, keyed by the region they are drawn in, in declaration order.
+   */
+  protected function held(): array {
+    $layout = $this->panel->currentLayout();
+    $held = [];
+
+    foreach ($layout->names() as $name) {
+      $held[$name] = [];
+
+      foreach ($layout->in($name)->blocks() as $block) {
         // A row the answers took off the screen is not somewhere the cursor can
         // be, because it is not anywhere.
         if ($block instanceof DependCapableInterface && $block->isHidden()) {
@@ -617,12 +647,12 @@ final class KeyRouter {
         // A block that does not claim the cursor is skipped rather than landed
         // on, which is what lets markup sit between two fields.
         if ($block instanceof FocusCapableInterface) {
-          $blocks[] = $block;
+          $held[$name][] = $block;
         }
       }
     }
 
-    return [...$blocks, ...($this->furniture[spl_object_id($this->panel)] ?? [])];
+    return $held;
   }
 
 }

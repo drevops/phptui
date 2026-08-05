@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field;
 
+use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\Block\Template as TemplateModel;
+use DrevOps\Tui\Field\Capability\TextEditCapableInterface;
+use DrevOps\Tui\Field\Capability\TextEditCapableTrait;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Template as TemplateModel;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
-use DrevOps\Tui\Field\Capability\TextEditCapableInterface;
-use DrevOps\Tui\Field\Capability\TextEditCapableTrait;
 
 /**
  * Fills the named slots of a fixed shape, one slot at a time.
@@ -52,7 +52,7 @@ class Template extends AbstractField implements TextEditCapableInterface {
   /**
    * Construct a template field.
    *
-   * @param \DrevOps\Tui\Model\Template $template
+   * @param \DrevOps\Tui\Block\Template $template
    *   The shape to fill in.
    * @param string $default
    *   The initial assembled value; a value that does not have the shape leaves

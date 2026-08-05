@@ -12,7 +12,7 @@ use DrevOps\Tui\Block\Element\LegendElementsInterface;
 use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Block\Element\PanelElementsInterface;
 use DrevOps\Tui\Block\Element\ProgressElementsInterface;
-use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\KeyName;
 
 /**
  * The floor a theme starts from: every element, drawn with nothing at all.
@@ -65,11 +65,11 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
   /**
    * {@inheritdoc}
    */
-  public function keyGlyph(Key $key): string {
+  public function keyGlyph(KeyName|string $key): string {
     // Its name, because a name is what the floor has: an arrow is outside ASCII
     // and a shorthand is a vocabulary a theme with a terminal behind it can
     // afford to teach.
-    return $key->label();
+    return $key instanceof KeyName ? $key->name : $key;
   }
 
   /**
@@ -84,6 +84,16 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
    */
   public function chromeOverflowMarker(bool $above): string {
     return $above ? '^' : 'v';
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * One column, which is the least that keeps two things apart: the floor draws
+   * no decoration, but two windows run against each other read as one.
+   */
+  public function chromeGutter(): int {
+    return 1;
   }
 
   /**

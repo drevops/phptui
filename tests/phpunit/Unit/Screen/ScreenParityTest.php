@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Screen;
 
 use DrevOps\Tui\Answers\Provenance;
+use DrevOps\Tui\Block\Buttons;
 use DrevOps\Tui\Block\Capability\DependCapableTrait;
 use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Block\Markup;
+use DrevOps\Tui\Block\NumberBounds;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Prose;
+use DrevOps\Tui\Block\Template;
+use DrevOps\Tui\Builder\Fixup;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
@@ -19,20 +24,15 @@ use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Model\Buttons;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Fixup;
-use DrevOps\Tui\Model\NumberBounds;
-use DrevOps\Tui\Model\Template;
-use DrevOps\Tui\Render\ExternalEditor;
-use DrevOps\Tui\Render\Terminal;
 use DrevOps\Tui\Screen\Collector;
+use DrevOps\Tui\Screen\ExternalEditor;
 use DrevOps\Tui\Screen\KeyRouter;
 use DrevOps\Tui\Screen\Layout\GridLayout;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
 use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Screen\ScreenRenderer;
+use DrevOps\Tui\Terminal\Terminal;
 use DrevOps\Tui\Testing\ScreenTester;
 use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\Tui\Theme\DosTheme;
@@ -815,6 +815,97 @@ final class ScreenParityTest extends TestCase {
     $this->assertStringContainsString('←/→', $tester->frame());
   }
 
+  public function testGridTooTallForItsSpaceMovesEveryLineTogether(): void {
+    $panel = $this->dealt(
+      [1, 1, 1],
+      $this->nested('one', 'One', (new Field('a', 'A'))->default('1'), (new Field('b', 'B'))->default('2')),
+      $this->nested('two', 'Two', (new Field('c', 'C'))->default('3'), (new Field('d', 'D'))->default('4')),
+      $this->nested('three', 'Three', (new Field('e', 'E'))->default('5'), (new Field('f', 'F'))->default('6')),
+    );
+
+    $tester = $this->tester($panel)->rows(12)->cols(50);
+    $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Down));
+
+    // Nothing is lost where a grid outruns its space, because no window can
+    // move its siblings and the arrangement can: the mark says there is more
+    // below, and moving onto the window past the edge brings it into sight by
+    // moving every line at once. The mark then says there is more above too.
+    $this->assertStringNotContainsString('Three', $tester->frame(0));
+    $this->assertStringContainsString('▼', $tester->frame(0));
+    $this->assertStringNotContainsString('▲', $tester->frame(0));
+
+    $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
+    $this->assertContains('  A  1                                           ▲', $rows);
+    $this->assertContains('❯ Three ›                                        ▼', $rows);
+  }
+
+  public function testWindowTheAnswersTookAwayClosesItsRowUp(): void {
+    $fruit = $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple'));
+    $panel = $this->dealt(
+      [3],
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(FALSE),
+      $fruit->when(new Condition('organic', eq: TRUE)),
+      $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot')),
+      $this->nested('herbs', 'Herbs', (new Field('herbs', 'Herbs'))->default('Basil')),
+    );
+
+    $tester = $this->tester($panel)->cols(60);
+    $tester->run(Key::named(KeyName::Enter), Key::char('y'), Key::named(KeyName::Enter));
+
+    $rows = array_map(rtrim(...), explode("\n", $tester->frame(0)));
+
+    // A section the answers took away is not there at all, so the row it was
+    // in closes up: the windows left move over and share the width between
+    // them rather than one of them standing in an empty slot.
+    $this->assertContains('  Vegetables ›                   Herbs ›', $rows);
+    $this->assertStringNotContainsString('Fruit', $tester->frame(0));
+
+    // The moment it is there again it takes its place back, and the row it is
+    // in is three windows wide.
+    $this->assertContains('  Fruit ›             Vegetables ›        Herbs ›', array_map(rtrim(...), explode("\n", $tester->frame())));
+  }
+
+  public function testCursorNeverLandsOnWindowTheAnswersTookAway(): void {
+    $veg = $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot'));
+    $panel = $this->dealt(
+      [3],
+      (new Field('organic', 'Organic only?', FieldType::Confirm))->default(FALSE),
+      $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple')),
+      $veg->when(new Condition('organic', eq: TRUE)),
+      $this->nested('herbs', 'Herbs', (new Field('herbs', 'Herbs'))->default('Basil')),
+    );
+
+    $tester = $this->tester($panel)->cols(60);
+    $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Right));
+
+    $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
+
+    // Moving across walks the windows that are there: the one the answers took
+    // away is not a place the cursor can be, so the step past it lands on the
+    // window beyond it rather than on nothing at all.
+    $this->assertContains('  Fruit ›                      ❯ Herbs ›', $rows);
+  }
+
+  public function testGoingIntoWindowLeavesTheGridItWasWindowOnto(): void {
+    $panel = $this->dealt(
+      [2],
+      $this->nested('fruit', 'Fruit', (new Field('fruit', 'Fruit'))->default('Apple')),
+      $this->nested('veg', 'Vegetables', (new Field('veg', 'Vegetables'))->default('Carrot')),
+    );
+
+    $tester = $this->tester($panel)->cols(60);
+    $tester->run(Key::named(KeyName::Enter));
+
+    $rows = array_values(array_filter(array_map(rtrim(...), explode("\n", $tester->frame()))));
+
+    // A window is a way in, so going in replaces what it was a window onto:
+    // the panel takes the whole frame rather than the cell it was drawn in,
+    // and the window beside it goes with the grid.
+    $this->assertSame('Delivery › Fruit', $rows[0]);
+    $this->assertStringContainsString('Fruit  Apple', $rows[1]);
+    $this->assertStringNotContainsString('Vegetables', $tester->frame());
+  }
+
   public function testRowPackedFromTheEndOfFlowIsStillOneYouLandOn(): void {
     $panel = $this->panel((new Field('courier', 'Courier'))->default('Valley Runs'));
     $panel->in('content')->tail((new Field('weight', 'Basket weight'))->default('1200'));
@@ -1089,9 +1180,28 @@ final class ScreenParityTest extends TestCase {
 
   /**
    * The panel a screen starts in, arranged as a grid of windows.
+   *
+   * A window is a region, so each panel goes in the one that names it and
+   * everything else stays in the region the panel's own rows are drawn in.
    */
   protected function dealt(array $shape, object ...$blocks): Panel {
-    return $this->arranged(new GridLayout(...$shape), 'main', 'Delivery', ...$blocks);
+    $layout = new GridLayout(...$shape);
+    $panel = (new Panel('main', 'Delivery'))->layout($layout);
+    $windows = 0;
+
+    foreach ($blocks as $block) {
+      /** @var \DrevOps\Tui\Block\BlockInterface $block */
+      $region = $windows === 0 ? $layout->leading() : $layout->trailing();
+
+      if ($block instanceof Panel) {
+        $region = $layout->windows()[$windows];
+        $windows++;
+      }
+
+      $panel->in($region)->add($block);
+    }
+
+    return $panel;
   }
 
   /**

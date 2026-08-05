@@ -6,11 +6,12 @@ namespace DrevOps\Tui\Tests\Unit\Theme;
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
+use DrevOps\Tui\Theme\ThemeInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -49,7 +50,7 @@ final class ScaleRenderTest extends TestCase {
   public function testScaleCarriesTheThemeAccent(): void {
     // Ember's highlight is bold orange (1;38;5;208); the scale inherits it with
     // no per-theme override, so the accent flows through highlight().
-    $theme = $this->builtin('ember', DefaultTheme::DEFAULT_WIDTH, ['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
+    $theme = $this->builtin('ember', ThemeInterface::DEFAULT_WIDTH, ['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
 
     $this->assertStringContainsString("\033[1;38;5;208m", $theme->fieldScale(2, 1, 5, ''));
   }
@@ -92,7 +93,7 @@ final class ScaleRenderTest extends TestCase {
 
     $points = substr_count($line, '●') + substr_count($line, '○');
     $this->assertGreaterThan(0, $points);
-    $this->assertLessThanOrEqual(DefaultTheme::DEFAULT_WIDTH, $points);
+    $this->assertLessThanOrEqual(ThemeInterface::DEFAULT_WIDTH, $points);
   }
 
   public function testCollapsedRowDrawsTheScale(): void {

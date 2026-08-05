@@ -7,15 +7,15 @@ namespace DrevOps\Tui\Tests\Unit\Screen;
 use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\CollectException;
+use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
+use DrevOps\Tui\Block\NumberBounds;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
+use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\NumberBounds;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\Layout\AbstractLayout;
@@ -283,10 +283,10 @@ final class CollectorTest extends TestCase {
         $this->region('content')->flex(1);
       }
 
-      public function arrange(int $available): array {
+      public function arrange(int $available, array $measured = []): array {
         $this->arranged++;
 
-        return parent::arrange($available);
+        return parent::arrange($available, $measured);
       }
 
     };

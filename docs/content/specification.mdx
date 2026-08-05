@@ -47,7 +47,7 @@ The four levels are what the model is made of. What you actually build with are 
 | Level  | Kinds                                                       | Instances, on the screen below                      |
 | ------ | ----------------------------------------------------------- | --------------------------------------------------- |
 | Screen | one                                                         | the screen                                          |
-| Layout | `default`, `grid`, `panel`, `two-column`                    | the screen's `default`                              |
+| Layout | `default`, `panel`, `two-column`, and the shaped grid       | the screen's `default`                              |
 | Region | none - a layout names its own                               | `header`, `content`, `footer`                       |
 | Block  | Panel, Field, Markup, Breadcrumb, Legend, Actions, Progress | one Breadcrumb, one Panel, three Fields, one Legend |
 
@@ -86,7 +86,7 @@ Seventeen capabilities cover everything on screen, each described as what you ca
 |            | Activate | Arrange | Bind | Capture | Collect | Constrain | Depend | Descend | Flow | Focus | Nest | Occupy | Overlay | Reject | Reuse | Scroll | Show |
 | ---------- | -------- | ------- | ---- | ------- | ------- | --------- | ------ | ------- | ---- | ----- | ---- | ------ | ------- | ------ | ----- | ------ | ---- |
 | Screen     |          |         |      |         |         |           |        |         |      |       | ✓    | ✓      |         |        |       |        |      |
-| Layout     |          | ✓       |      |         |         |           |        |         | ✓    |       | ✓    |        |         |        | ✓     |        |      |
+| Layout     |          | ✓       |      |         |         |           |        |         | ✓    |       | ✓    |        |         |        | ✓     | ✓      |      |
 | Region     |          |         |      |         |         |           |        |         | ✓    |       | ✓    |        |         |        |       | ✓      |      |
 | Panel      |          |         | ✓    |         |         |           | ✓      | ✓       |      | ✓     | ✓    |        | ✓       |        |       |        | ✓    |
 | Field      |          |         | ✓    | ✓       | ✓       | ✓         | ✓      |         |      | ✓     |      |        |         | ✓      |       |        | ✓    |
@@ -106,7 +106,7 @@ Eight readings of that table are worth stating outright, because they're the one
 
 **Arrange is Flow plus sizing.** Both a _layout_ and a _region_ run what is inside them in one direction, so both claim _Flow_. Only the layout also apportions space between them, which is _Arrange_, and only the layout claims that. A _panel_ arranges nothing at all - it _nests_ a layout and the layout arranges, which is what lets one layout serve a panel and a screen without either knowing about the other.
 
-**Scroll belongs to the region.** A layout is composed of region instances, and each declares whether it scrolls - so one layout can pin a column and scroll its neighbor, and two rows can scroll independently. The layout is only where the declaration is made, since that is where regions come into being.
+**Scroll is claimed twice.** A region scrolls the blocks it holds, so one layout can pin a column and scroll its neighbor, and two rows can scroll independently. An arrangement scrolls the lines it stacks, all of them together, which no region of it could do for the others. One capability, two things that can be a surface - and neither does the other's job.
 
 **Occupy belongs to the screen.** Whether the frame takes the whole terminal or shrinks to its contents is a property of the root, not of any layout inside it - so a layout behaves the same either way.
 
@@ -138,7 +138,7 @@ _Occupy_ sits here rather than on a layout because it's a fact about the termina
 
 ### Layout
 
-A **layout** is composed of _region_ instances and decides where they sit. It claims _Arrange_, _Flow_, _Nest_ and _Reuse_.
+A **layout** is composed of _region_ instances and decides where they sit. It claims _Arrange_, _Flow_, _Nest_ and _Reuse_ - and _Scroll_, where its lines move together as one surface.
 
 Every layout is a class extending `AbstractLayout`, which carries the sizing arithmetic. A subclass declares its **axis** - whether its regions run top to bottom or left to right - and names them:
 
@@ -165,7 +165,7 @@ $layout = new DefaultLayout();
 $layout->in('header')->add(new Breadcrumb());
 ```
 
-Sizes and scrolling are stated where the regions are declared, because that's where regions come into being. The _region_ still owns _Scroll_; the layout is only where it's written down.
+Sizes and scrolling are stated where the regions are declared, because that's where regions come into being. A _region_ owns _Scroll_ over the blocks it holds; a layout owns it over the lines it stacks, and declares it on itself.
 
 A layout draws nothing itself - neither it nor a _region_ claims _Show_. And a layout with no regions renders nothing at all, because there is nowhere for a block to go.
 
@@ -251,11 +251,12 @@ $this->region('bottom')->flex(1)->scrolls();
 
 #### Sizing a region
 
-A region takes its share of the axis one of two ways, and both axes work the same:
+A region takes its share of the axis one of three ways, and both axes work the same:
 
 ```php
 $this->region('header')->fixed(1);    // exactly one row (or column)
 $this->region('content')->flex(1);   // a share of whatever is left
+$this->region('window-1')->content(); // as much as what it holds comes to
 ```
 
 **`fixed` is cells**, and rows are why it exists. A header is one line whatever the terminal height, and no proportion can say that - 4% of a 24-row terminal is one row, of a 50-row terminal is two. Columns rarely need it; rows almost always do at their edges.
@@ -283,6 +284,8 @@ $this->region('bottom')->flex(30)->scrolls();
 ╰─────────────────────────╯
 ```
 
+**`content` is what it holds.** A window is as deep as the rows behind it, and neither a count of cells nor a share of the remainder can say that. It stays a declaration rather than a measurement: what the region holds is counted where blocks are drawn and handed to the layout as a number, so the region states a kind and the layout still does every line of the arithmetic. The three are one closed set, so they are an enum - `Sizing::Fixed`, `Sizing::Flex`, `Sizing::Content` - and `->sizing()` answers with it.
+
 Declaring neither is `flex(1)`, which is why the default layout can leave its middle region bare:
 
 ```php
@@ -293,7 +296,7 @@ $this->region('content')->scrolls();
 $this->region('footer')->fixed(1);
 ```
 
-The two mix without negotiating: fixed regions are subtracted first, then what remains is divided by the flex values. A header stays one row however tall the terminal, and the flexible regions share the rest between them.
+The three mix without negotiating: the sized regions are subtracted first - the fixed ones and the ones measured by what they hold alike - then what remains is divided by the flex values. A header stays one row however tall the terminal, and the flexible regions share the rest between them.
 
 #### Who calculates what
 
@@ -303,9 +306,15 @@ Sizing and scrolling are two calculations, and each can only be done by one leve
 
 **The region scrolls.** Given the one number the layout hands it, everything else is its own: how tall its blocks are, where its viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved, which is why _Scroll_ is the region's.
 
+**An arrangement can scroll too**, and for the same reason it sizes: moving every line together is beyond any one region, because none of them sees its siblings. So _Scroll_ is claimed by a region over the blocks it holds, and by an arrangement over the lines it stacks - one capability, two things that can be a surface. `two-column` is a surface neither way and `default` only the first, through its `content` region; a [grid](#a-grid-of-windows) is the one shipped arrangement that is a surface itself.
+
+**The renderer measures.** A region sized by what it holds still can't size itself, because what it holds is only known where blocks are drawn. So the renderer counts each region's contents and hands the layout a map of name to cells; the layout divides the axis by those numbers. That way a layout that apportions by content still never learns that blocks exist - it is told numbers keyed by its own regions, which is the same kind of thing `arrange()` already deals in.
+
 ```
+Renderer ──▸  each Region's contents are counted
 Layout   ──▸  each Region is given a size
 Region   ──▸  offset, visible rows, overflow markers
+Layout   ──▸  the same, over every line at once, where it is one surface
 ```
 
 Character cells don't divide evenly, so the layout rounds: it takes the fixed sizes off, divides the remainder by the flex values, and hands any leftover cell to the last flexible region. A region never sees that arithmetic - it's told a number and gets on with it.
@@ -337,38 +346,49 @@ This is why the axis needs no third value. Any arrangement is rows of columns of
 
 #### Shipped layouts
 
-_Reuse_ means a layout is named and reusable, so the same one serves a _screen_ and a _panel_. Four ship, and a form picks one by name rather than describing an arrangement inline:
+_Reuse_ means a layout is named and reusable, so the same one serves a _screen_ and a _panel_. Three ship, and a form picks one by name rather than describing an arrangement inline:
 
 | Name         | Axis    | Regions                                                     |
 | ------------ | ------- | ----------------------------------------------------------- |
 | `default`    | rows    | `header` (fixed 1), `content` (scrolls), `footer` (fixed 1) |
-| `grid`       | rows    | `content` (scrolls)                                         |
 | `panel`      | rows    | `content` (scrolls)                                         |
 | `two-column` | columns | `left`, `right`                                             |
 
-Two axes and one degenerate case is enough: `default`, `grid` and `panel` run down, `two-column` runs across, and anything else is those nested, or a layout you write yourself. `panel` is what a panel is arranged by when it names none.
+Two axes and one degenerate case is enough: `default` and `panel` run down, `two-column` runs across, and anything else is those nested, a grid, or a layout you write yourself. `panel` is what a panel is arranged by when it names none.
 
 #### A grid of windows
 
-`grid` is the one shipped layout constructed with an argument, because what it arranges is a shape rather than a set of names:
+A **grid** is the one arrangement built from a shape rather than picked by a name:
 
 ```php
 // One window on the first visual row, two sharing the second.
 $panel->layout(new GridLayout(1, 2));
 ```
 
-The _panels_ in its one region are dealt into those visual rows, each drawn as a **window** - a column previewing what is behind it rather than a row summarizing it. Everything else in the region keeps its place: a block written above the first window stays above the grid, one written below the last stays below it.
+Each of its windows is a _region_ of its own, so `GridLayout(1, 2)` declares five: `above`, then `window-1`, `window-2` and `window-3` numbered in reading order - across the first visual row, then across the second - and last `below`. A _panel_ reaches a window by naming that region, exactly as any block reaches any other, and is drawn there as a **window** - a column showing what is behind it rather than a row summarizing it. That is the region's declaration, not the panel's: a row has one line to say what is behind a panel and a window has the depth to show it, so which of the two the space is can only be answered by the arrangement.
 
-It declares one region rather than one per window, and that split is the useful part:
+`above` and `below` are where the panel's own rows go, and which of the two a row is in is the whole of where it sits: a row written before the first window is in `above` and draws over the grid, one written after the last is in `below` and draws under it, and declaration order holds either side. The builder places them without being told - the region a block reaches by naming none is `above` until the first window is declared and `below` from then on - so `$p->text(...)` before a sub-panel and `$p->markup(...)` after it end up where they read.
 
-|                      | Answered by                                                    |
-| -------------------- | -------------------------------------------------------------- |
-| how tall a window is | what it holds - so the whole grid scrolls as one _region_ does |
-| how wide a window is | the _layout_, because its neighbors come off the width first   |
+Both of the questions a window raises are the layout's, which is the whole of what a grid adds over `panel`:
 
-A window sized by its own contents and scrolling with its siblings is a block in a region. A window whose width can only be worked out once every window in its row has been counted is _Arrange_, and _Arrange_ is the layout's - which is the whole of what `GridLayout` adds over `panel`.
+|                      | Answered by                                                                            |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| how deep a window is | what it holds, which is a size a region states and the layout apportions               |
+| how wide a window is | the _layout_, because the windows it shares a visual row with come off the width first |
 
-Moving through one is spatial: <kbd>←</kbd> and <kbd>→</kbd> walk a visual row, <kbd>↑</kbd> and <kbd>↓</kbd> move between rows and out to the blocks above and below the grid. The _legend_ advertises all four only where a grid is arranged, because it reads that off the layout too.
+The width is where the theme comes in: the air between two things drawn side by side is a styling decision, so the layout asks the theme for the gutter before dividing the width, and the renderer asks the same theme when it joins what the windows drew. One fact, read in both places, so they cannot disagree.
+
+**A grid _Scrolls_ as one surface**, which is the third thing only the layout can do. A grid too tall for its space has to move every line together, and no window can move its siblings any more than it can size them - so the arrangement holds the offset, and the same rule that keeps a region honest applies to it: it is drawn whole, the part in sight is what its space has room for, and the overflow mark says which edge the rest is past. Nothing is trimmed away silently, which no region does anywhere either.
+
+The driver moves it exactly as it moves a region, because both are the same kind of thing - a surface with contents that may outrun it. Following the cursor works on the arrangement rather than on one region of it: the row the focused window starts on is counted across every line, so stepping onto a window past the edge brings its whole line into sight.
+
+Moving through one is spatial: <kbd>←</kbd> and <kbd>→</kbd> walk a visual row, <kbd>↑</kbd> and <kbd>↓</kbd> move between rows and out to the blocks above and below the grid. The _legend_ advertises all four only where windows actually sit beside each other, because it reads that off the layout's lines too.
+
+A window is a whole _section_, so it comes and goes with the answers exactly as one row does - and a section that is not there leaves no space where it stood. **The visual row closes up**: the windows still there share the width between them, the cursor steps straight past the gone one, and the row is back at its old width the moment the answer brings it back.
+
+Going into a window leaves the grid behind: the panel takes the whole arrangement rather than the cell it was previewed in, exactly as going into any panel replaces what was drawn where it stood.
+
+**No name reaches a grid**, and that is what keeps a grid a grid. Two grids of different shapes are different arrangements and a name carries no shape, so `'grid'` is not among the names a form can pick, the class is refused by name too, and a grid with no visual row at all is refused where it is constructed. It is built where the shape is written: `new GridLayout(1, 2)`, or the builder's `->layout(1, 2)` that says the same thing shorter.
 
 ```php
 (new Tui($form))->layout('two-column')->run();
@@ -439,6 +459,8 @@ LayoutManager::create('sidebar');             // registered
 LayoutManager::create(SidebarLayout::class);  // the class, unregistered
 ```
 
+All three hand over a name and nothing else, so a layout any of them can build is one that asks for nothing else either. That is the whole reason a [grid](#a-grid-of-windows) is reached by none of them: its shape is what it arranges, and no name says which shape. A layout whose constructor takes an argument is left out of the shipped names and refused by the other two routes, naming the class rather than failing at the first frame.
+
 Most subclasses only declare regions, and inherit every line of the arithmetic. Overriding that arithmetic is the other reason to subclass - a layout that packs regions to fit, or gives the focused one extra room - and it is the same door `AbstractLayout` already holds open.
 
 ### Region
@@ -458,12 +480,15 @@ $this->region('sidebar')
 | ----------------------- | --------------------------------------------------------- |
 | `->fixed(24)`           | 24 cells of the axis, whatever the terminal size          |
 | `->flex(2)`             | twice the share of the remainder that `flex(1)` gets      |
+| `->content()`           | as much of the axis as what it holds comes to             |
 | `->flow(Axis::Columns)` | its blocks run across it rather than down                 |
 | `->scrolls()`           | its contents may outrun it, and you can move through them |
+| `->previews()`          | a panel in it draws as a window onto it, not as a row     |
 | `->add($block)`         | a block goes in it, packed from the start of the flow     |
+| `->prepend($block)`     | a block goes in it, before everything already there       |
 | `->tail($block)`        | a block goes in it, packed from the end of the flow       |
 
-`fixed()` and `flex()` are the odd pair out: they _declare_ a size but don't compute one, because _Arrange_ is the layout's. The region states what it wants and the layout does the arithmetic.
+`fixed()`, `flex()` and `content()` are the odd trio out: they _declare_ a size but don't compute one, because _Arrange_ is the layout's. The region states what it wants and the layout does the arithmetic - even for `content()`, where the number comes from the renderer counting what the region holds.
 
 The name is the whole point of a region: it's how a block says where it goes, so nothing depends on the order things were declared in.
 
@@ -483,9 +508,9 @@ $layout->in('content')
 
 The _panel_ in the middle of that is a block like any other. It takes the rows its own layout comes to, and never more than the blocks placed beside it leave - which is the room it scrolls inside when it holds more. So the buttons sit under the panel's last row wherever that falls, and stay there while the rows scroll under them. Going _into_ a nested panel is the one thing that changes: the descent replaces what is drawn there, and the blocks beside it go with the rows they stood beside.
 
-_Scroll_ is per region instance rather than per layout, which is why a two-column layout can pin one column while its neighbor scrolls, and why two rows can scroll independently of each other. The region owns it; the layout is only where it's declared, since that's where regions come into being.
+_Scroll_ is per surface rather than per layout class, which is why a two-column layout can pin one column while its neighbor scrolls, and why two rows can scroll independently of each other. Each region instance declares whether it scrolls - and so does the arrangement itself, where its lines have to move together.
 
-The region also _does_ the scrolling. Its layout hands it one number - the size it was given - and everything after that is the region's own work: how tall its blocks add up to, where the viewport sits, whether an overflow marker is due, and how the cursor or the wheel moves it. No sibling is involved in any of that, which is what makes _Scroll_ the region's capability rather than the layout's.
+A surface holds where it has been moved to, within the one number it was given. What it holds is measured and marked where things are drawn, and moved by whatever is driving the screen - but the offset is the surface's own, over its blocks where it is a region and over its lines where it is an arrangement. No sibling is involved either way, which is what makes _Scroll_ the surface's own capability rather than something apportioned to it.
 
 A region knows only that it holds blocks. It never knows which kinds - which is why the three calls above are indistinguishable to it, and why a _breadcrumb_ can go wherever a _field_ can.
 
@@ -765,6 +790,8 @@ interface LegendElementsInterface {
  └────────────── legendKey()
 ```
 
+**A legend is written from the bindings, never by hand.** It's handed the map a key press resolves against and the fragments naming what those keys do, and reads the glyphs back out of it - so a rebound key changes the line advertising it, and a fragment nothing reaches is dropped rather than drawn as a label with no key in front of it. A key written down twice, once where it's bound and once where it's advertised, is a key that drifts.
+
 Both follow the same shape, and so does every other block: an element per distinct thing it styles, prefixed with the block's name so a theme can implement every interface on one class without collisions.
 
 #### Actions
@@ -889,11 +916,11 @@ final class Breadcrumb extends AbstractBlock {
 }
 ```
 
-`ThemeInterface` itself carries only the two things no block could own - the width they all lay out against, and how the theme writes a key - so the block narrows it to its own elements interface before drawing. That narrowing is the whole reason the core stays thin: a theme grows by implementing more element interfaces, not by growing `ThemeInterface`.
+`ThemeInterface` itself carries only the two things no block could own - the width they all lay out against, and how the theme writes a key - so the block narrows it to its own elements interface before drawing. That narrowing is the whole reason the core stays thin: a theme grows by implementing more element interfaces, not by growing `ThemeInterface`. The one other thing it carries is a number rather than a method: `DEFAULT_WIDTH`, the width a theme lays out to when no terminal has been measured, which belongs to the contract because everything that builds a theme without a terminal in front of it needs the same answer.
 
 An **element** takes a plain string and returns a styled one. It knows nothing about what surrounds it, which is what lets the same element draw a separator inside a form and inside a standalone line of output.
 
-Where that line falls is worth stating outright, because it's the rule that keeps elements reusable. **An element takes plain scalars and nothing else** - strings, integers, booleans - so nothing handed to one can carry a field, a panel or an answer set in behind it. The theme-wide methods on `ThemeInterface` are the one place that widens, and only because they belong to no block: `keyGlyph()` takes a `Key`, an input value object, because writing a key is vocabulary rather than styling and the key press is the thing being written. A value object describing input is fair game there. Form state isn't, anywhere.
+Where that line falls is worth stating outright, because it's the rule that keeps elements reusable. **A theme takes plain scalars and enums and nothing else** - strings, integers, booleans, and the enum case for anything one-of-a-fixed-set - so nothing handed to it can carry a field, a panel or an answer set in behind it. The rule holds for the theme-wide methods on `ThemeInterface` exactly as it holds for an element: `keyGlyph()` takes a `KeyName` or the character a typed key writes, never the `Key` the input layer carries a press around in. A closed set travels as its enum; a value object stays where it was built.
 
 That's the whole division of labor. **Order, spacing and how many elements there are belong to the block; color and glyph belong to the theme.** A theme can repaint a breadcrumb but can't reorder one, because reordering isn't styling.
 
@@ -905,7 +932,7 @@ Eight ship, one per block plus one for the frame that belongs to no block:
 
 | Interface                     | Draws                                                                |
 | ----------------------------- | -------------------------------------------------------------------- |
-| `ChromeElementsInterface`     | the border, the region's overflow mark, and the conditional gutter   |
+| `ChromeElementsInterface`     | the border, the region's overflow mark, and the two gutters          |
 | `BreadcrumbElementsInterface` | the trail's segments and what stands between them                    |
 | `LegendElementsInterface`     | a key, what it does, and what stands between two entries             |
 | `PanelElementsInterface`      | a nested panel's row: selector, title, descend mark, summary         |
@@ -914,7 +941,7 @@ Eight ship, one per block plus one for the frame that belongs to no block:
 | `ActionsElementsInterface`    | the buttons, the gap between them, and the reason one is withheld    |
 | `ProgressElementsInterface`   | the caption, the spinner frame, the bar's track and its tally        |
 
-`ChromeElementsInterface` is the one named for something other than a block, and for a reason worth stating: what it draws belongs to none of them. The frame surrounds every region at once and the overflow mark says a region's contents outran it - neither is anything a block could ask for, since a block only ever fills the space it is given and never learns where that space ends, so both belong to whatever draws the screen. The gutter a conditional block steps in behind is the other kind: every block that can come and go draws the same one, so a chain of a row, a passage of markup and a row steps in together rather than one kind at a time.
+`ChromeElementsInterface` is the one named for something other than a block, and for a reason worth stating: what it draws belongs to none of them. The frame surrounds every region at once and the overflow mark says a region's contents outran it - neither is anything a block could ask for, since a block only ever fills the space it is given and never learns where that space ends, so both belong to whatever draws the screen. The gutter a conditional block steps in behind is the other kind: every block that can come and go draws the same one, so a chain of a row, a passage of markup and a row steps in together rather than one kind at a time. The air between two things drawn side by side is that kind too, and two levels spend it - an arrangement takes it off the width before dividing what is left, and the renderer leaves it when it joins what they drew - so both read the one answer rather than each keeping its own.
 
 A field that windows a long list to a page marks its own overflow with `fieldOverflowMarker()` rather than borrowing the chrome's. The two say different things - one that a list the field owns ran past its page, the other that a region ran past the space the layout gave it - so each belongs to whoever draws it. The shipped theme answers both alike, so a reader still learns one mark; a theme that wants them told apart says so once in each.
 
@@ -958,9 +985,11 @@ Color and the background are one declaration rather than two, because the two qu
 
 Two of the six carry a **trait** with the plumbing, so a theme states a flag and inherits the rest. `ColorSchemeCapableTrait` brings `paint()` and `emphasize()`, and `UnicodeCapableTrait` brings `glyph()` - which is why the palette above reads as color choices rather than as escape-sequence handling. The other four are small enough to answer directly.
 
-`AbstractTheme` is the floor. It implements all eight of the elements interfaces above and declares no capability at all, so it may not paint and may not reach past ASCII: what is left is the strings it was handed and the stand-ins that read without them. That is why a form renders in a terminal that supports nothing, and why a theme adds what its terminal can do rather than working around what it cannot.
+`AbstractTheme` is the floor. It implements all eight of the elements interfaces above and declares no capability at all, so it may not paint and may not reach past ASCII: what is left is the strings it was handed and the stand-ins that read without them. That is why a form renders in a terminal that supports nothing, and why a theme adds what its terminal can do rather than working around what it cannot. It's also the list: what a theme has to draw is read off the floor rather than written down a second time, so adding a block changes what a theme owes by changing the one class that already owes it.
 
 `DefaultTheme` is that floor with all six declared, and it's the class a theme extends when it wants a palette rather than a blank page. It isn't a requirement. `ThemeManager` builds anything implementing `ThemeInterface` from a frame width and an options array - the constructor `AbstractTheme` carries - so `->theme(OrchardTheme::class)` reaches a theme built straight on the floor exactly as it reaches one built on `DefaultTheme`, whether it's named by class, registered under a short name or shipped. What the floor doesn't declare, the driver does without: no edge is drawn around it, no air shows between its rows, nothing recedes behind a dialog, and an element patch goes nowhere. The [primitives](/output) are the one thing it can't do at all, because a card, a grid and a status line are composed rather than styled: they want `PrimitiveElementsInterface`, and a theme without it is named rather than drawn blank.
+
+**A theme is checked where it's picked.** Naming one - `->theme(OrchardTheme::class)`, or registering it under a short name - is where it's asked for the whole of the floor: that it can be built from a width and an options array, and that it answers for every element a form is drawn from. A class that can't is refused there by name, so a theme that would go blank on the third row never gets as far as the first. The per-block check stays as the backstop for the other way in, where a theme instance is handed straight to a block or a screen with no manager between them - that one is a type error naming the block and the interface, and it's what a test that draws one block through a theme of its own runs into.
 
 What a theme keeps behind its elements is its own business. `DefaultTheme` writes each hue down once in a small set of protected voices - `accent()`, `value()`, `guidance()` - so a subclass repaints a whole family in a line. Those voices aren't API: nothing outside the class may name one, and no driver, block or test may reach for one. **The element is the whole of the contract**, and the palette behind it is an implementation detail a subclass may lean on and everything else can only see through the element that draws from it.
 
@@ -1012,9 +1041,9 @@ That one rule explains a behavior that otherwise looks like a special case. An o
 
 _Focus_ decides which block is innermost. It moves with <kbd>↑</kbd> and <kbd>↓</kbd> between the blocks that claim it, skipping the ones that don't - so a _markup_ block sits between two _fields_ without ever being landed on. <kbd>←</kbd> and <kbd>→</kbd> move across, which matters where sub-panels are dealt into a grid: what is beside a window is a neighbor rather than the next row, and stepping off the grid lands on the row beside it rather than under whichever window the cursor happened to be on.
 
-Four kinds of key never reach the router, and all four for the same reason - none of them acts on a block. Pressing a button ends the form or closes the dialog it belongs to; activating work runs it against the terminal a step at a time; leaving is about the session rather than about anything in it; and the wheel moves the _region_ the cursor is in, which is not a block at all. `ScreenController` holds those, because a panel knows about none of them and a block never learns where it is drawn.
+Four kinds of key never reach the router, and all four for the same reason - none of them acts on a block. Pressing a button ends the form or closes the dialog it belongs to; activating work runs it against the terminal a step at a time; leaving is about the session rather than about anything in it; and the wheel moves the surface the cursor is on - a _region_, or the whole arrangement where that is what scrolls - which is not a block at all. `ScreenController` holds those, because a panel knows about none of them and a block never learns where it is drawn.
 
-The wheel is the clearest of the four. It moves the viewport by a row and leaves the cursor exactly where it was, so a reader can look ahead without answering anything - and the moment they press a key that could move the cursor, the rule that keeps the cursor in sight wins the viewport back. A region that was not declared to _Scroll_ ignores it, because there is nothing to move through.
+The wheel is the clearest of the four. It moves the viewport by a row and leaves the cursor exactly where it was, so a reader can look ahead without answering anything - and the moment they press a key that could move the cursor, the rule that keeps the cursor in sight wins the viewport back. A surface that was not declared to _Scroll_ ignores it, because there is nothing to move through.
 
 Drawing runs the other way, outward from the root:
 
@@ -1114,7 +1143,7 @@ When something doesn't fit, don't argue about where it goes. Name the capability
 | Who works out how tall `content` is?                | _Arrange_  | _layout_      | The _layout_. Only it sees the fixed siblings that come off first.           |
 | Can two _blocks_ sit side by side?                  | _Flow_     | _region_      | Yes, and without nesting a _layout_.                                         |
 | Can a whole section come and go?                    | _Depend_   | the _block_   | Yes. A _panel_ claims it, and carries what it holds.                         |
-| Who deals sub-panels into a grid of windows?        | _Arrange_  | _layout_      | The _layout_ - `grid`. Only it can size a window against the row it sits in. |
+| Who deals sub-panels into a grid of windows?        | _Arrange_  | _layout_      | The _layout_ - a grid. Only it can size a window against the row it sits in. |
 | Can a _legend_ sit left and a version string right? | _Flow_     | _region_      | Yes. Both ends of one flow, on either axis.                                  |
 
 Every one of them turns on the same test: **which level can see what the job needs?** A region can't size itself, because its siblings' fixed cells come off the top before the remainder is divided. Nor can a window, because the windows beside it come off the width first - which is why a grid is a layout rather than something a panel carries. A layout can't furnish itself and stay reusable, because it would have to know what a breadcrumb is - it can only say which of its regions the trail belongs in, and that is arrangement.
@@ -1127,19 +1156,19 @@ It's also what makes an element reusable. Because `breadcrumbSeparator()` receiv
 
 Every level, every capability and every element on this page is implemented and tested. These are the classes behind them:
 
-| Level        | Class                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Screen       | `Screen`, and `ScreenRenderer` to draw one                                                                                                                                                                                                                                                                                                                                                                         |
-| Layout       | `LayoutInterface`, `AbstractLayout`, `DefaultLayout`, `GridLayout`, `PanelLayout`, `TwoColumnLayout`, `LayoutManager`, and the `Furniture` roles a layout answers for                                                                                                                                                                                                                                              |
-| Region       | `Region`                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Block        | `BlockInterface`, `AbstractBlock`, and `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions`, `Progress`                                                                                                                                                                                                                                                                                                   |
-| Capabilities | one interface per block capability - `ActivateCapableInterface`, `BindCapableInterface`, `CaptureCapableInterface`, `CollectCapableInterface`, `ConstrainCapableInterface`, `DependCapableInterface`, `DescendCapableInterface`, `FocusCapableInterface`, `OverlayCapableInterface`, `RejectCapableInterface` - with `BindCapableTrait`, `DependCapableTrait` and `FocusCapableTrait` carrying the shared behavior |
-| Elements     | one `*ElementsInterface` per block, plus `ChromeElementsInterface`, all implemented by `AbstractTheme`                                                                                                                                                                                                                                                                                                             |
-| Theme        | `ThemeInterface` (two methods), `AbstractTheme` as the floor, `DefaultTheme` above it, the six `*CapableInterface` declarations with `ColorSchemeCapableTrait` and `UnicodeCapableTrait`, and `ThemeManager` to name any of them                                                                                                                                                                                   |
-| Overriding   | `ThemeBuilder`, the `BreadcrumbOverrides` / `LegendOverrides` / `FieldOverrides` groups, and the `ThemeElement` set they write into                                                                                                                                                                                                                                                                                |
-| Behavior     | `KeyRouter` for keys, `ScreenController` for the session, `Collector` for the headless path                                                                                                                                                                                                                                                                                                                        |
-| Building     | `Form`, `PanelBuilder`, `FieldBuilder`, `Assembler`                                                                                                                                                                                                                                                                                                                                                                |
-| Testing      | `ScreenTester` for a screen, `TuiTester` for a whole form, `FieldRunner` for one field                                                                                                                                                                                                                                                                                                                             |
+| Level        | Class                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Screen       | `Screen`, and `ScreenRenderer` to draw one                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Layout       | `LayoutInterface`, `AbstractLayout`, `DefaultLayout`, `GridLayout`, `PanelLayout`, `TwoColumnLayout`, `LayoutManager`, and the `Furniture` roles a layout answers for                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Region       | `Region`, and the `Sizing` kinds it states                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Block        | `BlockInterface`, `AbstractBlock`, and `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions`, `Progress`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Capabilities | one interface per block capability - `ActivateCapableInterface`, `BindCapableInterface`, `CaptureCapableInterface`, `CollectCapableInterface`, `ConstrainCapableInterface`, `DependCapableInterface`, `DescendCapableInterface`, `FocusCapableInterface`, `OverlayCapableInterface`, `RejectCapableInterface` - with `BindCapableTrait`, `DependCapableTrait` and `FocusCapableTrait` carrying the shared behavior, and beside them `ScrollCapableInterface` with `ScrollCapableTrait`, the one capability claimed outside the block level: by a `Region` over its blocks, and by a `LayoutInterface` over its lines |
+| Elements     | one `*ElementsInterface` per block, plus `ChromeElementsInterface`, all implemented by `AbstractTheme`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Theme        | `ThemeInterface` (two methods and the width to lay out to when nothing else says), `AbstractTheme` as the floor, `DefaultTheme` above it, the six `*CapableInterface` declarations with `ColorSchemeCapableTrait` and `UnicodeCapableTrait`, and `ThemeManager` to name any of them and refuse one that cannot draw                                                                                                                                                                                                                                                                                                  |
+| Overriding   | `ThemeBuilder`, the `BreadcrumbOverrides` / `LegendOverrides` / `FieldOverrides` groups, and the `ThemeElement` set they write into                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Behavior     | `KeyRouter` for keys, `ScreenController` for the session, `Collector` for the headless path                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Building     | `Form`, `PanelBuilder`, `FieldBuilder`, `Assembler`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Testing      | `ScreenTester` for a screen, `TuiTester` for a whole form, `FieldRunner` for one field                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 Two endings are worth naming beside them, because they are what a caller sees when a collection does not finish: `CollectException` when the answers cannot be taken as they were given, and `CancelException` when the form is abandoned through its cancel button.
 

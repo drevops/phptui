@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Theme\Capability;
 
-use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\Sgr;
 
 /**

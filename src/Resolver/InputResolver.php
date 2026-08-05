@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Resolver;
 
 use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Translation\Translator;
 
 /**

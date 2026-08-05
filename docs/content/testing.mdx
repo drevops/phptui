@@ -91,7 +91,7 @@ Everything a session is built from can be set on it, which is what makes it the 
 | `externalEditor(...)`     | what hands a passage of text to an editor of the reader's own        |
 | `rows(int)` / `cols(int)` | the reported terminal size                                           |
 
-`theme()` takes a `ThemeInterface` instance rather than a name, so a theme built for one test - an anonymous class overriding a single element, say - goes straight in with no registration and no construction contract to satisfy. A theme that is a real class is better named on the facade, floor or not; see [Themes](/themes#what-a-theme-is-allowed-to-do).
+`theme()` takes a `ThemeInterface` instance rather than a name, so a theme built for one test - an anonymous class overriding a single element, say - goes straight in with no registration, no construction contract to satisfy and no check that it can draw the whole form. That's the point: a test that drives one block through a theme answering for one element wants exactly that, and a block it can't draw says so by name when it's asked to. A theme that is a real class is better named on the facade, floor or not; see [Themes](/themes#what-a-theme-is-allowed-to-do).
 
 ## One field
 

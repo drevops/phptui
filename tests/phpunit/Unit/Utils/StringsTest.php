@@ -118,14 +118,6 @@ final class StringsTest extends TestCase {
     yield 'emoji words' => ['🍎 🍐 🍒', 3, ['🍎 🍐', '🍒']];
   }
 
-  public function testMalformedInputFallsBackToBytes(): void {
-    Strings::useMbstring(FALSE);
-
-    $this->assertSame(["\xC3", '('], Strings::split("\xC3("));
-    $this->assertSame(2, Strings::length("\xC3("));
-    $this->assertSame("\xC3", Strings::substr("\xC3(", 0, 1));
-  }
-
   public function testDetectsMbstring(): void {
     Strings::useMbstring(NULL);
 

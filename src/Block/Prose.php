@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Block;
 
 use DrevOps\Tui\Block\Element\MarkupElementsInterface;
-use DrevOps\Tui\Render\Markup as Parser;
-use DrevOps\Tui\Render\MarkupKind;
-use DrevOps\Tui\Render\MarkupSegment;
+use DrevOps\Tui\Terminal\Markup as Parser;
+use DrevOps\Tui\Terminal\MarkupKind;
+use DrevOps\Tui\Terminal\MarkupSegment;
 use DrevOps\Tui\Theme\Capability\MarkdownCapableInterface;
 
 /**
@@ -62,7 +62,7 @@ final class Prose {
   /**
    * Draw one span with the element that owns it.
    *
-   * @param \DrevOps\Tui\Render\MarkupSegment $segment
+   * @param \DrevOps\Tui\Terminal\MarkupSegment $segment
    *   The span.
    * @param \DrevOps\Tui\Block\Element\MarkupElementsInterface $theme
    *   The theme.

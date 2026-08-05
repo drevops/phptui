@@ -1,6 +1,7 @@
 @startuml
 ' drevops/tui - component architecture.
-' Packages mirror the src/ subdirectories; arrows show the main dependencies.
+' Packages group the src/ classes by what they do; arrows show the main
+' dependencies.
 ' Regenerate every SVG with:  plantuml -tsvg docs/architecture/*.puml
 !theme plain
 skinparam backgroundColor white
@@ -37,7 +38,9 @@ package "Arranging" #FFEBEE {
   [GridLayout]
   [LayoutManager]
   [Region]
+  [Sizing]
   [Furniture]
+  interface ScrollCapableInterface
 }
 
 package "Driving" #FFF3E0 {
@@ -46,7 +49,14 @@ package "Driving" #FFF3E0 {
   [ScreenRenderer]
   [Assembler]
   [KeyMap]
+}
+
+package "Terminal - the text machinery" #ECEFF1 {
   [Terminal]
+  [Ansi]
+  [Box]
+  [Table]
+  [Terminal\\Markup]
 }
 
 package "Collecting" #E8F5E9 {
@@ -100,6 +110,9 @@ BlockInterface --> [Block\\Element]
 [GridLayout] --> [AbstractLayout]
 [LayoutManager] --> LayoutInterface
 [Region] --> BlockInterface
+[Region] --> [Sizing]
+[Region] --> ScrollCapableInterface
+LayoutInterface --> ScrollCapableInterface
 
 [Tui] --> [Collector]
 [Tui] --> [ScreenController]
@@ -119,6 +132,8 @@ BlockInterface --> [Block\\Element]
 [ScreenRenderer] --> [Screen]
 [ScreenRenderer] --> LayoutInterface
 [ScreenRenderer] --> ThemeInterface
+[ScreenRenderer] --> [Ansi]
+[ScreenRenderer] --> [Box]
 
 [Collector] --> [Tree]
 [Collector] --> [Discovery]
@@ -135,6 +150,10 @@ BlockInterface --> [Block\\Element]
 [AbstractTheme] --> ThemeInterface
 [AbstractTheme] --> [Block\\Element]
 [DefaultTheme] --> [AbstractTheme]
+[DefaultTheme] --> [Ansi]
+[DefaultTheme] --> [Box]
+[DefaultTheme] --> [Table]
+[DefaultTheme] --> [Terminal\\Markup]
 [DefaultTheme] --> [Theme\\Capability]
 [Theme\\Capability] --> [Theme\\Override]
 [ThemeManager] --> ThemeInterface

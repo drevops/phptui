@@ -13,7 +13,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   <ThemedImage sources={{light: useBaseUrl('/field-toggle-light-animated.svg'), dark: useBaseUrl('/field-toggle-dark-animated.svg')}} alt="Toggle field" />
 </p>
 
-An inline switch that cycles between a fixed set of labeled values. It collects the **selected option value** (a `string`). It's always in one of its states, so it always returns a value.
+An inline switch that flips between exactly two labeled values. It collects the **selected option value** (a `string`). It's always in one of its two states, so it always returns a value.
 
 ```php
 $p->toggle('ripeness', 'Ripeness')
@@ -28,19 +28,19 @@ Runnable script: [`playground/02-fields-toggle.php`](https://github.com/drevops/
 
 ## Options
 
-| Name        | Description                                              | Required | Default      |
-| ----------- | -------------------------------------------------------- | -------- | ------------ |
-| `options()` | The values to switch between, as a `value => label` map. | Yes      | -            |
-| `default()` | Which value starts selected.                             | No       | First option |
+| Name        | Description                                                                                 | Required | Default      |
+| ----------- | ------------------------------------------------------------------------------------------- | -------- | ------------ |
+| `options()` | The two values to switch between, as a `value => label` map. A third is a build-time error. | Yes      | -            |
+| `default()` | Which value starts selected; a literal that is neither of the two is a build-time error.    | No       | First option |
 
 ## Keyboard
 
-| Key                                                                          | Action                                             |
-| ---------------------------------------------------------------------------- | -------------------------------------------------- |
-| <kbd>←</kbd> / <kbd>→</kbd> / <kbd>Space</kbd> / <kbd>↑</kbd> / <kbd>↓</kbd> | Cycle to the adjacent value                        |
-| a letter                                                                     | Jump to the first value whose label starts with it |
-| <kbd>Enter</kbd>                                                             | Accept the current value                           |
-| <kbd>Esc</kbd>                                                               | Cancel                                             |
+| Key                                                                          | Action                                       |
+| ---------------------------------------------------------------------------- | -------------------------------------------- |
+| <kbd>←</kbd> / <kbd>→</kbd> / <kbd>Space</kbd> / <kbd>↑</kbd> / <kbd>↓</kbd> | Flip to the other value                      |
+| a letter                                                                     | Jump to the value whose label starts with it |
+| <kbd>Enter</kbd>                                                             | Accept the current value                     |
+| <kbd>Esc</kbd>                                                               | Cancel                                       |
 
 ## Display modes
 

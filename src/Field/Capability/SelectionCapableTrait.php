@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field\Capability;
 
+use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\Block\Option;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -46,7 +46,7 @@ trait SelectionCapableTrait {
   /**
    * The field type this field binds its keys under.
    *
-   * @return \DrevOps\Tui\Model\FieldType
+   * @return \DrevOps\Tui\Block\FieldType
    *   The choice field type.
    */
   abstract protected function choiceType(): FieldType;
@@ -65,7 +65,7 @@ trait SelectionCapableTrait {
   /**
    * Seed the option rows and the cursor, and the selection set when multiple.
    *
-   * @param array<int|string,\DrevOps\Tui\Model\Option|string> $options
+   * @param array<int|string,\DrevOps\Tui\Block\Option|string> $options
    *   Option rows in display order - a list of options or the value => label
    *   shorthand map.
    * @param string|list<string> $default
@@ -307,7 +307,7 @@ trait SelectionCapableTrait {
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Model\Option $option
+   * @param \DrevOps\Tui\Block\Option $option
    *   The option row.
    * @param bool $current
    *   Whether the row holds the cursor.

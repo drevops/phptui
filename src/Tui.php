@@ -15,7 +15,6 @@ use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
 use DrevOps\Tui\Primitive\Output;
 use DrevOps\Tui\Primitive\Progress;
-use DrevOps\Tui\Render\Terminal;
 use DrevOps\Tui\Resolver\InputResolver;
 use DrevOps\Tui\Schema\AgentHelp;
 use DrevOps\Tui\Schema\SchemaGenerator;
@@ -23,10 +22,10 @@ use DrevOps\Tui\Schema\SchemaValidator;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\Layout\LayoutManager;
 use DrevOps\Tui\Screen\ScreenController;
+use DrevOps\Tui\Terminal\Terminal;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
 use DrevOps\Tui\Theme\Capability\OverrideCapableInterface;
-use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\Override\Overrides;
 use DrevOps\Tui\Theme\ThemeBuilder;
@@ -463,7 +462,7 @@ final class Tui {
    * @param callable(\DrevOps\Tui\Primitive\Progress): TReturn $work
    *   The work to run; it receives the progress primitive and its result is
    *   returned.
-   * @param \DrevOps\Tui\Render\Terminal|null $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal|null $terminal
    *   The terminal to draw on (defaults to a real one on standard error).
    *
    * @return TReturn
@@ -477,7 +476,7 @@ final class Tui {
 
     $terminal ??= self::primitiveTerminal();
 
-    $theme = $this->buildTheme('', DefaultTheme::DEFAULT_WIDTH, $this->primitiveThemeOptions());
+    $theme = $this->buildTheme('', ThemeInterface::DEFAULT_WIDTH, $this->primitiveThemeOptions());
 
     return (new Progress($terminal, self::pieces($theme), $terminal->isOutputTty(), $total, $caption))->run($work);
   }
@@ -492,7 +491,7 @@ final class Tui {
    * interactive terminal the colour is dropped unless it was forced, so a
    * captured log holds clean text.
    *
-   * @param \DrevOps\Tui\Render\Terminal|null $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal|null $terminal
    *   The terminal to write to (defaults to a real one on standard error).
    *
    * @return \DrevOps\Tui\Primitive\Output
@@ -552,7 +551,7 @@ final class Tui {
    * @param bool $update
    *   Whether discovery pre-fills the panels from an existing project, with the
    *   detected values carrying their `detected` provenance badge.
-   * @param \DrevOps\Tui\Render\Terminal|null $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal|null $terminal
    *   The terminal to drive (defaults to a real one).
    *
    * @return \DrevOps\Tui\Answers\Answers
@@ -610,7 +609,7 @@ final class Tui {
    *   Public for the {@see \DrevOps\Tui\Testing\TuiTester} harness; consumers
    *   collect through run(), collect() or interact().
    */
-  public function controller(array $options, string $theme = '', string $banner = '', string $version = '', string $directory = '', int $width = DefaultTheme::DEFAULT_WIDTH, bool $update = FALSE): ScreenController {
+  public function controller(array $options, string $theme = '', string $banner = '', string $version = '', string $directory = '', int $width = ThemeInterface::DEFAULT_WIDTH, bool $update = FALSE): ScreenController {
     // Restore this facade's language before rendering (see collect()).
     Translator::setShared($this->translator);
 
@@ -658,7 +657,7 @@ final class Tui {
       return $terminal_width;
     }
 
-    return $terminal_width > 0 ? min(DefaultTheme::DEFAULT_WIDTH, $terminal_width) : DefaultTheme::DEFAULT_WIDTH;
+    return $terminal_width > 0 ? min(ThemeInterface::DEFAULT_WIDTH, $terminal_width) : ThemeInterface::DEFAULT_WIDTH;
   }
 
   /**
@@ -757,7 +756,7 @@ final class Tui {
    * follows the background only when colour is on - with colour off the palette
    * is invisible, so the background query is skipped.
    *
-   * @param \DrevOps\Tui\Render\Terminal $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal $terminal
    *   The terminal queried for its background during detection.
    *
    * @return array<string,mixed>
@@ -815,7 +814,7 @@ final class Tui {
    * A primitive is chrome, not data, so it stays off standard output where a
    * consumer's own results are written.
    *
-   * @return \DrevOps\Tui\Render\Terminal
+   * @return \DrevOps\Tui\Terminal\Terminal
    *   The terminal.
    */
   protected static function primitiveTerminal(): Terminal {

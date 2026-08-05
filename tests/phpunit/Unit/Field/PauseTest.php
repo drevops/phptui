@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Field;
 
+use DrevOps\Tui\Field\AbstractField;
+use DrevOps\Tui\Field\Pause;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Testing\ArrayKeyStream;
 use DrevOps\Tui\Testing\FieldRunner;
 use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Field\AbstractField;
-use DrevOps\Tui\Field\Pause;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;

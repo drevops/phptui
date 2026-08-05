@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field;
 
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\Block\Option;
 use DrevOps\Tui\Field\Capability\CompletionCapableInterface;
 use DrevOps\Tui\Field\Capability\CompletionCapableTrait;
 use DrevOps\Tui\Field\Capability\PagingCapableInterface;
@@ -22,6 +16,12 @@ use DrevOps\Tui\Field\Capability\QueryOptionsCapableInterface;
 use DrevOps\Tui\Field\Capability\QueryOptionsCapableTrait;
 use DrevOps\Tui\Field\Capability\SearchCapableInterface;
 use DrevOps\Tui\Field\Capability\TextEditCapableInterface;
+use DrevOps\Tui\Input\Action;
+use DrevOps\Tui\Input\Hint;
+use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\Scope;
+use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\Tui\Utils\Strings;
 
 /**
  * An autocomplete text input fuzzy-filtering a fixed option set.

@@ -23,7 +23,7 @@ The engine doesn't know (or care) what application it serves. It stays generic: 
 - 🧭 [**Full-screen TUI**](/panels) - a scrollable, keyboard-driven form: fields group into panels you go into to any depth (or that open as modal dialogs), with a contextual key-hint footer and <kbd>?</kbd> opening a field's own long-form help
 - ⚡ [**Inline editing**](/panels#inline-editing) - a field's editor opens in place on the panel row; opt a field out to full-screen with `->standalone()`
 - 🧩 [**Fields**](/fields) - fifteen kinds: `calendar`, `confirm`, `filepicker`, `number`, `password`, `pause`, `rating`, `reorder`, `search`, `select`, `suggest`, `template`, `text`, `textarea`, `toggle` - plus [markup](/markup) and progress blocks, which collect nothing
-- 🧭 [**Layouts**](/layouts) - arrange a screen or a panel into named regions with their own sizes, flow and scrolling; four ship, and a layout class of your own is picked by name beside them
+- 🧭 [**Layouts**](/layouts) - arrange a screen or a panel into named regions with their own sizes, flow and scrolling; three ship by name - plus the grid, which ships without one because a name carries no shape - and a layout class of your own is picked by name beside them
 - 🏗️ [**Builder-driven**](/configuration) - the form is declared in PHP with a fluent builder; the common cases need no code
 - 🎛️ [**Interactive or unattended**](/headless-collection) - answer the form by keyboard, or supply the answers up front as a JSON payload and environment variables so it runs without prompting
 - 🤖 [**AI agents**](/ai-agents) - the form describes itself: `agentHelp()` returns a JSON Schema of the answers and `schema()` the full question metadata - fold them into your tool's help and an agent can answer the form unattended

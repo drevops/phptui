@@ -40,7 +40,7 @@ trait FilterCapableTrait {
    * @param string $needle
    *   The query.
    *
-   * @return list<\DrevOps\Tui\Model\Option>
+   * @return list<\DrevOps\Tui\Block\Option>
    *   The matching option rows.
    */
   abstract protected function filterOptions(string $needle): array;
@@ -89,7 +89,7 @@ trait FilterCapableTrait {
    * already the answer to the query, so filtering them again locally would drop
    * the ones whose labels do not literally match it.
    *
-   * @return list<\DrevOps\Tui\Model\Option>
+   * @return list<\DrevOps\Tui\Block\Option>
    *   The visible rows.
    */
   public function visible(): array {

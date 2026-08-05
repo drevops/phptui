@@ -148,7 +148,11 @@ $bare = (new Tui($form))->theme('default', ['border' => 'none', 'spacing' => 'no
 
 A panel's sub-panels list vertically by default; `->layout()` given **numbers** arranges the panel with a [grid layout](/layouts#a-grid-of-windows) instead, dealing them into side-by-side windows. Each argument declares one visual row and says how many panels sit beside each other in it, filled in declaration order: `layout(2)` puts two panels side by side, `layout(2, 2)` makes four windows, `layout(1, 2)` one full-width panel above two columns - and `layout(2, 1)` the other way around. Every level of the panel tree declares its own, so a panel you have gone into arranges its children independently: `Form::layout()` arranges the top-level panels, `PanelBuilder::layout()` a panel's children.
 
-Given a **name** instead, the same `PanelBuilder::layout()` picks a layout that arranges the panel's own blocks into named regions - `$p->layout('two-column')`, then `$p->in('left')`. Both forms pick the layout a panel is arranged by, which is why mixing them in one call throws: a panel is arranged by one. Names are covered on [Layouts](/layouts).
+Each window is a **region** of that grid - `window-1`, `window-2` and so on in reading order - and each sub-panel is placed in the one that names it as it is declared. The panel's own rows go in the pair around them, `above` and `below`: a row written before the first sub-panel draws over the grid, one written after the last draws under it, and you never have to name either.
+
+A grid taller than the space it has **scrolls as one**: every line moves together, the overflow marker says which edge the rest is past, and moving onto a window past the edge brings its line into view. A sub-panel gated on an answer takes its window with it when the answer goes, and the visual row closes up around it rather than keeping a hole - the remaining windows share the width, and <kbd>Left</kbd>/<kbd>Right</kbd> step straight past it.
+
+Given a **name** instead, the same `PanelBuilder::layout()` picks a layout that arranges the panel's own blocks into named regions - `$p->layout('two-column')`, then `$p->in('left')`. Both forms pick the layout a panel is arranged by, which is why mixing them in one call throws: a panel is arranged by one. A grid is never one of the names, because a name carries no shape; numbers are the only door to one. Names are covered on [Layouts](/layouts).
 
 ```php
 $form = Form::create('Market stall')
@@ -179,7 +183,7 @@ $form = Form::create('Market stall')
 
 Each column previews its panel - the title, the description and one row per field value - so the grid reads as windows into the form. A panel nested inside a window draws the bare way into it, the title and the mark saying it leads somewhere: a window is a preview column, and the full row with a description and a summary belongs to a list, where there is a whole width to spend on it.
 
-The arrows move spatially: <kbd>Left</kbd>/<kbd>Right</kbd> along a row, <kbd>Up</kbd>/<kbd>Down</kbd> between rows, and out to the fields above or the buttons below. <kbd>Enter</kbd> drills into the focused panel exactly as in the row list, and fields declared on the same panel keep their normal rows above the grid. The declaration is refused where it is written - every visual row must hold at least one window, and the slots must exactly cover the sub-panels - so a mismatch throws at declaration time, never mid-session.
+The arrows move spatially: <kbd>Left</kbd>/<kbd>Right</kbd> along a row, <kbd>Up</kbd>/<kbd>Down</kbd> between rows, and out to the fields above or the buttons below. <kbd>Enter</kbd> drills into the focused panel exactly as in the row list - the panel then takes the whole frame rather than the cell it was previewed in - and fields declared on the same panel keep their normal rows, above the grid or below it depending on which side of the sub-panels they were written. The declaration is refused where it is written - a grid needs at least one visual row, every visual row must hold at least one window, and the slots must exactly cover the sub-panels - so a mismatch throws at declaration time, never mid-session.
 
 ## Fullscreen
 

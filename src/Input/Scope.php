@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Input;
 
-use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Block\FieldType;
 
 /**
  * The binding context a key resolves in: base, navigation, or one field type.
@@ -72,7 +72,7 @@ final readonly class Scope {
   /**
    * Construct a scope.
    *
-   * @param \DrevOps\Tui\Model\FieldType|null $fieldType
+   * @param \DrevOps\Tui\Block\FieldType|null $fieldType
    *   The field type this scope targets, or NULL for the base and navigation
    *   scopes.
    * @param bool $navigation
@@ -110,7 +110,7 @@ final readonly class Scope {
   /**
    * The scope for a single field type.
    *
-   * @param \DrevOps\Tui\Model\FieldType $type
+   * @param \DrevOps\Tui\Block\FieldType $type
    *   The field type.
    * @param bool $multiple
    *   Whether the multiple-collecting variant of the type is targeted.

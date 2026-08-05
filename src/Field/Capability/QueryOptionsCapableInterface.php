@@ -63,7 +63,7 @@ interface QueryOptionsCapableInterface {
    *
    * @param string $query
    *   The query that was resolved.
-   * @param list<\DrevOps\Tui\Model\Option> $rows
+   * @param list<\DrevOps\Tui\Block\Option> $rows
    *   The rows the source returned for it.
    */
   public function applyQuery(string $query, array $rows): void;

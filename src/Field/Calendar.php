@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field;
 
+use DrevOps\Tui\Block\DateBounds;
+use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\Block\Weekday;
+use DrevOps\Tui\Field\Capability\StepCapableInterface;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Input\ScopedKeyMap;
-use DrevOps\Tui\Model\DateBounds;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Weekday;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 use DrevOps\Tui\Utils\Strings;
-use DrevOps\Tui\Field\Capability\StepCapableInterface;
 
 /**
  * A navigable month calendar returning a normalized ISO `Y-m-d` string.
@@ -57,7 +57,7 @@ class Calendar extends AbstractField implements StepCapableInterface {
    *
    * @param string $default
    *   The initial date as an ISO `Y-m-d` string; empty opens on today.
-   * @param \DrevOps\Tui\Model\DateBounds|null $bounds
+   * @param \DrevOps\Tui\Block\DateBounds|null $bounds
    *   Optional min/max range and week-start day; NULL for an open range that
    *   starts the week on Monday.
    */

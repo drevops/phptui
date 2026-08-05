@@ -20,7 +20,7 @@ use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Testing\TuiTester;
 
 require __DIR__ . '/../vendor/autoload.php';

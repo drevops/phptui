@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Field;
 
+use DrevOps\Tui\Block\DateBounds;
+use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\Block\Weekday;
+use DrevOps\Tui\Field\AbstractField;
+use DrevOps\Tui\Field\Calendar;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Model\DateBounds;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Weekday;
-use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Testing\ArrayKeyStream;
 use DrevOps\Tui\Testing\FieldRunner;
 use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Field\AbstractField;
-use DrevOps\Tui\Field\Calendar;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

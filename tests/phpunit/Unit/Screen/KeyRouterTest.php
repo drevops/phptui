@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Screen;
 
 use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Mode;
@@ -12,7 +13,6 @@ use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Screen\KeyRouter;
 use DrevOps\Tui\Screen\Layout\DefaultLayout;
 use DrevOps\Tui\Theme\DefaultTheme;

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field;
 
+use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 
@@ -55,8 +55,11 @@ class Pause extends AbstractField {
    */
   protected function renderBody(ThemeInterface $theme): string {
     $key = $this->keys()->primary(Action::Accept) ?? Key::named(KeyName::Enter);
+    // A named key travels as its name and a typed one as what it writes, so
+    // nothing an input layer holds a key in reaches the theme.
+    $glyph = $theme->keyGlyph($key->name ?? $key->label());
 
-    return Translator::t('Press @key to continue', ['@key' => $this->entryLabel($theme, $theme->keyGlyph($key), TRUE)]);
+    return Translator::t('Press @key to continue', ['@key' => $this->entryLabel($theme, $glyph, TRUE)]);
   }
 
   /**

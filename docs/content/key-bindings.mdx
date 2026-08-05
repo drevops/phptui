@@ -76,9 +76,9 @@ What `default` actually declares, scope by scope. Every field inherits the base 
 | file picker (multiple)               | <kbd>Space</kbd>                                                             | `Toggle`                                         |
 | reorder                              | <kbd>Space</kbd>                                                             | `Grab`                                           |
 
-`vim` inherits all of it and adds letters where typing can't swallow them: the panel browser and the single-choice select gain <kbd>k</kbd>/<kbd>j</kbd> for up/down, and the calendar gains <kbd>k</kbd>/<kbd>j</kbd>/<kbd>h</kbd>/<kbd>l</kbd> for week and day movement - each alongside the arrow keys, never replacing them.
+`vim` inherits all of it and adds letters where typing can't swallow them: the panel browser gains <kbd>h</kbd>/<kbd>j</kbd>/<kbd>k</kbd>/<kbd>l</kbd> for all four directions, the single-choice select <kbd>k</kbd>/<kbd>j</kbd> for up and down, and the calendar <kbd>k</kbd>/<kbd>j</kbd>/<kbd>h</kbd>/<kbd>l</kbd> for week and day movement - each alongside the arrow keys, never replacing them.
 
-The last row is why a field's own help stays reachable while it is open. Where the field takes typed characters the key is one of them, so the scope is skipped rather than fought over - which is also what the validation below would insist on.
+The `every field that takes no typed text` row is why a field's own help stays reachable while it is open. Where the field takes typed characters the key is one of them, so the scope is skipped rather than fought over - which is also what the validation below would insist on.
 
 Not everything on the keyboard routes through the map: a few field keys are fixed. The calendar's month and edge jumps (<kbd>PageUp</kbd>/<kbd>PageDown</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>) have no action behind them and always keep their keys. <kbd>Ctrl-C</kbd> is fixed the other way round - it is answered above the routing, so it aborts from anywhere, including from inside an open field.
 
@@ -89,7 +89,7 @@ Not everything on the keyboard routes through the map: a few field keys are fixe
 Bindings are layered by **scope**: a base layer shared by every field, a navigation layer for the panel browser, and one layer per field type that overrides the base only where it differs (<kbd>Enter</kbd> inserts a newline in a textarea, <kbd>Space</kbd> toggles a checkbox option). To retune individual bindings, pass overrides on top of a preset - each names a scope, an action and its keys. Later bindings win, so re-declaring a scope-and-action pair replaces the preset's keys for it:
 
 ```php
-use DrevOps\Tui\Model\FieldType;
+use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Binding;
 use DrevOps\Tui\Input\KeyName;

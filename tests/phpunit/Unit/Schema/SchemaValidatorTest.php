@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Schema;
 
 use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\FilePickerConstraints;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Builder\FieldBuilder;
@@ -12,7 +13,6 @@ use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Model\FilePickerConstraints;
 use DrevOps\Tui\Schema\SchemaValidator;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
 use org\bovigo\vfs\vfsStream;

@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field;
 
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Field\Capability\PlaceholderCapableInterface;
 use DrevOps\Tui\Field\Capability\PlaceholderCapableTrait;
 use DrevOps\Tui\Field\Capability\RevealCapableInterface;
 use DrevOps\Tui\Field\Capability\TextEditCapableInterface;
 use DrevOps\Tui\Field\Capability\TextEditCapableTrait;
+use DrevOps\Tui\Input\Action;
+use DrevOps\Tui\Input\Hint;
+use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\Scope;
+use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\Tui\Translation\Translator;
+use DrevOps\Tui\Utils\Strings;
 
 /**
  * Single-line text input rendered masked; the accepted value stays plain.

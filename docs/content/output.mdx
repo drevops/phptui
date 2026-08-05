@@ -232,7 +232,7 @@ Runnable in [`playground/18-output-text.php`](https://github.com/drevops/tui/blo
 
 The colors and glyphs come from the active [theme](/themes), the same way every field does, and the pieces reuse the voices the panel already speaks in: a box takes the frame's border and heading, a success line the value color, an info line the theme's accent. So `->theme('ember')` prints info lines in ember's orange and `->theme('frost')` in frost's blue, with no extra configuration and nothing a custom theme has to override to inherit its own palette.
 
-To go further and restyle one piece outright, override its `render*()` method on your theme - `renderCard()`, `renderTable()`, `renderStatus()`, `renderDefinitions()`, `renderText()` or `renderBanner()`.
+To go further and restyle one piece outright, override its `render*()` method on your theme - `renderCard()`, `renderTable()`, `renderStatus()`, `renderDefinitions()`, `renderText()`, `renderRule()` or `renderBanner()`.
 
 `renderCard()` is the single renderer behind both the standalone card and the one a [markup block](/markup) draws in a panel - grid included, since a markup grid is a card with a grid in it - so overriding it restyles the two together. `renderTable()` draws the standalone grid. None of them takes a field, a panel or an answer set: they take plain strings and arrays, which is what makes them usable outside a form at all.
 
@@ -252,7 +252,7 @@ The frames, glyphs and alignment survive, because they are text. Forcing wins ov
 To write somewhere other than standard error - standard output, or a stream you control - pass your own terminal:
 
 ```php
-use DrevOps\Tui\Render\Terminal;
+use DrevOps\Tui\Terminal\Terminal;
 
 $out = $tui->output(new Terminal(STDOUT));
 ```

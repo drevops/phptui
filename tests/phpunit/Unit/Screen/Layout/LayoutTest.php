@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Screen\Layout;
 
 use DrevOps\Tui\Screen\Axis;
+use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
 use DrevOps\Tui\Screen\Furniture;
 use DrevOps\Tui\Screen\Layout\AbstractLayout;
 use DrevOps\Tui\Screen\Layout\DefaultLayout;
 use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Screen\Region;
+use DrevOps\Tui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -21,6 +24,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(AbstractLayout::class)]
 #[CoversClass(DefaultLayout::class)]
 #[CoversClass(TwoColumnLayout::class)]
+#[CoversTrait(ScrollCapableTrait::class)]
 #[Group('screen')]
 final class LayoutTest extends TestCase {
 
@@ -114,6 +118,10 @@ final class LayoutTest extends TestCase {
 
     $this->assertSame(2, array_sum($sizes));
     $this->assertSame(0, $sizes['content']);
+
+    // One row cannot hold both of them either, so they are trimmed in
+    // declaration order and the header is the one that keeps its row.
+    $this->assertSame(['header' => 1, 'content' => 0, 'footer' => 0], $layout->arrange(1));
   }
 
   public function testLayoutWithNoRegionsArrangesNothing(): void {
@@ -153,6 +161,17 @@ final class LayoutTest extends TestCase {
     $this->assertFalse($layout->in('footer')->isScrolling());
   }
 
+  public function testArrangementStacksItsRegionsRatherThanMovingThemAsOne(): void {
+    // Only an arrangement whose lines have to move together is a surface; the
+    // rest hand each region a size and leave the moving to it.
+    $this->assertFalse((new DefaultLayout())->isScrolling());
+
+    $this->expectException(\LogicException::class);
+    $this->expectExceptionMessage(DefaultLayout::class . ' does not scroll, so it cannot be scrolled to row 2.');
+
+    (new DefaultLayout())->scrollTo(2);
+  }
+
   public function testTheTwoColumnLayoutSplitsLeftFromRight(): void {
     $layout = new TwoColumnLayout();
 
@@ -160,13 +179,40 @@ final class LayoutTest extends TestCase {
     $this->assertSame(['left', 'right'], $layout->names());
   }
 
-  public function testArrangementDealingNothingGivesOneBlockTheRegionWhole(): void {
+  public function testStackedRegionsEachTakeTheirOwnLineAndItsWidth(): void {
     $layout = new DefaultLayout();
 
-    // A row is one block where nothing is dealt, so it takes the region as it
-    // stands however many blocks are stacked under it.
-    $this->assertSame([], $layout->deal());
-    $this->assertSame(40, $layout->share(40, 1));
+    // One region to a line is what stacking regions means, so each of them has
+    // the width to itself however wide the frame is.
+    $this->assertSame([['header'], ['content'], ['footer']], $layout->lines());
+    $this->assertSame(40, $layout->share(40, 1, new DefaultTheme()));
+  }
+
+  public function testRegionsRunAgainstEachOtherUnlessAnArrangementSaysOtherwise(): void {
+    $layout = new DefaultLayout();
+
+    // Nothing is spent telling one region from the next, which is what puts a
+    // header on the row directly above the rows it introduces.
+    $this->assertSame(24, array_sum($layout->arrange(24)));
+    $this->assertSame(6, $layout->natural(['header' => 1, 'content' => 4, 'footer' => 1]));
+  }
+
+  public function testMeasuredRegionTakesWhatItHoldsAndNoMore(): void {
+    $layout = new class() extends AbstractLayout {
+
+      public function __construct() {
+        parent::__construct(Axis::Rows);
+
+        $this->region('note')->content();
+        $this->region('rows')->flex(1);
+      }
+
+    };
+
+    // What it holds is counted where blocks are drawn and handed over as a
+    // number, so the region states a kind and the layout does the arithmetic.
+    $this->assertSame(['note' => 3, 'rows' => 21], $layout->arrange(24, ['note' => 3, 'rows' => 40]));
+    $this->assertSame(43, $layout->natural(['note' => 3, 'rows' => 40]));
   }
 
   #[DataProvider('dataProviderLayoutSaysWhereEachPieceOfFurnitureGoes')]

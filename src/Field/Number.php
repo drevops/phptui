@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Field;
 
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\NumberBounds;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\Block\NumberBounds;
 use DrevOps\Tui\Field\Capability\PlaceholderCapableInterface;
 use DrevOps\Tui\Field\Capability\PlaceholderCapableTrait;
 use DrevOps\Tui\Field\Capability\StepCapableInterface;
 use DrevOps\Tui\Field\Capability\TextEditCapableInterface;
 use DrevOps\Tui\Field\Capability\TextEditCapableTrait;
+use DrevOps\Tui\Input\Action;
+use DrevOps\Tui\Input\Hint;
+use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\Scope;
+use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\Tui\Utils\Strings;
 
 /**
  * Integer input: digits with an optional leading minus, accepted as an int.
@@ -40,7 +40,7 @@ class Number extends AbstractField implements TextEditCapableInterface, StepCapa
    *
    * @param string $default
    *   The initial value (and live input buffer).
-   * @param \DrevOps\Tui\Model\NumberBounds|null $bounds
+   * @param \DrevOps\Tui\Block\NumberBounds|null $bounds
    *   Optional bounds and step; NULL for a plain integer entry.
    */
   public function __construct(string $default = '', protected ?NumberBounds $bounds = NULL) {

@@ -13,14 +13,17 @@ namespace DrevOps\Tui\Theme;
  * {@see create()} also accepts a fully-qualified theme class name directly, so
  * a one-off theme needs no registration at all. Terminal-capability detection
  * (colour, Unicode, dark/light background) lives on
- * {@see \DrevOps\Tui\Render\Terminal}.
+ * {@see \DrevOps\Tui\Terminal\Terminal}.
  *
  * What it asks of a theme is the floor and nothing above it: a
- * {@see ThemeInterface} built from a frame width and the options a consumer
- * stated, which is the constructor {@see AbstractTheme} carries. Everything
- * else a driver wants - a border, spacing, a wash, a patch - is a capability
- * it asks for and does without, so a theme that declares none is still a theme
- * this builds and a session runs.
+ * {@see ThemeInterface} that can be built from a frame width and the options a
+ * consumer stated, and that answers for every element a form is drawn from -
+ * which is the constructor and the elements {@see AbstractTheme} carries.
+ * Both are checked where a theme is picked, so a theme that cannot draw the
+ * form is named there rather than partway through a frame. Everything else a
+ * driver wants - a border, spacing, a wash, a patch - is a capability it asks
+ * for and does without, so a theme that declares none is still a theme this
+ * builds and a session runs.
  *
  * @package DrevOps\Tui\Theme
  */
@@ -49,8 +52,9 @@ final class ThemeManager {
    *   The theme class name.
    *
    * @throws \InvalidArgumentException
-   *   When the class is not a theme, or is one nothing can instantiate -
-   *   registration fails early rather than at the later create() call.
+   *   When the class is not a theme, or is one nothing can build or draw a
+   *   form with - registration fails early rather than at the later create()
+   *   call.
    */
   public static function register(string $name, string $class): void {
     self::$registry[$name] = self::vouch($class);
@@ -79,9 +83,9 @@ final class ThemeManager {
    *
    * @throws \InvalidArgumentException
    *   When the name is neither registered nor a theme class name, or names a
-   *   theme class nothing can instantiate.
+   *   theme class nothing can build or draw a form with.
    */
-  public static function create(string $name = 'default', int $width = DefaultTheme::DEFAULT_WIDTH, array $options = []): ThemeInterface {
+  public static function create(string $name = 'default', int $width = ThemeInterface::DEFAULT_WIDTH, array $options = []): ThemeInterface {
     $name = $name === '' ? 'default' : $name;
 
     $class = self::$registry[$name] ?? NULL;
@@ -107,20 +111,129 @@ final class ThemeManager {
    *   The class.
    *
    * @throws \InvalidArgumentException
-   *   When the class is not a theme, or is one nothing can instantiate.
+   *   When the class is not a theme, is one nothing can instantiate, cannot be
+   *   built from a width and options, or cannot draw a form.
    */
   protected static function vouch(string $class): string {
     if (!is_a($class, ThemeInterface::class, TRUE)) {
       throw new \InvalidArgumentException(sprintf('Theme class "%s" must implement %s.', $class, ThemeInterface::class));
     }
 
+    $reflection = new \ReflectionClass($class);
+
     // An abstract theme passes the type check and then fatals on the first
     // create(): refusing it here names the class rather than the call site.
-    if (!(new \ReflectionClass($class))->isInstantiable()) {
+    if (!$reflection->isInstantiable()) {
       throw new \InvalidArgumentException(sprintf('Theme class "%s" cannot be instantiated.', $class));
     }
 
+    if (!self::builds($reflection->getConstructor())) {
+      throw new \InvalidArgumentException(sprintf('Theme class "%s" must take a frame width and an options array.', $class));
+    }
+
+    $missing = array_diff(self::drawn(), class_implements($class) ?: []);
+
+    if ($missing !== []) {
+      throw new \InvalidArgumentException(sprintf('Theme class "%s" cannot draw a form: it does not implement %s.', $class, implode(', ', $missing)));
+    }
+
     return $class;
+  }
+
+  /**
+   * Whether a constructor takes the two arguments create() passes it.
+   *
+   * @param \ReflectionMethod|null $constructor
+   *   The constructor, or NULL when the class declares none.
+   *
+   * @return bool
+   *   TRUE when it takes a width and an options array.
+   */
+  protected static function builds(?\ReflectionMethod $constructor): bool {
+    $parameters = $constructor instanceof \ReflectionMethod ? $constructor->getParameters() : [];
+
+    if (count($parameters) < 2) {
+      return FALSE;
+    }
+
+    // Nothing here can invent a third argument, so anything past the two it is
+    // called with has to answer for itself.
+    foreach (array_slice($parameters, 2) as $extra) {
+      if (!$extra->isOptional()) {
+        return FALSE;
+      }
+    }
+
+    return self::takes($parameters[0], ArgumentType::Width) && self::takes($parameters[1], ArgumentType::Options);
+  }
+
+  /**
+   * Whether a parameter accepts a value of the given type.
+   *
+   * @param \ReflectionParameter $parameter
+   *   The parameter.
+   * @param \DrevOps\Tui\Theme\ArgumentType $type
+   *   The type a caller hands it.
+   *
+   * @return bool
+   *   TRUE when it accepts one.
+   */
+  protected static function takes(\ReflectionParameter $parameter, ArgumentType $type): bool {
+    $declared = $parameter->getType();
+
+    // A parameter declaring nothing takes whatever it is handed.
+    if (!$declared instanceof \ReflectionType) {
+      return TRUE;
+    }
+
+    // Alternatives are satisfied by any one of them. Anything else standing
+    // where a single type would is a set of interfaces to satisfy at once,
+    // which is nothing a width or an options array can be.
+    $alternatives = $declared instanceof \ReflectionUnionType ? $declared->getTypes() : [$declared];
+
+    foreach ($alternatives as $alternative) {
+      if (self::named($alternative, $type)) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Whether one declared type accepts the argument a caller hands it.
+   *
+   * @param \ReflectionType $declared
+   *   The declared type.
+   * @param \DrevOps\Tui\Theme\ArgumentType $type
+   *   The argument a caller hands it.
+   *
+   * @return bool
+   *   TRUE when it does.
+   */
+  protected static function named(\ReflectionType $declared, ArgumentType $type): bool {
+    if (!$declared instanceof \ReflectionNamedType) {
+      return FALSE;
+    }
+
+    $accepted = array_map(static fn(DeclaredType $accepts): string => $accepts->value, $type->accepted());
+
+    return in_array($declared->getName(), $accepted, TRUE);
+  }
+
+  /**
+   * The element interfaces a theme has to implement to draw a form.
+   *
+   * Read off the floor rather than written down here. The floor's promise is
+   * that it answers for every element the blocks and the frame declare, so
+   * reading the set off it means a block added to the library changes what a
+   * theme has to draw by changing the one class that already has to draw it.
+   *
+   * @return array<string,class-string>
+   *   The interfaces.
+   */
+  protected static function drawn(): array {
+    return array_diff(class_implements(AbstractTheme::class) ?: [], [ThemeInterface::class]);
   }
 
 }

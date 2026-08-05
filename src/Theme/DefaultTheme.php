@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Theme;
 
-use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
 use DrevOps\Tui\Primitive\Status;
-use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Render\Box;
-use DrevOps\Tui\Render\Markup;
-use DrevOps\Tui\Render\MarkupKind;
-use DrevOps\Tui\Render\MarkupSegment;
-use DrevOps\Tui\Render\Table;
+use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\Tui\Terminal\Box;
+use DrevOps\Tui\Terminal\Markup;
+use DrevOps\Tui\Terminal\MarkupKind;
+use DrevOps\Tui\Terminal\MarkupSegment;
+use DrevOps\Tui\Terminal\Table;
 use DrevOps\Tui\Theme\Capability\ColorSchemeCapableInterface;
 use DrevOps\Tui\Theme\Capability\ColorSchemeCapableTrait;
 use DrevOps\Tui\Theme\Capability\DimCapableInterface;
@@ -58,11 +57,6 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   use UnicodeCapableTrait;
 
   /**
-   * The default frame width, used when a caller does not specify one.
-   */
-  public const int DEFAULT_WIDTH = 76;
-
-  /**
    * The nominal width of a boxed or underlined input field, in columns.
    */
   protected const int FIELD_WIDTH = 40;
@@ -97,6 +91,11 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * row and a card line up on the same steps.
    */
   protected const int CONDITIONAL_INDENT = 2;
+
+  /**
+   * The columns left clear between two things drawn side by side.
+   */
+  protected const int GUTTER = 2;
 
   /**
    * The left indent of a definition list, in columns.
@@ -144,7 +143,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    *   on), "spacing" (a SPACING_* value), "border" (a BORDER_* value), plus any
    *   option a concrete theme declares.
    */
-  public function __construct(int $width = self::DEFAULT_WIDTH, array $options = []) {
+  public function __construct(int $width = ThemeInterface::DEFAULT_WIDTH, array $options = []) {
     parent::__construct($width, $options);
     $this->validateOptions();
 
@@ -670,14 +669,12 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function keyGlyph(Key $key): string {
-    $name = $key->name;
-
-    if (!$name instanceof KeyName) {
-      return $key->label();
+  public function keyGlyph(KeyName|string $key): string {
+    if (!$key instanceof KeyName) {
+      return $key;
     }
 
-    return match ($name) {
+    return match ($key) {
       KeyName::Up, KeyName::MouseWheelUp => $this->glyph('↑', '^'),
       KeyName::Down, KeyName::MouseWheelDown => $this->glyph('↓', 'v'),
       KeyName::Left => $this->glyph('←', '<'),
@@ -710,6 +707,14 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   #[\Override]
   public function chromeOverflowMarker(bool $above): string {
     return $this->indicator($above ? $this->glyph('▲', '^') : $this->glyph('▼', 'v'));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function chromeGutter(): int {
+    return self::GUTTER;
   }
 
   /**
@@ -1706,7 +1711,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   /**
    * Style one parsed markup span with its element.
    *
-   * @param \DrevOps\Tui\Render\MarkupSegment $segment
+   * @param \DrevOps\Tui\Terminal\MarkupSegment $segment
    *   The span.
    *
    * @return string

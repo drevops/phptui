@@ -9,13 +9,13 @@ use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
+use DrevOps\Tui\Block\TableSpec;
 use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Model\FormException;
-use DrevOps\Tui\Model\TableSpec;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Screen\Layout\LayoutManager;
 use DrevOps\Tui\Tests\Fixtures\Screen\Layout\RegionlessLayout;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -117,16 +117,29 @@ final class BlockTreeTest extends TestCase {
     $this->assertCount(0, $panel->in('right')->blocks());
   }
 
-  public function testGridArrangesTheSubPanelsWithoutTouchingTheRegions(): void {
+  public function testGridDrawsEachSubPanelInTheWindowThatNamesIt(): void {
     $panel = $this->panel(static function (PanelBuilder $p): void {
       $p->layout(2);
+      $p->text('courier', 'Courier');
       $p->panel('left', 'Left', static fn(PanelBuilder $sp): FieldBuilder => $sp->text('one', 'One'));
       $p->panel('right', 'Right', static fn(PanelBuilder $sp): FieldBuilder => $sp->text('two', 'Two'));
+      $p->markup('note', 'Every crate is weighed at the bench.');
     });
 
-    $this->assertSame([2], $panel->currentLayout()->deal());
-    $this->assertSame(['content'], $panel->currentLayout()->names());
-    $this->assertCount(2, $panel->children());
+    // Each sub-panel goes in the window that names it, and where a row sits is
+    // which of the pair around them it is in: written before the windows it is
+    // above them, written after it is below.
+    $this->assertSame([['above'], ['window-1', 'window-2'], ['below']], $panel->currentLayout()->lines());
+    $courier = $panel->in('above')->blocks()[0] ?? NULL;
+    $note = $panel->in('below')->blocks()[0] ?? NULL;
+
+    $this->assertInstanceOf(Field::class, $courier);
+    $this->assertInstanceOf(Markup::class, $note);
+    $this->assertSame('courier', $courier->id());
+    $this->assertSame('note', $note->id());
+    $this->assertSame(['left', 'right'], array_map(static fn(Panel $child): string => $child->id(), $panel->children()));
+    $this->assertSame($panel->children()[0], $panel->in('window-1')->blocks()[0]);
+    $this->assertSame($panel->children()[1], $panel->in('window-2')->blocks()[0]);
   }
 
   /**

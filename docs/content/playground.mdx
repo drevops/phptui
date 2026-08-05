@@ -14,7 +14,7 @@ Runnable examples live in [`playground/`](https://github.com/drevops/tui/tree/ma
 | `02-fields-*`             | One script per [field](/fields), plus the whole gallery on one form                                                                                                                                  |
 | `02-markup-*`             | [Markup](/markup): prose, a bordered card and a grid - one block drawn three ways, collecting nothing                                                                                                |
 | `02-progress-row`         | The [progress row](/progress-row): a block that runs work when activated, filling a bar in place                                                                                                     |
-| `03-panels-*`             | [Nested panels](/panels), [modal dialogs](/panels#modal-panels), the border frame, the grid by name and by counts, the fullscreen stretch                                                            |
+| `03-panels-*`             | [Nested panels](/panels), [modal dialogs](/panels#modal-panels), the border frame, the grid of windows and the plain row list beside it, the fullscreen stretch                                      |
 | `04-inline-editing`       | [Inline editing](/panels#inline-editing) and `->standalone()`                                                                                                                                        |
 | `05-form-logic-*`         | [Derived values](/configuration#derived-values), [conditional fields](/configuration#conditional-fields) and whole conditional sections, fix-ups                                                     |
 | `06-field-behaviour-*`    | [Declared behavior](/field-behaviour): [required fields](/field-behaviour#required-fields), closures, handler classes                                                                                |
@@ -32,7 +32,7 @@ Runnable examples live in [`playground/`](https://github.com/drevops/tui/tree/ma
 | `17-query-options`        | [Options that follow the query](/progress#options-from-a-query), cached and held back by `->minQuery()`                                                                                              |
 | `18-output-*`             | The [output primitives](/output): boxes and cards, tables, status lines, definition lists, text, rules, a banner                                                                                     |
 | `19-dynamic-options`      | [Options that follow the answers](/field-behaviour#options-from-the-answers), narrowing one field by another                                                                                         |
-| `20-layouts-*`            | [Layouts](/layouts): a layout class of your own registered by name, and a region flowing its blocks across, packed from either end                                                                   |
+| `20-layouts-*`            | [Layouts](/layouts): a layout class of your own registered by name, a region flowing its blocks across, packed from either end, and a grid moving every line of itself together                      |
 
 The reusable helper classes the scripts load sit beside them - `themes/`, `layouts/` and `handlers/` - with the fixtures the examples read from in `sample-project/` and `translations/`.
 
@@ -43,4 +43,4 @@ composer install
 php playground/01-quickstart.php
 ```
 
-The SVG demos throughout this documentation are generated from the playground scripts and forms: `php docs/util/update-assets.php` records the panel walkthroughs through a scripted terminal session (it needs `asciinema`, `expect`, `node` and `npm`), while `php docs/util/render-field-svgs.php`, `php docs/util/render-progress-svgs.php`, `php docs/util/render-output-svgs.php` and `php docs/util/render-theme-svgs.php` render the field cards, the primitives and the theme previews deterministically through the library's own [test harness](/testing) - no terminal involved.
+The SVG demos throughout this documentation are generated from the playground scripts and forms: `php docs/util/update-assets.php` records the panel walkthroughs through a scripted terminal session (it needs `asciinema`, `expect`, `node` and `npm`), while `php docs/util/render-field-svgs.php`, `php docs/util/render-anatomy-svgs.php`, `php docs/util/render-progress-svgs.php`, `php docs/util/render-output-svgs.php` and `php docs/util/render-theme-svgs.php` render the field cards, the anatomy diagrams, the primitives and the theme previews deterministically through the library's own [test harness](/testing) - no terminal involved.

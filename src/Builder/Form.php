@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Builder;
 
+use DrevOps\Tui\Block\Buttons;
 use DrevOps\Tui\Block\Capability\DependCapableInterface;
 use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\Block\Option;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Block\Template;
 use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Condition\ConditionInterface;
-use DrevOps\Tui\Model\Buttons;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\Fixup;
-use DrevOps\Tui\Model\FormException;
-use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Model\Template;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Screen\Layout\GridLayout;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
 
@@ -29,6 +28,11 @@ use DrevOps\Tui\Screen\Layout\PanelLayout;
  * @package DrevOps\Tui\Builder
  */
 final class Form {
+
+  /**
+   * The region a panel goes in when the arrangement keeps no window for it.
+   */
+  protected const string CONTENT = 'content';
 
   /**
    * The start banner (logo).
@@ -58,7 +62,7 @@ final class Form {
   /**
    * The post-settle fix-up rules.
    *
-   * @var \DrevOps\Tui\Model\Fixup[]
+   * @var \DrevOps\Tui\Builder\Fixup[]
    */
   protected array $fixups = [];
 
@@ -129,7 +133,7 @@ final class Form {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the form's tree has already been built.
    */
   public function buttons(bool $show, string $submit_label = 'Submit', string $cancel_label = 'Cancel'): self {
@@ -160,7 +164,7 @@ final class Form {
   /**
    * Add a post-settle fix-up rule.
    *
-   * @param \DrevOps\Tui\Model\Fixup $fixup
+   * @param \DrevOps\Tui\Builder\Fixup $fixup
    *   The fix-up, evaluated once the answers have settled.
    *
    * @return $this
@@ -185,7 +189,7 @@ final class Form {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the form's tree has already been built.
    */
   public function panel(string $id, string $title, \Closure $build): self {
@@ -212,7 +216,7 @@ final class Form {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the form's tree has already been built, or a visual row holds fewer
    *   than one panel.
    */
@@ -235,7 +239,7 @@ final class Form {
    * @return \DrevOps\Tui\Block\Panel
    *   The root panel, carrying the form's own name.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When a declaration contradicts itself.
    */
   public function root(): Panel {
@@ -250,9 +254,11 @@ final class Form {
     $root = (new Panel($this->title, $this->title))->layout($this->layout ?? new PanelLayout());
     $root->buttons(new Buttons($this->buttons, $this->submitLabel, $this->cancelLabel));
 
-    foreach ($this->panels as $panel) {
+    foreach ($this->panels as $index => $panel) {
       $panel->seal();
-      $root->in('content')->add($panel->block());
+      // A grid draws each panel in a window of its own, and a window is a
+      // region, so the panel is placed in the one that names it.
+      $root->in($this->layout instanceof GridLayout ? $this->layout->windows()[$index] : self::CONTENT)->add($panel->block());
     }
 
     $this->assertUniqueFieldIds($root);
@@ -291,7 +297,7 @@ final class Form {
   /**
    * The rules this form applies once its answers have settled.
    *
-   * @return \DrevOps\Tui\Model\Fixup[]
+   * @return \DrevOps\Tui\Builder\Fixup[]
    *   The rules, in declaration order.
    */
   public function currentFixups(): array {
@@ -308,7 +314,7 @@ final class Form {
    * @param string $declaration
    *   What is being declared, as a fragment naming it.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the tree has already been built.
    */
   protected function assertUnbuilt(string $declaration): void {

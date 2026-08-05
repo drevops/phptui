@@ -6,13 +6,13 @@ namespace DrevOps\Tui\Tests\Unit\Screen;
 
 use DrevOps\Tui\Block\Actions;
 use DrevOps\Tui\Block\Breadcrumb;
+use DrevOps\Tui\Block\Buttons;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Model\Buttons;
-use DrevOps\Tui\Model\FormException;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Screen\Assembler;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\ScreenRenderer;

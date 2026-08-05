@@ -4,20 +4,15 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Field;
 
+use DrevOps\Tui\Block\DateBounds;
 use DrevOps\Tui\Block\Field as BlockField;
-use DrevOps\Tui\Field\Capability\QueryOptionsCapableInterface;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Model\DateBounds;
-use DrevOps\Tui\Model\FieldType;
-use DrevOps\Tui\Model\NumberBounds;
-use DrevOps\Tui\Model\Template as TemplateModel;
-use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\Block\NumberBounds;
+use DrevOps\Tui\Block\Template as TemplateModel;
 use DrevOps\Tui\Field\Calendar;
+use DrevOps\Tui\Field\Capability\QueryOptionsCapableInterface;
 use DrevOps\Tui\Field\Confirm;
+use DrevOps\Tui\Field\FieldFactory;
 use DrevOps\Tui\Field\FilePicker;
 use DrevOps\Tui\Field\Number;
 use DrevOps\Tui\Field\Password;
@@ -28,10 +23,15 @@ use DrevOps\Tui\Field\Search;
 use DrevOps\Tui\Field\Select;
 use DrevOps\Tui\Field\Suggest;
 use DrevOps\Tui\Field\Template;
-use DrevOps\Tui\Field\Textarea;
 use DrevOps\Tui\Field\Text;
+use DrevOps\Tui\Field\Textarea;
 use DrevOps\Tui\Field\Toggle;
-use DrevOps\Tui\Field\FieldFactory;
+use DrevOps\Tui\Input\Hint;
+use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Input\KeyMapManager;
+use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\Tui\Theme\DefaultTheme;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -262,7 +262,7 @@ final class FieldFactoryTest extends TestCase {
   /**
    * Tests that a declared placeholder ghosts every field with a buffer.
    *
-   * @param \DrevOps\Tui\Model\FieldType $type
+   * @param \DrevOps\Tui\Block\FieldType $type
    *   The kind.
    */
   #[DataProvider('dataProviderPlaceholderReachesEveryCapableField')]
@@ -277,7 +277,7 @@ final class FieldFactoryTest extends TestCase {
   /**
    * Data provider for testPlaceholderReachesEveryCapableField().
    *
-   * @return \Iterator<string, array{\DrevOps\Tui\Model\FieldType}>
+   * @return \Iterator<string, array{\DrevOps\Tui\Block\FieldType}>
    *   The kinds that draw a buffer to ghost.
    */
   public static function dataProviderPlaceholderReachesEveryCapableField(): \Iterator {
@@ -400,7 +400,7 @@ final class FieldFactoryTest extends TestCase {
   /**
    * A block of the given kind with two entries.
    *
-   * @param \DrevOps\Tui\Model\FieldType $type
+   * @param \DrevOps\Tui\Block\FieldType $type
    *   The kind.
    *
    * @return \DrevOps\Tui\Block\Field

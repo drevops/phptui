@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit;
 
+use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Screen\Collector;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Block\Progress;
-use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Primitive\ProgressReporter;
-use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Schema\AgentHelp;
+use DrevOps\Tui\Screen\Collector;
+use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Tui;

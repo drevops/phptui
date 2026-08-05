@@ -13,7 +13,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   <ThemedImage sources={{light: useBaseUrl('/field-search-light-animated.svg'), dark: useBaseUrl('/field-search-dark-animated.svg')}} alt="Search field" />
 </p>
 
-Single choice with a filter line above the options. Typing fuzzy-matches and ranks the labels - exact and prefix matches lead, looser subsequence matches follow - and highlights the matched characters. It collects the **selected option value** (a `string`).
+Single choice with a filter line above the options. Typing fuzzy-matches and ranks the labels - exact matches lead, then prefix, then substring, with looser scattered subsequence matches last - and highlights the matched characters. It collects the **selected option value** (a `string`).
 
 ```php
 $p->search('vegetable', 'Vegetable')

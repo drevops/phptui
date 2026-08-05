@@ -16,12 +16,12 @@
 
 declare(strict_types=1);
 
+use DrevOps\Tui\Builder\Fixup;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\CollectException;
 use DrevOps\Tui\Condition\Condition;
 use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Model\Fixup;
 use DrevOps\Tui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';

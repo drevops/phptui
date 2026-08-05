@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Input;
 
+use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Binding;
 use DrevOps\Tui\Input\DefaultKeyMap;
@@ -14,7 +15,6 @@ use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Input\ScopedKeyMap;
 use DrevOps\Tui\Input\VimKeyMap;
-use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Tests\Traits\ResetsRegistriesTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;

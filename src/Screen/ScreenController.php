@@ -14,8 +14,11 @@ use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Mode;
+use DrevOps\Tui\Block\Option;
+use DrevOps\Tui\Block\OptionKind;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
+use DrevOps\Tui\Block\RenderMode;
 use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\CancelException;
 use DrevOps\Tui\Derive\Derive;
@@ -30,19 +33,13 @@ use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Input\KeyParser;
 use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Model\Option;
-use DrevOps\Tui\Model\OptionKind;
-use DrevOps\Tui\Model\RenderMode;
 use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
 use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Primitive\Status;
-use DrevOps\Tui\Render\Ansi;
-use DrevOps\Tui\Render\Box;
-use DrevOps\Tui\Render\ExternalEditor;
-use DrevOps\Tui\Render\Overlay;
-use DrevOps\Tui\Render\Scroller;
-use DrevOps\Tui\Render\Terminal;
 use DrevOps\Tui\Screen\Layout\DefaultLayout;
+use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\Tui\Terminal\Box;
+use DrevOps\Tui\Terminal\Terminal;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\Capability\DimCapableInterface;
 use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
@@ -256,7 +253,7 @@ class ScreenController {
    *   onto the first frame.
    * @param string $version
    *   The version shown under that banner.
-   * @param \DrevOps\Tui\Render\ExternalEditor|null $external_editor
+   * @param \DrevOps\Tui\Screen\ExternalEditor|null $external_editor
    *   What hands a passage of text to an editor of the reader's own, or NULL
    *   for one that launches whatever the environment names.
    */
@@ -316,7 +313,7 @@ class ScreenController {
   /**
    * Run the session against a terminal until the form ends.
    *
-   * @param \DrevOps\Tui\Render\Terminal $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal $terminal
    *   The terminal.
    *
    * @return \DrevOps\Tui\Answers\Answers
@@ -524,7 +521,7 @@ class ScreenController {
    * because the anchor places content on a screen the frame fits, which this
    * one is not.
    *
-   * @param \DrevOps\Tui\Render\Terminal $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal $terminal
    *   The terminal.
    *
    * @return string
@@ -572,7 +569,7 @@ class ScreenController {
    *
    * @param string $frame
    *   The drawn frame.
-   * @param \DrevOps\Tui\Render\Terminal $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal $terminal
    *   The terminal.
    *
    * @return string
@@ -603,7 +600,7 @@ class ScreenController {
   /**
    * Show what precedes the form, and wait for the key that dismisses it.
    *
-   * @param \DrevOps\Tui\Render\Terminal $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal $terminal
    *   The terminal.
    * @param \DrevOps\Tui\Input\KeyParser $parser
    *   What reads keys out of the bytes the terminal delivers.
@@ -648,7 +645,7 @@ class ScreenController {
   /**
    * The frame as it stands: the furniture rewritten, then drawn outward.
    *
-   * @param \DrevOps\Tui\Render\Terminal $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal $terminal
    *   The terminal the frame is sized against.
    *
    * @return string
@@ -709,7 +706,7 @@ class ScreenController {
   /**
    * The rows a frame is laid out to.
    *
-   * @param \DrevOps\Tui\Render\Terminal $terminal
+   * @param \DrevOps\Tui\Terminal\Terminal $terminal
    *   The terminal.
    *
    * @return int
@@ -723,7 +720,7 @@ class ScreenController {
   }
 
   /**
-   * Move each scrolling region so the row the cursor is on stays in sight.
+   * Move each scrolling surface so the row the cursor is on stays in sight.
    *
    * @param int $rows
    *   The terminal rows.
@@ -736,8 +733,8 @@ class ScreenController {
       return;
     }
 
-    foreach ($this->viewports($rows) as [$region, $total, $row, $height]) {
-      $region->scrollTo($this->scroller->follow($total, $height, $row, $region->offset($total, $height))->offset);
+    foreach ($this->viewports($rows) as [$surface, $total, $row, $height]) {
+      $surface->scrollTo($this->scroller->follow($total, $height, $row, $surface->offset($total, $height))->offset);
     }
   }
 
@@ -772,7 +769,7 @@ class ScreenController {
   }
 
   /**
-   * Move the region the wheel points at by a row, leaving the cursor alone.
+   * Move the surface the wheel points at by a row, leaving the cursor alone.
    *
    * @param int $delta
    *   The rows to move by: negative towards the top of the contents.
@@ -780,43 +777,59 @@ class ScreenController {
   protected function scroll(int $delta): void {
     $terminal = $this->terminal;
 
-    // A region is moved against the room it has, and until a session is
+    // A surface is moved against the room it has, and until a session is
     // running there is no terminal to say how much that is.
     if (!$terminal instanceof Terminal) {
       return;
     }
 
-    foreach ($this->viewports($this->rows($terminal)) as [$region, $total, , $height]) {
-      $region->scrollTo($this->scroller->viewport($region->offset($total, $height) + $delta, $total, $height)->offset);
+    foreach ($this->viewports($this->rows($terminal)) as [$surface, $total, , $height]) {
+      $surface->scrollTo($this->scroller->viewport($surface->offset($total, $height) + $delta, $total, $height)->offset);
     }
   }
 
   /**
-   * The scrolling region the cursor is in, and what it is showing of what.
+   * The scrolling surface the cursor is on, and what it is showing of what.
    *
    * The one the wheel points at too: a reader turning it is looking at the
-   * region they are working in, which is the region the cursor is in.
+   * surface they are working on, which is the one the cursor is on.
    *
    * @param int $rows
    *   The terminal rows.
    *
-   * @return \Generator<int,array{\DrevOps\Tui\Screen\Region,int,int,int}>
-   *   The region, the rows its contents come to, the row the cursor is on, and
-   *   the rows it was given.
+   * @return \Generator<int,array{\DrevOps\Tui\Screen\Capability\ScrollCapableInterface,int,int,int}>
+   *   The surface, the rows its contents come to, the row the cursor is on,
+   *   and the rows it was given.
    */
   protected function viewports(int $rows): \Generator {
     $panel = $this->router->current();
+    $layout = $panel->currentLayout();
     $focused = $this->router->focused();
-    $sizes = $panel->currentLayout()->arrange($this->content($rows));
+    $of = $focused instanceof BlockInterface ? $focused : NULL;
+    $room = $this->content($rows);
 
-    foreach ($panel->currentLayout()->names() as $name) {
+    // An arrangement whose lines move together is one surface however many
+    // regions it is made of, so it is the surface the cursor is followed on.
+    if ($layout->isScrolling()) {
+      [$total, $row] = $this->renderer->reach($layout, $of);
+
+      if ($row >= 0) {
+        yield [$layout, $total, $row, $room];
+      }
+
+      return;
+    }
+
+    $sizes = $this->renderer->sizes($layout, $room);
+
+    foreach ($layout->names() as $name) {
       $region = $panel->in($name);
 
       if (!$region->isScrolling()) {
         continue;
       }
 
-      [$total, $row] = $this->renderer->extent($panel->currentLayout(), $name, $focused instanceof BlockInterface ? $focused : NULL);
+      [$total, $row] = $this->renderer->extent($layout, $name, $of);
 
       // A region the cursor is not in stays where it was left: only the one
       // holding the focused row has anything to follow.
@@ -846,7 +859,7 @@ class ScreenController {
     // A frame spends a rule top and bottom, so what the layout is given is the
     // terminal less its chrome.
     $inside = $this->border === Border::None ? $rows : max(0, $rows - self::FRAME_RULES);
-    $region = $this->screen->currentLayout()->arrange($inside)[$this->body] ?? $inside;
+    $region = $this->renderer->sizes($this->screen->currentLayout(), $inside)[$this->body] ?? $inside;
 
     return $this->renderer->room($this->screen->in($this->body), $this->panel, $region);
   }
@@ -1092,7 +1105,7 @@ class ScreenController {
    *
    * @param \DrevOps\Tui\Block\Field $field
    *   The field.
-   * @param list<\DrevOps\Tui\Model\Option> $rows
+   * @param list<\DrevOps\Tui\Block\Option> $rows
    *   What the latest query answered.
    *
    * @return array<string,string>

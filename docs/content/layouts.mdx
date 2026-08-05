@@ -8,13 +8,13 @@ keywords: ['layout', 'region', 'columns', 'scrolling', 'arrangement', 'screen']
 
 A form never has to name a layout. Declare a panel of fields and you get the default arrangement: a trail across the top, the fields in the middle, the key hints along the bottom. A **layout** is what you reach for when that is not the shape you want - two columns instead of one, a taller header, a sidebar that stays put while its neighbor scrolls.
 
-A layout is an **arrangement and nothing else**. It names its regions, says how big each is and which of them scroll, and stops there. It never mentions a breadcrumb, a panel or a field - a layout carrying content opinions is a layout exactly one form can use. That is what makes it reusable: the same layout can arrange a whole screen and a single panel, and neither knows about the other.
+A layout is an **arrangement and nothing else**. It names its regions, says how big each is, says which of them scroll and whether it is a scrolling surface itself, and stops there. It never mentions a breadcrumb, a panel or a field - a layout carrying content opinions is a layout exactly one form can use. That is what makes it reusable: the same layout can arrange a whole screen and a single panel, and neither knows about the other.
 
 A **region** is one named slot inside it. Blocks go in by name, so nothing depends on the order anything was declared in.
 
 ```
 Screen        the frame
-└─ Layout     names the regions, sizes them, says which scroll
+└─ Layout     names the regions, sizes them, says which scroll - and may scroll as one
    └─ Region  holds blocks, flows them, scrolls them
       └─ Block   a field, a panel, a note, the key hints
 ```
@@ -23,18 +23,17 @@ The [specification](/specification#layout) explains why the split falls exactly 
 
 ## The layouts that ship
 
-Four, picked by name:
+Three, picked by name:
 
 | Name         | Axis    | Regions                                                     | For                                         |
 | ------------ | ------- | ----------------------------------------------------------- | ------------------------------------------- |
 | `default`    | rows    | `header` (fixed 1), `content` (scrolls), `footer` (fixed 1) | the screen, unless you say otherwise        |
-| `grid`       | rows    | `content` (scrolls)                                         | sub-panels dealt into visual rows           |
 | `panel`      | rows    | `content` (scrolls)                                         | a panel, unless it says otherwise           |
 | `two-column` | columns | `left`, `right`                                             | anything that wants its blocks side by side |
 
 Two axes cover it, because the second dimension comes from nesting rather than from a grid: a panel is a block that holds a layout, so any arrangement is rows of columns of rows, as deep as it needs to be.
 
-`grid` is the odd one out, and the [next section](#a-grid-of-windows) is why: it takes the same one region `panel` does, and adds the arithmetic that sizes the sub-panels sharing a visual row.
+A fourth arrangement ships without a name: the **grid**, covered in the [next section](#a-grid-of-windows). What it arranges is a shape rather than a set of names, and no name carries a shape, so it is built where the shape is written rather than picked from this table.
 
 ## Picking one
 
@@ -70,13 +69,13 @@ Both calls resolve through the same registry, which is the whole of what _reuse_
 
 :::note
 
-`PanelBuilder::layout()` also takes **numbers**: `->layout(1, 2)` arranges the panel with a `grid` of that shape, dealing its _sub-panels_ into [side-by-side windows](/panels#panel-layouts). Both forms pick a layout, so mixing them in one call throws - a panel is arranged by one.
+`PanelBuilder::layout()` also takes **numbers**: `->layout(1, 2)` arranges the panel with a [grid](#a-grid-of-windows) of that shape, dealing its _sub-panels_ into [side-by-side windows](/panels#panel-layouts). Both forms pick a layout, so mixing them in one call throws - a panel is arranged by one - and so does calling it with neither, since that names no arrangement and declares no shape.
 
 :::
 
 ## A grid of windows
 
-`grid` is the one shipped layout built with an argument, because what it arranges is a shape rather than a set of names:
+The grid is the one arrangement built from a shape rather than picked by a name:
 
 ```php
 use DrevOps\Tui\Screen\Layout\GridLayout;
@@ -85,41 +84,60 @@ use DrevOps\Tui\Screen\Layout\GridLayout;
 $panel->layout(new GridLayout(1, 2));
 ```
 
-The builder's `->layout(1, 2)` is the same thing said shorter, and it is how a form usually reaches one. Either way the panels in the layout's `content` region are dealt into those visual rows and drawn as **windows** - columns previewing what is behind them - while everything else in the region keeps its place, above the grid or below it depending on where it was written.
+The builder's `->layout(1, 2)` is the same thing said shorter, and it is how a form usually reaches one.
 
-It declares the same one region `panel` does rather than one region per window, and that split is the point:
+**Every window is a region.** `GridLayout(1, 2)` declares five of them: `above`, then `window-1`, `window-2` and `window-3` numbered in reading order - across the first visual row, then across the second - and last `below`. A sub-panel goes in the window that names it, which is what the builder does for you as each one is declared, and it draws there as a **window**: a column showing what is behind it rather than a row summarizing it. That is the region's declaration rather than the panel's - a row has one line to say what is behind a panel and a window has the depth to show it, so only the arrangement knows which of the two the space is.
+
+**`above` and `below` are the panel's own rows**, and which of the two a row is in is the whole of where it sits: written before the first window it draws over the grid, written after the last it draws under it, and declaration order holds either side. The builder puts them there without being asked - the region a block reaches by naming none is `above` until the first sub-panel is declared and `below` from then on:
+
+```php
+$p->layout(2);
+$p->text('name', 'Order name');                  // above the grid
+$p->panel('fruit', 'Fruit', $declare);           // window-1
+$p->panel('veg', 'Vegetables', $declare);        // window-2
+$p->markup('note', 'Crates are weighed at the bench.'); // below the grid
+```
+
+Both questions a window raises are the layout's, which is the whole of what a grid adds:
 
 | Question             | Answered by                                                        |
 | -------------------- | ------------------------------------------------------------------ |
-| how tall a window is | what it holds, so the whole grid scrolls together as one region    |
+| how deep a window is | what it holds - a size the region states and the layout apportions |
 | how wide a window is | the layout, because the windows beside it come off the width first |
 
-A window sized by its own contents, stacking with its siblings and scrolling with them, is a block in a region. A width that can only be worked out once every window in the row has been counted is _sizing_, and sizing is the layout's - which is the whole of what `GridLayout` adds. The gutter between two windows comes off the width before it is divided, so they are the same width at every terminal size.
+The gutter between two windows comes off the width before it is divided, so they are the same width at every terminal size. How wide that gutter is belongs to the theme, so the layout asks for it before dividing and the renderer asks the same theme when it joins what the windows drew - one fact, read in both places.
 
-Moving through a grid is spatial: <kbd>Left</kbd> and <kbd>Right</kbd> walk a visual row, <kbd>Up</kbd> and <kbd>Down</kbd> move between rows and out to whatever sits above or below the grid. The key hints advertise all four only where a grid is arranged, because they read that off the layout too.
+**A grid scrolls as one surface.** A grid too tall for its space has to move every line together, and no window can move its siblings any more than it can size them, so the offset belongs to the arrangement - the third thing only the layout can do. Everything else reads exactly as it does for a region: the grid is drawn whole, the part in sight is what its space has room for, and the [overflow marker](#scrolling) points at the edge the rest is past. Nothing is dropped silently. Following the cursor works on the whole surface too, so stepping onto a window past the edge brings its line into sight.
 
-Two mistakes are refused where they are written rather than mid-session: a visual row declaring fewer than one window is nothing could ever be dealt into, and a shape whose slots do not exactly cover the sub-panels would leave one of them off the screen or a row of the grid empty.
+**A window that is not there closes its row up.** A sub-panel gated on an answer is a whole [section](/panels#conditional-panels), and a section that has gone leaves no space where it stood: the windows still there share the width between them, the arrows step straight past the gone one, and the row is back at its old width the moment the answer brings it back.
+
+Moving through a grid is spatial: <kbd>Left</kbd> and <kbd>Right</kbd> walk a visual row, <kbd>Up</kbd> and <kbd>Down</kbd> move between rows and out to whatever sits above or below the grid. The key hints advertise all four only where windows actually sit beside each other, because they read that off the layout too. Going into a window leaves the grid behind: the panel takes the whole frame rather than the cell it was previewed in.
+
+Three mistakes are refused where they are written rather than mid-session: a grid declared with no visual row at all is not a grid, a visual row declaring fewer than one window is nothing that could ever be dealt into, and a shape whose slots do not exactly cover the sub-panels would leave one of them off the screen or a row of the grid empty.
 
 ## Sizing a region
 
-A region takes its share of the axis one of two ways, and both axes work the same:
+A region takes its share of the axis one of three ways, and both axes work the same:
 
 ```php
-$this->region('header')->fixed(1);   // exactly one row (or column)
-$this->region('content')->flex(1);   // a share of whatever is left
+$this->region('header')->fixed(1);    // exactly one row (or column)
+$this->region('content')->flex(1);    // a share of whatever is left
+$this->region('window-1')->content(); // as much as what it holds comes to
 ```
 
 **`fixed` is cells**, and rows are why it exists. A header is one line whatever the terminal height, and no proportion can say that: 4% of a 24-row terminal is one row, of a 50-row terminal is two. Columns rarely need it; rows almost always do at their edges.
 
 **`flex` is a share of the remainder.** Shares don't sum to anything in particular, so `30, 40, 30` and `3, 4, 3` mean the same thing. Declaring neither is `flex(1)`.
 
-The two mix without negotiating. Fixed regions come off the top first, what remains is divided by the flex values, and any cell left over by the rounding goes to the last region taking a share - so the sizes always add up to what was available. A region never sees that arithmetic; it is told a number and gets on with it.
+**`content` is what it holds**, which is what a window of a grid takes. It is still a declaration rather than a measurement: what the region holds is counted where blocks are drawn and handed to the layout as a plain number, so the region says which kind it is and the layout does every line of the arithmetic.
+
+The three mix without negotiating. Sized regions come off the top first, what remains is divided by the flex values, and any cell left over by the rounding goes to the last region taking a share - so the sizes always add up to what was available. A region never sees that arithmetic; it is told a number and gets on with it.
 
 A terminal too small even for the fixed regions is a real state rather than an error: they are trimmed in declaration order, so the sizes still add up and the frame stays whole.
 
 ## Scrolling
 
-Scrolling is declared **per region**, not per layout:
+Scrolling is declared **per surface** rather than per layout - usually a region, and sometimes the arrangement itself:
 
 ```php
 $this->region('produce')->flex(3)->scrolls();
@@ -128,7 +146,25 @@ $this->region('delivery')->flex(2);
 
 That is what lets a long produce list outrun its column while its neighbor stays pinned, and what lets two rows scroll independently of each other. A region that was not declared to scroll clips what outruns it instead.
 
-The region does the scrolling too. Its layout hands it one number - the size it was given - and everything after that is the region's own: how tall its blocks add up to, where the viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved, which is why sizing belongs to the layout and scrolling belongs to the region.
+The region does the scrolling too. Its layout hands it one number - the size it was given - and everything after that is the region's own: how tall its blocks add up to, where the viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved, which is why a region can scroll its own blocks alone - and why moving every line at once has to belong to the arrangement instead.
+
+**An arrangement can be a surface too**, declared the same way and moved by the same rules:
+
+```php
+public function __construct() {
+  parent::__construct(Axis::Rows);
+
+  // Its lines move together rather than each region moving on its own.
+  $this->scrolls();
+
+  $this->region('top')->content();
+  $this->region('bottom')->content();
+}
+```
+
+Use it where no single region can do the moving, which is exactly what a [grid](#a-grid-of-windows) needs: its lines have to move together, and none of them sees its siblings. The layout is then drawn whole and shows what its space has room for, marking whichever edge the rest is past - the region rules, one level up.
+
+[`playground/20-layouts-scrolling.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-scrolling.php) prints one grid three times: with the room it comes to, in a frame too short for it, and moved down three rows - carrying the panel's own rows along with the windows.
 
 ## Flow: two blocks on one line
 
@@ -206,11 +242,11 @@ final class StallLayout extends AbstractLayout {
 }
 ```
 
-Two axes exist - `Axis::Rows` and `Axis::Columns` - and that is the whole set. Declaring the same region name twice throws, naming the layout. So does arranging a panel with a layout that declares no region at all, since there would be nowhere for a block to go.
+Two axes exist - `Axis::Rows` and `Axis::Columns` - and that is the whole set. Declaring the same region name twice throws, naming the region. So does arranging a panel with a layout that declares no region at all, since there would be nowhere for a block to go.
 
-Overriding the arithmetic is the other reason to subclass - a layout that packs its regions to fit, or gives the focused one extra room - and `arrange(int $available): array<string,int>` is the method that does it. Two more sit beside it for the arithmetic that runs across a region rather than along the axis: `deal(): array<int>` says how many of its blocks share each visual row, and `share(int $available, int $count): int` how much of the region each of them takes. `GridLayout` is the one shipped layout that answers either with anything but "one block, the whole width".
+Overriding the arithmetic is the other reason to subclass - a layout that packs its regions to fit, or gives the focused one extra room - and `arrange(int $available, array $measured = []): array<string,int>` is the method that does it; `$measured` is what each region's contents came to, for the ones sized by what they hold. Two more sit beside it for arrangements that draw several regions on one line of the axis: `lines(): list<list<string>>` says which regions share each line, and `share(int $available, int $count, ChromeElementsInterface $chrome): int` how much of that line each of them takes. `GridLayout` is the one shipped arrangement that answers either with anything but "one region to a line, the whole width".
 
-A fourth is not arithmetic at all: `furnishes(Furniture $piece): ?string` says which region each piece of the [standard furniture](#where-the-standard-furniture-goes) belongs in. A layout using the conventional names inherits the answer.
+Two more are not arithmetic at all. `natural(array $measured = []): int` says what the arrangement comes to when nothing has sized it, which is what a panel takes of the region it sits in. And `furnishes(Furniture $piece): ?string` says which region each piece of the [standard furniture](#where-the-standard-furniture-goes) belongs in. Every layout inherits `natural()` whatever it calls its regions; a layout using the conventional names inherits `furnishes()` as well.
 
 ## Registering one
 
@@ -227,7 +263,9 @@ LayoutManager::create(StallLayout::class);    // the class, unregistered
 
 Registered or not, the name goes wherever a shipped one does - `->layout('stall')` on the facade for the screen, `$p->layout('stall')` for a panel. Naming the class directly needs no registration at all; registering buys a short, stable alias.
 
-Each call builds its own instance, because two forms picking the same layout must not share its regions. Registration checks the class up front - it has to implement `LayoutInterface` and be instantiable - so an abstract class or a typo is refused where it is written rather than at the first frame.
+Each call builds its own instance, because two forms picking the same layout must not share its regions. Registration checks the class up front - it has to implement `LayoutInterface`, be instantiable, and be buildable from its name alone - so an abstract class or a typo is refused where it is written rather than at the first frame.
+
+That last check is why a [grid](#a-grid-of-windows) is reached by none of these three routes: all of them hand over a name and nothing else, and a name carries no shape. A layout whose constructor takes an argument is left out of the shipped names and refused by the other two routes, naming the class rather than failing at the first frame - so `layout('grid')` throws exactly as a misspelled name does, and a grid is written where its shape is.
 
 Both routes are in [`playground/20-layouts-custom.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-custom.php), which registers one layout for a panel and another for the screen.
 

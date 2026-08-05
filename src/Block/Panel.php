@@ -15,12 +15,11 @@ use DrevOps\Tui\Block\Capability\OverlayCapableInterface;
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Block\Element\PanelElementsInterface;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Model\Buttons;
-use DrevOps\Tui\Model\FormException;
 use DrevOps\Tui\Screen\Furniture;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Region;
@@ -166,13 +165,13 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * Label the way out of this panel.
    *
-   * @param \DrevOps\Tui\Model\Buttons $buttons
+   * @param \DrevOps\Tui\Block\Buttons $buttons
    *   The pair that closes it.
    *
    * @return static
    *   The panel.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When the pair is hidden on a panel that draws over what is behind it,
    *   which would strand it with no way out.
    */
@@ -186,7 +185,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * The way out of this panel.
    *
-   * @return \DrevOps\Tui\Model\Buttons
+   * @return \DrevOps\Tui\Block\Buttons
    *   The pair that closes it.
    */
   public function currentButtons(): Buttons {
@@ -307,7 +306,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * {@inheritdoc}
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When its buttons are hidden, which would leave it drawn over everything
    *   with no way out.
    */
@@ -346,8 +345,8 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   public function hints(): array {
     // Windows sitting beside each other are moved between in two directions
     // rather than one, so what the keys do depends on how they are arranged.
-    $dealt = $this->layout instanceof LayoutInterface && $this->layout->deal() !== [];
-    $move = $dealt
+    $abreast = $this->layout instanceof LayoutInterface && array_filter($this->layout->lines(), static fn(array $line): bool => count($line) > 1) !== [];
+    $move = $abreast
       ? new Hint('move', Action::MoveUp, Action::MoveDown, Action::MoveLeft, Action::MoveRight)
       : new Hint('move', Action::MoveUp, Action::MoveDown);
 
@@ -697,10 +696,10 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    *
    * @param bool $modal
    *   Whether it draws over what is behind it.
-   * @param \DrevOps\Tui\Model\Buttons $buttons
+   * @param \DrevOps\Tui\Block\Buttons $buttons
    *   The pair that closes it.
    *
-   * @throws \DrevOps\Tui\Model\FormException
+   * @throws \DrevOps\Tui\FormException
    *   When such a panel hides its buttons.
    */
   protected function assertWayOut(bool $modal, Buttons $buttons): void {

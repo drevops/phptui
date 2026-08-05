@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Render\Ansi;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
@@ -85,31 +84,33 @@ final class ThemeRenderTest extends TestCase {
   }
 
   #[DataProvider('dataProviderKeyGlyph')]
-  public function testKeyGlyph(Key $key, string $unicode, string $ascii): void {
+  public function testKeyGlyph(KeyName|string $key, string $unicode, string $ascii): void {
     $this->assertSame($unicode, (new DefaultTheme())->keyGlyph($key));
     $this->assertSame($ascii, (new DefaultTheme(76, ['color' => FALSE, 'unicode' => FALSE]))->keyGlyph($key));
   }
 
   public static function dataProviderKeyGlyph(): \Iterator {
-    yield 'up' => [Key::named(KeyName::Up), '↑', '^'];
-    yield 'down' => [Key::named(KeyName::Down), '↓', 'v'];
-    yield 'left' => [Key::named(KeyName::Left), '←', '<'];
-    yield 'right' => [Key::named(KeyName::Right), '→', '>'];
-    yield 'enter' => [Key::named(KeyName::Enter), '↵', '<'];
-    yield 'escape' => [Key::named(KeyName::Escape), 'esc', 'esc'];
-    yield 'interrupt' => [Key::named(KeyName::Interrupt), 'ctrl-c', 'ctrl-c'];
-    yield 'tab' => [Key::named(KeyName::Tab), 'tab', 'tab'];
-    yield 'space' => [Key::named(KeyName::Space), 'space', 'space'];
-    yield 'backspace' => [Key::named(KeyName::Backspace), '⌫', 'bksp'];
-    yield 'delete' => [Key::named(KeyName::Delete), 'del', 'del'];
-    yield 'home' => [Key::named(KeyName::Home), 'home', 'home'];
-    yield 'end' => [Key::named(KeyName::End), 'end', 'end'];
-    yield 'page up' => [Key::named(KeyName::PageUp), 'pgup', 'pgup'];
-    yield 'page down' => [Key::named(KeyName::PageDown), 'pgdn', 'pgdn'];
-    yield 'wheel up' => [Key::named(KeyName::MouseWheelUp), '↑', '^'];
-    yield 'wheel down' => [Key::named(KeyName::MouseWheelDown), '↓', 'v'];
-    yield 'character' => [Key::char('j'), 'j', 'j'];
-    yield 'control character spelled out' => [Key::char("\x05"), 'ctrl-e', 'ctrl-e'];
+    yield 'up' => [KeyName::Up, '↑', '^'];
+    yield 'down' => [KeyName::Down, '↓', 'v'];
+    yield 'left' => [KeyName::Left, '←', '<'];
+    yield 'right' => [KeyName::Right, '→', '>'];
+    yield 'enter' => [KeyName::Enter, '↵', '<'];
+    yield 'escape' => [KeyName::Escape, 'esc', 'esc'];
+    yield 'interrupt' => [KeyName::Interrupt, 'ctrl-c', 'ctrl-c'];
+    yield 'tab' => [KeyName::Tab, 'tab', 'tab'];
+    yield 'space' => [KeyName::Space, 'space', 'space'];
+    yield 'backspace' => [KeyName::Backspace, '⌫', 'bksp'];
+    yield 'delete' => [KeyName::Delete, 'del', 'del'];
+    yield 'home' => [KeyName::Home, 'home', 'home'];
+    yield 'end' => [KeyName::End, 'end', 'end'];
+    yield 'page up' => [KeyName::PageUp, 'pgup', 'pgup'];
+    yield 'page down' => [KeyName::PageDown, 'pgdn', 'pgdn'];
+    yield 'wheel up' => [KeyName::MouseWheelUp, '↑', '^'];
+    yield 'wheel down' => [KeyName::MouseWheelDown, '↓', 'v'];
+    // A typed key arrives as what it writes, so there is no vocabulary left
+    // for a theme to pick from and it is written out as it came.
+    yield 'character' => ['j', 'j', 'j'];
+    yield 'key spelled out where nothing can be typed' => ['ctrl-e', 'ctrl-e', 'ctrl-e'];
   }
 
   public function testDimRecedesText(): void {

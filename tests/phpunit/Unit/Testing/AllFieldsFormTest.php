@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Testing;
 
 use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Model\FieldType;
 use DrevOps\Tui\Testing\TuiTester;
 use DrevOps\Tui\Tests\Fixtures\Form\AllFieldsForm;
 use DrevOps\Tui\Tests\Fixtures\Theme\OceanTheme;

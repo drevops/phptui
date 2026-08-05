@@ -8,7 +8,6 @@ use DrevOps\Tui\Block\Capability\DependCapableInterface;
 use DrevOps\Tui\Block\Capability\DependCapableTrait;
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Element\MarkupElementsInterface;
-use DrevOps\Tui\Model\TableSpec;
 use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
@@ -164,7 +163,7 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
   /**
    * The grid drawn beneath this block's body.
    *
-   * @return \DrevOps\Tui\Model\TableSpec|null
+   * @return \DrevOps\Tui\Block\TableSpec|null
    *   The grid, or NULL when it carries none.
    */
   public function tableSpec(): ?TableSpec {

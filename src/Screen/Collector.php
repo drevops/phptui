@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Screen;
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Block\Option;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\CollectException;
@@ -16,7 +17,6 @@ use DrevOps\Tui\Derive\Deriver;
 use DrevOps\Tui\Discovery\DiscoverInterface;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
-use DrevOps\Tui\Model\Option;
 use DrevOps\Tui\Translation\Translator;
 
 /**
@@ -64,7 +64,7 @@ final class Collector {
    * context of its own retires this memo rather than leaving the collection
    * convinced they are still its own.
    *
-   * @var array<string,array{answers:array<string,mixed>,run:array{string,bool,string},rows:list<\DrevOps\Tui\Model\Option>}>
+   * @var array<string,array{answers:array<string,mixed>,run:array{string,bool,string},rows:list<\DrevOps\Tui\Block\Option>}>
    */
   protected array $memo = [];
 
@@ -80,7 +80,7 @@ final class Collector {
    *   The registry resolving a field id to the behaviour reusable across every
    *   form that asks for that kind of answer, or NULL when nothing is reused
    *   and each field speaks only for itself.
-   * @param \DrevOps\Tui\Model\Fixup[] $fixups
+   * @param \DrevOps\Tui\Builder\Fixup[] $fixups
    *   The rules applied once the answers have settled. They belong to the form
    *   rather than to any one block, so they arrive beside the tree.
    */

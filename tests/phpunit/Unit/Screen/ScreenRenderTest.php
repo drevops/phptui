@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Screen;
 
 use DrevOps\Tui\Block\Breadcrumb;
+use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
+use DrevOps\Tui\Input\Action;
+use DrevOps\Tui\Input\Hint;
+use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Layout\AbstractLayout;
 use DrevOps\Tui\Screen\Layout\DefaultLayout;
@@ -35,7 +39,7 @@ final class ScreenRenderTest extends TestCase {
     $screen = (new Screen())->layout(new DefaultLayout());
     $screen->in('header')->add(new Breadcrumb('Orchard', 'Delivery'));
     $screen->in('content')->add(new Markup('intro', 'Pick the produce.'));
-    $screen->in('footer')->add((new Legend())->entry('↵', 'accept'));
+    $screen->in('footer')->add((new Legend())->advertise(KeyMapManager::create()->navigation(), new Hint('accept', Action::Activate)));
 
     $lines = $this->render($screen, 6, 40);
 
@@ -268,35 +272,41 @@ final class ScreenRenderTest extends TestCase {
   public function testGridIsMeasuredTheWayItIsDrawn(): void {
     $grid = new GridLayout(2, 1);
     $hub = (new Panel('hub', 'Hub'))->layout($grid)->enter();
-    $region = $grid->in('content');
-    $region->add(new Markup('above', 'Pick the produce.'));
+    $grid->in($grid->leading())->add(new Markup('intro', 'Pick the produce.'));
 
     $screen = (new Screen())->layout(new DefaultLayout());
     $screen->in('content')->add($hub);
 
-    $windows = [];
+    $placed = 0;
 
     foreach (['fruit' => 'Fruit', 'veg' => 'Vegetables', 'dairy' => 'Dairy'] as $id => $title) {
       $window = (new Panel($id, $title))->layout(new DefaultLayout());
       $window->in('content')->add(new Markup($id . '-note', "one\ntwo"));
-      $region->add($window);
-      $windows[$id] = $window;
+      $grid->in($grid->windows()[$placed])->add($window);
+      $placed++;
     }
 
-    [$total, $row] = (new ScreenRenderer(new DefaultTheme(40, ['color' => FALSE])))->extent($grid, 'content', $windows['dairy']);
+    $renderer = new ScreenRenderer(new DefaultTheme(40, ['color' => FALSE]));
 
-    // The row above, the air under it, then two windows sharing three rows, a
-    // rule between the visual rows, and the window below sharing none: two
-    // windows side by side cost the rows of one rather than of both.
-    $this->assertSame(9, $total);
-    // The window below the first visual row starts after it and the rule.
-    $this->assertSame(6, $row);
+    // Every region is measured on its own, and the arrangement is what adds
+    // them up: the row above, then two windows sharing three rows, then the
+    // window below sharing none - so two windows side by side cost the rows of
+    // one rather than of both. Every line but the last carries the row telling
+    // it from the next.
+    $sizes = $renderer->sizes($grid, 40);
+    $this->assertSame(1, $renderer->extent($grid, 'above')[0]);
+    $this->assertSame(3, $renderer->extent($grid, 'window-1')[0]);
+    $this->assertSame(['above' => 2, 'window-1' => 4, 'window-2' => 4, 'window-3' => 3, 'below' => 0], $sizes);
 
-    // What was counted is what is drawn: the content region comes to exactly
-    // those rows, so a region moved against them shows what it says it does.
-    $drawn = $this->render($screen, $total + 2, 40);
-    $this->assertSame('  Dairy ›', $drawn[$row + 1]);
-    $this->assertSame('two', $drawn[$total]);
+    // The arrangement is measured as one surface too, which is what it is
+    // moved against when it outruns its space.
+    $this->assertSame([9, 6], $renderer->reach($grid, $grid->in('window-3')->blocks()[0]));
+
+    // What was counted is what is drawn: the windows come to exactly those
+    // rows, so a surface moved against them shows what it says it does.
+    $drawn = $this->render($screen, 11, 40);
+    $this->assertSame('  Dairy ›', $drawn[7]);
+    $this->assertSame('two', $drawn[9]);
   }
 
   public function testBlockPackedFromTheEndSitsAgainstTheFarEdgeOfTheFlow(): void {
@@ -304,7 +314,7 @@ final class ScreenRenderTest extends TestCase {
     $layout->in('footer')->flow(Axis::Columns);
 
     $screen = (new Screen())->layout($layout);
-    $screen->in('footer')->add((new Legend())->entry('↵', 'accept'))->tail(new Markup('version', 'v1.2.3'));
+    $screen->in('footer')->add((new Legend())->advertise(KeyMapManager::create()->navigation(), new Hint('accept', Action::Activate)))->tail(new Markup('version', 'v1.2.3'));
 
     // A footer flows its key hints from one end and a version string from the
     // other, without a second arrangement to put them there.
@@ -328,6 +338,68 @@ final class ScreenRenderTest extends TestCase {
     // The same statement with the axis turned: the end of a flow running down
     // a region is its last row.
     $this->assertSame(['Pick the produce.', '', '', '', '', 'v1.2.3'], $this->render($screen, 6, 40));
+  }
+
+  public function testWindowPackedFromTheEndIsDrawnTheWayItWasMeasured(): void {
+    $layout = new class() extends AbstractLayout {
+
+      public function __construct() {
+        parent::__construct(Axis::Rows);
+
+        $this->region('content')->content()->previews();
+      }
+
+    };
+
+    $window = (new Panel('fruit', 'Fruit'))->layout(new DefaultLayout());
+    $window->in('content')->add(new Markup('note', "apples\npears"));
+
+    $screen = (new Screen())->layout($layout);
+    $screen->in('content')->tail($window);
+
+    $renderer = new ScreenRenderer(new DefaultTheme(40, ['color' => FALSE]));
+
+    // A window shows what is behind it whichever end of the flow it was packed
+    // from, so the rows it is counted at are the rows it draws.
+    $this->assertSame(3, $renderer->extent($layout, 'content')[0]);
+    $this->assertSame(['  Fruit ›', 'apples', 'pears'], $this->render($screen, 3, 40));
+  }
+
+  public function testLineIsAsDeepAsTheDeepestRegionDrawnOnIt(): void {
+    $layout = new class() extends AbstractLayout {
+
+      public function __construct() {
+        parent::__construct(Axis::Rows);
+
+        $this->region('left')->content();
+        $this->region('right')->content();
+      }
+
+      #[\Override]
+      public function lines(): array {
+        return [['left', 'right']];
+      }
+
+      #[\Override]
+      public function arrange(int $available, array $measured = []): array {
+        return ['left' => 1, 'right' => 3];
+      }
+
+      #[\Override]
+      public function share(int $available, int $count, ChromeElementsInterface $chrome): int {
+        return intdiv($available, max(1, $count));
+      }
+
+    };
+
+    $screen = (new Screen())->layout($layout);
+    $screen->in('left')->add(new Markup('one', 'pears'));
+    $screen->in('right')->add(new Markup('two', "apples\ncherries\nplums"));
+
+    // An arrangement of a consumer's own can give the regions of a line sizes
+    // of their own, and the line has to reach the deepest of them rather than
+    // however deep whichever of them is named first happens to be.
+    $this->assertSame(['pears                 apples', '                      cherries', '                      plums'], $this->render($screen, 3, 40));
   }
 
   public function testWhereTheTwoEndsMeetTheHeadKeepsItsSpaceAndTheTailIsCut(): void {

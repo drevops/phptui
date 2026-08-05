@@ -54,7 +54,7 @@ A screen is built from four levels, and each owns a fixed set of capabilities. W
 
 ```
 Screen        the root; occupies the terminal, or fits its contents
-└─ Layout     arranges; reusable by name
+└─ Layout     arranges; reusable by name; scrolls what it stacks
    └─ Region  holds blocks and flows them; declares whether it scrolls
       └─ Block   drawn in a region
 ```
@@ -149,7 +149,7 @@ The facade's surface:
 
 | Call | Purpose |
 |---|---|
-| `run($prompts, $version, $directory, $interactive)` | Collect answers; interactive on a TTY, headless otherwise (or forced via `$interactive`) |
+| `run($prompts, $version, $directory, $interactive, $update)` | Collect answers; interactive on a TTY, headless otherwise (or forced via `$interactive`) |
 | `collect($prompts, $directory, $update, $version)` | Headless collection from JSON + environment; `$update` enables discovery |
 | `interact()` | The interactive panel TUI, explicitly |
 | `progress($total, $caption, $work)` | Show slow work running around the form: a spinner with no total, a determinate bar with one - a theme-drawn primitive |
