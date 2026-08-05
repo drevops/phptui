@@ -32,7 +32,7 @@ Runnable script: [`playground/02-fields-reorder.php`](https://github.com/drevops
 
 | Name         | Description                                                                                                      | Required | Default        |
 | ------------ | ---------------------------------------------------------------------------------------------------------------- | -------- | -------------- |
-| `options()`  | The items to rank, as a `value => label` map.                                                                    | Yes      | -              |
+| `options()`  | The items to rank, as a `value => label` map; at least two, and all of them plain.                               | Yes      | -              |
 | `default()`  | Seeds the starting order; any omitted options are appended in declared order, so the ranking is always complete. | No       | Declared order |
 | `pageSize()` | Items shown before the list pages around the cursor.                                                             | No       | `10`           |
 

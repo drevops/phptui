@@ -11,6 +11,13 @@
  * next two side by side below; layout(2, 2) makes four windows. Each window is
  * a region of the grid, so a panel is drawn in the one that names it.
  *
+ * A grid keeps a region either side of its windows for the panel's own rows,
+ * and which of the pair a row is in is the whole of where it sits: written
+ * before the first window it draws over the grid, written after the last it
+ * draws under it. Produce shows both - a crate count above its two windows and
+ * a standing note below them - and neither region is ever named here, because
+ * where a row was written is what says which one it went in.
+ *
  * A name carries no shape, so no name reaches a grid: a panel that declares no
  * arrangement lists its sub-panels as rows instead - which is what Delivery
  * does here, beside Produce's layout(2) of Fruit and Vegetables. Every level
@@ -42,6 +49,10 @@ $form = Form::create('Market stall')
   ->panel('produce', 'Produce', function (PanelBuilder $p): void {
     // Counts: two sub-panels share one visual row.
     $p->layout(2);
+
+    // Written before the first window, so it goes in the region above them.
+    $p->number('crates', 'Crates')->default(6)->min(1)->max(99);
+
     $p->panel('fruit', 'Fruit', function (PanelBuilder $sp): void {
       $sp->select('fruit', 'Fruit')->default('apple')->options([
         'apple' => 'Apple',
@@ -56,6 +67,9 @@ $form = Form::create('Market stall')
         'spinach' => 'Spinach',
       ]);
     });
+
+    // Written after the last window, so it goes in the region below them.
+    $p->markup('bench', 'Crates are weighed at the bench.');
   })
   ->panel('delivery', 'Delivery', function (PanelBuilder $p): void {
     // No shape, so no grid: the two sub-panels are rows you select, one under

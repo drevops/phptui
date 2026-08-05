@@ -866,7 +866,9 @@ EXPECT;
  *
  * Both arrangements a panel can take are opened in turn, so the recording
  * carries the difference between them: a shape deals windows side by side, and
- * a panel that declares none lists its sub-panels as rows.
+ * a panel that declares none lists its sub-panels as rows. Produce is opened
+ * last so the held frame is the one showing the pair of rows a grid keeps
+ * either side of its windows.
  *
  * @return string
  *   The expect script body.
@@ -888,7 +890,8 @@ safe_send "\r"
 pause 2000
 press_escape
 
-# Back across to Produce, whose layout(2) deals its two windows into one row.
+# Back across to Produce, whose layout(2) deals its two windows into one row,
+# with a crate count above them and a standing note below.
 pause 1000
 arrow_left
 pause 600
@@ -1202,7 +1205,9 @@ function getJobs(string $project_dir): array {
   ];
 
   // Panel layouts: the layout(1, 2) grid hub with the nested layout(2) grid,
-  // walked spatially with the arrows.
+  // walked spatially with the arrows. The nested grid carries a row above its
+  // windows and another below, so the recording shows where a panel's own rows
+  // go once it is arranged as a grid.
   $jobs['panel-layout'] = [
     'command' => 'env LINES=' . TERMINAL_ROWS . ' COLUMNS=' . TERMINAL_COLS . ' php ' . $project_dir . '/playground/03-panels-layout.php',
     'interact' => layoutInteraction(),

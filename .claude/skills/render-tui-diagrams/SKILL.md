@@ -14,7 +14,7 @@ description: Use when regenerating the TUI architecture diagrams under docs/arch
 
 Each `.puml` renders to a light `<name>.svg`, and a dark-scheme `<name>-dark.svg` is derived from that light render by `docs/util/derive-dark-diagram.js`. Both are committed and served so the diagrams read well in light and dark browsers.
 
-All content is derived from the source under `src/` (the packages are the `src/` subdirectories; the lifecycle is what `Engine::collect()` and `PanelController::run()` do), never from design docs. If the docs and the code disagree, the code wins.
+All content is derived from the source under `src/` (the packages group the `src/` classes by what they do; the lifecycle is what `Tui::collect()` and `ScreenController::run()` do), never from design docs. If the docs and the code disagree, the code wins.
 
 ## Prerequisite
 
@@ -39,7 +39,7 @@ The light render stays the single source of truth; the dark variant is derived f
 
 ## Task B - add a new data-flow diagram
 
-1. **Trace the flow from source.** Pick the entry method (e.g. `Engine::collect()`, `PanelController::run()`) and follow it through the classes it calls: `InputResolver`, the discovery specs, `Deriver` + `Derive` + `Transform`, `Condition`, `HandlerRegistry` (reusable static behaviour), then `Answers` / `Theme` / `FieldFactory` on the way out.
+1. **Trace the flow from source.** Pick the entry method (e.g. `Tui::collect()`, `ScreenController::run()`) and follow it through the classes it calls: `InputResolver`, the discovery specs, `Deriver` + `Derive` + `Transform`, `Condition`, `HandlerRegistry` (reusable static behaviour), then `Answers` / `Theme` / `FieldFactory` on the way out.
 2. **Create** `docs/architecture/dataflow-<flow>.puml` from the template below.
 3. **Fill** the participants and messages from the real call path: solid arrows (`->`) for the forward path, dashed (`-->`) for returns. Mirror `dataflow-collect.puml`.
 4. **Render and derive** it: `plantuml -tsvg docs/architecture/dataflow-<flow>.puml`, then `node docs/util/derive-dark-diagram.js docs/architecture/dataflow-<flow>.svg` for the dark variant.

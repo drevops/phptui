@@ -125,7 +125,7 @@ The CGA blue screen, painted regardless of the terminal background. The theme dr
 
 ## Dark and light
 
-Dark and light aren't separate themes - they're a `mode` display option that every theme honors. When no theme is set (or you pass the explicit `'auto'` sentinel), the interactive TUI picks the mode from the actual terminal background: it queries the background color over OSC 11, falls back to the `COLORFGBG` environment variable, and settles on dark when neither answers.
+Dark and light aren't separate themes - they're a `mode` display option that every theme honors. Leave `mode` unset, whichever theme you picked, and the interactive TUI reads it off the actual terminal background: it queries the background color over OSC 11, falls back to the `COLORFGBG` environment variable, and settles on dark when neither answers. With color off the query is skipped and the mode is dark, since an unpainted palette has nothing to suit.
 
 ```php
 (new Tui($form))->theme('frost', ['mode' => 'light']);  // force light
@@ -134,7 +134,7 @@ Dark and light aren't separate themes - they're a `mode` display option that eve
 
 ## Display options
 
-Every theme takes the same options array, validated when the theme is built - an unknown key or a value outside the allowed set throws there, naming what it would accept. These are all of them:
+Every theme built on `DefaultTheme` takes the same options array, validated in its constructor - an unknown key, a value outside the allowed set, or a minimum size above its own maximum throws there, naming what it would accept. A theme built straight on the floor reads no option at all, so it validates none either. These are all of them:
 
 | Option               | Values                                                              | Does                                                                                                          |
 | -------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -193,7 +193,7 @@ class AquaTheme extends DefaultTheme {
 }
 ```
 
-Colors come from the `Sgr` palette map - named cases like `Sgr::Cyan` or `Sgr::Sand`, composed with `Sgr::of(...)` - so a palette reads as colors rather than raw ANSI numbers. `paint()` wraps text in a style and honors the color switch; `emphasize()` adds weight to whatever the cursor is on. The five adaptive built-ins are each four or five overrides of exactly this shape.
+Colors come from the `Sgr` palette map - named cases like `Sgr::Cyan` or `Sgr::Sand`, composed with `Sgr::of(...)` - so a palette reads as colors rather than raw ANSI numbers. `paint()` wraps text in a style and honors the color switch; `emphasize()` adds weight to whatever the cursor is on. Midnight, frost and ember are each five overrides of exactly this shape; mono adds a sixth, and dos, which paints its own screen rather than adapting to one, goes further.
 
 The voices are `protected` on purpose, and that's the boundary worth knowing before you write a theme: **the elements are the contract, and everything behind them is the theme's own business**. A subclass may lean on `accent()` or `guidance()` all it likes, and nothing outside the class may name one - no driver, no block, no test reaches past an element to the palette that painted it. Which is what lets a theme reorganize its palette without breaking a single caller, and why an element is the thing to override when you want a caller to see the difference.
 
@@ -243,7 +243,7 @@ Two of the six carry a **trait** with the plumbing, so a theme states a flag and
 
 `DefaultTheme` declares all six, so a subclass of it inherits every facility and never has to think about this. `AbstractTheme` declares none: it hands back the strings it was given and the ASCII stand-ins that read without them. That is the floor, and it is why a form renders in a terminal that supports nothing.
 
-A theme built on the floor is selected like any other - `->theme(MyFloorTheme::class)`, or a short name you registered - because `ThemeManager` builds anything implementing `ThemeInterface` from a frame width and an options array. It checks both of those where the theme is picked, along with the elements a form is drawn from, so a class that can't be built that way or can't draw a row is refused by name there rather than partway through a frame. What it doesn't declare, the driver does without: no frame is drawn around it, no blank row shows between blocks, nothing recedes behind a modal, and an [element patch](#patching-an-element) is dropped rather than deciding the theme can't draw. The [output and progress primitives](/output) are the exception - a card, a grid and a status line are composed rather than styled, so they want `PrimitiveElementsInterface`, and a theme without it is named in the error rather than drawn blank.
+A theme built on the floor is selected like any other - `->theme(MyFloorTheme::class)`, or a short name you registered - because `ThemeManager` builds anything implementing `ThemeInterface` from a frame width and an options array. It checks three things where the theme is picked: that the class can be instantiated at all, that its constructor takes a frame width and an options array, and that it implements every element interface the floor does. So a class nothing can build, or one that can't draw a row, is refused by name there rather than partway through a frame - and the set it is checked against is read off the floor rather than written down, so a block added to the library changes what a theme has to draw without anyone maintaining a list. A theme that reaches a frame some other way still can't draw blank: the renderer narrows it to the elements it needs and throws naming both, so `ScreenRenderer` refuses one without `ChromeElementsInterface` and every block does the same for its own. What it doesn't declare, the driver does without: no frame is drawn around it, no blank row shows between blocks, nothing recedes behind a modal, and an [element patch](#patching-an-element) is dropped rather than deciding the theme can't draw. The [output and progress primitives](/output) are the exception - a card, a grid and a status line are composed rather than styled, so they want `PrimitiveElementsInterface`, and a theme without it is named in the error rather than drawn blank.
 
 ## Patching an element
 

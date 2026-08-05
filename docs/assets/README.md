@@ -43,6 +43,12 @@ from their borderless twins.
   cards in all four display modes (`field-*-dark-animated*.svg`, the unmarked one
   being the hero, framed by the rounded border) and the matching static
   screenshots (`field-*-dark-static*.svg`, borderless).
+- **`render-anatomy-svgs.php`** - the annotated anatomy diagrams the field
+  anatomy page shows (`anatomy-*`): a real field frame through the same
+  keystroke harness, with the callouts drawn as vectors around it so nothing is
+  injected into the frame. It is run on its own rather than by
+  `update-assets.php`, because the diagrams change when the callouts do rather
+  than when a field does.
 - **`render-theme-svgs.php`** - the built-in theme previews, also through the
   keystroke harness: `theme-<name>-<dark|light>-static[-bordered].svg` for the
   adaptive themes, and the dark/light pair for `dos` (which draws its own window

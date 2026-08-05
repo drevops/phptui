@@ -45,6 +45,7 @@ loop until the form ends
     Screen --> SR: a size for each Region
     SR -> Screen: lines() and share(), where a grid draws Regions side by side
     SR -> Screen: flow the Region's blocks from both ends, scroll if declared
+    note right of SR: an arrangement declared to scroll is drawn whole\nand moved as one, because no Region of it\ncan move its siblings
     SR -> Block: render(theme)
     Block -> Theme: elements for what it draws
     Theme --> Block: styled strings
@@ -62,7 +63,7 @@ loop until the form ends
   alt the interrupt key
     note right of SC: aborts from anywhere, including an open field
   else a button, work to run, leaving, or the wheel
-    note right of SC: held here: none of the four acts on a block -\nthe wheel moves the region the cursor is in,\nleaving the cursor on the row it was on
+    note right of SC: held here: none of the four acts on a block -\nthe wheel moves the surface the cursor is on,\nregion or arrangement, leaving the cursor put
   else anything else
     SC -> KR: handle(key)
     activate KR

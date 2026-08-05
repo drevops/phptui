@@ -1,6 +1,7 @@
 @startuml
 ' drevops/tui - component architecture.
-' Packages mirror the src/ subdirectories; arrows show the main dependencies.
+' Packages group the src/ classes by what they do; arrows show the main
+' dependencies.
 ' Regenerate every SVG with:  plantuml -tsvg docs/architecture/*.puml
 !theme plain
 skinparam backgroundColor white
@@ -37,7 +38,9 @@ package "Arranging" #FFEBEE {
   [GridLayout]
   [LayoutManager]
   [Region]
+  [Sizing]
   [Furniture]
+  interface ScrollCapableInterface
 }
 
 package "Driving" #FFF3E0 {
@@ -107,6 +110,9 @@ BlockInterface --> [Block\\Element]
 [GridLayout] --> [AbstractLayout]
 [LayoutManager] --> LayoutInterface
 [Region] --> BlockInterface
+[Region] --> [Sizing]
+[Region] --> ScrollCapableInterface
+LayoutInterface --> ScrollCapableInterface
 
 [Tui] --> [Collector]
 [Tui] --> [ScreenController]

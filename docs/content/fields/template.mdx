@@ -42,7 +42,7 @@ A slot name is a word (`{{grade}}`, `{{part_1}}`), and inner whitespace is allow
 
 Only the slot name is required: an omitted label falls back to the slot name, and an omitted validator leaves the slot checked by the field's own validator alone - so `->slot('grade')` is enough to name a slot without constraining it.
 
-Four rules are enforced when the form is built, each raising a `FormException`: a pattern declares at least one slot, no slot name is repeated, two slots are separated by some fixed text, and `->slot()` names a slot the pattern actually declares. The middle two answer to the same reason - every slot is filled in separately and the answer is read back off the assembled string - but they are separate rules, and a pattern can break either one on its own: `{{a}}-{{a}}` has a boundary and still has no one place to put a value, while `{{a}}{{b}}` names two slots and still has no boundary to read back at.
+Five rules are enforced when the form is built, each raising a `FormException`: a template field declares a pattern at all, that pattern declares at least one slot, no slot name is repeated, two slots are separated by some fixed text, and `->slot()` names a slot the pattern actually declares. The middle two answer to the same reason - every slot is filled in separately and the answer is read back off the assembled string - but they are separate rules, and a pattern can break either one on its own: `{{a}}-{{a}}` has a boundary and still has no one place to put a value, while `{{a}}{{b}}` names two slots and still has no boundary to read back at.
 
 ## Reading the answer
 

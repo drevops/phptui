@@ -8,13 +8,13 @@ keywords: ['layout', 'region', 'columns', 'scrolling', 'arrangement', 'screen']
 
 A form never has to name a layout. Declare a panel of fields and you get the default arrangement: a trail across the top, the fields in the middle, the key hints along the bottom. A **layout** is what you reach for when that is not the shape you want - two columns instead of one, a taller header, a sidebar that stays put while its neighbor scrolls.
 
-A layout is an **arrangement and nothing else**. It names its regions, says how big each is and which of them scroll, and stops there. It never mentions a breadcrumb, a panel or a field - a layout carrying content opinions is a layout exactly one form can use. That is what makes it reusable: the same layout can arrange a whole screen and a single panel, and neither knows about the other.
+A layout is an **arrangement and nothing else**. It names its regions, says how big each is, says which of them scroll and whether it is a scrolling surface itself, and stops there. It never mentions a breadcrumb, a panel or a field - a layout carrying content opinions is a layout exactly one form can use. That is what makes it reusable: the same layout can arrange a whole screen and a single panel, and neither knows about the other.
 
 A **region** is one named slot inside it. Blocks go in by name, so nothing depends on the order anything was declared in.
 
 ```
 Screen        the frame
-└─ Layout     names the regions, sizes them, says which scroll
+└─ Layout     names the regions, sizes them, says which scroll - and may scroll as one
    └─ Region  holds blocks, flows them, scrolls them
       └─ Block   a field, a panel, a note, the key hints
 ```
@@ -137,7 +137,7 @@ A terminal too small even for the fixed regions is a real state rather than an e
 
 ## Scrolling
 
-Scrolling is declared **per region** rather than per layout:
+Scrolling is declared **per surface** rather than per layout - usually a region, and sometimes the arrangement itself:
 
 ```php
 $this->region('produce')->flex(3)->scrolls();
@@ -146,7 +146,7 @@ $this->region('delivery')->flex(2);
 
 That is what lets a long produce list outrun its column while its neighbor stays pinned, and what lets two rows scroll independently of each other. A region that was not declared to scroll clips what outruns it instead.
 
-The region does the scrolling too. Its layout hands it one number - the size it was given - and everything after that is the region's own: how tall its blocks add up to, where the viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved, which is why sizing belongs to the layout and scrolling belongs to the region.
+The region does the scrolling too. Its layout hands it one number - the size it was given - and everything after that is the region's own: how tall its blocks add up to, where the viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved, which is why a region can scroll its own blocks alone - and why moving every line at once has to belong to the arrangement instead.
 
 **An arrangement can be a surface too**, declared the same way and moved by the same rules:
 
@@ -163,6 +163,8 @@ public function __construct() {
 ```
 
 Use it where no single region can do the moving, which is exactly what a [grid](#a-grid-of-windows) needs: its lines have to move together, and none of them sees its siblings. The layout is then drawn whole and shows what its space has room for, marking whichever edge the rest is past - the region rules, one level up.
+
+[`playground/20-layouts-scrolling.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-scrolling.php) prints one grid three times: with the room it comes to, in a frame too short for it, and moved down three rows - carrying the panel's own rows along with the windows.
 
 ## Flow: two blocks on one line
 
@@ -240,11 +242,11 @@ final class StallLayout extends AbstractLayout {
 }
 ```
 
-Two axes exist - `Axis::Rows` and `Axis::Columns` - and that is the whole set. Declaring the same region name twice throws, naming the layout. So does arranging a panel with a layout that declares no region at all, since there would be nowhere for a block to go.
+Two axes exist - `Axis::Rows` and `Axis::Columns` - and that is the whole set. Declaring the same region name twice throws, naming the region. So does arranging a panel with a layout that declares no region at all, since there would be nowhere for a block to go.
 
-Overriding the arithmetic is the other reason to subclass - a layout that packs its regions to fit, or gives the focused one extra room - and `arrange(int $available, array $measured): array<string,int>` is the method that does it; `$measured` is what each region's contents came to, for the ones sized by what they hold. Two more sit beside it for arrangements that draw several regions on one line of the axis: `lines(): array<list<string>>` says which regions share each line, and `share(int $available, int $count, ChromeElementsInterface $chrome): int` how much of that line each of them takes. `GridLayout` is the one shipped arrangement that answers either with anything but "one region to a line, the whole width".
+Overriding the arithmetic is the other reason to subclass - a layout that packs its regions to fit, or gives the focused one extra room - and `arrange(int $available, array $measured = []): array<string,int>` is the method that does it; `$measured` is what each region's contents came to, for the ones sized by what they hold. Two more sit beside it for arrangements that draw several regions on one line of the axis: `lines(): list<list<string>>` says which regions share each line, and `share(int $available, int $count, ChromeElementsInterface $chrome): int` how much of that line each of them takes. `GridLayout` is the one shipped arrangement that answers either with anything but "one region to a line, the whole width".
 
-Two more are not arithmetic at all. `natural(array $measured): int` says what the arrangement comes to when nothing has sized it, which is what a panel takes of the region it sits in. And `furnishes(Furniture $piece): ?string` says which region each piece of the [standard furniture](#where-the-standard-furniture-goes) belongs in. A layout using the conventional names inherits both answers.
+Two more are not arithmetic at all. `natural(array $measured = []): int` says what the arrangement comes to when nothing has sized it, which is what a panel takes of the region it sits in. And `furnishes(Furniture $piece): ?string` says which region each piece of the [standard furniture](#where-the-standard-furniture-goes) belongs in. Every layout inherits `natural()` whatever it calls its regions; a layout using the conventional names inherits `furnishes()` as well.
 
 ## Registering one
 
