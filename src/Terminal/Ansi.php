@@ -91,16 +91,17 @@ final class Ansi {
    *
    * Text a form is built from is drawn as it stands, so an escape sequence
    * inside it reaches the terminal and clears the screen, moves the cursor or
-   * recolours everything after it. What a terminal reads as an instruction goes;
-   * the newline and the tab, which are text rather than instruction, stay.
+   * recolours everything after it. What a terminal reads as an instruction
+   * goes; the newline and the tab, which are text rather than instruction,
+   * stay.
    *
    * A carriage return is folded to a newline rather than dropped, because it is
    * a line break written on another platform - dropping it would run two lines
    * together where the author wrote two.
    *
-   * The C1 controls go too, and are matched as the two bytes UTF-8 encodes them
-   * as: a terminal in 8-bit mode reads U+009B as a CSI introducer and would open
-   * a sequence on it. The lead byte they are matched behind never appears inside
+   * The C1 controls go too, matched as the two bytes UTF-8 encodes them as: a
+   * terminal in 8-bit mode reads U+009B as a CSI introducer and would open a
+   * sequence on it. The lead byte they are matched behind never appears inside
    * another character, so no multi-byte text is cut in half to reach them.
    *
    * @param string $text

@@ -83,7 +83,7 @@ final class ControlBytesTest extends TestCase {
     parent::tearDown();
   }
 
-  public function testAMarkupBodyDrawsItsTextWithoutTheEscape(): void {
+  public function testMarkupBodyDrawsItsTextWithoutTheEscape(): void {
     $rendered = (new Markup('notice', 'Deliveries ' . self::CLEAR . ' leave at dawn.'))->render($this->plain());
 
     $this->assertStringNotContainsString("\033", $rendered);
@@ -91,7 +91,7 @@ final class ControlBytesTest extends TestCase {
     $this->assertStringContainsString('leave at dawn.', $rendered);
   }
 
-  public function testAFieldRowDrawsItsLabelAndValueWithoutTheEscape(): void {
+  public function testFieldRowDrawsItsLabelAndValueWithoutTheEscape(): void {
     $field = (new Field('courier', 'Cou' . self::CLEAR . 'rier'))->default('Valley ' . self::CLEAR . ' Runs');
 
     $this->assertSame('  Cou[2Jrier  Valley [2J Runs', $field->render($this->plain()));
@@ -138,21 +138,20 @@ final class ControlBytesTest extends TestCase {
     yield 'a grid body cell' => [static fn(string $b): string => (new TableSpec([], [['Figs' . $b]]))->rows[0][0], 'Figs[2J'];
     yield 'a template literal' => [static fn(string $b): string => (new Template('Figs' . $b . '-{{crate}}'))->literalAt(0), 'Figs[2J-'];
     yield 'a template slot label' => [static fn(string $b): string => (new Template('{{crate}}', ['crate' => 'Figs' . $b]))->labelOf('crate'), 'Figs[2J'];
-    yield 'a fix-up value' => [static fn(string $b): string => (string) (new Fixup(set: 'f', to: 'Figs' . $b))->to, 'Figs[2J'];
   }
 
-  #[DataProvider('dataProviderAFieldValueIsFilteredWhereverItIsSet')]
-  public function testAFieldValueIsFilteredWhereverItIsSet(\Closure $set, mixed $expected): void {
+  #[DataProvider('dataProviderFieldValueIsFilteredWhereverItIsSet')]
+  public function testFieldValueIsFilteredWhereverItIsSet(\Closure $set, mixed $expected): void {
     $this->assertSame($expected, $set(self::CLEAR));
   }
 
   /**
-   * Data provider for testAFieldValueIsFilteredWhereverItIsSet().
+   * Data provider for testFieldValueIsFilteredWhereverItIsSet().
    *
    * @return \Iterator<string, array{\Closure, mixed}>
    *   What sets the value and reads it back, and the value it settles on.
    */
-  public static function dataProviderAFieldValueIsFilteredWhereverItIsSet(): \Iterator {
+  public static function dataProviderFieldValueIsFilteredWhereverItIsSet(): \Iterator {
     yield 'a declared default' => [static fn(string $b): mixed => (new Field('f', 'F'))->default('Figs' . $b)->value(), 'Figs[2J'];
     yield 'a value accepted outright' => [
       static function (string $b): mixed {
@@ -165,16 +164,17 @@ final class ControlBytesTest extends TestCase {
     ];
     yield 'a list of values' => [static fn(string $b): mixed => (new Field('f', 'F', FieldType::Select))->multiple()->default(['Figs' . $b, 'Plums'])->value(), ['Figs[2J', 'Plums']];
     yield 'a value that is not text at all' => [static fn(string $b): mixed => (new Field('f', 'F', FieldType::Number))->default(12)->value(), 12];
+    yield 'a value a fix-up writes' => [static fn(string $b): mixed => (new Fixup(set: 'f', to: 'Figs' . $b))->to, 'Figs[2J'];
   }
 
-  public function testAValueANormalizationReturnsIsFiltered(): void {
+  public function testNormalizedValueIsFiltered(): void {
     $field = (new Field('courier', 'Courier'))->transform(static fn(mixed $value): string => 'Valley' . self::CLEAR . ' Runs');
     $field->accept('Coast Runs');
 
     $this->assertSame('Valley[2J Runs', $field->value());
   }
 
-  public function testAValueANormalizationReturnsIsFilteredWithNoScreen(): void {
+  public function testNormalizedValueIsFilteredWithNoScreen(): void {
     $form = Form::create('Orchard')->panel('delivery', 'Delivery', static function (PanelBuilder $panel): void {
       $panel->text('courier', 'Courier')->default('')->transform(static fn(mixed $value): string => 'Valley' . self::CLEAR . ' Runs');
     });
@@ -184,7 +184,7 @@ final class ControlBytesTest extends TestCase {
     $this->assertSame('Valley[2J Runs', $answers->value('courier'));
   }
 
-  public function testAComputedValueIsFiltered(): void {
+  public function testComputedValueIsFiltered(): void {
     $form = Form::create('Orchard')->panel('delivery', 'Delivery', static function (PanelBuilder $panel): void {
       $panel->text('courier', 'Courier')->default('Valley Runs');
       $panel->text('slug', 'Slug')->derive(new Derive('{{courier}}' . self::CLEAR));
@@ -193,13 +193,13 @@ final class ControlBytesTest extends TestCase {
     $this->assertSame('Valley Runs[2J', (new Tui($form))->collect()->value('slug'));
   }
 
-  public function testADraftIsFilteredAsItIsTyped(): void {
+  public function testDraftIsFilteredAsItIsTyped(): void {
     $field = (new Field('note', 'Note'))->draft('Figs' . self::CLEAR);
 
     $this->assertStringNotContainsString("\033", $field->open()->render($this->plain()));
   }
 
-  public function testAMultiLineValueKeepsItsNewlinesAndTabs(): void {
+  public function testMultiLineValueKeepsItsNewlinesAndTabs(): void {
     $field = (new Field('note', 'Note', FieldType::Textarea))->default("Figs\tand plums\nleave at dawn." . self::CLEAR);
 
     $this->assertSame("Figs\tand plums\nleave at dawn.[2J", $field->value());
@@ -211,8 +211,8 @@ final class ControlBytesTest extends TestCase {
     $this->assertSame("Figs\nand plums[2J\nleave at dawn.", $markup->bodyText());
   }
 
-  public function testARefusedValueReopensTheEditorOnTheFilteredDraft(): void {
-    $field = (new Field('courier', 'Courier'))->validate(static fn(mixed $value): ?string => 'Coast Runs do not deliver here.');
+  public function testRefusedValueReopensTheEditorOnTheFilteredDraft(): void {
+    $field = (new Field('courier', 'Courier'))->validate(static fn(mixed $value): string => 'Coast Runs do not deliver here.');
     $field->open();
     $field->draft('Figs' . self::CLEAR);
     $field->capture(Key::char('x'));
@@ -232,7 +232,7 @@ final class ControlBytesTest extends TestCase {
     $this->assertSame('Figs!', $textarea->buffer());
   }
 
-  public function testAValueFromAnEnvironmentVariableIsFiltered(): void {
+  public function testValueFromAnEnvironmentVariableIsFiltered(): void {
     $this->putEnv('CRATE_COURIER', 'Valley' . self::CLEAR . ' Runs');
 
     $answers = (new Tui($this->form(), env_prefix: 'CRATE_'))->collect();
@@ -240,13 +240,13 @@ final class ControlBytesTest extends TestCase {
     $this->assertSame('Valley[2J Runs', $answers->value('courier'));
   }
 
-  public function testAValueFromASuppliedPayloadIsFiltered(): void {
+  public function testValueFromSuppliedPayloadIsFiltered(): void {
     $answers = (new Tui($this->form()))->collect(json_encode(['courier' => 'Valley' . self::CLEAR . ' Runs'], JSON_THROW_ON_ERROR));
 
     $this->assertSame('Valley[2J Runs', $answers->value('courier'));
   }
 
-  public function testAValueFromADiscoverySourceIsFiltered(): void {
+  public function testValueFromDiscoverySourceIsFiltered(): void {
     vfsStream::setup('orchard', NULL, ['.env' => 'COURIER=Valley' . self::CLEAR . ' Runs']);
 
     $form = Form::create('Orchard')->panel('delivery', 'Delivery', static function (PanelBuilder $panel): void {
@@ -258,7 +258,7 @@ final class ControlBytesTest extends TestCase {
     $this->assertSame('Valley[2J Runs', $answers->value('courier'));
   }
 
-  public function testAValueFromADetectorOfItsOwnIsFiltered(): void {
+  public function testValueFromDetectorOfItsOwnIsFiltered(): void {
     $form = Form::create('Orchard')->panel('delivery', 'Delivery', static function (PanelBuilder $panel): void {
       $panel->text('courier', 'Courier')->default('')->discover(static fn(Context $context): string => 'Valley' . self::CLEAR . ' Runs');
     });
@@ -268,7 +268,7 @@ final class ControlBytesTest extends TestCase {
     $this->assertSame('Valley[2J Runs', $answers->value('courier'));
   }
 
-  public function testAComputedDefaultIsFiltered(): void {
+  public function testComputedDefaultIsFiltered(): void {
     $form = Form::create('Orchard')->panel('delivery', 'Delivery', static function (PanelBuilder $panel): void {
       $panel->text('courier', 'Courier')->default(static fn(Context $context): string => 'Valley' . self::CLEAR . ' Runs');
     });
@@ -293,7 +293,7 @@ final class ControlBytesTest extends TestCase {
       /**
        * {@inheritdoc}
        */
-      public function command(): ?string {
+      public function command(): string {
         return 'true';
       }
 
@@ -351,7 +351,7 @@ final class ControlBytesTest extends TestCase {
     $this->assertSame("Packing[2J crates\n", $terminal->output());
   }
 
-  public function testTheProgressPrimitiveFiltersALabelReportedMidRun(): void {
+  public function testTheProgressPrimitiveFiltersTheLabelReportedMidRun(): void {
     $terminal = new BufferedTerminal();
 
     (new Progress($terminal, $this->theme(color: FALSE), TRUE, 2, 'Packing crates'))->run(static function (Progress $progress): bool {
