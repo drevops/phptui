@@ -248,7 +248,7 @@ final class Output {
     // spacing content out passes a list, and box('') must draw nothing.
     $lines = is_array($body) ? $body : ($body === '' ? [] : [$body]);
 
-    return array_map(Ansi::sanitize(...), array_values($lines));
+    return array_map(Ansi::sanitize(...), $lines);
   }
 
   /**
@@ -261,7 +261,7 @@ final class Output {
    *   The cells, each carrying nothing a terminal acts on.
    */
   protected static function toCells(array $cells): array {
-    return array_map(Ansi::sanitize(...), array_values($cells));
+    return array_map(Ansi::sanitize(...), $cells);
   }
 
   /**
