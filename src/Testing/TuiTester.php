@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Testing;
 
 use DrevOps\Tui\Answers\Answers;
+use DrevOps\Tui\Block\BlockInterface;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\CancelException;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\InterruptException;
+use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Tui;
@@ -139,6 +141,42 @@ final class TuiTester {
    */
   public function layout(string $layout): self {
     $this->tui->layout($layout);
+
+    return $this;
+  }
+
+  /**
+   * Put a block of the consumer's own in one of the screen's regions.
+   *
+   * @param string $region
+   *   The region name.
+   * @param \DrevOps\Tui\Block\BlockInterface $block
+   *   The block.
+   * @param bool $tail
+   *   Whether it packs from the end of the region's run rather than the start.
+   *
+   * @return $this
+   *   The tester.
+   */
+  public function place(string $region, BlockInterface $block, bool $tail = FALSE): self {
+    $this->tui->place($region, $block, $tail);
+
+    return $this;
+  }
+
+  /**
+   * Run one region's blocks across it rather than down it.
+   *
+   * @param string $region
+   *   The region name.
+   * @param \DrevOps\Tui\Screen\Axis $axis
+   *   The direction its blocks run.
+   *
+   * @return $this
+   *   The tester.
+   */
+  public function flow(string $region, Axis $axis): self {
+    $this->tui->flow($region, $axis);
 
     return $this;
   }

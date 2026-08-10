@@ -256,6 +256,12 @@ class ScreenController {
    * @param \DrevOps\Tui\Screen\ExternalEditor|null $external_editor
    *   What hands a passage of text to an editor of the reader's own, or NULL
    *   for one that launches whatever the environment names.
+   * @param list<array{region:string,block:\DrevOps\Tui\Block\BlockInterface,tail:bool}> $placements
+   *   Blocks of the consumer's own, each named against the region it goes in
+   *   and the end of that region's run it packs from.
+   * @param array<string,\DrevOps\Tui\Screen\Axis> $flows
+   *   The direction a region runs its blocks, keyed by region name, where the
+   *   consumer states one other than the layout's.
    */
   public function __construct(
     protected Panel $panel,
@@ -271,6 +277,8 @@ class ScreenController {
     protected string $banner = '',
     protected string $version = '',
     ?ExternalEditor $external_editor = NULL,
+    array $placements = [],
+    array $flows = [],
   ) {
     $this->keys = $keys ?? KeyMapManager::create();
     $this->collector = $collector ?? new Collector();
@@ -280,6 +288,7 @@ class ScreenController {
 
     $this->assembler = new Assembler();
     $this->screen = $this->assembler->assemble($panel, $this->layout);
+    $this->furnish($placements, $flows);
     $arranged = $this->screen->currentLayout();
     // The assembler refuses a layout with nowhere to draw the form, so by here
     // there is always a region holding it.
@@ -1767,6 +1776,29 @@ class ScreenController {
     $screen->in('footer')->add($this->legend);
 
     return $screen;
+  }
+
+  /**
+   * Put the consumer's own blocks and flows into the screen's regions.
+   *
+   * After the assembler rather than instead of it: the furniture a session
+   * needs is placed first, so a block of the consumer's lands after the trail
+   * or the hints its region already holds rather than in front of them.
+   *
+   * @param list<array{region:string,block:\DrevOps\Tui\Block\BlockInterface,tail:bool}> $placements
+   *   The blocks, each named against the region it goes in.
+   * @param array<string,\DrevOps\Tui\Screen\Axis> $flows
+   *   The direction a region runs its blocks, keyed by region name.
+   */
+  protected function furnish(array $placements, array $flows): void {
+    foreach ($flows as $name => $axis) {
+      $this->screen->in($name)->flow($axis);
+    }
+
+    foreach ($placements as $placement) {
+      $region = $this->screen->in($placement['region']);
+      $placement['tail'] ? $region->tail($placement['block']) : $region->add($placement['block']);
+    }
   }
 
   /**

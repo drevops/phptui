@@ -77,4 +77,17 @@ interface ActionsElementsInterface {
    */
   public function actionRefusal(string $reason): string;
 
+  /**
+   * The line setting the buttons apart from the rows around them.
+   *
+   * A row of the block rather than something drawn around it, so what the
+   * buttons come to is what the arrangement divides its space by - a rule
+   * nobody counted would push a row off the bottom of the frame.
+   *
+   * @return string
+   *   The styled line, at the width the theme lays content out to, or an empty
+   *   string when the theme sets the buttons apart with nothing.
+   */
+  public function actionRule(): string;
+
 }

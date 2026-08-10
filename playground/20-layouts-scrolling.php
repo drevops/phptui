@@ -12,11 +12,14 @@
  * arrangement: a grid declares itself a surface, is drawn whole, and shows what
  * its space has room for.
  *
- * The frames below are one grid of four windows, first with the room it comes
- * to and then in a frame too short for it. The overflow mark says which edge
- * the rest is past, and moving the grid carries the panel's own rows with it -
- * so nothing is dropped quietly and the pair around the windows is as much of
- * the surface as the windows are.
+ * The form below is one grid of four windows, with a row of the form's own
+ * above them and another below, in a frame deliberately too short for it. Move
+ * with the arrow keys and the whole surface travels: the overflow mark says
+ * which edge the rest is past, and the pair around the windows moves with them,
+ * because a surface that left them behind would not be one surface.
+ *
+ * The box is what makes that legible - it says where the frame ends, so what
+ * the grid has run past can be seen rather than inferred.
  *
  * Usage:
  *   php playground/20-layouts-scrolling.php
@@ -26,20 +29,20 @@ declare(strict_types=1);
 
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Screen\Assembler;
-use DrevOps\Tui\Screen\ScreenRenderer;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\Tui\CollectException;
+use DrevOps\Tui\InterruptException;
+use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\Spacing;
+use DrevOps\Tui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-// Two visual rows of two windows, with a row of the form's own above them and
+// Three visual rows of two windows, with a row of the form's own above them and
 // another below: the pair around the windows travels with the grid, because a
 // surface that left them behind would not be one surface.
 $form = Form::create('Market stall')
-  ->buttons(FALSE)
   ->panel('order', 'Order', function (PanelBuilder $p): void {
-    $p->layout(2, 2);
+    $p->layout(2, 2, 2);
 
     $p->text('name', 'Order name')->default('Weekly Box');
 
@@ -66,32 +69,39 @@ $form = Form::create('Market stall')
         'afternoon' => 'Afternoon',
       ]);
     });
+    $p->panel('ripeness', 'Ripeness', function (PanelBuilder $sp): void {
+      $sp->toggle('ripeness', 'Ripeness')->default('ripe')->options([
+        'ripe' => 'Ripe',
+        'unripe' => 'Unripe',
+      ]);
+    });
+    $p->panel('freshness', 'Freshness', function (PanelBuilder $sp): void {
+      $sp->rating('freshness', 'Freshness')->default(4)->min(1)->max(5);
+    });
 
     $p->markup('bench', 'Crates are weighed at the bench.');
   });
 
-// Stacking the rows against each other keeps the frames about the movement
-// rather than about the air the theme leaves between blocks.
-$theme = new DefaultTheme(72, ['spacing' => Spacing::Normal]);
-$panel = $form->root();
+try {
+  // A capped height is what makes the movement the point: the grid comes to
+  // more rows than the frame keeps however tall the terminal is, so there is
+  // always somewhere for it to travel. Stacking the rows against each other
+  // keeps the frame about the movement rather than about the air the theme
+  // leaves between blocks.
+  $answers = (new Tui($form))
+    ->theme('default', ['border' => Border::Rounded, 'spacing' => Spacing::Normal, 'max_height' => 11])
+    ->clearOnExit(FALSE)
+    ->run();
+}
+catch (InterruptException) {
+  // Leave quietly on Ctrl-C.
+  exit(130);
+}
+catch (CollectException $exception) {
+  fwrite(STDERR, $exception->getMessage() . PHP_EOL);
+  exit(1);
+}
 
-// The panel the grid arranges has to be the one on screen for the grid to be
-// what is drawn, which is what going into it means.
-$order = $panel->children()[0]->enter();
-
-// A grid is the shipped arrangement that scrolls, and the offset is its own -
-// there is no region here to ask for it.
-$grid = $order->currentLayout();
-
-$frame = static function (string $said, int $rows) use ($panel, $theme): void {
-  $screen = (new Assembler())->assemble($panel, 'default');
-
-  print $said . "\n\n";
-  print (new ScreenRenderer($theme))->render($screen, $rows, 72) . "\n\n";
-};
-
-$frame('The whole grid, in a frame with the room for it.', 16);
-$frame('The same grid in nine rows: the mark says the rest is below.', 9);
-
-$grid->scrollTo(3);
-$frame('Moved down three rows: every line moved, the note among them.', 9);
+// The offset arranges drawing and nothing else, so the answers read exactly as
+// they would in a frame with room for the whole grid.
+echo $answers->toSummary() . PHP_EOL;

@@ -1065,7 +1065,12 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    */
   #[\Override]
   public function fieldLoading(): string {
-    return $this->highlight($this->glyph('…', '...'));
+    // Named rather than marked: an ellipsis alone says something is happening
+    // without saying what, and the one thing a reader needs from a field that
+    // has stopped answering is that it is fetching rather than broken. Dimmed
+    // because it is the field's own aside about itself, and steady because a
+    // terminal that honours a blink is rarer than one that does not.
+    return $this->paint(Sgr::of(Sgr::Dim, Sgr::Grey), Translator::t('Loading') . $this->glyph('…', '...'));
   }
 
   /**
@@ -1230,6 +1235,23 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   #[\Override]
   public function actionRefusal(string $reason): string {
     return $this->error($reason);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function actionRule(): string {
+    $border = $this->borderStyle();
+
+    // The frame's own line, drawn in the frame's own style: the buttons read as
+    // a compartment of the box rather than as rows with a rule of their own,
+    // and a frame with no box has no line to lend them.
+    if ($border === Border::None) {
+      return '';
+    }
+
+    return $this->chromeBorder(str_repeat(Box::chars($border, $this->unicode)['h'], max(1, $this->contentWidth())));
   }
 
   /**

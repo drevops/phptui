@@ -855,7 +855,7 @@ final class FieldBlockTest extends TestCase {
 
     // Nothing has asked the loader yet, which is what a reader meets while a
     // panel that fetches its own rows is being opened.
-    $this->assertSame('  Basket contents  …', $field->render($this->theme()));
+    $this->assertSame('  Basket contents  Loading…', $field->render($this->theme()));
 
     $this->assertSame('  Basket contents', $field->settle(['apple' => 'Apple'])->render($this->theme()));
   }

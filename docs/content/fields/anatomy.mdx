@@ -215,8 +215,11 @@ Elements are grouped by the block that declares them, in one interface per block
 |                               | `actionSelected()`      | the button that would be pressed             |
 |                               | `actionSeparator()`     | the gap standing between two buttons         |
 |                               | `actionRefusal()`       | the reason the form cannot be ended yet      |
+|                               | `actionRule()`          | the line setting the buttons apart           |
 
 The brackets around a button belong to `actionButton()`, not to the block. A theme that frames a button differently changes that one method, and the block goes on knowing only that it has labels and one of them would be pressed.
+
+So do the rules above and below them. `actionRule()` draws the line in the frame's own border style and at the width the theme lays content out to, so the buttons read as a compartment of the box rather than as rows with a rule of their own - and answers with an empty string on a frame drawn without a border, which has no line to lend them. They are rows of the block rather than something drawn around it, so what the buttons come to counts them in and no row is pushed off the bottom of the frame by a line nobody measured.
 
 Where the cursor is and which button it would press are two questions, so they are two elements. `actionSelector()` answers the first the way `fieldSelector()` and `panelSelector()` answer it for the rows above - a mark in the same column, so the buttons line up with everything else the cursor walks - and it is a glyph rather than a color for the same reason those are: with [color off](/display-modes) a row that said only `actionSelected()` would read the same whether or not you were standing on it. `actionSelected()` answers the second, and only where the first is answered yes: off the row, no button is drawn as the one a key press would reach, because none of them is.
 
@@ -266,7 +269,7 @@ One field owns both modes, so one interface names both. `FieldElementsInterface`
 | `fieldGhost()`            | the completion offered after the draft, which nobody typed                                         |
 | `fieldInput()`            | the whole typed line: draft, caret and completion in one piece                                     |
 | `fieldScale()`            | the run of points a graded answer reads as                                                         |
-| `fieldLoading()`          | the mark saying the field is still fetching what it will offer                                     |
+| `fieldLoading()`          | the word saying the field is still fetching what it will offer                                     |
 | `fieldState()`            | the **state** (edit 10)                                                                            |
 | `fieldCaption()`          | the **caption** (edit 11)                                                                          |
 

@@ -813,10 +813,14 @@ interface ActionsElementsInterface {
 
   public function actionRefusal(string $reason): string;
 
+  public function actionRule(): string;
+
 }
 ```
 
 ```
+├──────────────────────┤ ── actionRule()
+
   Courier is required.
   ─────────┬──────────
            └────────── actionRefusal()
@@ -827,6 +831,8 @@ interface ActionsElementsInterface {
 │      │      └──────── actionSeparator()
 │      └─────────────── actionSelected()
 └────────────────────── actionSelector()
+
+├──────────────────────┤ ── actionRule()
 ```
 
 **It claims _Focus_, so it draws focused differently from not.** Where the cursor is and which button it would press are two questions and two elements: `actionSelector()` marks the row the way `fieldSelector()` and `panelSelector()` mark theirs, in the same column, so the buttons line up with every other row the cursor walks; `actionSelected()` marks the button a key press would reach, and only while the row has the cursor - off it there is no pending press to draw. The mark is a glyph rather than a color for the same reason the other two are: a terminal drawing no color would leave a row styled alone saying the same thing whether you were standing on it or three rows above it.
@@ -834,6 +840,8 @@ interface ActionsElementsInterface {
 The refusal is the block's own row rather than a note somebody draws above it, and it sits against the buttons with nothing between them - not even the blank row the theme puts between one block and the next. A message that could drift a row away from what it refuses is a message about nothing. It stands off the selector's column, which says where the cursor is and is not somewhere a message can be.
 
 The brackets belong to the element, not the block. A theme that framed a button differently changes `actionButton()` alone, and the block goes on knowing only that it has labels and one of them has focus.
+
+The rules setting the buttons apart are rows of the block for the same reason the refusal is: what the buttons come to is what the arrangement divides its space by, and a rule nobody counted would push a row off the bottom of the frame. `actionRule()` draws them in the frame's own border style, so the renderer joins them to the sides they run into rather than stopping a gutter short of them - and where the buttons come to rest against the foot of the frame, the frame's own edge stands in for the lower one instead of drawing the same line twice. A frame with no border has no line to lend them, so `actionRule()` answers with an empty string and the buttons cost the one row they draw.
 
 #### Progress
 
@@ -949,7 +957,7 @@ Eight ship, one per block plus one for the frame that belongs to no block:
 | `PanelElementsInterface`      | a nested panel's row: selector, title, descend mark, summary         |
 | `FieldElementsInterface`      | both of a field's modes, from its selector to its caret              |
 | `MarkupElementsInterface`     | a passage, one span at a time: strong, emphasis, code, links, bullet |
-| `ActionsElementsInterface`    | the buttons, the gap between them, and the reason one is withheld    |
+| `ActionsElementsInterface`    | the buttons, the gaps and rules around them, and a withheld submit   |
 | `ProgressElementsInterface`   | the caption, the spinner frame, the bar's track and its tally        |
 
 `ChromeElementsInterface` is the one named for something other than a block, and for a reason worth stating: what it draws belongs to none of them. The frame surrounds every region at once and the overflow mark says a region's contents outran it - neither is anything a block could ask for, since a block only ever fills the space it is given and never learns where that space ends, so both belong to whatever draws the screen. The gutter a conditional block steps in behind is the other kind: every block that can come and go draws the same one, so a chain of a row, a passage of markup and a row steps in together rather than one kind at a time. The air between two things drawn side by side is that kind too, and two levels spend it - an arrangement takes it off the width before dividing what is left, and the renderer leaves it when it joins what they drew - so both read the one answer rather than each keeping its own.

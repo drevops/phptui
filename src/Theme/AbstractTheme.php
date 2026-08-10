@@ -13,6 +13,7 @@ use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Block\Element\PanelElementsInterface;
 use DrevOps\Tui\Block\Element\ProgressElementsInterface;
 use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\Translation\Translator;
 
 /**
  * The floor a theme starts from: every element, drawn with nothing at all.
@@ -318,7 +319,9 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
    * {@inheritdoc}
    */
   public function fieldLoading(): string {
-    return '...';
+    // The word alone: an ellipsis is a mark a theme trails the word with, and
+    // the floor has nothing to draw one in.
+    return Translator::t('Loading');
   }
 
   /**
@@ -463,6 +466,13 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
    */
   public function actionRefusal(string $reason): string {
     return $reason;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function actionRule(): string {
+    return '';
   }
 
   /**

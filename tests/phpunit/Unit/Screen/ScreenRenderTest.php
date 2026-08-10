@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Screen;
 
+use DrevOps\Tui\Block\Actions;
 use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Field;
@@ -22,6 +23,7 @@ use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Screen\Screen;
 use DrevOps\Tui\Screen\ScreenRenderer;
 use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\Tui\Tests\Fixtures\Screen\Layout\NoFooterLayout;
 use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
@@ -439,6 +441,56 @@ final class ScreenRenderTest extends TestCase {
     $this->assertSame('Legend', $lines[5]);
   }
 
+  public function testButtonsAreSetApartByRulesJoinedToTheFrameTheyRunInto(): void {
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('content')->add(new Markup('intro', 'Pick the produce.'))->add($this->actions());
+    $screen->in('footer')->add(new Markup('legend', 'Legend'));
+
+    // The rules are the box's own line rather than rows standing inside it, so
+    // they run into the sides instead of stopping a gutter short of them.
+    $this->assertSame([
+      '┌────────────────────────────┐',
+      '│                            │',
+      '│ Pick the produce.          │',
+      '│                            │',
+      '├────────────────────────────┤',
+      '│   [ Submit ]  [ Cancel ]   │',
+      '├────────────────────────────┤',
+      '│ Legend                     │',
+      '└────────────────────────────┘',
+    ], $this->framed($screen, 9, 30));
+  }
+
+  public function testButtonsRestingOnTheFrameKeepItsEdgeRatherThanRuleBesideIt(): void {
+    $screen = (new Screen())->layout(new NoFooterLayout());
+    $screen->in('header')->add(new Markup('trail', 'Orchard'));
+    $screen->in('content')->add(new Markup('intro', "Pick the produce.\nWeigh the crates."))->add($this->actions());
+
+    // Nothing is pinned under the form, so it runs to the foot of the frame:
+    // the lower rule and the frame's edge would be one line drawn twice, so the
+    // edge stands in for it and the frame is the shorter by the line they no
+    // longer share.
+    $this->assertSame([
+      '┌────────────────────────────┐',
+      '│ Orchard                    │',
+      '│ Pick the produce.          │',
+      '│ Weigh the crates.          │',
+      '│                            │',
+      '├────────────────────────────┤',
+      '│   [ Submit ]  [ Cancel ]   │',
+      '└────────────────────────────┘',
+    ], $this->framed($screen, 9, 30));
+  }
+
+  public function testUnboxedFrameSetsTheButtonsApartWithNothing(): void {
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('content')->add($this->actions());
+
+    // A frame with no box has no line to lend them, so the buttons cost the one
+    // row they draw and nothing is ruled off.
+    $this->assertSame(['', '  [ Submit ]  [ Cancel ]', '', '', '', ''], $this->render($screen, 6, 30));
+  }
+
   public function testAnEmptyLayoutDrawsNothingAtAll(): void {
     $layout = new class() extends AbstractLayout {
 
@@ -467,9 +519,35 @@ final class ScreenRenderTest extends TestCase {
    *   The rows.
    */
   protected function render(Screen $screen, int $rows, int $columns, Border $border = Border::None): array {
-    $rendered = (new ScreenRenderer(new DefaultTheme($columns, ['color' => FALSE]), $border))->render($screen, $rows, $columns);
+    $rendered = (new ScreenRenderer(new DefaultTheme($columns, ['color' => FALSE, 'border' => $border]), $border))->render($screen, $rows, $columns);
 
     return $rendered === '' ? [] : array_map(rtrim(...), explode("\n", $rendered));
+  }
+
+  /**
+   * Draw a screen inside a box and return its rows, trailing spaces kept.
+   *
+   * @param \DrevOps\Tui\Screen\Screen $screen
+   *   The screen.
+   * @param int $rows
+   *   The terminal rows.
+   * @param int $columns
+   *   The terminal columns.
+   *
+   * @return list<string>
+   *   The rows.
+   */
+  protected function framed(Screen $screen, int $rows, int $columns): array {
+    $theme = new DefaultTheme($columns, ['color' => FALSE, 'border' => Border::Line]);
+
+    return explode("\n", (new ScreenRenderer($theme, Border::Line))->render($screen, $rows, $columns));
+  }
+
+  /**
+   * The buttons that end a form.
+   */
+  protected function actions(): Actions {
+    return (new Actions())->action('submit', 'Submit')->action('cancel', 'Cancel');
   }
 
 }

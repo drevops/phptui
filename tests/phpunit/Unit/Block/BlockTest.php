@@ -19,6 +19,7 @@ use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Primitive\ProgressReporter;
 use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
+use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
@@ -197,15 +198,28 @@ final class BlockTest extends TestCase {
 
   public function testActionsFrameEveryLabelAndMarkTheRowThatHasTheCursor(): void {
     $actions = (new Actions())->action('submit', 'Submit')->action('cancel', 'Cancel');
+    $theme = new DefaultTheme(80, ['color' => FALSE, 'border' => Border::None]);
 
     // The buttons are a row the cursor lands on like any other, so they say so
     // the way any other does - and a row nobody is on marks no button as the
     // one that would be pressed, because pressing is not a key away from there.
-    $this->assertSame('  [ Submit ]  [ Cancel ]', $actions->render($this->theme()));
+    $this->assertSame('  [ Submit ]  [ Cancel ]', $actions->render($theme));
 
     $actions->focus();
 
-    $this->assertSame('❯ [ Submit ]  [ Cancel ]', $actions->render($this->theme()));
+    $this->assertSame('❯ [ Submit ]  [ Cancel ]', $actions->render($theme));
+  }
+
+  public function testActionsSetThemselvesApartWithTheLineTheFrameIsDrawnIn(): void {
+    $actions = (new Actions())->action('submit', 'Submit')->action('cancel', 'Cancel');
+    $rows = explode("\n", $actions->render(new DefaultTheme(20, ['color' => FALSE, 'border' => Border::Double])));
+
+    // A row of the block rather than something drawn around it, so what the
+    // buttons come to counts the rules in.
+    $this->assertSame(['════════════════', '  [ Submit ]  [ Cancel ]', '════════════════'], $rows);
+
+    // A frame with no box has no line to lend them, so they stand on their own.
+    $this->assertSame('  [ Submit ]  [ Cancel ]', $actions->render(new DefaultTheme(20, ['color' => FALSE, 'border' => Border::None])));
   }
 
   public function testActionsTakeAnyLabelsTheFormDeclares(): void {

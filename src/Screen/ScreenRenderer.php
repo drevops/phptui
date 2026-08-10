@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Screen;
 
 use DrevOps\Tui\Block\BlockInterface;
 use DrevOps\Tui\Block\Capability\DependCapableInterface;
+use DrevOps\Tui\Block\Element\ActionsElementsInterface;
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
@@ -81,7 +82,57 @@ final class ScreenRenderer {
     // each side, so what the layout is given is the terminal less its chrome.
     $inside = $this->lay($screen->currentLayout(), max(0, $rows - 2), max(1, $columns - self::CHROME), TRUE);
 
+    // Where the buttons come to rest against the foot of the frame, their
+    // lower rule and the frame's own edge are one line drawn twice, so the
+    // edge stands in for it. The row that saves goes back to the arrangement
+    // when it has another row of content to put in it - which is why the
+    // arrangement is asked a second time, with the row already spent; when it
+    // has not, the frame is the shorter by the line the two no longer share.
+    if ($this->closed($inside, $columns)) {
+      $roomier = $this->lay($screen->currentLayout(), max(0, $rows - 1), max(1, $columns - self::CHROME), TRUE);
+      $inside = array_slice($this->closed($roomier, $columns) ? $roomier : $inside, 0, -1);
+    }
+
     return implode("\n", $this->framed($inside, $columns));
+  }
+
+  /**
+   * Whether a frame's last row is the lower rule of the buttons.
+   *
+   * @param list<string> $lines
+   *   The rows as the layout arranged them.
+   * @param int $columns
+   *   The columns the frame spans, including its own.
+   *
+   * @return bool
+   *   TRUE when the buttons end the frame.
+   */
+  protected function closed(array $lines, int $columns): bool {
+    $rule = $this->banded(max(1, $columns - self::CHROME));
+
+    return $rule !== '' && $lines !== [] && $lines[array_key_last($lines)] === $rule;
+  }
+
+  /**
+   * The row the buttons set themselves apart with, as a frame carries it.
+   *
+   * @param int $inner
+   *   The columns inside the frame's border and gutter.
+   *
+   * @return string
+   *   The row, or an empty string when the theme sets the buttons apart with
+   *   nothing - which is what a borderless frame does.
+   */
+  protected function banded(int $inner): string {
+    if (!$this->theme instanceof ActionsElementsInterface) {
+      return '';
+    }
+
+    $rule = $this->theme->actionRule();
+
+    // Fitted the way the region fitted it, so what is compared here is the row
+    // the pass actually produced rather than the row the theme drew.
+    return $rule === '' ? '' : Box::fit($rule, $inner);
   }
 
   /**
@@ -331,11 +382,16 @@ final class ScreenRenderer {
     $chars = Box::chars($this->border, $this->unicode());
     $inner = max(1, $columns - self::CHROME);
     $bar = $chrome->chromeBorder($chars['v']);
+    $rule = $this->banded($inner);
+    $joined = $chrome->chromeBorder(Box::rule($chars['ml'], $chars['mr'], $chars['h'], $columns));
 
     $out = [$chrome->chromeBorder(Box::rule($chars['tl'], $chars['tr'], $chars['h'], $columns))];
 
     foreach ($lines as $line) {
-      $out[] = $bar . ' ' . Box::fit($line, $inner) . ' ' . $bar;
+      // The rules around the buttons are the box's own line rather than a row
+      // standing inside it, so they run into the sides instead of stopping a
+      // gutter short of them.
+      $out[] = $rule !== '' && $line === $rule ? $joined : $bar . ' ' . Box::fit($line, $inner) . ' ' . $bar;
     }
 
     $out[] = $chrome->chromeBorder(Box::rule($chars['bl'], $chars['br'], $chars['h'], $columns));

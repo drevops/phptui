@@ -22,6 +22,7 @@ use DrevOps\Tui\Screen\Layout\AbstractLayout;
 use DrevOps\Tui\Screen\Layout\PanelLayout;
 use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -43,8 +44,9 @@ final class BuilderGapsTest extends TestCase {
   public function testTheFirstActionDeclaredIsSelectedUntilAnotherIsGiven(): void {
     // Drawn with colour and with the cursor on the row, since which button
     // would be pressed is a question about the row that has it, and the answer
-    // is carried by style alone.
-    $theme = new DefaultTheme(80);
+    // is carried by style alone. Unboxed, so the row under test is the whole
+    // of what the block draws.
+    $theme = new DefaultTheme(80, ['border' => Border::None]);
     $actions = (new Actions())->action('submit', 'Submit')->action('cancel', 'Cancel');
     $actions->focus();
 
@@ -86,9 +88,12 @@ final class BuilderGapsTest extends TestCase {
 
     // The reason belongs to the buttons it withholds, so it is drawn against
     // them rather than left to whatever else the region holds - and it goes
-    // the moment they are allowed through again.
-    $this->assertSame("  Basket contents is required.\n  [ Submit ]  [ Cancel ]", $actions->refuse('Basket contents is required.')->render($this->theme()));
-    $this->assertSame('  [ Submit ]  [ Cancel ]', $actions->refuse(NULL)->render($this->theme()));
+    // the moment they are allowed through again. Unboxed, so the rows under
+    // test are the whole of what the block draws.
+    $theme = new DefaultTheme(80, ['color' => FALSE, 'border' => Border::None]);
+
+    $this->assertSame("  Basket contents is required.\n  [ Submit ]  [ Cancel ]", $actions->refuse('Basket contents is required.')->render($theme));
+    $this->assertSame('  [ Submit ]  [ Cancel ]', $actions->refuse(NULL)->render($theme));
   }
 
   public function testLegendForgetsWhatNoLongerApplies(): void {

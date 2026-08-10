@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui;
 
 use DrevOps\Tui\Answers\Answers;
+use DrevOps\Tui\Block\BlockInterface;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Tree;
 use DrevOps\Tui\Builder\Form;
@@ -19,6 +20,7 @@ use DrevOps\Tui\Resolver\InputResolver;
 use DrevOps\Tui\Schema\AgentHelp;
 use DrevOps\Tui\Schema\SchemaGenerator;
 use DrevOps\Tui\Schema\SchemaValidator;
+use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Collector;
 use DrevOps\Tui\Screen\Layout\LayoutManager;
 use DrevOps\Tui\Screen\ScreenController;
@@ -83,6 +85,20 @@ final class Tui {
    * The layout the screen is arranged by.
    */
   protected string $layout = 'default';
+
+  /**
+   * The blocks put in the screen's own regions, in the order they were placed.
+   *
+   * @var list<array{region:string,block:\DrevOps\Tui\Block\BlockInterface,tail:bool}>
+   */
+  protected array $placements = [];
+
+  /**
+   * The direction each named region runs its blocks, where one was stated.
+   *
+   * @var array<string,\DrevOps\Tui\Screen\Axis>
+   */
+  protected array $flows = [];
 
   /**
    * The resolved key bindings; NULL uses the default preset.
@@ -229,9 +245,89 @@ final class Tui {
    */
   public function layout(string $layout): self {
     $this->layout = $layout === '' ? 'default' : $layout;
-    LayoutManager::create($this->layout);
+    $this->assertRegions();
 
     return $this;
+  }
+
+  /**
+   * Put a block of your own in one of the screen's regions.
+   *
+   * The regions around the form are the session's rather than the form's, so
+   * what stands in them is stated here rather than declared on a panel: a
+   * standing note beside the trail, a version string beside the key hints. The
+   * standard furniture is placed first, so a block lands after the trail or the
+   * hints its region already holds.
+   *
+   * Which end of the region's run it packs from is the block's own to say.
+   * Packing from the end is what puts something against the far edge - the
+   * right of a region running across, the last row of one running down - and
+   * where the two runs meet, what packs from the start keeps its space.
+   *
+   * @code
+   * $tui->layout('market')
+   *   ->place('header', new Markup('preview', '(read-only preview)'))
+   *   ->place('footer', new Markup('version', 'v1.2.3'), tail: TRUE)
+   *   ->flow('footer', Axis::Columns);
+   * @endcode
+   *
+   * @param string $region
+   *   The region name, as the layout declares it.
+   * @param \DrevOps\Tui\Block\BlockInterface $block
+   *   The block.
+   * @param bool $tail
+   *   Whether it packs from the end of the region's run rather than the start.
+   *
+   * @return $this
+   *   The facade.
+   */
+  public function place(string $region, BlockInterface $block, bool $tail = FALSE): self {
+    $this->placements[] = ['region' => $region, 'block' => $block, 'tail' => $tail];
+    $this->assertRegions();
+
+    return $this;
+  }
+
+  /**
+   * Run one region's blocks across it rather than down it.
+   *
+   * A region a layout declared running one way is turned the other way here,
+   * which is what saves a form from arranging a layout of its own every time
+   * two things belong on the same line. A region running across gives each
+   * block the width it drew; one running down gives each a row. Either way a
+   * region that was not declared to scroll clips what outruns it.
+   *
+   * @param string $region
+   *   The region name, as the layout declares it.
+   * @param \DrevOps\Tui\Screen\Axis $axis
+   *   The direction its blocks run.
+   *
+   * @return $this
+   *   The facade.
+   */
+  public function flow(string $region, Axis $axis): self {
+    $this->flows[$region] = $axis;
+    $this->assertRegions();
+
+    return $this;
+  }
+
+  /**
+   * Check the layout answers to every region name stated so far.
+   *
+   * Re-checked from every setter that can invalidate the answer, so a name
+   * nothing answers to throws where it was written whichever order the layout
+   * and the regions were named in.
+   *
+   * @throws \InvalidArgumentException
+   *   When the layout declares no region of a stated name.
+   */
+  protected function assertRegions(): void {
+    $arranged = LayoutManager::create($this->layout);
+
+    foreach ([...array_column($this->placements, 'region'), ...array_keys($this->flows)] as $name) {
+      $arranged->in($name);
+    }
   }
 
   /**
@@ -632,6 +728,8 @@ final class Tui {
       footer: $this->footer,
       banner: $banner !== '' ? $banner : $this->form->currentBanner(),
       version: $version,
+      placements: $this->placements,
+      flows: $this->flows,
     );
   }
 
