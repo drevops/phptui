@@ -87,6 +87,62 @@ final class Ansi {
   }
 
   /**
+   * Drop the control bytes a terminal acts on, keeping the ones text carries.
+   *
+   * Text a form is built from is drawn as it stands, so an escape sequence
+   * inside it reaches the terminal and clears the screen, moves the cursor or
+   * recolours everything after it. What a terminal reads as an instruction goes;
+   * the newline and the tab, which are text rather than instruction, stay.
+   *
+   * A carriage return is folded to a newline rather than dropped, because it is
+   * a line break written on another platform - dropping it would run two lines
+   * together where the author wrote two.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The text a terminal can only print.
+   */
+  public static function sanitize(string $text): string {
+    $text = (string) preg_replace('/\r\n?/', "\n", $text);
+
+    return (string) preg_replace('/[\x00-\x08\x0B-\x1F\x7F]/', '', $text);
+  }
+
+  /**
+   * Sanitize every string a value holds, whatever shape the value has.
+   *
+   * An answer is one string, a list of them, or something that is not text at
+   * all, and each is drawn wherever the answer is. Arrays are walked to their
+   * leaves - keys included, because a keyed set draws its keys - and anything
+   * that is not text is handed back as it was.
+   *
+   * @param mixed $value
+   *   The value.
+   *
+   * @return mixed
+   *   The value, with every string inside it sanitized.
+   */
+  public static function sanitizeValue(mixed $value): mixed {
+    if (is_string($value)) {
+      return self::sanitize($value);
+    }
+
+    if (!is_array($value)) {
+      return $value;
+    }
+
+    $out = [];
+
+    foreach ($value as $key => $item) {
+      $out[is_string($key) ? self::sanitize($key) : $key] = self::sanitizeValue($item);
+    }
+
+    return $out;
+  }
+
+  /**
    * Strip ANSI escape sequences from text.
    *
    * Removes both the CSI styling sequences and the OSC 8 hyperlink wrappers

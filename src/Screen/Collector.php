@@ -17,6 +17,7 @@ use DrevOps\Tui\Derive\Deriver;
 use DrevOps\Tui\Discovery\DiscoverInterface;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Translation\Translator;
 
 /**
@@ -393,8 +394,11 @@ final class Collector {
    *   The value and its source.
    */
   protected function resolveInitial(Field $field, array $supplied, Context $context): array {
+    // A supplied value is whatever an environment variable or a JSON payload
+    // held, and a computed default is whatever consumer code returned; neither
+    // has been through a field, which is where a declared value is filtered.
     if (array_key_exists($field->id(), $supplied)) {
-      return [$supplied[$field->id()], Source::Input];
+      return [Ansi::sanitizeValue($supplied[$field->id()]), Source::Input];
     }
 
     if ($context->update) {
@@ -407,7 +411,7 @@ final class Collector {
 
     $default = $field->value();
 
-    return [$default instanceof \Closure ? $default($context) : $default, Source::Default];
+    return [Ansi::sanitizeValue($default instanceof \Closure ? $default($context) : $default), Source::Default];
   }
 
   /**
@@ -424,12 +428,14 @@ final class Collector {
   protected function discoverValue(Field $field, Context $context): mixed {
     $discover = $field->discovery();
 
+    // Filtered here rather than where the value lands, so what is measured
+    // against the field's rows is the same text the field would go on to draw.
     if ($discover instanceof DiscoverInterface) {
-      return $discover->discover($context->directory);
+      return Ansi::sanitizeValue($discover->discover($context->directory));
     }
 
     if ($discover instanceof \Closure) {
-      return $discover($context);
+      return Ansi::sanitizeValue($discover($context));
     }
 
     return NULL;

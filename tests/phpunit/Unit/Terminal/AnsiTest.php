@@ -74,6 +74,54 @@ final class AnsiTest extends TestCase {
     $this->assertSame('keeps spaces', Ansi::stripControl('keeps spaces'));
   }
 
+  #[DataProvider('dataProviderSanitize')]
+  public function testSanitize(string $text, string $expected): void {
+    $this->assertSame($expected, Ansi::sanitize($text));
+  }
+
+  public static function dataProviderSanitize(): \Iterator {
+    yield 'text with nothing to filter is untouched' => ['Deliveries leave at dawn.', 'Deliveries leave at dawn.'];
+    yield 'a screen clear is dropped, its text kept' => ["Deliveries \033[2J leave at dawn.", 'Deliveries [2J leave at dawn.'];
+    yield 'a colour sequence is dropped' => ["\033[31mApricot\033[0m", '[31mApricot[0m'];
+    yield 'a cursor move is dropped' => ["Pears\033[10;20HPlums", 'Pears[10;20HPlums'];
+    yield 'a hyperlink wrapper loses its escapes and its bell' => ["\033]8;;https://example.com\007Figs\033]8;;\007", ']8;;https://example.comFigs]8;;'];
+    yield 'a newline is text and stays' => ["Apples\nOranges", "Apples\nOranges"];
+    yield 'a tab is text and stays' => ["Apples\tOranges", "Apples\tOranges"];
+    yield 'a Windows line ending folds to a newline' => ["Apples\r\nOranges", "Apples\nOranges"];
+    yield 'a lone carriage return folds to a newline' => ["Apples\rOranges", "Apples\nOranges"];
+    yield 'a doubled carriage return folds to two newlines' => ["Apples\r\rOranges", "Apples\n\nOranges"];
+    yield 'a null byte is dropped' => ["App\x00les", 'Apples'];
+    yield 'a bell is dropped' => ["App\007les", 'Apples'];
+    yield 'a vertical tab is dropped' => ["App\x0bles", 'Apples'];
+    yield 'a delete is dropped' => ["App\x7fles", 'Apples'];
+    yield 'multi-byte text is untouched' => ['Груші та сливи', 'Груші та сливи'];
+    yield 'nothing in is nothing out' => ['', ''];
+  }
+
+  #[DataProvider('dataProviderSanitizeValue')]
+  public function testSanitizeValue(mixed $value, mixed $expected): void {
+    $this->assertSame($expected, Ansi::sanitizeValue($value));
+  }
+
+  public static function dataProviderSanitizeValue(): \Iterator {
+    yield 'a string is filtered' => ["Apri\033[2Jcots", 'Apri[2Jcots'];
+    yield 'a list is filtered item by item' => [["Ap\033[2Jples", "Pe\007ars"], ['Ap[2Jples', 'Pears']];
+    yield 'a string key is filtered too' => [["Ba\033[2Jsket" => "Pl\007ums"], ['Ba[2Jsket' => 'Plums']];
+    yield 'an integer key is left as it is' => [[3 => "Pl\007ums"], [3 => 'Plums']];
+    yield 'nesting is walked to its leaves' => [[['a' => ["Fi\007gs"]]], [['a' => ['Figs']]]];
+    yield 'an integer is not text' => [42, 42];
+    yield 'a float is not text' => [1.5, 1.5];
+    yield 'a boolean is not text' => [TRUE, TRUE];
+    yield 'nothing is not text' => [NULL, NULL];
+    yield 'an empty list stays empty' => [[], []];
+  }
+
+  public function testSanitizeValueLeavesAnObjectAlone(): void {
+    $object = new \stdClass();
+
+    $this->assertSame($object, Ansi::sanitizeValue($object));
+  }
+
   public function testStripHyperlinkTerminators(): void {
     $esc = "\033";
 

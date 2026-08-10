@@ -9,6 +9,7 @@ use DrevOps\Tui\Block\Capability\DependCapableTrait;
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 
@@ -32,6 +33,16 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
   use DependCapableTrait;
 
   /**
+   * The content it draws; newlines separate lines.
+   */
+  protected string $body;
+
+  /**
+   * The title above the body, empty when the body draws alone.
+   */
+  protected string $title;
+
+  /**
    * Whether it is drawn inside a border rather than as bare lines.
    */
   protected bool $bordered = FALSE;
@@ -53,9 +64,11 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
    */
   public function __construct(
     protected string $id,
-    protected string $body,
-    protected string $title = '',
+    string $body,
+    string $title = '',
   ) {
+    $this->body($body);
+    $this->title($title);
   }
 
   /**
@@ -78,7 +91,7 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
    *   The block.
    */
   public function body(string $body): static {
-    $this->body = $body;
+    $this->body = Ansi::sanitize($body);
 
     return $this;
   }
@@ -103,7 +116,7 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
    *   The block.
    */
   public function title(string $title): static {
-    $this->title = $title;
+    $this->title = Ansi::sanitize($title);
 
     return $this;
   }
@@ -211,9 +224,7 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
    *   The lines.
    */
   protected function lines(): array {
-    // A Windows-authored body carries CRLF endings, and a surviving carriage
-    // return would send the cursor back to column 0 and overprint the row.
-    return explode("\n", str_replace(["\r\n", "\r"], "\n", $this->body));
+    return explode("\n", $this->body);
   }
 
 }

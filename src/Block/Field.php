@@ -75,6 +75,11 @@ final class Field extends AbstractBlock implements
   protected const string ENV_NAME_PATTERN = '/^[A-Za-z_]\w*$/';
 
   /**
+   * The name it draws.
+   */
+  protected string $label;
+
+  /**
    * Which of its two shapes it is drawing.
    */
   protected Mode $mode = Mode::View;
@@ -328,9 +333,10 @@ final class Field extends AbstractBlock implements
    */
   public function __construct(
     protected string $id,
-    protected string $label,
+    string $label,
     protected FieldType $fieldType = FieldType::Text,
   ) {
+    $this->label = Ansi::sanitize($label);
     $this->pickerConstraints = new FilePickerConstraints();
   }
 
@@ -415,7 +421,7 @@ final class Field extends AbstractBlock implements
     }
 
     if (!$this->editor->isComplete()) {
-      $this->draft = $this->editor->value();
+      $this->draft($this->editor->value());
 
       return TRUE;
     }
@@ -423,11 +429,11 @@ final class Field extends AbstractBlock implements
     $offered = $this->editor->value();
 
     if (!$this->accept($offered)) {
-      $this->draft = $offered;
+      $this->draft($offered);
       // Opened again on what was offered, so the reader carries on from it
       // rather than from an answer they have already moved past, and told the
       // reason so it is read where the answer is being given.
-      $this->editor = $this->editorFor($offered)->refused((string) $this->refusal);
+      $this->editor = $this->editorFor($this->draft)->refused((string) $this->refusal);
     }
 
     return TRUE;
@@ -447,7 +453,7 @@ final class Field extends AbstractBlock implements
    * {@inheritdoc}
    */
   public function draft(mixed $draft): static {
-    $this->draft = $draft;
+    $this->draft = Ansi::sanitizeValue($draft);
 
     return $this;
   }
@@ -459,7 +465,7 @@ final class Field extends AbstractBlock implements
    * here: a default the form author wrote is not a value a person typed.
    */
   public function default(mixed $value): static {
-    $this->value = $value;
+    $this->value = Ansi::sanitizeValue($value);
 
     return $this;
   }
@@ -471,7 +477,9 @@ final class Field extends AbstractBlock implements
    * reason on its error line.
    */
   public function accept(mixed $value = NULL): bool {
-    $offered = func_num_args() === 0 ? $this->draft : $value;
+    // A draft was filtered as it was typed; a value handed in directly has not
+    // been through anything yet.
+    $offered = func_num_args() === 0 ? $this->draft : Ansi::sanitizeValue($value);
 
     $refusal = $this->refuses($offered, $this->reusableValidate);
 
@@ -518,7 +526,7 @@ final class Field extends AbstractBlock implements
    */
   public function required(bool $required = TRUE, string $message = ''): static {
     $this->required = $required;
-    $this->requiredMessage = $message;
+    $this->requiredMessage = Ansi::sanitize($message);
 
     return $this;
   }
@@ -1180,7 +1188,7 @@ final class Field extends AbstractBlock implements
    * {@inheritdoc}
    */
   public function constrain(string $constraint): static {
-    $this->constraint = $constraint;
+    $this->constraint = Ansi::sanitize($constraint);
 
     return $this;
   }
@@ -1425,7 +1433,7 @@ final class Field extends AbstractBlock implements
       }
     }
 
-    $this->captions = $captions;
+    $this->captions = array_map(Ansi::sanitize(...), $captions);
 
     return $this;
   }
@@ -1496,7 +1504,7 @@ final class Field extends AbstractBlock implements
    *   The field.
    */
   public function description(string $description): static {
-    $this->description = $description;
+    $this->description = Ansi::sanitize($description);
 
     return $this;
   }
@@ -1521,7 +1529,7 @@ final class Field extends AbstractBlock implements
    *   The field.
    */
   public function help(string $help): static {
-    $this->help = $help;
+    $this->help = Ansi::sanitize($help);
 
     return $this;
   }
@@ -1546,7 +1554,7 @@ final class Field extends AbstractBlock implements
    *   The field.
    */
   public function placeholder(string $placeholder): static {
-    $this->placeholder = $placeholder;
+    $this->placeholder = Ansi::sanitize($placeholder);
 
     return $this;
   }
@@ -1574,7 +1582,7 @@ final class Field extends AbstractBlock implements
    *   The field.
    */
   public function badge(string $badge): static {
-    $this->badge = $badge;
+    $this->badge = Ansi::sanitize($badge);
 
     return $this;
   }

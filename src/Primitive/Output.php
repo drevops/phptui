@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Primitive;
 
 use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Terminal\Terminal;
 
 /**
@@ -56,7 +57,7 @@ final class Output {
    *   The primitive.
    */
   public function box(string|array $body, string $title = ''): self {
-    return $this->writeLines($this->theme->renderCard($title, self::toLines($body)));
+    return $this->writeLines($this->theme->renderCard(Ansi::sanitize($title), self::toLines($body)));
   }
 
   /**
@@ -77,7 +78,7 @@ final class Output {
    *   The primitive.
    */
   public function card(string $title, string|array $body = '', array $headers = [], array $rows = [], bool $bordered = TRUE): self {
-    return $this->writeLines($this->theme->renderCard($title, self::toLines($body), $headers, $rows, $bordered));
+    return $this->writeLines($this->theme->renderCard(Ansi::sanitize($title), self::toLines($body), self::toCells($headers), array_map(self::toCells(...), $rows), $bordered));
   }
 
   /**
@@ -92,7 +93,7 @@ final class Output {
    *   The primitive.
    */
   public function table(array $headers, array $rows): self {
-    return $this->writeLines($this->theme->renderTable($headers, $rows));
+    return $this->writeLines($this->theme->renderTable(self::toCells($headers), array_map(self::toCells(...), $rows)));
   }
 
   /**
@@ -105,7 +106,7 @@ final class Output {
    *   The primitive.
    */
   public function text(string $text): self {
-    return $this->writeLines($this->theme->renderText($text));
+    return $this->writeLines($this->theme->renderText(Ansi::sanitize($text)));
   }
 
   /**
@@ -130,7 +131,7 @@ final class Output {
    *   The primitive.
    */
   public function banner(string $logo, string $version = ''): self {
-    return $this->writeLines(explode("\n", $this->theme->renderBanner($logo, $version)));
+    return $this->writeLines(explode("\n", $this->theme->renderBanner(Ansi::sanitize($logo), Ansi::sanitize($version))));
   }
 
   /**
@@ -145,7 +146,7 @@ final class Output {
    *   The primitive.
    */
   public function status(Status $status, string $text): self {
-    return $this->writeLines([$this->theme->renderStatus($status, $text)]);
+    return $this->writeLines([$this->theme->renderStatus($status, Ansi::sanitize($text))]);
   }
 
   /**
@@ -224,7 +225,13 @@ final class Output {
    *   The primitive.
    */
   public function definitions(array $pairs): self {
-    return $this->writeLines($this->theme->renderDefinitions($pairs));
+    $sanitized = [];
+
+    foreach ($pairs as $label => $value) {
+      $sanitized[is_string($label) ? Ansi::sanitize($label) : $label] = Ansi::sanitize($value);
+    }
+
+    return $this->writeLines($this->theme->renderDefinitions($sanitized));
   }
 
   /**
@@ -239,7 +246,22 @@ final class Output {
   protected static function toLines(string|array $body): array {
     // A single empty string is an absent body, not a blank line: a caller
     // spacing content out passes a list, and box('') must draw nothing.
-    return is_array($body) ? $body : ($body === '' ? [] : [$body]);
+    $lines = is_array($body) ? $body : ($body === '' ? [] : [$body]);
+
+    return array_map(Ansi::sanitize(...), array_values($lines));
+  }
+
+  /**
+   * Filter a row of grid cells.
+   *
+   * @param list<string> $cells
+   *   The cells.
+   *
+   * @return list<string>
+   *   The cells, each carrying nothing a terminal acts on.
+   */
+  protected static function toCells(array $cells): array {
+    return array_map(Ansi::sanitize(...), array_values($cells));
   }
 
   /**

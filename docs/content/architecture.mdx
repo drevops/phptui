@@ -29,6 +29,12 @@ Read it as three concerns around that tree:
 
 Under all three sits the terminal. `Terminal` is the device - raw mode, the alternate screen, the size it reports - and beside it is the text machinery every drawn line passes through: `Ansi` for escape sequences, `Box` and `Table` for the geometry of a frame and a grid, and `Terminal\Markup` - distinct from the `Markup` block above - for the [markdown subset](/markdown). All of it takes plain strings and hands plain strings back, so nothing above it has to know how a glyph reaches the screen.
 
+### Text you supply is filtered at the door
+
+A terminal acts on some bytes rather than printing them, so a label, a markup body or a collected answer carrying `ESC[2J` would clear the screen instead of reading as text. Every string you hand the library is filtered where it is taken in - a block setter, a value the collection resolves, a save from your `$EDITOR`, a key you type - by `Ansi::sanitize()`. The escapes go; the newline and the tab stay, and a `CRLF` or a lone `CR` folds to a newline, so multi-line content keeps its lines. A block therefore never holds a byte a terminal would act on, and that holds for a theme of your own too: what an element is handed has already been through the filter.
+
+The library's own escapes are unaffected: the theme composes styling after the filter has run, so a form built from untrusted content keeps its color.
+
 ## Step 1 - describe the questions
 
 You declare the questions in PHP with the fluent `Form` builder: panels holding fields. A field has an `id`, a type (`text`, `select`, `suggest`, `search`, `filepicker`, `confirm` and the rest; `select`, `search` and `filepicker` collect a list with `->multiple()`) and optional rules - `default`, `required`, `options`, `when` (show it only when a condition holds), `derive` (compute it from other fields) and `discover` (detect it from the target directory).

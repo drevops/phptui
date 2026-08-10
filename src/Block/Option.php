@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
+use DrevOps\Tui\Terminal\Ansi;
+
 /**
  * A single row in a select, search or suggest option list.
  *
@@ -12,9 +14,33 @@ namespace DrevOps\Tui\Block;
  * Heading rows, and disabled Option rows, are visual structure that navigation
  * skips and collection never returns.
  *
+ * Every row the library holds comes through here - the ones a field declares
+ * and the ones a loader, a resolver or a query source hands back - so this is
+ * the one place a row's text is filtered.
+ *
  * @package DrevOps\Tui\Block
  */
 final readonly class Option {
+
+  /**
+   * The value collected when the option is selected.
+   */
+  public string $value;
+
+  /**
+   * The displayed label.
+   */
+  public string $label;
+
+  /**
+   * What the option means, shown beside the list and in the machine schema.
+   */
+  public string $description;
+
+  /**
+   * The reason shown beside a disabled option.
+   */
+  public string $disabledReason;
 
   /**
    * Construct an option row.
@@ -31,17 +57,21 @@ final readonly class Option {
    *   The row kind.
    * @param bool $disabled
    *   Whether a selectable Option row is shown but cannot be selected.
-   * @param string $disabledReason
+   * @param string $disabled_reason
    *   The reason shown beside a disabled option.
    */
   public function __construct(
-    public string $value,
-    public string $label,
-    public string $description = '',
+    string $value,
+    string $label,
+    string $description = '',
     public OptionKind $kind = OptionKind::Option,
     public bool $disabled = FALSE,
-    public string $disabledReason = '',
+    string $disabled_reason = '',
   ) {
+    $this->value = Ansi::sanitize($value);
+    $this->label = Ansi::sanitize($label);
+    $this->description = Ansi::sanitize($description);
+    $this->disabledReason = Ansi::sanitize($disabled_reason);
   }
 
   /**

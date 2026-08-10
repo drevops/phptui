@@ -23,6 +23,7 @@ use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\Screen\Furniture;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Region;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
 use DrevOps\Tui\Theme\Spacing;
 use DrevOps\Tui\Theme\ThemeInterface;
@@ -88,6 +89,11 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   protected bool $entered = FALSE;
 
   /**
+   * The title it carries into the trail.
+   */
+  protected string $title;
+
+  /**
    * The standing text under its title.
    */
   protected string $description = '';
@@ -112,8 +118,9 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    */
   public function __construct(
     protected string $id,
-    protected string $title,
+    string $title,
   ) {
+    $this->title = Ansi::sanitize($title);
     $this->buttons = new Buttons();
   }
 
@@ -147,7 +154,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    *   The panel.
    */
   public function description(string $description): static {
-    $this->description = $description;
+    $this->description = Ansi::sanitize($description);
 
     return $this;
   }

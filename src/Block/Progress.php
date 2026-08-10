@@ -13,6 +13,7 @@ use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Element\ProgressElementsInterface;
 use DrevOps\Tui\FormException;
 use DrevOps\Tui\Primitive\ProgressReporter;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -61,6 +62,11 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
   protected string $label = '';
 
   /**
+   * The caption naming the work.
+   */
+  protected string $caption;
+
+  /**
    * Construct a progress block.
    *
    * @param string $id
@@ -70,8 +76,9 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
    */
   public function __construct(
     protected string $id,
-    protected string $caption,
+    string $caption,
   ) {
+    $this->caption = Ansi::sanitize($caption);
   }
 
   /**
@@ -146,7 +153,7 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
    *   The block.
    */
   public function label(string $label): static {
-    $this->label = $label;
+    $this->label = Ansi::sanitize($label);
 
     return $this;
   }
@@ -210,7 +217,7 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
     }
 
     if ($label !== NULL) {
-      $this->label = $label;
+      $this->label($label);
     }
 
     return $this;

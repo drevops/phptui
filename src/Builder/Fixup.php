@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Builder;
 
 use DrevOps\Tui\Condition\ConditionInterface;
+use DrevOps\Tui\Terminal\Ansi;
 
 /**
  * A post-settle fix-up: set a field's value when a condition holds.
@@ -17,6 +18,11 @@ use DrevOps\Tui\Condition\ConditionInterface;
  * @package DrevOps\Tui\Builder
  */
 final readonly class Fixup {
+
+  /**
+   * The literal value to set, ignored when another field is copied from.
+   */
+  public mixed $to;
 
   /**
    * Construct a fix-up.
@@ -32,10 +38,11 @@ final readonly class Fixup {
    */
   public function __construct(
     public string $set,
-    public mixed $to = NULL,
+    mixed $to = NULL,
     public string $from = '',
     public ?ConditionInterface $when = NULL,
   ) {
+    $this->to = Ansi::sanitizeValue($to);
   }
 
 }

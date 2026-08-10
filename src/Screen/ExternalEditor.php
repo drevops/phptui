@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Screen;
 
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Terminal\Terminal;
 
 /**
@@ -111,7 +112,12 @@ class ExternalEditor {
   }
 
   /**
-   * Drop a single trailing newline the editor appended by convention.
+   * Condition the saved buffer into something the field can hold.
+   *
+   * Drops a single trailing newline the editor appended by convention, and
+   * filters the control bytes a file written by another program can carry -
+   * what came back is text somebody typed elsewhere, not text this library
+   * composed.
    *
    * @param string $content
    *   The raw saved buffer.
@@ -120,7 +126,7 @@ class ExternalEditor {
    *   The buffer without one trailing newline (CRLF or LF).
    */
   protected function normalize(string $content): string {
-    return (string) preg_replace('/\r?\n\z/', '', $content);
+    return Ansi::sanitize((string) preg_replace('/\r?\n\z/', '', $content));
   }
 
   /**

@@ -157,9 +157,8 @@ class Textarea extends AbstractField implements TextEditCapableInterface, Extern
       return;
     }
 
-    $this->buffer = $content;
-    $this->cursor = Strings::length($content);
-    $this->accept($content);
+    $this->initTextBuffer($content);
+    $this->accept($this->buffer);
   }
 
   /**
