@@ -94,7 +94,13 @@ final class AnsiTest extends TestCase {
     yield 'a bell is dropped' => ["App\007les", 'Apples'];
     yield 'a vertical tab is dropped' => ["App\x0bles", 'Apples'];
     yield 'a delete is dropped' => ["App\x7fles", 'Apples'];
+    // A terminal in 8-bit mode opens a sequence on U+009B, so it goes the same
+    // way the two-byte ESC-[ that introduces the same sequence does.
+    yield 'an eight-bit control introducer is dropped' => ["App\u{009B}2Jles", 'App2Jles'];
+    yield 'an eight-bit string terminator is dropped' => ["App\u{009C}les", 'Apples'];
+    yield 'a printable character above the controls stays' => ["App\u{00A1}les", "App\u{00A1}les"];
     yield 'multi-byte text is untouched' => ['Груші та сливи', 'Груші та сливи'];
+    yield 'a character whose bytes span the control range is untouched' => ['Ω≈ç√', 'Ω≈ç√'];
     yield 'nothing in is nothing out' => ['', ''];
   }
 

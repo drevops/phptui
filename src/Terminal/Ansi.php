@@ -98,6 +98,11 @@ final class Ansi {
    * a line break written on another platform - dropping it would run two lines
    * together where the author wrote two.
    *
+   * The C1 controls go too, and are matched as the two bytes UTF-8 encodes them
+   * as: a terminal in 8-bit mode reads U+009B as a CSI introducer and would open
+   * a sequence on it. The lead byte they are matched behind never appears inside
+   * another character, so no multi-byte text is cut in half to reach them.
+   *
    * @param string $text
    *   The text.
    *
@@ -107,7 +112,7 @@ final class Ansi {
   public static function sanitize(string $text): string {
     $text = (string) preg_replace('/\r\n?/', "\n", $text);
 
-    return (string) preg_replace('/[\x00-\x08\x0B-\x1F\x7F]/', '', $text);
+    return (string) preg_replace('/[\x00-\x08\x0B-\x1F\x7F]|\xC2[\x80-\x9F]/', '', $text);
   }
 
   /**
