@@ -17,6 +17,8 @@ use DrevOps\Tui\Block\Template;
 use DrevOps\Tui\Builder\Fixup;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\Derive\Derive;
+use DrevOps\Tui\Derive\Deriver;
 use DrevOps\Tui\Discovery\Dotenv;
 use DrevOps\Tui\Field\Textarea;
 use DrevOps\Tui\Handler\Context;
@@ -48,6 +50,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Actions::class)]
 #[CoversClass(Ansi::class)]
 #[CoversClass(Breadcrumb::class)]
+#[CoversClass(Deriver::class)]
 #[CoversClass(ExternalEditor::class)]
 #[CoversClass(Field::class)]
 #[CoversClass(Fixup::class)]
@@ -162,6 +165,32 @@ final class ControlBytesTest extends TestCase {
     ];
     yield 'a list of values' => [static fn(string $b): mixed => (new Field('f', 'F', FieldType::Select))->multiple()->default(['Figs' . $b, 'Plums'])->value(), ['Figs[2J', 'Plums']];
     yield 'a value that is not text at all' => [static fn(string $b): mixed => (new Field('f', 'F', FieldType::Number))->default(12)->value(), 12];
+  }
+
+  public function testAValueANormalizationReturnsIsFiltered(): void {
+    $field = (new Field('courier', 'Courier'))->transform(static fn(mixed $value): string => 'Valley' . self::CLEAR . ' Runs');
+    $field->accept('Coast Runs');
+
+    $this->assertSame('Valley[2J Runs', $field->value());
+  }
+
+  public function testAValueANormalizationReturnsIsFilteredWithNoScreen(): void {
+    $form = Form::create('Orchard')->panel('delivery', 'Delivery', static function (PanelBuilder $panel): void {
+      $panel->text('courier', 'Courier')->default('')->transform(static fn(mixed $value): string => 'Valley' . self::CLEAR . ' Runs');
+    });
+
+    $answers = (new Tui($form))->collect(json_encode(['courier' => 'Coast Runs'], JSON_THROW_ON_ERROR));
+
+    $this->assertSame('Valley[2J Runs', $answers->value('courier'));
+  }
+
+  public function testAComputedValueIsFiltered(): void {
+    $form = Form::create('Orchard')->panel('delivery', 'Delivery', static function (PanelBuilder $panel): void {
+      $panel->text('courier', 'Courier')->default('Valley Runs');
+      $panel->text('slug', 'Slug')->derive(new Derive('{{courier}}' . self::CLEAR));
+    });
+
+    $this->assertSame('Valley Runs[2J', (new Tui($form))->collect()->value('slug'));
   }
 
   public function testADraftIsFilteredAsItIsTyped(): void {

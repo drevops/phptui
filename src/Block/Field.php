@@ -492,7 +492,9 @@ final class Field extends AbstractBlock implements
     $transform = $this->transform ?? $this->reusableTransform;
 
     $this->refusal = NULL;
-    $this->value = $transform instanceof \Closure ? $transform($offered) : $offered;
+    // What a normalization returns is a value in its own right rather than the
+    // one that was measured, so it comes in through the same door.
+    $this->value = $transform instanceof \Closure ? Ansi::sanitizeValue($transform($offered)) : $offered;
     $this->draft = NULL;
     $this->mode = Mode::View;
     $this->editor = NULL;

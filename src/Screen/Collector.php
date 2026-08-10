@@ -493,7 +493,7 @@ final class Collector {
       }
 
       $transform = $field->transformer() ?? $this->handlers->transformer($field->id());
-      $values[$field->id()] = $transform instanceof \Closure ? $transform($values[$field->id()]) : $values[$field->id()];
+      $values[$field->id()] = $transform instanceof \Closure ? Ansi::sanitizeValue($transform($values[$field->id()])) : $values[$field->id()];
     }
 
     return $values;
