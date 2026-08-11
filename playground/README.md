@@ -85,7 +85,7 @@ Both routes are in [`20-layouts-custom.php`](20-layouts-custom.php). A name noth
 
 The regions around the form are the session's, so a block of your own goes in on the facade too: `->place('header', $block)` puts one in a named region, `->place(..., tail: TRUE)` packs it from the end of that region's run, and `->flow('header', Axis::Columns)` turns the region across. The standard furniture is placed first, so a placed block lands after the trail or the key hints its region already holds. Both are in [`20-layouts-region-flow.php`](20-layouts-region-flow.php).
 
-A region draws its own box with `->outlined('Caption')`, and `->inspect()` on the facade draws one around every region at every depth, captioned with its name - which is how an arrangement is read while it is being written. Each box spends a row top and bottom and a column each side of the cells its region was granted. Both are in [`20-layouts-nested.php`](20-layouts-nested.php).
+Edges are one declaration wherever something occupies a rectangle - the screen, a region, any block: `->border(BorderSide::ALL, Border::Rounded, 'Caption')`. Omitting the style takes the theme's, and the sides combine with a bitwise or, so a rule above and below something is a border with two sides left off. A box spends the cells of whatever declared it: a row for each horizontal edge, a column for each vertical one. Both are in [`20-layouts-nested.php`](20-layouts-nested.php).
 
 ## How the TUI sets key bindings
 

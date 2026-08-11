@@ -171,7 +171,7 @@ Use it where no single region can do the moving, which is exactly what a [grid](
 A region draws its own box when it says so, captioned in the top edge:
 
 ```php
-$this->region('noticeboard')->flex(2)->outlined('Today at the market');
+$this->region('noticeboard')->flex(2)->border(BorderSide::ALL, Border::Line, 'Today at the market');
 ```
 
 ```
@@ -184,33 +184,6 @@ $this->region('noticeboard')->flex(2)->outlined('Today at the market');
 The box **spends the region's own cells**: a row top and bottom and a column each side of what the layout granted, exactly as the frame around the whole screen spends the terminal's. A region granted four rows shows two of them. Nothing else moves - a sibling gets the cells it always got, because the box is drawn inside the grant rather than around it. Below three rows or three columns there is no room for a box and any contents both, so the region draws its contents and no edge.
 
 Passing no caption writes the region's own name.
-
-### Seeing every region at once
-
-`->inspect()` on the facade boxes and captions **every** region, at every depth - the screen's, the panel drawn in it, and every panel below that:
-
-```php
-(new Tui($form))->layout('market-hall')->inspect()->run();
-```
-
-```
-╭─ aisles ─────────────────────────────────────╮
-│╭─ content ──────────────────────────────────╮│
-││╭─ stalls ───────────────╮╭─ noticeboard ──╮││
-│││╭─ above ──────────────╮││ Stalls open at ││
-││││ ❯ Crates  6          │││ six.           ││
-│││╰──────────────────────╯││                ││
-│││╭─ window-1 ─╮╭─ window-2 ─╮│              ││
-││││  Fruit ›   ││  Vegetables ›│             ││
-│││╰────────────╯╰────────────╯│              ││
-││╰────────────────────────╯╰────────────────╯││
-│╰────────────────────────────────────────────╯│
-╰──────────────────────────────────────────────╯
-```
-
-It is a development tool rather than part of a form's design: reach for it while writing a layout, to see which region a row actually landed in and how much of the axis each one was granted. A region that declared `->outlined()` keeps its own caption; the rest are captioned with their names.
-
-The boxes cost what a declared box costs, so an inspected frame holds less than the frame it describes - the rows sit where the boxes leave room rather than where they will ship.
 
 [`playground/20-layouts-nested.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-nested.php) stacks four arrangements in one form - a custom screen layout, a custom two-column panel layout, a grid of windows, and the shipped `two-column` on a panel inside one of those windows - and runs it twice, once as it ships and once inspected.
 

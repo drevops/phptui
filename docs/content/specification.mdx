@@ -484,14 +484,14 @@ $this->region('sidebar')
 | `->flow(Axis::Columns)` | its blocks run across it rather than down                 |
 | `->scrolls()`           | its contents may outrun it, and you can move through them |
 | `->previews()`          | a panel in it draws as a window onto it, not as a row     |
-| `->outlined('Notes')`   | a box around it, captioned in the top edge                |
+| `->border(...)`         | edges around it: the sides, the style and a title         |
 | `->add($block)`         | a block goes in it, packed from the start of the flow     |
 | `->prepend($block)`     | a block goes in it, before everything already there       |
 | `->tail($block)`        | a block goes in it, packed from the end of the flow       |
 
 `fixed()`, `flex()` and `content()` are the odd trio out: they _declare_ a size but don't compute one, because _Arrange_ is the layout's. The region states what it wants and the layout does the arithmetic - even for `content()`, where the number comes from the renderer counting what the region holds.
 
-`outlined()` spends the region's own cells rather than asking for more: a row top and bottom and a column each side of what the layout granted, the way the frame around the whole screen spends the terminal's. Siblings are untouched, because the box is drawn inside the grant. Below three rows or three columns there is no room for a box and any contents both, so the region draws its contents and no edge. The facade's `inspect()` turns one on for every region at every depth, captioned with its name, which is a development tool rather than part of a form's design.
+`border()` is the same call the screen and every block take, because all three occupy a rectangle. It spends the cells of whatever declared it - a row for each horizontal edge, a column for each vertical one - so siblings are untouched and a region with too little room for both draws its contents and no edge. The renderer sizes the box and the theme draws it, which is why a border fits its column at any depth.
 
 The name is the whole point of a region: it's how a block says where it goes, so nothing depends on the order things were declared in.
 
@@ -816,14 +816,10 @@ interface ActionsElementsInterface {
 
   public function actionRefusal(string $reason): string;
 
-  public function actionRule(): string;
-
 }
 ```
 
 ```
-├──────────────────────┤ ── actionRule()
-
   Courier is required.
   ─────────┬──────────
            └────────── actionRefusal()
@@ -834,8 +830,6 @@ interface ActionsElementsInterface {
 │      │      └──────── actionSeparator()
 │      └─────────────── actionSelected()
 └────────────────────── actionSelector()
-
-├──────────────────────┤ ── actionRule()
 ```
 
 **It claims _Focus_, so it draws focused differently from not.** Where the cursor is and which button it would press are two questions and two elements: `actionSelector()` marks the row the way `fieldSelector()` and `panelSelector()` mark theirs, in the same column, so the buttons line up with every other row the cursor walks; `actionSelected()` marks the button a key press would reach, and only while the row has the cursor - off it there is no pending press to draw. The mark is a glyph rather than a color for the same reason the other two are: a terminal drawing no color would leave a row styled alone saying the same thing whether you were standing on it or three rows above it.
@@ -844,7 +838,7 @@ The refusal is the block's own row rather than a note somebody draws above it, a
 
 The brackets belong to the element, not the block. A theme that framed a button differently changes `actionButton()` alone, and the block goes on knowing only that it has labels and one of them has focus.
 
-The rules setting the buttons apart are rows of the block for the same reason the refusal is: what the buttons come to is what the arrangement divides its space by, and a rule nobody counted would push a row off the bottom of the frame. `actionRule()` draws them in the frame's own border style, so the renderer joins them to the sides they run into rather than stopping a gutter short of them - and where the buttons come to rest against the foot of the frame, the frame's own edge stands in for the lower one instead of drawing the same line twice. A frame with no border has no line to lend them, so `actionRule()` answers with an empty string and the buttons cost the one row they draw.
+The rules above and below the buttons are no element of this block. _Actions_ claims the border capability like anything else that occupies a rectangle and declares two of the four sides, so the renderer draws them exactly as it draws a region's box or the frame around the screen. An edge whose end meets no side is a plain run rather than a corner, which is what makes a border of two sides read as a rule.
 
 #### Progress
 
