@@ -71,9 +71,7 @@ final class KeyRouter {
    * @param \DrevOps\Tui\Block\Panel $panel
    *   The panel it moves around, which is the panel you are in.
    */
-  public function __construct(
-    protected Panel $panel,
-  ) {
+  public function __construct(protected Panel $panel) {
     $this->root = $panel;
 
     // One declaration outlives the session driving it, so a session opens on a

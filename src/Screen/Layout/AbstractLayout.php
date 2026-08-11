@@ -56,9 +56,7 @@ abstract class AbstractLayout implements LayoutInterface {
    * @param \DrevOps\Tui\Screen\Axis $axis
    *   The direction its regions run.
    */
-  public function __construct(
-    protected Axis $axis,
-  ) {
+  public function __construct(protected Axis $axis) {
   }
 
   /**

@@ -28,7 +28,13 @@ use DrevOps\Tui\Utils\Strings;
  *
  * @package DrevOps\Tui\Field
  */
-class Suggest extends AbstractField implements SearchCapableInterface, TextEditCapableInterface, QueryOptionsCapableInterface, PagingCapableInterface, PlaceholderCapableInterface, CompletionCapableInterface {
+class Suggest extends AbstractField implements
+  SearchCapableInterface,
+  TextEditCapableInterface,
+  QueryOptionsCapableInterface,
+  PagingCapableInterface,
+  PlaceholderCapableInterface,
+  CompletionCapableInterface {
 
   use PagingCapableTrait;
   use QueryOptionsCapableTrait;
