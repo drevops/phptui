@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Screen\Capability;
 
 use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\Side;
+use DrevOps\Tui\Theme\BorderSide;
 
 /**
  * The declaration behind {@see BorderCapableInterface}.
@@ -30,20 +30,20 @@ trait BorderCapableTrait {
   protected string $borderTitle = '';
 
   /**
-   * The edges that are drawn; empty draws all four.
-   *
-   * @var list<\DrevOps\Tui\Theme\Side>
+   * The edges that are drawn, combined from {@see BorderSide}.
    */
-  protected array $borderSides = [];
+  protected int $borderSides = BorderSide::All;
 
   /**
    * {@inheritdoc}
    */
-  public function border(?Border $style = NULL, string $title = '', array $sides = []): static {
-    $this->bordered = $style !== Border::None;
+  public function border(int $sides = BorderSide::All, ?Border $style = NULL, string $title = ''): static {
+    // Naming no side draws nothing, which is the same refusal as naming no
+    // style: both leave the thing unboxed rather than boxed with no edges.
+    $this->bordered = $sides !== BorderSide::None && $style !== Border::None;
+    $this->borderSides = $sides;
     $this->borderStyle = $style;
     $this->borderTitle = $title;
-    $this->borderSides = $sides;
 
     return $this;
   }
@@ -72,8 +72,8 @@ trait BorderCapableTrait {
   /**
    * {@inheritdoc}
    */
-  public function borderSides(): array {
-    return $this->borderSides === [] ? Side::all() : $this->borderSides;
+  public function borderSides(): int {
+    return $this->borderSides;
   }
 
 }

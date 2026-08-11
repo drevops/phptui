@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Screen\Capability;
 
 use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\Side;
+use DrevOps\Tui\Theme\BorderSide;
 
 /**
  * Declares that something draws edges around the space it occupies.
@@ -24,18 +24,23 @@ interface BorderCapableInterface {
   /**
    * Draw edges around this.
    *
+   * @code
+   * $block->border(BorderSide::Top | BorderSide::Bottom);
+   * $region->border(BorderSide::All, Border::Rounded, 'Today');
+   * @endcode
+   *
+   * @param int $sides
+   *   The edges to draw, combined from {@see BorderSide}.
    * @param \DrevOps\Tui\Theme\Border|null $style
    *   The style to draw them in, or NULL for the theme's own.
    * @param string $title
    *   The text written into the top edge; empty writes none, and so does a
    *   border that draws no top edge.
-   * @param list<\DrevOps\Tui\Theme\Side> $sides
-   *   The edges to draw; empty draws all four.
    *
    * @return static
    *   The thing declaring it.
    */
-  public function border(?Border $style = NULL, string $title = '', array $sides = []): static;
+  public function border(int $sides = BorderSide::All, ?Border $style = NULL, string $title = ''): static;
 
   /**
    * Whether edges are drawn around this.
@@ -65,9 +70,9 @@ interface BorderCapableInterface {
   /**
    * The edges that are drawn.
    *
-   * @return list<\DrevOps\Tui\Theme\Side>
-   *   The sides, all four when none were named.
+   * @return int
+   *   The combination, from {@see BorderSide}.
    */
-  public function borderSides(): array;
+  public function borderSides(): int;
 
 }

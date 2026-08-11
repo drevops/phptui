@@ -478,6 +478,72 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
   /**
    * {@inheritdoc}
    */
+  public function borderTopLeft(Border $style): string {
+    return '+';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderTopRight(Border $style): string {
+    return '+';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderBottomLeft(Border $style): string {
+    return '+';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderBottomRight(Border $style): string {
+    return '+';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderLeftJunction(Border $style): string {
+    return '+';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderRightJunction(Border $style): string {
+    return '+';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderHorizontal(Border $style): string {
+    return match ($style) {
+      Border::Double => '=',
+      Border::None, Border::Line, Border::Rounded => '-',
+    };
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderVertical(Border $style): string {
+    return '|';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderPaint(string $text): string {
+    return $text;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function progressSelector(bool $selected): string {
     return $selected ? '>' : ' ';
   }
