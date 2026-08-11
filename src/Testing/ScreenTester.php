@@ -18,6 +18,7 @@ use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\Tui\Theme\ThemeManager;
 use DrevOps\Tui\Tui;
 
 /**
@@ -151,14 +152,20 @@ final class ScreenTester {
   /**
    * Set the theme the blocks draw through.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
-   *   The theme.
+   * @param \DrevOps\Tui\Theme\ThemeInterface|string $theme
+   *   The theme instance or name.
    *
    * @return $this
    *   The tester.
    */
-  public function theme(ThemeInterface $theme): self {
-    $this->theme = $theme;
+  public function theme(ThemeInterface|string $theme): self {
+    if (is_string($theme)) {
+      $options = $this->themeOptions();
+      $this->theme = ThemeManager::create($theme, Tui::frameWidth($options, $this->cols), $options);
+    }
+    else {
+      $this->theme = $theme;
+    }
 
     return $this;
   }

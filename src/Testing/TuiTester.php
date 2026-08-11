@@ -8,11 +8,16 @@ use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Block\BlockInterface;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\CancelException;
+use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Screen\Axis;
+use DrevOps\Tui\Screen\Collector;
+use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\Mode;
+use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Tui;
 
 /**
@@ -55,6 +60,11 @@ final class TuiTester {
    * The theme name or class (empty selects the default theme).
    */
   protected string $theme = '';
+
+  /**
+   * The theme instance, when one was passed directly.
+   */
+  protected ?ThemeInterface $themeInstance = NULL;
 
   /**
    * The reported terminal height.
@@ -116,16 +126,23 @@ final class TuiTester {
   }
 
   /**
-   * Set the theme name or class the form is rendered with.
+   * Set the theme the form is rendered with.
    *
-   * @param string $theme
-   *   The theme name or class.
+   * @param \DrevOps\Tui\Theme\ThemeInterface|string $theme
+   *   The theme instance, name or class.
    *
    * @return $this
    *   The tester.
    */
-  public function theme(string $theme): self {
-    $this->theme = $theme;
+  public function theme(ThemeInterface|string $theme): self {
+    if (is_string($theme)) {
+      $this->theme = $theme;
+      $this->themeInstance = NULL;
+    }
+    else {
+      $this->themeInstance = $theme;
+      $this->theme = '';
+    }
 
     return $this;
   }
@@ -302,7 +319,36 @@ final class TuiTester {
     // terminal's columns.
     $width = Tui::frameWidth($this->options, $this->cols);
 
-    $controller = $this->tui->controller($this->options, $this->theme, '', $this->version, $this->directory, $width, $this->update);
+    if ($this->themeInstance instanceof ThemeInterface) {
+      // Build the controller manually when a ThemeInterface instance was
+      // passed.
+      $collector = new Collector($this->tui->registry(), []);
+      $controller = new ScreenController(
+        $this->tui->root(),
+        $this->themeInstance,
+        [],
+        NULL,
+        $collector,
+        new Context($this->directory, [], $this->update, $this->version),
+        'default',
+        Border::None,
+        TRUE,
+        TRUE,
+        '',
+        $this->version,
+      );
+    }
+    else {
+      $controller = $this->tui->controller(
+        $this->options,
+        $this->theme,
+        '',
+        $this->version,
+        $this->directory,
+        $width,
+        $this->update
+      );
+    }
 
     $this->cancelled = FALSE;
     $this->interrupted = FALSE;

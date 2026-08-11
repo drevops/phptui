@@ -518,7 +518,7 @@ class ScreenController {
       return '';
     }
 
-    return $this->pieces()->renderBanner($this->banner, $this->version) . "\n\n" . Translator::t('Press any key to continue...');
+    return implode("\n", $this->pieces()->renderBanner($this->banner, $this->version)) . "\n\n" . Translator::t('Press any key to continue...');
   }
 
   /**

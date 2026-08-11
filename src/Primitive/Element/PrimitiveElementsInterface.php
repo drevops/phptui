@@ -95,10 +95,10 @@ interface PrimitiveElementsInterface {
    * @param string $version
    *   The version shown below the logo, or an empty string for none.
    *
-   * @return string
-   *   The composed banner.
+   * @return list<string>
+   *   The banner's physical lines.
    */
-  public function renderBanner(string $logo, string $version): string;
+  public function renderBanner(string $logo, string $version): array;
 
   /**
    * Draw a status line: the kind's glyph and the message, in its colour.

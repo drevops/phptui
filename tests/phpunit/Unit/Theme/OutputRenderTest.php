@@ -171,7 +171,7 @@ final class OutputRenderTest extends TestCase {
   }
 
   public function testBannerStacksTheLogoAboveItsVersion(): void {
-    $lines = explode("\n", $this->theme(color: FALSE)->renderBanner("Produce\nBox", '1.2.3'));
+    $lines = $this->theme(color: FALSE)->renderBanner("Produce\nBox", '1.2.3');
 
     $this->assertSame('Produce', $lines[0]);
     $this->assertSame('Box', $lines[1]);
@@ -180,7 +180,7 @@ final class OutputRenderTest extends TestCase {
   }
 
   public function testBannerWithoutVersionIsTheLogoAlone(): void {
-    $this->assertSame('Produce', $this->theme(color: FALSE)->renderBanner('Produce', ''));
+    $this->assertSame(['Produce'], $this->theme(color: FALSE)->renderBanner('Produce', ''));
   }
 
   public function testBoxWrapsLongBodyTextInsideTheBorder(): void {

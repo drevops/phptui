@@ -23,7 +23,7 @@ use DrevOps\Tui\Terminal\Terminal;
  *
  * @code
  * $out = $tui->output();
- * $out->box('Everything below is optional.', 'Welcome');
+ * $out->box('Welcome', 'Everything below is optional.');
  * $out->success('Preserves are ready');
  * $out->definitions(['Jars' => '12', 'Fruit' => 'Apricot']);
  * @endcode
@@ -46,17 +46,17 @@ final class Output {
   /**
    * Write a bordered box with an optional title.
    *
+   * @param string $title
+   *   The heading shown as the box's first line; empty for a bare box.
    * @param string|list<string> $body
    *   The body: one string (its newlines splitting it into lines), or a list of
    *   lines. Long lines wrap to the box's inner width, and an empty entry of a
    *   list stays a blank line so the content can be spaced out.
-   * @param string $title
-   *   The heading shown as the box's first line; empty for a bare box.
    *
    * @return $this
    *   The primitive.
    */
-  public function box(string|array $body, string $title = ''): self {
+  public function box(string $title = '', string|array $body = ''): self {
     return $this->writeLines($this->theme->renderCard(Ansi::sanitize($title), self::toLines($body)));
   }
 
@@ -131,7 +131,7 @@ final class Output {
    *   The primitive.
    */
   public function banner(string $logo, string $version = ''): self {
-    return $this->writeLines(explode("\n", $this->theme->renderBanner(Ansi::sanitize($logo), Ansi::sanitize($version))));
+    return $this->writeLines($this->theme->renderBanner(Ansi::sanitize($logo), Ansi::sanitize($version)));
   }
 
   /**

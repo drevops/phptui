@@ -554,7 +554,7 @@ final class Tui {
    *   spinner.
    * @param string $caption
    *   The caption shown beside the indicator.
-   * @param callable(\DrevOps\Tui\Primitive\Progress): TReturn $work
+   * @param \Closure(\DrevOps\Tui\Primitive\Progress): TReturn $work
    *   The work to run; it receives the progress primitive and its result is
    *   returned.
    * @param \DrevOps\Tui\Terminal\Terminal|null $terminal
@@ -565,7 +565,7 @@ final class Tui {
    *
    * @template TReturn
    */
-  public function progress(?int $total, string $caption, callable $work, ?Terminal $terminal = NULL): mixed {
+  public function progress(?int $total, string $caption, \Closure $work, ?Terminal $terminal = NULL): mixed {
     // Restore this facade's language at the operation boundary (see collect()).
     Translator::setShared($this->translator);
 

@@ -240,7 +240,7 @@ class OceanTheme extends DefaultTheme {
    * {@inheritdoc}
    */
   #[\Override]
-  public function renderBanner(string $logo, string $version): string {
+  public function renderBanner(string $logo, string $version): array {
     $lines = [];
 
     foreach (explode("\n", $logo) as $line) {
@@ -252,7 +252,7 @@ class OceanTheme extends DefaultTheme {
       $lines[] = $this->footer('≈ ' . $version . ' ≈');
     }
 
-    return implode("\n", $lines);
+    return $lines;
   }
 
 }

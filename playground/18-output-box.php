@@ -38,11 +38,11 @@ $out = (new Tui($form))->output();
 
 // A titled box: the title heads the frame, the body wraps inside it. An empty
 // line in the list stays blank, so the content can be spaced out.
-$out->box([
+$out->box('Welcome to the produce box', [
   'Everything below is picked the morning it ships.',
   '',
   'Nothing is charged until the box leaves the packing shed.',
-], 'Welcome to the produce box');
+]);
 
 // A box with no title is a bare frame around its body.
-$out->box('Pick a fruit, add vegetables, and confirm the quantity.');
+$out->box('', 'Pick a fruit, add vegetables, and confirm the quantity.');

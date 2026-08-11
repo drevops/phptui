@@ -373,7 +373,7 @@ final class ControlBytesTest extends TestCase {
    */
   public static function dataProviderTheOutputPrimitiveWritesFilteredText(): \Iterator {
     yield 'a box body' => [static fn(Output $out, string $b): Output => $out->box('Figs' . $b), 'Figs'];
-    yield 'a box body as a list' => [static fn(Output $out, string $b): Output => $out->box(['Figs' . $b, 'Plums']), 'Plums'];
+    yield 'a box body as a list' => [static fn(Output $out, string $b): Output => $out->box('', ['Figs' . $b, 'Plums']), 'Plums'];
     yield 'a box title' => [static fn(Output $out, string $b): Output => $out->box('Plums', 'Figs' . $b), 'Figs'];
     yield 'a card title' => [static fn(Output $out, string $b): Output => $out->card('Figs' . $b, 'Plums'), 'Figs'];
     yield 'a card grid cell' => [static fn(Output $out, string $b): Output => $out->card('Crates', '', ['Produce'], [['Figs' . $b]]), 'Figs'];

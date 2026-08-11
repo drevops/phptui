@@ -1494,7 +1494,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   /**
    * {@inheritdoc}
    */
-  public function renderBanner(string $logo, string $version): string {
+  public function renderBanner(string $logo, string $version): array {
     $lines = [];
 
     foreach (explode("\n", $logo) as $line) {
@@ -1506,7 +1506,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
       $lines[] = $this->footer(Translator::t('Version: @version', ['@version' => $version]));
     }
 
-    return implode("\n", $lines);
+    return $lines;
   }
 
   /**

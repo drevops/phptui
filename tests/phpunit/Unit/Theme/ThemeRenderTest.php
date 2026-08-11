@@ -75,12 +75,12 @@ final class ThemeRenderTest extends TestCase {
   }
 
   public function testBanner(): void {
-    $banner = Ansi::strip($this->plainTheme()->renderBanner("LOGO\nline", '1.2.3'));
+    $banner = Ansi::strip(implode("\n", $this->plainTheme()->renderBanner("LOGO\nline", '1.2.3')));
 
     $this->assertStringContainsString('LOGO', $banner);
     $this->assertStringContainsString('Version: 1.2.3', $banner);
 
-    $this->assertStringNotContainsString('Version', Ansi::strip($this->plainTheme()->renderBanner('LOGO', '')));
+    $this->assertStringNotContainsString('Version', Ansi::strip(implode("\n", $this->plainTheme()->renderBanner('LOGO', ''))));
   }
 
   #[DataProvider('dataProviderKeyGlyph')]
