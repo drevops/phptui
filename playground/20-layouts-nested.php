@@ -119,8 +119,15 @@ $form = Form::create('Market hall')
       $sp->confirm('gift', 'Gift wrap?')->default(FALSE);
     });
 
+    // The cursor steps between the columns with the left and right keys, so the
+    // noticeboard holds rows to land on rather than standing text alone.
     $p->in('noticeboard');
-    $p->markup('hours', "Stalls open at six.\nScales close at four.\nApples are in season.");
+    $p->markup('hours', "Stalls open at six.\nScales close at four.");
+    $p->toggle('season', 'Season')->default('summer')->options([
+      'summer' => 'Summer',
+      'autumn' => 'Autumn',
+    ]);
+    $p->confirm('newsletter', 'Weekly list?')->default(TRUE);
   });
 
 // Stacking the rows against each other keeps the frames about the arrangement

@@ -427,6 +427,17 @@ final class KeyRouter {
    *   The windows to move by.
    */
   protected function moveAcross(int $delta): void {
+    $columns = $this->columnEntries();
+
+    // An arrangement running across draws its regions side by side, so the
+    // cursor steps between them - onto the first row the next region holds.
+    // Walking the rows within one region stays the job of up and down.
+    if ($columns !== []) {
+      $this->stepAcross($columns, $delta);
+
+      return;
+    }
+
     $at = $this->windowAt();
 
     if ($at === NULL) {
@@ -442,6 +453,64 @@ final class KeyRouter {
     }
 
     $this->cursor = $windows[$row][$next];
+    $this->settle();
+  }
+
+  /**
+   * The row each region of an arrangement running across is entered at.
+   *
+   * @return list<int>
+   *   The first focusable row of each region, in the order they are drawn;
+   *   empty when the panel is arranged down rather than across, or when fewer
+   *   than two of its regions hold a row the cursor can land on.
+   */
+  protected function columnEntries(): array {
+    $layout = $this->panel->currentLayout();
+
+    if ($layout->axis() !== Axis::Columns) {
+      return [];
+    }
+
+    $entries = [];
+    $index = 0;
+
+    foreach ($this->held() as $blocks) {
+      if ($blocks !== []) {
+        $entries[] = $index;
+      }
+
+      $index += count($blocks);
+    }
+
+    return count($entries) > 1 ? $entries : [];
+  }
+
+  /**
+   * Step the cursor to the region beside the one it is in.
+   *
+   * @param list<int> $entries
+   *   The row each region is entered at.
+   * @param int $delta
+   *   The regions to move by.
+   */
+  protected function stepAcross(array $entries, int $delta): void {
+    $in = 0;
+
+    // The cursor is in the last region it has passed the entry row of, so a
+    // region is stepped out of from any of its rows rather than its first.
+    foreach ($entries as $at => $entry) {
+      if ($this->cursor >= $entry) {
+        $in = $at;
+      }
+    }
+
+    $next = $in + $delta;
+
+    if ($next < 0 || $next >= count($entries)) {
+      return;
+    }
+
+    $this->cursor = $entries[$next];
     $this->settle();
   }
 
