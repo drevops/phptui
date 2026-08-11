@@ -74,6 +74,67 @@ final class AnsiTest extends TestCase {
     $this->assertSame('keeps spaces', Ansi::stripControl('keeps spaces'));
   }
 
+  #[DataProvider('dataProviderSanitize')]
+  public function testSanitize(string $text, string $expected): void {
+    $this->assertSame($expected, Ansi::sanitize($text));
+  }
+
+  public static function dataProviderSanitize(): \Iterator {
+    yield 'text with nothing to filter is untouched' => ['Deliveries leave at dawn.', 'Deliveries leave at dawn.'];
+    yield 'a screen clear is dropped, its text kept' => ["Deliveries \033[2J leave at dawn.", 'Deliveries [2J leave at dawn.'];
+    yield 'a colour sequence is dropped' => ["\033[31mApricot\033[0m", '[31mApricot[0m'];
+    yield 'a cursor move is dropped' => ["Pears\033[10;20HPlums", 'Pears[10;20HPlums'];
+    yield 'a hyperlink wrapper loses its escapes and its bell' => ["\033]8;;https://example.com\007Figs\033]8;;\007", ']8;;https://example.comFigs]8;;'];
+    yield 'a newline is text and stays' => ["Apples\nOranges", "Apples\nOranges"];
+    yield 'a tab is text and stays' => ["Apples\tOranges", "Apples\tOranges"];
+    yield 'a Windows line ending folds to a newline' => ["Apples\r\nOranges", "Apples\nOranges"];
+    yield 'a lone carriage return folds to a newline' => ["Apples\rOranges", "Apples\nOranges"];
+    yield 'a doubled carriage return folds to two newlines' => ["Apples\r\rOranges", "Apples\n\nOranges"];
+    yield 'a null byte is dropped' => ["App\x00les", 'Apples'];
+    yield 'a bell is dropped' => ["App\007les", 'Apples'];
+    yield 'a vertical tab is dropped' => ["App\x0bles", 'Apples'];
+    yield 'a delete is dropped' => ["App\x7fles", 'Apples'];
+    // A terminal in 8-bit mode opens a sequence on U+009B, so it goes the same
+    // way the two-byte ESC-[ that introduces the same sequence does.
+    yield 'an eight-bit control introducer is dropped' => ["App\u{009B}2Jles", 'App2Jles'];
+    yield 'an eight-bit string terminator is dropped' => ["App\u{009C}les", 'Apples'];
+    yield 'a printable character above the controls stays' => ["App\u{00A1}les", "App\u{00A1}les"];
+    // Encoding the introducer as a bare byte makes the text invalid UTF-8,
+    // which would otherwise carry it straight past the filter.
+    yield 'a bare eight-bit introducer is dropped' => ["App\x9B2Jles", 'App2Jles'];
+    yield 'a bare continuation byte goes with it' => ["App\x80les", 'Apples'];
+    yield 'multi-byte text is untouched' => ['Груші та сливи', 'Груші та сливи'];
+    yield 'a character whose bytes span the control range is untouched' => ['Ω≈ç√', 'Ω≈ç√'];
+    yield 'nothing in is nothing out' => ['', ''];
+  }
+
+  #[DataProvider('dataProviderSanitizeValue')]
+  public function testSanitizeValue(mixed $value, mixed $expected): void {
+    $this->assertSame($expected, Ansi::sanitizeValue($value));
+  }
+
+  public static function dataProviderSanitizeValue(): \Iterator {
+    yield 'a string is filtered' => ["Apri\033[2Jcots", 'Apri[2Jcots'];
+    yield 'a list is filtered item by item' => [["Ap\033[2Jples", "Pe\007ars"], ['Ap[2Jples', 'Pears']];
+    // A key addresses an entry rather than being read, and filtering two keys
+    // into one would drop an entry.
+    yield 'a string key is left as it is' => [["Ba\033[2Jsket" => "Pl\007ums"], ["Ba\033[2Jsket" => 'Plums']];
+    yield 'two keys that would collide both survive' => [['a' => 1, "a\007" => 2], ['a' => 1, "a\007" => 2]];
+    yield 'an integer key is left as it is' => [[3 => "Pl\007ums"], [3 => 'Plums']];
+    yield 'nesting is walked to its leaves' => [[['a' => ["Fi\007gs"]]], [['a' => ['Figs']]]];
+    yield 'an integer is not text' => [42, 42];
+    yield 'a float is not text' => [1.5, 1.5];
+    yield 'a boolean is not text' => [TRUE, TRUE];
+    yield 'nothing is not text' => [NULL, NULL];
+    yield 'an empty list stays empty' => [[], []];
+  }
+
+  public function testSanitizeValueLeavesAnObjectAlone(): void {
+    $object = new \stdClass();
+
+    $this->assertSame($object, Ansi::sanitizeValue($object));
+  }
+
   public function testStripHyperlinkTerminators(): void {
     $esc = "\033";
 

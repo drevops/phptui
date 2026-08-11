@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Block;
 
 use DrevOps\Tui\FormException;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Translation\Translator;
 
 /**
@@ -35,6 +36,11 @@ final class Template {
   protected array $placeholders = [];
 
   /**
+   * The declared pattern, carrying `{{name}}` slots.
+   */
+  protected string $pattern;
+
+  /**
    * Construct a template.
    *
    * @param string $pattern
@@ -52,11 +58,15 @@ final class Template {
    *   side by side, or when a label or validator names an absent slot.
    */
   public function __construct(
-    protected string $pattern,
+    string $pattern,
     protected array $labels = [],
     protected array $validators = [],
   ) {
-    $this->split($pattern);
+    // Filter before splitting, so the literals, the expression and the
+    // assembled string all describe the same pattern.
+    $this->pattern = Ansi::sanitize($pattern);
+    $this->labels = array_map(Ansi::sanitize(...), $this->labels);
+    $this->split($this->pattern);
     $this->assertShape();
     $this->assertDeclared(array_keys($this->labels), 'label');
     $this->assertDeclared(array_keys($this->validators), 'validator');

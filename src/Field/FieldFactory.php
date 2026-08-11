@@ -13,6 +13,7 @@ use DrevOps\Tui\Field\Capability\PlaceholderCapableInterface;
 use DrevOps\Tui\Field\Capability\QueryOptionsCapableInterface;
 use DrevOps\Tui\Input\KeyMap;
 use DrevOps\Tui\Input\KeyMapManager;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Translation\Translator;
 
 /**
@@ -166,7 +167,7 @@ class FieldFactory {
     $completion = $block->completion();
     $source = $completion instanceof \Closure ? $completion($answers) : $completion;
 
-    return Field::stringList($source);
+    return array_map(Ansi::sanitize(...), Field::stringList($source));
   }
 
   /**

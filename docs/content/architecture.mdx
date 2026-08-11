@@ -29,6 +29,14 @@ Read it as three concerns around that tree:
 
 Under all three sits the terminal. `Terminal` is the device - raw mode, the alternate screen, the size it reports - and beside it is the text machinery every drawn line passes through: `Ansi` for escape sequences, `Box` and `Table` for the geometry of a frame and a grid, and `Terminal\Markup` - distinct from the `Markup` block above - for the [markdown subset](/markdown). All of it takes plain strings and hands plain strings back, so nothing above it has to know how a glyph reaches the screen.
 
+### Text you supply is filtered at the door
+
+A terminal acts on some bytes rather than printing them, so a label, a markup body or a collected answer containing `ESC[2J` would clear the screen instead of reading as text. `Ansi::sanitize()` filters every string you hand the library, at the point it is taken in: a block setter, a value the collection resolves, a save from your `$EDITOR`, a key you type. Escapes are removed. Newline and tab are kept, and `CRLF` or a lone `CR` folds to a newline, so multi-line content keeps its lines.
+
+A block therefore never holds a byte a terminal would act on, and that applies to your own theme too - an element only ever receives filtered text. The library's own escapes are unaffected, because the theme composes styling after the filter runs, so a form built from untrusted content keeps its color.
+
+Identifiers are excluded: field, panel and markup ids, action names, and the keys of a collected answer address something rather than being read, and the library never draws one. Pick them yourself rather than from untrusted input.
+
 ## Step 1 - describe the questions
 
 You declare the questions in PHP with the fluent `Form` builder: panels holding fields. A field has an `id`, a type (`text`, `select`, `suggest`, `search`, `filepicker`, `confirm` and the rest; `select`, `search` and `filepicker` collect a list with `->multiple()`) and optional rules - `default`, `required`, `options`, `when` (show it only when a condition holds), `derive` (compute it from other fields) and `discover` (detect it from the target directory).

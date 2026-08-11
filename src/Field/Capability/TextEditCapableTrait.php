@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Field\Capability;
 
 use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Key;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Utils\Strings;
 
@@ -36,7 +37,7 @@ trait TextEditCapableTrait {
    *   The initial value (and live input buffer).
    */
   protected function initTextBuffer(string $buffer): void {
-    $this->buffer = $buffer;
+    $this->buffer = Ansi::sanitize($buffer);
     $this->cursor = Strings::length($this->buffer);
   }
 
@@ -98,10 +99,14 @@ trait TextEditCapableTrait {
   /**
    * Insert text at the cursor.
    *
+   * Unbound control keys arrive as ordinary characters, and a paste delivers
+   * whole escape sequences the same way.
+   *
    * @param string $text
    *   The text to insert.
    */
   public function insert(string $text): void {
+    $text = Ansi::sanitize($text);
     $this->buffer = Strings::substr($this->buffer, 0, $this->cursor) . $text . Strings::substr($this->buffer, $this->cursor);
     $this->cursor += Strings::length($text);
   }

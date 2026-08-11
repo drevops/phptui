@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Primitive;
 
 use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Terminal\Terminal;
 use DrevOps\Tui\Terminal\TerminalControl;
 
@@ -49,6 +50,11 @@ final class Progress {
   protected string $label = '';
 
   /**
+   * The caption shown beside the indicator.
+   */
+  protected string $caption;
+
+  /**
    * Construct a progress primitive.
    *
    * @param \DrevOps\Tui\Terminal\Terminal $terminal
@@ -68,8 +74,9 @@ final class Progress {
     protected PrimitiveElementsInterface $theme,
     protected bool $active,
     ?int $total,
-    protected string $caption,
+    string $caption,
   ) {
+    $this->caption = Ansi::sanitize($caption);
     $this->total = $total === NULL ? NULL : max(0, $total);
   }
 
@@ -120,7 +127,7 @@ final class Progress {
    */
   public function advance(?string $label = NULL): void {
     if ($label !== NULL) {
-      $this->label = $label;
+      $this->label = Ansi::sanitize($label);
     }
 
     if ($this->total === NULL) {

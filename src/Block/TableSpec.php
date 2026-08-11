@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
+use DrevOps\Tui\Terminal\Ansi;
+
 /**
  * A presentational table: header cells and body rows, coerced to strings.
  *
@@ -66,7 +68,7 @@ final readonly class TableSpec {
     $out = [];
 
     foreach ($cells as $cell) {
-      $out[] = is_scalar($cell) ? (string) $cell : '';
+      $out[] = is_scalar($cell) ? Ansi::sanitize((string) $cell) : '';
     }
 
     return $out;

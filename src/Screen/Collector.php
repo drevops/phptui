@@ -17,6 +17,7 @@ use DrevOps\Tui\Derive\Deriver;
 use DrevOps\Tui\Discovery\DiscoverInterface;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Handler\HandlerRegistry;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Translation\Translator;
 
 /**
@@ -393,8 +394,10 @@ final class Collector {
    *   The value and its source.
    */
   protected function resolveInitial(Field $field, array $supplied, Context $context): array {
+    // Environment values, JSON payloads and computed defaults bypass
+    // Field::default(), so they are filtered here instead.
     if (array_key_exists($field->id(), $supplied)) {
-      return [$supplied[$field->id()], Source::Input];
+      return [Ansi::sanitizeValue($supplied[$field->id()]), Source::Input];
     }
 
     if ($context->update) {
@@ -407,7 +410,7 @@ final class Collector {
 
     $default = $field->value();
 
-    return [$default instanceof \Closure ? $default($context) : $default, Source::Default];
+    return [Ansi::sanitizeValue($default instanceof \Closure ? $default($context) : $default), Source::Default];
   }
 
   /**
@@ -424,12 +427,14 @@ final class Collector {
   protected function discoverValue(Field $field, Context $context): mixed {
     $discover = $field->discovery();
 
+    // Filter before the value is matched against the field's options, so the
+    // matched text and the drawn text are identical.
     if ($discover instanceof DiscoverInterface) {
-      return $discover->discover($context->directory);
+      return Ansi::sanitizeValue($discover->discover($context->directory));
     }
 
     if ($discover instanceof \Closure) {
-      return $discover($context);
+      return Ansi::sanitizeValue($discover($context));
     }
 
     return NULL;
@@ -487,7 +492,7 @@ final class Collector {
       }
 
       $transform = $field->transformer() ?? $this->handlers->transformer($field->id());
-      $values[$field->id()] = $transform instanceof \Closure ? $transform($values[$field->id()]) : $values[$field->id()];
+      $values[$field->id()] = $transform instanceof \Closure ? Ansi::sanitizeValue($transform($values[$field->id()])) : $values[$field->id()];
     }
 
     return $values;

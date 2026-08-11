@@ -9,6 +9,7 @@ use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableTrait;
 use DrevOps\Tui\Block\Capability\RejectCapableInterface;
 use DrevOps\Tui\Block\Element\ActionsElementsInterface;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 
@@ -62,7 +63,7 @@ final class Actions extends AbstractBlock implements ActivateCapableInterface, F
    *   The block.
    */
   public function action(string $name, string $label): static {
-    $this->buttons[$name] = $label;
+    $this->buttons[$name] = Ansi::sanitize($label);
     $this->selected ??= $name;
 
     return $this;
@@ -117,7 +118,7 @@ final class Actions extends AbstractBlock implements ActivateCapableInterface, F
    *   The block.
    */
   public function refuse(?string $reason): static {
-    $this->refusal = $reason;
+    $this->refusal = $reason === NULL ? NULL : Ansi::sanitize($reason);
 
     return $this;
   }

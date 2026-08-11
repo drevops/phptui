@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Derive;
 
+use DrevOps\Tui\Terminal\Ansi;
+
 /**
  * Recomputes derived field values until chains settle to a fixpoint.
  *
@@ -40,7 +42,8 @@ class Deriver {
           continue;
         }
 
-        $computed = $rule->compute($values);
+        // A derive template is consumer text and is never validated.
+        $computed = Ansi::sanitizeValue($rule->compute($values));
         if (($values[$id] ?? NULL) !== $computed) {
           $values[$id] = $computed;
           $changed = TRUE;

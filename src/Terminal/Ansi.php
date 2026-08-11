@@ -87,6 +87,78 @@ final class Ansi {
   }
 
   /**
+   * Drop the control bytes a terminal acts on, keeping the ones text uses.
+   *
+   * Consumer text is drawn unaltered, so an escape sequence inside it clears
+   * the screen, moves the cursor or recolours the output. Newline and tab are
+   * text and are kept; every other C0 control and DEL is removed.
+   *
+   * A carriage return folds to a newline instead of being dropped, because it
+   * is a line break written on another platform.
+   *
+   * The C1 controls are removed as the two bytes UTF-8 encodes them as: a
+   * terminal in 8-bit mode reads U+009B as a CSI introducer. Their lead byte
+   * never appears inside another character, so multi-byte text is unaffected.
+   *
+   * Invalid UTF-8 is filtered a second time over the bare C1 range. Valid text
+   * cannot hold a bare C1 byte, so the extra pass only reaches input that is
+   * already malformed, and it closes the bypass of encoding a control byte
+   * that way deliberately.
+   *
+   * @param string $text
+   *   The text.
+   *
+   * @return string
+   *   The text a terminal can only print.
+   */
+  public static function sanitize(string $text): string {
+    $text = (string) preg_replace('/\r\n?/', "\n", $text);
+    $text = (string) preg_replace('/[\x00-\x08\x0B-\x1F\x7F]|\xC2[\x80-\x9F]/', '', $text);
+
+    if (preg_match('//u', $text) === 1) {
+      return $text;
+    }
+
+    return (string) preg_replace('/[\x80-\x9F]/', '', $text);
+  }
+
+  /**
+   * Sanitize every string a value holds, whatever shape the value has.
+   *
+   * An answer is a string, a list of strings, or a value that is not text.
+   * Arrays are walked to their leaves and a non-string value is returned
+   * unchanged.
+   *
+   * Keys are left alone. A key addresses an entry rather than being read, the
+   * same way an id addresses a field, and filtering two keys into one would
+   * drop an entry. Where a key is drawn it is a label, and it is filtered by
+   * whoever draws it.
+   *
+   * @param mixed $value
+   *   The value.
+   *
+   * @return mixed
+   *   The value, with every string inside it sanitized.
+   */
+  public static function sanitizeValue(mixed $value): mixed {
+    if (is_string($value)) {
+      return self::sanitize($value);
+    }
+
+    if (!is_array($value)) {
+      return $value;
+    }
+
+    $out = [];
+
+    foreach ($value as $key => $item) {
+      $out[$key] = self::sanitizeValue($item);
+    }
+
+    return $out;
+  }
+
+  /**
    * Strip ANSI escape sequences from text.
    *
    * Removes both the CSI styling sequences and the OSC 8 hyperlink wrappers

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Block;
 
 use DrevOps\Tui\Block\Element\BreadcrumbElementsInterface;
+use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 
@@ -32,7 +33,7 @@ final class Breadcrumb extends AbstractBlock {
    *   The panel titles, from the root to where you are.
    */
   public function __construct(string ...$segments) {
-    $this->segments = array_values($segments);
+    $this->trail(...$segments);
   }
 
   /**
@@ -45,7 +46,7 @@ final class Breadcrumb extends AbstractBlock {
    *   The block.
    */
   public function trail(string ...$segments): self {
-    $this->segments = array_values($segments);
+    $this->segments = array_map(Ansi::sanitize(...), array_values($segments));
 
     return $this;
   }
