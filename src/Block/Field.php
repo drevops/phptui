@@ -946,7 +946,9 @@ final class Field extends AbstractBlock implements
     $entry = new Option($value, $label === '' ? $value : $label, $description, OptionKind::Option, $disabled, $disabled_reason);
 
     foreach ($this->entries as $index => $existing) {
-      if ($existing->kind === OptionKind::Option && $existing->value === $value) {
+      // Option filters the value it is given, so the match is made against the
+      // filtered form rather than the argument.
+      if ($existing->kind === OptionKind::Option && $existing->value === $entry->value) {
         $this->entries[$index] = $entry;
 
         return $this;
@@ -1009,6 +1011,8 @@ final class Field extends AbstractBlock implements
    *   separators carry none and are never returned.
    */
   public function entryOf(string $value): ?Option {
+    $value = Ansi::sanitize($value);
+
     foreach ($this->entries as $entry) {
       if ($entry->kind === OptionKind::Option && $entry->value === $value) {
         return $entry;

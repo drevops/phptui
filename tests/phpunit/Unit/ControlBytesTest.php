@@ -205,6 +205,16 @@ final class ControlBytesTest extends TestCase {
     $this->assertSame("Figs\tand plums\nleave at dawn.[2J", $field->value());
   }
 
+  public function testAnEntryDeclaredTwiceReplacesTheRowAfterFiltering(): void {
+    $field = (new Field('basket', 'Basket', FieldType::Select))
+      ->entry('apple', 'Apple')
+      ->entry("apple\x00", 'Bruised apple');
+
+    // The set stays unique: the filtered value matches the row already there.
+    $this->assertCount(1, $field->entries());
+    $this->assertSame('Bruised apple', $field->entryOf('apple')?->label);
+  }
+
   public function testMultiLineMarkupKeepsItsLines(): void {
     $markup = new Markup('notice', "Figs\r\nand plums" . self::CLEAR . "\rleave at dawn.");
 

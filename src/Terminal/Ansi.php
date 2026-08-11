@@ -100,6 +100,11 @@ final class Ansi {
    * terminal in 8-bit mode reads U+009B as a CSI introducer. Their lead byte
    * never appears inside another character, so multi-byte text is unaffected.
    *
+   * Invalid UTF-8 is filtered a second time over the bare C1 range. Valid text
+   * cannot hold a bare C1 byte, so the extra pass only reaches input that is
+   * already malformed, and it closes the bypass of encoding a control byte
+   * that way deliberately.
+   *
    * @param string $text
    *   The text.
    *
@@ -108,8 +113,13 @@ final class Ansi {
    */
   public static function sanitize(string $text): string {
     $text = (string) preg_replace('/\r\n?/', "\n", $text);
+    $text = (string) preg_replace('/[\x00-\x08\x0B-\x1F\x7F]|\xC2[\x80-\x9F]/', '', $text);
 
-    return (string) preg_replace('/[\x00-\x08\x0B-\x1F\x7F]|\xC2[\x80-\x9F]/', '', $text);
+    if (preg_match('//u', $text) === 1) {
+      return $text;
+    }
+
+    return (string) preg_replace('/[\x80-\x9F]/', '', $text);
   }
 
   /**

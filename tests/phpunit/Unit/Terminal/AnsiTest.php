@@ -99,6 +99,10 @@ final class AnsiTest extends TestCase {
     yield 'an eight-bit control introducer is dropped' => ["App\u{009B}2Jles", 'App2Jles'];
     yield 'an eight-bit string terminator is dropped' => ["App\u{009C}les", 'Apples'];
     yield 'a printable character above the controls stays' => ["App\u{00A1}les", "App\u{00A1}les"];
+    // Encoding the introducer as a bare byte makes the text invalid UTF-8,
+    // which would otherwise carry it straight past the filter.
+    yield 'a bare eight-bit introducer is dropped' => ["App\x9B2Jles", 'App2Jles'];
+    yield 'a bare continuation byte goes with it' => ["App\x80les", 'Apples'];
     yield 'multi-byte text is untouched' => ['Груші та сливи', 'Груші та сливи'];
     yield 'a character whose bytes span the control range is untouched' => ['Ω≈ç√', 'Ω≈ç√'];
     yield 'nothing in is nothing out' => ['', ''];
