@@ -22,7 +22,7 @@ Four levels, and nothing else:
 ```
 Screen        the root; occupies the terminal, or fits its contents
 └─ Layout     arranges; reusable by name
-   └─ Region  holds blocks and flows them; declares whether it scrolls
+   └─ Region  holds blocks and flows them; declares whether it scrolls and whether it draws edges
       └─ Block   drawn in a region
 ```
 
@@ -484,11 +484,14 @@ $this->region('sidebar')
 | `->flow(Axis::Columns)` | its blocks run across it rather than down                 |
 | `->scrolls()`           | its contents may outrun it, and you can move through them |
 | `->previews()`          | a panel in it draws as a window onto it, not as a row     |
+| `->outlined('Notes')`   | a box around it, captioned in the top edge                |
 | `->add($block)`         | a block goes in it, packed from the start of the flow     |
 | `->prepend($block)`     | a block goes in it, before everything already there       |
 | `->tail($block)`        | a block goes in it, packed from the end of the flow       |
 
 `fixed()`, `flex()` and `content()` are the odd trio out: they _declare_ a size but don't compute one, because _Arrange_ is the layout's. The region states what it wants and the layout does the arithmetic - even for `content()`, where the number comes from the renderer counting what the region holds.
+
+`outlined()` spends the region's own cells rather than asking for more: a row top and bottom and a column each side of what the layout granted, the way the frame around the whole screen spends the terminal's. Siblings are untouched, because the box is drawn inside the grant. Below three rows or three columns there is no room for a box and any contents both, so the region draws its contents and no edge. The facade's `inspect()` turns one on for every region at every depth, captioned with its name, which is a development tool rather than part of a form's design.
 
 The name is the whole point of a region: it's how a block says where it goes, so nothing depends on the order things were declared in.
 

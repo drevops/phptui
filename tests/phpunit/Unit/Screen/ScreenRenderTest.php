@@ -491,6 +491,66 @@ final class ScreenRenderTest extends TestCase {
     $this->assertSame(['', '  [ Submit ]  [ Cancel ]', '', '', '', ''], $this->render($screen, 6, 30));
   }
 
+  public function testOutlinedRegionDrawsItsOwnEdgesInsideTheCellsItWasGranted(): void {
+    $layout = new DefaultLayout();
+    $layout->in('content')->outlined('Notes');
+
+    $screen = (new Screen())->layout($layout);
+    $screen->in('header')->add(new Markup('trail', 'Orchard'));
+    $screen->in('content')->add(new Markup('notes', "Pick the produce.\nWeigh the crates."));
+
+    // The box spends a row top and bottom and a column each side of the four
+    // rows the layout granted, so two rows of the note are left in sight.
+    $this->assertSame([
+      'Orchard',
+      '┌─ Notes ──────────────────────┐',
+      '│Pick the produce.             │',
+      '│Weigh the crates.             │',
+      '└──────────────────────────────┘',
+      '',
+    ], $this->render($screen, 6, 32));
+  }
+
+  public function testOutlinedRegionFallsBackToItsContentsWhenTheBoxWouldNotFit(): void {
+    $layout = new DefaultLayout();
+    $layout->in('header')->outlined();
+
+    $screen = (new Screen())->layout($layout);
+    $screen->in('header')->add(new Markup('trail', 'Orchard'));
+
+    // One row has no room for a box and anything inside it, so the row goes to
+    // the contents and no edge is drawn.
+    $this->assertSame('Orchard', $this->render($screen, 6, 32)[0]);
+  }
+
+  public function testInspectingBoxesEveryRegionAndCaptionsItWithItsName(): void {
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('content')->add(new Markup('notes', 'Pick the produce.'));
+
+    $rendered = (new ScreenRenderer(new DefaultTheme(32, ['color' => FALSE, 'border' => Border::None]), Border::None, TRUE))->render($screen, 6, 32);
+    $lines = array_map(rtrim(...), explode("\n", $rendered));
+
+    // A region that declared no box gets one while the layout is inspected, and
+    // a borderless frame still draws the edges in a line the reader can see.
+    $this->assertSame('┌─ content ────────────────────┐', $lines[1]);
+    $this->assertSame('│Pick the produce.             │', $lines[2]);
+    $this->assertSame('└──────────────────────────────┘', $lines[4]);
+  }
+
+  public function testCaptionWiderThanItsEdgeIsCutRatherThanPushingTheCornerOff(): void {
+    $layout = new DefaultLayout();
+    $layout->in('content')->outlined('A caption nothing this narrow could hold');
+
+    $screen = (new Screen())->layout($layout);
+    $screen->in('content')->add(new Markup('notes', 'Pick.'));
+
+    $lines = $this->render($screen, 6, 20);
+
+    // The box stays the width the layout granted whatever it was captioned.
+    $this->assertSame(20, Ansi::width($lines[1]));
+    $this->assertStringEndsWith('┐', $lines[1]);
+  }
+
   public function testAnEmptyLayoutDrawsNothingAtAll(): void {
     $layout = new class() extends AbstractLayout {
 

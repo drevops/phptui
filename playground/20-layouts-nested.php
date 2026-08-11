@@ -1,0 +1,157 @@
+<?php
+
+/**
+ * @file
+ * Arrangement all the way down, and the switch that draws every region's edge.
+ *
+ * Four arrangements stack in this one form, each nested inside a block the one
+ * above it holds:
+ *
+ *   1. The screen runs MarketHallLayout - a two-row masthead flowing across, a
+ *      scrolling body, a status bar flowing across. Its regions are named for
+ *      what they are, so it states where the standard furniture goes.
+ *   2. The panel in that body runs StallFloorLayout - two columns of unequal
+ *      width, the wider one scrolling, the narrower one drawing its own box.
+ *   3. The "Produce" panel in the wider column runs a grid, so its four
+ *      sub-panels are drawn as windows onto what they hold rather than as rows
+ *      saying what is behind them.
+ *   4. The "Fruit" panel in the first window runs the shipped two-column
+ *      layout, so its fields sit beside a standing note.
+ *
+ * A region declares its own box with ->outlined(), which the noticeboard does.
+ * ->inspect() draws one around every region at every depth, captioned with its
+ * name, which is how an arrangement is read while it is being written. Each box
+ * spends a row top and bottom and a column each side of the cells its region
+ * was granted, so an inspected frame holds less than the frame it describes.
+ *
+ * The form runs twice: once as it ships, then again inspected. Drive each with
+ * the arrow keys, drill in with Enter, and leave with Escape.
+ *
+ * Usage:
+ *   php playground/20-layouts-nested.php
+ */
+
+declare(strict_types=1);
+
+use DrevOps\Tui\Block\Markup;
+use DrevOps\Tui\Builder\Form;
+use DrevOps\Tui\Builder\PanelBuilder;
+use DrevOps\Tui\CollectException;
+use DrevOps\Tui\InterruptException;
+use DrevOps\Tui\Screen\Layout\LayoutManager;
+use DrevOps\Tui\Theme\Border;
+use DrevOps\Tui\Theme\Spacing;
+use DrevOps\Tui\Tui;
+use Playground\Layouts\MarketHallLayout;
+use Playground\Layouts\StallFloorLayout;
+
+require __DIR__ . '/../vendor/autoload.php';
+// The requires make the classes loadable; a real consumer would autoload them.
+require __DIR__ . '/layouts/MarketHallLayout.php';
+require __DIR__ . '/layouts/StallFloorLayout.php';
+
+LayoutManager::register('market-hall', MarketHallLayout::class);
+LayoutManager::register('stall-floor', StallFloorLayout::class);
+
+// Each session gets a form of its own, so the second opens on the answers the
+// form declares rather than on whatever the first was left holding.
+$form = static fn (): Form => Form::create('Market hall')
+  ->panel('hall', 'Hall', function (PanelBuilder $p): void {
+    // Declared before anything is placed, so every block below knows the
+    // regions it may go in.
+    $p->layout('stall-floor');
+
+    $p->in('stalls');
+    $p->text('order', 'Order name')->default('Weekly Box');
+
+    $p->panel('produce', 'Produce', function (PanelBuilder $sp): void {
+      // Two visual rows of two windows, with a row of the panel's own above
+      // them and another below.
+      $sp->layout(2, 2);
+
+      $sp->text('crates', 'Crates')->default('6');
+
+      $sp->panel('fruit', 'Fruit', function (PanelBuilder $wp): void {
+        // A shipped layout on a panel, reached by the same name the facade
+        // reaches it by.
+        $wp->layout('two-column');
+
+        $wp->in('left');
+        $wp->select('fruit', 'Fruit')->default('apple')->options([
+          'apple' => 'Apple',
+          'pear' => 'Pear',
+          'plum' => 'Plum',
+        ]);
+        $wp->rating('freshness', 'Freshness')->default(4)->min(1)->max(5);
+
+        $wp->in('right');
+        $wp->markup('picked', 'Picked at dawn, graded at the bench.');
+      });
+
+      $sp->panel('vegetables', 'Vegetables', function (PanelBuilder $wp): void {
+        $wp->select('vegetables', 'Vegetables')->multiple()->default(['carrot'])->options([
+          'carrot' => 'Carrot',
+          'leek' => 'Leek',
+          'tomato' => 'Tomato',
+        ]);
+      });
+
+      $sp->panel('herbs', 'Herbs', function (PanelBuilder $wp): void {
+        $wp->confirm('bundle', 'Herb bundle?')->default(TRUE);
+      });
+
+      $sp->panel('roots', 'Roots', function (PanelBuilder $wp): void {
+        $wp->toggle('washed', 'Washed')->default('yes')->options([
+          'yes' => 'Yes',
+          'no' => 'No',
+        ]);
+      });
+
+      $sp->markup('scales', 'Crates are weighed at the bench.');
+    });
+
+    $p->panel('delivery', 'Delivery', function (PanelBuilder $sp): void {
+      $sp->toggle('slot', 'Slot')->default('morning')->options([
+        'morning' => 'Morning',
+        'afternoon' => 'Afternoon',
+      ]);
+      $sp->confirm('gift', 'Gift wrap?')->default(FALSE);
+    });
+
+    $p->in('noticeboard');
+    $p->markup('hours', "Stalls open at six.\nScales close at four.\nApples are in season.");
+  });
+
+// Stacking the rows against each other keeps the frames about the arrangement
+// rather than about the air the theme leaves between blocks, and leaves the
+// two-row masthead room for both of its blocks.
+$run = static function (string $said, bool $inspect) use ($form): void {
+  echo $said . PHP_EOL . PHP_EOL;
+
+  (new Tui($form()))
+    ->layout('market-hall')
+    ->theme('default', ['border' => Border::Rounded, 'spacing' => Spacing::Normal])
+    ->place('masthead', new Markup('season', '(summer season)'))
+    ->place('statusbar', new Markup('version', 'v1.2.3'), tail: TRUE)
+    ->inspect($inspect)
+    ->clearOnExit(FALSE)
+    ->run();
+
+  echo PHP_EOL;
+};
+
+try {
+  $run('As it ships: four arrangements, and only the noticeboard draws an edge.', FALSE);
+  $run('Inspected: every region boxed and captioned, at every depth.', TRUE);
+}
+catch (InterruptException) {
+  // Leave quietly on Ctrl-C.
+  exit(130);
+}
+catch (CollectException $exception) {
+  fwrite(STDERR, $exception->getMessage() . PHP_EOL);
+  exit(1);
+}
+
+// Arranging exists only to draw, so the answers read the same under either.
+echo 'Both sessions collected the same answers.' . PHP_EOL;

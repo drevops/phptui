@@ -46,6 +46,11 @@ final class ScreenRenderer {
   public const int CHROME = 4;
 
   /**
+   * The cells a region's own box spends on each axis, both sides.
+   */
+  public const int OUTLINE = 2;
+
+  /**
    * Construct a renderer.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
@@ -53,11 +58,44 @@ final class ScreenRenderer {
    * @param \DrevOps\Tui\Theme\Border $border
    *   The frame drawn around every region at once; none by default, which
    *   leaves the rows exactly as the layout arranged them.
+   * @param bool $inspect
+   *   Whether every region is boxed and captioned, whatever it declared. The
+   *   boxes cost the cells a declared one costs, so an inspected frame holds
+   *   less than the frame it describes.
    */
   public function __construct(
     protected ThemeInterface $theme,
     protected Border $border = Border::None,
+    protected bool $inspect = FALSE,
   ) {
+  }
+
+  /**
+   * The cells of a region's grant that its contents can use.
+   *
+   * @param \DrevOps\Tui\Screen\Region $region
+   *   The region.
+   * @param int $cells
+   *   The cells the layout granted it.
+   *
+   * @return int
+   *   The cells left once its box has taken its own.
+   */
+  public function inside(Region $region, int $cells): int {
+    return $this->outlines($region) ? max(0, $cells - self::OUTLINE) : $cells;
+  }
+
+  /**
+   * Whether a box is drawn around a region.
+   *
+   * @param \DrevOps\Tui\Screen\Region $region
+   *   The region.
+   *
+   * @return bool
+   *   TRUE when the region declared one, or when every region is being boxed.
+   */
+  protected function outlines(Region $region): bool {
+    return $this->inspect || $region->isOutlined();
   }
 
   /**
@@ -154,6 +192,8 @@ final class ScreenRenderer {
    *   The rows.
    */
   public function room(Region $region, Panel $panel, int $rows): int {
+    $rows = $this->inside($region, $rows);
+
     // A panel you walked into is drawn where the furniture is not, so it takes
     // the region whole however much of it the furniture would have wanted.
     if ($this->deeper($panel)) {
@@ -209,7 +249,8 @@ final class ScreenRenderer {
     // answers are kept: what it comes to, for the arrangement to divide the
     // axis by, and where the block sits in it.
     foreach ($layout->names() as $name) {
-      [$measured[$name], $rows[$name]] = $this->extent($layout, $name, $of);
+      [$content, $rows[$name]] = $this->extent($layout, $name, $of);
+      $measured[$name] = $this->demand($layout->in($name), $content);
     }
 
     $sizes = $layout->arrange($layout->natural($measured), $measured);
@@ -221,7 +262,8 @@ final class ScreenRenderer {
 
       foreach ($line as $name) {
         if (($rows[$name] ?? -1) >= 0) {
-          $row = $total + $rows[$name];
+          // A boxed region starts its contents a row below its own top edge.
+          $row = $total + $rows[$name] + ($this->outlines($layout->in($name)) ? 1 : 0);
         }
 
         $held = max($held, $sizes[$name] ?? 0);
@@ -231,6 +273,21 @@ final class ScreenRenderer {
     }
 
     return [$total, $row];
+  }
+
+  /**
+   * The cells a region asks the layout for, once its box is counted in.
+   *
+   * @param \DrevOps\Tui\Screen\Region $region
+   *   The region.
+   * @param int $content
+   *   The cells its contents come to.
+   *
+   * @return int
+   *   The cells.
+   */
+  protected function demand(Region $region, int $content): int {
+    return $this->outlines($region) ? $content + self::OUTLINE : $content;
   }
 
   /**
@@ -360,7 +417,7 @@ final class ScreenRenderer {
     $measured = [];
 
     foreach ($layout->names() as $name) {
-      $measured[$name] = $this->extent($layout, $name)[0];
+      $measured[$name] = $this->demand($layout->in($name), $this->extent($layout, $name)[0]);
     }
 
     return $measured;
@@ -636,6 +693,91 @@ final class ScreenRenderer {
    *   Exactly $rows rows, padded or clipped to fit.
    */
   protected function fill(Region $region, int $rows, int $columns, bool $furnished = FALSE): array {
+    // A region below three rows or three columns has no room for a box and its
+    // contents both, so it spends what it has on the contents.
+    if (!$this->outlines($region) || $rows < 3 || $columns < 3) {
+      return $this->packed($region, $rows, $columns, $furnished);
+    }
+
+    $inside = $this->packed($region, $rows - self::OUTLINE, $columns - self::OUTLINE, $furnished);
+
+    return $this->outline($inside, $region->caption(), $rows, $columns);
+  }
+
+  /**
+   * Draw a box around a region's rows, captioned in its top edge.
+   *
+   * @param list<string> $lines
+   *   The rows drawn inside the box.
+   * @param string $caption
+   *   The text written into the top edge.
+   * @param int $rows
+   *   The rows the region was given, box included.
+   * @param int $columns
+   *   The columns it was given, box included.
+   *
+   * @return list<string>
+   *   Exactly $rows rows.
+   */
+  protected function outline(array $lines, string $caption, int $rows, int $columns): array {
+    $chrome = $this->chrome();
+    $chars = Box::chars($this->border === Border::None ? Border::Line : $this->border, $this->unicode());
+    $bar = $chrome->chromeBorder($chars['v']);
+    $inner = $columns - self::OUTLINE;
+    $rule = $this->banded($inner);
+    $joined = $chrome->chromeBorder(Box::rule($chars['ml'], $chars['mr'], $chars['h'], $columns));
+    $out = [$chrome->chromeBorder($this->captioned($chars, $caption, $columns))];
+
+    foreach ($lines as $line) {
+      $out[] = $rule !== '' && $line === $rule ? $joined : $bar . Box::fit($line, $inner) . $bar;
+    }
+
+    $out[] = $chrome->chromeBorder(Box::rule($chars['bl'], $chars['br'], $chars['h'], $columns));
+
+    return $out;
+  }
+
+  /**
+   * A box's top edge, with a caption written into it.
+   *
+   * @param array<string,string> $chars
+   *   The box-drawing glyphs.
+   * @param string $caption
+   *   The text written into the edge.
+   * @param int $columns
+   *   The columns the edge spans, corners included.
+   *
+   * @return string
+   *   The edge, unstyled.
+   */
+  protected function captioned(array $chars, string $caption, int $columns): string {
+    $head = $chars['tl'] . $chars['h'] . ' ' . $caption . ' ';
+
+    // A caption wider than the edge is cut rather than pushing the corner off
+    // it, so the box stays the width the layout granted.
+    if (Ansi::width($head) > $columns - 1) {
+      $head = Ansi::slice($head, $columns - 1);
+    }
+
+    return $head . str_repeat($chars['h'], max(0, $columns - 1 - Ansi::width($head))) . $chars['tr'];
+  }
+
+  /**
+   * Draw a region's blocks into the space its box left it.
+   *
+   * @param \DrevOps\Tui\Screen\Region $region
+   *   The region.
+   * @param int $rows
+   *   The rows it may fill.
+   * @param int $columns
+   *   The columns it may fill.
+   * @param bool $furnished
+   *   Whether it holds the furniture a session puts around a form.
+   *
+   * @return list<string>
+   *   Exactly $rows rows, padded or clipped to fit.
+   */
+  protected function packed(Region $region, int $rows, int $columns, bool $furnished = FALSE): array {
     $lines = $this->arrange($region, $rows, $columns, $furnished);
     $tail = $this->tailed($region);
 

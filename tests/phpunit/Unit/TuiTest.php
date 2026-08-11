@@ -308,6 +308,30 @@ final class TuiTest extends TestCase {
     $this->assertStringStartsWith('╰', $lines[12]);
   }
 
+  public function testInspectingBoxesTheRegionsOfEveryLayoutTheScreenNests(): void {
+    $form = Form::create('Market hall')
+      ->panel('order', 'Order', function (PanelBuilder $panel): void {
+        $panel->layout(2);
+
+        $panel->panel('fruit', 'Fruit', function (PanelBuilder $window): void {
+          $window->text('fruit', 'Fruit')->default('Pear');
+        });
+        $panel->panel('veg', 'Vegetables', function (PanelBuilder $window): void {
+          $window->text('veg', 'Vegetables')->default('Carrot');
+        });
+      });
+
+    $tester = (new TuiTester($form))->options(['color' => FALSE, 'border' => Border::Rounded])->rows(20)->cols(72)->inspect();
+    $tester->run(Key::named(KeyName::Enter), Key::named(KeyName::Interrupt));
+    $display = $tester->display();
+
+    // The switch reaches every layout the screen nests rather than the screen's
+    // own: the grid's windows are regions like any other and carry their names.
+    $this->assertStringContainsString('─ content ─', $display);
+    $this->assertStringContainsString('─ window-1 ─', $display);
+    $this->assertStringContainsString('─ window-2 ─', $display);
+  }
+
   #[DataProvider('dataProviderRegionNameNothingAnswersToThrowsWhereItIsWritten')]
   public function testRegionNameNothingAnswersToThrowsWhereItIsWritten(\Closure $state): void {
     $this->expectException(\InvalidArgumentException::class);

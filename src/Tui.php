@@ -101,6 +101,11 @@ final class Tui {
   protected array $flows = [];
 
   /**
+   * Whether every region is boxed and captioned with its name.
+   */
+  protected bool $inspect = FALSE;
+
+  /**
    * The resolved key bindings; NULL uses the default preset.
    */
   protected ?KeyMap $keymap = NULL;
@@ -308,6 +313,31 @@ final class Tui {
   public function flow(string $region, Axis $axis): self {
     $this->flows[$region] = $axis;
     $this->assertRegions();
+
+    return $this;
+  }
+
+  /**
+   * Box and caption every region, at every depth of the screen.
+   *
+   * A development tool for reading an arrangement. Every region draws its own
+   * edges with its name in the top one - the screen's, the panel drawn in it,
+   * and every panel below that. A region that declared its own box draws it
+   * either way; this turns one on for the rest.
+   *
+   * Each box spends a row top and bottom and a column each side of the cells
+   * its region was granted, so an inspected frame holds less than the frame it
+   * describes. A region below three rows or three columns draws its contents
+   * instead, having no room for both.
+   *
+   * @param bool $inspect
+   *   Whether to box every region.
+   *
+   * @return $this
+   *   The facade.
+   */
+  public function inspect(bool $inspect = TRUE): self {
+    $this->inspect = $inspect;
 
     return $this;
   }
@@ -730,6 +760,7 @@ final class Tui {
       version: $version,
       placements: $this->placements,
       flows: $this->flows,
+      inspect: $this->inspect,
     );
   }
 
