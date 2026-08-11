@@ -94,8 +94,9 @@ class Rating extends AbstractField implements StepCapableInterface {
   /**
    * Jump to the point a typed digit names.
    *
-   * A digit the scale does not include is ignored, so typing on a scale that
-   * starts above nine, or runs well past it, is inert.
+   * A digit the scale does not include is ignored. One digit names one point,
+   * so only the points 0 to 9 are reachable by typing; the rest are reached
+   * with the movement keys.
    *
    * @param string $char
    *   The typed character.

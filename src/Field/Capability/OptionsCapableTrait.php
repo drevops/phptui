@@ -13,9 +13,9 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * Shared option-list behaviour for the choice fields.
  *
  * Holds the ordered option rows and the two invariants every choice field
- * shares. The cursor is only ever placed on a selectable row, skipping
- * separators, headings and disabled options. Non-selectable rows render as
- * visual-only structure.
+ * shares. Where a selectable row exists the cursor is placed on one, skipping
+ * separators, headings and disabled options; where none is selectable it
+ * falls back to index 0. Non-selectable rows render as visual-only structure.
  *
  * @package DrevOps\Tui\Field\Capability
  */

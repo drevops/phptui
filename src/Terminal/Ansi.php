@@ -65,7 +65,7 @@ final class Ansi {
    */
   public static function link(string $text, string $url): string {
     // A raw ESC or BEL in either part would truncate the wrapper or inject
-    // arbitrary control codes downstream, so every control byte is dropped
+    // arbitrary control codes downstream, so the C0 bytes and DEL are dropped
     // before the URL and text are embedded.
     $text = self::stripControl($text);
     $url = self::stripControl($url);

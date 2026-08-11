@@ -44,6 +44,9 @@ interface ScrollCapableInterface {
    *
    * @return static
    *   The surface.
+   *
+   * @throws \LogicException
+   *   When the surface does not scroll.
    */
   public function scrollTo(int $row): static;
 

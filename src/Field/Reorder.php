@@ -92,8 +92,8 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
     }
 
     if ($keys->matches($key, Action::Accept)) {
-      // Accept drops a held item, as Space does, so nothing is committed
-      // mid-move.
+      // Accept drops a held item, as the grab action does, so nothing is
+      // committed mid-move.
       if ($this->grabbed) {
         $this->grabbed = FALSE;
       }
@@ -225,8 +225,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
    *   The two-column marker cell.
    */
   protected function marker(ThemeInterface $theme, bool $current): string {
-    // The glyphs are the keys that move the item, so the mark shows what to
-    // press.
+    // The glyphs name the two directions the item moves in.
     if ($current && $this->grabbed) {
       return $theme->keyGlyph(KeyName::Up) . $theme->keyGlyph(KeyName::Down);
     }

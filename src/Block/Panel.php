@@ -389,10 +389,10 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * The ids of the rows this panel holds, in the order they were placed.
    *
-   * Every row that carries an id is included, whether it collects an answer
-   * or only shows something. A display-only id is still an id the form
+   * Field, markup and progress rows are included, whether they collect an
+   * answer or only show something. A display-only id is still an id the form
    * knows, so a stray answer can be told from one aimed at a row that takes
-   * none.
+   * none. The ids of nested panels are not included.
    *
    * @return list<string>
    *   The ids.

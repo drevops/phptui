@@ -12,8 +12,8 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * Behaviour every block shares: drawing through a theme's elements.
  *
  * A block draws with the elements it declares, and {@see elements()} narrows
- * the theme to them: a theme that does not implement them fails as a type
- * error rather than drawing a blank line.
+ * the theme to them: a theme that does not implement them throws
+ * \InvalidArgumentException rather than drawing a blank line.
  *
  * Every block may also declare edges. The declaration carries no geometry -
  * what a block occupies is known where it is drawn - so the renderer sizes

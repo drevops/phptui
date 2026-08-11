@@ -26,9 +26,9 @@ use DrevOps\Tui\FormException;
  * the declaration is finished, because only a finished one can be checked
  * for contradictions.
  *
- * Most declarations apply to some kinds of answer and not to others, and one
- * the kind has nowhere to put is rejected where it was written rather than
- * quietly dropped, so the error points at the line that made it.
+ * Most declarations apply to some kinds of answer and not to others. A
+ * declaration the kind has nowhere to put is rejected where it was written
+ * rather than quietly dropped, so the error points at the line that made it.
  *
  * @package DrevOps\Tui\Builder
  */

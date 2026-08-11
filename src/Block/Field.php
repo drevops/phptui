@@ -2339,7 +2339,7 @@ final class Field extends AbstractBlock implements
    * One entry as it is drawn.
    *
    * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
-   *   The theme.
+   *   The theme narrowed to the field elements.
    * @param \DrevOps\Tui\Block\Option $entry
    *   The entry.
    *
