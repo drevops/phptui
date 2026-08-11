@@ -9,6 +9,7 @@ use DrevOps\Tui\Block\Capability\FocusCapableInterface;
 use DrevOps\Tui\Block\Capability\FocusCapableTrait;
 use DrevOps\Tui\Block\Capability\RejectCapableInterface;
 use DrevOps\Tui\Block\Element\ActionsElementsInterface;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
@@ -87,10 +88,13 @@ final class Actions extends AbstractBlock implements ActivateCapableInterface, F
    *
    * @return static
    *   The block.
+   *
+   * @throws \DrevOps\Tui\FormException
+   *   When the action name is unknown.
    */
   public function select(string $name): static {
     if (!isset($this->buttons[$name])) {
-      throw new \InvalidArgumentException(sprintf('Unknown action "%s". This block declares: %s.', $name, implode(', ', $this->names())));
+      throw new FormException(sprintf('Unknown action "%s". This block declares: %s.', $name, implode(', ', $this->names())));
     }
 
     $this->selected = $name;

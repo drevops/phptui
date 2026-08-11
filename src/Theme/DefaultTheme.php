@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Theme;
 
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
 use DrevOps\Tui\Primitive\Status;
@@ -170,7 +171,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   /**
    * Validate the options against optionSchema(), failing loudly on a mistake.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\FormException
    *   When an option key is unknown or its value is not allowed.
    */
   protected function validateOptions(): void {
@@ -180,7 +181,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
     foreach ($this->options as $key => $value) {
       if (in_array($key, $integers, TRUE)) {
         if (!is_int($value) || $value < 0) {
-          throw new \InvalidArgumentException(Translator::t('@value is not a valid "@key". Use a non-negative integer.', [
+          throw new FormException(Translator::t('@value is not a valid "@key". Use a non-negative integer.', [
             '@value' => $this->showValue($value),
             '@key' => $key,
           ]));
@@ -190,7 +191,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
       }
 
       if (!array_key_exists($key, $schema)) {
-        throw new \InvalidArgumentException(Translator::t('Unknown theme option "@key". Known: @known.', [
+        throw new FormException(Translator::t('Unknown theme option "@key". Known: @known.', [
           '@key' => $key,
           '@known' => implode(', ', [...array_keys($schema), ...$integers]),
         ]));
@@ -200,7 +201,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
       $candidate = $value instanceof \BackedEnum ? $value->value : $value;
 
       if (!in_array($candidate, $schema[$key], TRUE)) {
-        throw new \InvalidArgumentException(Translator::t('@value is not a valid "@key". Allowed: @allowed.', [
+        throw new FormException(Translator::t('@value is not a valid "@key". Allowed: @allowed.', [
           '@value' => $this->showValue($candidate),
           '@key' => $key,
           '@allowed' => implode(', ', array_map($this->showValue(...), $schema[$key])),
@@ -213,7 +214,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
     // unresolvable resize notice.
     foreach ([['min_width', 'max_width'], ['min_height', 'max_height']] as [$min_key, $max_key]) {
       if (array_key_exists($min_key, $this->options) && $this->intOption($max_key, 0) > 0 && $this->intOption($min_key, 0) > $this->intOption($max_key, 0)) {
-        throw new \InvalidArgumentException(Translator::t('"@min" must not exceed "@max".', [
+        throw new FormException(Translator::t('"@min" must not exceed "@max".', [
           '@min' => $min_key,
           '@max' => $max_key,
         ]));

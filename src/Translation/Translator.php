@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Translation;
 
+use DrevOps\Tui\FormException;
+
 /**
  * Resolves user-facing strings to a target language, English as the fallback.
  *
@@ -350,6 +352,9 @@ final class Translator {
    *
    * @return array<string,string>
    *   The source => translation entries the source contributes.
+   *
+   * @throws \DrevOps\Tui\FormException
+   *   When the source is neither a directory, file, nor array.
    */
   protected function loadSource(string|array $source, array $candidates): array {
     if (is_array($source)) {
@@ -380,7 +385,7 @@ final class Translator {
       return in_array(pathinfo($source, PATHINFO_FILENAME), $candidates, TRUE) ? $this->readCatalog($source) : [];
     }
 
-    throw new \InvalidArgumentException(sprintf('The translation source "%s" is neither a directory nor a catalog file.', $source));
+    throw new FormException(sprintf('The translation source "%s" is neither a directory nor a catalog file.', $source));
   }
 
   /**

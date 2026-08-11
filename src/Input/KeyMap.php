@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Input;
 
 use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\FormException;
 
 /**
  * The resolved, validated key bindings for a whole form.
@@ -175,7 +176,7 @@ final class KeyMap {
    * @return array<string,array{key:\DrevOps\Tui\Input\Key,action:\DrevOps\Tui\Input\Action}>
    *   The inverted map.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\FormException
    *   When one key is bound to two different actions in the layer.
    */
   protected function invert(array $layer, Scope $scope): array {
@@ -186,7 +187,7 @@ final class KeyMap {
         $token = $key->token();
 
         if (isset($inverted[$token]) && $inverted[$token]['action'] !== $entry['action']) {
-          throw new \InvalidArgumentException(sprintf('Key "%s" is bound to both %s and %s in the %s scope.', $key->label(), $inverted[$token]['action']->name, $entry['action']->name, $scope->label()));
+          throw new FormException(sprintf('Key "%s" is bound to both %s and %s in the %s scope.', $key->label(), $inverted[$token]['action']->name, $entry['action']->name, $scope->label()));
         }
 
         $inverted[$token] = ['key' => $key, 'action' => $entry['action']];
@@ -225,7 +226,7 @@ final class KeyMap {
    * @param \DrevOps\Tui\Input\Scope $scope
    *   The scope being checked.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\FormException
    *   When a printable character is bound in the base or a text-entry scope.
    */
   protected function assertTypeable(array $inverted, Scope $scope): void {
@@ -241,10 +242,10 @@ final class KeyMap {
       }
 
       if ($scope->fieldType instanceof FieldType) {
-        throw new \InvalidArgumentException(sprintf('The %s scope consumes typed characters, so the printable character "%s" cannot be bound to an action there.', $scope->label(), $entry['key']->label()));
+        throw new FormException(sprintf('The %s scope consumes typed characters, so the printable character "%s" cannot be bound to an action there.', $scope->label(), $entry['key']->label()));
       }
 
-      throw new \InvalidArgumentException(sprintf('The base scope may not bind the printable character "%s"; it would be un-typeable in text fields. Bind it in a specific non-text scope instead.', $entry['key']->label()));
+      throw new FormException(sprintf('The base scope may not bind the printable character "%s"; it would be un-typeable in text fields. Bind it in a specific non-text scope instead.', $entry['key']->label()));
     }
   }
 
@@ -272,7 +273,7 @@ final class KeyMap {
    * @return list<\DrevOps\Tui\Input\Key>
    *   The normalized keys.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\FormException
    *   When a character binding is not exactly one character.
    */
   protected function normalize(array $keys, Scope $scope): array {
@@ -289,7 +290,7 @@ final class KeyMap {
         $out[] = Key::char($key);
       }
       else {
-        throw new \InvalidArgumentException(sprintf('A character binding in the %s scope must be a single character, got "%s".', $scope->label(), $key));
+        throw new FormException(sprintf('A character binding in the %s scope must be a single character, got "%s".', $scope->label(), $key));
       }
     }
 

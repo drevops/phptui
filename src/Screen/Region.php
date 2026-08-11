@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Screen;
 
 use DrevOps\Tui\Block\BlockInterface;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Screen\Capability\BorderCapableInterface;
 use DrevOps\Tui\Screen\Capability\BorderCapableTrait;
 use DrevOps\Tui\Screen\Capability\ScrollCapableInterface;
@@ -95,10 +96,13 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
    *
    * @return $this
    *   The region.
+   *
+   * @throws \DrevOps\Tui\FormException
+   *   When the cell count is 0 or negative.
    */
   public function fixed(int $cells): self {
     if ($cells < 1) {
-      throw new \InvalidArgumentException('A fixed size is a count of cells, so it cannot be 0.');
+      throw new FormException('A fixed size is a count of cells, so it cannot be 0.');
     }
 
     $this->sizing = Sizing::Fixed;
@@ -118,10 +122,13 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
    *
    * @return $this
    *   The region.
+   *
+   * @throws \DrevOps\Tui\FormException
+   *   When the share is 0 or negative.
    */
   public function flex(int $share): self {
     if ($share < 1) {
-      throw new \InvalidArgumentException('A flex share divides the remainder, so it cannot be 0.');
+      throw new FormException('A flex share divides the remainder, so it cannot be 0.');
     }
 
     $this->sizing = Sizing::Flex;

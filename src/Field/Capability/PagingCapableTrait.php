@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Field\Capability;
 
 use DrevOps\Tui\Block\Element\FieldElementsInterface;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Screen\Scroller;
 use DrevOps\Tui\Screen\Viewport;
 use DrevOps\Tui\Theme\ThemeInterface;
@@ -54,12 +55,12 @@ trait PagingCapableTrait {
    * @return int
    *   The effective page size.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\FormException
    *   When a declared page size is not positive.
    */
   protected function resolvePageSize(?int $page_size): int {
     if ($page_size !== NULL && $page_size < 1) {
-      throw new \InvalidArgumentException(Translator::t('Page size must be a positive integer, @size given.', [
+      throw new FormException(Translator::t('Page size must be a positive integer, @size given.', [
         '@size' => $page_size,
       ]));
     }

@@ -6,6 +6,7 @@ namespace DrevOps\Tui\Resolver;
 
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\FieldType;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Translation\Translator;
 
 /**
@@ -121,7 +122,7 @@ class InputResolver {
    * @return array<string,mixed>
    *   The decoded map keyed by field id.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\FormException
    *   When the operand decodes to anything but a JSON object - failing loudly
    *   instead of silently discarding every supplied answer.
    */
@@ -134,7 +135,7 @@ class InputResolver {
     $data = json_decode($json, TRUE);
 
     if (!is_array($data)) {
-      throw new \InvalidArgumentException(Translator::t('The --prompts value is neither a JSON object nor a path to one.'));
+      throw new FormException(Translator::t('The --prompts value is neither a JSON object nor a path to one.'));
     }
 
     $out = [];
