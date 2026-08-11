@@ -124,11 +124,11 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
   /**
    * Move the cursor, carrying the held item when one is grabbed.
    *
-   * @param int $dir
+   * @param int $delta
    *   The direction: -1 up, +1 down.
    */
-  protected function move(int $dir): void {
-    $target = $this->cursor + $dir;
+  protected function move(int $delta): void {
+    $target = $this->cursor + $delta;
 
     if ($target < 0 || $target >= count($this->items)) {
       return;

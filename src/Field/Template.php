@@ -158,15 +158,15 @@ class Template extends AbstractField implements TextEditCapableInterface {
    * error but does not hold the caret, so a slot filled in the wrong order can
    * still be reached and corrected.
    *
-   * @param int $direction
+   * @param int $delta
    *   The number of slots to move by: 1 forward, -1 back.
    */
-  protected function move(int $direction): void {
+  protected function move(int $delta): void {
     $count = count($this->names);
     $this->parts[$this->activeName()] = $this->buffer;
     $this->error = $this->template->partError($this->activeName(), $this->buffer);
 
-    $this->focus((($this->active + $direction) % $count + $count) % $count);
+    $this->focus((($this->active + $delta) % $count + $count) % $count);
   }
 
   /**
