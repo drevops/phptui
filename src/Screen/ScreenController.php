@@ -15,7 +15,7 @@ use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Mode;
 use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\OptionType;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Block\RenderMode;
@@ -1124,7 +1124,7 @@ class ScreenController {
     $offered = [];
 
     foreach ([...$field->entries(), ...$rows] as $row) {
-      if ($row->kind === OptionKind::Option) {
+      if ($row->kind === OptionType::Option) {
         $offered[$row->value] = $row->label;
       }
     }

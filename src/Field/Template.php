@@ -47,7 +47,7 @@ class Template extends AbstractField implements TextEditCapableInterface {
   /**
    * The index of the slot holding the caret.
    */
-  protected int $active = 0;
+  protected int $current = 0;
 
   /**
    * Construct a template field.
@@ -88,13 +88,13 @@ class Template extends AbstractField implements TextEditCapableInterface {
     }
 
     if ($keys->matches($key, Action::MoveDown)) {
-      $this->move(1);
+      $this->moveCursor(1);
 
       return;
     }
 
     if ($keys->matches($key, Action::MoveUp)) {
-      $this->move(-1);
+      $this->moveCursor(-1);
 
       return;
     }
@@ -133,7 +133,7 @@ class Template extends AbstractField implements TextEditCapableInterface {
    */
   protected function values(): array {
     $values = $this->parts;
-    $values[$this->activeName()] = $this->buffer;
+    $values[$this->currentName()] = $this->buffer;
 
     return $values;
   }
@@ -144,8 +144,8 @@ class Template extends AbstractField implements TextEditCapableInterface {
    * @return string
    *   The slot name.
    */
-  protected function activeName(): string {
-    return $this->names[$this->active] ?? '';
+  protected function currentName(): string {
+    return $this->names[$this->current] ?? '';
   }
 
   /**
@@ -158,12 +158,12 @@ class Template extends AbstractField implements TextEditCapableInterface {
    * @param int $delta
    *   The number of slots to move by: 1 forward, -1 back.
    */
-  protected function move(int $delta): void {
+  protected function moveCursor(int $delta): void {
     $count = count($this->names);
-    $this->parts[$this->activeName()] = $this->buffer;
-    $this->error = $this->template->partError($this->activeName(), $this->buffer);
+    $this->parts[$this->currentName()] = $this->buffer;
+    $this->error = $this->template->partError($this->currentName(), $this->buffer);
 
-    $this->focus((($this->active + $delta) % $count + $count) % $count);
+    $this->focus((($this->current + $delta) % $count + $count) % $count);
   }
 
   /**
@@ -173,8 +173,8 @@ class Template extends AbstractField implements TextEditCapableInterface {
    *   The slot index.
    */
   protected function focus(int $index): void {
-    $this->active = $index;
-    $this->initTextBuffer($this->parts[$this->activeName()] ?? '');
+    $this->current = $index;
+    $this->initTextBuffer($this->parts[$this->currentName()] ?? '');
   }
 
   /**
@@ -242,7 +242,7 @@ class Template extends AbstractField implements TextEditCapableInterface {
 
     $shape .= $this->renderLiteral($theme, count($this->names));
 
-    return $shape . "\n" . $this->elements($theme)->fieldState(Translator::t('filling in @label', ['@label' => $this->template->labelOf($this->activeName())]));
+    return $shape . "\n" . $this->elements($theme)->fieldState(Translator::t('filling in @label', ['@label' => $this->template->labelOf($this->currentName())]));
   }
 
   /**
@@ -277,7 +277,7 @@ class Template extends AbstractField implements TextEditCapableInterface {
    *   The rendered slot.
    */
   protected function renderSlot(ThemeInterface $theme, int $index, string $name): string {
-    if ($index === $this->active) {
+    if ($index === $this->current) {
       return $this->renderCaretLine($theme);
     }
 

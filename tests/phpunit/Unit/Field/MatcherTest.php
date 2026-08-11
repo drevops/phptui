@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Field;
 
 use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\OptionType;
 use DrevOps\Tui\Field\Matcher;
 use DrevOps\Tui\Field\MatchResult;
 use DrevOps\Tui\Field\MatchTier;
@@ -125,9 +125,9 @@ final class MatcherTest extends TestCase {
 
     $options = [
       new Option('a', 'Apple'),
-      new Option('', 'Fruits', '', OptionKind::Heading),
+      new Option('', 'Fruits', '', OptionType::Heading),
       new Option('p', 'Pineapple'),
-      new Option('', '', '', OptionKind::Separator),
+      new Option('', '', '', OptionType::Separator),
       new Option('g', 'Grape'),
     ];
 

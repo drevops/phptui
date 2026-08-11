@@ -6,7 +6,7 @@ namespace DrevOps\Tui\Field;
 
 use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\OptionType;
 use DrevOps\Tui\Block\SelectionBounds;
 use DrevOps\Tui\Field\Capability\FilterCapableInterface;
 use DrevOps\Tui\Field\Capability\FilterCapableTrait;
@@ -81,7 +81,7 @@ class Select extends AbstractField implements OptionsCapableInterface, Selection
   protected function filterOptions(string $needle): array {
     $lower = Strings::lower($needle);
 
-    return array_values(array_filter($this->options, static fn(Option $option): bool => $option->kind === OptionKind::Option && str_contains(Strings::lower($option->label), $lower)));
+    return array_values(array_filter($this->options, static fn(Option $option): bool => $option->kind === OptionType::Option && str_contains(Strings::lower($option->label), $lower)));
   }
 
   /**

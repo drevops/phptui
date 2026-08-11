@@ -687,7 +687,7 @@ final class Field extends AbstractBlock implements
    * @return string
    *   The fragment (e.g. "a string", "a list"), translated.
    */
-  public function valueKind(): string {
+  public function valueType(): string {
     return match (TRUE) {
       $this->fieldType === FieldType::Confirm, $this->fieldType === FieldType::Pause => Translator::t('a boolean'),
       $this->collectsList() => Translator::t('a list'),
@@ -943,12 +943,12 @@ final class Field extends AbstractBlock implements
    *   The field.
    */
   public function entry(string $value, string $label = '', string $description = '', bool $disabled = FALSE, string $disabled_reason = ''): static {
-    $entry = new Option($value, $label === '' ? $value : $label, $description, OptionKind::Option, $disabled, $disabled_reason);
+    $entry = new Option($value, $label === '' ? $value : $label, $description, OptionType::Option, $disabled, $disabled_reason);
 
     foreach ($this->entries as $index => $existing) {
       // Option filters the value it is given, so the match is made against the
       // filtered form rather than the argument.
-      if ($existing->kind === OptionKind::Option && $existing->value === $entry->value) {
+      if ($existing->kind === OptionType::Option && $existing->value === $entry->value) {
         $this->entries[$index] = $entry;
 
         return $this;
@@ -970,7 +970,7 @@ final class Field extends AbstractBlock implements
    *   The field.
    */
   public function heading(string $label): static {
-    $this->entries[] = new Option('', $label, '', OptionKind::Heading);
+    $this->entries[] = new Option('', $label, '', OptionType::Heading);
 
     return $this;
   }
@@ -982,7 +982,7 @@ final class Field extends AbstractBlock implements
    *   The field.
    */
   public function separator(): static {
-    $this->entries[] = new Option('', '', '', OptionKind::Separator);
+    $this->entries[] = new Option('', '', '', OptionType::Separator);
 
     return $this;
   }
@@ -1014,7 +1014,7 @@ final class Field extends AbstractBlock implements
     $value = Ansi::sanitize($value);
 
     foreach ($this->entries as $entry) {
-      if ($entry->kind === OptionKind::Option && $entry->value === $value) {
+      if ($entry->kind === OptionType::Option && $entry->value === $value) {
         return $entry;
       }
     }
@@ -2347,11 +2347,11 @@ final class Field extends AbstractBlock implements
    *   The drawn entry; empty for a divider, which is a gap and nothing else.
    */
   protected function entryLine(FieldElementsInterface $elements, Option $entry): string {
-    if ($entry->kind === OptionKind::Heading) {
+    if ($entry->kind === OptionType::Heading) {
       return $elements->fieldCaption($entry->label);
     }
 
-    if ($entry->kind === OptionKind::Separator) {
+    if ($entry->kind === OptionType::Separator) {
       return $elements->fieldEntrySeparator();
     }
 

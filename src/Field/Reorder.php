@@ -111,13 +111,13 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
     }
 
     if ($keys->matches($key, Action::MoveUp)) {
-      $this->move(-1);
+      $this->moveCursor(-1);
 
       return;
     }
 
     if ($keys->matches($key, Action::MoveDown)) {
-      $this->move(1);
+      $this->moveCursor(1);
     }
   }
 
@@ -127,7 +127,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
    * @param int $delta
    *   The direction: -1 up, +1 down.
    */
-  protected function move(int $delta): void {
+  protected function moveCursor(int $delta): void {
     $target = $this->cursor + $delta;
 
     if ($target < 0 || $target >= count($this->items)) {
@@ -183,7 +183,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
    *   The highlighted item's description.
    */
   #[\Override]
-  protected function highlightedDescription(): string {
+  protected function currentDescription(): string {
     if ($this->items === []) {
       return '';
     }

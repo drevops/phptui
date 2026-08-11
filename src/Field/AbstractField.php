@@ -325,7 +325,7 @@ abstract class AbstractField implements FieldInterface {
   public function view(ThemeInterface $theme): string {
     $lines = [$this->renderBody($theme)];
 
-    $detail = $this->renderOptionDescription($theme, $this->highlightedDescription());
+    $detail = $this->renderOptionDescription($theme, $this->currentDescription());
     if ($detail !== '') {
       $lines[] = $detail;
     }
@@ -376,7 +376,7 @@ abstract class AbstractField implements FieldInterface {
    * @return string
    *   The description shown beneath the body, or an empty string.
    */
-  protected function highlightedDescription(): string {
+  protected function currentDescription(): string {
     return '';
   }
 

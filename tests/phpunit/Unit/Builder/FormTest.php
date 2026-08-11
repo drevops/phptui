@@ -10,7 +10,7 @@ use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Block\FilePickerMode;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\NumberBounds;
-use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\OptionType;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Block\RenderMode;
@@ -642,7 +642,7 @@ final class FormTest extends TestCase {
     $this->assertSame(FilePickerMode::Directory, $assets->pickerConstraints()->mode);
   }
 
-  public function testOptionKindsAndDisabled(): void {
+  public function testOptionTypesAndDisabled(): void {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $p): void {
         $p->select('profile')
@@ -658,10 +658,10 @@ final class FormTest extends TestCase {
 
     $options = $profile->entries();
     $this->assertCount(4, $options);
-    $this->assertSame(OptionKind::Heading, $options[0]->kind);
+    $this->assertSame(OptionType::Heading, $options[0]->kind);
     $this->assertSame('Recommended', $options[0]->label);
-    $this->assertSame(OptionKind::Option, $options[1]->kind);
-    $this->assertSame(OptionKind::Separator, $options[2]->kind);
+    $this->assertSame(OptionType::Option, $options[1]->kind);
+    $this->assertSame(OptionType::Separator, $options[2]->kind);
     $this->assertTrue($options[3]->disabled);
     $this->assertSame('requires PHP 8.4', $options[3]->disabledReason);
 

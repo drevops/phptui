@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Field\Capability;
 
 use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\OptionType;
 use DrevOps\Tui\Screen\Viewport;
 use DrevOps\Tui\Theme\ThemeInterface;
 
@@ -150,7 +150,7 @@ trait OptionsCapableTrait {
    * @return string
    *   The highlighted option's description.
    */
-  protected function highlightedDescription(): string {
+  protected function currentDescription(): string {
     $option = $this->visible()[$this->cursor] ?? NULL;
 
     return $option instanceof Option && $option->isSelectable() ? $option->description : '';
@@ -179,13 +179,13 @@ trait OptionsCapableTrait {
     $lines = [];
 
     foreach (array_slice($rows, $viewport->offset, $this->pageSize) as $slot => $option) {
-      if ($option->kind === OptionKind::Heading) {
+      if ($option->kind === OptionType::Heading) {
         $lines[] = $this->renderHeadingRow($theme, $option);
 
         continue;
       }
 
-      if ($option->kind === OptionKind::Separator) {
+      if ($option->kind === OptionType::Separator) {
         $lines[] = $this->renderSeparatorRow($theme);
 
         continue;

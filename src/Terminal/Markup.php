@@ -79,7 +79,7 @@ final class Markup {
       $rendered = '';
 
       foreach ($line->segments as $segment) {
-        $rendered .= $segment->kind === MarkupKind::Link ? self::hyperlink($segment->text, $segment->url, $color) : $segment->text;
+        $rendered .= $segment->kind === MarkupType::Link ? self::hyperlink($segment->text, $segment->url, $color) : $segment->text;
       }
 
       $out[] = $rendered;
@@ -160,7 +160,7 @@ final class Markup {
    *   The visible text.
    */
   protected static function visible(MarkupSegment $segment, bool $color): string {
-    if ($segment->kind !== MarkupKind::Link) {
+    if ($segment->kind !== MarkupType::Link) {
       return $segment->text;
     }
 
@@ -230,7 +230,7 @@ final class Markup {
 
       // Close the run of plain text that led up to this span before it.
       if ($index > $start) {
-        $segments[] = new MarkupSegment(MarkupKind::Text, substr($text, $start, $index - $start));
+        $segments[] = new MarkupSegment(MarkupType::Text, substr($text, $start, $index - $start));
       }
 
       [$segment, $consumed] = $span;
@@ -240,7 +240,7 @@ final class Markup {
     }
 
     if ($index > $start) {
-      $segments[] = new MarkupSegment(MarkupKind::Text, substr($text, $start));
+      $segments[] = new MarkupSegment(MarkupType::Text, substr($text, $start));
     }
 
     return $segments;
@@ -264,7 +264,7 @@ final class Markup {
     $char = $text[$index];
 
     if ($markdown && $char === '`' && preg_match('/\G`([^`]+)`/', $text, $matches, 0, $index) === 1) {
-      return [new MarkupSegment(MarkupKind::Code, $matches[1]), strlen($matches[0])];
+      return [new MarkupSegment(MarkupType::Code, $matches[1]), strlen($matches[0])];
     }
 
     if ($char === '[' && preg_match('/\G\[([^\]]*)\]\(([^)]+)\)/', $text, $matches, 0, $index) === 1 && self::looksLikeUrl($matches[2])) {
@@ -272,15 +272,15 @@ final class Markup {
       $label = Ansi::stripControl($matches[1]);
       $url = Ansi::stripControl($matches[2]);
 
-      return [new MarkupSegment(MarkupKind::Link, $label, $url), strlen($matches[0])];
+      return [new MarkupSegment(MarkupType::Link, $label, $url), strlen($matches[0])];
     }
 
     if ($markdown && $char === '*' && preg_match('/\G\*\*(\S(?:.*?\S)?)\*\*/', $text, $matches, 0, $index) === 1) {
-      return [new MarkupSegment(MarkupKind::Bold, $matches[1]), strlen($matches[0])];
+      return [new MarkupSegment(MarkupType::Bold, $matches[1]), strlen($matches[0])];
     }
 
     if ($markdown && $char === '*' && preg_match('/\G\*([^\s*](?:[^*]*[^\s*])?)\*/', $text, $matches, 0, $index) === 1) {
-      return [new MarkupSegment(MarkupKind::Emphasis, $matches[1]), strlen($matches[0])];
+      return [new MarkupSegment(MarkupType::Emphasis, $matches[1]), strlen($matches[0])];
     }
 
     return NULL;

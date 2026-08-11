@@ -325,7 +325,7 @@ class Suggest extends AbstractField implements
    *   The highlighted suggestion's description.
    */
   #[\Override]
-  protected function highlightedDescription(): string {
+  protected function currentDescription(): string {
     if ($this->cursor < 0) {
       return '';
     }

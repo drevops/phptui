@@ -9,7 +9,7 @@ namespace DrevOps\Tui\Terminal;
  *
  * @package DrevOps\Tui\Terminal
  */
-enum MarkupKind {
+enum MarkupType {
 
   case Text;
   case Bold;

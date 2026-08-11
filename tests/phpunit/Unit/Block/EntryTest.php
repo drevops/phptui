@@ -7,7 +7,7 @@ namespace DrevOps\Tui\Tests\Unit\Block;
 use DrevOps\Tui\Block\Field;
 use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\OptionType;
 use DrevOps\Tui\Builder\FieldBuilder;
 use DrevOps\Tui\FormException;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the option model, option kinds and the entry helpers a field offers.
  */
 #[CoversClass(Option::class)]
-#[CoversClass(OptionKind::class)]
+#[CoversClass(OptionType::class)]
 #[CoversClass(FieldType::class)]
 #[CoversClass(Field::class)]
 #[CoversClass(FieldBuilder::class)]
@@ -32,7 +32,7 @@ final class EntryTest extends TestCase {
     $this->assertCount(2, $options);
     $this->assertSame('a', $options[0]->value);
     $this->assertSame('Apple', $options[0]->label);
-    $this->assertSame(OptionKind::Option, $options[0]->kind);
+    $this->assertSame(OptionType::Option, $options[0]->kind);
     $this->assertTrue($options[0]->isSelectable());
   }
 
@@ -43,7 +43,7 @@ final class EntryTest extends TestCase {
   }
 
   public function testListFromOptionsPassesThrough(): void {
-    $sep = new Option('', '', '', OptionKind::Separator);
+    $sep = new Option('', '', '', OptionType::Separator);
     $options = Option::list([new Option('a', 'Apple'), $sep]);
 
     $this->assertSame('Apple', $options[0]->label);
@@ -51,7 +51,7 @@ final class EntryTest extends TestCase {
   }
 
   public function testListMixed(): void {
-    $options = Option::list(['a' => 'Apple', new Option('b', 'Banana', '', OptionKind::Option, TRUE, 'nope')]);
+    $options = Option::list(['a' => 'Apple', new Option('b', 'Banana', '', OptionType::Option, TRUE, 'nope')]);
 
     $this->assertSame('a', $options[0]->value);
     $this->assertTrue($options[1]->disabled);
@@ -65,9 +65,9 @@ final class EntryTest extends TestCase {
 
   public static function dataProviderSelectable(): \Iterator {
     yield 'plain option' => [new Option('a', 'A'), TRUE];
-    yield 'disabled option' => [new Option('a', 'A', '', OptionKind::Option, TRUE), FALSE];
-    yield 'separator' => [new Option('', '', '', OptionKind::Separator), FALSE];
-    yield 'heading' => [new Option('', 'Group', '', OptionKind::Heading), FALSE];
+    yield 'disabled option' => [new Option('a', 'A', '', OptionType::Option, TRUE), FALSE];
+    yield 'separator' => [new Option('', '', '', OptionType::Separator), FALSE];
+    yield 'heading' => [new Option('', 'Group', '', OptionType::Heading), FALSE];
   }
 
   #[DataProvider('dataProviderConstrainsToOptions')]
@@ -137,7 +137,7 @@ final class EntryTest extends TestCase {
 
   #[DataProvider('dataProviderValueKind')]
   public function testValueKind(FieldType $type, bool $multiple, string $expected): void {
-    $this->assertSame($expected, (new Field('f', 'F', $type))->multiple($multiple)->valueKind());
+    $this->assertSame($expected, (new Field('f', 'F', $type))->multiple($multiple)->valueType());
   }
 
   public static function dataProviderValueKind(): \Iterator {
@@ -203,9 +203,9 @@ final class EntryTest extends TestCase {
     $options = [
       new Option('standard', 'Standard'),
       new Option('minimal', 'Minimal'),
-      new Option('demo', 'Demo', '', OptionKind::Option, TRUE, 'unavailable'),
-      new Option('legacy', 'Legacy', '', OptionKind::Option, TRUE),
-      new Option('', '', '', OptionKind::Separator),
+      new Option('demo', 'Demo', '', OptionType::Option, TRUE, 'unavailable'),
+      new Option('legacy', 'Legacy', '', OptionType::Option, TRUE),
+      new Option('', '', '', OptionType::Separator),
     ];
     yield 'selectable value' => [FieldType::Select, FALSE, $options, 'standard', NULL];
     yield 'disabled with reason' => [FieldType::Select, FALSE, $options, 'demo', 'option "demo" is disabled: unavailable'];
@@ -259,10 +259,10 @@ final class EntryTest extends TestCase {
   protected function selectField(): Field {
     return self::offering(FieldType::Select, FALSE, [
       new Option('standard', 'Standard'),
-      new Option('', 'Group', '', OptionKind::Heading),
+      new Option('', 'Group', '', OptionType::Heading),
       new Option('minimal', 'Minimal'),
-      new Option('', '', '', OptionKind::Separator),
-      new Option('demo', 'Demo', '', OptionKind::Option, TRUE, 'unavailable'),
+      new Option('', '', '', OptionType::Separator),
+      new Option('demo', 'Demo', '', OptionType::Option, TRUE, 'unavailable'),
     ]);
   }
 
@@ -284,9 +284,9 @@ final class EntryTest extends TestCase {
 
     foreach ($options as $option) {
       match ($option->kind) {
-        OptionKind::Heading => $field->heading($option->label),
-        OptionKind::Separator => $field->separator(),
-        OptionKind::Option => $field->entry($option->value, $option->label, $option->description, $option->disabled, $option->disabledReason),
+        OptionType::Heading => $field->heading($option->label),
+        OptionType::Separator => $field->separator(),
+        OptionType::Option => $field->entry($option->value, $option->label, $option->description, $option->disabled, $option->disabledReason),
       };
     }
 

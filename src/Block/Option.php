@@ -9,7 +9,7 @@ use DrevOps\Tui\Terminal\Ansi;
 /**
  * A single row in a select, search or suggest option list.
  *
- * A row is an Option, a Separator or a Heading (see {@see OptionKind}). Only
+ * A row is an Option, a Separator or a Heading (see {@see OptionType}). Only
  * an Option row is selectable, and only when it is not disabled; Separator and
  * Heading rows, and disabled Option rows, are visual structure that navigation
  * skips and collection never returns.
@@ -52,7 +52,7 @@ final readonly class Option {
    * @param string $description
    *   The option's description. Shown for the highlighted option as a secondary
    *   line beneath the choice list, and carried into the machine schema.
-   * @param \DrevOps\Tui\Block\OptionKind $kind
+   * @param \DrevOps\Tui\Block\OptionType $kind
    *   The row kind.
    * @param bool $disabled
    *   Whether a selectable Option row is shown but cannot be selected.
@@ -63,7 +63,7 @@ final readonly class Option {
     string $value,
     string $label,
     string $description = '',
-    public OptionKind $kind = OptionKind::Option,
+    public OptionType $kind = OptionType::Option,
     public bool $disabled = FALSE,
     string $disabled_reason = '',
   ) {
@@ -81,7 +81,7 @@ final readonly class Option {
    *   disabled options.
    */
   public function isSelectable(): bool {
-    return $this->kind === OptionKind::Option && !$this->disabled;
+    return $this->kind === OptionType::Option && !$this->disabled;
   }
 
   /**

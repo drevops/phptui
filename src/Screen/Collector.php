@@ -913,7 +913,7 @@ final class Collector {
     }
 
     if (!$field->acceptsValue($value)) {
-      return Translator::t('must be @constraint.', ['@constraint' => $field->valueKind()]);
+      return Translator::t('must be @constraint.', ['@constraint' => $field->valueType()]);
     }
 
     return $field->refuses($value, $this->handlers->validator($field->id()));

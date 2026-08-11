@@ -127,7 +127,7 @@ class SchemaValidator {
     }
 
     if (!$field->acceptsValue($value)) {
-      return $this->constraintMessage($field, $field->valueKind());
+      return $this->constraintMessage($field, $field->valueType());
     }
 
     $bounds_error = $this->checkBounds($field, $value);

@@ -11,7 +11,7 @@ use DrevOps\Tui\Primitive\Status;
 use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Terminal\Box;
 use DrevOps\Tui\Terminal\Markup;
-use DrevOps\Tui\Terminal\MarkupKind;
+use DrevOps\Tui\Terminal\MarkupType;
 use DrevOps\Tui\Terminal\MarkupSegment;
 use DrevOps\Tui\Terminal\Table;
 use DrevOps\Tui\Theme\Capability\ColorSchemeCapableInterface;
@@ -1841,13 +1841,13 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    */
   protected function markupSegment(MarkupSegment $segment): string {
     return match ($segment->kind) {
-      MarkupKind::Bold => $this->markupStrong($segment->text),
-      MarkupKind::Emphasis => $this->markupEmphasis($segment->text),
-      MarkupKind::Code => $this->markupCode($segment->text),
-      MarkupKind::Link => $this->markupLink($segment->text, $segment->url),
+      MarkupType::Bold => $this->markupStrong($segment->text),
+      MarkupType::Emphasis => $this->markupEmphasis($segment->text),
+      MarkupType::Code => $this->markupCode($segment->text),
+      MarkupType::Link => $this->markupLink($segment->text, $segment->url),
       // The parser has already split every link into its own span, so the
       // element's own link resolution finds nothing left to do here.
-      MarkupKind::Text => $this->markupLine($segment->text),
+      MarkupType::Text => $this->markupLine($segment->text),
     };
   }
 

@@ -12,7 +12,7 @@ use DrevOps\Tui\Block\FilePickerMode;
 use DrevOps\Tui\Block\Mode;
 use DrevOps\Tui\Block\NumberBounds;
 use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\OptionType;
 use DrevOps\Tui\Block\RenderMode;
 use DrevOps\Tui\Block\SelectionBounds;
 use DrevOps\Tui\Block\Template;
@@ -564,9 +564,9 @@ final class FieldBlockTest extends TestCase {
       ->heading('Vegetables')
       ->entry('carrot', 'Carrot');
 
-    $kinds = array_map(static fn(object $entry): OptionKind => $entry->kind, $field->entries());
+    $kinds = array_map(static fn(object $entry): OptionType => $entry->kind, $field->entries());
 
-    $expected = [OptionKind::Heading, OptionKind::Option, OptionKind::Separator, OptionKind::Heading, OptionKind::Option];
+    $expected = [OptionType::Heading, OptionType::Option, OptionType::Separator, OptionType::Heading, OptionType::Option];
     $this->assertSame($expected, $kinds);
     $this->assertSame(['apple', 'carrot'], $field->selectableValues());
   }

@@ -6,7 +6,7 @@ namespace DrevOps\Tui\Tests\Unit\Terminal;
 
 use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Terminal\Markup;
-use DrevOps\Tui\Terminal\MarkupKind;
+use DrevOps\Tui\Terminal\MarkupType;
 use DrevOps\Tui\Terminal\MarkupSegment;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -26,7 +26,7 @@ final class MarkupTest extends TestCase {
 
     $this->assertCount(1, $lines);
     $this->assertFalse($lines[0]->bullet);
-    $this->assertEquals([new MarkupSegment(MarkupKind::Text, 'just text')], $lines[0]->segments);
+    $this->assertEquals([new MarkupSegment(MarkupType::Text, 'just text')], $lines[0]->segments);
   }
 
   public function testParseSplitsPhysicalLines(): void {
@@ -43,9 +43,9 @@ final class MarkupTest extends TestCase {
       $segments = $lines[0]->segments;
 
       $this->assertCount(3, $segments);
-      $this->assertSame(MarkupKind::Text, $segments[0]->kind);
+      $this->assertSame(MarkupType::Text, $segments[0]->kind);
       $this->assertSame('see ', $segments[0]->text);
-      $this->assertSame(MarkupKind::Link, $segments[1]->kind);
+      $this->assertSame(MarkupType::Link, $segments[1]->kind);
       $this->assertSame('Orchard', $segments[1]->text);
       $this->assertSame('https://example.com/orchard', $segments[1]->url);
       $this->assertSame(' now', $segments[2]->text);
@@ -56,7 +56,7 @@ final class MarkupTest extends TestCase {
     $lines = Markup::parse('pack it [see step 3](later)', TRUE);
 
     $this->assertCount(1, $lines[0]->segments);
-    $this->assertSame(MarkupKind::Text, $lines[0]->segments[0]->kind);
+    $this->assertSame(MarkupType::Text, $lines[0]->segments[0]->kind);
     $this->assertSame('pack it [see step 3](later)', $lines[0]->segments[0]->text);
   }
 
@@ -65,7 +65,7 @@ final class MarkupTest extends TestCase {
     $lines = Markup::parse($source, FALSE);
 
     $this->assertCount(1, $lines[0]->segments);
-    $this->assertSame(MarkupKind::Text, $lines[0]->segments[0]->kind);
+    $this->assertSame(MarkupType::Text, $lines[0]->segments[0]->kind);
     $this->assertSame($source, $lines[0]->segments[0]->text);
   }
 
@@ -79,14 +79,14 @@ final class MarkupTest extends TestCase {
   public function testParseBold(): void {
     $segments = Markup::parse('a **two words** b', TRUE)[0]->segments;
 
-    $this->assertSame(MarkupKind::Bold, $segments[1]->kind);
+    $this->assertSame(MarkupType::Bold, $segments[1]->kind);
     $this->assertSame('two words', $segments[1]->text);
   }
 
   public function testParseEmphasis(): void {
     $segments = Markup::parse('a *ripe* pear', TRUE)[0]->segments;
 
-    $this->assertSame(MarkupKind::Emphasis, $segments[1]->kind);
+    $this->assertSame(MarkupType::Emphasis, $segments[1]->kind);
     $this->assertSame('ripe', $segments[1]->text);
   }
 
@@ -100,7 +100,7 @@ final class MarkupTest extends TestCase {
   public function testParseInlineCode(): void {
     $segments = Markup::parse('run `harvest` today', TRUE)[0]->segments;
 
-    $this->assertSame(MarkupKind::Code, $segments[1]->kind);
+    $this->assertSame(MarkupType::Code, $segments[1]->kind);
     $this->assertSame('harvest', $segments[1]->text);
   }
 
@@ -117,7 +117,7 @@ final class MarkupTest extends TestCase {
     $line = Markup::parse('* **Ripe** fruit', TRUE)[0];
 
     $this->assertTrue($line->bullet);
-    $this->assertSame(MarkupKind::Bold, $line->segments[0]->kind);
+    $this->assertSame(MarkupType::Bold, $line->segments[0]->kind);
     $this->assertSame('Ripe', $line->segments[0]->text);
   }
 
