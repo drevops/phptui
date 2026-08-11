@@ -783,7 +783,7 @@ final class Tui {
    *   The help text.
    */
   public function agentHelp(?Context $context = NULL): string {
-    return (new AgentHelp($this->root(), $this->envPrefix, $context ?? new Context()))->generate();
+    return (new AgentHelp($this->root(), $context ?? new Context(), $this->envPrefix))->generate();
   }
 
   /**

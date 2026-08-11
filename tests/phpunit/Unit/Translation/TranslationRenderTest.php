@@ -143,7 +143,7 @@ final class TranslationRenderTest extends TestCase {
 
     // A headless validation error and the agent help both localize.
     $this->assertContains('Falta la pregunta obligatoria "name".', (new SchemaValidator($form))->validate([]));
-    $this->assertStringContainsString('Nombre del sitio', (new AgentHelp($form, 'TUI_'))->generate());
+    $this->assertStringContainsString('Nombre del sitio', (new AgentHelp($form, envPrefix: 'TUI_'))->generate());
   }
 
   public function testUkrainianLegendNamesEveryKeyItAdvertises(): void {

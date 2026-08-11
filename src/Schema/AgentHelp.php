@@ -59,15 +59,15 @@ class AgentHelp {
    * @param \DrevOps\Tui\Block\Panel $root
    *   The declared tree to describe, read from the panel every declared panel
    *   hangs from.
+   * @param \DrevOps\Tui\Handler\Context $context
+   *   The context a closure default is evaluated against; defaults to an empty
+   *   context carrying no prior answers.
    * @param string $envPrefix
    *   The prefix for per-question env variable names (e.g. "APP_"); under an
    *   empty prefix only a field naming its own variable carries the `env`
    *   annotation.
-   * @param \DrevOps\Tui\Handler\Context $context
-   *   The context a closure default is evaluated against; defaults to an empty
-   *   context carrying no prior answers.
    */
-  public function __construct(protected Panel $root, protected string $envPrefix = '', protected Context $context = new Context()) {
+  public function __construct(protected Panel $root, protected Context $context = new Context(), protected string $envPrefix = '') {
     $this->names = new EnvNameResolver($envPrefix);
   }
 
