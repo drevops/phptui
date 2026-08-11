@@ -60,7 +60,7 @@ final class Tui {
   protected string $envPrefix;
 
   /**
-   * What collects the answers with no screen at all, once one is asked for.
+   * The headless collector, created on first use.
    */
   protected ?Collector $collector = NULL;
 
@@ -77,7 +77,7 @@ final class Tui {
   protected array $themeOptions = [];
 
   /**
-   * What the consumer states differently, on whatever theme is selected.
+   * The consumer's overrides, applied to whichever theme is selected.
    */
   protected ?Overrides $themeOverrides = NULL;
 
@@ -161,13 +161,12 @@ final class Tui {
   /**
    * Select the theme, or state what it draws differently.
    *
-   * Two things a consumer wants at two different sizes, so one call answers
-   * both. A name picks the theme and its display options. A closure is handed a
-   * {@see \DrevOps\Tui\Theme\ThemeBuilder} and states the elements whatever
-   * theme is selected should draw differently - anything it does not name keeps
-   * the theme's own answer, which is what makes it a patch rather than a
-   * replacement. Reach for a subclass when changing a palette; reach for the
-   * closure when changing a handful of glyphs.
+   * A name picks the theme and its display options. A closure receives a
+   * {@see \DrevOps\Tui\Theme\ThemeBuilder} and states the elements the
+   * selected theme draws differently; an element it does not name keeps the
+   * theme's own value, so the closure is a patch rather than a replacement.
+   * A palette change suits a theme subclass; a handful of glyphs suits the
+   * closure.
    *
    * @code
    * $tui->theme('mono')
@@ -205,7 +204,7 @@ final class Tui {
   }
 
   /**
-   * Build the selected theme, carrying anything stated differently.
+   * Build the selected theme and apply the consumer's overrides.
    *
    * @param string $name
    *   The theme name or class; empty falls back to the facade's theme.
@@ -220,8 +219,8 @@ final class Tui {
   protected function buildTheme(string $name, int $width, array $options): ThemeInterface {
     $theme = ThemeManager::create($this->resolveTheme($name), $width, $options);
 
-    // A patch is a facility a theme declares, so a theme with nowhere to put
-    // one keeps its own answers rather than the patch deciding it cannot draw.
+    // Overrides apply only through a theme's own override capability, so a
+    // theme without it is used unchanged rather than rejected.
     if (!$this->themeOverrides instanceof Overrides || !$theme instanceof OverrideCapableInterface) {
       return $theme;
     }
@@ -251,18 +250,18 @@ final class Tui {
   }
 
   /**
-   * Put a block of your own in one of the screen's regions.
+   * Put a consumer block in one of the screen's regions.
    *
-   * The regions around the form are the session's rather than the form's, so
-   * what stands in them is stated here rather than declared on a panel: a
-   * standing note beside the trail, a version string beside the key hints. The
-   * standard furniture is placed first, so a block lands after the trail or the
-   * hints its region already holds.
+   * The regions around the form belong to the session rather than the form,
+   * so their extra blocks are placed here rather than declared on a panel: a
+   * note beside the trail, a version string beside the key hints. The built-in
+   * blocks are placed first, so a placed block follows the trail or the hints
+   * its region already holds.
    *
-   * Which end of the region's run it packs from is the block's own to say.
-   * Packing from the end is what puts something against the far edge - the
-   * right of a region running across, the last row of one running down - and
-   * where the two runs meet, what packs from the start keeps its space.
+   * The $tail flag selects which end of the region's run the block packs
+   * from. Packing from the end puts a block against the far edge - the right
+   * of a region running across, the last row of one running down - and where
+   * the two runs meet, a block packed from the start keeps its space.
    *
    * @code
    * $tui->layout('market')
@@ -291,11 +290,11 @@ final class Tui {
   /**
    * Run one region's blocks across it rather than down it.
    *
-   * A region a layout declared running one way is turned the other way here,
-   * which is what saves a form from arranging a layout of its own every time
-   * two things belong on the same line. A region running across gives each
-   * block the width it drew; one running down gives each a row. Either way a
-   * region that was not declared to scroll clips what outruns it.
+   * A region the layout declared running one way is turned the other way
+   * here, so a form needs no layout of its own every time two blocks belong
+   * on the same line. A region running across gives each block the width it
+   * drew; one running down gives each a row. On either axis, a region that
+   * was not declared to scroll clips what overflows it.
    *
    * @param string $region
    *   The region name, as the layout declares it.
@@ -313,11 +312,11 @@ final class Tui {
   }
 
   /**
-   * Check the layout answers to every region name stated so far.
+   * Check that the layout declares every region name stated so far.
    *
-   * Re-checked from every setter that can invalidate the answer, so a name
-   * nothing answers to throws where it was written whichever order the layout
-   * and the regions were named in.
+   * Every setter that can invalidate the check re-runs it, so an unknown name
+   * throws at the call that stated it, whichever order the layout and the
+   * regions were named in.
    *
    * @throws \InvalidArgumentException
    *   When the layout declares no region of a stated name.
@@ -335,7 +334,7 @@ final class Tui {
    *
    * The preset names the base bindings ("default", "vim", a registered name, or
    * a preset class); each override is a {@see \DrevOps\Tui\Input\Binding}
-   * naming a scope, an action and its keys, retuning it on top of the preset.
+   * naming a scope, an action and its keys, applied on top of the preset.
    * Conflicting, un-typeable or malformed bindings throw here, not mid-session.
    *
    * @param string $preset
@@ -491,9 +490,9 @@ final class Tui {
    *   TRUE/FALSE to force the mode; NULL auto-detects from the prompts and
    *   the standard-input TTY.
    * @param bool $update
-   *   Whether to enable discovery against an existing project. It reaches the
-   *   chosen mode's initial state, so the panels open pre-filled interactively
-   *   just as the headless answers resolve them.
+   *   Whether to enable discovery against an existing project. Discovery
+   *   feeds the chosen mode's initial state: the panels open pre-filled
+   *   interactively, and the headless answers resolve to the same values.
    *
    * @return \DrevOps\Tui\Answers\Answers
    *   The collected answers.
@@ -591,7 +590,7 @@ final class Tui {
    *   The terminal to write to (defaults to a real one on standard error).
    *
    * @return \DrevOps\Tui\Primitive\Output
-   *   The output primitive; hold onto it to write more than one piece.
+   *   The output primitive; one instance writes any number of pieces.
    */
   public function output(?Terminal $terminal = NULL): Output {
     // Restore this facade's language at the operation boundary (see collect()).
@@ -608,9 +607,9 @@ final class Tui {
   /**
    * The theme, narrowed to the finished pieces a primitive writes.
    *
-   * A card, a grid, a status line and a bar are composed rather than styled, so
-   * a theme that answers for none of them says so by name here rather than
-   * failing on the first line it is asked to write.
+   * A card, a grid, a status line and a bar are composed rather than styled,
+   * so a theme that implements none of them fails here with a named error
+   * rather than at the first line it writes.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -667,8 +666,6 @@ final class Tui {
       // @codeCoverageIgnoreEnd
     }
 
-    // The theme's display options (colour, Unicode, mode) come from the facade
-    // when set, otherwise they are auto-detected from the terminal.
     $options = $this->resolveThemeOptions($terminal);
 
     return $this->controller($options, $theme, $banner, $version, $directory, self::frameWidth($options, $terminal->width()), $update)->run($terminal);
@@ -677,10 +674,9 @@ final class Tui {
   /**
    * Build the session that drives the form for the resolved display options.
    *
-   * Shared by interact() and the test harness: it builds the tree the form
-   * declares, resolves the theme and banner and wires the session - so a caller
-   * that supplies its own terminal (a real one, or a scripted one for tests)
-   * can run it against that.
+   * Builds the tree the form declares, resolves the theme and banner and
+   * wires the session, so a caller that supplies its own terminal (a real
+   * one, or a scripted one for tests) can run the session against it.
    *
    * @param array<string,mixed> $options
    *   The resolved theme display options (colour, Unicode, mode).
@@ -718,10 +714,9 @@ final class Tui {
       $this->keyMap ?? KeyMapManager::create(),
       new Collector($this->registry, $this->form->currentFixups()),
       $this->context($directory, $update, $version),
-      // The frame the theme was told to lay its rows out to is the frame that
-      // has to be drawn around them, so the border is read back off it rather
-      // than resolved a second time here. A theme that says nothing about the
-      // room it takes gets no edge drawn around it.
+      // The border must match the frame the theme laid its rows out to, so it
+      // is read back off the built theme rather than resolved a second time.
+      // A theme without the occupy capability gets no border.
       layout: $this->layout,
       border: $drawn instanceof OccupyCapableInterface ? $drawn->borderStyle() : Border::None,
       clearOnExit: $this->clearOnExit,
@@ -815,10 +810,10 @@ final class Tui {
   /**
    * The declared block tree: the panel every declared panel hangs from.
    *
-   * The rows a form asks about are settled state - a set of entries that
-   * arrives from somewhere else settles onto the block holding it - so one tree
-   * carries the declaration and what has become of it, and every operation on
-   * this facade reads that one.
+   * The rows a form asks about are state: a set of entries supplied from
+   * elsewhere is stored on the block holding it, so one tree carries the
+   * declaration and its state. Every operation on this facade reads that one
+   * tree.
    *
    * @return \DrevOps\Tui\Block\Panel
    *   The root panel.
@@ -909,8 +904,8 @@ final class Tui {
   /**
    * A real terminal that draws a primitive's output on standard error.
    *
-   * A primitive is chrome, not data, so it stays off standard output where a
-   * consumer's own results are written.
+   * A primitive is chrome, not data, so it writes to standard error and
+   * leaves standard output to a consumer's own results.
    *
    * @return \DrevOps\Tui\Terminal\Terminal
    *   The terminal.

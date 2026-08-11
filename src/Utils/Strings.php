@@ -10,9 +10,9 @@ use AlexSkrypnyk\Str2Name\Str2Name;
  * UTF-8 string helpers backed by mbstring when available.
  *
  * The mbstring detection, the byte-level fallbacks behind it and the case
- * folding are the base class's; what is added here is the text handling a
- * terminal needs and a name formatter does not - measuring, slicing and
- * wrapping a line, and filling a template in.
+ * folding come from the base class. This class adds the text handling a
+ * terminal needs and a name formatter does not: measuring, slicing and
+ * wrapping a line, and filling a template.
  *
  * @package DrevOps\Tui\Utils
  */

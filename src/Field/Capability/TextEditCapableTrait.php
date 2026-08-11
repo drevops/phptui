@@ -31,7 +31,7 @@ trait TextEditCapableTrait {
   protected int $cursor = 0;
 
   /**
-   * Seed the buffer and land the cursor at its end.
+   * Seed the buffer and place the cursor at its end.
    *
    * @param string $buffer
    *   The initial value (and live input buffer).

@@ -7,26 +7,27 @@ namespace DrevOps\Tui\Field\Capability;
 /**
  * A field whose candidate list is resolved from its live query.
  *
- * The field owns the query, the cache and the displayed state; it never
- * resolves anything itself, because a resolution blocks and only the panel loop
- * may block and repaint. The loop asks {@see pendingQuery()} what still needs
- * answering, calls the field's source, and hands the result back.
+ * The field owns the query, the cache and the displayed state. It never
+ * resolves anything itself: a resolution blocks, and only the panel loop may
+ * block and repaint. The loop reads {@see pendingQuery()} for the query still
+ * needing resolution, calls the field's source, and passes the result back.
  *
  * @package DrevOps\Tui\Field\Capability
  */
 interface QueryOptionsCapableInterface {
 
   /**
-   * Turn the field's candidates over to a query source.
+   * Drive the field's candidate list from a query source.
    *
    * @param int $min_length
-   *   The query length below which the source is not called, so a backend is
-   *   not asked to list everything; zero calls it for the empty query too.
+   *   The query length below which the source is not called, so a short query
+   *   does not request the backend's full listing; zero calls the source for
+   *   the empty query too.
    */
   public function driveByQuery(int $min_length = 0): void;
 
   /**
-   * Whether the field's candidates come from a query source at all.
+   * Whether the field's candidates come from a query source.
    *
    * @return bool
    *   TRUE when a source is driving the list.
@@ -42,10 +43,10 @@ interface QueryOptionsCapableInterface {
   public function query(): string;
 
   /**
-   * The query still waiting on a call to the source, if any.
+   * The query that still requires a call to the source, if any.
    *
-   * Settles everything that needs no call - an unchanged query, a query below
-   * the minimum length, one already answered in this session - so a NULL return
+   * A query requiring no call is settled directly: one unchanged, one below
+   * the minimum length, one already resolved in this session. A NULL return
    * means the displayed list is up to date.
    *
    * @return string|null
@@ -72,7 +73,7 @@ interface QueryOptionsCapableInterface {
    * Record that a query could not be resolved and leave the loading state.
    *
    * @param string $query
-   *   The query that failed - remembered, so the same failing call is not
+   *   The query that failed, recorded so the same failing call is not
    *   repeated on every frame.
    * @param string $message
    *   The message shown in place of the list.

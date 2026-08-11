@@ -12,10 +12,10 @@ use DrevOps\Tui\Theme\ThemeInterface;
 /**
  * Shared option-list behaviour for the choice fields.
  *
- * Holds the ordered option rows and centralizes the two things every choice
- * field must agree on: the cursor only ever rests on a selectable row (so
- * separators, headings and disabled options are skipped), and those
- * non-selectable rows render as visual-only structure.
+ * Holds the ordered option rows and the two invariants every choice field
+ * shares. The cursor is only ever placed on a selectable row, skipping
+ * separators, headings and disabled options. Non-selectable rows render as
+ * visual-only structure.
  *
  * @package DrevOps\Tui\Field\Capability
  */

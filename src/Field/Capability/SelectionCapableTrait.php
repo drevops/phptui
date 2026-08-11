@@ -17,10 +17,10 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * Choice behaviour over the option rows, single-value or multiple-value.
  *
  * Composes with {@see OptionsCapableTrait}: the cursor moves over the visible
- * rows, only ever resting on a selectable one. A single-value field commits
- * the highlighted option; a multiple-value field toggles a selection set -
- * Space toggles the highlighted option, Left/Right deselect or select every
- * visible option - and commits the selected values in display order.
+ * rows and stops only on a selectable one. A single-value field commits the
+ * highlighted option. A multiple-value field toggles a selection set - Space
+ * toggles the highlighted option, Left/Right deselect or select every visible
+ * option - and commits the selected values in display order.
  *
  * @package DrevOps\Tui\Field\Capability
  */
@@ -289,10 +289,9 @@ trait SelectionCapableTrait {
       }
     }
 
-    // The rows are only the display order, and a list that changes under the
-    // selection - one resolved from a query - no longer holds everything that
-    // was selected from an earlier one. Those selections are still the user's,
-    // so they follow the ordered ones rather than being dropped.
+    // The options hold only the current display order; a list resolved from a
+    // query can lack values selected from an earlier one. Those selections are
+    // still the user's, so they are appended after the ordered ones.
     foreach (array_keys($this->selected) as $value) {
       if (!in_array($value, $out, TRUE)) {
         $out[] = $value;
@@ -332,17 +331,17 @@ trait SelectionCapableTrait {
       return $elements->fieldEntryMarker(FALSE, TRUE) . ' ' . $this->renderDisabledLabel($theme, $option);
     }
 
-    // Moving the cursor is what picks in an exclusive list, so the mark and the
-    // cursor say the same thing and the row draws only the mark.
+    // Moving the cursor is the selection in an exclusive list, so the mark
+    // mirrors the cursor and the row draws only the mark.
     return $elements->fieldEntryMarker($current, TRUE) . ' ' . $this->renderMatchedLabel($theme, $option->label, $this->matchPositions($option->label), $current);
   }
 
   /**
    * {@inheritdoc}
    *
-   * Measured from the glyphs the row actually draws rather than assumed: the
-   * leading run differs between the two modes, and again between a themed
-   * glyph and its textual stand-in.
+   * Measured from the glyphs the row actually draws, not assumed: the leading
+   * run differs between the two modes, and between a themed glyph and its
+   * textual stand-in.
    */
   #[\Override]
   protected function entryTextOffset(ThemeInterface $theme): int {
@@ -359,8 +358,7 @@ trait SelectionCapableTrait {
    * {@inheritdoc}
    *
    * In multiple mode Toggle is the non-obvious action - nothing else signals
-   * that a key toggles the highlighted option - so it leads, followed by the
-   * rest.
+   * that a key toggles the highlighted option - so its hint is listed first.
    */
   #[\Override]
   public function hints(): array {

@@ -31,7 +31,7 @@ enum Provenance: string {
   /**
    * The badge label in the active language.
    *
-   * A literal per case, rather than translating the backing value, so each
+   * Each case translates a literal rather than the backing value, so each
    * badge string is a discoverable chrome key in the catalog template.
    *
    * @return string

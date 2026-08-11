@@ -30,7 +30,7 @@ use DrevOps\Tui\Screen\Layout\PanelLayout;
 final class Form {
 
   /**
-   * The region a panel goes in when the arrangement keeps no window for it.
+   * The region a panel goes in when no grid window is declared for it.
    */
   protected const string CONTENT = 'content';
 
@@ -79,7 +79,7 @@ final class Form {
   protected ?GridLayout $layout = NULL;
 
   /**
-   * The panel every declared panel hangs from, once the form is finished.
+   * The root panel holding every declared panel, once the form is finished.
    */
   protected ?Panel $root = NULL;
 
@@ -231,10 +231,10 @@ final class Form {
   /**
    * The block tree this form declares.
    *
-   * The panels hang from one root, so the whole declaration is reachable from a
-   * single block - the panel a screen starts in, and the one a headless
-   * collection walks. The tree is the declaration rather than a view of it, so
-   * it is written once and handed back as it stands.
+   * Every panel is a child of one root, so the whole declaration is reachable
+   * from a single block - the panel a screen starts in, and the one headless
+   * collection traverses. The tree is built once; later calls return the same
+   * instance.
    *
    * @return \DrevOps\Tui\Block\Panel
    *   The root panel, carrying the form's own name.
@@ -249,15 +249,15 @@ final class Form {
 
     $this->layout?->assertDeals(count($this->panels), $this->title);
 
-    // The root is the form itself rather than a panel somebody declared, so it
-    // is addressed by the name the form goes by.
+    // The root is the form itself rather than a declared panel, so its id is
+    // the form's title.
     $root = (new Panel($this->title, $this->title))->layout($this->layout ?? new PanelLayout());
     $root->buttons(new Buttons($this->buttons, $this->submitLabel, $this->cancelLabel));
 
     foreach ($this->panels as $index => $panel) {
       $panel->seal();
       // A grid draws each panel in a window of its own, and a window is a
-      // region, so the panel is placed in the one that names it.
+      // region, so each panel is placed in the window at its index.
       $root->in($this->layout instanceof GridLayout ? $this->layout->windows()[$index] : self::CONTENT)->add($panel->block());
     }
 
@@ -305,11 +305,10 @@ final class Form {
   }
 
   /**
-   * Assert that nothing the tree is built from is declared after it is built.
+   * Assert that the tree has not been built yet.
    *
-   * The tree is written once and handed back as it stands, so a declaration
-   * arriving after it reaches nothing - and a panel nobody can see is worse
-   * than a form that refuses to take it.
+   * The tree is built once and reused, so a declaration arriving after the
+   * build would never reach it; the form throws instead of dropping it.
    *
    * @param string $declaration
    *   What is being declared, as a fragment naming it.
@@ -327,7 +326,7 @@ final class Form {
    * Assert that every field id is unique across the panel tree.
    *
    * @param \DrevOps\Tui\Block\Panel $root
-   *   The panel every declared panel hangs from.
+   *   The root panel holding every declared panel.
    */
   protected function assertUniqueFieldIds(Panel $root): void {
     $seen = [];
@@ -342,15 +341,14 @@ final class Form {
   }
 
   /**
-   * Say how many answers each block waits on before it is there at all.
+   * Set the nesting depth of every conditionally visible block.
    *
-   * A rule may name a field on any panel, and a section carries what it holds,
-   * so this is a fact about the whole form rather than about a panel or a block
-   * on its own: it can only be worked out once every panel has been placed,
-   * which is here.
+   * A rule may name a field on any panel, and a section's rule covers what it
+   * holds, so a block's depth is a fact about the whole form: it can only be
+   * computed once every panel has been placed.
    *
    * @param \DrevOps\Tui\Block\Panel $root
-   *   The panel every declared panel hangs from.
+   *   The root panel holding every declared panel.
    */
   protected function nestConditionals(Panel $root): void {
     $holders = [];
@@ -369,13 +367,13 @@ final class Form {
   }
 
   /**
-   * Every block a tree holds that can come and go, and what holds each.
+   * Every block a condition can hide, and the panel holding each.
    *
    * @param \DrevOps\Tui\Block\Panel $panel
    *   The panel to walk.
    * @param array<int,\DrevOps\Tui\Block\Panel> $holders
-   *   The section each block sits in, keyed by the block's object id, written
-   *   here as the walk goes.
+   *   The section each block sits in, keyed by the block's object id,
+   *   populated as the walk proceeds.
    *
    * @return list<\DrevOps\Tui\Block\Capability\DependCapableInterface>
    *   The blocks, in declaration order.
@@ -400,14 +398,14 @@ final class Form {
   }
 
   /**
-   * How deep one block sits: one step per rule in the chain leading to it.
+   * The nesting depth of one block: one step per rule in the chain to it.
    *
-   * The chain runs through the sections as well as through the rules: a section
-   * only there behind an answer is one such rule, so everything it holds counts
-   * it once, and a block with a rule of its own is the next step in from there.
+   * The chain runs through the sections as well as through the rules: a
+   * section gated by a rule adds one step counted by everything it holds, and
+   * a block with a rule of its own adds another.
    *
-   * Measured by object rather than by id, because a section and a row it holds
-   * may go by the same name.
+   * Measured by object rather than by id, because a section and a row it
+   * holds may share the same id.
    *
    * @param \DrevOps\Tui\Block\Capability\DependCapableInterface $block
    *   The block to measure.
@@ -416,7 +414,8 @@ final class Form {
    * @param array<string,\DrevOps\Tui\Block\Field> $by_id
    *   Every field in the form, keyed by id.
    * @param array<int,int> $resolved
-   *   The depths measured so far, so a block several rules name is walked once.
+   *   The depths measured so far, so a block named by several rules is walked
+   *   once.
    * @param array<int,bool> $walking
    *   The blocks on the current walk, keyed by object id.
    *
@@ -430,9 +429,9 @@ final class Form {
       return $resolved[$at];
     }
 
-    // A reference leading back to a block already on the walk closes a cycle.
-    // Such a rule can never hold a stable depth, so the back edge contributes
-    // none and the walk ends rather than deepening forever.
+    // A reference back to a block already on the walk closes a cycle. A
+    // cyclic rule has no stable depth, so the back edge contributes nothing
+    // and the recursion stops.
     if (isset($walking[$at])) {
       return 0;
     }
@@ -441,8 +440,8 @@ final class Form {
     $holder = $holders[$at] ?? NULL;
     $base = $holder instanceof Panel ? $this->nesting($holder, $holders, $by_id, $resolved, $walking) : 0;
 
-    // A rule the block decides for itself names no question, so nothing can be
-    // said about what it waits on and it sits where its section's rows do.
+    // A closure rule names no field, so nothing is known about what it
+    // depends on and the block takes its section's depth.
     if (!$block->condition() instanceof ConditionInterface) {
       return $resolved[$at] = $base;
     }
@@ -462,7 +461,7 @@ final class Form {
    * Assert that nothing is declared on a field that never draws it.
    *
    * @param \DrevOps\Tui\Block\Panel $root
-   *   The panel every declared panel hangs from.
+   *   The root panel holding every declared panel.
    */
   protected function assertFieldSurfaces(Panel $root): void {
     foreach (Tree::fields($root) as $field) {
@@ -479,13 +478,13 @@ final class Form {
   /**
    * Assert that every field is offered exactly one set of rows it can hold.
    *
-   * A field's rows may stand as declared, arrive from a loader, follow the
-   * answers or follow a query, and each of the four replaces the others - so a
+   * A field's rows come from one of four sources - declared entries, a
+   * loader, a resolver or a query source - and each replaces the others. A
    * field offered two of them has no one set, and a field offered any of them
    * on a kind that shows no list has nowhere to put them.
    *
    * @param \DrevOps\Tui\Block\Panel $root
-   *   The panel every declared panel hangs from.
+   *   The root panel holding every declared panel.
    */
   protected function assertEntrySources(Panel $root): void {
     foreach (Tree::fields($root) as $field) {
@@ -518,7 +517,7 @@ final class Form {
    * Assert that every toggle field declares exactly two entries.
    *
    * @param \DrevOps\Tui\Block\Panel $root
-   *   The panel every declared panel hangs from.
+   *   The root panel holding every declared panel.
    */
   protected function assertToggleEntries(Panel $root): void {
     foreach (Tree::fields($root) as $field) {
@@ -526,8 +525,6 @@ final class Form {
         continue;
       }
 
-      // Rows that arrive later cannot be counted here, and the default they
-      // would be checked against is the one they will settle on.
       if (!$this->settled($field)) {
         continue;
       }
@@ -559,10 +556,10 @@ final class Form {
    * Assert that every reorder field declares at least two plain entries.
    *
    * A ranking arranges a flat list, so headings, separators and disabled rows
-   * have no place in it, and fewer than two items is nothing to reorder.
+   * are not allowed in it, and fewer than two items leaves nothing to reorder.
    *
    * @param \DrevOps\Tui\Block\Panel $root
-   *   The panel every declared panel hangs from.
+   *   The root panel holding every declared panel.
    */
   protected function assertReorderEntries(Panel $root): void {
     foreach (Tree::fields($root) as $field) {
@@ -570,7 +567,6 @@ final class Form {
         continue;
       }
 
-      // Rows that arrive later are not there to be counted or vetted here.
       if (!$this->settled($field)) {
         continue;
       }
@@ -593,7 +589,7 @@ final class Form {
    * Assert that every template field declares the shape it fills in.
    *
    * @param \DrevOps\Tui\Block\Panel $root
-   *   The panel every declared panel hangs from.
+   *   The root panel holding every declared panel.
    */
   protected function assertTemplateShapes(Panel $root): void {
     foreach (Tree::fields($root) as $field) {
@@ -615,7 +611,7 @@ final class Form {
    * has no defined layout.
    *
    * @param \DrevOps\Tui\Block\Panel $root
-   *   The panel every declared panel hangs from.
+   *   The root panel holding every declared panel.
    */
   protected function assertModalPanels(Panel $root): void {
     foreach (Tree::panels($root) as $panel) {
@@ -632,8 +628,9 @@ final class Form {
    *   The field.
    *
    * @return bool
-   *   FALSE while a loader, a resolver or a query source still owes the field
-   *   its rows, so there is nothing yet to count or to check a default against.
+   *   FALSE while a loader, a resolver or a query source has not yet supplied
+   *   the rows, so there is nothing yet to count or to check a default
+   *   against.
    */
   protected function settled(Field $field): bool {
     return !$field->loader() instanceof \Closure && !$field->resolver() instanceof \Closure && !$field->source() instanceof \Closure;

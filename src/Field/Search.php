@@ -90,8 +90,8 @@ class Search extends AbstractField implements
   /**
    * {@inheritdoc}
    *
-   * Space is part of the query in single mode, so it cannot double as a select
-   * key there; multiple mode binds Space to toggle the highlighted option.
+   * Space is part of the query in single mode, so it cannot also select;
+   * multiple mode binds Space to toggle the highlighted option.
    */
   protected function handleSingleMode(Key $key): void {
     if ($this->keys()->matches($key, Action::InsertSpace)) {
@@ -133,8 +133,8 @@ class Search extends AbstractField implements
   /**
    * {@inheritdoc}
    *
-   * A query that has not run yet stands in for the list, and a count limit on
-   * a list nobody can see yet is noise.
+   * While the query-state line replaces the list, the selection-count hint is
+   * suppressed.
    */
   #[\Override]
   protected function renderConstraint(ThemeInterface $theme): string {

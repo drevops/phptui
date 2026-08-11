@@ -16,15 +16,15 @@ use DrevOps\Tui\Translation\Translator;
 /**
  * Formatted content, and nothing else.
  *
- * How it is laid out on the page - prose, a bordered card, a table - is a
- * presentation choice rather than a capability, so all three are this one block
- * drawn three ways. What an earlier answer can change is whether it is there at
- * all, which is why a standing warning needs no block of its own.
+ * Prose, a bordered card and a table are one block drawn three ways: the
+ * layout is a presentation choice rather than a capability. An earlier
+ * answer can change only whether the block is there at all, so a standing
+ * warning needs no block of its own.
  *
- * Prose is composed line by line from the theme's markup elements. A card and a
- * grid are laid out rather than styled - they measure their content, wrap it
- * and align it - so both go to the theme's card renderer, the one that already
- * draws a card wherever else the library draws one.
+ * Prose is composed line by line from the theme's markup elements. A card
+ * and a grid are laid out rather than styled - they measure their content,
+ * wrap it and align it - so both go to the theme's card renderer, the same
+ * one that draws a card everywhere else in the library.
  *
  * @package DrevOps\Tui\Block
  */

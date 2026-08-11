@@ -7,9 +7,9 @@ namespace DrevOps\Tui\Screen;
 /**
  * Computes the visible window of a scrolling list.
  *
- * `follow()` keeps the cursor inside the viewport (a key press re-engages
- * cursor-follow) and `viewport()` resolves a window for an offset alone. Both
- * clamp to the valid range, and a viewport reports ▲/▼.
+ * `follow()` keeps the cursor inside the viewport and `viewport()` resolves a
+ * window for an offset alone. Both clamp to the valid range, and a viewport
+ * reports ▲/▼.
  *
  * @package DrevOps\Tui\Screen
  */
@@ -50,7 +50,7 @@ class Scroller {
   /**
    * The viewport for an offset, clamped, with the scrolled-off flags resolved.
    *
-   * The single home of the "when do the scroll indicators show" rule.
+   * The one place the scroll-indicator flags are decided.
    *
    * @param int $offset
    *   The desired first-visible-line index.

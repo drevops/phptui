@@ -24,8 +24,8 @@ abstract class AbstractField implements FieldInterface {
   /**
    * The resolved key bindings for this field's scope.
    *
-   * Injected by the field factory; when a field is constructed directly (for
-   * a test or a one-off), it falls back to the default preset for its scope.
+   * When none are injected, the field falls back to the default preset for
+   * its scope.
    */
   protected ?ScopedKeyMap $scoped = NULL;
 
@@ -118,8 +118,7 @@ abstract class AbstractField implements FieldInterface {
   /**
    * The scope whose default bindings apply when none are injected.
    *
-   * Fields whose bindings differ from the base defaults override this; the
-   * base scope is the right fallback for the rest.
+   * Fields whose bindings differ from the base defaults override this.
    *
    * @return \DrevOps\Tui\Input\Scope
    *   The field's binding scope.
@@ -161,7 +160,7 @@ abstract class AbstractField implements FieldInterface {
    *   The key to test.
    *
    * @return bool
-   *   TRUE when the key triggered the accept, so it travels no further.
+   *   TRUE when the key triggered the accept and was consumed.
    */
   protected function handleAccept(Key $key): bool {
     if ($this->keys()->matches($key, Action::Accept)) {
@@ -226,8 +225,8 @@ abstract class AbstractField implements FieldInterface {
    *   The rendered row.
    */
   protected function renderExclusiveRow(ThemeInterface $theme, string $label, bool $current): string {
-    // Moving the cursor is what picks in an exclusive list, so the mark and the
-    // cursor say the same thing and the row draws only the mark.
+    // Moving the cursor picks in an exclusive list, so the mark and the
+    // cursor state coincide and the row draws only the mark.
     return $this->elements($theme)->fieldEntryMarker($current, TRUE) . ' ' . $this->entryLabel($theme, $label, $current);
   }
 
@@ -245,9 +244,8 @@ abstract class AbstractField implements FieldInterface {
    * Style an option label, emphasising the query-matched characters.
    *
    * The label is split into runs of matched and unmatched characters, each run
-   * styled on its own so no SGR code nests inside another: matched runs get the
-   * match colour, and the rest is drawn as the entry it belongs to. With no
-   * matched positions this is exactly {@see entryLabel()}.
+   * styled on its own, so no SGR code nests inside another. With no matched
+   * positions this is exactly {@see entryLabel()}.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -289,7 +287,7 @@ abstract class AbstractField implements FieldInterface {
   }
 
   /**
-   * Style one run of same-kind characters for {@see renderMatchedLabel()}.
+   * Style one run of matched or unmatched characters.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -316,13 +314,12 @@ abstract class AbstractField implements FieldInterface {
   /**
    * {@inheritdoc}
    *
-   * The frame every field shares, stacked so that each line sits nearest what
-   * it belongs to: the field's own body, the highlighted option's detail
-   * (choice fields only), then what the field expects of an answer, then why
-   * the last one was refused. The detail leads because it changes as the
-   * highlight moves - a line that follows the cursor belongs against the list
-   * it follows, not below a constraint that never moves. A field renders only
-   * its body via {@see renderBody()} and states its expectation via
+   * The frame every field shares: the field's body, the highlighted option's
+   * description (choice fields only), the constraint, then the error. The
+   * description changes as the highlight moves, so it renders directly under
+   * the list rather than below the constraint, which never moves.
+   *
+   * A field supplies its body via {@see renderBody()} and its constraint via
    * {@see renderConstraint()}.
    */
   public function view(ThemeInterface $theme): string {
@@ -346,7 +343,7 @@ abstract class AbstractField implements FieldInterface {
   }
 
   /**
-   * What the field expects of an answer, before anything is refused.
+   * What the field expects of an answer.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -373,9 +370,8 @@ abstract class AbstractField implements FieldInterface {
   /**
    * The highlighted option's description; empty for fields without one.
    *
-   * The choice fields override this (directly or via a capability trait) to
-   * surface the highlighted option's description; every other field inherits
-   * the empty default, so the shared frame adds no description line for it.
+   * Choice fields override this, directly or via a capability trait; the
+   * empty default adds no description line to the frame.
    *
    * @return string
    *   The description shown beneath the body, or an empty string.
@@ -387,8 +383,8 @@ abstract class AbstractField implements FieldInterface {
   /**
    * The narrowest content width at which an option description is still shown.
    *
-   * Below this the panel is too narrow to render a readable description, so it
-   * is dropped rather than wrapped into unreadable fragments.
+   * Below this width a wrapped description breaks into unreadable fragments,
+   * so it is dropped.
    */
   protected const int MIN_DESCRIPTION_WIDTH = 8;
 
@@ -405,8 +401,8 @@ abstract class AbstractField implements FieldInterface {
    *   description or the panel is too narrow to show one.
    */
   protected function renderOptionDescription(ThemeInterface $theme, string $description): string {
-    // Indented to start where an entry's own text starts, so it reads as
-    // belonging to the entry above it rather than to the list as a whole.
+    // Indent to the column where an entry's own text starts, so the
+    // description aligns with the entry above it.
     $indent = str_repeat(' ', $this->entryTextOffset($theme));
     $width = $theme->contentWidth() - Strings::length($indent);
 
@@ -435,9 +431,9 @@ abstract class AbstractField implements FieldInterface {
   /**
    * Offer a value as the answer, finishing the collection.
    *
-   * Nothing is measured here: a field offers what it collected and whatever
-   * holds the answer decides whether it stands, so the offer always goes
-   * through and whatever was being said about the last one is cleared.
+   * The field does not validate: whatever holds the answer decides whether an
+   * offered value stands. The offer always succeeds and clears any prior
+   * error.
    *
    * @param mixed $value
    *   The collected value.

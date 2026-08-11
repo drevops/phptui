@@ -55,8 +55,8 @@ class Template extends AbstractField implements TextEditCapableInterface {
    * @param \DrevOps\Tui\Block\Template $template
    *   The shape to fill in.
    * @param string $default
-   *   The initial assembled value; a value that does not have the shape leaves
-   *   every slot empty.
+   *   The initial assembled value; a value that does not match the shape
+   *   leaves every slot empty.
    */
   public function __construct(protected TemplateModel $template, string $default = '') {
     $this->names = $this->template->placeholders();
@@ -111,7 +111,7 @@ class Template extends AbstractField implements TextEditCapableInterface {
   /**
    * {@inheritdoc}
    *
-   * The assembled string, with the live buffer standing in for its slot.
+   * The assembled string, with the live buffer supplying the active slot.
    */
   protected function liveValue(): mixed {
     return $this->template->assemble($this->values());
@@ -119,8 +119,6 @@ class Template extends AbstractField implements TextEditCapableInterface {
 
   /**
    * {@inheritdoc}
-   *
-   * Moving between slots is the action a reader will not guess, so it leads.
    */
   #[\Override]
   public function hints(): array {
@@ -128,7 +126,7 @@ class Template extends AbstractField implements TextEditCapableInterface {
   }
 
   /**
-   * The value of every slot, with the live buffer standing in for its slot.
+   * The value of every slot, with the live buffer supplying the active slot.
    *
    * @return array<string,string>
    *   The slot values keyed by slot name, in shape order.
@@ -153,9 +151,9 @@ class Template extends AbstractField implements TextEditCapableInterface {
   /**
    * Move the caret to another slot, wrapping around the ends.
    *
-   * The slot being left is validated on the way out: a rejected value shows its
-   * error but does not hold the caret, so a slot filled in the wrong order can
-   * still be reached and corrected.
+   * The slot being left is validated. A rejected value sets the error but
+   * does not block the move, so slots can be filled and corrected in any
+   * order.
    *
    * @param int $delta
    *   The number of slots to move by: 1 forward, -1 back.
@@ -182,8 +180,8 @@ class Template extends AbstractField implements TextEditCapableInterface {
   /**
    * Accept the assembled value once every slot passes its own validator.
    *
-   * A rejected slot takes the caret, so the shown error names the slot the user
-   * is looking at.
+   * A rejected slot receives the caret, so the shown error names the focused
+   * slot.
    */
   protected function submit(): void {
     $values = $this->values();
@@ -207,14 +205,14 @@ class Template extends AbstractField implements TextEditCapableInterface {
   }
 
   /**
-   * Refuse a slot whose value would be misread once the shape is assembled.
+   * Reject a slot whose value would be ambiguous once the shape is assembled.
    *
    * @param array<string,string> $values
    *   The value of each slot, keyed by slot name.
    *
    * @return bool
-   *   TRUE when every slot survives assembly; FALSE when one was rejected, the
-   *   caret moved to it and the error set.
+   *   TRUE when every slot passes; FALSE when one was rejected, the caret
+   *   moved to it and the error set.
    */
   protected function rejectAmbiguous(array $values): bool {
     $name = $this->template->ambiguousSlot($values);
@@ -256,8 +254,8 @@ class Template extends AbstractField implements TextEditCapableInterface {
    *   The chunk position.
    *
    * @return string
-   *   The rendered chunk; an absent chunk styles to nothing rather than to a
-   *   bare pair of styling codes.
+   *   The rendered chunk; an absent chunk renders as an empty string, not as
+   *   a bare pair of styling codes.
    */
   protected function renderLiteral(ThemeInterface $theme, int $index): string {
     $literal = $this->template->literalAt($index);
@@ -285,8 +283,8 @@ class Template extends AbstractField implements TextEditCapableInterface {
 
     $value = $this->parts[$name] ?? '';
 
-    // An empty slot would collapse the shape into its fixed text alone, so it
-    // shows its label instead - dimmed, to read as a hint and not a value.
+    // An empty slot would collapse the shape into its fixed text, so its
+    // label renders in its place. The dimming marks it as a hint, not a value.
     return $value === '' ? $this->elements($theme)->fieldDescription($this->template->labelOf($name)) : $value;
   }
 

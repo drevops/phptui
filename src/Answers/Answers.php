@@ -44,9 +44,9 @@ final readonly class Answers {
   /**
    * Build a self-describing answer set from a declared block tree.
    *
-   * The tree's root is the form itself rather than a panel somebody declared,
-   * so it contributes no heading: the trail each answer carries starts at the
-   * panel it was asked in.
+   * The tree's root is the form itself rather than a declared panel, so it
+   * contributes no heading: the trail each answer carries starts at the panel
+   * it was asked in.
    *
    * @param \DrevOps\Tui\Block\Panel $root
    *   The panel every declared panel hangs from.

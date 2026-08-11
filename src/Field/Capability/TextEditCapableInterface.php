@@ -8,7 +8,7 @@ namespace DrevOps\Tui\Field\Capability;
  * A field that edits a character buffer.
  *
  * {@see TextEditCapableTrait} carries the default cursor-based implementation;
- * an append-only field may implement the vocabulary directly.
+ * an append-only field may implement the methods directly.
  *
  * @package DrevOps\Tui\Field\Capability
  */

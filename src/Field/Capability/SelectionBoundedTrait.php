@@ -9,11 +9,11 @@ use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 
 /**
- * Says what a multi-value field's declared selection counts ask for.
+ * Presents a multi-value field's declared selection-count bounds.
  *
- * The bound is surfaced as a persistent hint so it is visible before it is
- * reached; refusing a count that misses it belongs to the block holding the
- * answer, which measures every offered value once.
+ * The bound is shown as a persistent hint, so it is visible before it is
+ * reached. Rejecting a count outside the bounds belongs to the block holding
+ * the answer, which measures every offered value once.
  *
  * @package DrevOps\Tui\Field\Capability
  */
@@ -27,9 +27,9 @@ trait SelectionBoundedTrait {
   /**
    * The themed selection-count hint line, or an empty string when not shown.
    *
-   * Worded as the refusal is, so the persistent guidance and the reason a
-   * count was refused read the same; the hint gives way to the error line
-   * while one is showing, so the two never stack.
+   * The hint uses the refusal's wording, so the persistent guidance and the
+   * rejection message match. While an error shows, the hint is suppressed, so
+   * the two lines never stack.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -43,9 +43,9 @@ trait SelectionBoundedTrait {
       return '';
     }
 
-    // The guidance voice, not the description's: this line states what the
-    // field expects, and drawn as a description it is indistinguishable from
-    // the highlighted option's own text sitting directly above it.
+    // Rendered as a constraint, not a description: the line states what the
+    // field expects. Drawn as a description it is indistinguishable from the
+    // highlighted option's own text directly above it.
     return $this->elements($theme)->fieldConstraint(Translator::t('Select @constraint.', ['@constraint' => $this->selectionBounds->describe()]));
   }
 

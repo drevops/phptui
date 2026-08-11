@@ -87,8 +87,8 @@ final readonly class Option {
   /**
    * Normalize a value => label map or a list of options into a list of options.
    *
-   * The map form (`['standard' => 'Standard']`) is the ergonomic shorthand for
-   * simple selectable options; richer rows (separators, headings, disabled
+   * The map form (`['standard' => 'Standard']`) is the shorthand for simple
+   * selectable options; richer rows (separators, headings, disabled
    * options) are passed as {@see Option} instances. A label defaults to its
    * value when empty.
    *
@@ -115,12 +115,12 @@ final readonly class Option {
   }
 
   /**
-   * Normalize what a callable returning options handed back.
+   * Normalize the return value of an option-returning callable.
    *
    * An option loader and a query source are each declared to return a
-   * value => label map, but both are consumer code running mid-session, so a
-   * mistyped one degrades to no options rather than erroring where there is no
-   * good way to report it.
+   * value => label map, but both are consumer code running mid-session. A
+   * mistyped result degrades to no options rather than erroring where there
+   * is no good way to report it.
    *
    * @param mixed $result
    *   The callable's return value.
@@ -135,9 +135,6 @@ final readonly class Option {
 
   /**
    * The values of the selectable rows, in display order.
-   *
-   * The one filtering every collection surface shares, so the field model, the
-   * choice fields and the schema generators agree on what is selectable.
    *
    * @param list<\DrevOps\Tui\Block\Option> $options
    *   The option rows.

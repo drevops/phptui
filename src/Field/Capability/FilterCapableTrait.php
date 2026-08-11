@@ -73,7 +73,7 @@ trait FilterCapableTrait {
   }
 
   /**
-   * Land the cursor on the first match and reset paging on a query change.
+   * Move the cursor to the first match and reset paging on a query change.
    */
   public function resetFilterCursor(): void {
     $this->cursor = $this->firstSelectable($this->visible());
@@ -83,11 +83,11 @@ trait FilterCapableTrait {
   /**
    * The rows currently visible under the filter.
    *
-   * With no filter every row shows in declared order; once filtering, only
-   * matching options show - structural headings and separators drop away so
-   * the result reads as a flat list. Rows that came from a query source are
-   * already the answer to the query, so filtering them again locally would drop
-   * the ones whose labels do not literally match it.
+   * With no filter every row shows in declared order. Under a filter only
+   * matching options show; structural headings and separators are excluded,
+   * so the result is a flat list. A query source has already matched its rows
+   * against the query, so filtering them again locally would drop rows whose
+   * labels do not literally match it.
    *
    * @return list<\DrevOps\Tui\Block\Option>
    *   The visible rows.

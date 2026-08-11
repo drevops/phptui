@@ -7,9 +7,9 @@ namespace DrevOps\Tui\Block;
 /**
  * The kinds of answer a field collects.
  *
- * Every case names something a reader can be asked for, because a field is the
- * only block that collects: a block that merely shows content or runs work is a
- * kind of its own rather than a kind of answer.
+ * A field is the only block that collects, so every case names an answer a
+ * reader can supply. A block that shows content or runs work is a block kind
+ * of its own, not a kind of answer.
  *
  * @package DrevOps\Tui\Block
  */
@@ -33,11 +33,6 @@ enum FieldType: string {
 
   /**
    * Whether the field's answer is a whole number rather than text.
-   *
-   * The two integer types reach the same shape from opposite directions: a
-   * number is typed digit by digit, a rating is stepped along a scale - but
-   * both answer with an int, so the type check, the environment coercion and
-   * the machine schemas treat them alike.
    *
    * @return bool
    *   TRUE for the integer-valued types.
@@ -96,11 +91,12 @@ enum FieldType: string {
   /**
    * Whether a field of this type may source its options from a live query.
    *
-   * Only the types whose interaction *is* a query qualify, because a source
-   * that follows the query has to show the query it followed: a select filters
-   * a known set without displaying the filter, a reorder and a toggle need the
-   * whole set at once, and a text field's ghost completion has no list to
-   * resolve into.
+   * Only the types whose interaction is a query qualify: query-sourced
+   * options must be shown beside the query that produced them.
+   *
+   * A select filters a known set without displaying the filter. A reorder and
+   * a toggle need the whole set at once, and a text field's ghost completion
+   * has no list to resolve into.
    *
    * @return bool
    *   TRUE for the query-driven choice types.
@@ -112,8 +108,8 @@ enum FieldType: string {
   /**
    * Whether a field of this type can show ghost text in an empty input.
    *
-   * Template is excluded: it ghosts each empty slot with that slot's own label,
-   * so a field-level placeholder would compete with it.
+   * Template is excluded: each empty slot shows its own label as ghost text,
+   * so a field-level placeholder would conflict with it.
    *
    * @return bool
    *   TRUE for the types that edit a text buffer or a query line.

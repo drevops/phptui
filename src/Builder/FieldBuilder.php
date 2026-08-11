@@ -21,15 +21,14 @@ use DrevOps\Tui\FormException;
 /**
  * A fluent builder for a single field: the block that collects.
  *
- * What is declared lands on the field as it is written. A declaration stated in
- * parts - a range, a shape, a set of limits - is assembled when the declaration
- * is finished, because only a finished one can be measured for the
- * contradictions it must not hold.
+ * A declaration is written onto the field as it is made. A declaration
+ * stated in parts - a range, a shape, a set of limits - is assembled when
+ * the declaration is finished, because only a finished one can be checked
+ * for contradictions.
  *
- * Most of what can be declared belongs to some kinds of answer and not to
- * others, and a declaration the kind has nowhere to put is refused where it was
- * written rather than quietly dropped - so a mistake is read at the line that
- * made it.
+ * Most declarations apply to some kinds of answer and not to others, and one
+ * the kind has nowhere to put is rejected where it was written rather than
+ * quietly dropped, so the error points at the line that made it.
  *
  * @package DrevOps\Tui\Builder
  */
@@ -212,8 +211,8 @@ final class FieldBuilder {
   /**
    * Set the help: the long-form text behind the field's help key.
    *
-   * Where a description has to fit under the row, help opens on its own page,
-   * it can run to paragraphs and carry the detail a row has no space for.
+   * A description has to fit under the row; help opens on its own page, so it
+   * can run to paragraphs and hold the detail a row has no space for.
    *
    * @param string $help
    *   The help text; blank lines separate paragraphs.
@@ -254,9 +253,9 @@ final class FieldBuilder {
    *
    * @param mixed $default
    *   The default value, or a `fn (Context): mixed` closure computing a
-   *   dynamic default from the run context. A closure that cannot be evaluated
-   *   without answers reads as null in machine-readable output unless a
-   *   {@see schemaDefault()} stands in for it.
+   *   dynamic default from the run context. A closure that cannot be
+   *   evaluated without answers reads as null in machine-readable output
+   *   unless a {@see schemaDefault()} replaces it there.
    *
    * @return $this
    *   The builder.
@@ -290,10 +289,11 @@ final class FieldBuilder {
   /**
    * Set the environment variable that answers the field.
    *
-   * The name is absolute: the form's prefix is not applied to it, so a variable
-   * name published elsewhere can be reproduced exactly. It replaces the
-   * mechanical `<PREFIX><FIELD_ID>` name rather than adding to it - declare the
-   * mechanical name through {@see envAliases()} to keep honouring it too.
+   * The name is absolute: the form's prefix is not applied to it, so a
+   * variable name published elsewhere can be reproduced exactly. It replaces
+   * the mechanical `<PREFIX><FIELD_ID>` name rather than adding to it;
+   * declare the mechanical name through {@see envAliases()} so it still
+   * answers the field.
    *
    * @param string $name
    *   The variable name.
@@ -308,7 +308,7 @@ final class FieldBuilder {
   }
 
   /**
-   * Set the further environment variables the field also answers to.
+   * Set further environment variables that also answer the field.
    *
    * Each is absolute, like {@see env()}, and they are consulted in order after
    * the canonical name - so the canonical name wins when both are set, and a
@@ -431,9 +431,9 @@ final class FieldBuilder {
    *
    * A field is edited inline by default - its editor expands in place on the
    * panel when activated, and collapses back on accept or cancel. Declaring it
-   * standalone opens that same editor full-screen instead: the better fit for a
-   * field that wants the whole viewport, such as a long option list, a month
-   * calendar or a multi-line textarea.
+   * standalone opens that same editor full-screen instead: the better fit for
+   * a field that needs the whole viewport, such as a long option list, a
+   * month calendar or a multi-line textarea.
    *
    * @param bool $standalone
    *   TRUE for the full-screen editor; FALSE to restore inline editing.
@@ -499,8 +499,8 @@ final class FieldBuilder {
    *   are already its steps.
    */
   public function step(int $step): self {
-    // Named ahead of the kind check: a scale does count through numbers, so
-    // what is wrong here is the increment rather than the kind.
+    // Checked before the kind check: a scale does count through numbers, so
+    // the error here is the increment rather than the kind.
     if ($this->fieldType === FieldType::Rating) {
       throw new FormException(sprintf('Field "%s" declares a step of %d on a scale whose points are its steps; remove ->step() and set the ends with ->min() and ->max().', $this->id, $step));
     }
@@ -1032,10 +1032,9 @@ final class FieldBuilder {
   /**
    * Add several options from a value => label map, or a callback for them.
    *
-   * A callback's own signature says when it runs. One that asks for the run
+   * The callback's signature determines when it runs. One that takes the run
    * context follows the collected answers: it is called again whenever they
-   * change, so one field's choices can narrow by another's answer - a basket
-   * that stops offering what the chosen category does not hold. It runs as
+   * change, so one field's choices can narrow by another's answer. It runs as
    * part of the form settling, before anything is drawn or validated, so the
    * narrowed set is the one every surface sees: the panel, headless
    * collection, the schema and the validator. A value the narrowed set no
@@ -1044,7 +1043,7 @@ final class FieldBuilder {
    * was supplied headlessly, which is reported instead. Keep such a callback
    * cheap: it runs for the whole form, not once per panel.
    *
-   * A callback that asks for nothing loads one list, once, lazily when the
+   * A callback with no parameters loads one list, once, lazily when the
    * field's panel opens - showing a themed "Loading…" beside the field until
    * it returns, and running after the panel's `->preload()` so it can read
    * what preload prepared.
@@ -1066,8 +1065,8 @@ final class FieldBuilder {
     $this->scoped(self::lists(), 'shows no options', 'options');
 
     if ($options instanceof \Closure) {
-      // Reading the signature here, rather than at every call, keeps the two
-      // lifecycles apart without a reflection call mid-session.
+      // The signature is read here rather than at every call, so the
+      // lifecycle is chosen without a reflection call mid-session.
       if ((new \ReflectionFunction($options))->getNumberOfParameters() > 0) {
         $this->block->resolve($options);
       }
@@ -1094,8 +1093,8 @@ final class FieldBuilder {
    * index. The field shows a themed "Loading…" while a call is in flight, and
    * the result replaces the list wholesale, so the local filter is turned off.
    *
-   * Repeats are free: a query already answered in this editor session is served
-   * from a cache, and a burst of typing resolves once, not once per character.
+   * A query already answered in this editor session is served from a cache,
+   * and a burst of typing resolves once, not once per character.
    *
    * @param \Closure $source
    *   An
@@ -1120,9 +1119,9 @@ final class FieldBuilder {
   /**
    * Set the query length below which the query source is not called.
    *
-   * A remote source asked for the empty query has to answer with everything, so
-   * a floor keeps the field quiet until the query is worth sending. Below it
-   * the field shows a prompt to keep typing instead of a list.
+   * A remote source asked for the empty query has to answer with everything,
+   * so no query shorter than the floor is sent. Below the floor the field
+   * shows a prompt to keep typing instead of a list.
    *
    * @param int $length
    *   The minimum number of characters, at least one.

@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Screen\Capability;
 
 /**
- * Holds a surface's offset, and refuses to move one that does not scroll.
+ * Holds a surface's offset; scrollTo() throws for one that does not scroll.
  *
  * @package DrevOps\Tui\Screen\Capability
  */
 trait ScrollCapableTrait {
 
   /**
-   * Whether this surface's contents may outrun it.
+   * Whether this surface's contents may overflow it.
    */
   protected bool $scrolls = FALSE;
 
@@ -58,7 +58,7 @@ trait ScrollCapableTrait {
   }
 
   /**
-   * What this surface is called, for a refusal that names it.
+   * The name of this surface, used in the scrollTo() exception message.
    *
    * @return string
    *   The name.

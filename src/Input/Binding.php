@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Input;
 
 /**
- * One authored binding: an action reachable by a set of keys within a scope.
+ * One authored binding: an action and the keys that trigger it in a scope.
  *
- * This is the declaration unit a preset ships and a consumer overrides with.
- * Keys are given in their most convenient form - a {@see KeyName} for a named
- * key, a single-character string for a printable key, or a ready {@see Key} -
- * and {@see KeyMap} normalizes them to {@see Key} when it resolves. Two
- * bindings for the same scope and action do not merge: the later one wins, so a
- * consumer replaces a preset's binding by re-declaring it.
+ * Presets and consumer overrides both declare their bindings in this form.
+ * A key may be a {@see KeyName} for a named key, a single-character string
+ * for a printable key, or a {@see Key}; {@see KeyMap} normalizes all three
+ * forms to {@see Key} when it resolves. Two bindings for the same scope and
+ * action do not merge: the later one wins, so a consumer replaces a preset's
+ * binding by re-declaring it.
  *
  * @package DrevOps\Tui\Input
  */

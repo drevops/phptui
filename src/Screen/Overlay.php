@@ -11,8 +11,8 @@ use DrevOps\Tui\Utils\Strings;
 /**
  * Pure line-compositor: splice a box of lines over a backdrop, centered.
  *
- * Theme-agnostic - it knows nothing about colour. It places a rendered box over
- * a rectangular backdrop and splices each box line into the backdrop by visible
+ * Theme-agnostic: it handles no colour. It places a rendered box over a
+ * rectangular backdrop and splices each box line into the backdrop by visible
  * column, so the backdrop shows through the padding on every side. Only the
  * backdrop is sliced - it is plain text the caller has already flattened and
  * padded to the composite width - while the styled box lines are placed

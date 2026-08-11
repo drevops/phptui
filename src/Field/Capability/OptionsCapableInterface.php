@@ -11,8 +11,8 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * A field that presents a list of option rows.
  *
  * The rows are {@see Option} objects, so headings, separators and disabled
- * options travel with the selectable ones; {@see OptionsCapableTrait} carries
- * the default implementation.
+ * options share the list with the selectable ones; {@see OptionsCapableTrait}
+ * carries the default implementation.
  *
  * @package DrevOps\Tui\Field\Capability
  */

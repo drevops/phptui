@@ -13,18 +13,17 @@ use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
 /**
  * A named container inside a layout.
  *
- * A region is a name, some blocks, and whether you can scroll them. Its name is
- * how a block says where it goes, so nothing depends on the order things were
- * declared in.
+ * A block addresses a region by name, so nothing depends on the order things
+ * were declared in.
  *
- * The blocks run along one axis and are packed from either end of it, which is
- * placement rather than sizing: a block takes the space it drew whichever end
- * it was packed from.
+ * The blocks run along one axis and are packed from either end of it, which
+ * is placement rather than sizing: a block takes the space it drew whichever
+ * end it was packed from.
  *
- * It declares a size without computing one: the arithmetic belongs to the
- * layout, which is the only thing that sees every sibling. Even a region as
- * deep as what it holds only says so - what it holds is counted where blocks
- * are drawn, and the layout is handed the number.
+ * A region declares a size without computing one: the layout is the only
+ * thing that sees every sibling, so the arithmetic belongs to it. A
+ * content-sized region's extent is counted where blocks are drawn, and the
+ * layout is handed the number.
  *
  * @package DrevOps\Tui\Screen
  */
@@ -34,12 +33,12 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   use ScrollCapableTrait;
 
   /**
-   * How it asks for its share of the axis.
+   * How this region's share of the axis is determined.
    */
   protected Sizing $sizing = Sizing::Flex;
 
   /**
-   * The cells it asked for, or the share it takes; nothing when it is measured.
+   * The cell count or flex share; 0 when the region is content-sized.
    */
   protected int $size = 1;
 
@@ -49,7 +48,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   protected Axis $flow = Axis::Rows;
 
   /**
-   * Whether a panel in it shows what is behind it rather than a row.
+   * Whether a panel in it draws its preview rather than its row.
    */
   protected bool $previews = FALSE;
 
@@ -91,9 +90,6 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   /**
    * Take a fixed number of cells of the axis.
    *
-   * A header is one line whatever the terminal height, and no proportion can
-   * say that, which is what this is for.
-   *
    * @param int $cells
    *   The cells to take.
    *
@@ -112,10 +108,10 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   }
 
   /**
-   * Take a share of whatever the fixed regions leave behind.
+   * Take a share of the cells the fixed regions leave.
    *
-   * Shares do not sum to anything in particular, so 30, 40, 30 and 3, 4, 3 mean
-   * the same thing.
+   * Shares do not sum to anything in particular, so 30, 40, 30 and 3, 4, 3
+   * mean the same thing.
    *
    * @param int $share
    *   The share to take.
@@ -135,12 +131,10 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   }
 
   /**
-   * Take as much of the axis as what this region holds comes to.
+   * Take as much of the axis as this region's contents come to.
    *
-   * A window is as deep as the rows behind it, and neither a count of cells nor
-   * a share of the remainder can say that. What it comes to is measured where
-   * blocks are drawn and handed to the layout, so this stays a declaration like
-   * the other two rather than a measurement.
+   * The extent is counted where blocks are drawn and handed to the layout, so
+   * this stays a declaration, like the other two, rather than a measurement.
    *
    * @return $this
    *   The region.
@@ -153,7 +147,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   }
 
   /**
-   * How this region asks for its share of the axis.
+   * How this region's share of the axis is determined.
    *
    * @return \DrevOps\Tui\Screen\Sizing
    *   The kind.
@@ -163,10 +157,10 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   }
 
   /**
-   * The cells this region asked for, or the share it takes.
+   * The cells this region declared, or the share it takes.
    *
    * @return int
-   *   The number, which is nothing at all when it is measured instead.
+   *   The number, or 0 when the region is content-sized.
    */
   public function size(): int {
     return $this->size;
@@ -200,10 +194,10 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   /**
    * Show a panel in this region as a window onto it rather than as a row.
    *
-   * A row has one line to say what is behind a panel and a window has the depth
-   * to show it, so which of the two a panel draws is a question about the space
-   * rather than about the panel. Only the arrangement knows which the space is,
-   * which is why it is declared here and not on the block.
+   * A row is one line and a window has depth, so which of the two a panel
+   * draws is a question about the space rather than about the panel. The
+   * space is known only to the arrangement, so the choice is declared here
+   * and not on the block.
    *
    * @return $this
    *   The region.
@@ -215,7 +209,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   }
 
   /**
-   * Whether a panel in this region shows what is behind it rather than a row.
+   * Whether a panel in this region draws its preview rather than its row.
    *
    * @return bool
    *   TRUE when it does.
@@ -226,9 +220,6 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
 
   /**
    * Draw a block in this region.
-   *
-   * A region never knows which kind it was given, which is why a breadcrumb can
-   * go wherever a field can.
    *
    * @param \DrevOps\Tui\Block\BlockInterface $block
    *   The block.
@@ -244,10 +235,6 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
 
   /**
    * Draw a block before everything already in this region.
-   *
-   * What a region holds is normally in the order it was declared in, so this is
-   * for the standing text a driver puts above rows that were placed before it
-   * knew there would be any.
    *
    * @param \DrevOps\Tui\Block\BlockInterface $block
    *   The block.
@@ -265,9 +252,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
    * Draw a block at the far end of this region's flow.
    *
    * Where {@see self::add()} packs from the start of the axis the blocks run
-   * along, this packs from the end of it - so a footer flowing across keeps its
-   * key hints at the left and a version string at the right, and one flowing
-   * down keeps a standing note on its last row.
+   * along, this packs from the end of it.
    *
    * @param \DrevOps\Tui\Block\BlockInterface $block
    *   The block.
@@ -305,7 +290,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
    * The blocks packed from the end of this region's flow.
    *
    * @return list<\DrevOps\Tui\Block\BlockInterface>
-   *   The blocks, none when everything it holds runs from the start.
+   *   The blocks; empty when none were packed from the end.
    */
   public function tailBlocks(): array {
     return $this->tail;

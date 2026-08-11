@@ -15,13 +15,8 @@ use DrevOps\Tui\Theme\ThemeInterface;
 /**
  * A graded answer: a point chosen from a scale, accepted as an int.
  *
- * The arrows walk the scale one point at a time and stop at either end - a
- * grade has a floor and a ceiling, so unlike a two-state switch the ends do
- * not wrap round. A digit selects its point outright when the scale reaches it.
- *
- * The ends are plain integers rather than a bounds object because a scale is
- * closed by construction: there is no point to draw beyond either end, so
- * neither may be left open.
+ * The arrows step one point at a time and stop at either end; the ends do
+ * not wrap. A typed digit selects its point when the scale includes it.
  *
  * @package DrevOps\Tui\Field
  */
@@ -90,7 +85,7 @@ class Rating extends AbstractField implements StepCapableInterface {
   /**
    * {@inheritdoc}
    *
-   * Each position is one point, and the scale stops at the end it reaches.
+   * Each position is one point, clamped at the ends of the scale.
    */
   public function stepBy(int $delta): void {
     $this->point = $this->clamp($this->point + $delta);
@@ -99,9 +94,8 @@ class Rating extends AbstractField implements StepCapableInterface {
   /**
    * Jump to the point a typed digit names.
    *
-   * A digit the scale does not reach leaves the choice alone, so typing on a
-   * scale that starts above nine - or runs well past it - is inert rather than
-   * surprising.
+   * A digit the scale does not include is ignored, so typing on a scale that
+   * starts above nine, or runs well past it, is inert.
    *
    * @param string $char
    *   The typed character.
@@ -146,9 +140,6 @@ class Rating extends AbstractField implements StepCapableInterface {
 
   /**
    * {@inheritdoc}
-   *
-   * The stepping keys lead: nothing about a row of points says which keys move
-   * along it.
    */
   #[\Override]
   public function hints(): array {

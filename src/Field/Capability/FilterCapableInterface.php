@@ -24,7 +24,7 @@ interface FilterCapableInterface {
   public function filter(): string;
 
   /**
-   * Land the cursor on the first match and reset paging on a query change.
+   * Move the cursor to the first match and reset paging on a query change.
    */
   public function resetFilterCursor(): void;
 

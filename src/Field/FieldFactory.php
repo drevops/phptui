@@ -17,11 +17,10 @@ use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Translation\Translator;
 
 /**
- * Builds the editor a field opens onto, seeded with the value it holds.
+ * Builds the interactive field for a block, seeded with the value it holds.
  *
- * The kind of answer a field collects is what it turns on, and nothing it
- * builds refuses anything: what a field will not take is the field's own to
- * refuse, so an offered value is measured where the answer is held.
+ * The block's field type selects the field class. A built field does not
+ * validate: an offered value is validated where the answer is held.
  *
  * @package DrevOps\Tui\Field
  */
@@ -46,7 +45,7 @@ class FieldFactory {
   }
 
   /**
-   * Build the field a block opens onto, seeded with the value it holds.
+   * Build the interactive field for a block, seeded with the value it holds.
    *
    * @param \DrevOps\Tui\Block\Field $block
    *   The block being opened.
@@ -59,8 +58,7 @@ class FieldFactory {
    *   The field.
    *
    * @throws \LogicException
-   *   When the block's kind needs a declaration it was not given, so there is
-   *   nothing complete enough to open onto.
+   *   When the block's type requires a declaration the block does not carry.
    */
   public function open(Field $block, mixed $current = NULL, array $answers = []): FieldInterface {
     $entries = $this->translate($block->entries());
@@ -134,7 +132,7 @@ class FieldFactory {
   }
 
   /**
-   * The shape a block's template field fills in.
+   * The template a block's template field fills in.
    *
    * @param \DrevOps\Tui\Block\Field $block
    *   The block.
@@ -199,8 +197,8 @@ class FieldFactory {
   /**
    * A rating's captions, localized to the active language.
    *
-   * Translated once here rather than at each draw, the way the option labels
-   * are, so the caption a field shows is the caption the panel row shows.
+   * Translated once here rather than at each draw, so the caption the field
+   * shows is the caption the panel row shows.
    *
    * @param array<int,string> $captions
    *   The caption of each captioned point, keyed by the point.
@@ -219,7 +217,7 @@ class FieldFactory {
    *   The localized options.
    *
    * @return array<string,string>
-   *   The labels keyed by value, for fields that take a flat option map.
+   *   The labels keyed by value.
    */
   protected function entryLabels(array $options): array {
     $out = [];

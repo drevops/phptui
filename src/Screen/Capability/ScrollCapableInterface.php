@@ -5,24 +5,23 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Screen\Capability;
 
 /**
- * A surface whose contents may outrun it, and be moved through.
+ * A surface whose contents may overflow it and be scrolled through.
  *
- * Two things can be one: a region, whose contents are the blocks it holds, and
- * an arrangement whose lines move together, whose contents are every line at
- * once. The second is not a region's to do, because no region sees its
- * siblings - which is the same reason sizing belongs to the arrangement.
+ * A region can be one, with the blocks it holds as the contents, and so can
+ * an arrangement whose lines move together, with every line at once as the
+ * contents. No region sees its siblings, so scrolling the whole belongs to
+ * the arrangement, as sizing does.
  *
- * Either way the surface only holds the offset and clamps it. What the offset
- * is an offset into is measured where things are drawn, and moving it is the
- * driver's, so the rule that keeps the cursor in sight lives in one place
- * whatever it is moving.
+ * Either way the surface only holds the offset and clamps it. The extent the
+ * offset indexes into is measured where things are drawn, and the driver
+ * moves it, so one rule keeps the cursor in sight whatever is moved.
  *
  * @package DrevOps\Tui\Screen\Capability
  */
 interface ScrollCapableInterface {
 
   /**
-   * Let this surface's contents outrun it.
+   * Allow this surface's contents to overflow it.
    *
    * @return static
    *   The surface.
@@ -30,7 +29,7 @@ interface ScrollCapableInterface {
   public function scrolls(): static;
 
   /**
-   * Whether this surface's contents may outrun it.
+   * Whether this surface's contents may overflow it.
    *
    * @return bool
    *   TRUE when they may.
@@ -57,7 +56,7 @@ interface ScrollCapableInterface {
    *   The rows it was given.
    *
    * @return int
-   *   The offset, never far enough to scroll the contents off their own end.
+   *   The offset, clamped so the contents cannot scroll past their own end.
    */
   public function offset(int $content, int $visible): int;
 

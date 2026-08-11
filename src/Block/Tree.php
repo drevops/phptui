@@ -11,11 +11,9 @@ use DrevOps\Tui\Condition\ConditionInterface;
 /**
  * A declared block tree, read as a flat list.
  *
- * A panel knows what it holds and which panels hang from it, and nothing more:
- * flattening the two into the order a form is declared in is a question about
- * the whole tree rather than about any one panel. It lives here so the headless
- * collection and the machine-readable descriptions read one order rather than
- * each walking their own.
+ * A panel knows only its own blocks and its child panels. Flattening the
+ * tree lives here so the headless collection and the machine-readable
+ * descriptions read one order rather than each walking their own.
  *
  * The order is declaration order: a panel's own rows first, then everything
  * beneath it, panel by panel.
@@ -65,14 +63,13 @@ final class Tree {
   /**
    * Which blocks a panel and the panels beneath it leave on the form.
    *
-   * A block decides for itself whether it is there, but a section carries what
-   * it holds: a block inside a section the answers took off the form is not
-   * there either, however its own rule reads. Composing the two is a question
-   * about the whole tree rather than about any one block, which is why it is
-   * answered here rather than by whoever asks.
+   * A block's own condition decides its presence, and an absent section
+   * removes every block it holds, however that block's own rule reads.
+   * Composing the two is a question about the whole tree, so it is answered
+   * here once rather than by each caller.
    *
-   * Keyed by object rather than by id, because a section and a row it holds may
-   * go by the same name and only one set of ids is ever checked for collisions.
+   * Keyed by object rather than by id: a section and a row it holds may
+   * share a name, and only one set of ids is ever checked for collisions.
    *
    * @param \DrevOps\Tui\Block\Panel $panel
    *   The panel to walk.
@@ -102,14 +99,13 @@ final class Tree {
   }
 
   /**
-   * Which blocks are there once the answers nobody was asked for stop counting.
+   * Which blocks are there once answers for absent blocks stop counting.
    *
-   * The companion to {@see within()} for a whole answer set read in one go. A
-   * value belonging to a block the answers took off the form is a value the
-   * form never asked for, so it cannot be what puts another block on it -
-   * measuring the conditions against the raw set would let one do exactly that.
-   * Dropping a value can take a further block away, so the reading is repeated
-   * until nothing moves.
+   * The companion to {@see within()} for a whole answer set read in one go.
+   * A value belonging to an absent block was never asked for, so it must not
+   * put another block on the form; measuring the conditions against the raw
+   * set would allow exactly that. Dropping a value can remove a further
+   * block, so the reading is repeated until nothing changes.
    *
    * Keyed by object rather than by id, for the reason {@see within()} is.
    *
@@ -123,9 +119,9 @@ final class Tree {
    */
   public static function settled(Panel $panel, array $answers): array {
     $there = self::within($panel, $answers);
-    // A settled reading exits below, so the bound only guards a set that never
-    // settles: one pass per field covers the longest chain of blocks that can
-    // take each other away, plus one to confirm nothing moved.
+    // A settled reading returns inside the loop, so the bound only guards a
+    // set that never settles: one pass per field covers the longest removal
+    // chain, plus one pass to confirm nothing changed.
     $limit = count(self::fields($panel)) + 1;
 
     for ($pass = 0; $pass < $limit; $pass++) {
@@ -142,7 +138,7 @@ final class Tree {
   }
 
   /**
-   * The answers left once the ones nobody was asked for are dropped.
+   * The answers left once those belonging to absent blocks are dropped.
    *
    * @param \DrevOps\Tui\Block\Panel $panel
    *   The panel to walk.
@@ -152,9 +148,9 @@ final class Tree {
    *   Which blocks are there, keyed by object id.
    *
    * @return array<string,mixed>
-   *   The answers, less the ones belonging to a block that is not there. A
-   *   value under an id the tree does not know is left alone, because whether
-   *   it belongs to the form at all is somebody else's question.
+   *   The answers, less the ones belonging to an absent block. A value under
+   *   an id the tree does not know is left alone; whether it belongs to the
+   *   form at all is out of scope here.
    */
   public static function held(Panel $panel, array $answers, array $there): array {
     foreach (self::fields($panel) as $field) {
@@ -167,15 +163,15 @@ final class Tree {
   }
 
   /**
-   * The one rule deciding whether each block is there, as it can be read.
+   * The one rule deciding whether each block is there, in readable form.
    *
    * The companion to {@see within()}: where that measures the composed rule
-   * against one answer set, this hands the rule itself over, so anything
-   * describing the form can publish what a block waits on rather than only
-   * whether it is there right now.
+   * against one answer set, this returns the rule itself, so a description
+   * of the form can publish what a block depends on rather than only whether
+   * it is there right now.
    *
-   * A rule a block decides for itself cannot be read, only asked, so it counts
-   * as no rule here - the same reading {@see DependCapableTrait::rule()} takes.
+   * A closure rule can be evaluated but not read, so it counts as no rule
+   * here - the same reading {@see DependCapableTrait::rule()} takes.
    *
    * Keyed by object rather than by id, for the reason {@see within()} is.
    *
@@ -209,18 +205,17 @@ final class Tree {
   /**
    * Whether anything at all decides that each block is there.
    *
-   * The question {@see gates()} cannot answer. A rule a block decides for
-   * itself is a real rule that simply cannot be read, so gates() hands back
-   * nothing for it - and anything that took "no rule to publish" for "asked on
-   * every run" would state something false about the form. This says only
-   * whether a block waits on anything, which is answerable either way.
+   * The question {@see gates()} cannot answer: a closure rule is a real rule
+   * that cannot be read, so gates() returns NULL for it, and a NULL gate
+   * must not be taken for "asked on every run". This reports only whether a
+   * block depends on anything, which both kinds of rule can answer.
    *
    * Keyed by object rather than by id, for the reason {@see within()} is.
    *
    * @param \DrevOps\Tui\Block\Panel $panel
    *   The panel to walk.
    * @param bool $inside
-   *   Whether the sections holding this one already wait on something.
+   *   Whether the sections holding this one already depend on something.
    *
    * @return array<int,bool>
    *   TRUE for each block the answers can take off the form, keyed by its
@@ -252,9 +247,9 @@ final class Tree {
    *   The block's own rule, or NULL when it declares none.
    *
    * @return \DrevOps\Tui\Condition\ConditionInterface|null
-   *   Both rules combined, the one that exists, or NULL when neither does. One
-   *   rule is handed back as it is rather than wrapped, so a reader is never
-   *   given an "all" of a single condition to unpick.
+   *   Both rules combined, the one that exists, or NULL when neither does. A
+   *   single rule is returned as it is rather than wrapped, so a reader is
+   *   never given an "all" of one condition to unpick.
    */
   protected static function both(?ConditionInterface $outer, ?ConditionInterface $own): ?ConditionInterface {
     if (!$outer instanceof ConditionInterface) {

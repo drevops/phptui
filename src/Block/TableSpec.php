@@ -9,9 +9,8 @@ use DrevOps\Tui\Terminal\Ansi;
 /**
  * A presentational table: header cells and body rows, coerced to strings.
  *
- * A note carries one to render an aligned grid beneath its title and body. The
- * cells are stored as plain strings; how they are styled and interpolated is
- * the renderer's concern, not this value object's.
+ * The cells are stored as plain strings; how they are styled and interpolated
+ * is the renderer's concern, not this value object's.
  *
  * @package DrevOps\Tui\Block
  */
@@ -34,10 +33,11 @@ final readonly class TableSpec {
   /**
    * Construct a table spec, coercing every cell to a string.
    *
-   * A scalar cell (a number, a bool) is stringified so tabular data need not be
-   * pre-formatted, and a non-scalar cell becomes an empty string, so the
-   * renderer only ever handles strings. An empty header list renders the grid
-   * with no header row.
+   * A scalar cell (a number, a bool) is stringified so tabular data need not
+   * be pre-formatted. A non-scalar cell becomes an empty string, so the
+   * renderer only ever handles strings.
+   *
+   * An empty header list renders the grid with no header row.
    *
    * @param list<mixed> $headers
    *   The header cells.
