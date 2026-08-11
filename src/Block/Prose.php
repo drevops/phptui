@@ -94,7 +94,7 @@ final class Prose {
    *   TRUE when it draws it.
    */
   protected static function markdown(MarkupElementsInterface $theme): bool {
-    return $theme instanceof MarkdownCapableInterface && $theme->hasMarkdown();
+    return $theme instanceof MarkdownCapableInterface && $theme->isMarkdown();
   }
 
 }

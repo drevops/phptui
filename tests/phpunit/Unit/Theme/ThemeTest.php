@@ -185,7 +185,7 @@ final class ThemeTest extends TestCase {
 
     $this->assertSame('Setup', $theme->markupTitle('Setup'));
     $this->assertSame('X', $theme->fieldValue('X'));
-    $this->assertFalse($theme->hasColor());
+    $this->assertFalse($theme->isColor());
   }
 
   #[DataProvider('dataProviderGlyph')]
@@ -253,8 +253,8 @@ final class ThemeTest extends TestCase {
   }
 
   public function testHasUnicode(): void {
-    $this->assertTrue((new DefaultTheme())->hasUnicode());
-    $this->assertFalse((new DefaultTheme(76, ['unicode' => FALSE]))->hasUnicode());
+    $this->assertTrue((new DefaultTheme())->isUnicode());
+    $this->assertFalse((new DefaultTheme(76, ['unicode' => FALSE]))->isUnicode());
   }
 
   public function testDefaultThemePaintsNoBackground(): void {

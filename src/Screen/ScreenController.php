@@ -1171,7 +1171,7 @@ class ScreenController {
    *   The field the key reached, if it reached one that was open.
    */
   protected function stamp(?Field $open): void {
-    if (!$open instanceof Field || !$open->hasAccepted()) {
+    if (!$open instanceof Field || !$open->isAccepted()) {
       return;
     }
 

@@ -510,7 +510,7 @@ final class Field extends AbstractBlock implements
    * @return bool
    *   TRUE when the last thing to happen here was an answer being taken.
    */
-  public function hasAccepted(): bool {
+  public function isAccepted(): bool {
     return $this->accepted;
   }
 
@@ -918,7 +918,7 @@ final class Field extends AbstractBlock implements
    * @return bool
    *   TRUE when it was.
    */
-  public function hasSchemaDefault(): bool {
+  public function isSchemaDefault(): bool {
     return $this->hasSchemaDefault;
   }
 
@@ -1173,7 +1173,7 @@ final class Field extends AbstractBlock implements
    *   FALSE while a loader, a resolver or a query source still owes them, so
    *   there is nothing yet to count or to check a value against.
    */
-  public function hasSettledOptions(): bool {
+  public function isSettledOptions(): bool {
     return !$this->loader instanceof \Closure && !$this->resolver instanceof \Closure && !$this->source instanceof \Closure;
   }
 
@@ -1184,7 +1184,7 @@ final class Field extends AbstractBlock implements
    *   TRUE when they are resolved from the answers or from a live query, so no
    *   one list describes the field.
    */
-  public function hasDynamicOptions(): bool {
+  public function isDynamicOptions(): bool {
     return $this->resolver instanceof \Closure || $this->source instanceof \Closure;
   }
 
@@ -1468,7 +1468,7 @@ final class Field extends AbstractBlock implements
     // A field that declares no options constrains nothing - but one whose
     // options follow a query or the answers is constrained by whatever they
     // resolved to, and resolving to nothing means the value does not exist.
-    if (!$this->fieldType->constrainsToOptions() || ($this->options === [] && !$this->hasDynamicOptions())) {
+    if (!$this->fieldType->constrainsToOptions() || ($this->options === [] && !$this->isDynamicOptions())) {
       return NULL;
     }
 
@@ -1649,7 +1649,7 @@ final class Field extends AbstractBlock implements
    * @return bool
    *   TRUE when it is.
    */
-  public function hasGhost(): bool {
+  public function isGhost(): bool {
     return $this->ghost;
   }
 
@@ -1731,7 +1731,7 @@ final class Field extends AbstractBlock implements
    * @return bool
    *   TRUE when it does.
    */
-  public function hasConfirmation(): bool {
+  public function isConfirmation(): bool {
     return $this->confirm;
   }
 
@@ -1756,7 +1756,7 @@ final class Field extends AbstractBlock implements
    * @return bool
    *   TRUE when it may.
    */
-  public function hasExternalEditor(): bool {
+  public function isExternalEditor(): bool {
     return $this->externalEditor;
   }
 
@@ -1784,7 +1784,7 @@ final class Field extends AbstractBlock implements
    * @return bool
    *   TRUE when one can be launched.
    */
-  public function hasHandoff(): bool {
+  public function isHandoff(): bool {
     return $this->handoff;
   }
 

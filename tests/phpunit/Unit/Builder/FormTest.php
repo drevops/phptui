@@ -119,7 +119,7 @@ final class FormTest extends TestCase {
     $this->assertInstanceOf(Field::class, $secret);
     $this->assertSame(FieldType::Password, $secret->type());
     $this->assertTrue($secret->isRevealable());
-    $this->assertTrue($secret->hasConfirmation());
+    $this->assertTrue($secret->isConfirmation());
 
     $timezone = self::fieldOf($form, 'timezone');
     $this->assertInstanceOf(Field::class, $timezone);
@@ -177,7 +177,7 @@ final class FormTest extends TestCase {
     $password = self::fieldOf($form, 'pw');
     $this->assertInstanceOf(Field::class, $password);
     $this->assertFalse($password->isRevealable());
-    $this->assertFalse($password->hasConfirmation());
+    $this->assertFalse($password->isConfirmation());
     $this->assertSame('', self::fieldOf($form, 'se')?->value());
     $this->assertSame([], self::fieldOf($form, 'ms')?->value());
     // A toggle defaults to its first option, since it always holds a value.
@@ -233,8 +233,8 @@ final class FormTest extends TestCase {
       })
       ->root();
 
-    $this->assertTrue(self::fieldOf($form, 'notes')?->hasExternalEditor());
-    $this->assertFalse(self::fieldOf($form, 'plain')?->hasExternalEditor());
+    $this->assertTrue(self::fieldOf($form, 'notes')?->isExternalEditor());
+    $this->assertFalse(self::fieldOf($form, 'plain')?->isExternalEditor());
   }
 
   public function testNoteField(): void {
@@ -373,10 +373,10 @@ final class FormTest extends TestCase {
       })
       ->root();
 
-    $this->assertTrue(self::fieldOf($form, 'fruit')?->hasGhost());
-    $this->assertFalse(self::fieldOf($form, 'berry')?->hasGhost());
+    $this->assertTrue(self::fieldOf($form, 'fruit')?->isGhost());
+    $this->assertFalse(self::fieldOf($form, 'berry')?->isGhost());
     // Ghost-text is opt-in, so a field that never asks for it stays without.
-    $this->assertFalse(self::fieldOf($form, 'plain')?->hasGhost());
+    $this->assertFalse(self::fieldOf($form, 'plain')?->isGhost());
   }
 
   public function testTemplateAssembled(): void {

@@ -98,7 +98,7 @@ final readonly class Condition implements ConditionInterface {
     }
 
     if ($this->contains !== NULL) {
-      return $this->hasContains($value, $this->contains);
+      return $this->isContaining($value, $this->contains);
     }
 
     return !in_array($value, [NULL, FALSE, '', []], TRUE);
@@ -184,7 +184,7 @@ final readonly class Condition implements ConditionInterface {
    * @return bool
    *   TRUE when contained.
    */
-  protected function hasContains(mixed $value, mixed $needle): bool {
+  protected function isContaining(mixed $value, mixed $needle): bool {
     if (is_array($value)) {
       foreach ($value as $item) {
         if ($this->equals($item, $needle)) {

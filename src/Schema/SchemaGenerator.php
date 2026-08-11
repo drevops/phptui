@@ -76,7 +76,7 @@ class SchemaGenerator {
         'help' => $field->helpText(),
         'placeholder' => $field->placeholderText(),
         'options' => $this->options($field),
-        'options_dynamic' => $field->hasDynamicOptions(),
+        'options_dynamic' => $field->isDynamicOptions(),
         'default' => DefaultResolver::resolve($field, $this->context),
         'required' => $field->isRequired(),
         'env' => $names->isAdvertisable($field) ? $names->canonical($field) : NULL,

@@ -353,7 +353,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * @return bool
    *   TRUE when it is drawn rather than left as literal text.
    */
-  public function hasMarkdown(): bool {
+  public function isMarkdown(): bool {
     return $this->markdown;
   }
 
@@ -958,7 +958,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
     // own description, so the two must not be mistaken for each other on any
     // surface. Slant reinforces the hue where the surface honours it, and where
     // neither survives the voice falls back to a mark, which nothing can strip.
-    $marked = $this->hasColor() ? $text : $this->glyph('› ', '> ') . $text;
+    $marked = $this->isColor() ? $text : $this->glyph('› ', '> ') . $text;
 
     return $this->paint($this->guidance(), $this->linkify($marked));
   }

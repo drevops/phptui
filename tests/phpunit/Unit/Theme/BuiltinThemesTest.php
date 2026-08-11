@@ -89,7 +89,7 @@ final class BuiltinThemesTest extends TestCase {
   public function testColourOffStripsPalette(string $name): void {
     $theme = $this->builtin($name, 76, ['color' => FALSE]);
 
-    $this->assertFalse($theme->hasColor());
+    $this->assertFalse($theme->isColor());
     $this->assertSame('Setup', $theme->markupTitle('Setup'));
     $this->assertSame('X', $theme->fieldValue('X'));
     $this->assertSame('▲', $theme->chromeOverflowMarker(TRUE));

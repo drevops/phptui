@@ -546,7 +546,7 @@ final class ScreenRenderer {
    *   TRUE when the theme declared it handles them.
    */
   protected function unicode(): bool {
-    return $this->theme instanceof UnicodeCapableInterface && $this->theme->hasUnicode();
+    return $this->theme instanceof UnicodeCapableInterface && $this->theme->isUnicode();
   }
 
   /**

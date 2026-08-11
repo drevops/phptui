@@ -25,7 +25,7 @@ interface ColorSchemeCapableInterface {
    * @return bool
    *   TRUE when an element may paint.
    */
-  public function hasColor(): bool;
+  public function isColor(): bool;
 
   /**
    * Whether the terminal's background is dark.

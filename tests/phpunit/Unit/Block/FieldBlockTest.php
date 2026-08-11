@@ -288,7 +288,7 @@ final class FieldBlockTest extends TestCase {
 
     yield 'ghost' => [
       static fn(Field $field): Field => $field->ghost(),
-      static fn(Field $field): bool => $field->hasGhost(),
+      static fn(Field $field): bool => $field->isGhost(),
       TRUE,
     ];
 
@@ -318,13 +318,13 @@ final class FieldBlockTest extends TestCase {
 
     yield 'confirmation' => [
       static fn(Field $field): Field => $field->confirmation(),
-      static fn(Field $field): bool => $field->hasConfirmation(),
+      static fn(Field $field): bool => $field->isConfirmation(),
       TRUE,
     ];
 
     yield 'external editor' => [
       static fn(Field $field): Field => $field->externalEditor(),
-      static fn(Field $field): bool => $field->hasExternalEditor(),
+      static fn(Field $field): bool => $field->isExternalEditor(),
       TRUE,
     ];
 
@@ -410,8 +410,8 @@ final class FieldBlockTest extends TestCase {
   public function testDeclaredNullDefaultIsStillDeclaredInMachineOutput(): void {
     $field = new Field('basket', 'Basket contents');
 
-    $this->assertFalse($field->hasSchemaDefault());
-    $this->assertTrue($field->schemaDefault(NULL)->hasSchemaDefault());
+    $this->assertFalse($field->isSchemaDefault());
+    $this->assertTrue($field->schemaDefault(NULL)->isSchemaDefault());
     $this->assertNull($field->schemaDefaultValue());
   }
 
@@ -659,8 +659,8 @@ final class FieldBlockTest extends TestCase {
 
   #[DataProvider('dataProviderOptionsAreUnsettledWhileSomethingOwesThem')]
   public function testOptionsAreUnsettledWhileSomethingOwesThem(Field $field, bool $settled, bool $dynamic): void {
-    $this->assertSame($settled, $field->hasSettledOptions());
-    $this->assertSame($dynamic, $field->hasDynamicOptions());
+    $this->assertSame($settled, $field->isSettledOptions());
+    $this->assertSame($dynamic, $field->isDynamicOptions());
   }
 
   public static function dataProviderOptionsAreUnsettledWhileSomethingOwesThem(): \Iterator {
@@ -691,7 +691,7 @@ final class FieldBlockTest extends TestCase {
 
     $this->assertSame(['apple', 'carrot'], $field->selectableValues());
     $this->assertNotInstanceOf(\Closure::class, $field->loader());
-    $this->assertTrue($field->hasSettledOptions());
+    $this->assertTrue($field->isSettledOptions());
   }
 
   public function testOptionsThatAreNotMapOfLabelsSettleToNone(): void {

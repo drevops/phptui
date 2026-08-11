@@ -31,7 +31,7 @@ trait ColorSchemeCapableTrait {
   /**
    * {@inheritdoc}
    */
-  public function hasColor(): bool {
+  public function isColor(): bool {
     return $this->color;
   }
 
