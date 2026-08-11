@@ -55,10 +55,13 @@ final class ScreenRenderer {
    * @param \DrevOps\Tui\Theme\Border $border
    *   The frame drawn around every region at once; none by default, which
    *   leaves the rows exactly as the layout arranged them.
+   * @param \DrevOps\Tui\Screen\Scroller $scroller
+   *   Resolves the window over content that outran the space it was given.
    */
   public function __construct(
     protected ThemeInterface $theme,
     protected Border $border = Border::None,
+    protected Scroller $scroller = new Scroller(),
   ) {
   }
 
@@ -653,10 +656,10 @@ final class ScreenRenderer {
    */
   protected function moved(LayoutInterface $layout, array $lines, int $rows, int $columns): array {
     $content = count($lines);
-    $from = $layout->offset($content, $rows);
-    $shown = array_slice($lines, $from, max(0, $rows));
+    $window = $this->scroller->viewport($layout->offset($content, $rows), $content, $rows);
+    $shown = $this->scroller->slice($lines, $window->offset, $rows);
 
-    return $this->marked($shown, $columns, $from > 0, $from + $rows < $content);
+    return $this->marked($shown, $columns, $window->hasAbove, $window->hasBelow);
   }
 
   /**
@@ -790,8 +793,8 @@ final class ScreenRenderer {
     // declared to, and clips if it was not. Either way it hands back the rows
     // it was given, so the frame stays the shape the layout worked out.
     $content = count($lines);
-    $from = $region->isScrolling() ? $region->offset($content, $rows) : 0;
-    $lines = array_slice($lines, $from, max(0, $rows));
+    $window = $this->scroller->viewport($region->isScrolling() ? $region->offset($content, $rows) : 0, $content, $rows);
+    $lines = $this->scroller->slice($lines, $window->offset, $rows);
 
     // What packs from the end takes the cells the start left, so where the two
     // meet in the middle the head keeps its rows and the tail is the one cut.
@@ -813,7 +816,7 @@ final class ScreenRenderer {
       return $lines;
     }
 
-    return $this->marked($lines, $columns, $from > 0, $from + $rows < $content);
+    return $this->marked($lines, $columns, $window->hasAbove, $window->hasBelow);
   }
 
   /**
