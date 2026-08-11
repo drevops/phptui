@@ -1514,7 +1514,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   public function renderStatus(Status $status, string $text): string {
     // The glyph and the message share one colour so the line reads as a single
     // statement, and the glyph alone still tells the five apart without it.
-    $line = rtrim($this->statusSymbol($status) . ' ' . $this->linkify($this->oneLine($text)));
+    $line = rtrim($this->statusGlyph($status) . ' ' . $this->linkify($this->oneLine($text)));
 
     return match ($status) {
       Status::Note => $this->description($line),
@@ -1572,7 +1572,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * @return string
    *   The glyph, respecting the theme's Unicode mode.
    */
-  protected function statusSymbol(Status $status): string {
+  protected function statusGlyph(Status $status): string {
     // Every glyph is one column wide in any terminal - none has an emoji
     // presentation or an East Asian width - so a run of status lines aligns.
     return match ($status) {
