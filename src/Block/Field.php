@@ -2338,7 +2338,7 @@ final class Field extends AbstractBlock implements
   /**
    * One entry as it is drawn.
    *
-   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $theme
+   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
    *   The theme.
    * @param \DrevOps\Tui\Block\Option $entry
    *   The entry.
@@ -2346,23 +2346,23 @@ final class Field extends AbstractBlock implements
    * @return string
    *   The drawn entry; empty for a divider, which is a gap and nothing else.
    */
-  protected function entryLine(FieldElementsInterface $theme, Option $entry): string {
+  protected function entryLine(FieldElementsInterface $elements, Option $entry): string {
     if ($entry->kind === OptionKind::Heading) {
-      return $theme->fieldCaption($entry->label);
+      return $elements->fieldCaption($entry->label);
     }
 
     if ($entry->kind === OptionKind::Separator) {
-      return $theme->fieldEntrySeparator();
+      return $elements->fieldEntrySeparator();
     }
 
     // Marking and naming are two elements: the mark records what was picked
     // and the text says what it was, so a theme can restyle either alone.
     $chosen = $this->isChosen($entry);
-    $line = $theme->fieldEntryMarker($chosen, !$this->multiple) . ' ' . $theme->fieldEntry($entry->label, $chosen);
+    $line = $elements->fieldEntryMarker($chosen, !$this->multiple) . ' ' . $elements->fieldEntry($entry->label, $chosen);
 
     // Why an entry cannot be picked belongs beside it, or a row that is drawn
     // and refuses the cursor reads as a fault rather than a decision.
-    return $entry->disabled && $entry->disabledReason !== '' ? $line . ' ' . $theme->fieldEntryNote($entry->disabledReason) : $line;
+    return $entry->disabled && $entry->disabledReason !== '' ? $line . ' ' . $elements->fieldEntryNote($entry->disabledReason) : $line;
   }
 
   /**
