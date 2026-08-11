@@ -527,8 +527,8 @@ final class Tui {
    *   The collected answers.
    */
   public function collect(string $prompts = '', string $directory = '', bool $update = FALSE, string $version = ''): Answers {
-    // Restore this facade's language at the operation boundary: another facade
-    // constructed or configured meanwhile may have replaced the shared one.
+    // Restore this facade's language at the operation boundary: another
+    // facade's operation may have replaced the shared one.
     Translator::setShared($this->translator);
     $root = $this->root();
     $inputs = (new InputResolver($this->envPrefix))->resolve(Tree::fields($root), $prompts, getenv());

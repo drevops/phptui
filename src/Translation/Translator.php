@@ -323,7 +323,7 @@ final class Translator {
 
     // The bundled defaults are the implicit first source, so any consumer
     // source overrides them. A missing bundled directory (a trimmed archive)
-    // degrades to English rather than erroring on every construction.
+    // degrades to English rather than failing at the first translation.
     $bundled = self::bundledDirectory();
     $sources = is_dir($bundled) ? [$bundled, ...$this->sources] : $this->sources;
 

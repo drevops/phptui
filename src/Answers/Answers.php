@@ -16,7 +16,7 @@ use DrevOps\Tui\Terminal\Terminal;
  * override.
  *
  * An answer set is self-describing: each answer carries a snapshot of its
- * question (label, kind, panel trail) in items(), so summaries and processing
+ * question (label, kind, panel trail) in $items, so summaries and processing
  * need no form configuration.
  *
  * @package DrevOps\Tui\Answers

@@ -24,7 +24,11 @@ use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Utils\Strings;
 
 /**
- * An autocomplete text input fuzzy-filtering a fixed option set.
+ * An autocomplete text input over a set of candidate values.
+ *
+ * A declared set is ranked locally against the buffer. A query source replaces
+ * the values as its queries settle, and those arrive already answering the
+ * buffer, so they are shown in the order given.
  *
  * @package DrevOps\Tui\Field
  */
