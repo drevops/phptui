@@ -20,6 +20,7 @@ use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Derive\Derive;
 use DrevOps\Tui\Derive\Deriver;
 use DrevOps\Tui\Discovery\Dotenv;
+use DrevOps\Tui\Field\Text;
 use DrevOps\Tui\Field\Textarea;
 use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Input\Key;
@@ -191,6 +192,39 @@ final class ControlBytesTest extends TestCase {
     });
 
     $this->assertSame('Valley Runs[2J', (new Tui($form))->collect()->value('slug'));
+  }
+
+  /**
+   * Tests that a completion candidate is filtered from either source.
+   *
+   * @param list<string>|\Closure $source
+   *   The declared candidates, or what computes them.
+   */
+  #[DataProvider('dataProviderCompletionCandidatesAreFiltered')]
+  public function testCompletionCandidatesAreFiltered(array|\Closure $source): void {
+    $field = (new Field('courier', 'Courier'))->complete($source);
+    $editor = $field->open()->editor();
+
+    $this->assertInstanceOf(Text::class, $editor);
+
+    $editor->handle(Key::char('V'));
+    $editor->applyCompletion();
+
+    // The candidate lands in the buffer whole and is previewed as ghost text,
+    // so a control byte in it would reach the terminal by either route.
+    $this->assertSame('Valley[2J Runs', $editor->buffer());
+    $this->assertStringNotContainsString("\033", $field->render($this->plain()));
+  }
+
+  /**
+   * Data provider for testCompletionCandidatesAreFiltered().
+   *
+   * @return \Iterator<string, array{array|\Closure}>
+   *   The declared candidates, or what computes them.
+   */
+  public static function dataProviderCompletionCandidatesAreFiltered(): \Iterator {
+    yield 'a declared list' => [['Valley' . self::CLEAR . ' Runs']];
+    yield 'a rule that computes one' => [static fn(array $answers): array => ['Valley' . self::CLEAR . ' Runs']];
   }
 
   public function testDraftIsFilteredAsItIsTyped(): void {

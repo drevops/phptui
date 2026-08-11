@@ -116,7 +116,10 @@ final class AnsiTest extends TestCase {
   public static function dataProviderSanitizeValue(): \Iterator {
     yield 'a string is filtered' => ["Apri\033[2Jcots", 'Apri[2Jcots'];
     yield 'a list is filtered item by item' => [["Ap\033[2Jples", "Pe\007ars"], ['Ap[2Jples', 'Pears']];
-    yield 'a string key is filtered too' => [["Ba\033[2Jsket" => "Pl\007ums"], ['Ba[2Jsket' => 'Plums']];
+    // A key addresses an entry rather than being read, and filtering two keys
+    // into one would drop an entry.
+    yield 'a string key is left as it is' => [["Ba\033[2Jsket" => "Pl\007ums"], ["Ba\033[2Jsket" => 'Plums']];
+    yield 'two keys that would collide both survive' => [['a' => 1, "a\007" => 2], ['a' => 1, "a\007" => 2]];
     yield 'an integer key is left as it is' => [[3 => "Pl\007ums"], [3 => 'Plums']];
     yield 'nesting is walked to its leaves' => [[['a' => ["Fi\007gs"]]], [['a' => ['Figs']]]];
     yield 'an integer is not text' => [42, 42];

@@ -126,8 +126,13 @@ final class Ansi {
    * Sanitize every string a value holds, whatever shape the value has.
    *
    * An answer is a string, a list of strings, or a value that is not text.
-   * Arrays are walked to their leaves, string keys included, because a keyed
-   * set draws its keys. A non-string value is returned unchanged.
+   * Arrays are walked to their leaves and a non-string value is returned
+   * unchanged.
+   *
+   * Keys are left alone. A key addresses an entry rather than being read, the
+   * same way an id addresses a field, and filtering two keys into one would
+   * drop an entry. Where a key is drawn it is a label, and it is filtered by
+   * whoever draws it.
    *
    * @param mixed $value
    *   The value.
@@ -147,7 +152,7 @@ final class Ansi {
     $out = [];
 
     foreach ($value as $key => $item) {
-      $out[is_string($key) ? self::sanitize($key) : $key] = self::sanitizeValue($item);
+      $out[$key] = self::sanitizeValue($item);
     }
 
     return $out;

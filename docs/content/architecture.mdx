@@ -35,6 +35,8 @@ A terminal acts on some bytes rather than printing them, so a label, a markup bo
 
 A block therefore never holds a byte a terminal would act on, and that applies to your own theme too - an element only ever receives filtered text. The library's own escapes are unaffected, because the theme composes styling after the filter runs, so a form built from untrusted content keeps its color.
 
+Identifiers are excluded: field, panel and markup ids, action names, and the keys of a collected answer address something rather than being read, and the library never draws one. Pick them yourself rather than from untrusted input.
+
 ## Step 1 - describe the questions
 
 You declare the questions in PHP with the fluent `Form` builder: panels holding fields. A field has an `id`, a type (`text`, `select`, `suggest`, `search`, `filepicker`, `confirm` and the rest; `select`, `search` and `filepicker` collect a list with `->multiple()`) and optional rules - `default`, `required`, `options`, `when` (show it only when a condition holds), `derive` (compute it from other fields) and `discover` (detect it from the target directory).
