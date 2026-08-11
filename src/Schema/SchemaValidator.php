@@ -208,7 +208,7 @@ class SchemaValidator {
    *   An error, or NULL when valid.
    */
   protected function checkOptions(Field $field, mixed $value): ?string {
-    $error = $field->entryError($value);
+    $error = $field->entryViolation($value);
 
     return $error === NULL ? NULL : Translator::t('Question "@id": @error.', ['@id' => $field->id(), '@error' => $error]);
   }

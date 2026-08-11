@@ -196,7 +196,7 @@ final class EntryTest extends TestCase {
 
   #[DataProvider('dataProviderOptionError')]
   public function testOptionError(FieldType $type, bool $multiple, array $options, mixed $value, ?string $expected): void {
-    $this->assertSame($expected, self::offering($type, $multiple, $options)->entryError($value));
+    $this->assertSame($expected, self::offering($type, $multiple, $options)->entryViolation($value));
   }
 
   public static function dataProviderOptionError(): \Iterator {

@@ -602,7 +602,7 @@ final class FieldBlockTest extends TestCase {
 
   #[DataProvider('dataProviderValueOutsideTheEntriesIsRefused')]
   public function testValueOutsideTheEntriesIsRefused(Field $field, mixed $value, ?string $error): void {
-    $this->assertSame($error, $field->entryError($value));
+    $this->assertSame($error, $field->entryViolation($value));
   }
 
   public static function dataProviderValueOutsideTheEntriesIsRefused(): \Iterator {
@@ -654,7 +654,7 @@ final class FieldBlockTest extends TestCase {
     // to, so resolving to nothing means the value does not exist.
     $field = (new Field('basket', 'Basket contents', FieldType::Search))->query(static fn(): array => []);
 
-    $this->assertSame('value "plum" was not found', $field->entryError('plum'));
+    $this->assertSame('value "plum" was not found', $field->entryViolation('plum'));
   }
 
   #[DataProvider('dataProviderEntriesAreUnsettledWhileSomethingOwesThem')]
@@ -703,9 +703,9 @@ final class FieldBlockTest extends TestCase {
   public function testValueThatDoesNotFitTheDeclaredShapeIsRefused(): void {
     $field = (new Field('crate', 'Crate code', FieldType::Template))->pattern(new Template('{{orchard}}-{{fruit}}'));
 
-    $this->assertNull($field->templateError('valley-apple'));
-    $this->assertNull($field->templateError(''));
-    $this->assertNull((new Field('courier', 'Courier'))->templateError('anything'));
+    $this->assertNull($field->templateViolation('valley-apple'));
+    $this->assertNull($field->templateViolation(''));
+    $this->assertNull((new Field('courier', 'Courier'))->templateViolation('anything'));
 
     $this->assertFalse($field->accept('valley'));
     $this->assertStringContainsString('does not match the template', (string) $field->refusal());

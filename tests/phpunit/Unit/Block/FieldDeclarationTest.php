@@ -209,7 +209,7 @@ final class FieldDeclarationTest extends TestCase {
       'b' => static fn(string $part): ?string => $part === 'ok' ? NULL : 'must be ok',
     ]));
 
-    $this->assertSame($expected, $field->templateError($value));
+    $this->assertSame($expected, $field->templateViolation($value));
   }
 
   /**
@@ -229,7 +229,7 @@ final class FieldDeclarationTest extends TestCase {
   }
 
   public function testTemplateErrorIsNullWithoutShape(): void {
-    $this->assertNull((new Field('name', 'Name'))->templateError('anything'));
+    $this->assertNull((new Field('name', 'Name'))->templateViolation('anything'));
   }
 
   /**

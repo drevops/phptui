@@ -1391,7 +1391,7 @@ final class Field extends AbstractBlock implements
    * @return string|null
    *   The message, or NULL when the value fits or no shape is declared.
    */
-  public function templateError(mixed $value): ?string {
+  public function templateViolation(mixed $value): ?string {
     if (!$this->template instanceof Template || !is_string($value) || $value === '') {
       return NULL;
     }
@@ -1464,7 +1464,7 @@ final class Field extends AbstractBlock implements
    *   The fragment, or NULL when nothing constrains the value or every item is
    *   among the entries.
    */
-  public function entryError(mixed $value): ?string {
+  public function entryViolation(mixed $value): ?string {
     // A field that declares no entries constrains nothing - but one whose
     // entries follow a query or the answers is constrained by whatever they
     // resolved to, and resolving to nothing means the value does not exist.
@@ -1473,7 +1473,7 @@ final class Field extends AbstractBlock implements
     }
 
     if (!$this->isMultiChoice()) {
-      return $this->scalarEntryError(is_scalar($value) ? (string) $value : '');
+      return $this->scalarEntryViolation(is_scalar($value) ? (string) $value : '');
     }
 
     if (!is_array($value)) {
@@ -1481,14 +1481,14 @@ final class Field extends AbstractBlock implements
     }
 
     foreach ($value as $item) {
-      $error = $this->scalarEntryError(is_scalar($item) ? (string) $item : '');
+      $error = $this->scalarEntryViolation(is_scalar($item) ? (string) $item : '');
 
       if ($error !== NULL) {
         return $error;
       }
     }
 
-    return $this->fieldType === FieldType::Reorder ? $this->rankingError($value) : NULL;
+    return $this->fieldType === FieldType::Reorder ? $this->rankingViolation($value) : NULL;
   }
 
   /**
@@ -1919,7 +1919,7 @@ final class Field extends AbstractBlock implements
       return $missing;
     }
 
-    $outside = $this->limitRefusal($value);
+    $outside = $this->limitViolation($value);
 
     if ($outside !== NULL) {
       return $outside;
@@ -1927,7 +1927,7 @@ final class Field extends AbstractBlock implements
 
     // The shape is checked before the field's own validator, which reads the
     // value as an assembled template and would otherwise see a foreign string.
-    $misshapen = $this->templateError($value);
+    $misshapen = $this->templateViolation($value);
 
     if ($misshapen !== NULL) {
       return $misshapen;
@@ -1938,7 +1938,7 @@ final class Field extends AbstractBlock implements
 
     // A validator that answers with nothing has not said why, and a refusal
     // nobody can read is no refusal at all.
-    return is_string($refusal) && $refusal !== '' ? $refusal : $this->entryError($value);
+    return is_string($refusal) && $refusal !== '' ? $refusal : $this->entryViolation($value);
   }
 
   /**
@@ -1954,7 +1954,7 @@ final class Field extends AbstractBlock implements
    * @return string|null
    *   The reason, or NULL when every declared limit is met.
    */
-  protected function limitRefusal(mixed $value): ?string {
+  protected function limitViolation(mixed $value): ?string {
     $number = $this->bounds?->violation($value);
 
     if ($number !== NULL) {
@@ -2055,7 +2055,7 @@ final class Field extends AbstractBlock implements
    *   The fragment naming the value when it is disabled or unknown, or NULL
    *   when it can be picked.
    */
-  protected function scalarEntryError(string $value): ?string {
+  protected function scalarEntryViolation(string $value): ?string {
     if (in_array($value, $this->selectableValues(), TRUE)) {
       return NULL;
     }
@@ -2098,7 +2098,7 @@ final class Field extends AbstractBlock implements
    * @return string|null
    *   The fragment, or NULL when the ranking covers every entry once.
    */
-  protected function rankingError(array $items): ?string {
+  protected function rankingViolation(array $items): ?string {
     $selectable = $this->selectableValues();
 
     $seen = [];

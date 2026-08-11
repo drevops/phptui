@@ -462,8 +462,8 @@ final class Collector {
       && $field->requiredViolation($value) === NULL
       && $field->boundsViolation($value) === NULL
       && $field->pickerViolation($value) === NULL
-      && $field->templateError($value) === NULL
-      && $field->entryError($value) === NULL;
+      && $field->templateViolation($value) === NULL
+      && $field->entryViolation($value) === NULL;
   }
 
   /**
