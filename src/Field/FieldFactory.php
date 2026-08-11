@@ -30,19 +30,19 @@ class FieldFactory {
   /**
    * The resolved key bindings to inject into each field.
    */
-  protected KeyMap $keymap;
+  protected KeyMap $keyMap;
 
   /**
    * Construct a field factory.
    *
-   * @param \DrevOps\Tui\Input\KeyMap|null $keymap
+   * @param \DrevOps\Tui\Input\KeyMap|null $key_map
    *   The resolved key bindings; NULL uses the default preset.
    * @param bool $externalEditorAvailable
    *   Whether an external editor is launchable here. A textarea field opts in
    *   per-field; the handoff shows only when one is also available.
    */
-  public function __construct(?KeyMap $keymap = NULL, protected bool $externalEditorAvailable = FALSE) {
-    $this->keymap = $keymap ?? KeyMapManager::create();
+  public function __construct(?KeyMap $key_map = NULL, protected bool $externalEditorAvailable = FALSE) {
+    $this->keyMap = $key_map ?? KeyMapManager::create();
   }
 
   /**
@@ -91,7 +91,7 @@ class FieldFactory {
       $field->setPlaceholder($block->placeholderText());
     }
 
-    return $field->setKeys($this->keymap->forField($block->type(), $block->isMultiple()));
+    return $field->setKeys($this->keyMap->forField($block->type(), $block->isMultiple()));
   }
 
   /**

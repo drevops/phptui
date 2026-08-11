@@ -104,7 +104,7 @@ final class Tui {
   /**
    * The resolved key bindings; NULL uses the default preset.
    */
-  protected ?KeyMap $keymap = NULL;
+  protected ?KeyMap $keyMap = NULL;
 
   /**
    * Force ANSI colour on/off; NULL auto-detects.
@@ -348,7 +348,7 @@ final class Tui {
    *   The facade.
    */
   public function keys(string $preset = '', array $overrides = []): self {
-    $this->keymap = KeyMapManager::create($preset, $overrides);
+    $this->keyMap = KeyMapManager::create($preset, $overrides);
 
     return $this;
   }
@@ -716,7 +716,7 @@ final class Tui {
       $this->root(),
       $drawn,
       [],
-      $this->keymap ?? KeyMapManager::create(),
+      $this->keyMap ?? KeyMapManager::create(),
       new Collector($this->registry, $this->form->currentFixups()),
       $this->context($directory, $update, $version),
       // The frame the theme was told to lay its rows out to is the frame that

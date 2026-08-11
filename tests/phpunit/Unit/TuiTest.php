@@ -95,7 +95,7 @@ final class TuiTest extends TestCase {
   public function testKeysResolvesPresetAndOverrides(): void {
     $tui = (new Tui($this->demoForm()))->keys('vim', [new Binding(Scope::navigation(), Action::Quit, 'x')]);
 
-    $keymap = (new \ReflectionProperty($tui, 'keymap'))->getValue($tui);
+    $keymap = (new \ReflectionProperty($tui, 'keyMap'))->getValue($tui);
     $this->assertInstanceOf(KeyMap::class, $keymap);
     $nav = $keymap->navigation();
     // The vim preset supplies "j" for MoveDown; the override binds "x" to Quit.
