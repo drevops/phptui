@@ -599,7 +599,7 @@ final class Tui {
     $terminal ??= self::primitiveTerminal();
 
     $options = $this->primitiveThemeOptions($terminal->isOutputTty());
-    $theme = $this->buildTheme('', self::frameWidth($options, $terminal->width()), $options);
+    $theme = $this->buildTheme('', self::frameWidth($options, $terminal->columns()), $options);
 
     return new Output($terminal, self::pieces($theme));
   }
@@ -668,7 +668,7 @@ final class Tui {
 
     $options = $this->resolveThemeOptions($terminal);
 
-    return $this->controller($options, $theme, $banner, $version, $directory, self::frameWidth($options, $terminal->width()), $update)->run($terminal);
+    return $this->controller($options, $theme, $banner, $version, $directory, self::frameWidth($options, $terminal->columns()), $update)->run($terminal);
   }
 
   /**

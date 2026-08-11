@@ -396,7 +396,7 @@ final class ScreenRenderer {
         $row = $total + $piece['offsets'][$at];
       }
 
-      $total += $piece['height'];
+      $total += $piece['rows'];
     }
 
     return [$total, $row];
@@ -408,7 +408,7 @@ final class ScreenRenderer {
    * @param \DrevOps\Tui\Screen\Region $region
    *   The region.
    *
-   * @return list<array{height:int,blocks:list<\DrevOps\Tui\Block\BlockInterface>,offsets:list<int>}>
+   * @return list<array{rows:int,blocks:list<\DrevOps\Tui\Block\BlockInterface>,offsets:list<int>}>
    *   Each piece: the rows it comes to, the blocks drawn in it, and the row
    *   each of those starts on within it.
    */
@@ -427,7 +427,7 @@ final class ScreenRenderer {
    * @param bool $previews
    *   Whether a panel among them shows what is behind it rather than a row.
    *
-   * @return list<array{height:int,blocks:list<\DrevOps\Tui\Block\BlockInterface>,offsets:list<int>}>
+   * @return list<array{rows:int,blocks:list<\DrevOps\Tui\Block\BlockInterface>,offsets:list<int>}>
    *   The pieces.
    */
   protected function stacked(array $blocks, bool $previews = FALSE): array {
@@ -437,7 +437,7 @@ final class ScreenRenderer {
       // The panel you are in draws its own layout in place of its row, so what
       // it comes to is what that layout comes to.
       if ($block instanceof Panel && $block->isEntered()) {
-        $pieces[] = ['height' => $this->height($block->currentLayout()), 'blocks' => [$block], 'offsets' => [0]];
+        $pieces[] = ['rows' => $this->rows($block->currentLayout()), 'blocks' => [$block], 'offsets' => [0]];
 
         continue;
       }
@@ -449,7 +449,7 @@ final class ScreenRenderer {
       }
 
       $pieces[] = [
-        'height' => substr_count($rendered, "\n") + 1,
+        'rows' => substr_count($rendered, "\n") + 1,
         'blocks' => [$block],
         'offsets' => [0],
       ];
@@ -467,7 +467,7 @@ final class ScreenRenderer {
    * @return int
    *   The rows.
    */
-  protected function height(LayoutInterface $layout): int {
+  protected function rows(LayoutInterface $layout): int {
     return $layout->natural($this->measured($layout));
   }
 
@@ -992,7 +992,7 @@ final class ScreenRenderer {
     // panel is one of them.
     $spent += $this->spaced() ? count($beside) : 0;
 
-    return max(0, min($rows - $spent, $this->height($panel->currentLayout())));
+    return max(0, min($rows - $spent, $this->rows($panel->currentLayout())));
   }
 
   /**

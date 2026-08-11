@@ -26,9 +26,9 @@ final class Overlay {
   /**
    * The top-left offset that centers a box within an area.
    *
-   * @param int $area_width
+   * @param int $area_columns
    *   The area's width in columns.
-   * @param int $area_height
+   * @param int $area_rows
    *   The area's height in rows.
    * @param int $box_width
    *   The box's width in columns.
@@ -38,16 +38,16 @@ final class Overlay {
    * @return array{int,int}
    *   The [top, left] offsets, never negative.
    */
-  public static function center(int $area_width, int $area_height, int $box_width, int $box_height): array {
-    return self::place($area_width, $area_height, $box_width, $box_height, HAlign::Center, VAlign::Middle);
+  public static function center(int $area_columns, int $area_rows, int $box_width, int $box_height): array {
+    return self::place($area_columns, $area_rows, $box_width, $box_height, HAlign::Center, VAlign::Middle);
   }
 
   /**
    * The top-left offset that places a box within an area by alignment.
    *
-   * @param int $area_width
+   * @param int $area_columns
    *   The area's width in columns.
-   * @param int $area_height
+   * @param int $area_rows
    *   The area's height in rows.
    * @param int $box_width
    *   The box's width in columns.
@@ -61,17 +61,17 @@ final class Overlay {
    * @return array{int,int}
    *   The [top, left] offsets, never negative.
    */
-  public static function place(int $area_width, int $area_height, int $box_width, int $box_height, HAlign $halign, VAlign $valign): array {
+  public static function place(int $area_columns, int $area_rows, int $box_width, int $box_height, HAlign $halign, VAlign $valign): array {
     $top = match ($valign) {
       VAlign::Top => 0,
-      VAlign::Middle => intdiv(max(0, $area_height - $box_height), 2),
-      VAlign::Bottom => max(0, $area_height - $box_height),
+      VAlign::Middle => intdiv(max(0, $area_rows - $box_height), 2),
+      VAlign::Bottom => max(0, $area_rows - $box_height),
     };
 
     $left = match ($halign) {
       HAlign::Left => 0,
-      HAlign::Center => intdiv(max(0, $area_width - $box_width), 2),
-      HAlign::Right => max(0, $area_width - $box_width),
+      HAlign::Center => intdiv(max(0, $area_columns - $box_width), 2),
+      HAlign::Right => max(0, $area_columns - $box_width),
     };
 
     return [$top, $left];
