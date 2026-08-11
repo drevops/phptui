@@ -16,7 +16,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests the option model, option kinds and the entry helpers a field offers.
+ * Tests the option model, option kinds and the option helpers a field offers.
  */
 #[CoversClass(Option::class)]
 #[CoversClass(OptionType::class)]
@@ -24,7 +24,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Field::class)]
 #[CoversClass(FieldBuilder::class)]
 #[Group('block')]
-final class EntryTest extends TestCase {
+final class OptionTest extends TestCase {
 
   public function testListFromMap(): void {
     $options = Option::list(['a' => 'Apple', 'b' => 'Banana']);
@@ -196,7 +196,7 @@ final class EntryTest extends TestCase {
 
   #[DataProvider('dataProviderOptionError')]
   public function testOptionError(FieldType $type, bool $multiple, array $options, mixed $value, ?string $expected): void {
-    $this->assertSame($expected, self::offering($type, $multiple, $options)->entryViolation($value));
+    $this->assertSame($expected, self::offering($type, $multiple, $options)->optionViolation($value));
   }
 
   public static function dataProviderOptionError(): \Iterator {

@@ -59,7 +59,7 @@ class Pause extends AbstractField {
     // nothing an input layer holds a key in reaches the theme.
     $glyph = $theme->keyGlyph($key->name ?? $key->label());
 
-    return Translator::t('Press @key to continue', ['@key' => $this->entryLabel($theme, $glyph, TRUE)]);
+    return Translator::t('Press @key to continue', ['@key' => $this->optionLabel($theme, $glyph, TRUE)]);
   }
 
   /**

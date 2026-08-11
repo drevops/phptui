@@ -1269,7 +1269,7 @@ final class FieldBuilder {
     // option's value rather than an empty value that would not match either.
     // The value is read off the option, not its array key, so a numeric-string
     // value like "0" is not coerced to an int.
-    $entries = $this->block->entries();
+    $entries = $this->block->options();
 
     if ($this->fieldType === FieldType::Toggle && $entries !== []) {
       return reset($entries)->value;

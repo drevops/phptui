@@ -93,13 +93,13 @@ final class FormTest extends TestCase {
     $this->assertInstanceOf(Field::class, $profile);
     $this->assertSame(FieldType::Select, $profile->type());
     $this->assertSame('standard', $profile->value());
-    $this->assertSame('Standard', $profile->entryOf('standard')?->label);
+    $this->assertSame('Standard', $profile->optionOf('standard')?->label);
 
     $services = self::fieldOf($form, 'services');
     $this->assertInstanceOf(Field::class, $services);
     $this->assertSame(FieldType::Select, $services->type());
     $this->assertTrue($services->isMultiple());
-    $this->assertSame('Search', $services->entryOf('solr')?->description);
+    $this->assertSame('Search', $services->optionOf('solr')?->description);
 
     $docs = self::fieldOf($form, 'docs');
     $this->assertInstanceOf(Field::class, $docs);
@@ -113,7 +113,7 @@ final class FormTest extends TestCase {
     $this->assertInstanceOf(Field::class, $visibility);
     $this->assertSame(FieldType::Toggle, $visibility->type());
     $this->assertSame('private', $visibility->value());
-    $this->assertSame('Public', $visibility->entryOf('public')?->label);
+    $this->assertSame('Public', $visibility->optionOf('public')?->label);
 
     $secret = self::fieldOf($form, 'secret');
     $this->assertInstanceOf(Field::class, $secret);
@@ -199,7 +199,7 @@ final class FormTest extends TestCase {
 
     // Label and option-label fall back to the id/value.
     $this->assertSame('t', self::fieldOf($form, 't')?->label());
-    $this->assertSame('a', self::fieldOf($form, 's')?->entryOf('a')?->label);
+    $this->assertSame('a', self::fieldOf($form, 's')?->optionOf('a')?->label);
 
     // Form-level defaults (the global TUI runtime is tested on the Tui facade).
     $this->assertTrue($form->currentButtons()->show);
@@ -656,7 +656,7 @@ final class FormTest extends TestCase {
     $profile = self::fieldOf($form, 'profile');
     $this->assertInstanceOf(Field::class, $profile);
 
-    $options = $profile->entries();
+    $options = $profile->options();
     $this->assertCount(4, $options);
     $this->assertSame(OptionType::Heading, $options[0]->kind);
     $this->assertSame('Recommended', $options[0]->label);
@@ -679,8 +679,8 @@ final class FormTest extends TestCase {
     $this->assertInstanceOf(Field::class, $field);
 
     // The second declaration overrides the first in place; the separator stays.
-    $this->assertCount(2, $field->entries());
-    $this->assertSame('Second', $field->entryOf('a')?->label);
+    $this->assertCount(2, $field->options());
+    $this->assertSame('Second', $field->optionOf('a')?->label);
     $this->assertSame(['a'], $field->selectableValues());
   }
 

@@ -132,7 +132,7 @@ class OceanTheme extends DefaultTheme {
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntryMarker(bool $chosen, bool $exclusive = FALSE): string {
+  public function fieldOptionMarker(bool $chosen, bool $exclusive = FALSE): string {
     if ($exclusive) {
       return $chosen ? $this->paint($this->accent(), $this->hasUnicode() ? '◉' : '(o)') : ($this->hasUnicode() ? '◯' : '( )');
     }

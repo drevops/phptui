@@ -199,28 +199,28 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
   /**
    * {@inheritdoc}
    */
-  public function fieldEntry(string $text, bool $chosen, bool $focused = FALSE): string {
+  public function fieldOption(string $text, bool $chosen, bool $focused = FALSE): string {
     return $text;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function fieldEntryMatch(string $text): string {
+  public function fieldOptionMatch(string $text): string {
     return $text;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function fieldEntrySelector(bool $selected): string {
+  public function fieldOptionSelector(bool $selected): string {
     return $selected ? '>' : ' ';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function fieldEntryMarker(bool $chosen, bool $exclusive = FALSE): string {
+  public function fieldOptionMarker(bool $chosen, bool $exclusive = FALSE): string {
     if ($exclusive) {
       return $chosen ? '(*)' : '( )';
     }
@@ -231,21 +231,21 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
   /**
    * {@inheritdoc}
    */
-  public function fieldEntryNote(string $text): string {
+  public function fieldOptionNote(string $text): string {
     return $text;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function fieldEntryDescription(string $text): string {
+  public function fieldOptionDescription(string $text): string {
     return $text;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function fieldEntrySeparator(): string {
+  public function fieldOptionSeparator(): string {
     return str_repeat('-', max(1, $this->contentWidth()));
   }
 

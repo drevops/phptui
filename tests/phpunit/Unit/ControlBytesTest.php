@@ -125,8 +125,8 @@ final class ControlBytesTest extends TestCase {
     yield 'an option value' => [static fn(string $b): string => (new Option('figs' . $b, 'Figs'))->value, 'figs[2J'];
     yield 'an option description' => [static fn(string $b): string => (new Option('v', 'V', 'Figs' . $b))->description, 'Figs[2J'];
     yield 'a disabled reason' => [static fn(string $b): string => (new Option('v', 'V', '', disabled: TRUE, disabled_reason: 'Figs' . $b))->disabledReason, 'Figs[2J'];
-    yield 'an entry declared on a field' => [static fn(string $b): string => (string) (new Field('f', 'F', FieldType::Select))->entry('v', 'Figs' . $b)->entryOf('v')?->label, 'Figs[2J'];
-    yield 'a heading between entries' => [static fn(string $b): string => (new Field('f', 'F', FieldType::Select))->heading('Figs' . $b)->entries()[0]->label, 'Figs[2J'];
+    yield 'an entry declared on a field' => [static fn(string $b): string => (string) (new Field('f', 'F', FieldType::Select))->entry('v', 'Figs' . $b)->optionOf('v')?->label, 'Figs[2J'];
+    yield 'a heading between entries' => [static fn(string $b): string => (new Field('f', 'F', FieldType::Select))->heading('Figs' . $b)->options()[0]->label, 'Figs[2J'];
     yield 'a panel title' => [static fn(string $b): string => (new Panel('p', 'Figs' . $b))->title(), 'Figs[2J'];
     yield 'a panel description' => [static fn(string $b): string => (new Panel('p', 'P'))->description('Figs' . $b)->descriptionText(), 'Figs[2J'];
     yield 'a breadcrumb segment' => [static fn(string $b): string => (new Breadcrumb('Figs' . $b))->render(new DefaultTheme(80, ['color' => FALSE])), 'Figs[2J'];
@@ -245,8 +245,8 @@ final class ControlBytesTest extends TestCase {
       ->entry("apple\x00", 'Bruised apple');
 
     // The set stays unique: the filtered value matches the row already there.
-    $this->assertCount(1, $field->entries());
-    $this->assertSame('Bruised apple', $field->entryOf('apple')?->label);
+    $this->assertCount(1, $field->options());
+    $this->assertSame('Bruised apple', $field->optionOf('apple')?->label);
   }
 
   public function testMultiLineMarkupKeepsItsLines(): void {

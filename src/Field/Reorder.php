@@ -207,7 +207,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
    *   The rendered row.
    */
   public function renderOptionRow(ThemeInterface $theme, Option $option, bool $current): string {
-    return $this->marker($theme, $current) . ' ' . $this->entryLabel($theme, $option->label, $current);
+    return $this->marker($theme, $current) . ' ' . $this->optionLabel($theme, $option->label, $current);
   }
 
   /**
@@ -230,7 +230,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
       return $theme->keyGlyph(KeyName::Up) . $theme->keyGlyph(KeyName::Down);
     }
 
-    return $this->elements($theme)->fieldEntrySelector($current) . ' ';
+    return $this->elements($theme)->fieldOptionSelector($current) . ' ';
   }
 
   /**

@@ -193,33 +193,33 @@ abstract class AbstractField implements FieldInterface {
   }
 
   /**
-   * Style one entry's label.
+   * Style one option's label.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
    * @param string $label
-   *   The entry label.
+   *   The option label.
    * @param bool $current
-   *   Whether the entry's row holds the cursor.
+   *   Whether the option's row holds the cursor.
    * @param bool $chosen
-   *   Whether the entry is picked.
+   *   Whether the option is picked.
    *
    * @return string
    *   The styled label.
    */
-  protected function entryLabel(ThemeInterface $theme, string $label, bool $current, bool $chosen = FALSE): string {
-    return $this->elements($theme)->fieldEntry($label, $chosen, $current);
+  protected function optionLabel(ThemeInterface $theme, string $label, bool $current, bool $chosen = FALSE): string {
+    return $this->elements($theme)->fieldOption($label, $chosen, $current);
   }
 
   /**
-   * Render an exclusive entry row: the mark and the label beside it.
+   * Render an exclusive option row: the mark and the label beside it.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
    * @param string $label
-   *   The entry label.
+   *   The option label.
    * @param bool $current
-   *   Whether the entry's row holds the cursor.
+   *   Whether the option's row holds the cursor.
    *
    * @return string
    *   The rendered row.
@@ -227,7 +227,7 @@ abstract class AbstractField implements FieldInterface {
   protected function renderExclusiveRow(ThemeInterface $theme, string $label, bool $current): string {
     // Moving the cursor picks in an exclusive list, so the mark and the
     // cursor state coincide and the row draws only the mark.
-    return $this->elements($theme)->fieldEntryMarker($current, TRUE) . ' ' . $this->entryLabel($theme, $label, $current);
+    return $this->elements($theme)->fieldOptionMarker($current, TRUE) . ' ' . $this->optionLabel($theme, $label, $current);
   }
 
   /**
@@ -245,7 +245,7 @@ abstract class AbstractField implements FieldInterface {
    *
    * The label is split into runs of matched and unmatched characters, each run
    * styled on its own, so no SGR code nests inside another. With no matched
-   * positions this is exactly {@see entryLabel()}.
+   * positions this is exactly {@see optionLabel()}.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -263,7 +263,7 @@ abstract class AbstractField implements FieldInterface {
    */
   protected function renderMatchedLabel(ThemeInterface $theme, string $label, array $positions, bool $current, bool $chosen = FALSE): string {
     if ($positions === []) {
-      return $this->entryLabel($theme, $label, $current, $chosen);
+      return $this->optionLabel($theme, $label, $current, $chosen);
     }
 
     $matched = array_fill_keys($positions, TRUE);
@@ -305,10 +305,10 @@ abstract class AbstractField implements FieldInterface {
    */
   protected function styleRun(ThemeInterface $theme, string $run, bool $matched, bool $current, bool $chosen): string {
     if ($matched) {
-      return $this->elements($theme)->fieldEntryMatch($run);
+      return $this->elements($theme)->fieldOptionMatch($run);
     }
 
-    return $this->entryLabel($theme, $run, $current, $chosen);
+    return $this->optionLabel($theme, $run, $current, $chosen);
   }
 
   /**
@@ -401,9 +401,9 @@ abstract class AbstractField implements FieldInterface {
    *   description or the panel is too narrow to show one.
    */
   protected function renderOptionDescription(ThemeInterface $theme, string $description): string {
-    // Indent to the column where an entry's own text starts, so the
-    // description aligns with the entry above it.
-    $indent = str_repeat(' ', $this->entryTextOffset($theme));
+    // Indent to the column where an option's own text starts, so the
+    // description aligns with the option above it.
+    $indent = str_repeat(' ', $this->optionTextOffset($theme));
     $width = $theme->contentWidth() - Strings::length($indent);
 
     if ($description === '' || $width < self::MIN_DESCRIPTION_WIDTH) {
@@ -412,19 +412,19 @@ abstract class AbstractField implements FieldInterface {
 
     $elements = $this->elements($theme);
 
-    return implode("\n", array_map(static fn(string $line): string => $indent . $elements->fieldEntryDescription($line), Strings::wrap($description, $width)));
+    return implode("\n", array_map(static fn(string $line): string => $indent . $elements->fieldOptionDescription($line), Strings::wrap($description, $width)));
   }
 
   /**
-   * The column an entry's own text starts at, within the field's view.
+   * The column an option's own text starts at, within the field's view.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return int
-   *   The offset; zero for a field whose entries carry no leading glyphs.
+   *   The offset; zero for a field whose options carry no leading glyphs.
    */
-  protected function entryTextOffset(ThemeInterface $theme): int {
+  protected function optionTextOffset(ThemeInterface $theme): int {
     return 0;
   }
 

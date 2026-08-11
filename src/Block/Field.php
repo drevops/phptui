@@ -993,7 +993,7 @@ final class Field extends AbstractBlock implements
    * @return list<\DrevOps\Tui\Block\Option>
    *   The rows, in the order they were declared.
    */
-  public function entries(): array {
+  public function options(): array {
     return $this->entries;
   }
 
@@ -1010,7 +1010,7 @@ final class Field extends AbstractBlock implements
    *   The entry, or NULL when nothing carries that value. Headings and
    *   separators carry none and are never returned.
    */
-  public function entryOf(string $value): ?Option {
+  public function optionOf(string $value): ?Option {
     $value = Ansi::sanitize($value);
 
     foreach ($this->entries as $entry) {
@@ -1173,7 +1173,7 @@ final class Field extends AbstractBlock implements
    *   FALSE while a loader, a resolver or a query source still owes them, so
    *   there is nothing yet to count or to check a value against.
    */
-  public function hasSettledEntries(): bool {
+  public function hasSettledOptions(): bool {
     return !$this->loader instanceof \Closure && !$this->resolver instanceof \Closure && !$this->source instanceof \Closure;
   }
 
@@ -1464,7 +1464,7 @@ final class Field extends AbstractBlock implements
    *   The fragment, or NULL when nothing constrains the value or every item is
    *   among the entries.
    */
-  public function entryViolation(mixed $value): ?string {
+  public function optionViolation(mixed $value): ?string {
     // A field that declares no entries constrains nothing - but one whose
     // entries follow a query or the answers is constrained by whatever they
     // resolved to, and resolving to nothing means the value does not exist.
@@ -1938,7 +1938,7 @@ final class Field extends AbstractBlock implements
 
     // A validator that answers with nothing has not said why, and a refusal
     // nobody can read is no refusal at all.
-    return is_string($refusal) && $refusal !== '' ? $refusal : $this->entryViolation($value);
+    return is_string($refusal) && $refusal !== '' ? $refusal : $this->optionViolation($value);
   }
 
   /**
@@ -2067,7 +2067,7 @@ final class Field extends AbstractBlock implements
       return Translator::t('value "@value" was not found', ['@value' => $value]);
     }
 
-    $entry = $this->entryOf($value);
+    $entry = $this->optionOf($value);
 
     if ($entry instanceof Option && $entry->disabled) {
       if ($entry->disabledReason === '') {
@@ -2332,7 +2332,7 @@ final class Field extends AbstractBlock implements
       return [$elements->fieldValue($this->readable($theme, $elements))];
     }
 
-    return array_map(fn(Option $entry): string => $this->entryLine($elements, $entry), $this->entries);
+    return array_map(fn(Option $entry): string => $this->optionLine($elements, $entry), $this->entries);
   }
 
   /**
@@ -2346,23 +2346,23 @@ final class Field extends AbstractBlock implements
    * @return string
    *   The drawn entry; empty for a divider, which is a gap and nothing else.
    */
-  protected function entryLine(FieldElementsInterface $elements, Option $entry): string {
+  protected function optionLine(FieldElementsInterface $elements, Option $entry): string {
     if ($entry->kind === OptionType::Heading) {
       return $elements->fieldCaption($entry->label);
     }
 
     if ($entry->kind === OptionType::Separator) {
-      return $elements->fieldEntrySeparator();
+      return $elements->fieldOptionSeparator();
     }
 
     // Marking and naming are two elements: the mark records what was picked
     // and the text says what it was, so a theme can restyle either alone.
     $chosen = $this->isChosen($entry);
-    $line = $elements->fieldEntryMarker($chosen, !$this->multiple) . ' ' . $elements->fieldEntry($entry->label, $chosen);
+    $line = $elements->fieldOptionMarker($chosen, !$this->multiple) . ' ' . $elements->fieldOption($entry->label, $chosen);
 
-    // Why an entry cannot be picked belongs beside it, or a row that is drawn
+    // Why an option cannot be picked belongs beside it, or a row that is drawn
     // and refuses the cursor reads as a fault rather than a decision.
-    return $entry->disabled && $entry->disabledReason !== '' ? $line . ' ' . $elements->fieldEntryNote($entry->disabledReason) : $line;
+    return $entry->disabled && $entry->disabledReason !== '' ? $line . ' ' . $elements->fieldOptionNote($entry->disabledReason) : $line;
   }
 
   /**

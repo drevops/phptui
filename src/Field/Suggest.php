@@ -312,7 +312,7 @@ class Suggest extends AbstractField implements
 
     foreach (array_slice($visible, $viewport->offset, $this->pageSize) as $slot => $value) {
       $current = $viewport->offset + $slot === $this->cursor;
-      $rows[] = $this->elements($theme)->fieldEntrySelector($current) . ' ' . $this->renderMatchedLabel($theme, $value, $this->matchPositions($value), $current);
+      $rows[] = $this->elements($theme)->fieldOptionSelector($current) . ' ' . $this->renderMatchedLabel($theme, $value, $this->matchPositions($value), $current);
     }
 
     return implode("\n", [$this->queryLine($theme), ...$this->wrapScrolled($theme, $rows, $viewport)]);

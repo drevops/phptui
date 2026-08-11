@@ -858,7 +858,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntry(string $text, bool $chosen, bool $focused = FALSE): string {
+  public function fieldOption(string $text, bool $chosen, bool $focused = FALSE): string {
     // Where the cursor rests is the louder of the two facts, and the only one
     // that moves, so it takes the accent and picking takes weight.
     if ($focused) {
@@ -872,7 +872,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntryMatch(string $text): string {
+  public function fieldOptionMatch(string $text): string {
     return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Yellow) : Sgr::of(Sgr::Bold, Sgr::Magenta), $text);
   }
 
@@ -880,8 +880,8 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntrySelector(bool $selected): string {
-    $glyph = $this->overriddenGlyph(ThemeElement::FieldEntrySelector);
+  public function fieldOptionSelector(bool $selected): string {
+    $glyph = $this->overriddenGlyph(ThemeElement::FieldOptionSelector);
 
     if ($glyph === NULL || !$selected) {
       return $this->marker($selected);
@@ -894,8 +894,8 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntryMarker(bool $chosen, bool $exclusive = FALSE): string {
-    $glyph = $this->overriddenGlyph(ThemeElement::FieldEntryMarker);
+  public function fieldOptionMarker(bool $chosen, bool $exclusive = FALSE): string {
+    $glyph = $this->overriddenGlyph(ThemeElement::FieldOptionMarker);
 
     // Only the picked state is stated, so an entry nobody picked keeps the
     // mark the theme draws for it and the patch stays a patch.
@@ -917,7 +917,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntryNote(string $text): string {
+  public function fieldOptionNote(string $text): string {
     return $this->paint(Sgr::of(Sgr::Grey), $text);
   }
 
@@ -925,7 +925,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntryDescription(string $text): string {
+  public function fieldOptionDescription(string $text): string {
     // Slanted against the description's grey: it says the same kind of thing
     // about a smaller subject, and the slant marks it as belonging to the entry
     // above rather than to the field.
@@ -936,7 +936,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntrySeparator(): string {
+  public function fieldOptionSeparator(): string {
     return $this->renderRule();
   }
 

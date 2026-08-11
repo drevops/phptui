@@ -235,7 +235,7 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
     $entries = $this->entries();
 
     if ($entries === []) {
-      $lines[] = $elements->fieldEntryNote(Translator::t('(empty)'));
+      $lines[] = $elements->fieldOptionNote(Translator::t('(empty)'));
     }
 
     $viewport = $this->pageViewport(count($entries), $this->cursor);
@@ -601,20 +601,20 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
   protected function renderRow(ThemeInterface $theme, string $name, bool $current): string {
     $label = $this->isDir($name) ? $name . '/' : $name;
     $elements = $this->elements($theme);
-    $row = $elements->fieldEntrySelector($current) . ' ';
+    $row = $elements->fieldOptionSelector($current) . ' ';
     $chosen = FALSE;
 
     if ($this->multiple) {
       $chosen = isset($this->selected[$this->join($name)]);
-      $box = $this->isSelectable($name) ? $elements->fieldEntryMarker($chosen) : $this->blankBox($theme);
+      $box = $this->isSelectable($name) ? $elements->fieldOptionMarker($chosen) : $this->blankBox($theme);
       $row .= $box . ' ';
     }
 
-    return $row . $this->entryLabel($theme, $label, $current, $chosen);
+    return $row . $this->optionLabel($theme, $label, $current, $chosen);
   }
 
   /**
-   * A spacer the width of a checkbox, for entries that cannot be selected.
+   * A spacer the width of a checkbox, for options that cannot be selected.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -623,7 +623,7 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
    *   The spacer.
    */
   protected function blankBox(ThemeInterface $theme): string {
-    return str_repeat(' ', Strings::length(Ansi::strip($this->elements($theme)->fieldEntryMarker(FALSE))));
+    return str_repeat(' ', Strings::length(Ansi::strip($this->elements($theme)->fieldOptionMarker(FALSE))));
   }
 
   /**

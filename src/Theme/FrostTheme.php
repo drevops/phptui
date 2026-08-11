@@ -51,7 +51,7 @@ class FrostTheme extends DefaultTheme {
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntryMatch(string $text): string {
+  public function fieldOptionMatch(string $text): string {
     return $this->paint($this->isDark ? Sgr::of(Sgr::Sand) : Sgr::of(Sgr::Ochre), $text);
   }
 

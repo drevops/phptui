@@ -103,27 +103,27 @@ interface FieldElementsInterface {
   public function fieldDescription(string $text): string;
 
   /**
-   * Style one entry of a list a field opens onto.
+   * Style one option of a list a field opens onto.
    *
-   * Being picked and being where the cursor rests are two different facts about
-   * an entry, and an entry can be either, both or neither: a settled row draws
-   * what was picked with no cursor anywhere in it, and a cursor moving down an
-   * open list picks nothing.
+   * Being picked and being where the cursor rests are two different facts
+   * about an option, and an option can be either, both or neither: a settled
+   * row draws what was picked with no cursor anywhere in it, and a cursor
+   * moving down an open list picks nothing.
    *
    * @param string $text
-   *   The entry label.
+   *   The option label.
    * @param bool $chosen
    *   Whether it is picked.
    * @param bool $focused
    *   Whether the cursor rests on it.
    *
    * @return string
-   *   The styled entry.
+   *   The styled option.
    */
-  public function fieldEntry(string $text, bool $chosen, bool $focused = FALSE): string;
+  public function fieldOption(string $text, bool $chosen, bool $focused = FALSE): string;
 
   /**
-   * Style the run of an entry's label that answers what was typed.
+   * Style the run of an option's label that answers what was typed.
    *
    * @param string $text
    *   The matched run.
@@ -131,45 +131,45 @@ interface FieldElementsInterface {
    * @return string
    *   The styled run.
    */
-  public function fieldEntryMatch(string $text): string;
+  public function fieldOptionMatch(string $text): string;
 
   /**
-   * The mark saying which entry has focus.
+   * The mark saying which option has focus.
    *
    * Its own element rather than a reuse of the field selector: one says which
-   * field you are on and the other which entry within it, so a theme can
+   * field you are on and the other which option within it, so a theme can
    * restyle either without touching the other.
    *
    * @param bool $selected
-   *   Whether this is the entry the cursor is on.
+   *   Whether this is the option the cursor is on.
    *
    * @return string
    *   The styled mark, or the gap standing in its place.
    */
-  public function fieldEntrySelector(bool $selected): string;
+  public function fieldOptionSelector(bool $selected): string;
 
   /**
-   * The mark recording that an entry was picked.
+   * The mark recording that an option was picked.
    *
    * Selecting and marking are different things: a selector says where you are,
-   * and this says what you decided. Whether picking one entry unpicks the last
+   * and this says what you decided. Whether picking one option unpicks the last
    * is a fact about the question rather than about the mark, so the mark is
    * told - a question that takes one answer and a question that takes several
    * are worth telling apart before anything has been picked at all.
    *
    * @param bool $chosen
-   *   Whether the entry is picked.
+   *   Whether the option is picked.
    * @param bool $exclusive
-   *   Whether picking this entry gives up every other, rather than adding to
+   *   Whether picking this option gives up every other, rather than adding to
    *   what is already picked.
    *
    * @return string
    *   The styled mark.
    */
-  public function fieldEntryMarker(bool $chosen, bool $exclusive = FALSE): string;
+  public function fieldOptionMarker(bool $chosen, bool $exclusive = FALSE): string;
 
   /**
-   * Style a qualifier on an entry, such as why it is unavailable.
+   * Style a qualifier on an option, such as why it is unavailable.
    *
    * @param string $text
    *   The note.
@@ -177,10 +177,10 @@ interface FieldElementsInterface {
    * @return string
    *   The styled note.
    */
-  public function fieldEntryNote(string $text): string;
+  public function fieldOptionNote(string $text): string;
 
   /**
-   * Style the focused entry's own explanatory text.
+   * Style the focused option's own explanatory text.
    *
    * @param string $text
    *   The description.
@@ -188,15 +188,15 @@ interface FieldElementsInterface {
    * @return string
    *   The styled description.
    */
-  public function fieldEntryDescription(string $text): string;
+  public function fieldOptionDescription(string $text): string;
 
   /**
-   * The mark standing between two runs of entries.
+   * The mark standing between two runs of options.
    *
    * @return string
    *   The styled mark.
    */
-  public function fieldEntrySeparator(): string;
+  public function fieldOptionSeparator(): string;
 
   /**
    * The mark saying a list runs past the page it is windowed to.
@@ -206,7 +206,7 @@ interface FieldElementsInterface {
    * was given, so a theme can restyle either without touching the other.
    *
    * @param bool $above
-   *   Whether the entries it points at are above rather than below.
+   *   Whether the options it points at are above rather than below.
    *
    * @return string
    *   The styled mark.
@@ -217,7 +217,7 @@ interface FieldElementsInterface {
    * Style what a field will accept, before anything is refused.
    *
    * The guidance voice, and the one line that has to survive a surface with
-   * nothing to spend: it sits directly under an entry's own explanatory text,
+   * nothing to spend: it sits directly under an option's own explanatory text,
    * so with no colour and no dependable italic it needs a mark of its own or a
    * reader cannot tell an expectation from prose.
    *

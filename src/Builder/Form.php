@@ -489,7 +489,7 @@ final class Form {
   protected function assertEntrySources(Panel $root): void {
     foreach (Tree::fields($root) as $field) {
       $offered = [
-        $field->entries() !== [],
+        $field->options() !== [],
         $field->loader() instanceof \Closure,
         $field->resolver() instanceof \Closure,
         $field->source() instanceof \Closure,
@@ -529,7 +529,7 @@ final class Form {
         continue;
       }
 
-      $entries = $field->entries();
+      $entries = $field->options();
 
       if (count($entries) !== 2) {
         throw new FormException(sprintf('Toggle field "%s" must have exactly two options, %d given.', $field->id(), count($entries)));
@@ -571,7 +571,7 @@ final class Form {
         continue;
       }
 
-      $entries = $field->entries();
+      $entries = $field->options();
 
       foreach ($entries as $entry) {
         if (!$entry->isSelectable()) {

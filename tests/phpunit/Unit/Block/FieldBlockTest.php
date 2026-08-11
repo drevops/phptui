@@ -564,7 +564,7 @@ final class FieldBlockTest extends TestCase {
       ->heading('Vegetables')
       ->entry('carrot', 'Carrot');
 
-    $kinds = array_map(static fn(object $entry): OptionType => $entry->kind, $field->entries());
+    $kinds = array_map(static fn(object $entry): OptionType => $entry->kind, $field->options());
 
     $expected = [OptionType::Heading, OptionType::Option, OptionType::Separator, OptionType::Heading, OptionType::Option];
     $this->assertSame($expected, $kinds);
@@ -577,7 +577,7 @@ final class FieldBlockTest extends TestCase {
     $field = (new Field('grade', 'Grade', FieldType::Select))->entry('0', 'Unripe')->entry('1', 'Ripe');
 
     $this->assertSame(['0', '1'], $field->selectableValues());
-    $this->assertSame('Unripe', $field->entryOf('0')?->label);
+    $this->assertSame('Unripe', $field->optionOf('0')?->label);
     $this->assertTrue($field->accept('0'));
     $this->assertSame('0', $field->value());
   }
@@ -588,21 +588,21 @@ final class FieldBlockTest extends TestCase {
       ->entry('carrot', 'Carrot')
       ->entry('apple', 'Golden Apple');
 
-    $this->assertCount(2, $field->entries());
-    $this->assertSame('Golden Apple', $field->entryOf('apple')?->label);
+    $this->assertCount(2, $field->options());
+    $this->assertSame('Golden Apple', $field->optionOf('apple')?->label);
     $this->assertSame(['apple', 'carrot'], $field->selectableValues());
   }
 
   public function testEntryWithNoLabelDrawsItsOwnValue(): void {
     $field = (new Field('basket', 'Basket contents', FieldType::Select))->entry('apple');
 
-    $this->assertSame('apple', $field->entryOf('apple')?->label);
-    $this->assertNotInstanceOf(Option::class, $field->entryOf('carrot'));
+    $this->assertSame('apple', $field->optionOf('apple')?->label);
+    $this->assertNotInstanceOf(Option::class, $field->optionOf('carrot'));
   }
 
   #[DataProvider('dataProviderValueOutsideTheEntriesIsRefused')]
   public function testValueOutsideTheEntriesIsRefused(Field $field, mixed $value, ?string $error): void {
-    $this->assertSame($error, $field->entryViolation($value));
+    $this->assertSame($error, $field->optionViolation($value));
   }
 
   public static function dataProviderValueOutsideTheEntriesIsRefused(): \Iterator {
@@ -654,12 +654,12 @@ final class FieldBlockTest extends TestCase {
     // to, so resolving to nothing means the value does not exist.
     $field = (new Field('basket', 'Basket contents', FieldType::Search))->query(static fn(): array => []);
 
-    $this->assertSame('value "plum" was not found', $field->entryViolation('plum'));
+    $this->assertSame('value "plum" was not found', $field->optionViolation('plum'));
   }
 
   #[DataProvider('dataProviderEntriesAreUnsettledWhileSomethingOwesThem')]
   public function testEntriesAreUnsettledWhileSomethingOwesThem(Field $field, bool $settled, bool $dynamic): void {
-    $this->assertSame($settled, $field->hasSettledEntries());
+    $this->assertSame($settled, $field->hasSettledOptions());
     $this->assertSame($dynamic, $field->hasDynamicEntries());
   }
 
@@ -691,13 +691,13 @@ final class FieldBlockTest extends TestCase {
 
     $this->assertSame(['apple', 'carrot'], $field->selectableValues());
     $this->assertNotInstanceOf(\Closure::class, $field->loader());
-    $this->assertTrue($field->hasSettledEntries());
+    $this->assertTrue($field->hasSettledOptions());
   }
 
   public function testEntriesThatAreNotMapOfLabelsSettleToNone(): void {
     $field = (new Field('basket', 'Basket contents', FieldType::Select))->entry('apple', 'Apple');
 
-    $this->assertSame([], $field->settle('not a map')->entries());
+    $this->assertSame([], $field->settle('not a map')->options());
   }
 
   public function testValueThatDoesNotFitTheDeclaredShapeIsRefused(): void {
@@ -836,8 +836,8 @@ final class FieldBlockTest extends TestCase {
     // A single choice is a radio list and several is a checkbox list, which is
     // the editor's shape rather than the row's: the field hands the region over
     // and the kind decides what fills it.
-    $this->assertSame(['○ Apple', '● Carrot'], $this->entryLines($one));
-    $this->assertSame(['❯ ◼ Apple', '◼ Carrot', '◻ Plum'], $this->entryLines($several));
+    $this->assertSame(['○ Apple', '● Carrot'], $this->optionLines($one));
+    $this->assertSame(['❯ ◼ Apple', '◼ Carrot', '◻ Plum'], $this->optionLines($several));
   }
 
   public function testSeveralAnswersReadAsOneLineWhileTheFieldIsSettled(): void {
@@ -890,7 +890,7 @@ final class FieldBlockTest extends TestCase {
   }
 
   /**
-   * The entry rows an open field draws, with the label prefix taken off.
+   * The option rows an open field draws, with the label prefix taken off.
    *
    * @param \DrevOps\Tui\Block\Field $field
    *   The field.
@@ -898,7 +898,7 @@ final class FieldBlockTest extends TestCase {
    * @return list<string>
    *   The rows.
    */
-  protected function entryLines(Field $field): array {
+  protected function optionLines(Field $field): array {
     $lines = explode("\n", $field->open()->render($this->theme()));
 
     return array_map(static fn(string $line): string => trim(str_replace('Basket contents', '', $line)), $lines);

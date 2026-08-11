@@ -44,10 +44,10 @@ final class BuiltinThemesTest extends TestCase {
     // A hue is stated once and every element drawn from it follows, so each
     // role is read back through an element rather than through the palette.
     $this->assertSame(Ansi::style('X', $expected['accent']), $theme->markupTitle('X'));
-    $this->assertSame(Ansi::style('X', $expected['accent']), $theme->fieldEntry('X', FALSE, TRUE));
+    $this->assertSame(Ansi::style('X', $expected['accent']), $theme->fieldOption('X', FALSE, TRUE));
     $this->assertSame(Ansi::style('X', $expected['value']), $theme->fieldValue('X'));
     $this->assertSame(Ansi::style('▲', $expected['indicator']), $theme->chromeOverflowMarker(TRUE));
-    $this->assertSame(Ansi::style('X', $expected['match']), $theme->fieldEntryMatch('X'));
+    $this->assertSame(Ansi::style('X', $expected['match']), $theme->fieldOptionMatch('X'));
     $this->assertSame(Ansi::style('X', $expected['border']), $theme->chromeBorder('X'));
   }
 
@@ -93,7 +93,7 @@ final class BuiltinThemesTest extends TestCase {
     $this->assertSame('Setup', $theme->markupTitle('Setup'));
     $this->assertSame('X', $theme->fieldValue('X'));
     $this->assertSame('▲', $theme->chromeOverflowMarker(TRUE));
-    $this->assertSame('X', $theme->fieldEntryMatch('X'));
+    $this->assertSame('X', $theme->fieldOptionMatch('X'));
     $this->assertSame('X', $theme->chromeBorder('X'));
   }
 

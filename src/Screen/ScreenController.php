@@ -1123,7 +1123,7 @@ class ScreenController {
   protected function offered(Field $field, array $rows): array {
     $offered = [];
 
-    foreach ([...$field->entries(), ...$rows] as $row) {
+    foreach ([...$field->options(), ...$rows] as $row) {
       if ($row->kind === OptionType::Option) {
         $offered[$row->value] = $row->label;
       }

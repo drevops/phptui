@@ -55,8 +55,8 @@ final class FieldDeclarationTest extends TestCase {
     $orchard = $root->children()[1];
     $basket = $orchard->fields()[0];
     $this->assertSame(FieldType::Select, $basket->type());
-    $this->assertSame('Standard', $basket->entryOf('standard')?->label);
-    $this->assertNotInstanceOf(Option::class, $basket->entryOf('missing'));
+    $this->assertSame('Standard', $basket->optionOf('standard')?->label);
+    $this->assertNotInstanceOf(Option::class, $basket->optionOf('missing'));
 
     // The trail reaches every panel and every field beneath the root.
     $this->assertCount(1, $orchard->children());

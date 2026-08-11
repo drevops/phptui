@@ -228,9 +228,9 @@ final class CalendarTest extends TestCase {
     $view = $field->view($theme);
 
     // A day before the minimum is rendered dimmed, not plain.
-    $this->assertStringContainsString($theme->fieldEntryNote(sprintf(' %2d ', 5)), $view);
+    $this->assertStringContainsString($theme->fieldOptionNote(sprintf(' %2d ', 5)), $view);
     // The cursor day stays bracketed and highlighted.
-    $this->assertStringContainsString($theme->fieldEntry('[15]', FALSE, TRUE), $view);
+    $this->assertStringContainsString($theme->fieldOption('[15]', FALSE, TRUE), $view);
   }
 
   public function testDimsDaysPastMaximum(): void {
@@ -241,7 +241,7 @@ final class CalendarTest extends TestCase {
     $view = $field->view($theme);
 
     // A day after the maximum is dimmed too, guarding the upper bound.
-    $this->assertStringContainsString($theme->fieldEntryNote(sprintf(' %2d ', 25)), $view);
+    $this->assertStringContainsString($theme->fieldOptionNote(sprintf(' %2d ', 25)), $view);
   }
 
 }

@@ -263,12 +263,12 @@ class Calendar extends AbstractField implements StepCapableInterface {
    */
   protected function dayCell(ThemeInterface $theme, \DateTimeImmutable $date, int $day): string {
     if ($date->format('Y-m-d') === $this->cursor->format('Y-m-d')) {
-      return $this->entryLabel($theme, sprintf('[%2d]', $day), TRUE);
+      return $this->optionLabel($theme, sprintf('[%2d]', $day), TRUE);
     }
 
     $cell = sprintf(' %2d ', $day);
 
-    return $this->bounds->contains($date) ? $cell : $this->elements($theme)->fieldEntryNote($cell);
+    return $this->bounds->contains($date) ? $cell : $this->elements($theme)->fieldOptionNote($cell);
   }
 
 }

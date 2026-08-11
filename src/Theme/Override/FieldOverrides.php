@@ -90,7 +90,7 @@ final class FieldOverrides {
    *   The group.
    */
   public function entrySelector(string $glyph, string $ascii): self {
-    $this->overrides->setGlyph(ThemeElement::FieldEntrySelector, $glyph, $ascii);
+    $this->overrides->setGlyph(ThemeElement::FieldOptionSelector, $glyph, $ascii);
 
     return $this;
   }
@@ -110,7 +110,7 @@ final class FieldOverrides {
    *   The group.
    */
   public function entryMarker(string $glyph, string $ascii): self {
-    $this->overrides->setGlyph(ThemeElement::FieldEntryMarker, $glyph, $ascii);
+    $this->overrides->setGlyph(ThemeElement::FieldOptionMarker, $glyph, $ascii);
 
     return $this;
   }

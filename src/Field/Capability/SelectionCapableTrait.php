@@ -319,21 +319,21 @@ trait SelectionCapableTrait {
 
     if ($this->multiple) {
       if ($option->disabled) {
-        return $elements->fieldEntrySelector(FALSE) . ' ' . $elements->fieldEntryMarker(FALSE) . ' ' . $this->renderDisabledLabel($theme, $option);
+        return $elements->fieldOptionSelector(FALSE) . ' ' . $elements->fieldOptionMarker(FALSE) . ' ' . $this->renderDisabledLabel($theme, $option);
       }
 
       $chosen = isset($this->selected[$option->value]);
 
-      return $elements->fieldEntrySelector($current) . ' ' . $elements->fieldEntryMarker($chosen) . ' ' . $this->renderMatchedLabel($theme, $option->label, $this->matchPositions($option->label), $current, $chosen);
+      return $elements->fieldOptionSelector($current) . ' ' . $elements->fieldOptionMarker($chosen) . ' ' . $this->renderMatchedLabel($theme, $option->label, $this->matchPositions($option->label), $current, $chosen);
     }
 
     if ($option->disabled) {
-      return $elements->fieldEntryMarker(FALSE, TRUE) . ' ' . $this->renderDisabledLabel($theme, $option);
+      return $elements->fieldOptionMarker(FALSE, TRUE) . ' ' . $this->renderDisabledLabel($theme, $option);
     }
 
     // Moving the cursor is the selection in an exclusive list, so the mark
     // mirrors the cursor and the row draws only the mark.
-    return $elements->fieldEntryMarker($current, TRUE) . ' ' . $this->renderMatchedLabel($theme, $option->label, $this->matchPositions($option->label), $current);
+    return $elements->fieldOptionMarker($current, TRUE) . ' ' . $this->renderMatchedLabel($theme, $option->label, $this->matchPositions($option->label), $current);
   }
 
   /**
@@ -344,12 +344,12 @@ trait SelectionCapableTrait {
    * textual stand-in.
    */
   #[\Override]
-  protected function entryTextOffset(ThemeInterface $theme): int {
+  protected function optionTextOffset(ThemeInterface $theme): int {
     $elements = $this->elements($theme);
 
     $prefix = $this->multiple
-      ? $elements->fieldEntrySelector(TRUE) . ' ' . $elements->fieldEntryMarker(FALSE) . ' '
-      : $elements->fieldEntryMarker(FALSE, TRUE) . ' ';
+      ? $elements->fieldOptionSelector(TRUE) . ' ' . $elements->fieldOptionMarker(FALSE) . ' '
+      : $elements->fieldOptionMarker(FALSE, TRUE) . ' ';
 
     return Ansi::width($prefix);
   }

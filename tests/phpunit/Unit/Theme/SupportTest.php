@@ -68,8 +68,8 @@ final class SupportTest extends TestCase {
   public function testSelectingAnItemAddsWeightRatherThanReplacingItsColour(): void {
     $theme = new CapableTheme();
 
-    $this->assertSame("\033[32mApple\033[0m", $theme->fieldEntry('Apple', FALSE));
-    $this->assertSame("\033[1;32mApple\033[0m", $theme->fieldEntry('Apple', TRUE));
+    $this->assertSame("\033[32mApple\033[0m", $theme->fieldOption('Apple', FALSE));
+    $this->assertSame("\033[1;32mApple\033[0m", $theme->fieldOption('Apple', TRUE));
   }
 
   public function testAnElementPicksItsGlyphFromWhatTheThemeSupports(): void {

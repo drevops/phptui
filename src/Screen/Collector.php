@@ -463,7 +463,7 @@ final class Collector {
       && $field->boundsViolation($value) === NULL
       && $field->pickerViolation($value) === NULL
       && $field->templateViolation($value) === NULL
-      && $field->entryViolation($value) === NULL;
+      && $field->optionViolation($value) === NULL;
   }
 
   /**
@@ -685,7 +685,7 @@ final class Collector {
 
       $memo = $this->memo[$field->id()] ?? NULL;
 
-      if ($memo !== NULL && $memo['answers'] === $answers && $memo['run'] === $run && $memo['rows'] === $field->entries()) {
+      if ($memo !== NULL && $memo['answers'] === $answers && $memo['run'] === $run && $memo['rows'] === $field->options()) {
         continue;
       }
 
@@ -693,10 +693,10 @@ final class Collector {
         $field->settle($resolver($resolved));
       }
       catch (\Throwable $throwable) {
-        throw $this->entriesError($field, $throwable);
+        throw $this->optionsError($field, $throwable);
       }
 
-      $this->memo[$field->id()] = ['answers' => $answers, 'run' => $run, 'rows' => $field->entries()];
+      $this->memo[$field->id()] = ['answers' => $answers, 'run' => $run, 'rows' => $field->options()];
 
       if ($supplied[$field->id()] ?? FALSE) {
         continue;
@@ -759,7 +759,7 @@ final class Collector {
           // On screen a source that cannot answer degrades to a message in the
           // field, but with no screen there is nobody to retype the query, so
           // the collection fails instead.
-          throw $this->entriesError($field, $throwable);
+          throw $this->optionsError($field, $throwable);
         }
 
         foreach ($resolved as $row) {
@@ -806,7 +806,7 @@ final class Collector {
    * @return \DrevOps\Tui\CollectException
    *   The error naming the field.
    */
-  protected function entriesError(Field $field, \Throwable $throwable): CollectException {
+  protected function optionsError(Field $field, \Throwable $throwable): CollectException {
     // Not every code is an integer - a database driver's SQLSTATE is a string -
     // and consumer code decides which exception arrives here, so it is coerced
     // rather than allowed to fail the report instead of making it.

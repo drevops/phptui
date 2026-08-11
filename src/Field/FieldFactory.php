@@ -61,14 +61,14 @@ class FieldFactory {
    *   When the block's type requires a declaration the block does not carry.
    */
   public function open(Field $block, mixed $current = NULL, array $answers = []): FieldInterface {
-    $entries = $this->translate($block->entries());
+    $entries = $this->translate($block->options());
 
     $field = match ($block->type()) {
       FieldType::Confirm => new Confirm((bool) $current),
-      FieldType::Toggle => new Toggle($this->entryLabels($entries), $this->text($current)),
+      FieldType::Toggle => new Toggle($this->optionLabels($entries), $this->text($current)),
       FieldType::Select => new Select($entries, $this->seed($block, $current), $block->isMultiple(), $block->pageSize(), $block->selectionBounds()),
       FieldType::Reorder => new Reorder($entries, Field::stringList($current), $block->pageSize()),
-      FieldType::Suggest => new Suggest($block->selectableValues(), $this->text($current), $block->pageSize(), $this->entryDescriptions($entries), $block->hasGhost()),
+      FieldType::Suggest => new Suggest($block->selectableValues(), $this->text($current), $block->pageSize(), $this->optionDescriptions($entries), $block->hasGhost()),
       FieldType::Search => new Search($entries, $this->seed($block, $current), $block->isMultiple(), $block->pageSize(), $block->selectionBounds()),
       FieldType::FilePicker => new FilePicker($block->pickerStart(), $this->seed($block, $current), $block->pickerConstraints(), $block->showsHidden(), $block->isMultiple(), $block->pageSize(), $block->selectionBounds()),
       FieldType::Number => new Number($this->number($current), $block->numberBounds()),
@@ -219,7 +219,7 @@ class FieldFactory {
    * @return array<string,string>
    *   The labels keyed by value.
    */
-  protected function entryLabels(array $options): array {
+  protected function optionLabels(array $options): array {
     $out = [];
 
     foreach ($options as $option) {
@@ -267,7 +267,7 @@ class FieldFactory {
    * @return array<string,string>
    *   The description for each selectable option value.
    */
-  protected function entryDescriptions(array $options): array {
+  protected function optionDescriptions(array $options): array {
     $out = [];
 
     foreach ($options as $option) {

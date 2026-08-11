@@ -222,7 +222,7 @@ trait OptionsCapableTrait {
    *   The rendered row.
    */
   protected function renderSeparatorRow(ThemeInterface $theme): string {
-    return $this->elements($theme)->fieldEntrySeparator();
+    return $this->elements($theme)->fieldOptionSeparator();
   }
 
   /**
@@ -243,7 +243,7 @@ trait OptionsCapableTrait {
       $text .= ' (' . $option->disabledReason . ')';
     }
 
-    return $this->elements($theme)->fieldEntryNote($text);
+    return $this->elements($theme)->fieldOptionNote($text);
   }
 
 }

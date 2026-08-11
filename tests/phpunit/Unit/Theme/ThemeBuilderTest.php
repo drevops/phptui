@@ -71,11 +71,11 @@ final class ThemeBuilderTest extends TestCase {
       ],
       'field entry selector' => [
         (new ThemeBuilder())->field(static fn(FieldOverrides $f): FieldOverrides => $f->entrySelector('→', '=>'))->overrides(),
-        'fieldEntrySelector',
+        'fieldOptionSelector',
       ],
       'field entry marker' => [
         (new ThemeBuilder())->field(static fn(FieldOverrides $f): FieldOverrides => $f->entryMarker('★', '(*)'))->overrides(),
-        'fieldEntryMarker',
+        'fieldOptionMarker',
       ],
       'field caret' => [
         (new ThemeBuilder())->field(static fn(FieldOverrides $f): FieldOverrides => $f->caret('▌', '!'))->overrides(),
@@ -106,7 +106,7 @@ final class ThemeBuilderTest extends TestCase {
       (new ThemeBuilder())->field(static fn(FieldOverrides $f): FieldOverrides => $f->selector('→', '=>'))->overrides()
     );
 
-    $this->assertSame($theme->fieldEntry('→', FALSE, TRUE), $theme->fieldSelector(TRUE));
+    $this->assertSame($theme->fieldOption('→', FALSE, TRUE), $theme->fieldSelector(TRUE));
   }
 
   public function testTwoSelectorsComeApartOnceEitherIsOverridden(): void {
@@ -117,7 +117,7 @@ final class ThemeBuilderTest extends TestCase {
     );
 
     $this->assertSame('→', $theme->fieldSelector(TRUE));
-    $this->assertSame('❯', $theme->fieldEntrySelector(TRUE));
+    $this->assertSame('❯', $theme->fieldOptionSelector(TRUE));
   }
 
   public function testAnUnmarkedStateKeepsWhatTheThemeDrawsForIt(): void {
@@ -126,8 +126,8 @@ final class ThemeBuilderTest extends TestCase {
       (new ThemeBuilder())->field(static fn(FieldOverrides $f): FieldOverrides => $f->entryMarker('★', '(*)'))->overrides()
     );
 
-    $this->assertSame('★', $theme->fieldEntryMarker(TRUE));
-    $this->assertSame($plain->fieldEntryMarker(FALSE), $theme->fieldEntryMarker(FALSE));
+    $this->assertSame('★', $theme->fieldOptionMarker(TRUE));
+    $this->assertSame($plain->fieldOptionMarker(FALSE), $theme->fieldOptionMarker(FALSE));
     $this->assertSame(' ', $theme->fieldSelector(FALSE));
   }
 
@@ -146,7 +146,7 @@ final class ThemeBuilderTest extends TestCase {
     $this->assertSame('→', $theme->fieldSelector(TRUE));
     $this->assertSame('?', $theme->fieldHelpMarker());
     $this->assertSame(' | ', $theme->fieldValueSeparator());
-    $this->assertSame('★', $theme->fieldEntryMarker(TRUE));
+    $this->assertSame('★', $theme->fieldOptionMarker(TRUE));
     $this->assertSame('▌', $theme->fieldCaret());
   }
 
@@ -193,11 +193,11 @@ final class ThemeBuilderTest extends TestCase {
       'fieldValueSeparator' => $theme->fieldValueSeparator(),
       'fieldBadge' => $theme->fieldBadge('edited'),
       'fieldDescription' => $theme->fieldDescription('Pick the produce.'),
-      'fieldEntry' => $theme->fieldEntry('Apple', TRUE),
-      'fieldEntrySelector' => $theme->fieldEntrySelector(TRUE),
-      'fieldEntryMarker' => $theme->fieldEntryMarker(TRUE),
-      'fieldEntryNote' => $theme->fieldEntryNote('out of season'),
-      'fieldEntryDescription' => $theme->fieldEntryDescription('Stays crisp.'),
+      'fieldOption' => $theme->fieldOption('Apple', TRUE),
+      'fieldOptionSelector' => $theme->fieldOptionSelector(TRUE),
+      'fieldOptionMarker' => $theme->fieldOptionMarker(TRUE),
+      'fieldOptionNote' => $theme->fieldOptionNote('out of season'),
+      'fieldOptionDescription' => $theme->fieldOptionDescription('Stays crisp.'),
       'fieldConstraint' => $theme->fieldConstraint('Pick two.'),
       'fieldError' => $theme->fieldError('Pick at least two.'),
       'fieldCaret' => $theme->fieldCaret(),

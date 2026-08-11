@@ -513,8 +513,8 @@ final class SelectTest extends TestCase {
     // the field is stating cannot be told from prose about the highlighted
     // option.
     $this->assertStringContainsString($this->styleOf($theme->fieldConstraint(...)) . 'Select between 1 and 2 items.', $view);
-    $this->assertStringContainsString($this->styleOf($theme->fieldEntryDescription(...)) . 'Crisp and sweet, the everyday choice.', $view);
-    $this->assertNotSame($this->styleOf($theme->fieldConstraint(...)), $this->styleOf($theme->fieldEntryDescription(...)));
+    $this->assertStringContainsString($this->styleOf($theme->fieldOptionDescription(...)) . 'Crisp and sweet, the everyday choice.', $view);
+    $this->assertNotSame($this->styleOf($theme->fieldConstraint(...)), $this->styleOf($theme->fieldOptionDescription(...)));
   }
 
   /**

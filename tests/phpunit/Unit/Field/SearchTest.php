@@ -277,7 +277,7 @@ final class SearchTest extends TestCase {
     $field->handle(Key::char('a'));
     $view = $field->view($theme);
 
-    $this->assertStringContainsString($theme->fieldEntryMatch('Pa'), $view);
+    $this->assertStringContainsString($theme->fieldOptionMatch('Pa'), $view);
     $this->assertStringContainsString('Palace', Ansi::strip($view));
   }
 
@@ -371,8 +371,8 @@ final class SearchTest extends TestCase {
 
     // The non-contiguous match highlights each hit character on its own,
     // leaving the intervening characters unstyled.
-    $this->assertStringContainsString($theme->fieldEntryMatch('B'), $view);
-    $this->assertStringContainsString($theme->fieldEntryMatch('n'), $view);
+    $this->assertStringContainsString($theme->fieldOptionMatch('B'), $view);
+    $this->assertStringContainsString($theme->fieldOptionMatch('n'), $view);
     $this->assertStringContainsString('Banana', Ansi::strip($view));
   }
 
