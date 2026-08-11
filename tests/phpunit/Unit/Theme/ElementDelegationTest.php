@@ -41,7 +41,7 @@ final class ElementDelegationTest extends TestCase {
       static fn(DefaultTheme $t): string => $t->fieldSelector(TRUE),
       static fn(DefaultTheme $t): string => $t->panelSelector(TRUE),
     ];
-    yield 'the field and entry selectors' => [
+    yield 'the field and option selectors' => [
       static fn(DefaultTheme $t): string => $t->fieldSelector(TRUE),
       static fn(DefaultTheme $t): string => $t->fieldOptionSelector(TRUE),
     ];
@@ -57,11 +57,11 @@ final class ElementDelegationTest extends TestCase {
       static fn(DefaultTheme $t): string => $t->panelDescription('Pick the produce.'),
       static fn(DefaultTheme $t): string => $t->markupLine('Pick the produce.'),
     ];
-    yield 'the focused entry and the caret' => [
+    yield 'the focused option and the caret' => [
       static fn(DefaultTheme $t): string => $t->fieldOption('█', FALSE, TRUE),
       static fn(DefaultTheme $t): string => $t->fieldCaret(),
     ];
-    yield 'the rule and the entry separator' => [
+    yield 'the rule and the option separator' => [
       static fn(DefaultTheme $t): string => $t->renderRule(),
       static fn(DefaultTheme $t): string => $t->fieldOptionSeparator(),
     ];
@@ -79,10 +79,10 @@ final class ElementDelegationTest extends TestCase {
 
   public static function dataProviderRepaintingOneHueMovesEveryElementDrawnFromIt(): \Iterator {
     yield 'field selector' => [static fn(DefaultTheme $t): string => $t->fieldSelector(TRUE)];
-    yield 'field entry selector' => [static fn(DefaultTheme $t): string => $t->fieldOptionSelector(TRUE)];
+    yield 'field option selector' => [static fn(DefaultTheme $t): string => $t->fieldOptionSelector(TRUE)];
     yield 'field value' => [static fn(DefaultTheme $t): string => $t->fieldValue('apple')];
     yield 'field caret' => [static fn(DefaultTheme $t): string => $t->fieldCaret()];
-    yield 'field entry marker' => [static fn(DefaultTheme $t): string => $t->fieldOptionMarker(TRUE, TRUE)];
+    yield 'field option marker' => [static fn(DefaultTheme $t): string => $t->fieldOptionMarker(TRUE, TRUE)];
     yield 'chrome border' => [static fn(DefaultTheme $t): string => $t->chromeBorder('----')];
     yield 'chrome overflow marker' => [static fn(DefaultTheme $t): string => $t->chromeOverflowMarker(TRUE)];
     yield 'panel title' => [static fn(DefaultTheme $t): string => $t->panelTitle('Delivery')];

@@ -145,8 +145,8 @@ final class KeyRouterTest extends TestCase {
   public function testSpaceTogglesInsideAnOpenListBecauseTheEditorBindsIt(): void {
     $basket = (new Field('basket', 'Basket contents', FieldType::Select))
       ->multiple()
-      ->entry('apple', 'Apple')
-      ->entry('carrot', 'Carrot');
+      ->option('apple', 'Apple')
+      ->option('carrot', 'Carrot');
     $router = $this->router($basket);
 
     $router->handle(Key::named(KeyName::Enter));
@@ -157,7 +157,7 @@ final class KeyRouterTest extends TestCase {
   }
 
   public function testCursorKeysReachAnOpenListRatherThanMovingBetweenFields(): void {
-    $basket = (new Field('basket', 'Basket contents', FieldType::Select))->entry('apple', 'Apple')->entry('carrot', 'Carrot');
+    $basket = (new Field('basket', 'Basket contents', FieldType::Select))->option('apple', 'Apple')->option('carrot', 'Carrot');
     $router = $this->router($basket, new Field('weight', 'Weight'));
 
     $router->handle(Key::named(KeyName::Enter));

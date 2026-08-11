@@ -263,9 +263,9 @@ final class Form {
 
     $this->assertUniqueFieldIds($root);
     $this->assertFieldSurfaces($root);
-    $this->assertEntrySources($root);
-    $this->assertToggleEntries($root);
-    $this->assertReorderEntries($root);
+    $this->assertOptionSources($root);
+    $this->assertToggleOptions($root);
+    $this->assertReorderOptions($root);
     $this->assertTemplateShapes($root);
     $this->assertModalPanels($root);
 
@@ -478,7 +478,7 @@ final class Form {
   /**
    * Assert that every field is offered exactly one set of rows it can hold.
    *
-   * A field's rows come from one of four sources - declared entries, a
+   * A field's rows come from one of four sources - declared options, a
    * loader, a resolver or a query source - and each replaces the others. A
    * field offered two of them has no one set, and a field offered any of them
    * on a kind that shows no list has nowhere to put them.
@@ -486,7 +486,7 @@ final class Form {
    * @param \DrevOps\Tui\Block\Panel $root
    *   The root panel holding every declared panel.
    */
-  protected function assertEntrySources(Panel $root): void {
+  protected function assertOptionSources(Panel $root): void {
     foreach (Tree::fields($root) as $field) {
       $offered = [
         $field->options() !== [],
@@ -514,12 +514,12 @@ final class Form {
   }
 
   /**
-   * Assert that every toggle field declares exactly two entries.
+   * Assert that every toggle field declares exactly two options.
    *
    * @param \DrevOps\Tui\Block\Panel $root
    *   The root panel holding every declared panel.
    */
-  protected function assertToggleEntries(Panel $root): void {
+  protected function assertToggleOptions(Panel $root): void {
     foreach (Tree::fields($root) as $field) {
       if ($field->type() !== FieldType::Toggle) {
         continue;
@@ -529,10 +529,10 @@ final class Form {
         continue;
       }
 
-      $entries = $field->options();
+      $options = $field->options();
 
-      if (count($entries) !== 2) {
-        throw new FormException(sprintf('Toggle field "%s" must have exactly two options, %d given.', $field->id(), count($entries)));
+      if (count($options) !== 2) {
+        throw new FormException(sprintf('Toggle field "%s" must have exactly two options, %d given.', $field->id(), count($options)));
       }
 
       $default = $field->value();
@@ -544,7 +544,7 @@ final class Form {
         continue;
       }
 
-      $values = array_map(static fn(Option $entry): string => $entry->value, $entries);
+      $values = array_map(static fn(Option $option): string => $option->value, $options);
 
       if (!is_string($default) || !in_array($default, $values, TRUE)) {
         throw new FormException(sprintf('Toggle field "%s" default must be one of: %s.', $field->id(), implode(', ', $values)));
@@ -553,7 +553,7 @@ final class Form {
   }
 
   /**
-   * Assert that every reorder field declares at least two plain entries.
+   * Assert that every reorder field declares at least two plain options.
    *
    * A ranking arranges a flat list, so headings, separators and disabled rows
    * are not allowed in it, and fewer than two items leaves nothing to reorder.
@@ -561,7 +561,7 @@ final class Form {
    * @param \DrevOps\Tui\Block\Panel $root
    *   The root panel holding every declared panel.
    */
-  protected function assertReorderEntries(Panel $root): void {
+  protected function assertReorderOptions(Panel $root): void {
     foreach (Tree::fields($root) as $field) {
       if ($field->type() !== FieldType::Reorder) {
         continue;
@@ -571,16 +571,16 @@ final class Form {
         continue;
       }
 
-      $entries = $field->options();
+      $options = $field->options();
 
-      foreach ($entries as $entry) {
-        if (!$entry->isSelectable()) {
+      foreach ($options as $option) {
+        if (!$option->isSelectable()) {
           throw new FormException(sprintf('Reorder field "%s" allows only plain options - no headings, separators or disabled rows.', $field->id()));
         }
       }
 
-      if (count($entries) < 2) {
-        throw new FormException(sprintf('Reorder field "%s" must have at least two options, %d given.', $field->id(), count($entries)));
+      if (count($options) < 2) {
+        throw new FormException(sprintf('Reorder field "%s" must have at least two options, %d given.', $field->id(), count($options)));
       }
     }
   }
@@ -622,7 +622,7 @@ final class Form {
   }
 
   /**
-   * Whether a field's entries stand as declared.
+   * Whether a field's options stand as declared.
    *
    * @param \DrevOps\Tui\Block\Field $field
    *   The field.

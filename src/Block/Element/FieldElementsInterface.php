@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Block\Element;
  * One field owns both of its modes, so one interface names both: the first
  * group is the single line a field draws until it is opened, and the second is
  * what it draws in the region it takes over once it is. A pair such as the
- * value and the draft, or the description and the entry description, is two
+ * value and the draft, or the description and the option description, is two
  * elements rather than one because each says a different thing, at a different
  * moment or about a different subject.
  *

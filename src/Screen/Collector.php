@@ -259,7 +259,7 @@ final class Collector {
       $waiting();
     }
 
-    $this->loadEntries($owed);
+    $this->loadOptions($owed);
 
     return TRUE;
   }
@@ -298,11 +298,11 @@ final class Collector {
   protected function fetched(Panel $panel, array $supplied, Context $context): array {
     // With no cursor to open a field, nothing would ever ask a loader for its
     // rows - and a value cannot be measured against rows that never arrive.
-    $this->loadEntries(Tree::fields($panel));
+    $this->loadOptions(Tree::fields($panel));
 
     [$fields, $values, $sources, $active] = $this->settle($panel, $supplied, $context);
 
-    $this->loadQueryEntries($fields, $values, $active);
+    $this->loadQueryOptions($fields, $values, $active);
 
     return [$fields, $values, $sources, $active];
   }
@@ -594,7 +594,7 @@ final class Collector {
     for ($pass = 0; $pass <= $limit; $pass++) {
       // Rows resolve first: a set that follows the answers decides what the
       // conditions below then see, and what a value is still allowed to be.
-      $values = $this->resolveEntries($fields, $values, $active, $context, $supplied);
+      $values = $this->resolveOptions($fields, $values, $active, $context, $supplied);
 
       $derived = $this->deriver->derive($rules, $values, $pinned);
 
@@ -629,7 +629,7 @@ final class Collector {
    * @param list<\DrevOps\Tui\Block\Field> $fields
    *   The fields, in declaration order.
    */
-  protected function loadEntries(array $fields): void {
+  protected function loadOptions(array $fields): void {
     foreach ($fields as $field) {
       $loader = $field->loader();
 
@@ -667,7 +667,7 @@ final class Collector {
    * @throws \DrevOps\Tui\CollectException
    *   When a resolver cannot answer.
    */
-  protected function resolveEntries(array $fields, array $values, array $active, Context $context, array $supplied): array {
+  protected function resolveOptions(array $fields, array $values, array $active, Context $context, array $supplied): array {
     $answers = $this->activeAnswers($fields, $values, $active);
     $resolved = new Context($context->directory, $answers, $context->update, $context->version);
 
@@ -733,7 +733,7 @@ final class Collector {
    * @throws \DrevOps\Tui\CollectException
    *   When a source cannot answer.
    */
-  protected function loadQueryEntries(array $fields, array $values, array $active): void {
+  protected function loadQueryOptions(array $fields, array $values, array $active): void {
     foreach ($fields as $field) {
       $source = $field->source();
 

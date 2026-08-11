@@ -234,8 +234,8 @@ final class ScreenParityTest extends TestCase {
 
     $category = (new Field('category', 'Category', FieldType::Select))
       ->default('fruit')
-      ->entry('fruit', 'Fruit')
-      ->entry('vegetable', 'Vegetable');
+      ->option('fruit', 'Fruit')
+      ->option('vegetable', 'Vegetable');
 
     $item = (new Field('item', 'Item', FieldType::Select))->resolve(static function (Context $context) use ($catalog): array {
       $category = $context->answers['category'] ?? '';
@@ -538,8 +538,8 @@ final class ScreenParityTest extends TestCase {
     yield 'several answers read as one run' => [
       (new Field('basket', 'Basket contents', FieldType::Select))
         ->multiple()
-        ->entry('apple', 'Apple')
-        ->entry('carrot', 'Carrot')
+        ->option('apple', 'Apple')
+        ->option('carrot', 'Carrot')
         ->default(['apple', 'carrot']),
       '❯ Basket contents  apple, carrot',
     ];

@@ -8,7 +8,7 @@ namespace DrevOps\Tui\Theme\Override;
  * The field's elements, as a consumer patches them.
  *
  * The block's prefix is implied by the group, so `selector()` here is the
- * field's selector and nothing else's - and the entry's is a call of its own,
+ * field's selector and nothing else's - and the option's is a call of its own,
  * because the two are different marks.
  *
  * @package DrevOps\Tui\Theme\Override
@@ -79,7 +79,7 @@ final class FieldOverrides {
   }
 
   /**
-   * Draw the mark saying which entry has focus with this glyph.
+   * Draw the mark saying which option has focus with this glyph.
    *
    * @param string $glyph
    *   The glyph.
@@ -89,17 +89,17 @@ final class FieldOverrides {
    * @return $this
    *   The group.
    */
-  public function entrySelector(string $glyph, string $ascii): self {
+  public function optionSelector(string $glyph, string $ascii): self {
     $this->overrides->setGlyph(ThemeElement::FieldOptionSelector, $glyph, $ascii);
 
     return $this;
   }
 
   /**
-   * Draw the mark recording a picked entry with this glyph.
+   * Draw the mark recording a picked option with this glyph.
    *
-   * The mark an entry carries once it is picked; an entry nobody picked keeps
-   * whatever the theme draws for it, so a patch stays a patch.
+   * The mark an option carries once it is picked; an option nobody picked
+   * keeps whatever the theme draws for it, so a patch stays a patch.
    *
    * @param string $glyph
    *   The glyph.
@@ -109,7 +109,7 @@ final class FieldOverrides {
    * @return $this
    *   The group.
    */
-  public function entryMarker(string $glyph, string $ascii): self {
+  public function optionMarker(string $glyph, string $ascii): self {
     $this->overrides->setGlyph(ThemeElement::FieldOptionMarker, $glyph, $ascii);
 
     return $this;

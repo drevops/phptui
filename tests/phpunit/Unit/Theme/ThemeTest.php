@@ -45,7 +45,7 @@ final class ThemeTest extends TestCase {
     yield 'constraint' => [static fn(): string => (new DefaultTheme())->fieldConstraint('X'), '3;38;5;246'];
     yield 'error' => [static fn(): string => (new DefaultTheme())->fieldError('X'), '31'];
     yield 'breadcrumb' => [static fn(): string => self::light()->breadcrumbLabel('X'), '90'];
-    yield 'entry note' => [static fn(): string => (new DefaultTheme())->fieldOptionNote('X'), '90'];
+    yield 'option note' => [static fn(): string => (new DefaultTheme())->fieldOptionNote('X'), '90'];
     yield 'state' => [static fn(): string => (new DefaultTheme())->fieldState('X'), '90'];
     yield 'caption' => [static fn(): string => (new DefaultTheme())->fieldCaption('X'), '1;38;5;109'];
     // Inline ghost-text is dimmed gray, the same as the other dimmed chrome.
@@ -167,12 +167,12 @@ final class ThemeTest extends TestCase {
     $this->assertSame('----------', (new DefaultTheme(10, ['unicode' => FALSE, 'color' => FALSE, 'border' => Border::None]))->renderRule());
     // The rule is dimmed when colour is on.
     $this->assertStringContainsString("\033[90m", (new DefaultTheme(10))->renderRule());
-    // One rule wherever it appears: what stands between two runs of entries is
+    // One rule wherever it appears: what stands between two runs of options is
     // what stands between two blocks of standalone output.
     $this->assertSame((new DefaultTheme(10))->renderRule(), (new DefaultTheme(10))->fieldOptionSeparator());
   }
 
-  public function testPickedEntryTakesWeightAndFocusTakesTheAccent(): void {
+  public function testPickedOptionTakesWeightAndFocusTakesTheAccent(): void {
     $theme = new DefaultTheme();
 
     $this->assertStringContainsString("\033[1", $theme->fieldOption('X', TRUE));

@@ -65,16 +65,16 @@ final class BuiltinThemesTest extends TestCase {
   }
 
   /**
-   * A picked entry keeps the palette hue and gains weight.
+   * A picked option keeps the palette hue and gains weight.
    */
-  #[DataProvider('dataProviderPickedEntryIsBold')]
-  public function testPickedEntryIsBold(string $name, string $expected): void {
+  #[DataProvider('dataProviderPickedOptionIsBold')]
+  public function testPickedOptionIsBold(string $name, string $expected): void {
     $theme = $this->builtin($name, 76, ['mode' => Mode::Dark]);
 
     $this->assertSame(Ansi::style('X', $expected), $theme->panelSummary('X'));
   }
 
-  public static function dataProviderPickedEntryIsBold(): \Iterator {
+  public static function dataProviderPickedOptionIsBold(): \Iterator {
     yield 'midnight' => ['midnight', '38;5;114'];
     yield 'frost' => ['frost', '38;5;150'];
     yield 'ember' => ['ember', '38;5;142'];
@@ -172,7 +172,7 @@ final class BuiltinThemesTest extends TestCase {
   /**
    * Every theme separates guidance from description by colour, not italic.
    *
-   * A constraint is drawn directly beneath the highlighted entry's own
+   * A constraint is drawn directly beneath the highlighted option's own
    * description, so the two need a cue that survives the surface: an SVG
    * render carries colour but drops italic entirely.
    */

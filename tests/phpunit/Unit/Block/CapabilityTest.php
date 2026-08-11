@@ -221,7 +221,7 @@ final class CapabilityTest extends TestCase {
   }
 
   public function testOpenFieldTakesPrintableKeyOnlyWhereItsKindTakesTypedInput(): void {
-    $basket = (new Field('basket', 'Basket contents', FieldType::Select))->entry('apple', 'Apple')->open();
+    $basket = (new Field('basket', 'Basket contents', FieldType::Select))->option('apple', 'Apple')->open();
 
     // A single choice is walked with the cursor rather than typed into, so a
     // printable key is not something being typed and travels outward.

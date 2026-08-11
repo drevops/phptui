@@ -286,7 +286,7 @@ final class OptionTest extends TestCase {
       match ($option->kind) {
         OptionType::Heading => $field->heading($option->label),
         OptionType::Separator => $field->separator(),
-        OptionType::Option => $field->entry($option->value, $option->label, $option->description, $option->disabled, $option->disabledReason),
+        OptionType::Option => $field->option($option->value, $option->label, $option->description, $option->disabled, $option->disabledReason),
       };
     }
 

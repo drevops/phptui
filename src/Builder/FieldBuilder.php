@@ -989,7 +989,7 @@ final class FieldBuilder {
    */
   public function option(string $value, string $label = '', string $description = '', bool $disabled = FALSE, string $disabled_reason = ''): self {
     $this->scoped(self::lists(), 'shows no options', 'option');
-    $this->block->entry($value, $label, $description, $disabled, $disabled_reason);
+    $this->block->option($value, $label, $description, $disabled, $disabled_reason);
 
     return $this;
   }
@@ -1269,10 +1269,10 @@ final class FieldBuilder {
     // option's value rather than an empty value that would not match either.
     // The value is read off the option, not its array key, so a numeric-string
     // value like "0" is not coerced to an int.
-    $entries = $this->block->options();
+    $options = $this->block->options();
 
-    if ($this->fieldType === FieldType::Toggle && $entries !== []) {
-      return reset($entries)->value;
+    if ($this->fieldType === FieldType::Toggle && $options !== []) {
+      return reset($options)->value;
     }
 
     return $this->defaultFor($this->fieldType);

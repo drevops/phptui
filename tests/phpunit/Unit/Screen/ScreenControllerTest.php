@@ -115,8 +115,8 @@ final class ScreenControllerTest extends TestCase {
   public function testTheListKeysReachAnOpenListRatherThanMovingBetweenRows(): void {
     $basket = (new Field('basket', 'Basket contents', FieldType::Select))
       ->multiple()
-      ->entry('apple', 'Apple')
-      ->entry('carrot', 'Carrot');
+      ->option('apple', 'Apple')
+      ->option('carrot', 'Carrot');
 
     $tester = $this->tester($this->panel($basket, new Field('courier', 'Courier')));
 
@@ -187,7 +187,7 @@ final class ScreenControllerTest extends TestCase {
 
   public function testFieldRefusesTooFewPicksAndStaysOpenOnThem(): void {
     $basket = (new Field('basket', 'Basket', FieldType::Select))->multiple()->selections(new SelectionBounds(2))->default([]);
-    $basket->entry('pear', 'Pear')->entry('plum', 'Plum');
+    $basket->option('pear', 'Pear')->option('plum', 'Plum');
     $tester = $this->tester($this->panel($basket));
 
     $answers = $tester->run(

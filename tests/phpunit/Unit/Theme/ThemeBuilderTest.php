@@ -69,12 +69,12 @@ final class ThemeBuilderTest extends TestCase {
         (new ThemeBuilder())->field(static fn(FieldOverrides $f): FieldOverrides => $f->valueSeparator(' | '))->overrides(),
         'fieldValueSeparator',
       ],
-      'field entry selector' => [
-        (new ThemeBuilder())->field(static fn(FieldOverrides $f): FieldOverrides => $f->entrySelector('→', '=>'))->overrides(),
+      'field option selector' => [
+        (new ThemeBuilder())->field(static fn(FieldOverrides $f): FieldOverrides => $f->optionSelector('→', '=>'))->overrides(),
         'fieldOptionSelector',
       ],
-      'field entry marker' => [
-        (new ThemeBuilder())->field(static fn(FieldOverrides $f): FieldOverrides => $f->entryMarker('★', '(*)'))->overrides(),
+      'field option marker' => [
+        (new ThemeBuilder())->field(static fn(FieldOverrides $f): FieldOverrides => $f->optionMarker('★', '(*)'))->overrides(),
         'fieldOptionMarker',
       ],
       'field caret' => [
@@ -123,7 +123,7 @@ final class ThemeBuilderTest extends TestCase {
   public function testAnUnmarkedStateKeepsWhatTheThemeDrawsForIt(): void {
     $plain = new DefaultTheme(80, ['color' => FALSE]);
     $theme = (new DefaultTheme(80, ['color' => FALSE]))->overrides(
-      (new ThemeBuilder())->field(static fn(FieldOverrides $f): FieldOverrides => $f->entryMarker('★', '(*)'))->overrides()
+      (new ThemeBuilder())->field(static fn(FieldOverrides $f): FieldOverrides => $f->optionMarker('★', '(*)'))->overrides()
     );
 
     $this->assertSame('★', $theme->fieldOptionMarker(TRUE));
@@ -137,7 +137,7 @@ final class ThemeBuilderTest extends TestCase {
         ->selector('→', '=>')
         ->helpMarker('?', '(?)')
         ->valueSeparator(' | ')
-        ->entryMarker('★', '(*)')
+        ->optionMarker('★', '(*)')
         ->caret('▌', '!'))
       ->overrides();
 

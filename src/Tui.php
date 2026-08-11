@@ -812,7 +812,7 @@ final class Tui {
   /**
    * The declared block tree: the panel every declared panel hangs from.
    *
-   * The rows a form asks about are state: a set of entries supplied from
+   * The rows a form asks about are state: a set of options supplied from
    * elsewhere is stored on the block holding it, so one tree carries the
    * declaration and its state. Every operation on this facade reads that one
    * tree.

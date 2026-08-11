@@ -218,9 +218,9 @@ final class CollectorTest extends TestCase {
     $this->assertSame(['courier' => 'Valley Runs'], (new Collector())->collect($panel, ['courier' => '  Valley Runs  ']));
   }
 
-  public function testSuppliedValueIsMeasuredAgainstTheEntriesItMayPickFrom(): void {
+  public function testSuppliedValueIsMeasuredAgainstTheOptionsItMayPickFrom(): void {
     $panel = $this->panel(
-      (new Field('basket', 'Basket contents', FieldType::Select))->entry('apple', 'Apple')->entry('carrot', 'Carrot')->default('apple'),
+      (new Field('basket', 'Basket contents', FieldType::Select))->option('apple', 'Apple')->option('carrot', 'Carrot')->default('apple'),
     );
 
     $this->assertSame(['basket' => 'carrot'], (new Collector())->collect($panel, ['basket' => 'carrot']));

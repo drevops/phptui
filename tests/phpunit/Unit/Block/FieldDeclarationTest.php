@@ -298,7 +298,7 @@ final class FieldDeclarationTest extends TestCase {
    */
   public static function dataProviderOptionsOnFieldWithNoListThrow(): \Iterator {
     yield 'a declared row' => [
-      static fn(Field $field): Field => $field->entry('apple', 'Apple'),
+      static fn(Field $field): Field => $field->option('apple', 'Apple'),
       'Field "f" of type "text" shows no options; only select, search, suggest, toggle and reorder fields have a list.',
     ];
     yield 'a query source' => [

@@ -897,7 +897,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   public function fieldOptionMarker(bool $chosen, bool $exclusive = FALSE): string {
     $glyph = $this->overriddenGlyph(ThemeElement::FieldOptionMarker);
 
-    // Only the picked state is stated, so an entry nobody picked keeps the
+    // Only the picked state is stated, so an option nobody picked keeps the
     // mark the theme draws for it and the patch stays a patch.
     if ($glyph !== NULL && $chosen) {
       return $exclusive ? $this->paint($this->accent(), $glyph) : $this->value($glyph);
@@ -927,8 +927,8 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   #[\Override]
   public function fieldOptionDescription(string $text): string {
     // Slanted against the description's grey: it says the same kind of thing
-    // about a smaller subject, and the slant marks it as belonging to the entry
-    // above rather than to the field.
+    // about a smaller subject, and the slant marks it as belonging to the
+    // option above rather than to the field.
     return $this->paint(Sgr::of(Sgr::Italic, Sgr::Grey), $this->linkify($text));
   }
 
@@ -954,7 +954,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   #[\Override]
   public function fieldConstraint(string $text): string {
     // Guidance on how to answer is never louder than the question itself, but
-    // still reads as its own voice - and it sits directly beneath an entry's
+    // still reads as its own voice - and it sits directly beneath an option's
     // own description, so the two must not be mistaken for each other on any
     // surface. Slant reinforces the hue where the surface honours it, and where
     // neither survives the voice falls back to a mark, which nothing can strip.
