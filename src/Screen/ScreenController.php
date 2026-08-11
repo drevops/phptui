@@ -306,7 +306,7 @@ class ScreenController {
     // A form that hides its buttons still has a live pair to be refused on, so
     // what withholds the end of it has somewhere to stand.
     $this->actions = $placed ?? $this->assembler->actions($panel->currentButtons());
-    $this->help = (new Markup('screen-help', ''))->bordered();
+    $this->help = (new Markup('screen-help', ''))->border();
     $this->overlay = $this->helpScreen();
 
     $this->equip();

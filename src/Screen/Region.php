@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Screen;
 
 use DrevOps\Tui\Block\BlockInterface;
+use DrevOps\Tui\Screen\Capability\BorderCapableInterface;
+use DrevOps\Tui\Screen\Capability\BorderCapableTrait;
 use DrevOps\Tui\Screen\Capability\ScrollCapableInterface;
 use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
 
@@ -26,8 +28,9 @@ use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
  *
  * @package DrevOps\Tui\Screen
  */
-final class Region implements ScrollCapableInterface {
+final class Region implements BorderCapableInterface, ScrollCapableInterface {
 
+  use BorderCapableTrait;
   use ScrollCapableTrait;
 
   /**
@@ -50,15 +53,6 @@ final class Region implements ScrollCapableInterface {
    */
   protected bool $previews = FALSE;
 
-  /**
-   * Whether a box is drawn around it.
-   */
-  protected bool $outlined = FALSE;
-
-  /**
-   * The text written into the top edge of that box.
-   */
-  protected string $caption = '';
 
   /**
    * The blocks packed from the start of its flow, in the order they were added.
@@ -231,45 +225,6 @@ final class Region implements ScrollCapableInterface {
     return $this->previews;
   }
 
-  /**
-   * Draw a box around this region.
-   *
-   * The box spends a row top and bottom and a column each side of the cells the
-   * layout granted, so an outlined region holds two fewer rows and two fewer
-   * columns than a bare one of the same size.
-   *
-   * @param string $caption
-   *   The text written into the top edge; empty writes the region's name.
-   *
-   * @return $this
-   *   The region.
-   */
-  public function outlined(string $caption = ''): self {
-    $this->outlined = TRUE;
-    $this->caption = $caption;
-
-    return $this;
-  }
-
-  /**
-   * Whether a box is drawn around this region.
-   *
-   * @return bool
-   *   TRUE when one is.
-   */
-  public function isOutlined(): bool {
-    return $this->outlined;
-  }
-
-  /**
-   * The text written into the top edge of this region's box.
-   *
-   * @return string
-   *   The caption, or the region's name when none was stated.
-   */
-  public function caption(): string {
-    return $this->caption === '' ? $this->name : $this->caption;
-  }
 
   /**
    * Draw a block in this region.

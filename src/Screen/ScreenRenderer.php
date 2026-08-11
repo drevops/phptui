@@ -95,7 +95,7 @@ final class ScreenRenderer {
    *   TRUE when the region declared one, or when every region is being boxed.
    */
   protected function outlines(Region $region): bool {
-    return $this->inspect || $region->isOutlined();
+    return $this->inspect || $region->isBordered();
   }
 
   /**
@@ -701,7 +701,7 @@ final class ScreenRenderer {
 
     $inside = $this->packed($region, $rows - self::OUTLINE, $columns - self::OUTLINE, $furnished);
 
-    return $this->outline($inside, $region->caption(), $rows, $columns);
+    return $this->outline($inside, $region->borderTitle(), $rows, $columns);
   }
 
   /**

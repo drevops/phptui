@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Block;
 
+use DrevOps\Tui\Screen\Capability\BorderCapableInterface;
+use DrevOps\Tui\Screen\Capability\BorderCapableTrait;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
@@ -15,9 +17,15 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * the elements it reaches for - and a theme that declares none cannot draw it,
  * which is a type error rather than a blank line.
  *
+ * Every block may also declare edges. What it occupies is known where it is
+ * drawn rather than here, so the declaration carries no geometry and the
+ * renderer sizes the box.
+ *
  * @package DrevOps\Tui\Block
  */
-abstract class AbstractBlock implements BlockInterface {
+abstract class AbstractBlock implements BlockInterface, BorderCapableInterface {
+
+  use BorderCapableTrait;
 
   /**
    * The theme, narrowed to the elements this block draws with.
