@@ -129,16 +129,20 @@ composer install
 - Method names/class properties: `camelCase`
 - **A method that answers a yes/no question about state is named `is*`.** The
   prefix is what marks a return as boolean, so a reader never has to open the
-  method to find out - existing examples: `isRequired()`, `isMultiple()`,
-  `isScrolling()`, `isSelectable()`, `isQueryDriven()`. This covers the
-  `has*` possession predicates too: prefer `is*` for a new one.
+  method to find out - `isRequired()`, `isMultiple()`, `isScrolling()`,
+  `isSelectable()`, `isQueryDriven()`, `isUnicode()`, `isGhost()`. There is no
+  `has*` form: possession is state, so `has*` and `is*` were one group and
+  `is*` is the one spelling.
 
-  The single exception is a **command that reports its own outcome**. A method
-  whose job is to do something, and whose boolean says whether it happened,
-  keeps its verb - `accept()`, `capture()`, `activate()`, `load()`, `leave()`,
-  `prepare()`. Those are not questions, and an `is` prefix would misname the
-  work they do. If a method both acts and answers, it is a command, not a
-  predicate.
+  Two things are not state predicates and keep their own names:
+
+  - A **command that reports its own outcome**. Its job is to do something and
+    its boolean says whether that happened - `accept()`, `capture()`,
+    `activate()`, `load()`, `leave()`, `prepare()`. An `is` prefix would
+    misname the work. A method that both acts and answers is a command.
+  - A **lookup taking what it is asked about** - `Answers::has(string $id)`,
+    `Key::is(KeyName $name)`, `Bounds::contains($value)`. These ask about an
+    argument rather than about the object's own state, so they read as verbs.
 - **Never model a closed set of values as string literals.** Any value that is
   one-of-a-fixed-set (a kind, a state, a mode, a source) is a backed or pure
   enum, and every property, parameter and return that carries it is typed with
