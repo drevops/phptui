@@ -31,7 +31,7 @@ trait CompletionCapableTrait {
    *   The full candidate string, or NULL.
    */
   public function bestMatch(): ?string {
-    if ($this->buffer === '' || !$this->completionAvailable()) {
+    if ($this->buffer === '' || !$this->isCompletionAvailable()) {
       return NULL;
     }
 
@@ -56,7 +56,7 @@ trait CompletionCapableTrait {
    *   TRUE when the caret sits at the end of the buffer, so the ghost text
    *   continues what is being typed rather than interrupting it.
    */
-  protected function completionAvailable(): bool {
+  protected function isCompletionAvailable(): bool {
     return $this->cursor === Strings::length($this->buffer);
   }
 

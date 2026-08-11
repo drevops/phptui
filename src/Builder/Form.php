@@ -578,7 +578,7 @@ final class Form {
       $entries = $field->entries();
 
       foreach ($entries as $entry) {
-        if (!$entry->selectable()) {
+        if (!$entry->isSelectable()) {
           throw new FormException(sprintf('Reorder field "%s" allows only plain options - no headings, separators or disabled rows.', $field->id()));
         }
       }

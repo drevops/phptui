@@ -33,7 +33,7 @@ final class EntryTest extends TestCase {
     $this->assertSame('a', $options[0]->value);
     $this->assertSame('Apple', $options[0]->label);
     $this->assertSame(OptionKind::Option, $options[0]->kind);
-    $this->assertTrue($options[0]->selectable());
+    $this->assertTrue($options[0]->isSelectable());
   }
 
   public function testListLabelDefaultsToValue(): void {
@@ -60,7 +60,7 @@ final class EntryTest extends TestCase {
 
   #[DataProvider('dataProviderSelectable')]
   public function testSelectable(Option $option, bool $expected): void {
-    $this->assertSame($expected, $option->selectable());
+    $this->assertSame($expected, $option->isSelectable());
   }
 
   public static function dataProviderSelectable(): \Iterator {

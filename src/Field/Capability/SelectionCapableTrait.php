@@ -156,7 +156,7 @@ trait SelectionCapableTrait {
       return;
     }
 
-    if ($keys->matches($key, Action::Accept) && $this->currentSelectable()) {
+    if ($keys->matches($key, Action::Accept) && $this->isCurrentSelectable()) {
       $this->accept($this->liveValue());
     }
   }
@@ -220,8 +220,8 @@ trait SelectionCapableTrait {
    * @return bool
    *   TRUE when the cursor rests on a selectable option.
    */
-  public function currentSelectable(): bool {
-    return ($this->visible()[$this->cursor] ?? NULL)?->selectable() ?? FALSE;
+  public function isCurrentSelectable(): bool {
+    return ($this->visible()[$this->cursor] ?? NULL)?->isSelectable() ?? FALSE;
   }
 
   /**
@@ -240,7 +240,7 @@ trait SelectionCapableTrait {
   public function toggleCurrent(): void {
     $option = $this->visible()[$this->cursor] ?? NULL;
 
-    if (!$option instanceof Option || !$option->selectable()) {
+    if (!$option instanceof Option || !$option->isSelectable()) {
       return;
     }
 
@@ -260,7 +260,7 @@ trait SelectionCapableTrait {
    */
   public function setAllVisible(bool $selected): void {
     foreach ($this->visible() as $option) {
-      if (!$option->selectable()) {
+      if (!$option->isSelectable()) {
         continue;
       }
 
@@ -278,13 +278,13 @@ trait SelectionCapableTrait {
    */
   protected function liveValue(): mixed {
     if (!$this->multiple) {
-      return $this->currentSelectable() ? $this->visible()[$this->cursor]->value : '';
+      return $this->isCurrentSelectable() ? $this->visible()[$this->cursor]->value : '';
     }
 
     $out = [];
 
     foreach ($this->options as $option) {
-      if ($option->selectable() && isset($this->selected[$option->value])) {
+      if ($option->isSelectable() && isset($this->selected[$option->value])) {
         $out[] = $option->value;
       }
     }

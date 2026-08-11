@@ -121,7 +121,7 @@ final class LayoutManager {
 
       // An arrangement nobody can build from its name alone is not one a form
       // can pick by name.
-      if (!self::nameable($class)) {
+      if (!self::isNameable($class)) {
         continue;
       }
 
@@ -167,7 +167,7 @@ final class LayoutManager {
     // An abstract layout, or one built from something a name cannot carry,
     // passes the type check and then fatals on the first create(): refusing it
     // here names the class rather than the call site.
-    if (!self::nameable($class)) {
+    if (!self::isNameable($class)) {
       throw new \InvalidArgumentException(sprintf('Layout class "%s" cannot be built from a name alone.', $class));
     }
 
@@ -188,7 +188,7 @@ final class LayoutManager {
    * @return bool
    *   TRUE when it can.
    */
-  protected static function nameable(string $class): bool {
+  protected static function isNameable(string $class): bool {
     $reflection = new \ReflectionClass($class);
 
     return $reflection->isInstantiable() && ($reflection->getConstructor()?->getNumberOfParameters() ?? 0) === 0;

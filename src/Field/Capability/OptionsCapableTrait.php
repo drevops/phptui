@@ -49,7 +49,7 @@ trait OptionsCapableTrait {
    */
   protected function firstSelectable(array $rows): int {
     foreach ($rows as $index => $row) {
-      if ($row->selectable()) {
+      if ($row->isSelectable()) {
         return $index;
       }
     }
@@ -70,7 +70,7 @@ trait OptionsCapableTrait {
    */
   protected function cursorForDefault(array $rows, string $default): int {
     foreach ($rows as $index => $row) {
-      if ($row->selectable() && $row->value === $default) {
+      if ($row->isSelectable() && $row->value === $default) {
         return $index;
       }
     }
@@ -95,7 +95,7 @@ trait OptionsCapableTrait {
     $index = $from + $dir;
 
     while ($index >= 0 && $index < count($rows)) {
-      if ($rows[$index]->selectable()) {
+      if ($rows[$index]->isSelectable()) {
         return $index;
       }
 
@@ -153,7 +153,7 @@ trait OptionsCapableTrait {
   protected function highlightedDescription(): string {
     $option = $this->visible()[$this->cursor] ?? NULL;
 
-    return $option instanceof Option && $option->selectable() ? $option->description : '';
+    return $option instanceof Option && $option->isSelectable() ? $option->description : '';
   }
 
   /**

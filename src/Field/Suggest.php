@@ -192,7 +192,7 @@ class Suggest extends AbstractField implements SearchCapableInterface, TextEditC
    * @return bool
    *   TRUE when the ghost-text preview applies.
    */
-  protected function completionAvailable(): bool {
+  protected function isCompletionAvailable(): bool {
     return $this->ghost && $this->cursor < 0 && !$this->queryLoading;
   }
 
@@ -271,7 +271,7 @@ class Suggest extends AbstractField implements SearchCapableInterface, TextEditC
 
     $this->descriptions = [];
     foreach ($rows as $row) {
-      if ($row->selectable()) {
+      if ($row->isSelectable()) {
         $this->descriptions[$row->value] = $row->description;
       }
     }

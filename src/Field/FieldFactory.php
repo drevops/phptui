@@ -225,7 +225,7 @@ class FieldFactory {
     $out = [];
 
     foreach ($options as $option) {
-      if ($option->selectable()) {
+      if ($option->isSelectable()) {
         $out[$option->value] = $option->label;
       }
     }
@@ -273,7 +273,7 @@ class FieldFactory {
     $out = [];
 
     foreach ($options as $option) {
-      if (!$option->selectable()) {
+      if (!$option->isSelectable()) {
         continue;
       }
 

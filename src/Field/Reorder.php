@@ -190,7 +190,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
 
     $current = $this->items[$this->cursor];
 
-    return $current->selectable() ? $current->description : '';
+    return $current->isSelectable() ? $current->description : '';
   }
 
   /**

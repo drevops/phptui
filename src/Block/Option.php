@@ -80,7 +80,7 @@ final readonly class Option {
    *   TRUE for an enabled Option row; FALSE for separators, headings and
    *   disabled options.
    */
-  public function selectable(): bool {
+  public function isSelectable(): bool {
     return $this->kind === OptionKind::Option && !$this->disabled;
   }
 
@@ -150,7 +150,7 @@ final readonly class Option {
     $out = [];
 
     foreach ($options as $option) {
-      if ($option->selectable()) {
+      if ($option->isSelectable()) {
         $out[] = $option->value;
       }
     }

@@ -118,7 +118,7 @@ class SchemaGenerator {
     $out = [];
 
     foreach ($field->entries() as $option) {
-      if (!$option->selectable()) {
+      if (!$option->isSelectable()) {
         continue;
       }
 
