@@ -59,7 +59,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
    *
    * @var list<\DrevOps\Tui\Block\BlockInterface>
    */
-  protected array $blocks = [];
+  protected array $head = [];
 
   /**
    * The blocks packed from the end of its flow, in the order they were added.
@@ -238,7 +238,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
    *   The region.
    */
   public function add(BlockInterface $block): self {
-    $this->blocks[] = $block;
+    $this->head[] = $block;
 
     return $this;
   }
@@ -257,7 +257,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
    *   The region.
    */
   public function prepend(BlockInterface $block): self {
-    array_unshift($this->blocks, $block);
+    array_unshift($this->head, $block);
 
     return $this;
   }
@@ -289,7 +289,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
    *   The blocks packed from the start, then the ones packed from the end.
    */
   public function blocks(): array {
-    return [...$this->blocks, ...$this->tail];
+    return [...$this->head, ...$this->tail];
   }
 
   /**
@@ -299,7 +299,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
    *   The blocks.
    */
   public function headBlocks(): array {
-    return $this->blocks;
+    return $this->head;
   }
 
   /**
