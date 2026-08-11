@@ -8,14 +8,10 @@ use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Block\BlockInterface;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\CancelException;
-use DrevOps\Tui\Handler\Context;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Collector;
-use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Tui;
@@ -319,36 +315,18 @@ final class TuiTester {
     // terminal's columns.
     $width = Tui::frameWidth($this->options, $this->cols);
 
-    if ($this->themeInstance instanceof ThemeInterface) {
-      // Build the controller manually when a ThemeInterface instance was
-      // passed.
-      $collector = new Collector($this->tui->registry(), []);
-      $controller = new ScreenController(
-        $this->tui->root(),
-        $this->themeInstance,
-        [],
-        NULL,
-        $collector,
-        new Context($this->directory, [], $this->update, $this->version),
-        'default',
-        Border::None,
-        TRUE,
-        TRUE,
-        '',
-        $this->version,
-      );
-    }
-    else {
-      $controller = $this->tui->controller(
-        $this->options,
-        $this->theme,
-        '',
-        $this->version,
-        $this->directory,
-        $width,
-        $this->update
-      );
-    }
+    // A built theme is handed to the facade as it stands, so a tester passing
+    // an instance still gets the key map, fixups, layout, border and banner the
+    // facade wires for a named one.
+    $controller = $this->tui->controller(
+      $this->options,
+      $this->themeInstance ?? $this->theme,
+      '',
+      $this->version,
+      $this->directory,
+      $width,
+      $this->update
+    );
 
     $this->cancelled = FALSE;
     $this->interrupted = FALSE;

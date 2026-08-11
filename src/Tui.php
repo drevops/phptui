@@ -206,8 +206,9 @@ final class Tui {
   /**
    * Build the selected theme and apply the consumer's overrides.
    *
-   * @param string $name
-   *   The theme name or class; empty falls back to the facade's theme.
+   * @param \DrevOps\Tui\Theme\ThemeInterface|string $name
+   *   A built theme, used as it stands; or the theme name or class to build,
+   *   where empty falls back to the facade's theme.
    * @param int $width
    *   The frame width.
    * @param array<string,mixed> $options
@@ -216,8 +217,8 @@ final class Tui {
    * @return \DrevOps\Tui\Theme\ThemeInterface
    *   The theme.
    */
-  protected function buildTheme(string $name, int $width, array $options): ThemeInterface {
-    $theme = ThemeManager::create($this->resolveTheme($name), $width, $options);
+  protected function buildTheme(ThemeInterface|string $name, int $width, array $options): ThemeInterface {
+    $theme = $name instanceof ThemeInterface ? $name : ThemeManager::create($this->resolveTheme($name), $width, $options);
 
     // Overrides apply only through a theme's own override capability, so a
     // theme without it is used unchanged rather than rejected.
@@ -680,8 +681,9 @@ final class Tui {
    *
    * @param array<string,mixed> $options
    *   The resolved theme display options (colour, Unicode, mode).
-   * @param string $theme
-   *   The theme name or class; empty falls back to the facade's theme.
+   * @param \DrevOps\Tui\Theme\ThemeInterface|string $theme
+   *   A built theme, used as it stands; or the theme name or class to build,
+   *   where empty falls back to the facade's theme.
    * @param string $banner
    *   An optional start banner; empty falls back to the form's banner.
    * @param string $version
@@ -701,7 +703,7 @@ final class Tui {
    *   Public for the {@see \DrevOps\Tui\Testing\TuiTester} harness; consumers
    *   collect through run(), collect() or interact().
    */
-  public function controller(array $options, string $theme = '', string $banner = '', string $version = '', string $directory = '', int $width = ThemeInterface::DEFAULT_WIDTH, bool $update = FALSE): ScreenController {
+  public function controller(array $options, ThemeInterface|string $theme = '', string $banner = '', string $version = '', string $directory = '', int $width = ThemeInterface::DEFAULT_WIDTH, bool $update = FALSE): ScreenController {
     // Restore this facade's language before rendering (see collect()).
     Translator::setShared($this->translator);
 

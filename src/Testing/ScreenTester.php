@@ -63,6 +63,15 @@ final class ScreenTester {
   protected ?ThemeInterface $theme = NULL;
 
   /**
+   * The name of the theme to build, when one was named rather than given.
+   *
+   * A named theme is built in controller() rather than here, so the options
+   * and column count it reads are the ones the tester ends up configured with
+   * whatever order the fluent calls were made in.
+   */
+  protected string $themeName = '';
+
+  /**
    * The bindings the screen answers to, once some are given.
    */
   protected ?KeyMap $keys = NULL;
@@ -159,13 +168,15 @@ final class ScreenTester {
    *   The tester.
    */
   public function theme(ThemeInterface|string $theme): self {
-    if (is_string($theme)) {
-      $options = $this->themeOptions();
-      $this->theme = ThemeManager::create($theme, Tui::frameWidth($options, $this->cols), $options);
-    }
-    else {
+    if ($theme instanceof ThemeInterface) {
       $this->theme = $theme;
+      $this->themeName = '';
+
+      return $this;
     }
+
+    $this->theme = NULL;
+    $this->themeName = $theme;
 
     return $this;
   }
@@ -512,7 +523,7 @@ final class ScreenTester {
       // The same width resolution the facade applies, against the scripted
       // terminal's columns: the theme is what every width is read off, so it
       // is the one place a terminal's size is turned into a frame's.
-      $this->theme ?? new DefaultTheme(Tui::frameWidth($options, $this->cols), $options),
+      $this->theme ?? $this->buildTheme($options),
       $this->supplied,
       $this->keys,
       $this->collector,
@@ -525,6 +536,25 @@ final class ScreenTester {
       $this->version,
       $this->externalEditor,
     );
+  }
+
+  /**
+   * Build the theme a name asked for, or the default when none was named.
+   *
+   * @param array<string,mixed> $options
+   *   The resolved display options.
+   *
+   * @return \DrevOps\Tui\Theme\ThemeInterface
+   *   The theme, laid out to the scripted terminal's frame width.
+   */
+  protected function buildTheme(array $options): ThemeInterface {
+    $width = Tui::frameWidth($options, $this->cols);
+
+    if ($this->themeName === '') {
+      return new DefaultTheme($width, $options);
+    }
+
+    return ThemeManager::create($this->themeName, $width, $options);
   }
 
   /**

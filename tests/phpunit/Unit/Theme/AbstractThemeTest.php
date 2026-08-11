@@ -33,8 +33,8 @@ final class AbstractThemeTest extends TestCase {
     yield 'field value' => [static fn(FloorTheme $t): string => $t->fieldValue('Orchard')];
     yield 'field badge' => [static fn(FloorTheme $t): string => $t->fieldBadge('Orchard')];
     yield 'field description' => [static fn(FloorTheme $t): string => $t->fieldDescription('Orchard')];
-    yield 'field entry note' => [static fn(FloorTheme $t): string => $t->fieldOptionNote('Orchard')];
-    yield 'field entry description' => [static fn(FloorTheme $t): string => $t->fieldOptionDescription('Orchard')];
+    yield 'field option note' => [static fn(FloorTheme $t): string => $t->fieldOptionNote('Orchard')];
+    yield 'field option description' => [static fn(FloorTheme $t): string => $t->fieldOptionDescription('Orchard')];
     yield 'field error' => [static fn(FloorTheme $t): string => $t->fieldError('Orchard')];
     yield 'field draft' => [static fn(FloorTheme $t): string => $t->fieldDraft('Orchard')];
     yield 'field state' => [static fn(FloorTheme $t): string => $t->fieldState('Orchard')];
@@ -63,11 +63,11 @@ final class AbstractThemeTest extends TestCase {
     yield 'legend separator' => [static fn(FloorTheme $t): string => $t->legendSeparator()];
     yield 'field selector' => [static fn(FloorTheme $t): string => $t->fieldSelector(TRUE)];
     yield 'field help marker' => [static fn(FloorTheme $t): string => $t->fieldHelpMarker()];
-    yield 'field entry selector' => [static fn(FloorTheme $t): string => $t->fieldOptionSelector(TRUE)];
-    yield 'field entry marker chosen' => [static fn(FloorTheme $t): string => $t->fieldOptionMarker(TRUE)];
-    yield 'field entry marker unchosen' => [static fn(FloorTheme $t): string => $t->fieldOptionMarker(FALSE)];
-    yield 'field entry marker exclusive' => [static fn(FloorTheme $t): string => $t->fieldOptionMarker(TRUE, TRUE)];
-    yield 'field entry separator' => [static fn(FloorTheme $t): string => $t->fieldOptionSeparator()];
+    yield 'field option selector' => [static fn(FloorTheme $t): string => $t->fieldOptionSelector(TRUE)];
+    yield 'field option marker chosen' => [static fn(FloorTheme $t): string => $t->fieldOptionMarker(TRUE)];
+    yield 'field option marker unchosen' => [static fn(FloorTheme $t): string => $t->fieldOptionMarker(FALSE)];
+    yield 'field option marker exclusive' => [static fn(FloorTheme $t): string => $t->fieldOptionMarker(TRUE, TRUE)];
+    yield 'field option separator' => [static fn(FloorTheme $t): string => $t->fieldOptionSeparator()];
     yield 'field caret' => [static fn(FloorTheme $t): string => $t->fieldCaret()];
     yield 'field mask' => [static fn(FloorTheme $t): string => $t->fieldMask()];
     yield 'field loading' => [static fn(FloorTheme $t): string => $t->fieldLoading()];
@@ -94,7 +94,7 @@ final class AbstractThemeTest extends TestCase {
     yield 'code' => [static fn(FloorTheme $t): string => $t->markupCode('Orchard')];
     yield 'panel description' => [static fn(FloorTheme $t): string => $t->panelDescription('Orchard')];
     yield 'panel summary' => [static fn(FloorTheme $t): string => $t->panelSummary('Orchard')];
-    yield 'entry match' => [static fn(FloorTheme $t): string => $t->fieldOptionMatch('Orchard')];
+    yield 'option match' => [static fn(FloorTheme $t): string => $t->fieldOptionMatch('Orchard')];
   }
 
   public function testFloorWritesOutTargetItCannotFollow(): void {
@@ -123,7 +123,7 @@ final class AbstractThemeTest extends TestCase {
 
   public function testGuidanceOpensWithMarkNothingCanStrip(): void {
     // Neither hue nor slant survives here, and a constraint sits directly under
-    // an entry's own text, so a mark is the one cue left to tell them apart.
+    // an option's own text, so a mark is the one cue left to tell them apart.
     $floor = new FloorTheme();
 
     $this->assertSame('> Orchard', $floor->fieldConstraint('Orchard'));
@@ -138,8 +138,8 @@ final class AbstractThemeTest extends TestCase {
     $this->assertNotSame($floor->fieldOptionMarker(TRUE), $floor->fieldOptionMarker(FALSE));
   }
 
-  public function testEntryIsItsOwnTextAndTheMarkBesideItIsNot(): void {
-    // Selecting and marking come apart at the floor too: the entry says what
+  public function testOptionIsItsOwnTextAndTheMarkBesideItIsNot(): void {
+    // Selecting and marking come apart at the floor too: the option says what
     // it is, and the mark beside it says whether it was picked.
     $floor = new FloorTheme();
 
