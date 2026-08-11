@@ -160,7 +160,7 @@ final class GridLayoutTest extends TestCase {
 
   public function testSlotsThatDoNotCoverTheWindowsAreRefusedNamingTheOwner(): void {
     $this->expectException(FormException::class);
-    $this->expectExceptionMessage('The grid of "Market stall" declares 3 slot(s) for 2 window(s).');
+    $this->expectExceptionMessage('The grid of "Market stall" declares 3 window(s) for 2 panel(s).');
 
     (new GridLayout(1, 2))->assertDeals(2, 'Market stall');
   }

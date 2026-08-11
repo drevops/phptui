@@ -621,7 +621,7 @@ final class PanelBuilder {
     $window = $layout->windows()[count($this->panels) - 1] ?? NULL;
 
     if ($window === NULL) {
-      throw new FormException(sprintf('The grid of "%s" declares %d slot(s) for %d window(s).', $this->id, count($layout->windows()), count($this->panels)));
+      throw new FormException(sprintf('The grid of "%s" declares %d window(s) for %d panel(s).', $this->id, count($layout->windows()), count($this->panels)));
     }
 
     $this->panel->in($window)->add($panel);

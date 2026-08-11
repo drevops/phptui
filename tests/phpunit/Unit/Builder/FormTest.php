@@ -972,7 +972,7 @@ final class FormTest extends TestCase {
           ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('two', 'Two'))
           ->root();
       },
-      'The grid of "Demo" declares 1 slot(s) for 2 window(s).',
+      'The grid of "Demo" declares 1 window(s) for 2 panel(s).',
     ];
 
     yield 'form slots above the panels' => [
@@ -983,7 +983,7 @@ final class FormTest extends TestCase {
           ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('two', 'Two'))
           ->root();
       },
-      'The grid of "Demo" declares 4 slot(s) for 2 window(s).',
+      'The grid of "Demo" declares 4 window(s) for 2 panel(s).',
     ];
 
     yield 'panel slots mismatch its children' => [
@@ -995,7 +995,7 @@ final class FormTest extends TestCase {
           })
           ->root();
       },
-      'The grid of "a" declares 2 slot(s) for 1 window(s).',
+      'The grid of "a" declares 2 window(s) for 1 panel(s).',
     ];
 
     yield 'zero-width row' => [
