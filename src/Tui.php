@@ -100,7 +100,6 @@ final class Tui {
    */
   protected array $flows = [];
 
-
   /**
    * The resolved key bindings; NULL uses the default preset.
    */

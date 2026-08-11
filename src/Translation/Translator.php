@@ -252,6 +252,7 @@ final class Translator {
     }
 
     $map = [];
+
     foreach ($args as $placeholder => $value) {
       $map[$placeholder] = (string) $value;
     }
@@ -272,9 +273,11 @@ final class Translator {
   public static function detectLanguage(): string {
     foreach (['LC_ALL', 'LC_MESSAGES', 'LANG'] as $var) {
       $value = getenv($var);
+
       if (!is_string($value)) {
         continue;
       }
+
       if ($value === '') {
         continue;
       }

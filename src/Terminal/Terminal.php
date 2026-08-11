@@ -371,9 +371,11 @@ class Terminal {
         }
 
         $chunk = fread($this->input, 64);
+
         if (!is_string($chunk)) {
           continue;
         }
+
         if ($chunk === '') {
           continue;
         }
@@ -405,6 +407,7 @@ class Terminal {
   public static function detectUnicode(): bool {
     foreach (['LC_ALL', 'LC_CTYPE', 'LANG'] as $var) {
       $value = getenv($var);
+
       if (is_string($value) && $value !== '') {
         return stripos($value, 'utf') !== FALSE;
       }

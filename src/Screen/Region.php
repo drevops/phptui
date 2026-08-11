@@ -53,7 +53,6 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
    */
   protected bool $previews = FALSE;
 
-
   /**
    * The blocks packed from the start of its flow, in the order they were added.
    *

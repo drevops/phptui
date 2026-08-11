@@ -66,6 +66,7 @@ class SummaryFormatter {
    */
   protected function openPanels(array $trail, array $panels): array {
     $common = 0;
+
     while ($common < count($trail) && isset($panels[$common]) && $trail[$common] === $panels[$common]) {
       $common++;
     }

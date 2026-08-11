@@ -35,6 +35,7 @@ class KeyParser {
     while ($i < $length) {
       if ($bytes[$i] === "\033") {
         [$key, $consumed] = $this->parseEscape($bytes, $i);
+
         if ($key instanceof Key) {
           $keys[] = $key;
         }
@@ -45,6 +46,7 @@ class KeyParser {
 
       // A multi-byte UTF-8 sequence is one typed character, not several keys.
       $span = $this->utf8Span($bytes, $i);
+
       if ($span > 1) {
         $keys[] = Key::char(substr($bytes, $i, $span));
         $i += $span;
@@ -158,6 +160,7 @@ class KeyParser {
     // rather than leaking its tail as typed characters.
     $j = $start + 2;
     $params = '';
+
     while ($j < $length && ord($bytes[$j]) >= 0x30 && ord($bytes[$j]) <= 0x3F) {
       $params .= $bytes[$j];
       $j++;
@@ -233,6 +236,7 @@ class KeyParser {
     $length = strlen($bytes);
     $j = $start + 3;
     $data = '';
+
     while ($j < $length && $bytes[$j] !== 'M' && $bytes[$j] !== 'm') {
       $data .= $bytes[$j];
       $j++;

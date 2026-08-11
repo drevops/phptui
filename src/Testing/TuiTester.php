@@ -291,6 +291,7 @@ final class TuiTester {
    */
   public function run(string|Key ...$items): Answers {
     $keystrokes = [];
+
     foreach ($items as $item) {
       $keystrokes[] = $item instanceof Key ? KeyEncoder::encode($item) : $item;
     }

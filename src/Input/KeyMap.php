@@ -152,6 +152,7 @@ final class KeyMap {
     $scope_inverted = $this->invert($layers[$scope->token()] ?? [], $scope);
 
     $effective = $base_inverted;
+
     foreach ($scope_inverted as $token => $entry) {
       $effective[$token] = $entry;
     }

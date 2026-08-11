@@ -70,8 +70,10 @@ class HandlerRegistry {
     }
 
     $class = $this->classNameFor($field_id);
+
     foreach ($this->namespaces as $namespace) {
       $fqcn = $namespace . '\\' . $class;
+
       if (class_exists($fqcn)) {
         return $this->cache[$field_id] = $fqcn;
       }
