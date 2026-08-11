@@ -43,11 +43,6 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
   protected string $title;
 
   /**
-   * Whether it is drawn inside a border rather than as bare lines.
-   */
-  protected bool $bordered = FALSE;
-
-  /**
    * The grid drawn beneath the body, or NULL when it carries none.
    */
   protected ?TableSpec $table = NULL;
@@ -132,31 +127,6 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
   }
 
   /**
-   * Draw this block inside a border.
-   *
-   * @param bool $bordered
-   *   Whether it is boxed.
-   *
-   * @return static
-   *   The block.
-   */
-  public function bordered(bool $bordered = TRUE): static {
-    $this->bordered = $bordered;
-
-    return $this;
-  }
-
-  /**
-   * Whether this block is drawn inside a border.
-   *
-   * @return bool
-   *   TRUE when it is.
-   */
-  public function isBordered(): bool {
-    return $this->bordered;
-  }
-
-  /**
    * Lay this block's content out as a grid beneath its body.
    *
    * @param list<mixed> $headers
@@ -190,18 +160,18 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
     $elements = $this->elements($theme, MarkupElementsInterface::class, 'markup');
     $gutter = $this->elements($theme, ChromeElementsInterface::class, 'a conditional row')->chromeIndent($this->depth);
 
-    if ($this->bordered || $this->table instanceof TableSpec) {
+    if ($this->table instanceof TableSpec) {
       // An empty body is no body at all here: a card that was handed one blank
       // line would spend a row on it, where prose simply draws the blank line.
       $body = $this->body === '' ? [] : $this->lines();
-      $headers = $this->table instanceof TableSpec ? $this->table->headers : [];
-      $rows = $this->table instanceof TableSpec ? $this->table->rows : [];
+      $headers = $this->table->headers;
+      $rows = $this->table->rows;
 
       // The one card renderer, so a bordered note and a standalone box are
       // restyled together rather than drifting apart.
       $pieces = $this->elements($theme, PrimitiveElementsInterface::class, 'a card');
 
-      return $this->stepped(implode("\n", $pieces->renderCard(Translator::t($this->title), $body, $headers, $rows, $this->bordered)), $gutter);
+      return $this->stepped(implode("\n", $pieces->renderCard(Translator::t($this->title), $body, $headers, $rows, $this->isBordered())), $gutter);
     }
 
     $lines = [];

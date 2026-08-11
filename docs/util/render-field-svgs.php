@@ -227,7 +227,7 @@ function fieldSpecs(string $tree): array {
     'markup' => [
       'form' => static fn(): Form => Form::create('Markup')->panel('main', 'Note', function (PanelBuilder $p): void {
         $p->note('intro', 'Fresh produce order')->body('A read-only card - the cursor skips it.');
-        $p->note('packing', 'Ready to pack')->body('Framed with a border.')->bordered();
+        $p->note('packing', 'Ready to pack')->body('Framed with a border.')->border();
       }),
       'keys' => [$enter],
       'rows' => 14,
@@ -235,7 +235,7 @@ function fieldSpecs(string $tree): array {
     ],
     'markup-markdown' => [
       'form' => static fn(): Form => Form::create('Markdown note')->panel('main', 'Note', function (PanelBuilder $p): void {
-        $p->note('order', 'Fresh produce order')->body('Pick what is **ripe** today:' . chr(10) . '- crisp `apples`' . chr(10) . '- sweet *pears*' . chr(10) . 'See the [seasonal guide](https://example.com/guide).')->bordered();
+        $p->note('order', 'Fresh produce order')->body('Pick what is **ripe** today:' . chr(10) . '- crisp `apples`' . chr(10) . '- sweet *pears*' . chr(10) . 'See the [seasonal guide](https://example.com/guide).')->border();
       }),
       'keys' => [$enter],
       'rows' => 14,

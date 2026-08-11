@@ -20,6 +20,7 @@ use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\Key;
 use DrevOps\Tui\Input\Scope;
+use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Furniture;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Screen\Region;
@@ -350,9 +351,12 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    * panel and coming back out again all resolve here.
    */
   public function hints(): array {
-    // Windows sitting beside each other are moved between in two directions
+    // Anything drawn beside something else is moved between in two directions
     // rather than one, so what the keys do depends on how they are arranged.
-    $abreast = $this->layout instanceof LayoutInterface && array_filter($this->layout->lines(), static fn(array $line): bool => count($line) > 1) !== [];
+    // A grid says so with several regions on one line; an arrangement running
+    // across says so with its axis, every region of it being drawn abreast.
+    $abreast = $this->layout instanceof LayoutInterface
+      && ($this->layout->axis() === Axis::Columns || array_filter($this->layout->lines(), static fn(array $line): bool => count($line) > 1) !== []);
     $move = $abreast
       ? new Hint('move', Action::MoveUp, Action::MoveDown, Action::MoveLeft, Action::MoveRight)
       : new Hint('move', Action::MoveUp, Action::MoveDown);

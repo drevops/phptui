@@ -19,6 +19,7 @@ use DrevOps\Tui\Screen\ScreenRenderer;
 use DrevOps\Tui\Tests\Fixtures\Screen\Layout\BareLayout;
 use DrevOps\Tui\Tests\Fixtures\Screen\Layout\HomelessLayout;
 use DrevOps\Tui\Tests\Fixtures\Screen\Layout\StallLayout;
+use DrevOps\Tui\Theme\Border;
 use DrevOps\Tui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -122,7 +123,10 @@ final class BuilderTest extends TestCase {
     });
 
     $screen = (new Assembler())->assemble($panel);
-    $rendered = (new ScreenRenderer(new DefaultTheme(40, ['color' => FALSE])))->render($screen, 6, 40);
+    // The theme is told the frame is unboxed because the renderer is drawing it
+    // unboxed: the buttons take their rules from the frame, so a theme that
+    // claimed a border here would draw a line nothing joins.
+    $rendered = (new ScreenRenderer(new DefaultTheme(40, ['color' => FALSE, 'border' => Border::None])))->render($screen, 6, 40);
     $lines = array_map(rtrim(...), explode("\n", $rendered));
 
     $this->assertSame('Delivery', $lines[0]);

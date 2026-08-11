@@ -171,15 +171,15 @@ final class Actions extends AbstractBlock implements ActivateCapableInterface, F
 
     $buttons = $elements->actionSelector($this->isFocused()) . ' ' . implode($elements->actionSeparator(), $parts);
 
-    if ($this->refusal === NULL) {
-      return $buttons;
-    }
-
     // Against the buttons rather than a row away from them: the reason is what
     // the button now says, so nothing is allowed to stand between the two - and
     // it stands off the mark's column, because the mark says where the cursor
     // is and the reason is not somewhere the cursor can be.
-    return $elements->actionSelector(FALSE) . ' ' . $elements->actionRefusal(Translator::t($this->refusal)) . "\n" . $buttons;
+    if ($this->refusal !== NULL) {
+      return $elements->actionSelector(FALSE) . ' ' . $elements->actionRefusal(Translator::t($this->refusal)) . "\n" . $buttons;
+    }
+
+    return $buttons;
   }
 
 }

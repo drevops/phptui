@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Tests\Unit\Screen;
 
+use DrevOps\Tui\Block\Actions;
 use DrevOps\Tui\Block\Breadcrumb;
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Field;
@@ -23,6 +24,7 @@ use DrevOps\Tui\Screen\Screen;
 use DrevOps\Tui\Screen\ScreenRenderer;
 use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\Border;
+use DrevOps\Tui\Theme\BorderSide;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\Spacing;
@@ -158,7 +160,7 @@ final class ScreenRenderTest extends TestCase {
     // The frame belongs to no block, so the theme is asked for it directly -
     // and a theme that declares none of it cannot draw one.
     $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('cannot draw the window chrome');
+    $this->expectExceptionMessage('cannot draw a border');
 
     (new ScreenRenderer($this->createStub(ThemeInterface::class), Border::Line))->render((new Screen())->layout(new DefaultLayout()), 5, 20);
   }
@@ -439,6 +441,61 @@ final class ScreenRenderTest extends TestCase {
     $this->assertSame('Legend', $lines[5]);
   }
 
+  public function testUnboxedFrameSetsTheButtonsApartWithNothing(): void {
+    $screen = (new Screen())->layout(new DefaultLayout());
+    $screen->in('content')->add($this->actions());
+
+    // A frame with no box has no line to lend them, so the buttons cost the one
+    // row they draw and nothing is ruled off.
+    $this->assertSame(['', '  [ Submit ]  [ Cancel ]', '', '', '', ''], $this->render($screen, 6, 30));
+  }
+
+  public function testOutlinedRegionDrawsItsOwnEdgesInsideTheCellsItWasGranted(): void {
+    $layout = new DefaultLayout();
+    $layout->in('content')->border(BorderSide::ALL, Border::Line, 'Notes');
+
+    $screen = (new Screen())->layout($layout);
+    $screen->in('header')->add(new Markup('trail', 'Orchard'));
+    $screen->in('content')->add(new Markup('notes', "Pick the produce.\nWeigh the crates."));
+
+    // The box spends a row top and bottom and a column each side of the four
+    // rows the layout granted, so two rows of the note are left in sight.
+    $this->assertSame([
+      'Orchard',
+      '┌─ Notes ──────────────────────┐',
+      '│Pick the produce.             │',
+      '│Weigh the crates.             │',
+      '└──────────────────────────────┘',
+      '',
+    ], $this->render($screen, 6, 32));
+  }
+
+  public function testOutlinedRegionFallsBackToItsContentsWhenTheBoxWouldNotFit(): void {
+    $layout = new DefaultLayout();
+    $layout->in('header')->border(BorderSide::ALL, Border::Line);
+
+    $screen = (new Screen())->layout($layout);
+    $screen->in('header')->add(new Markup('trail', 'Orchard'));
+
+    // One row has no room for a box and anything inside it, so the row goes to
+    // the contents and no edge is drawn.
+    $this->assertSame('Orchard', $this->render($screen, 6, 32)[0]);
+  }
+
+  public function testCaptionWiderThanItsEdgeIsCutRatherThanPushingTheCornerOff(): void {
+    $layout = new DefaultLayout();
+    $layout->in('content')->border(BorderSide::ALL, Border::Line, 'A caption nothing this narrow could hold');
+
+    $screen = (new Screen())->layout($layout);
+    $screen->in('content')->add(new Markup('notes', 'Pick.'));
+
+    $lines = $this->render($screen, 6, 20);
+
+    // The box stays the width the layout granted whatever it was captioned.
+    $this->assertSame(20, Ansi::width($lines[1]));
+    $this->assertStringEndsWith('┐', $lines[1]);
+  }
+
   public function testAnEmptyLayoutDrawsNothingAtAll(): void {
     $layout = new class() extends AbstractLayout {
 
@@ -467,9 +524,35 @@ final class ScreenRenderTest extends TestCase {
    *   The rows.
    */
   protected function render(Screen $screen, int $rows, int $columns, Border $border = Border::None): array {
-    $rendered = (new ScreenRenderer(new DefaultTheme($columns, ['color' => FALSE]), $border))->render($screen, $rows, $columns);
+    $rendered = (new ScreenRenderer(new DefaultTheme($columns, ['color' => FALSE, 'border' => $border]), $border))->render($screen, $rows, $columns);
 
     return $rendered === '' ? [] : array_map(rtrim(...), explode("\n", $rendered));
+  }
+
+  /**
+   * Draw a screen inside a box and return its rows, trailing spaces kept.
+   *
+   * @param \DrevOps\Tui\Screen\Screen $screen
+   *   The screen.
+   * @param int $rows
+   *   The terminal rows.
+   * @param int $columns
+   *   The terminal columns.
+   *
+   * @return list<string>
+   *   The rows.
+   */
+  protected function framed(Screen $screen, int $rows, int $columns): array {
+    $theme = new DefaultTheme($columns, ['color' => FALSE, 'border' => Border::Line]);
+
+    return explode("\n", (new ScreenRenderer($theme, Border::Line))->render($screen, $rows, $columns));
+  }
+
+  /**
+   * The buttons that end a form.
+   */
+  protected function actions(): Actions {
+    return (new Actions())->action('submit', 'Submit')->action('cancel', 'Cancel');
   }
 
 }

@@ -45,6 +45,11 @@ card and the one a markup block draws in a panel, grid included, so a theme
 override restyles the two together. Keep it that way: a renderer that reaches
 for form state cannot be used standalone.
 
+A border is not a card. Anything occupying a rectangle - the screen, a region,
+any block - declares its edges with the border capability, and the renderer
+sizes the box while the theme draws the glyphs. A block never learns the space
+it was given, so it declares its edges and never draws them.
+
 
 ### Namespace Structure
 

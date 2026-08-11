@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Screen;
 
 use DrevOps\Tui\Block\BlockInterface;
+use DrevOps\Tui\Screen\Capability\BorderCapableInterface;
+use DrevOps\Tui\Screen\Capability\BorderCapableTrait;
 use DrevOps\Tui\Screen\Capability\ScrollCapableInterface;
 use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
 
@@ -26,8 +28,9 @@ use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
  *
  * @package DrevOps\Tui\Screen
  */
-final class Region implements ScrollCapableInterface {
+final class Region implements BorderCapableInterface, ScrollCapableInterface {
 
+  use BorderCapableTrait;
   use ScrollCapableTrait;
 
   /**
@@ -49,6 +52,7 @@ final class Region implements ScrollCapableInterface {
    * Whether a panel in it shows what is behind it rather than a row.
    */
   protected bool $previews = FALSE;
+
 
   /**
    * The blocks packed from the start of its flow, in the order they were added.

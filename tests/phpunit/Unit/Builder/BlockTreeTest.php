@@ -239,7 +239,7 @@ final class BlockTreeTest extends TestCase {
 
     yield 'a card' => [
       static function (PanelBuilder $p): void {
-        $p->markup('notice', 'Deliveries leave at dawn.')->bordered();
+        $p->markup('notice', 'Deliveries leave at dawn.')->border();
       },
       TRUE,
       FALSE,
@@ -255,7 +255,7 @@ final class BlockTreeTest extends TestCase {
 
     yield 'a note is the same block' => [
       static function (PanelBuilder $p): void {
-        $p->note('packing', 'Ready to pack')->body('Framed with a border.')->bordered();
+        $p->note('packing', 'Ready to pack')->body('Framed with a border.')->border();
       },
       TRUE,
       FALSE,

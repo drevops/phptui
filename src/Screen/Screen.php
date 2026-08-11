@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Screen;
 
+use DrevOps\Tui\Screen\Capability\BorderCapableInterface;
+use DrevOps\Tui\Screen\Capability\BorderCapableTrait;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 
 /**
@@ -15,7 +17,9 @@ use DrevOps\Tui\Screen\Layout\LayoutInterface;
  *
  * @package DrevOps\Tui\Screen
  */
-final class Screen {
+final class Screen implements BorderCapableInterface {
+
+  use BorderCapableTrait;
 
   /**
    * The layout arranging this screen, once one is given.

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Theme;
 
 use DrevOps\Tui\Block\Element\ActionsElementsInterface;
+use DrevOps\Tui\Block\Element\BorderElementsInterface;
 use DrevOps\Tui\Block\Element\BreadcrumbElementsInterface;
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Element\FieldElementsInterface;
@@ -13,6 +14,7 @@ use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Block\Element\PanelElementsInterface;
 use DrevOps\Tui\Block\Element\ProgressElementsInterface;
 use DrevOps\Tui\Input\KeyName;
+use DrevOps\Tui\Translation\Translator;
 
 /**
  * The floor a theme starts from: every element, drawn with nothing at all.
@@ -30,7 +32,7 @@ use DrevOps\Tui\Input\KeyName;
  *
  * @package DrevOps\Tui\Theme
  */
-abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface, BreadcrumbElementsInterface, ChromeElementsInterface, FieldElementsInterface, LegendElementsInterface, MarkupElementsInterface, PanelElementsInterface, ProgressElementsInterface {
+abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface, BorderElementsInterface, BreadcrumbElementsInterface, ChromeElementsInterface, FieldElementsInterface, LegendElementsInterface, MarkupElementsInterface, PanelElementsInterface, ProgressElementsInterface {
 
   /**
    * The spinner animation frames that need no glyph outside ASCII.
@@ -318,7 +320,9 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
    * {@inheritdoc}
    */
   public function fieldLoading(): string {
-    return '...';
+    // The word alone: an ellipsis is a mark a theme trails the word with, and
+    // the floor has nothing to draw one in.
+    return Translator::t('Loading');
   }
 
   /**
@@ -463,6 +467,72 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
    */
   public function actionRefusal(string $reason): string {
     return $reason;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderTopLeft(Border $style): string {
+    return '+';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderTopRight(Border $style): string {
+    return '+';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderBottomLeft(Border $style): string {
+    return '+';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderBottomRight(Border $style): string {
+    return '+';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderLeftJunction(Border $style): string {
+    return '+';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderRightJunction(Border $style): string {
+    return '+';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderHorizontal(Border $style): string {
+    return match ($style) {
+      Border::Double => '=',
+      Border::None, Border::Line, Border::Rounded => '-',
+    };
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderVertical(Border $style): string {
+    return '|';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function borderPaint(string $text): string {
+    return $text;
   }
 
   /**

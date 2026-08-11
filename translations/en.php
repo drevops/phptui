@@ -44,6 +44,7 @@ return [
   'January' => 'January',
   'July' => 'July',
   'June' => 'June',
+  'Loading' => 'Loading',
   'March' => 'March',
   'Max @size' => 'Max @size',
   'May' => 'May',

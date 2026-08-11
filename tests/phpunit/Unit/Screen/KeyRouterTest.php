@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Screen;
 
 use DrevOps\Tui\Block\Field;
+use DrevOps\Tui\Builder\Form;
+use DrevOps\Tui\Builder\PanelBuilder;
 use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
@@ -276,6 +278,43 @@ final class KeyRouterTest extends TestCase {
    */
   protected function theme(): DefaultTheme {
     return new DefaultTheme(80, ['color' => FALSE]);
+  }
+
+  public function testCursorStepsBetweenTheColumnsOfAnArrangementRunningAcross(): void {
+    $form = Form::create('Market hall')
+      ->panel('hall', 'Hall', function (PanelBuilder $p): void {
+        $p->layout('two-column');
+
+        $p->in('left');
+        $p->text('item', 'Item')->default('Pear');
+        $p->number('crates', 'Crates')->default(6);
+
+        $p->in('right');
+        $p->confirm('gift', 'Gift wrap?')->default(FALSE);
+      });
+
+    $panel = $form->root()->children()[0];
+    $router = (new KeyRouter($panel))->bind(KeyMapManager::create());
+
+    // Every region of an arrangement running across is drawn beside its
+    // siblings, so the whole of it is one visual row and each region is one
+    // step along it - landing on the first row that region holds.
+    $this->assertSame('item', $this->cursorId($router));
+
+    $router->handle(Key::named(KeyName::Right));
+    $this->assertSame('gift', $this->cursorId($router));
+
+    $router->handle(Key::named(KeyName::Left));
+    $this->assertSame('item', $this->cursorId($router));
+  }
+
+  /**
+   * The id of the field the cursor is on.
+   */
+  protected function cursorId(KeyRouter $router): string {
+    $focused = $router->focused();
+
+    return $focused instanceof Field ? $focused->id() : '';
   }
 
 }

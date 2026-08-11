@@ -7,6 +7,7 @@ namespace DrevOps\Tui\Tests\Unit;
 use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Answers\Provenance;
 use DrevOps\Tui\Block\Actions;
+use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
@@ -24,6 +25,7 @@ use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Input\Scope;
 use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Primitive\Progress;
+use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\ScreenController;
 use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Terminal\Terminal;
@@ -246,6 +248,59 @@ final class TuiTest extends TestCase {
     $this->expectException(\InvalidArgumentException::class);
 
     $this->tui()->layout('orchard-grid');
+  }
+
+  public function testPlacedBlocksStandBesideTheFurnitureTheirRegionAlreadyHolds(): void {
+    $tester = (new TuiTester($this->demoForm()))
+      ->options(['color' => FALSE, 'border' => Border::None])
+      ->cols(80)
+      ->place('header', new Markup('preview', '(read-only preview)'))
+      ->place('footer', new Markup('version', 'v1.2.3'), tail: TRUE)
+      ->flow('header', Axis::Columns)
+      ->flow('footer', Axis::Columns);
+
+    $tester->run(Key::named(KeyName::Interrupt));
+    $lines = explode("\n", $tester->display());
+
+    // The furniture is placed first, so what the consumer adds lands after the
+    // trail rather than in front of it - and running across is what puts the
+    // two on one row instead of two.
+    $this->assertSame('Demo (read-only preview)', rtrim($lines[0]));
+    // Packing from the end is what holds the version against the far edge.
+    $this->assertStringEndsWith('v1.2.3', rtrim($lines[array_key_last($lines)]));
+  }
+
+  public function testRegionNobodyTurnedRunsItsBlocksDownItself(): void {
+    $tester = (new TuiTester($this->demoForm()))
+      ->options(['color' => FALSE, 'border' => Border::None])
+      ->cols(60)
+      ->place('header', new Markup('preview', '(read-only preview)'));
+
+    $tester->run(Key::named(KeyName::Interrupt));
+    $lines = explode("\n", $tester->display());
+
+    // Down a header of one row the trail has it and the block has nowhere to
+    // go, because a region that was not declared to scroll clips what outruns
+    // it. Turning the region across is what makes room for both.
+    $this->assertSame('Demo', rtrim($lines[0]));
+    $this->assertStringNotContainsString('(read-only preview)', $tester->display());
+  }
+
+  #[DataProvider('dataProviderRegionNameNothingAnswersToThrowsWhereItIsWritten')]
+  public function testRegionNameNothingAnswersToThrowsWhereItIsWritten(\Closure $state): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Unknown region "orchard"');
+
+    $state($this->tui());
+  }
+
+  public static function dataProviderRegionNameNothingAnswersToThrowsWhereItIsWritten(): \Iterator {
+    yield 'placing' => [static fn(Tui $tui): Tui => $tui->place('orchard', new Markup('preview', 'Preview'))];
+    yield 'flowing' => [static fn(Tui $tui): Tui => $tui->flow('orchard', Axis::Columns)];
+    // Named before the layout that would have to answer to it: the check is
+    // made again from there, so the order the two are written in is free.
+    yield 'placing before the layout' => [static fn(Tui $tui): Tui => $tui->place('orchard', new Markup('preview', 'Preview'))->layout('two-column')];
+    yield 'flowing before the layout' => [static fn(Tui $tui): Tui => $tui->flow('orchard', Axis::Columns)->layout('two-column')];
   }
 
   public function testEverySessionDrivesTheOneDeclaredTree(): void {

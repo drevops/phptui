@@ -15,7 +15,7 @@ A **region** is one named slot inside it. Blocks go in by name, so nothing depen
 ```
 Screen        the frame
 └─ Layout     names the regions, sizes them, says which scroll - and may scroll as one
-   └─ Region  holds blocks, flows them, scrolls them
+   └─ Region  holds blocks, flows them, scrolls them, draws its own edges
       └─ Block   a field, a panel, a note, the key hints
 ```
 
@@ -164,7 +164,28 @@ public function __construct() {
 
 Use it where no single region can do the moving, which is exactly what a [grid](#a-grid-of-windows) needs: its lines have to move together, and none of them sees its siblings. The layout is then drawn whole and shows what its space has room for, marking whichever edge the rest is past - the region rules, one level up.
 
-[`playground/20-layouts-scrolling.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-scrolling.php) prints one grid three times: with the room it comes to, in a frame too short for it, and moved down three rows - carrying the panel's own rows along with the windows.
+[`playground/20-layouts-scrolling.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-scrolling.php) runs one grid in a frame deliberately too short for it, so the arrow keys move the whole surface and the panel's own rows travel with the windows.
+
+## Drawing a region's edges
+
+A region draws its own box when it says so, captioned in the top edge:
+
+```php
+$this->region('noticeboard')->flex(2)->border(BorderSide::ALL, Border::Line, 'Today at the market');
+```
+
+```
+╭─ Today at the market ─╮
+│ Stalls open at six.   │
+│ Scales close at four. │
+╰───────────────────────╯
+```
+
+The box **spends the region's own cells**: a row top and bottom and a column each side of what the layout granted, exactly as the frame around the whole screen spends the terminal's. A region granted four rows shows two of them. Nothing else moves - a sibling gets the cells it always got, because the box is drawn inside the grant rather than around it. Below three rows or three columns there is no room for a box and any contents both, so the region draws its contents and no edge.
+
+Passing no caption writes the region's own name.
+
+[`playground/20-layouts-nested.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-nested.php) stacks four arrangements in one form - a custom screen layout, a custom two-column panel layout, a grid of windows, and the shipped `two-column` on a panel inside one of those windows - and runs it twice, once as it ships and once inspected.
 
 ## Flow: two blocks on one line
 
@@ -218,7 +239,29 @@ Flow is what a layout and a region share; sizing is what only a layout does. Bot
 | Areas that scroll independently   | a layout                                 |
 | Somewhere you can navigate into   | a [panel](/panels), which nests a layout |
 
-[`playground/20-layouts-region-flow.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-region-flow.php) draws the same header three ways - down a one-row header where the note is clipped, across it where both fit, and down a two-row header where they stack.
+[`playground/20-layouts-region-flow.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-region-flow.php) runs the same form twice, the same two blocks placed in both, with only the regions turned - across, where the note shares the header row and the version string the footer row, then down, where the note stacks under the trail and the one-row footer cuts the version.
+
+## Putting your own blocks in a region
+
+The regions around the form are the **session's** rather than the form's, so what stands in them is stated on the facade rather than declared on a panel. `->place()` puts a block in a named region and `->flow()` turns that region:
+
+```php
+use DrevOps\Tui\Block\Markup;
+use DrevOps\Tui\Screen\Axis;
+
+(new Tui($form))
+  ->layout('market')
+  ->place('header', new Markup('preview', '(read-only preview)'))
+  ->place('footer', new Markup('version', 'v1.2.3'), tail: TRUE)
+  ->flow('header', Axis::Columns)
+  ->run();
+```
+
+The [standard furniture](#where-the-standard-furniture-goes) is placed first, so a block of yours lands **after** the trail or the key hints its region already holds. `tail: TRUE` packs it from the end of the region's run instead of the start, which is the same statement `->tail()` makes on a region.
+
+Both take a region name, and a name the layout does not answer to throws where it is written rather than mid-session - whichever order the layout and the region were named in, since naming a layout re-checks every region stated before it.
+
+A region running down gives each block a row and clips what outruns it, so a one-row header has room for the trail and nothing else. Turning it across, or giving it the rows, is what makes room for both.
 
 ## Writing one
 
@@ -311,7 +354,7 @@ final class StallLayout extends AbstractLayout {
 
 `NULL` is a refusal: the piece is never drawn. Only `Furniture::Body` has to be answered, because a screen with nowhere to draw the form is refused where the layout is named rather than opening on an empty frame.
 
-Everything the session places goes into the **screen's** regions, never into the panels the form declared - so a second run over the same declaration opens on the same first frame rather than on the last run's furniture. A layout meant to arrange a panel's own blocks can name its regions anything, because nothing is placed in it but what the form places itself.
+Everything the session places goes into the **screen's** regions, never into the panels the form declared - so a second run over the same declaration opens on the same first frame rather than on the last run's furniture. That holds for [blocks you place yourself](#putting-your-own-blocks-in-a-region) too. A layout meant to arrange a panel's own blocks can name its regions anything, because nothing is placed in it but what the form places itself.
 
 ## What a layout does not touch
 

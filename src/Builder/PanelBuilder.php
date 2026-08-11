@@ -439,7 +439,7 @@ final class PanelBuilder {
   /**
    * Add markup: formatted content, and nothing else.
    *
-   * Chain `->bordered()` to draw it inside a card and `->table()` to lay it out
+   * Chain `->border()` to draw it inside a card and `->table()` to lay it out
    * as a grid; both are presentation choices over the same block. `->when()`
    * gates it on an earlier answer, which is what lets a warning appear only
    * when one calls for it.
