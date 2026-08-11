@@ -167,9 +167,6 @@ class FieldFactory {
     $completion = $block->completion();
     $source = $completion instanceof \Closure ? $completion($answers) : $completion;
 
-    // A candidate is both drawn as ghost text and landed in the buffer whole,
-    // and the two doors it arrives through - a declared list and a rule that
-    // computes one - meet here.
     return array_map(Ansi::sanitize(...), Field::stringList($source));
   }
 

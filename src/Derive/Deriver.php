@@ -42,8 +42,7 @@ class Deriver {
           continue;
         }
 
-        // A computed value is text nobody has measured, and it settles into the
-        // answers exactly as one somebody typed does.
+        // A derive template is consumer text and is never validated.
         $computed = Ansi::sanitizeValue($rule->compute($values));
         if (($values[$id] ?? NULL) !== $computed) {
           $values[$id] = $computed;

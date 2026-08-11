@@ -87,22 +87,18 @@ final class Ansi {
   }
 
   /**
-   * Drop the control bytes a terminal acts on, keeping the ones text carries.
+   * Drop the control bytes a terminal acts on, keeping the ones text uses.
    *
-   * Text a form is built from is drawn as it stands, so an escape sequence
-   * inside it reaches the terminal and clears the screen, moves the cursor or
-   * recolours everything after it. What a terminal reads as an instruction
-   * goes; the newline and the tab, which are text rather than instruction,
-   * stay.
+   * Consumer text is drawn unaltered, so an escape sequence inside it clears
+   * the screen, moves the cursor or recolours the output. Newline and tab are
+   * text and are kept; every other C0 control and DEL is removed.
    *
-   * A carriage return is folded to a newline rather than dropped, because it is
-   * a line break written on another platform - dropping it would run two lines
-   * together where the author wrote two.
+   * A carriage return folds to a newline instead of being dropped, because it
+   * is a line break written on another platform.
    *
-   * The C1 controls go too, matched as the two bytes UTF-8 encodes them as: a
-   * terminal in 8-bit mode reads U+009B as a CSI introducer and would open a
-   * sequence on it. The lead byte they are matched behind never appears inside
-   * another character, so no multi-byte text is cut in half to reach them.
+   * The C1 controls are removed as the two bytes UTF-8 encodes them as: a
+   * terminal in 8-bit mode reads U+009B as a CSI introducer. Their lead byte
+   * never appears inside another character, so multi-byte text is unaffected.
    *
    * @param string $text
    *   The text.
@@ -119,10 +115,9 @@ final class Ansi {
   /**
    * Sanitize every string a value holds, whatever shape the value has.
    *
-   * An answer is one string, a list of them, or something that is not text at
-   * all, and each is drawn wherever the answer is. Arrays are walked to their
-   * leaves - keys included, because a keyed set draws its keys - and anything
-   * that is not text is handed back as it was.
+   * An answer is a string, a list of strings, or a value that is not text.
+   * Arrays are walked to their leaves, string keys included, because a keyed
+   * set draws its keys. A non-string value is returned unchanged.
    *
    * @param mixed $value
    *   The value.

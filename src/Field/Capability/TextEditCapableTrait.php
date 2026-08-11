@@ -99,9 +99,8 @@ trait TextEditCapableTrait {
   /**
    * Insert text at the cursor.
    *
-   * A control byte with no binding on it arrives here as an ordinary typed
-   * character - a paste carries whole sequences that way - so what is inserted
-   * is filtered rather than trusted to be printable.
+   * Unbound control keys arrive as ordinary characters, and a paste delivers
+   * whole escape sequences the same way.
    *
    * @param string $text
    *   The text to insert.

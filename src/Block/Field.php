@@ -477,8 +477,7 @@ final class Field extends AbstractBlock implements
    * reason on its error line.
    */
   public function accept(mixed $value = NULL): bool {
-    // A draft was filtered as it was typed; a value handed in directly has not
-    // been through anything yet.
+    // $draft is filtered when it is set; a value passed in directly is not.
     $offered = func_num_args() === 0 ? $this->draft : Ansi::sanitizeValue($value);
 
     $refusal = $this->refuses($offered, $this->reusableValidate);
@@ -492,8 +491,7 @@ final class Field extends AbstractBlock implements
     $transform = $this->transform ?? $this->reusableTransform;
 
     $this->refusal = NULL;
-    // What a normalization returns is a value in its own right rather than the
-    // one that was measured, so it comes in through the same door.
+    // The transform can return text that was never validated.
     $this->value = $transform instanceof \Closure ? Ansi::sanitizeValue($transform($offered)) : $offered;
     $this->draft = NULL;
     $this->mode = Mode::View;

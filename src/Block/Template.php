@@ -62,9 +62,8 @@ final class Template {
     protected array $labels = [],
     protected array $validators = [],
   ) {
-    // The pattern is filtered before it is split, so the fixed chunks it draws,
-    // the expression it matches with and the string it assembles all describe
-    // the same shape.
+    // Filter before splitting, so the literals, the expression and the
+    // assembled string all describe the same pattern.
     $this->pattern = Ansi::sanitize($pattern);
     $this->labels = array_map(Ansi::sanitize(...), $this->labels);
     $this->split($this->pattern);

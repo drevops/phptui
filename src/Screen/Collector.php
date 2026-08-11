@@ -394,9 +394,8 @@ final class Collector {
    *   The value and its source.
    */
   protected function resolveInitial(Field $field, array $supplied, Context $context): array {
-    // A supplied value is whatever an environment variable or a JSON payload
-    // held, and a computed default is whatever consumer code returned; neither
-    // has been through a field, which is where a declared value is filtered.
+    // Environment values, JSON payloads and computed defaults bypass
+    // Field::default(), so they are filtered here instead.
     if (array_key_exists($field->id(), $supplied)) {
       return [Ansi::sanitizeValue($supplied[$field->id()]), Source::Input];
     }
@@ -428,8 +427,8 @@ final class Collector {
   protected function discoverValue(Field $field, Context $context): mixed {
     $discover = $field->discovery();
 
-    // Filtered here rather than where the value lands, so what is measured
-    // against the field's rows is the same text the field would go on to draw.
+    // Filter before the value is matched against the field's options, so the
+    // matched text and the drawn text are identical.
     if ($discover instanceof DiscoverInterface) {
       return Ansi::sanitizeValue($discover->discover($context->directory));
     }

@@ -258,7 +258,7 @@ final class Output {
    *   The cells.
    *
    * @return list<string>
-   *   The cells, each carrying nothing a terminal acts on.
+   *   The filtered cells.
    */
   protected static function toCells(array $cells): array {
     return array_map(Ansi::sanitize(...), $cells);

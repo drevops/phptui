@@ -112,12 +112,10 @@ class ExternalEditor {
   }
 
   /**
-   * Condition the saved buffer into something the field can hold.
+   * Condition the saved buffer into a value the field can hold.
    *
    * Drops a single trailing newline the editor appended by convention, and
-   * filters the control bytes a file written by another program can carry -
-   * what came back is text somebody typed elsewhere, not text this library
-   * composed.
+   * filters the control bytes an externally written file can contain.
    *
    * @param string $content
    *   The raw saved buffer.

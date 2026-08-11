@@ -14,9 +14,8 @@ use DrevOps\Tui\Terminal\Ansi;
  * Heading rows, and disabled Option rows, are visual structure that navigation
  * skips and collection never returns.
  *
- * Every row the library holds comes through here - the ones a field declares
- * and the ones a loader, a resolver or a query source hands back - so this is
- * the one place a row's text is filtered.
+ * Every row reaches this constructor, whether a field declares it or a loader,
+ * a resolver or a query source returns it. Row text is filtered here only.
  *
  * @package DrevOps\Tui\Block
  */

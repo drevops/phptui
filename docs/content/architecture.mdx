@@ -31,9 +31,9 @@ Under all three sits the terminal. `Terminal` is the device - raw mode, the alte
 
 ### Text you supply is filtered at the door
 
-A terminal acts on some bytes rather than printing them, so a label, a markup body or a collected answer carrying `ESC[2J` would clear the screen instead of reading as text. Every string you hand the library is filtered where it is taken in - a block setter, a value the collection resolves, a save from your `$EDITOR`, a key you type - by `Ansi::sanitize()`. The escapes go; the newline and the tab stay, and a `CRLF` or a lone `CR` folds to a newline, so multi-line content keeps its lines. A block therefore never holds a byte a terminal would act on, and that holds for a theme of your own too: what an element is handed has already been through the filter.
+A terminal acts on some bytes rather than printing them, so a label, a markup body or a collected answer containing `ESC[2J` would clear the screen instead of reading as text. `Ansi::sanitize()` filters every string you hand the library, at the point it is taken in: a block setter, a value the collection resolves, a save from your `$EDITOR`, a key you type. Escapes are removed. Newline and tab are kept, and `CRLF` or a lone `CR` folds to a newline, so multi-line content keeps its lines.
 
-The library's own escapes are unaffected: the theme composes styling after the filter has run, so a form built from untrusted content keeps its color.
+A block therefore never holds a byte a terminal would act on, and that applies to your own theme too - an element only ever receives filtered text. The library's own escapes are unaffected, because the theme composes styling after the filter runs, so a form built from untrusted content keeps its color.
 
 ## Step 1 - describe the questions
 
