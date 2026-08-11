@@ -113,7 +113,6 @@ class Template extends AbstractField implements TextEditCapableInterface {
    *
    * The assembled string, with the live buffer standing in for its slot.
    */
-  #[\Override]
   protected function liveValue(): mixed {
     return $this->template->assemble($this->values());
   }

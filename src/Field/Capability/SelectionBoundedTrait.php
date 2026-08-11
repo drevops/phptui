@@ -52,6 +52,7 @@ trait SelectionBoundedTrait {
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   protected function renderConstraint(ThemeInterface $theme): string {
     return $this->selectionHint($theme);
   }
