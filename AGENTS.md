@@ -127,6 +127,18 @@ composer install
 - All files must end with a newline character
 - Local variables/method arguments: `snake_case`
 - Method names/class properties: `camelCase`
+- **A method that answers a yes/no question about state is named `is*`.** The
+  prefix is what marks a return as boolean, so a reader never has to open the
+  method to find out - existing examples: `isRequired()`, `isMultiple()`,
+  `isScrolling()`, `isSelectable()`, `isQueryDriven()`. This covers the
+  `has*` possession predicates too: prefer `is*` for a new one.
+
+  The single exception is a **command that reports its own outcome**. A method
+  whose job is to do something, and whose boolean says whether it happened,
+  keeps its verb - `accept()`, `capture()`, `activate()`, `load()`, `leave()`,
+  `prepare()`. Those are not questions, and an `is` prefix would misname the
+  work they do. If a method both acts and answers, it is a command, not a
+  predicate.
 - **Never model a closed set of values as string literals.** Any value that is
   one-of-a-fixed-set (a kind, a state, a mode, a source) is a backed or pure
   enum, and every property, parameter and return that carries it is typed with
