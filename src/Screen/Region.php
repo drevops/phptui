@@ -225,7 +225,6 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
     return $this->previews;
   }
 
-
   /**
    * Draw a block in this region.
    *

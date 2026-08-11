@@ -6,6 +6,7 @@ namespace Playground\Layouts;
 
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Layout\AbstractLayout;
+use DrevOps\Tui\Theme\BorderSide;
 
 /**
  * The stalls beside a standing noticeboard, in two columns of unequal width.
@@ -27,7 +28,7 @@ final class StallFloorLayout extends AbstractLayout {
     parent::__construct(Axis::Columns);
 
     $this->region('stalls')->flex(3)->scrolls();
-    $this->region('noticeboard')->flex(2)->outlined('Today at the market');
+    $this->region('noticeboard')->flex(2)->border(BorderSide::ALL, NULL, 'Today at the market');
   }
 
 }

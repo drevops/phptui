@@ -262,8 +262,6 @@ class ScreenController {
    * @param array<string,\DrevOps\Tui\Screen\Axis> $flows
    *   The direction a region runs its blocks, keyed by region name, where the
    *   consumer states one other than the layout's.
-   * @param bool $inspect
-   *   Whether every region is boxed and captioned with its name.
    */
   public function __construct(
     protected Panel $panel,
@@ -281,13 +279,12 @@ class ScreenController {
     ?ExternalEditor $external_editor = NULL,
     array $placements = [],
     array $flows = [],
-    protected bool $inspect = FALSE,
   ) {
     $this->keys = $keys ?? KeyMapManager::create();
     $this->collector = $collector ?? new Collector();
     $this->externalEditor = $external_editor ?? new ExternalEditor();
     $this->scroller = new Scroller();
-    $this->renderer = new ScreenRenderer($theme, $border, $inspect);
+    $this->renderer = new ScreenRenderer($theme, $border);
 
     $this->assembler = new Assembler();
     $this->screen = $this->assembler->assemble($panel, $this->layout);
@@ -1573,7 +1570,7 @@ class ScreenController {
 
     // A dialog with no edge is a dialog nobody can see the edge of, so a form
     // that draws no frame still draws one around what floats over it.
-    $renderer = new ScreenRenderer($this->theme, $this->border === Border::None ? Border::Line : $this->border, $this->inspect);
+    $renderer = new ScreenRenderer($this->theme, $this->border === Border::None ? Border::Line : $this->border);
 
     return $renderer->render($staging, $height, $columns);
   }
@@ -1590,9 +1587,7 @@ class ScreenController {
   protected function depth(Screen $staging): int {
     [$rows] = $this->renderer->extent($staging->currentLayout(), self::CONTENT);
 
-    // Every region of the dialog is boxed while the layout is being inspected,
-    // and the box takes rows the dialog has to be tall enough to hold.
-    return $this->inspect ? $rows + ScreenRenderer::OUTLINE : $rows;
+    return $rows;
   }
 
   /**

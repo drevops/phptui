@@ -47,7 +47,7 @@ $answers = (new Tui($form))->markdown()->run();
 ```php
 $p->note('intro', 'Fresh produce order')
   ->body("Pick what is **ripe** today:\n- crisp apples\n- sweet pears\nSee the [seasonal guide](https://example.com/seasonal-guide).")
-  ->bordered();
+  ->border();
 
 $p->number('quantity', 'Quantity')->min(1)->max(99)
   ->description('Baskets hold up to **99**; order more in a *second* basket.');

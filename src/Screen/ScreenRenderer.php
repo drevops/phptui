@@ -6,13 +6,15 @@ namespace DrevOps\Tui\Screen;
 
 use DrevOps\Tui\Block\BlockInterface;
 use DrevOps\Tui\Block\Capability\DependCapableInterface;
-use DrevOps\Tui\Block\Element\ActionsElementsInterface;
+use DrevOps\Tui\Block\Element\BorderElementsInterface;
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Screen\Layout\LayoutInterface;
 use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Terminal\Box;
+use DrevOps\Tui\Screen\Capability\BorderCapableInterface;
 use DrevOps\Tui\Theme\Border;
+use DrevOps\Tui\Theme\BorderSide;
 use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
 use DrevOps\Tui\Theme\Capability\UnicodeCapableInterface;
 use DrevOps\Tui\Theme\Spacing;
@@ -46,11 +48,6 @@ final class ScreenRenderer {
   public const int CHROME = 4;
 
   /**
-   * The cells a region's own box spends on each axis, both sides.
-   */
-  public const int OUTLINE = 2;
-
-  /**
    * Construct a renderer.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
@@ -58,15 +55,10 @@ final class ScreenRenderer {
    * @param \DrevOps\Tui\Theme\Border $border
    *   The frame drawn around every region at once; none by default, which
    *   leaves the rows exactly as the layout arranged them.
-   * @param bool $inspect
-   *   Whether every region is boxed and captioned, whatever it declared. The
-   *   boxes cost the cells a declared one costs, so an inspected frame holds
-   *   less than the frame it describes.
    */
   public function __construct(
     protected ThemeInterface $theme,
     protected Border $border = Border::None,
-    protected bool $inspect = FALSE,
   ) {
   }
 
@@ -82,20 +74,30 @@ final class ScreenRenderer {
    *   The cells left once its box has taken its own.
    */
   public function inside(Region $region, int $cells): int {
-    return $this->outlines($region) ? max(0, $cells - self::OUTLINE) : $cells;
+    return max(0, $cells - $this->spent($region, TRUE));
   }
 
   /**
-   * Whether a box is drawn around a region.
+   * The cells a border takes of the axis it is measured along.
    *
-   * @param \DrevOps\Tui\Screen\Region $region
-   *   The region.
+   * @param \DrevOps\Tui\Screen\Capability\BorderCapableInterface $of
+   *   What declared it.
+   * @param bool $down
+   *   Whether the axis runs down rather than across.
    *
-   * @return bool
-   *   TRUE when the region declared one, or when every region is being boxed.
+   * @return int
+   *   The cells: one for each edge drawn at either end of that axis.
    */
-  protected function outlines(Region $region): bool {
-    return $this->inspect || $region->isBordered();
+  protected function spent(BorderCapableInterface $of, bool $down): int {
+    if (!$this->styleOf($of) instanceof Border) {
+      return 0;
+    }
+
+    $sides = $of->borderSides();
+    $near = $down ? BorderSide::TOP : BorderSide::LEFT;
+    $far = $down ? BorderSide::BOTTOM : BorderSide::RIGHT;
+
+    return (BorderSide::draws($sides, $near) ? 1 : 0) + (BorderSide::draws($sides, $far) ? 1 : 0);
   }
 
   /**
@@ -120,57 +122,122 @@ final class ScreenRenderer {
     // each side, so what the layout is given is the terminal less its chrome.
     $inside = $this->lay($screen->currentLayout(), max(0, $rows - 2), max(1, $columns - self::CHROME), TRUE);
 
-    // Where the buttons come to rest against the foot of the frame, their
-    // lower rule and the frame's own edge are one line drawn twice, so the
-    // edge stands in for it. The row that saves goes back to the arrangement
-    // when it has another row of content to put in it - which is why the
-    // arrangement is asked a second time, with the row already spent; when it
-    // has not, the frame is the shorter by the line the two no longer share.
-    if ($this->closed($inside, $columns)) {
-      $roomier = $this->lay($screen->currentLayout(), max(0, $rows - 1), max(1, $columns - self::CHROME), TRUE);
-      $inside = array_slice($this->closed($roomier, $columns) ? $roomier : $inside, 0, -1);
-    }
-
     return implode("\n", $this->framed($inside, $columns));
   }
 
   /**
-   * Whether a frame's last row is the lower rule of the buttons.
+   * The style a border is drawn in, or NULL when none is drawn at all.
    *
-   * @param list<string> $lines
-   *   The rows as the layout arranged them.
-   * @param int $columns
-   *   The columns the frame spans, including its own.
+   * @param \DrevOps\Tui\Screen\Capability\BorderCapableInterface $of
+   *   What declared it.
    *
-   * @return bool
-   *   TRUE when the buttons end the frame.
+   * @return \DrevOps\Tui\Theme\Border|null
+   *   The style: the one stated, else the theme's own; NULL when nothing
+   *   declared edges, or when the style resolves to none.
    */
-  protected function closed(array $lines, int $columns): bool {
-    $rule = $this->banded(max(1, $columns - self::CHROME));
+  protected function styleOf(BorderCapableInterface $of): ?Border {
+    if (!$of->isBordered()) {
+      return NULL;
+    }
 
-    return $rule !== '' && $lines !== [] && $lines[array_key_last($lines)] === $rule;
+    $style = $of->borderStyle() ?? ($this->theme instanceof OccupyCapableInterface ? $this->theme->borderStyle() : Border::Line);
+
+    return $style === Border::None ? NULL : $style;
   }
 
   /**
-   * The row the buttons set themselves apart with, as a frame carries it.
+   * Draw the edges something declared around the rows it drew.
    *
-   * @param int $inner
-   *   The columns inside the frame's border and gutter.
+   * @param list<string> $lines
+   *   The rows drawn inside the edges.
+   * @param \DrevOps\Tui\Screen\Capability\BorderCapableInterface $of
+   *   What declared them.
+   * @param \DrevOps\Tui\Theme\Border $style
+   *   The style to draw them in.
+   * @param int $columns
+   *   The columns the edges span, their own included.
    *
-   * @return string
-   *   The row, or an empty string when the theme sets the buttons apart with
-   *   nothing - which is what a borderless frame does.
+   * @return list<string>
+   *   The rows.
    */
-  protected function banded(int $inner): string {
-    if (!$this->theme instanceof ActionsElementsInterface) {
-      return '';
+  protected function edged(array $lines, BorderCapableInterface $of, Border $style, int $columns): array {
+    $pieces = $this->borders();
+    $sides = $of->borderSides();
+    $left = BorderSide::draws($sides, BorderSide::LEFT) ? $pieces->borderPaint($pieces->borderVertical($style)) : '';
+    $right = BorderSide::draws($sides, BorderSide::RIGHT) ? $pieces->borderPaint($pieces->borderVertical($style)) : '';
+    $inner = max(1, $columns - Ansi::width($left) - Ansi::width($right));
+    $out = [];
+
+    if (BorderSide::draws($sides, BorderSide::TOP)) {
+      $out[] = $pieces->borderPaint($this->edge($pieces, $style, $of->borderTitle(), $columns, TRUE, $sides));
     }
 
-    $rule = $this->theme->actionRule();
+    foreach ($lines as $line) {
+      $out[] = $left . Box::fit($line, $inner) . $right;
+    }
 
-    // Fitted the way the region fitted it, so what is compared here is the row
-    // the pass actually produced rather than the row the theme drew.
-    return $rule === '' ? '' : Box::fit($rule, $inner);
+    if (BorderSide::draws($sides, BorderSide::BOTTOM)) {
+      $out[] = $pieces->borderPaint($this->edge($pieces, $style, '', $columns, FALSE, $sides));
+    }
+
+    return $out;
+  }
+
+  /**
+   * One horizontal edge, with a title written into it when it carries one.
+   *
+   * @param \DrevOps\Tui\Block\Element\BorderElementsInterface $pieces
+   *   The theme, narrowed to the glyphs a border is drawn with.
+   * @param \DrevOps\Tui\Theme\Border $style
+   *   The style.
+   * @param string $title
+   *   The text written into it; empty writes none.
+   * @param int $columns
+   *   The columns it spans, corners included.
+   * @param bool $top
+   *   Whether it is the top edge rather than the bottom.
+   * @param int $sides
+   *   The edges the border draws, which is what says whether either end of
+   *   this one turns a corner.
+   *
+   * @return string
+   *   The edge, unstyled.
+   */
+  protected function edge(BorderElementsInterface $pieces, Border $style, string $title, int $columns, bool $top, int $sides = BorderSide::ALL): string {
+    $fill = $pieces->borderHorizontal($style);
+
+    // A corner turns into a side that is drawn. Where none is, the edge is a
+    // plain run - which is what a rule above and below something looks like.
+    $start = BorderSide::draws($sides, BorderSide::LEFT) ? ($top ? $pieces->borderTopLeft($style) : $pieces->borderBottomLeft($style)) : $fill;
+    $end = BorderSide::draws($sides, BorderSide::RIGHT) ? ($top ? $pieces->borderTopRight($style) : $pieces->borderBottomRight($style)) : $fill;
+    $head = $title === '' ? $start : $start . $fill . ' ' . $title . ' ';
+
+    // A title wider than the edge is cut rather than pushing the corner off it,
+    // so the box stays the width it was granted.
+    if (Ansi::width($head) > $columns - 1) {
+      $head = Ansi::slice($head, $columns - 1);
+    }
+
+    return $head . str_repeat($fill, max(0, $columns - 1 - Ansi::width($head))) . $end;
+  }
+
+  /**
+   * The theme, narrowed to the glyphs a border is drawn with.
+   *
+   * @return \DrevOps\Tui\Block\Element\BorderElementsInterface
+   *   The theme.
+   *
+   * @throws \InvalidArgumentException
+   *   When the theme does not implement the elements.
+   */
+  protected function borders(): BorderElementsInterface {
+    if (!$this->theme instanceof BorderElementsInterface) {
+      $elements = BorderElementsInterface::class;
+
+      throw new \InvalidArgumentException(sprintf('%s cannot draw a border: it does not implement %s.', $this->theme::class, $elements));
+    }
+
+    return $this->theme;
   }
 
   /**
@@ -263,7 +330,7 @@ final class ScreenRenderer {
       foreach ($line as $name) {
         if (($rows[$name] ?? -1) >= 0) {
           // A boxed region starts its contents a row below its own top edge.
-          $row = $total + $rows[$name] + ($this->outlines($layout->in($name)) ? 1 : 0);
+          $row = $total + $rows[$name] + (BorderSide::draws($layout->in($name)->borderSides(), BorderSide::TOP) && $this->styleOf($layout->in($name)) instanceof Border ? 1 : 0);
         }
 
         $held = max($held, $sizes[$name] ?? 0);
@@ -287,7 +354,7 @@ final class ScreenRenderer {
    *   The cells.
    */
   protected function demand(Region $region, int $content): int {
-    return $this->outlines($region) ? $content + self::OUTLINE : $content;
+    return $content + $this->spent($region, TRUE);
   }
 
   /**
@@ -435,23 +502,17 @@ final class ScreenRenderer {
    *   The framed rows.
    */
   protected function framed(array $lines, int $columns): array {
-    $chrome = $this->chrome();
-    $chars = Box::chars($this->border, $this->unicode());
+    $pieces = $this->borders();
     $inner = max(1, $columns - self::CHROME);
-    $bar = $chrome->chromeBorder($chars['v']);
-    $rule = $this->banded($inner);
-    $joined = $chrome->chromeBorder(Box::rule($chars['ml'], $chars['mr'], $chars['h'], $columns));
+    $bar = $pieces->borderPaint($pieces->borderVertical($this->border));
 
-    $out = [$chrome->chromeBorder(Box::rule($chars['tl'], $chars['tr'], $chars['h'], $columns))];
+    $out = [$pieces->borderPaint($this->edge($pieces, $this->border, '', $columns, TRUE))];
 
     foreach ($lines as $line) {
-      // The rules around the buttons are the box's own line rather than a row
-      // standing inside it, so they run into the sides instead of stopping a
-      // gutter short of them.
-      $out[] = $rule !== '' && $line === $rule ? $joined : $bar . ' ' . Box::fit($line, $inner) . ' ' . $bar;
+      $out[] = $bar . ' ' . Box::fit($line, $inner) . ' ' . $bar;
     }
 
-    $out[] = $chrome->chromeBorder(Box::rule($chars['bl'], $chars['br'], $chars['h'], $columns));
+    $out[] = $pieces->borderPaint($this->edge($pieces, $this->border, '', $columns, FALSE));
 
     return $out;
   }
@@ -693,73 +754,17 @@ final class ScreenRenderer {
    *   Exactly $rows rows, padded or clipped to fit.
    */
   protected function fill(Region $region, int $rows, int $columns, bool $furnished = FALSE): array {
-    // A region below three rows or three columns has no room for a box and its
-    // contents both, so it spends what it has on the contents.
-    if (!$this->outlines($region) || $rows < 3 || $columns < 3) {
+    $style = $this->styleOf($region);
+    $down = $this->spent($region, TRUE);
+    $across = $this->spent($region, FALSE);
+
+    // A region with no room for its edges and its contents both spends what it
+    // has on the contents.
+    if (!$style instanceof Border || $rows <= $down || $columns <= $across) {
       return $this->packed($region, $rows, $columns, $furnished);
     }
 
-    $inside = $this->packed($region, $rows - self::OUTLINE, $columns - self::OUTLINE, $furnished);
-
-    return $this->outline($inside, $region->borderTitle(), $rows, $columns);
-  }
-
-  /**
-   * Draw a box around a region's rows, captioned in its top edge.
-   *
-   * @param list<string> $lines
-   *   The rows drawn inside the box.
-   * @param string $caption
-   *   The text written into the top edge.
-   * @param int $rows
-   *   The rows the region was given, box included.
-   * @param int $columns
-   *   The columns it was given, box included.
-   *
-   * @return list<string>
-   *   Exactly $rows rows.
-   */
-  protected function outline(array $lines, string $caption, int $rows, int $columns): array {
-    $chrome = $this->chrome();
-    $chars = Box::chars($this->border === Border::None ? Border::Line : $this->border, $this->unicode());
-    $bar = $chrome->chromeBorder($chars['v']);
-    $inner = $columns - self::OUTLINE;
-    $rule = $this->banded($inner);
-    $joined = $chrome->chromeBorder(Box::rule($chars['ml'], $chars['mr'], $chars['h'], $columns));
-    $out = [$chrome->chromeBorder($this->captioned($chars, $caption, $columns))];
-
-    foreach ($lines as $line) {
-      $out[] = $rule !== '' && $line === $rule ? $joined : $bar . Box::fit($line, $inner) . $bar;
-    }
-
-    $out[] = $chrome->chromeBorder(Box::rule($chars['bl'], $chars['br'], $chars['h'], $columns));
-
-    return $out;
-  }
-
-  /**
-   * A box's top edge, with a caption written into it.
-   *
-   * @param array<string,string> $chars
-   *   The box-drawing glyphs.
-   * @param string $caption
-   *   The text written into the edge.
-   * @param int $columns
-   *   The columns the edge spans, corners included.
-   *
-   * @return string
-   *   The edge, unstyled.
-   */
-  protected function captioned(array $chars, string $caption, int $columns): string {
-    $head = $chars['tl'] . $chars['h'] . ' ' . $caption . ' ';
-
-    // A caption wider than the edge is cut rather than pushing the corner off
-    // it, so the box stays the width the layout granted.
-    if (Ansi::width($head) > $columns - 1) {
-      $head = Ansi::slice($head, $columns - 1);
-    }
-
-    return $head . str_repeat($chars['h'], max(0, $columns - 1 - Ansi::width($head))) . $chars['tr'];
+    return $this->edged($this->packed($region, $rows - $down, $columns - $across, $furnished), $region, $style, $columns);
   }
 
   /**
@@ -844,7 +849,7 @@ final class ScreenRenderer {
       return $furnished ? $this->within($region, $entered, $rows, $columns) : $this->lay($entered->currentLayout(), $rows, $columns);
     }
 
-    $drawn = array_values($this->rendered($region->headBlocks(), $region->isPreviewing()));
+    $drawn = array_values($this->rendered($region->headBlocks(), $region->isPreviewing(), $columns));
 
     if ($region->flowAxis() !== Axis::Columns) {
       return $this->down($drawn);
@@ -914,7 +919,7 @@ final class ScreenRenderer {
       return $this->lay($panel->currentLayout(), $rows, $columns);
     }
 
-    [$above, $below] = $this->beside($region, $panel);
+    [$above, $below] = $this->beside($region, $panel, $columns);
     $drawn = $this->lay($panel->currentLayout(), $this->fit($panel, [...$above, ...$below], $rows), $columns);
 
     // The panel stacks as one more block, so what shows between it and what
@@ -929,11 +934,14 @@ final class ScreenRenderer {
    *   The region.
    * @param \DrevOps\Tui\Block\Panel $panel
    *   The panel.
+   * @param int $columns
+   *   The columns the region was given, which is what a block declaring edges
+   *   is boxed to; none leaves every block unboxed.
    *
    * @return array{list<string>,list<string>}
    *   What each of them drew, in the order they were placed.
    */
-  protected function beside(Region $region, Panel $panel): array {
+  protected function beside(Region $region, Panel $panel, int $columns = 0): array {
     $above = [];
     $below = [];
     $seen = FALSE;
@@ -954,7 +962,10 @@ final class ScreenRenderer {
       $above[] = $block;
     }
 
-    return [array_values($this->rendered($above)), array_values($this->rendered($below))];
+    return [
+      array_values($this->rendered($above, FALSE, $columns)),
+      array_values($this->rendered($below, FALSE, $columns)),
+    ];
   }
 
   /**
@@ -1105,11 +1116,14 @@ final class ScreenRenderer {
    *   The blocks.
    * @param bool $previews
    *   Whether a panel among them shows what is behind it rather than a row.
+   * @param int $columns
+   *   The columns the region was given, which is what a block declaring edges
+   *   is boxed to; none leaves every block unboxed.
    *
    * @return array<int,string>
    *   What each block that drew anything drew.
    */
-  protected function rendered(array $blocks, bool $previews = FALSE): array {
+  protected function rendered(array $blocks, bool $previews = FALSE, int $columns = 0): array {
     $drawn = [];
 
     foreach ($blocks as $index => $block) {
@@ -1128,7 +1142,10 @@ final class ScreenRenderer {
         continue;
       }
 
-      $drawn[$index] = $rendered;
+      // The edges a block declares are drawn here rather than by the block: it
+      // never learns the space it was given, and a box has to know one.
+      $style = $block instanceof BorderCapableInterface ? $this->styleOf($block) : NULL;
+      $drawn[$index] = $style instanceof Border && $columns > 0 ? implode("\n", $this->edged(explode("\n", $rendered), $block, $style, $columns)) : $rendered;
     }
 
     return $drawn;

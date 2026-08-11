@@ -18,14 +18,16 @@
  *   4. The "Fruit" panel in the first window runs the shipped two-column
  *      layout, so its fields sit beside a standing note.
  *
- * A region declares its own box with ->outlined(), which the noticeboard does.
- * ->inspect() draws one around every region at every depth, captioned with its
- * name, which is how an arrangement is read while it is being written. Each box
- * spends a row top and bottom and a column each side of the cells its region
- * was granted, so an inspected frame holds less than the frame it describes.
+ * Edges are one declaration wherever something occupies a rectangle - the
+ * screen, a region, any block - and they name a style, a title and the sides
+ * to draw. The noticeboard region draws all four with a title; the buttons
+ * that end the form draw a top and a bottom and nothing else.
  *
- * The form runs twice: once as it ships, then again inspected. Drive each with
- * the arrow keys, drill in with Enter, and leave with Escape.
+ * A box spends the cells of whatever declared it: a row for each horizontal
+ * edge, a column for each vertical one. So a region that draws all four holds
+ * two fewer rows and two fewer columns than a bare one of the same size.
+ *
+ * Drive it with the arrow keys, drill in with Enter, and leave with Escape.
  *
  * Usage:
  *   php playground/20-layouts-nested.php
@@ -33,6 +35,7 @@
 
 declare(strict_types=1);
 
+use DrevOps\Tui\Answers\Answers;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Builder\Form;
 use DrevOps\Tui\Builder\PanelBuilder;
@@ -53,9 +56,7 @@ require __DIR__ . '/layouts/StallFloorLayout.php';
 LayoutManager::register('market-hall', MarketHallLayout::class);
 LayoutManager::register('stall-floor', StallFloorLayout::class);
 
-// Each session gets a form of its own, so the second opens on the answers the
-// form declares rather than on whatever the first was left holding.
-$form = static fn (): Form => Form::create('Market hall')
+$form = Form::create('Market hall')
   ->panel('hall', 'Hall', function (PanelBuilder $p): void {
     // Declared before anything is placed, so every block below knows the
     // regions it may go in.
@@ -125,24 +126,20 @@ $form = static fn (): Form => Form::create('Market hall')
 // Stacking the rows against each other keeps the frames about the arrangement
 // rather than about the air the theme leaves between blocks, and leaves the
 // two-row masthead room for both of its blocks.
-$run = static function (string $said, bool $inspect) use ($form): void {
+$run = static function (string $said) use ($form): Answers {
   echo $said . PHP_EOL . PHP_EOL;
 
-  (new Tui($form()))
+  return (new Tui($form))
     ->layout('market-hall')
     ->theme('default', ['border' => Border::Rounded, 'spacing' => Spacing::Normal])
     ->place('masthead', new Markup('season', '(summer season)'))
     ->place('statusbar', new Markup('version', 'v1.2.3'), tail: TRUE)
-    ->inspect($inspect)
     ->clearOnExit(FALSE)
     ->run();
-
-  echo PHP_EOL;
 };
 
 try {
-  $run('As it ships: four arrangements, and only the noticeboard draws an edge.', FALSE);
-  $run('Inspected: every region boxed and captioned, at every depth.', TRUE);
+  $answers = $run('Four arrangements nested in one form, two of them drawing their own edges.');
 }
 catch (InterruptException) {
   // Leave quietly on Ctrl-C.
@@ -153,5 +150,5 @@ catch (CollectException $exception) {
   exit(1);
 }
 
-// Arranging exists only to draw, so the answers read the same under either.
-echo 'Both sessions collected the same answers.' . PHP_EOL;
+// Arranging exists only to draw, so the answers read as they would unarranged.
+echo $answers->toSummary() . PHP_EOL;

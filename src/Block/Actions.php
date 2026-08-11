@@ -176,12 +176,10 @@ final class Actions extends AbstractBlock implements ActivateCapableInterface, F
     // it stands off the mark's column, because the mark says where the cursor
     // is and the reason is not somewhere the cursor can be.
     if ($this->refusal !== NULL) {
-      $buttons = $elements->actionSelector(FALSE) . ' ' . $elements->actionRefusal(Translator::t($this->refusal)) . "\n" . $buttons;
+      return $elements->actionSelector(FALSE) . ' ' . $elements->actionRefusal(Translator::t($this->refusal)) . "\n" . $buttons;
     }
 
-    $rule = $elements->actionRule();
-
-    return $rule === '' ? $buttons : $rule . "\n" . $buttons . "\n" . $rule;
+    return $buttons;
   }
 
 }

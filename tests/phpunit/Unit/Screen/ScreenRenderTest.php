@@ -23,8 +23,8 @@ use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
 use DrevOps\Tui\Screen\Screen;
 use DrevOps\Tui\Screen\ScreenRenderer;
 use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Tests\Fixtures\Screen\Layout\NoFooterLayout;
 use DrevOps\Tui\Theme\Border;
+use DrevOps\Tui\Theme\BorderSide;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\Mode;
 use DrevOps\Tui\Theme\Spacing;
@@ -160,7 +160,7 @@ final class ScreenRenderTest extends TestCase {
     // The frame belongs to no block, so the theme is asked for it directly -
     // and a theme that declares none of it cannot draw one.
     $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('cannot draw the window chrome');
+    $this->expectExceptionMessage('cannot draw a border');
 
     (new ScreenRenderer($this->createStub(ThemeInterface::class), Border::Line))->render((new Screen())->layout(new DefaultLayout()), 5, 20);
   }
@@ -441,47 +441,6 @@ final class ScreenRenderTest extends TestCase {
     $this->assertSame('Legend', $lines[5]);
   }
 
-  public function testButtonsAreSetApartByRulesJoinedToTheFrameTheyRunInto(): void {
-    $screen = (new Screen())->layout(new DefaultLayout());
-    $screen->in('content')->add(new Markup('intro', 'Pick the produce.'))->add($this->actions());
-    $screen->in('footer')->add(new Markup('legend', 'Legend'));
-
-    // The rules are the box's own line rather than rows standing inside it, so
-    // they run into the sides instead of stopping a gutter short of them.
-    $this->assertSame([
-      '┌────────────────────────────┐',
-      '│                            │',
-      '│ Pick the produce.          │',
-      '│                            │',
-      '├────────────────────────────┤',
-      '│   [ Submit ]  [ Cancel ]   │',
-      '├────────────────────────────┤',
-      '│ Legend                     │',
-      '└────────────────────────────┘',
-    ], $this->framed($screen, 9, 30));
-  }
-
-  public function testButtonsRestingOnTheFrameKeepItsEdgeRatherThanRuleBesideIt(): void {
-    $screen = (new Screen())->layout(new NoFooterLayout());
-    $screen->in('header')->add(new Markup('trail', 'Orchard'));
-    $screen->in('content')->add(new Markup('intro', "Pick the produce.\nWeigh the crates."))->add($this->actions());
-
-    // Nothing is pinned under the form, so it runs to the foot of the frame:
-    // the lower rule and the frame's edge would be one line drawn twice, so the
-    // edge stands in for it and the frame is the shorter by the line they no
-    // longer share.
-    $this->assertSame([
-      '┌────────────────────────────┐',
-      '│ Orchard                    │',
-      '│ Pick the produce.          │',
-      '│ Weigh the crates.          │',
-      '│                            │',
-      '├────────────────────────────┤',
-      '│   [ Submit ]  [ Cancel ]   │',
-      '└────────────────────────────┘',
-    ], $this->framed($screen, 9, 30));
-  }
-
   public function testUnboxedFrameSetsTheButtonsApartWithNothing(): void {
     $screen = (new Screen())->layout(new DefaultLayout());
     $screen->in('content')->add($this->actions());
@@ -493,7 +452,7 @@ final class ScreenRenderTest extends TestCase {
 
   public function testOutlinedRegionDrawsItsOwnEdgesInsideTheCellsItWasGranted(): void {
     $layout = new DefaultLayout();
-    $layout->in('content')->outlined('Notes');
+    $layout->in('content')->border(BorderSide::ALL, Border::Line, 'Notes');
 
     $screen = (new Screen())->layout($layout);
     $screen->in('header')->add(new Markup('trail', 'Orchard'));
@@ -513,7 +472,7 @@ final class ScreenRenderTest extends TestCase {
 
   public function testOutlinedRegionFallsBackToItsContentsWhenTheBoxWouldNotFit(): void {
     $layout = new DefaultLayout();
-    $layout->in('header')->outlined();
+    $layout->in('header')->border(BorderSide::ALL, Border::Line);
 
     $screen = (new Screen())->layout($layout);
     $screen->in('header')->add(new Markup('trail', 'Orchard'));
@@ -523,23 +482,9 @@ final class ScreenRenderTest extends TestCase {
     $this->assertSame('Orchard', $this->render($screen, 6, 32)[0]);
   }
 
-  public function testInspectingBoxesEveryRegionAndCaptionsItWithItsName(): void {
-    $screen = (new Screen())->layout(new DefaultLayout());
-    $screen->in('content')->add(new Markup('notes', 'Pick the produce.'));
-
-    $rendered = (new ScreenRenderer(new DefaultTheme(32, ['color' => FALSE, 'border' => Border::None]), Border::None, TRUE))->render($screen, 6, 32);
-    $lines = array_map(rtrim(...), explode("\n", $rendered));
-
-    // A region that declared no box gets one while the layout is inspected, and
-    // a borderless frame still draws the edges in a line the reader can see.
-    $this->assertSame('┌─ content ────────────────────┐', $lines[1]);
-    $this->assertSame('│Pick the produce.             │', $lines[2]);
-    $this->assertSame('└──────────────────────────────┘', $lines[4]);
-  }
-
   public function testCaptionWiderThanItsEdgeIsCutRatherThanPushingTheCornerOff(): void {
     $layout = new DefaultLayout();
-    $layout->in('content')->outlined('A caption nothing this narrow could hold');
+    $layout->in('content')->border(BorderSide::ALL, Border::Line, 'A caption nothing this narrow could hold');
 
     $screen = (new Screen())->layout($layout);
     $screen->in('content')->add(new Markup('notes', 'Pick.'));

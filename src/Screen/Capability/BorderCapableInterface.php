@@ -25,8 +25,8 @@ interface BorderCapableInterface {
    * Draw edges around this.
    *
    * @code
-   * $block->border(BorderSide::Top | BorderSide::Bottom);
-   * $region->border(BorderSide::All, Border::Rounded, 'Today');
+   * $block->border(BorderSide::TOP | BorderSide::BOTTOM);
+   * $region->border(BorderSide::ALL, Border::Rounded, 'Today');
    * @endcode
    *
    * @param int $sides
@@ -40,7 +40,7 @@ interface BorderCapableInterface {
    * @return static
    *   The thing declaring it.
    */
-  public function border(int $sides = BorderSide::All, ?Border $style = NULL, string $title = ''): static;
+  public function border(int $sides = BorderSide::ALL, ?Border $style = NULL, string $title = ''): static;
 
   /**
    * Whether edges are drawn around this.

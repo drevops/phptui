@@ -1241,17 +1241,100 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function actionRule(): string {
-    $border = $this->borderStyle();
+  public function borderTopLeft(Border $style): string {
+    return match ($style) {
+      Border::Rounded => $this->glyph('╭', '+'),
+      Border::Double => $this->glyph('╔', '+'),
+      Border::None, Border::Line => $this->glyph('┌', '+'),
+    };
+  }
 
-    // The frame's own line, drawn in the frame's own style: the buttons read as
-    // a compartment of the box rather than as rows with a rule of their own,
-    // and a frame with no box has no line to lend them.
-    if ($border === Border::None) {
-      return '';
-    }
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function borderTopRight(Border $style): string {
+    return match ($style) {
+      Border::Rounded => $this->glyph('╮', '+'),
+      Border::Double => $this->glyph('╗', '+'),
+      Border::None, Border::Line => $this->glyph('┐', '+'),
+    };
+  }
 
-    return $this->chromeBorder(str_repeat(Box::chars($border, $this->unicode)['h'], max(1, $this->contentWidth())));
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function borderBottomLeft(Border $style): string {
+    return match ($style) {
+      Border::Rounded => $this->glyph('╰', '+'),
+      Border::Double => $this->glyph('╚', '+'),
+      Border::None, Border::Line => $this->glyph('└', '+'),
+    };
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function borderBottomRight(Border $style): string {
+    return match ($style) {
+      Border::Rounded => $this->glyph('╯', '+'),
+      Border::Double => $this->glyph('╝', '+'),
+      Border::None, Border::Line => $this->glyph('┘', '+'),
+    };
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function borderLeftJunction(Border $style): string {
+    return match ($style) {
+      Border::Double => $this->glyph('╠', '+'),
+      Border::None, Border::Line, Border::Rounded => $this->glyph('├', '+'),
+    };
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function borderRightJunction(Border $style): string {
+    return match ($style) {
+      Border::Double => $this->glyph('╣', '+'),
+      Border::None, Border::Line, Border::Rounded => $this->glyph('┤', '+'),
+    };
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function borderHorizontal(Border $style): string {
+    return match ($style) {
+      Border::Double => $this->glyph('═', '='),
+      Border::None, Border::Line, Border::Rounded => $this->glyph('─', '-'),
+    };
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function borderVertical(Border $style): string {
+    return match ($style) {
+      Border::Double => $this->glyph('║', '|'),
+      Border::None, Border::Line, Border::Rounded => $this->glyph('│', '|'),
+    };
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function borderPaint(string $text): string {
+    return $this->chromeBorder($text);
   }
 
   /**

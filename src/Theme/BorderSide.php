@@ -8,11 +8,11 @@ namespace DrevOps\Tui\Theme;
  * The edges a border draws, combined with a bitwise or.
  *
  * @code
- * BorderSide::Top | BorderSide::Bottom
+ * BorderSide::TOP | BorderSide::BOTTOM
  * @endcode
  *
  * Constants rather than an enum because these combine: PHP has no operator
- * overloading, so `BorderSide::Left|BorderSide::Right` on enum cases raises a
+ * overloading, so `BorderSide::LEFT|BorderSide::RIGHT` on enum cases raises a
  * TypeError. A side is a flag rather than one of a fixed set of values.
  *
  * Which sides are drawn is also which cells are spent: a top and a bottom cost
@@ -22,23 +22,23 @@ namespace DrevOps\Tui\Theme;
  */
 final class BorderSide {
 
-  public const int Top = 1;
+  public const int TOP = 1;
 
-  public const int Right = 2;
+  public const int RIGHT = 2;
 
-  public const int Bottom = 4;
+  public const int BOTTOM = 4;
 
-  public const int Left = 8;
+  public const int LEFT = 8;
 
   /**
    * Every edge, which is what a border draws when it names none.
    */
-  public const int All = self::Top | self::Right | self::Bottom | self::Left;
+  public const int ALL = self::TOP | self::RIGHT | self::BOTTOM | self::LEFT;
 
   /**
    * No edge at all.
    */
-  public const int None = 0;
+  public const int NONE = 0;
 
   /**
    * Whether a combination draws a given side.

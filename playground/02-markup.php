@@ -7,7 +7,7 @@
  * Markup renders a title and body inline in the form. The cursor skips it, it
  * never appears in the answers, and headless runs omit it entirely. Its text
  * takes the same `{{field}}` templating derived values use, so markup can
- * reflect earlier answers; `->bordered()` frames it as a card. How it is laid
+ * reflect earlier answers; `->border()` frames it as a card. How it is laid
  * out is a presentation choice over one block: `markup()` writes the body
  * first, `note()` the title first, and both build the same thing.
  *
@@ -30,7 +30,7 @@ $form = Form::create('Markup')
     $p->markup('weighing', 'Every crate is weighed at the packing bench.');
     $p->note('intro', 'Fresh produce order')->body('This card is read-only - the cursor skips it and it collects nothing.');
     $p->text('item', 'Item')->default('Pear');
-    $p->note('summary', 'Ready to pack')->body('Packing {{item}} into the basket.')->bordered();
+    $p->note('summary', 'Ready to pack')->body('Packing {{item}} into the basket.')->border();
   });
 
 try {

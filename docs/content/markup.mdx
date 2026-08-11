@@ -32,7 +32,7 @@ How markup is laid out on the page is a presentation choice rather than a capabi
 $p->markup('weighing', 'Every crate is weighed at the packing bench.');
 
 // The same block in a bordered card.
-$p->markup('notice', 'Deliveries leave at dawn.')->bordered();
+$p->markup('notice', 'Deliveries leave at dawn.')->border();
 
 // The same block again, laid out as a grid under a title.
 $p->markup('yields', '', 'Yields per crate')
@@ -49,7 +49,7 @@ A card and a grid both go to the theme's card renderer - the same one behind [`c
 | `note(id, title)`         | The same block written title first, for the shape of a card.          |
 | `->body(text)`            | Sets the content.                                                     |
 | `->title(text)`           | Sets the title drawn above the body.                                  |
-| `->bordered()`            | Frames it in the theme's box with minimal padding.                    |
+| `->border()`            | Frames it in the theme's box with minimal padding.                    |
 | `->table(headers, rows)`  | Lays an aligned grid beneath the body.                                |
 | `->when(condition)`       | Puts it on the form only when an earlier answer calls for it.         |
 
@@ -61,10 +61,10 @@ $p->note('intro', 'Fresh produce order')
 
 $p->text('item', 'Produce name')->default('Pear');
 
-// The body reflects the earlier answer; ->bordered() frames the card.
+// The body reflects the earlier answer; ->border() frames the card.
 $p->note('summary', 'Ready to pack')
   ->body('Packing {{item}} into the basket.')
-  ->bordered();
+  ->border();
 ```
 
 Both titles are optional: markup with an empty title draws its body alone.
@@ -101,7 +101,7 @@ A body can carry a `[text](url)` link, and when the enclosing TUI is configured 
 ```php
 $p->note('order', 'Fresh produce order')
   ->body('Pick what is **ripe** today:' . PHP_EOL . '- crisp `apples`' . PHP_EOL . '- sweet *pears*')
-  ->bordered();
+  ->border();
 ```
 
 ## Appearing on an answer

@@ -242,7 +242,7 @@ final class FormTest extends TestCase {
       ->panel('p', 'P', function (PanelBuilder $panel): void {
         $panel->note('intro', 'Getting started')->body('Fill in each field.');
         $panel->note('bare');
-        $panel->note('boxed', 'Boxed')->bordered();
+        $panel->note('boxed', 'Boxed')->border();
         $panel->note('stock', 'Stock')->table(['Fruit', 'Qty'], [['Apple', '3'], ['Pear', '5']]);
       })
       ->root();
@@ -260,7 +260,7 @@ final class FormTest extends TestCase {
     // An omitted title stays empty rather than falling back to the id.
     $this->assertSame('', self::markupOf($form, 'bare')?->titleText());
 
-    // ->bordered() draws the card inside a box.
+    // ->border() draws the card inside a box.
     $this->assertTrue(self::markupOf($form, 'boxed')?->isBordered());
 
     // ->table() stores the header cells and body rows on the block.

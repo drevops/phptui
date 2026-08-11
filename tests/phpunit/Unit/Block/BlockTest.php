@@ -17,9 +17,11 @@ use DrevOps\Tui\Input\Action;
 use DrevOps\Tui\Input\Hint;
 use DrevOps\Tui\Input\KeyMapManager;
 use DrevOps\Tui\Primitive\ProgressReporter;
+use DrevOps\Tui\Screen\Assembler;
 use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\Tui\Theme\Border;
+use DrevOps\Tui\Theme\BorderSide;
 use DrevOps\Tui\Theme\DefaultTheme;
 use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
@@ -134,17 +136,13 @@ final class BlockTest extends TestCase {
     $this->assertSame(['First.', 'Second.'], explode("\n", $rendered));
   }
 
-  public function testMarkupInBorderIsBoxedAroundTheSameContent(): void {
-    $markup = (new Markup('notice', 'Deliveries leave at dawn.', 'Notice'))->bordered();
+  public function testMarkupDeclaringEdgesStillDrawsOnlyItsOwnContent(): void {
+    $markup = (new Markup('notice', 'Deliveries leave at dawn.', 'Notice'))->border();
 
+    // A block never learns the space it was given, so it declares the edges and
+    // draws its rows; whatever knows the rectangle puts the box around them.
     $this->assertTrue($markup->isBordered());
-
-    $lines = explode("\n", $markup->render($this->theme()));
-
-    $this->assertStringStartsWith('╭', $lines[0]);
-    $this->assertStringContainsString('Notice', $lines[1]);
-    $this->assertStringContainsString('Deliveries leave at dawn.', $lines[2]);
-    $this->assertStringStartsWith('╰', $lines[3]);
+    $this->assertSame("Notice\nDeliveries leave at dawn.", $markup->render($this->theme()));
   }
 
   public function testMarkupAsTableAlignsTheRowsUnderTheirHeaders(): void {
@@ -163,7 +161,7 @@ final class BlockTest extends TestCase {
   public function testMarkupWithNothingToSayDrawsNoCardAroundIt(): void {
     // A card with neither a title, a body nor a grid has nothing to frame, so
     // it draws nothing rather than an empty box.
-    $this->assertSame('', (new Markup('spacer', ''))->bordered()->render($this->theme()));
+    $this->assertSame('', (new Markup('spacer', ''))->border()->render($this->theme()));
   }
 
   public function testMarkupCarriesNoTableUntilItIsGivenOne(): void {
@@ -210,16 +208,14 @@ final class BlockTest extends TestCase {
     $this->assertSame('❯ [ Submit ]  [ Cancel ]', $actions->render($theme));
   }
 
-  public function testActionsSetThemselvesApartWithTheLineTheFrameIsDrawnIn(): void {
-    $actions = (new Actions())->action('submit', 'Submit')->action('cancel', 'Cancel');
-    $rows = explode("\n", $actions->render(new DefaultTheme(20, ['color' => FALSE, 'border' => Border::Double])));
+  public function testActionsDeclareRulesAboveAndBelowRatherThanFullEdges(): void {
+    $actions = (new Assembler())->actions();
 
-    // A row of the block rather than something drawn around it, so what the
-    // buttons come to counts the rules in.
-    $this->assertSame(['════════════════', '  [ Submit ]  [ Cancel ]', '════════════════'], $rows);
-
-    // A frame with no box has no line to lend them, so they stand on their own.
-    $this->assertSame('  [ Submit ]  [ Cancel ]', $actions->render(new DefaultTheme(20, ['color' => FALSE, 'border' => Border::None])));
+    // The buttons are an ordinary block declaring two of the four sides, so a
+    // rule above and below is the same statement as a box with sides left off.
+    $this->assertTrue($actions->isBordered());
+    $this->assertSame(BorderSide::TOP | BorderSide::BOTTOM, $actions->borderSides());
+    $this->assertFalse(BorderSide::draws($actions->borderSides(), BorderSide::LEFT));
   }
 
   public function testActionsTakeAnyLabelsTheFormDeclares(): void {

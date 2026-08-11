@@ -11,6 +11,7 @@ use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\FormException;
 use DrevOps\Tui\Screen\Layout\LayoutManager;
+use DrevOps\Tui\Theme\BorderSide;
 use DrevOps\Tui\Translation\Translator;
 
 /**
@@ -95,7 +96,10 @@ final class Assembler {
    *   The actions.
    */
   public function actions(Buttons $declared = new Buttons()): Actions {
+    // A rule above and below rather than a box: the buttons are a compartment
+    // of the frame, and sides are what says so.
     return (new Actions())
+      ->border(BorderSide::TOP | BorderSide::BOTTOM)
       ->action(Ending::Submit->value, Translator::t($declared->submitLabel))
       ->action(Ending::Cancel->value, Translator::t($declared->cancelLabel));
   }

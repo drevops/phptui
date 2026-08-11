@@ -182,21 +182,6 @@ final class TuiTester {
   }
 
   /**
-   * Box and caption every region, at every depth of the screen.
-   *
-   * @param bool $inspect
-   *   Whether to box every region.
-   *
-   * @return $this
-   *   The tester.
-   */
-  public function inspect(bool $inspect = TRUE): self {
-    $this->tui->inspect($inspect);
-
-    return $this;
-  }
-
-  /**
    * Merge theme display options over the deterministic defaults.
    *
    * @param array<string,mixed> $options

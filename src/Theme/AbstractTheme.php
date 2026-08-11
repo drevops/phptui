@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Theme;
 
 use DrevOps\Tui\Block\Element\ActionsElementsInterface;
+use DrevOps\Tui\Block\Element\BorderElementsInterface;
 use DrevOps\Tui\Block\Element\BreadcrumbElementsInterface;
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
 use DrevOps\Tui\Block\Element\FieldElementsInterface;
@@ -31,7 +32,7 @@ use DrevOps\Tui\Translation\Translator;
  *
  * @package DrevOps\Tui\Theme
  */
-abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface, BreadcrumbElementsInterface, ChromeElementsInterface, FieldElementsInterface, LegendElementsInterface, MarkupElementsInterface, PanelElementsInterface, ProgressElementsInterface {
+abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface, BorderElementsInterface, BreadcrumbElementsInterface, ChromeElementsInterface, FieldElementsInterface, LegendElementsInterface, MarkupElementsInterface, PanelElementsInterface, ProgressElementsInterface {
 
   /**
    * The spinner animation frames that need no glyph outside ASCII.
@@ -466,13 +467,6 @@ abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface
    */
   public function actionRefusal(string $reason): string {
     return $reason;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function actionRule(): string {
-    return '';
   }
 
   /**

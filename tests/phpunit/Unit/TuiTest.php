@@ -33,7 +33,6 @@ use DrevOps\Tui\Terminal\TerminalControl;
 use DrevOps\Tui\Testing\BufferedTerminal;
 use DrevOps\Tui\Testing\KeyEncoder;
 use DrevOps\Tui\Testing\TuiTester;
-use DrevOps\Tui\Tests\Fixtures\Screen\Layout\NoFooterLayout;
 use DrevOps\Tui\Tests\Fixtures\Theme\FloorTheme;
 use DrevOps\Tui\Tests\Traits\IsolatesEnvTrait;
 use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
@@ -285,51 +284,6 @@ final class TuiTest extends TestCase {
     // it. Turning the region across is what makes room for both.
     $this->assertSame('Demo', rtrim($lines[0]));
     $this->assertStringNotContainsString('(read-only preview)', $tester->display());
-  }
-
-  public function testRowTheCollapsedRuleFreesGoesBackToTheFormThatOutranTheFrame(): void {
-    $form = Form::create('Orchard');
-
-    foreach (range(1, 4) as $index) {
-      $form->panel('p' . $index, 'Panel ' . $index, function (PanelBuilder $panel) use ($index): void {
-        $panel->text('courier' . $index, 'Courier')->default('Valley Runs');
-      });
-    }
-
-    $tester = (new TuiTester($form))->layout(NoFooterLayout::class)->options(['color' => FALSE, 'border' => Border::Rounded])->rows(13)->cols(56);
-    $tester->run(Key::named(KeyName::Interrupt));
-    $lines = explode("\n", $tester->display());
-
-    // The frame keeps every row the terminal gave it, because the row the
-    // collapse saves is handed back to a form that had another row to draw -
-    // which is what the mark saying there is more below is drawn against.
-    $this->assertCount(13, $lines);
-    $this->assertStringEndsWith('▼ │', $lines[8]);
-    $this->assertStringStartsWith('╰', $lines[12]);
-  }
-
-  public function testInspectingBoxesTheRegionsOfEveryLayoutTheScreenNests(): void {
-    $form = Form::create('Market hall')
-      ->panel('order', 'Order', function (PanelBuilder $panel): void {
-        $panel->layout(2);
-
-        $panel->panel('fruit', 'Fruit', function (PanelBuilder $window): void {
-          $window->text('fruit', 'Fruit')->default('Pear');
-        });
-        $panel->panel('veg', 'Vegetables', function (PanelBuilder $window): void {
-          $window->text('veg', 'Vegetables')->default('Carrot');
-        });
-      });
-
-    $tester = (new TuiTester($form))->options(['color' => FALSE, 'border' => Border::Rounded])->rows(20)->cols(72)->inspect();
-    $tester->run(Key::named(KeyName::Enter), Key::named(KeyName::Interrupt));
-    $display = $tester->display();
-
-    // The switch reaches every layout the screen nests rather than the screen's
-    // own: the grid's windows are regions like any other and carry their names.
-    $this->assertStringContainsString('─ content ─', $display);
-    $this->assertStringContainsString('─ window-1 ─', $display);
-    $this->assertStringContainsString('─ window-2 ─', $display);
   }
 
   #[DataProvider('dataProviderRegionNameNothingAnswersToThrowsWhereItIsWritten')]

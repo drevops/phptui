@@ -32,15 +32,15 @@ trait BorderCapableTrait {
   /**
    * The edges that are drawn, combined from {@see BorderSide}.
    */
-  protected int $borderSides = BorderSide::All;
+  protected int $borderSides = BorderSide::ALL;
 
   /**
    * {@inheritdoc}
    */
-  public function border(int $sides = BorderSide::All, ?Border $style = NULL, string $title = ''): static {
+  public function border(int $sides = BorderSide::ALL, ?Border $style = NULL, string $title = ''): static {
     // Naming no side draws nothing, which is the same refusal as naming no
     // style: both leave the thing unboxed rather than boxed with no edges.
-    $this->bordered = $sides !== BorderSide::None && $style !== Border::None;
+    $this->bordered = $sides !== BorderSide::NONE && $style !== Border::None;
     $this->borderSides = $sides;
     $this->borderStyle = $style;
     $this->borderTitle = $title;
