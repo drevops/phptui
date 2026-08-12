@@ -397,7 +397,7 @@ Each renders across every field and degrades to plain text without ANSI. Below, 
 
 ### `default`
 
-Cyan accents on an auto-detected dark or light base - the out-of-the-box look, and the one in the demos at the top of this page.
+Cyan accents on an auto-detected dark or light base - the out-of-the-box look. It carries no preview of its own because it needs none: every recording on this page, from the two demos at the top to all sixteen fields above, is drawn in it.
 
 ### `midnight`
 
