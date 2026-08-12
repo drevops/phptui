@@ -131,22 +131,25 @@ jobs:
           if-no-files-found: error
 
       - name: Upload test results to Codecov
-        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1
-        if: matrix.php-versions == '8.4' && matrix.deps == 'normal' && runner.os == 'Linux' && env.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7
+        if: ${{ !cancelled() && matrix.php-versions == '8.4' && matrix.deps == 'normal' && runner.os == 'Linux' && env.CODECOV_TOKEN_PRESENT == 'true' }}
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: .logs/junit.xml
+          report_type: test_results
           fail_ci_if_error: true
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          CODECOV_TOKEN_PRESENT: ${{ secrets.CODECOV_TOKEN != '' }}
 
       - name: Upload coverage report to Codecov
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7
-        if: matrix.php-versions == '8.4' && matrix.deps == 'normal' && runner.os == 'Linux' && env.CODECOV_TOKEN != ''
+        if: ${{ !cancelled() && matrix.php-versions == '8.4' && matrix.deps == 'normal' && runner.os == 'Linux' && env.CODECOV_TOKEN_PRESENT == 'true' }}
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: .logs/cobertura.xml
           fail_ci_if_error: true
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          CODECOV_TOKEN_PRESENT: ${{ secrets.CODECOV_TOKEN != '' }}
 
       - name: Setup tmate session
         if: ${{ !cancelled() && github.event.inputs.enable_terminal }}
