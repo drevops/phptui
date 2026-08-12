@@ -937,7 +937,7 @@ final class Breadcrumb extends AbstractBlock {
 }
 ```
 
-`ThemeInterface` itself carries only the two things no block could own - the width they all lay out against, and how the theme writes a key - so the block narrows it to its own elements interface before drawing. That narrowing is the whole reason the core stays thin: a theme grows by implementing more element interfaces, not by growing `ThemeInterface`.
+`ThemeInterface` itself carries only two methods, the two things no block could own - the width they all lay out against, and how the theme writes a key - so the block narrows it to its own elements interface before drawing. That narrowing is the whole reason the core stays thin: a theme grows by implementing more element interfaces, not by growing `ThemeInterface`.
 
 An **element** takes a plain string and returns a styled one. It knows nothing about what surrounds it, which is what lets the same element draw a separator inside a form and inside a standalone line of output.
 
@@ -970,11 +970,11 @@ Two things follow from the shape. A theme that doesn't implement the interface c
 
 ### A theme declares what it supports
 
-A terminal may have no color, no Unicode, or a background the theme should read. A theme declares which of those it handles, and **declaring one is what grants the facility that goes with it**: `paint()` exists on a theme because it declared the color scheme, `glyph()` because it declared Unicode. Six declarations exist, and [what a theme is allowed to do](/themes#what-a-theme-is-allowed-to-do) is the whole set.
+A terminal may have no color, no Unicode, or a background the theme should read. A theme declares which of those it handles, and **declaring one is what grants the facility that goes with it** - a theme that says nothing may not reach for the facility, and one that declares it inherits the plumbing. Which declarations exist and what each grants is [what a theme is allowed to do](/themes#what-a-theme-is-allowed-to-do).
 
-`AbstractTheme` is the floor. It implements all eight of the elements interfaces above and declares no capability at all, so it may not paint and may not reach past ASCII: what is left is the strings it was handed and the stand-ins that read without them. That is why a form renders in a terminal that supports nothing, and why a theme adds what its terminal can do rather than working around what it cannot. It's also the list: what a theme has to draw is read off the floor rather than written down a second time, so adding a block changes what a theme owes by changing the one class that already owes it.
+`AbstractTheme` is the floor. It implements all eight of the elements interfaces above and declares nothing at all, so it may not paint and may not reach past ASCII: what is left is the strings it was handed and the stand-ins that read without them. That is why a form renders in a terminal that supports nothing, and why a theme adds what its terminal can do rather than working around what it cannot. It's also the list: what a theme has to draw is read off the floor rather than written down a second time, so adding a block changes what a theme owes by changing the one class that already owes it.
 
-**A theme is checked where it's picked**, not partway through a frame - a class that cannot be built from a width and an options array, or that cannot answer for every element the floor does, is refused by name at `->theme(...)`. The per-block check stays as the backstop for a theme instance handed straight to a block with no manager between them.
+That is what makes a theme checkable where it's picked rather than partway through a frame, since the floor is the whole of what one must answer for.
 
 What a theme keeps behind its elements is its own business. `DefaultTheme` writes each hue down once in a small set of protected voices - `accent()`, `value()`, `guidance()` - so a subclass repaints a whole family in a line. Those voices aren't API: nothing outside the class may name one, and no driver, block or test may reach for one. **The element is the whole of the contract**, and the palette behind it is an implementation detail a subclass may lean on and everything else can only see through the element that draws from it.
 

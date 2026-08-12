@@ -10,7 +10,7 @@ description: Use when regenerating the TUI architecture diagrams under docs/arch
 - `architecture.puml` - layered component architecture
 - `dataflow-collect.puml` - the headless collection lifecycle (a sequence diagram)
 - `dataflow-tui.puml` - the interactive panel-TUI loop (a sequence diagram)
-- `README.md` - a narrative walkthrough that explains how the TUI is set up and how it runs, embedding the rendered SVGs as supporting visuals (not a bare index)
+- `README.md` - an index of the sources: one table listing each `.puml` with the renders it produces and what it shows, plus the regeneration commands. The walkthrough that embeds the SVGs lives in `docs/content/specification.mdx`
 
 Each `.puml` renders to a light `<name>.svg`, and a dark-scheme `<name>-dark.svg` is derived from that light render by `docs/util/derive-dark-diagram.js`. Both are committed and served so the diagrams read well in light and dark browsers.
 
