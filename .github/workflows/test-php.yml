@@ -130,10 +130,6 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
 
-      # The token goes through the 'token' input rather than a CODECOV_TOKEN
-      # environment variable: the action strips newlines from the input, while
-      # the environment variable is passed to the CLI verbatim and a trailing
-      # newline in the secret makes it build an invalid Authorization header.
       - name: Upload test results to Codecov
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7
         if: matrix.php-versions == '8.4' && matrix.deps == 'normal' && runner.os == 'Linux' && env.CODECOV_TOKEN_PRESENT == 'true'
