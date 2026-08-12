@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Capability;
+namespace DrevOps\PhpTui\Block\Capability;
 
 /**
  * Focus behaviour: whether the cursor is on a block.
  *
- * @package DrevOps\Tui\Block\Capability
+ * @package DrevOps\PhpTui\Block\Capability
  */
 trait FocusCapableTrait {
 

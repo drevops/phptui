@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\Block\Capability\DependCapableInterface;
-use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Condition\ConditionInterface;
+use DrevOps\PhpTui\Block\Capability\DependCapableInterface;
+use DrevOps\PhpTui\Condition\Condition;
+use DrevOps\PhpTui\Condition\ConditionInterface;
 
 /**
  * A declared block tree, read as a flat list.
@@ -18,17 +18,17 @@ use DrevOps\Tui\Condition\ConditionInterface;
  * The order is declaration order: a panel's own rows first, then everything
  * beneath it, panel by panel.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final class Tree {
 
   /**
    * Every field a panel and the panels beneath it hold.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to walk.
    *
-   * @return list<\DrevOps\Tui\Block\Field>
+   * @return list<\DrevOps\PhpTui\Block\Field>
    *   The fields, in declaration order.
    */
   public static function fields(Panel $panel): array {
@@ -44,10 +44,10 @@ final class Tree {
   /**
    * Every panel beneath a panel, the panel itself included.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to walk.
    *
-   * @return list<\DrevOps\Tui\Block\Panel>
+   * @return list<\DrevOps\PhpTui\Block\Panel>
    *   The panels, in declaration order, outermost first.
    */
   public static function panels(Panel $panel): array {
@@ -71,7 +71,7 @@ final class Tree {
    * Keyed by object rather than by id: a section and a row it holds may
    * share a name, and only one set of ids is ever checked for collisions.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to walk.
    * @param array<string,mixed> $answers
    *   The answers every condition is measured against.
@@ -109,7 +109,7 @@ final class Tree {
    *
    * Keyed by object rather than by id, for the reason {@see within()} is.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to walk.
    * @param array<string,mixed> $answers
    *   The answers every condition is measured against.
@@ -140,7 +140,7 @@ final class Tree {
   /**
    * The answers left once those belonging to absent blocks are dropped.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to walk.
    * @param array<string,mixed> $answers
    *   The answers as they were supplied.
@@ -175,12 +175,12 @@ final class Tree {
    *
    * Keyed by object rather than by id, for the reason {@see within()} is.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to walk.
-   * @param \DrevOps\Tui\Condition\ConditionInterface|null $inherited
+   * @param \DrevOps\PhpTui\Condition\ConditionInterface|null $inherited
    *   The rule the sections holding this one already impose.
    *
-   * @return array<int,\DrevOps\Tui\Condition\ConditionInterface|null>
+   * @return array<int,\DrevOps\PhpTui\Condition\ConditionInterface|null>
    *   The rule each block waits on, or NULL where it is always there, keyed by
    *   its object id.
    */
@@ -212,7 +212,7 @@ final class Tree {
    *
    * Keyed by object rather than by id, for the reason {@see within()} is.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to walk.
    * @param bool $inside
    *   Whether the sections holding this one already depend on something.
@@ -241,12 +241,12 @@ final class Tree {
   /**
    * The single rule two rules amount to.
    *
-   * @param \DrevOps\Tui\Condition\ConditionInterface|null $outer
+   * @param \DrevOps\PhpTui\Condition\ConditionInterface|null $outer
    *   The rule the section imposes, or NULL when it imposes none.
-   * @param \DrevOps\Tui\Condition\ConditionInterface|null $own
+   * @param \DrevOps\PhpTui\Condition\ConditionInterface|null $own
    *   The block's own rule, or NULL when it declares none.
    *
-   * @return \DrevOps\Tui\Condition\ConditionInterface|null
+   * @return \DrevOps\PhpTui\Condition\ConditionInterface|null
    *   Both rules combined, the one that exists, or NULL when neither does. A
    *   single rule is returned as it is rather than wrapped, so a reader is
    *   never given an "all" of one condition to unpick.
@@ -262,7 +262,7 @@ final class Tree {
   /**
    * The ids of every row a panel and the panels beneath it hold.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to walk.
    *
    * @return list<string>

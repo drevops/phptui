@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Schema;
+namespace DrevOps\PhpTui\Schema;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Handler\Context;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Handler\Context;
 
 /**
  * Resolves a field's answer-driven options for machine-readable output.
@@ -18,16 +18,16 @@ use DrevOps\Tui\Handler\Context;
  * context empties the list rather than failing the description, the way a
  * closure default that cannot resolve stands down to NULL.
  *
- * @package DrevOps\Tui\Schema
+ * @package DrevOps\PhpTui\Schema
  */
 final class OptionsResolver {
 
   /**
    * Resolve a field's options in place, if they follow the answers.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
-   * @param \DrevOps\Tui\Handler\Context $context
+   * @param \DrevOps\PhpTui\Handler\Context $context
    *   The context the resolver is called with.
    */
   public static function resolve(Field $field, Context $context): void {

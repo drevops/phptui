@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
 /**
  * A field that can hand its buffer to an external editor.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Field\Capability;
  * The field only raises the request; the driver launches the editor and
  * feeds the captured result back.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 interface ExternalEditCapableInterface {
 

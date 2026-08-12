@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme\Override;
+namespace DrevOps\PhpTui\Theme\Override;
 
 /**
  * The breadcrumb's elements, as a consumer patches them.
@@ -10,14 +10,14 @@ namespace DrevOps\Tui\Theme\Override;
  * The block's prefix is implied by the group, so `separator()` here is the
  * breadcrumb's separator and nothing else's.
  *
- * @package DrevOps\Tui\Theme\Override
+ * @package DrevOps\PhpTui\Theme\Override
  */
 final class BreadcrumbOverrides {
 
   /**
    * Construct a group over the patch it writes into.
    *
-   * @param \DrevOps\Tui\Theme\Override\Overrides $overrides
+   * @param \DrevOps\PhpTui\Theme\Override\Overrides $overrides
    *   The patch being collected.
    */
   public function __construct(

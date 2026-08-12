@@ -1,9 +1,9 @@
 # Contributing
 
-Thanks for your interest in improving `drevops/tui`. Bug reports, feature ideas and pull requests are all welcome.
+Thanks for your interest in improving `drevops/phptui`. Bug reports, feature ideas and pull requests are all welcome.
 
-- Report a bug or propose a change: open an [issue](https://github.com/drevops/tui/issues).
-- Submit a change: send a [pull request](https://github.com/drevops/tui/pulls) from a branch off `main`.
+- Report a bug or propose a change: open an [issue](https://github.com/drevops/phptui/issues).
+- Submit a change: send a [pull request](https://github.com/drevops/phptui/pulls) from a branch off `main`.
 
 The full guide - local setup, the quality stack, tests, coding conventions and how the documentation and SVG assets are built - is on the documentation site:
 

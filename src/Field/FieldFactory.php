@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\NumberBounds;
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\Template as TemplateModel;
-use DrevOps\Tui\Field\Capability\PlaceholderCapableInterface;
-use DrevOps\Tui\Field\Capability\QueryOptionsCapableInterface;
-use DrevOps\Tui\Input\KeyMap;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\NumberBounds;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Block\Template as TemplateModel;
+use DrevOps\PhpTui\Field\Capability\PlaceholderCapableInterface;
+use DrevOps\PhpTui\Field\Capability\QueryOptionsCapableInterface;
+use DrevOps\PhpTui\Input\KeyMap;
+use DrevOps\PhpTui\Input\KeyMapManager;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Builds the interactive field for a block, seeded with the value it holds.
@@ -22,7 +22,7 @@ use DrevOps\Tui\Translation\Translator;
  * The block's field type selects the field class. A built field does not
  * validate: an offered value is validated where the answer is held.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 class FieldFactory {
 
@@ -34,7 +34,7 @@ class FieldFactory {
   /**
    * Construct a field factory.
    *
-   * @param \DrevOps\Tui\Input\KeyMap|null $key_map
+   * @param \DrevOps\PhpTui\Input\KeyMap|null $key_map
    *   The resolved key bindings; NULL uses the default preset.
    * @param bool $externalEditorAvailable
    *   Whether an external editor is launchable here. A textarea field opts in
@@ -47,14 +47,14 @@ class FieldFactory {
   /**
    * Build the interactive field for a block, seeded with the value it holds.
    *
-   * @param \DrevOps\Tui\Block\Field $block
+   * @param \DrevOps\PhpTui\Block\Field $block
    *   The block being opened.
    * @param mixed $current
    *   The current value to seed the field with.
    * @param array<string,mixed> $answers
    *   The answers collected so far, passed to a text completion closure.
    *
-   * @return \DrevOps\Tui\Field\FieldInterface
+   * @return \DrevOps\PhpTui\Field\FieldInterface
    *   The field.
    *
    * @throws \LogicException
@@ -95,7 +95,7 @@ class FieldFactory {
   /**
    * The field seed value for a block: a scalar, or a list when multiple.
    *
-   * @param \DrevOps\Tui\Block\Field $block
+   * @param \DrevOps\PhpTui\Block\Field $block
    *   The block.
    * @param mixed $current
    *   The current value to seed the field with.
@@ -111,12 +111,12 @@ class FieldFactory {
   /**
    * Build a rating field over a block's scale, seeded with its value.
    *
-   * @param \DrevOps\Tui\Block\Field $block
+   * @param \DrevOps\PhpTui\Block\Field $block
    *   The block.
    * @param mixed $current
    *   The current value to seed the field with.
    *
-   * @return \DrevOps\Tui\Field\Rating
+   * @return \DrevOps\PhpTui\Field\Rating
    *   The field.
    */
   protected function rating(Field $block, mixed $current): Rating {
@@ -134,10 +134,10 @@ class FieldFactory {
   /**
    * The template a block's template field fills in.
    *
-   * @param \DrevOps\Tui\Block\Field $block
+   * @param \DrevOps\PhpTui\Block\Field $block
    *   The block.
    *
-   * @return \DrevOps\Tui\Block\Template
+   * @return \DrevOps\PhpTui\Block\Template
    *   The template.
    */
   protected function template(Field $block): TemplateModel {
@@ -153,7 +153,7 @@ class FieldFactory {
   /**
    * Resolve a block's completion source to a concrete candidate list.
    *
-   * @param \DrevOps\Tui\Block\Field $block
+   * @param \DrevOps\PhpTui\Block\Field $block
    *   The block.
    * @param array<string,mixed> $answers
    *   The answers collected so far.
@@ -213,7 +213,7 @@ class FieldFactory {
   /**
    * The selectable value => label map for a set of options.
    *
-   * @param list<\DrevOps\Tui\Block\Option> $options
+   * @param list<\DrevOps\PhpTui\Block\Option> $options
    *   The localized options.
    *
    * @return array<string,string>
@@ -238,10 +238,10 @@ class FieldFactory {
    * field searches identical to the list it shows, so a match runs against the
    * same text the user reads.
    *
-   * @param list<\DrevOps\Tui\Block\Option> $options
+   * @param list<\DrevOps\PhpTui\Block\Option> $options
    *   The options in display order.
    *
-   * @return list<\DrevOps\Tui\Block\Option>
+   * @return list<\DrevOps\PhpTui\Block\Option>
    *   The options in display order, localized to the active language.
    */
   protected function translate(array $options): array {
@@ -261,7 +261,7 @@ class FieldFactory {
    * For the value-based suggest field, which carries no option rows: the
    * localized per-option description keyed by its value.
    *
-   * @param list<\DrevOps\Tui\Block\Option> $options
+   * @param list<\DrevOps\PhpTui\Block\Option> $options
    *   The localized options.
    *
    * @return array<string,string>

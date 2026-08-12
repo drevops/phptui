@@ -15,16 +15,16 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\CollectException;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Binding;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\CollectException;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Binding;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\InterruptException;
+use DrevOps\PhpTui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
 

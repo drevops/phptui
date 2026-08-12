@@ -2,38 +2,38 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui;
+namespace DrevOps\PhpTui;
 
-use DrevOps\Tui\Answers\Answers;
-use DrevOps\Tui\Block\BlockInterface;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Handler\HandlerRegistry;
-use DrevOps\Tui\Input\KeyMap;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
-use DrevOps\Tui\Primitive\Output;
-use DrevOps\Tui\Primitive\Progress;
-use DrevOps\Tui\Resolver\InputResolver;
-use DrevOps\Tui\Schema\AgentHelp;
-use DrevOps\Tui\Schema\SchemaGenerator;
-use DrevOps\Tui\Schema\SchemaValidator;
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Collector;
-use DrevOps\Tui\Screen\Layout\LayoutManager;
-use DrevOps\Tui\Screen\ScreenController;
-use DrevOps\Tui\Terminal\Terminal;
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
-use DrevOps\Tui\Theme\Capability\OverrideCapableInterface;
-use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\Override\Overrides;
-use DrevOps\Tui\Theme\ThemeBuilder;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Theme\ThemeManager;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Answers\Answers;
+use DrevOps\PhpTui\Block\BlockInterface;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Handler\HandlerRegistry;
+use DrevOps\PhpTui\Input\KeyMap;
+use DrevOps\PhpTui\Input\KeyMapManager;
+use DrevOps\PhpTui\Primitive\Element\PrimitiveElementsInterface;
+use DrevOps\PhpTui\Primitive\Output;
+use DrevOps\PhpTui\Primitive\Progress;
+use DrevOps\PhpTui\Resolver\InputResolver;
+use DrevOps\PhpTui\Schema\AgentHelp;
+use DrevOps\PhpTui\Schema\SchemaGenerator;
+use DrevOps\PhpTui\Schema\SchemaValidator;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Collector;
+use DrevOps\PhpTui\Screen\Layout\LayoutManager;
+use DrevOps\PhpTui\Screen\ScreenController;
+use DrevOps\PhpTui\Terminal\Terminal;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\Capability\OccupyCapableInterface;
+use DrevOps\PhpTui\Theme\Capability\OverrideCapableInterface;
+use DrevOps\PhpTui\Theme\Mode;
+use DrevOps\PhpTui\Theme\Override\Overrides;
+use DrevOps\PhpTui\Theme\ThemeBuilder;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Theme\ThemeManager;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * The one-class entry point for collecting a form's answers.
@@ -45,7 +45,7 @@ use DrevOps\Tui\Translation\Translator;
  * language, each set through a fluent setter. Those internals stay reachable
  * via root() and registry() when a consumer wants finer control.
  *
- * @package DrevOps\Tui
+ * @package DrevOps\PhpTui
  */
 final class Tui {
 
@@ -89,14 +89,14 @@ final class Tui {
   /**
    * The blocks put in the screen's own regions, in the order they were placed.
    *
-   * @var list<array{region:string,block:\DrevOps\Tui\Block\BlockInterface,tail:bool}>
+   * @var list<array{region:string,block:\DrevOps\PhpTui\Block\BlockInterface,tail:bool}>
    */
   protected array $placements = [];
 
   /**
    * The direction each named region runs its blocks, where one was stated.
    *
-   * @var array<string,\DrevOps\Tui\Screen\Axis>
+   * @var array<string,\DrevOps\PhpTui\Screen\Axis>
    */
   protected array $flows = [];
 
@@ -143,18 +143,18 @@ final class Tui {
   /**
    * Construct a TUI.
    *
-   * @param \DrevOps\Tui\Builder\Form $form
+   * @param \DrevOps\PhpTui\Builder\Form $form
    *   The form declaring the panels and fields to collect.
    * @param string[] $handler_namespaces
    *   Namespaces searched, in order, for per-field consumer classes offering
    *   reusable static validate()/transform() behaviour.
    * @param string $env_prefix
    *   The env-variable prefix for per-question overrides; wins over the
-   *   form-declared prefix, which wins over the "TUI_" default.
+   *   form-declared prefix, which wins over the "PHPTUI_" default.
    */
   public function __construct(protected Form $form, array $handler_namespaces = [], string $env_prefix = '') {
     $declared = $form->currentEnvPrefix();
-    $this->envPrefix = $env_prefix !== '' ? $env_prefix : ($declared !== '' ? $declared : 'TUI_');
+    $this->envPrefix = $env_prefix !== '' ? $env_prefix : ($declared !== '' ? $declared : 'PHPTUI_');
     $this->registry = new HandlerRegistry($handler_namespaces);
   }
 
@@ -162,7 +162,7 @@ final class Tui {
    * Select the theme, or state what it draws differently.
    *
    * A name picks the theme and its display options. A closure receives a
-   * {@see \DrevOps\Tui\Theme\ThemeBuilder} and states the elements the
+   * {@see \DrevOps\PhpTui\Theme\ThemeBuilder} and states the elements the
    * selected theme draws differently; an element it does not name keeps the
    * theme's own value, so the closure is a patch rather than a replacement.
    * A palette change suits a theme subclass; a handful of glyphs suits the
@@ -206,7 +206,7 @@ final class Tui {
   /**
    * Build the selected theme and apply the consumer's overrides.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface|string $name
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface|string $name
    *   A built theme, used as it stands; or the theme name or class to build,
    *   where empty falls back to the facade's theme.
    * @param int $width
@@ -214,7 +214,7 @@ final class Tui {
    * @param array<string,mixed> $options
    *   The resolved display options.
    *
-   * @return \DrevOps\Tui\Theme\ThemeInterface
+   * @return \DrevOps\PhpTui\Theme\ThemeInterface
    *   The theme.
    */
   protected function buildTheme(ThemeInterface|string $name, int $width, array $options): ThemeInterface {
@@ -273,7 +273,7 @@ final class Tui {
    *
    * @param string $region
    *   The region name, as the layout declares it.
-   * @param \DrevOps\Tui\Block\BlockInterface $block
+   * @param \DrevOps\PhpTui\Block\BlockInterface $block
    *   The block.
    * @param bool $tail
    *   Whether it packs from the end of the region's run rather than the start.
@@ -299,7 +299,7 @@ final class Tui {
    *
    * @param string $region
    *   The region name, as the layout declares it.
-   * @param \DrevOps\Tui\Screen\Axis $axis
+   * @param \DrevOps\PhpTui\Screen\Axis $axis
    *   The direction its blocks run.
    *
    * @return $this
@@ -334,13 +334,13 @@ final class Tui {
    * Set the key-binding preset and optional overrides.
    *
    * The preset names the base bindings ("default", "vim", a registered name, or
-   * a preset class); each override is a {@see \DrevOps\Tui\Input\Binding}
+   * a preset class); each override is a {@see \DrevOps\PhpTui\Input\Binding}
    * naming a scope, an action and its keys, applied on top of the preset.
    * Conflicting, un-typeable or malformed bindings throw here, not mid-session.
    *
    * @param string $preset
    *   The preset name or class. Empty selects the default preset.
-   * @param list<\DrevOps\Tui\Input\Binding> $overrides
+   * @param list<\DrevOps\PhpTui\Input\Binding> $overrides
    *   Bindings applied on top of the preset.
    *
    * @return $this
@@ -462,7 +462,7 @@ final class Tui {
    * activated process-wide so `t()` resolves during a run. Without one, every
    * string renders in its English source.
    *
-   * @param \DrevOps\Tui\Translation\Translator $translator
+   * @param \DrevOps\PhpTui\Translation\Translator $translator
    *   The translator.
    *
    * @return $this
@@ -495,14 +495,14 @@ final class Tui {
    *   feeds the chosen mode's initial state: the panels open pre-filled
    *   interactively, and the headless answers resolve to the same values.
    *
-   * @return \DrevOps\Tui\Answers\Answers
+   * @return \DrevOps\PhpTui\Answers\Answers
    *   The collected answers.
    *
-   * @throws \DrevOps\Tui\CollectException
+   * @throws \DrevOps\PhpTui\CollectException
    *   When the answers cannot be taken as they were given.
-   * @throws \DrevOps\Tui\InterruptException
+   * @throws \DrevOps\PhpTui\InterruptException
    *   When the user aborts the interactive session with the interrupt key.
-   * @throws \DrevOps\Tui\CancelException
+   * @throws \DrevOps\PhpTui\CancelException
    *   When the user dismisses the interactive session via the cancel button.
    */
   public function run(string $prompts = '', string $version = '', string $directory = '', ?bool $interactive = NULL, bool $update = FALSE): Answers {
@@ -523,7 +523,7 @@ final class Tui {
    * @param string $version
    *   The version stamped into the context.
    *
-   * @return \DrevOps\Tui\Answers\Answers
+   * @return \DrevOps\PhpTui\Answers\Answers
    *   The collected answers.
    */
   public function collect(string $prompts = '', string $directory = '', bool $update = FALSE, string $version = ''): Answers {
@@ -541,24 +541,24 @@ final class Tui {
   /**
    * Show a progress indicator while a slow callback runs.
    *
-   * The callback receives the {@see \DrevOps\Tui\Primitive\Progress} and drives
-   * it with `advance()`; its return value is passed straight back. With no
-   * total the indicator is an animated spinner - each advance ticks a frame;
-   * with a total it is a bar that fills as it advances, with a step count and
-   * label. The active theme draws it, so it matches the panel's look and
-   * honours the colour and Unicode switches. On an interactive terminal it
-   * animates and settles when the callback returns; off a TTY it prints the
-   * caption once as a plain line and emits no control sequences.
+   * The callback receives the {@see \DrevOps\PhpTui\Primitive\Progress} and
+   * drives it with `advance()`; its return value is passed straight back.
+   * With no total the indicator is an animated spinner - each advance ticks a
+   * frame; with a total it is a bar that fills as it advances, with a step
+   * count and label. The active theme draws it, so it matches the panel's
+   * look and honours the colour and Unicode switches. On an interactive
+   * terminal it animates and settles when the callback returns; off a TTY it
+   * prints the caption once as a plain line and emits no control sequences.
    *
    * @param int|null $total
    *   The number of steps for a determinate bar, or NULL for an indeterminate
    *   spinner.
    * @param string $caption
    *   The caption shown beside the indicator.
-   * @param \Closure(\DrevOps\Tui\Primitive\Progress): TReturn $work
+   * @param \Closure(\DrevOps\PhpTui\Primitive\Progress): TReturn $work
    *   The work to run; it receives the progress primitive and its result is
    *   returned.
-   * @param \DrevOps\Tui\Terminal\Terminal|null $terminal
+   * @param \DrevOps\PhpTui\Terminal\Terminal|null $terminal
    *   The terminal to draw on (defaults to a real one on standard error).
    *
    * @return TReturn
@@ -587,10 +587,10 @@ final class Tui {
    * interactive terminal the colour is dropped unless it was forced, so a
    * captured log holds clean text.
    *
-   * @param \DrevOps\Tui\Terminal\Terminal|null $terminal
+   * @param \DrevOps\PhpTui\Terminal\Terminal|null $terminal
    *   The terminal to write to (defaults to a real one on standard error).
    *
-   * @return \DrevOps\Tui\Primitive\Output
+   * @return \DrevOps\PhpTui\Primitive\Output
    *   The output primitive; one instance writes any number of pieces.
    */
   public function output(?Terminal $terminal = NULL): Output {
@@ -612,10 +612,10 @@ final class Tui {
    * so a theme that implements none of them fails here with a named error
    * rather than at the first line it writes.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
-   * @return \DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface
+   * @return \DrevOps\PhpTui\Primitive\Element\PrimitiveElementsInterface
    *   The theme, able to draw them.
    *
    * @throws \InvalidArgumentException
@@ -647,17 +647,17 @@ final class Tui {
    * @param bool $update
    *   Whether discovery pre-fills the panels from an existing project, with the
    *   detected values carrying their `detected` provenance badge.
-   * @param \DrevOps\Tui\Terminal\Terminal|null $terminal
+   * @param \DrevOps\PhpTui\Terminal\Terminal|null $terminal
    *   The terminal to drive (defaults to a real one).
    *
-   * @return \DrevOps\Tui\Answers\Answers
+   * @return \DrevOps\PhpTui\Answers\Answers
    *   The collected answers.
    *
-   * @throws \DrevOps\Tui\CollectException
+   * @throws \DrevOps\PhpTui\CollectException
    *   When the answers cannot be taken as they were given.
-   * @throws \DrevOps\Tui\InterruptException
+   * @throws \DrevOps\PhpTui\InterruptException
    *   When the user aborts the interactive session with the interrupt key.
-   * @throws \DrevOps\Tui\CancelException
+   * @throws \DrevOps\PhpTui\CancelException
    *   When the user dismisses the interactive session via the cancel button.
    */
   public function interact(string $theme = '', string $banner = '', string $version = '', string $directory = '', bool $update = FALSE, ?Terminal $terminal = NULL): Answers {
@@ -681,7 +681,7 @@ final class Tui {
    *
    * @param array<string,mixed> $options
    *   The resolved theme display options (colour, Unicode, mode).
-   * @param \DrevOps\Tui\Theme\ThemeInterface|string $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface|string $theme
    *   A built theme, used as it stands; or the theme name or class to build,
    *   where empty falls back to the facade's theme.
    * @param string $banner
@@ -696,12 +696,12 @@ final class Tui {
    * @param bool $update
    *   Whether discovery pre-fills the initial state from an existing project.
    *
-   * @return \DrevOps\Tui\Screen\ScreenController
+   * @return \DrevOps\PhpTui\Screen\ScreenController
    *   The session, ready to run against a terminal.
    *
    * @internal
-   *   Public for the {@see \DrevOps\Tui\Testing\TuiTester} harness; consumers
-   *   collect through run(), collect() or interact().
+   *   Public for the {@see \DrevOps\PhpTui\Testing\TuiTester} harness;
+   *   consumers collect through run(), collect() or interact().
    */
   public function controller(array $options, ThemeInterface|string $theme = '', string $banner = '', string $version = '', string $directory = '', int $width = ThemeInterface::DEFAULT_WIDTH, bool $update = FALSE): ScreenController {
     // Restore this facade's language before rendering (see collect()).
@@ -758,7 +758,7 @@ final class Tui {
   /**
    * The JSON schema describing the questions.
    *
-   * @param \DrevOps\Tui\Handler\Context|null $context
+   * @param \DrevOps\PhpTui\Handler\Context|null $context
    *   The context a closure default is evaluated against; NULL uses an empty
    *   context carrying no prior answers.
    *
@@ -772,7 +772,7 @@ final class Tui {
   /**
    * Agent-facing help for driving the form non-interactively.
    *
-   * @param \DrevOps\Tui\Handler\Context|null $context
+   * @param \DrevOps\PhpTui\Handler\Context|null $context
    *   The context a closure default is evaluated against; NULL uses an empty
    *   context carrying no prior answers.
    *
@@ -788,7 +788,7 @@ final class Tui {
    *
    * @param array<string,mixed> $answers
    *   The answers to validate.
-   * @param \DrevOps\Tui\Handler\Context|null $context
+   * @param \DrevOps\PhpTui\Handler\Context|null $context
    *   The context an options resolver is evaluated against, its answers
    *   replaced by the ones under validation; NULL uses an empty context.
    *
@@ -802,7 +802,7 @@ final class Tui {
   /**
    * The handler registry.
    *
-   * @return \DrevOps\Tui\Handler\HandlerRegistry
+   * @return \DrevOps\PhpTui\Handler\HandlerRegistry
    *   The handler registry.
    */
   public function registry(): HandlerRegistry {
@@ -817,7 +817,7 @@ final class Tui {
    * declaration and its state. Every operation on this facade reads that one
    * tree.
    *
-   * @return \DrevOps\Tui\Block\Panel
+   * @return \DrevOps\PhpTui\Block\Panel
    *   The root panel.
    */
   public function root(): Panel {
@@ -851,7 +851,7 @@ final class Tui {
    * follows the background only when colour is on - with colour off the palette
    * is invisible, so the background query is skipped.
    *
-   * @param \DrevOps\Tui\Terminal\Terminal $terminal
+   * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
    *   The terminal queried for its background during detection.
    *
    * @return array<string,mixed>
@@ -909,7 +909,7 @@ final class Tui {
    * A primitive is chrome, not data, so it writes to standard error and
    * leaves standard output to a consumer's own results.
    *
-   * @return \DrevOps\Tui\Terminal\Terminal
+   * @return \DrevOps\PhpTui\Terminal\Terminal
    *   The terminal.
    */
   protected static function primitiveTerminal(): Terminal {
@@ -966,7 +966,7 @@ final class Tui {
    * @param string $version
    *   The version stamped into the context.
    *
-   * @return \DrevOps\Tui\Handler\Context
+   * @return \DrevOps\PhpTui\Handler\Context
    *   The context.
    */
   protected function context(string $directory, bool $update, string $version): Context {

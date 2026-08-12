@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui;
+namespace DrevOps\PhpTui;
 
 /**
  * Thrown when the user dismisses an interactive session via the cancel button.
@@ -12,7 +12,7 @@ namespace DrevOps\Tui;
  * {@see InterruptException} so one catch covers both aborts; a caller that
  * treats an explicit cancel differently catches this class first.
  *
- * @package DrevOps\Tui
+ * @package DrevOps\PhpTui
  */
 class CancelException extends InterruptException {
 

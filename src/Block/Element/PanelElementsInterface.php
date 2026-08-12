@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Element;
+namespace DrevOps\PhpTui\Block\Element;
 
 /**
  * The elements the panel block composes when it is nested.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Block\Element;
  * A panel draws a row of its own only as a sub-panel, which is the shape you
  * select to enter it. Once entered it draws nothing itself: its blocks do.
  *
- * @package DrevOps\Tui\Block\Element
+ * @package DrevOps\PhpTui\Block\Element
  */
 interface PanelElementsInterface {
 

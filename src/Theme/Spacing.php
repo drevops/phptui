@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
 /**
  * The vertical spacing of the rendered panel body.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Theme;
  * A consumer passes a case (or its string value) as the "spacing" theme
  * option.
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 enum Spacing: string {
 

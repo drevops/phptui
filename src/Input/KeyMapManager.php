@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Input;
+namespace DrevOps\PhpTui\Input;
 
 /**
  * The key-map preset registry and factory.
@@ -15,14 +15,14 @@ namespace DrevOps\Tui\Input;
  * passed to {@see create()} are appended after the preset's own bindings, so a
  * consumer can retune individual bindings without replacing the whole preset.
  *
- * @package DrevOps\Tui\Input
+ * @package DrevOps\PhpTui\Input
  */
 final class KeyMapManager {
 
   /**
    * The name => preset-class registry.
    *
-   * @var array<string,class-string<\DrevOps\Tui\Input\DefaultKeyMap>>
+   * @var array<string,class-string<\DrevOps\PhpTui\Input\DefaultKeyMap>>
    */
   protected static array $registry = [
     'default' => DefaultKeyMap::class,
@@ -60,10 +60,10 @@ final class KeyMapManager {
    *
    * @param string $name
    *   A registered name, a preset class name, or "" for the default preset.
-   * @param list<\DrevOps\Tui\Input\Binding> $overrides
+   * @param list<\DrevOps\PhpTui\Input\Binding> $overrides
    *   Bindings appended after the preset's own, retuning individual bindings.
    *
-   * @return \DrevOps\Tui\Input\KeyMap
+   * @return \DrevOps\PhpTui\Input\KeyMap
    *   The resolved, validated key map.
    *
    * @throws \InvalidArgumentException

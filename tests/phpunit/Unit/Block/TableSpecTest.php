@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Block;
+namespace DrevOps\PhpTui\Tests\Unit\Block;
 
-use DrevOps\Tui\Block\TableSpec;
+use DrevOps\PhpTui\Block\TableSpec;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;

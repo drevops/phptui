@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Element;
+namespace DrevOps\PhpTui\Block\Element;
 
 /**
  * The elements the actions block composes.
@@ -21,7 +21,7 @@ namespace DrevOps\Tui\Block\Element;
  * the reason is an element here rather than a note somebody else draws above
  * them: nothing can come between a refusal and what it refuses.
  *
- * @package DrevOps\Tui\Block\Element
+ * @package DrevOps\PhpTui\Block\Element
  */
 interface ActionsElementsInterface {
 

@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionType;
-use DrevOps\Tui\Block\SelectionBounds;
-use DrevOps\Tui\Field\Capability\FilterCapableInterface;
-use DrevOps\Tui\Field\Capability\FilterCapableTrait;
-use DrevOps\Tui\Field\Capability\OptionsCapableInterface;
-use DrevOps\Tui\Field\Capability\OptionsCapableTrait;
-use DrevOps\Tui\Field\Capability\PagingCapableInterface;
-use DrevOps\Tui\Field\Capability\PagingCapableTrait;
-use DrevOps\Tui\Field\Capability\SelectionBoundedTrait;
-use DrevOps\Tui\Field\Capability\SelectionCapableInterface;
-use DrevOps\Tui\Field\Capability\SelectionCapableTrait;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Block\OptionType;
+use DrevOps\PhpTui\Block\SelectionBounds;
+use DrevOps\PhpTui\Field\Capability\FilterCapableInterface;
+use DrevOps\PhpTui\Field\Capability\FilterCapableTrait;
+use DrevOps\PhpTui\Field\Capability\OptionsCapableInterface;
+use DrevOps\PhpTui\Field\Capability\OptionsCapableTrait;
+use DrevOps\PhpTui\Field\Capability\PagingCapableInterface;
+use DrevOps\PhpTui\Field\Capability\PagingCapableTrait;
+use DrevOps\PhpTui\Field\Capability\SelectionBoundedTrait;
+use DrevOps\PhpTui\Field\Capability\SelectionCapableInterface;
+use DrevOps\PhpTui\Field\Capability\SelectionCapableTrait;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * A single-choice or multiple-choice list of options.
@@ -26,7 +26,7 @@ use DrevOps\Tui\Utils\Strings;
  * A single-choice radio list, or a multiple-choice checkbox list with
  * type-to-filter and select-all/none.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 class Select extends AbstractField implements OptionsCapableInterface, SelectionCapableInterface, FilterCapableInterface, PagingCapableInterface {
 
@@ -39,7 +39,7 @@ class Select extends AbstractField implements OptionsCapableInterface, Selection
   /**
    * Construct a select field.
    *
-   * @param array<int|string,\DrevOps\Tui\Block\Option|string> $options
+   * @param array<int|string,\DrevOps\PhpTui\Block\Option|string> $options
    *   Option rows in display order - a list of options or the value => label
    *   shorthand map.
    * @param string|list<string> $default
@@ -49,7 +49,7 @@ class Select extends AbstractField implements OptionsCapableInterface, Selection
    * @param int|null $page_size
    *   The number of option rows shown at once before the list pages; NULL uses
    *   the default.
-   * @param \DrevOps\Tui\Block\SelectionBounds|null $selection_bounds
+   * @param \DrevOps\PhpTui\Block\SelectionBounds|null $selection_bounds
    *   The minimum/maximum selection counts enforced on accept, or NULL for no
    *   count limit.
    */
@@ -62,7 +62,7 @@ class Select extends AbstractField implements OptionsCapableInterface, Selection
   /**
    * The field type this field binds its keys under.
    *
-   * @return \DrevOps\Tui\Block\FieldType
+   * @return \DrevOps\PhpTui\Block\FieldType
    *   The select field type.
    */
   protected function choiceType(): FieldType {
@@ -75,7 +75,7 @@ class Select extends AbstractField implements OptionsCapableInterface, Selection
    * @param string $needle
    *   The query.
    *
-   * @return list<\DrevOps\Tui\Block\Option>
+   * @return list<\DrevOps\PhpTui\Block\Option>
    *   The matching option rows.
    */
   protected function filterOptions(string $needle): array {

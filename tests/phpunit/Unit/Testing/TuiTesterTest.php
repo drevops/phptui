@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Testing;
+namespace DrevOps\PhpTui\Tests\Unit\Testing;
 
-use DrevOps\Tui\Answers\Provenance;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Discovery\Dotenv;
-use DrevOps\Tui\Discovery\JsonValue;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Testing\TuiTester;
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\Spacing;
+use DrevOps\PhpTui\Answers\Provenance;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Condition\Condition;
+use DrevOps\PhpTui\Discovery\Dotenv;
+use DrevOps\PhpTui\Discovery\JsonValue;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Testing\TuiTester;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\Spacing;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -64,7 +64,7 @@ final class TuiTesterTest extends TestCase {
         $p->text('machine_name', 'Machine name');
       });
 
-    $tester = new TuiTester($form, ['DrevOps\Tui\Tests\Fixtures\Handler']);
+    $tester = new TuiTester($form, ['DrevOps\PhpTui\Tests\Fixtures\Handler']);
 
     // The handler's static validate() rejects the empty accept inline, then the
     // typed value is accepted and lowercased by its static transform().

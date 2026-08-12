@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Answers;
+namespace DrevOps\PhpTui\Answers;
 
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Terminal\Terminal;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Terminal\Terminal;
 
 /**
  * The collected answer set: values plus provenance, keyed by question id.
@@ -19,7 +19,7 @@ use DrevOps\Tui\Terminal\Terminal;
  * question (label, kind, panel trail) in $items, so summaries and processing
  * need no form configuration.
  *
- * @package DrevOps\Tui\Answers
+ * @package DrevOps\PhpTui\Answers
  */
 final readonly class Answers {
 
@@ -28,9 +28,9 @@ final readonly class Answers {
    *
    * @param array<string,mixed> $values
    *   The answer values keyed by question id.
-   * @param array<string,\DrevOps\Tui\Answers\Provenance> $provenance
+   * @param array<string,\DrevOps\PhpTui\Answers\Provenance> $provenance
    *   The provenance keyed by question id.
-   * @param array<string,\DrevOps\Tui\Answers\Answer> $items
+   * @param array<string,\DrevOps\PhpTui\Answers\Answer> $items
    *   The self-describing answers keyed by question id, in form order (empty
    *   when the set was assembled without a configuration).
    */
@@ -48,11 +48,11 @@ final readonly class Answers {
    * contributes no heading: the trail each answer carries starts at the panel
    * it was asked in.
    *
-   * @param \DrevOps\Tui\Block\Panel $root
+   * @param \DrevOps\PhpTui\Block\Panel $root
    *   The panel every declared panel hangs from.
    * @param array<string,mixed> $values
    *   The answer values keyed by question id.
-   * @param array<string,\DrevOps\Tui\Answers\Provenance> $provenance
+   * @param array<string,\DrevOps\PhpTui\Answers\Provenance> $provenance
    *   The provenance keyed by question id.
    *
    * @return self
@@ -71,16 +71,16 @@ final readonly class Answers {
   /**
    * Walk a panel block and the panels beneath it, snapshotting each answer.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to walk.
    * @param list<string> $trail
    *   The titles of the ancestor panels, outermost first.
    * @param array<string,mixed> $values
    *   The answer values keyed by question id.
-   * @param array<string,\DrevOps\Tui\Answers\Provenance> $provenance
+   * @param array<string,\DrevOps\PhpTui\Answers\Provenance> $provenance
    *   The provenance keyed by question id.
    *
-   * @return array<string,\DrevOps\Tui\Answers\Answer>
+   * @return array<string,\DrevOps\PhpTui\Answers\Answer>
    *   The self-describing answers keyed by question id.
    */
   protected static function walkTree(Panel $panel, array $trail, array $values, array $provenance): array {
@@ -98,16 +98,16 @@ final readonly class Answers {
   /**
    * Snapshot the questions one panel asked, in the order it asked them.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel.
    * @param list<string> $trail
    *   The titles of the panels the questions live under, outermost first.
    * @param array<string,mixed> $values
    *   The answer values keyed by question id.
-   * @param array<string,\DrevOps\Tui\Answers\Provenance> $provenance
+   * @param array<string,\DrevOps\PhpTui\Answers\Provenance> $provenance
    *   The provenance keyed by question id.
    *
-   * @return array<string,\DrevOps\Tui\Answers\Answer>
+   * @return array<string,\DrevOps\PhpTui\Answers\Answer>
    *   The self-describing answers keyed by question id.
    */
   protected static function snapshot(Panel $panel, array $trail, array $values, array $provenance): array {
@@ -173,7 +173,7 @@ final readonly class Answers {
    * @param string $id
    *   The question id.
    *
-   * @return \DrevOps\Tui\Answers\Provenance
+   * @return \DrevOps\PhpTui\Answers\Provenance
    *   The provenance (Default when absent).
    */
   public function provenanceOf(string $id): Provenance {
@@ -186,7 +186,7 @@ final readonly class Answers {
    * @param string $id
    *   The question id.
    *
-   * @return \DrevOps\Tui\Answers\Answer|null
+   * @return \DrevOps\PhpTui\Answers\Answer|null
    *   The answer, or NULL when absent (or the set carries no snapshots).
    */
   public function item(string $id): ?Answer {

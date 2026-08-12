@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Field;
+namespace DrevOps\PhpTui\Tests\Unit\Field;
 
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionType;
-use DrevOps\Tui\Field\AbstractField;
-use DrevOps\Tui\Field\Capability\PagingCapableTrait;
-use DrevOps\Tui\Field\Reorder;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Testing\ArrayKeyStream;
-use DrevOps\Tui\Testing\FieldRunner;
-use DrevOps\Tui\Tests\Traits\AssertsPagingTrait;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Block\OptionType;
+use DrevOps\PhpTui\Field\AbstractField;
+use DrevOps\PhpTui\Field\Capability\PagingCapableTrait;
+use DrevOps\PhpTui\Field\Reorder;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Testing\ArrayKeyStream;
+use DrevOps\PhpTui\Testing\FieldRunner;
+use DrevOps\PhpTui\Tests\Traits\AssertsPagingTrait;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\Group;

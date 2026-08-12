@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Input;
+namespace DrevOps\PhpTui\Input;
 
 /**
  * A single key press: either a named special key or a printable character.
  *
- * @package DrevOps\Tui\Input
+ * @package DrevOps\PhpTui\Input
  */
 final readonly class Key {
 
   /**
    * Construct a key.
    *
-   * @param \DrevOps\Tui\Input\KeyName|null $name
+   * @param \DrevOps\PhpTui\Input\KeyName|null $name
    *   The named special key, or NULL for a printable character.
    * @param string|null $char
    *   The printable character, or NULL for a named key.
@@ -28,7 +28,7 @@ final readonly class Key {
   /**
    * Create a named special key.
    *
-   * @param \DrevOps\Tui\Input\KeyName $name
+   * @param \DrevOps\PhpTui\Input\KeyName $name
    *   The key name.
    */
   public static function named(KeyName $name): self {
@@ -55,7 +55,7 @@ final readonly class Key {
   /**
    * Whether this key is the given named key.
    *
-   * @param \DrevOps\Tui\Input\KeyName $name
+   * @param \DrevOps\PhpTui\Input\KeyName $name
    *   The name to compare.
    */
   public function is(KeyName $name): bool {
@@ -65,7 +65,7 @@ final readonly class Key {
   /**
    * Whether this key is the same key as another.
    *
-   * @param \DrevOps\Tui\Input\Key $other
+   * @param \DrevOps\PhpTui\Input\Key $other
    *   The key to compare.
    *
    * @return bool

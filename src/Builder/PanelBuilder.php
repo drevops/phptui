@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Builder;
+namespace DrevOps\PhpTui\Builder;
 
-use DrevOps\Tui\Block\BlockInterface;
-use DrevOps\Tui\Block\Buttons;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Progress;
-use DrevOps\Tui\Condition\ConditionInterface;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Screen\Layout\GridLayout;
-use DrevOps\Tui\Screen\Layout\LayoutInterface;
-use DrevOps\Tui\Screen\Layout\LayoutManager;
-use DrevOps\Tui\Screen\Layout\PanelLayout;
+use DrevOps\PhpTui\Block\BlockInterface;
+use DrevOps\PhpTui\Block\Buttons;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Progress;
+use DrevOps\PhpTui\Condition\ConditionInterface;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Screen\Layout\GridLayout;
+use DrevOps\PhpTui\Screen\Layout\LayoutInterface;
+use DrevOps\PhpTui\Screen\Layout\LayoutManager;
+use DrevOps\PhpTui\Screen\Layout\PanelLayout;
 
 /**
  * A fluent builder for a panel: what it holds, and how it is arranged.
@@ -26,7 +26,7 @@ use DrevOps\Tui\Screen\Layout\PanelLayout;
  * block then names the region it goes in rather than depending on the order
  * it was declared in.
  *
- * @package DrevOps\Tui\Builder
+ * @package DrevOps\PhpTui\Builder
  */
 final class PanelBuilder {
 
@@ -38,14 +38,14 @@ final class PanelBuilder {
   /**
    * The field builders, in declaration order.
    *
-   * @var \DrevOps\Tui\Builder\FieldBuilder[]
+   * @var \DrevOps\PhpTui\Builder\FieldBuilder[]
    */
   protected array $fields = [];
 
   /**
    * The nested panel builders, in declaration order.
    *
-   * @var \DrevOps\Tui\Builder\PanelBuilder[]
+   * @var \DrevOps\PhpTui\Builder\PanelBuilder[]
    */
   protected array $panels = [];
 
@@ -75,7 +75,7 @@ final class PanelBuilder {
   /**
    * The panel this builder is declaring.
    *
-   * @return \DrevOps\Tui\Block\Panel
+   * @return \DrevOps\PhpTui\Block\Panel
    *   The panel, whose identity never changes, so it can be placed in a region
    *   as it is declared.
    */
@@ -86,7 +86,7 @@ final class PanelBuilder {
   /**
    * Finish the declaration, so everything it holds is finished too.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the declared grid does not match the panels it arranges.
    */
   public function seal(): void {
@@ -127,7 +127,7 @@ final class PanelBuilder {
    * everything it holds: while the condition does not hold, its questions are
    * not asked, not drawn and not in the answers.
    *
-   * @param \DrevOps\Tui\Condition\ConditionInterface $condition
+   * @param \DrevOps\PhpTui\Condition\ConditionInterface $condition
    *   The condition gating the panel, evaluated as the answers settle.
    *
    * @return $this
@@ -186,7 +186,7 @@ final class PanelBuilder {
    * @param string $label
    *   The label (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   public function text(string $id, string $label = ''): FieldBuilder {
@@ -200,14 +200,14 @@ final class PanelBuilder {
    * context and each `{{name}}` slot is filled separately - and
    * `->slot()` to label or validate one slot. The answer is the
    * assembled string; its parts are read back with
-   * {@see \DrevOps\Tui\Answers\Answers::parts()}.
+   * {@see \DrevOps\PhpTui\Answers\Answers::parts()}.
    *
    * @param string $id
    *   The field id.
    * @param string $label
    *   The label (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   public function template(string $id, string $label = ''): FieldBuilder {
@@ -222,7 +222,7 @@ final class PanelBuilder {
    * @param string $label
    *   The label (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   public function select(string $id, string $label = ''): FieldBuilder {
@@ -237,7 +237,7 @@ final class PanelBuilder {
    * @param string $label
    *   The label (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   public function reorder(string $id, string $label = ''): FieldBuilder {
@@ -252,7 +252,7 @@ final class PanelBuilder {
    * @param string $label
    *   The label (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   public function confirm(string $id, string $label = ''): FieldBuilder {
@@ -267,7 +267,7 @@ final class PanelBuilder {
    * @param string $label
    *   The label (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   public function toggle(string $id, string $label = ''): FieldBuilder {
@@ -282,7 +282,7 @@ final class PanelBuilder {
    * @param string $label
    *   The label (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   public function suggest(string $id, string $label = ''): FieldBuilder {
@@ -297,7 +297,7 @@ final class PanelBuilder {
    * @param string $label
    *   The label (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   public function number(string $id, string $label = ''): FieldBuilder {
@@ -316,7 +316,7 @@ final class PanelBuilder {
    * @param string $label
    *   The label (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   public function rating(string $id, string $label = ''): FieldBuilder {
@@ -331,7 +331,7 @@ final class PanelBuilder {
    * @param string $label
    *   The label (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   public function calendar(string $id, string $label = ''): FieldBuilder {
@@ -346,7 +346,7 @@ final class PanelBuilder {
    * @param string $label
    *   The label (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   public function textarea(string $id, string $label = ''): FieldBuilder {
@@ -361,7 +361,7 @@ final class PanelBuilder {
    * @param string $label
    *   The label (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   public function password(string $id, string $label = ''): FieldBuilder {
@@ -378,7 +378,7 @@ final class PanelBuilder {
    * @param string $label
    *   The label (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   public function search(string $id, string $label = ''): FieldBuilder {
@@ -395,7 +395,7 @@ final class PanelBuilder {
    * @param string $label
    *   The label (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   public function filePicker(string $id, string $label = ''): FieldBuilder {
@@ -410,7 +410,7 @@ final class PanelBuilder {
    * @param string $label
    *   The label (defaults to the id).
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   public function pause(string $id, string $label = ''): FieldBuilder {
@@ -429,7 +429,7 @@ final class PanelBuilder {
    * @param string $title
    *   The title (optional; an empty title draws the body alone).
    *
-   * @return \DrevOps\Tui\Block\Markup
+   * @return \DrevOps\PhpTui\Block\Markup
    *   The markup block.
    */
   public function note(string $id, string $title = ''): Markup {
@@ -451,7 +451,7 @@ final class PanelBuilder {
    * @param string $title
    *   An optional title above the body.
    *
-   * @return \DrevOps\Tui\Block\Markup
+   * @return \DrevOps\PhpTui\Block\Markup
    *   The markup block.
    */
   public function markup(string $id, string $body, string $title = ''): Markup {
@@ -466,14 +466,14 @@ final class PanelBuilder {
    *
    * Chain `->steps(int)` for a determinate bar (omit it for a spinner) and
    * `->work(\Closure)` for the work; the callback drives the indicator through
-   * the {@see \DrevOps\Tui\Primitive\ProgressReporter} it receives.
+   * the {@see \DrevOps\PhpTui\Primitive\ProgressReporter} it receives.
    *
    * @param string $id
    *   The block id.
    * @param string $caption
    *   The caption shown beside the indicator (defaults to the id).
    *
-   * @return \DrevOps\Tui\Block\Progress
+   * @return \DrevOps\PhpTui\Block\Progress
    *   The progress block.
    */
   public function progress(string $id, string $caption = ''): Progress {
@@ -511,7 +511,7 @@ final class PanelBuilder {
    * A name picks the arrangement of the panel's own blocks - a shipped layout,
    * or any one a consumer registered - and each of its regions then takes the
    * blocks that name it through
-   * {@see \DrevOps\Tui\Builder\PanelBuilder::in()}.
+   * {@see \DrevOps\PhpTui\Builder\PanelBuilder::in()}.
    *
    * Counts arrange the sub-panels instead: each argument declares one visual
    * row and names how many sub-panels sit side by side in it, filled in
@@ -527,7 +527,7 @@ final class PanelBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When a name is mixed with counts, more than one name is given, a visual
    *   row holds fewer than one sub-panel, or the panel already holds blocks
    *   the named layout has nowhere to put.
@@ -583,7 +583,7 @@ final class PanelBuilder {
   /**
    * Add a block to the current region.
    *
-   * @param \DrevOps\Tui\Block\BlockInterface $block
+   * @param \DrevOps\PhpTui\Block\BlockInterface $block
    *   The block.
    *
    * @return $this
@@ -603,10 +603,10 @@ final class PanelBuilder {
    * is a region, so the region a sub-panel goes in is settled here rather
    * than derived later from declaration order.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The sub-panel.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the grid has no window left to draw it in.
    */
   protected function descend(Panel $panel): void {
@@ -635,13 +635,13 @@ final class PanelBuilder {
   /**
    * Arrange the panel with a layout.
    *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   * @param \DrevOps\PhpTui\Screen\Layout\LayoutInterface $layout
    *   The layout.
    *
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the panel already holds blocks the layout has nowhere to put.
    */
   protected function arrange(LayoutInterface $layout): self {
@@ -661,7 +661,7 @@ final class PanelBuilder {
    * @return string
    *   The first region the panel's layout declares.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the layout declares no region, so there is nowhere for a block to
    *   go.
    */
@@ -682,10 +682,10 @@ final class PanelBuilder {
    *   The field id.
    * @param string $label
    *   The label (defaults to the id).
-   * @param \DrevOps\Tui\Block\FieldType $type
+   * @param \DrevOps\PhpTui\Block\FieldType $type
    *   The field type.
    *
-   * @return \DrevOps\Tui\Builder\FieldBuilder
+   * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
   protected function field(string $id, string $label, FieldType $type): FieldBuilder {

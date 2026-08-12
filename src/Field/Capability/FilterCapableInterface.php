@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
 /**
  * A field whose visible rows narrow under a typed query.
@@ -11,7 +11,7 @@ namespace DrevOps\Tui\Field\Capability;
  * {@see FilterCapableTrait} carries the default implementation for the choice
  * fields.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 interface FilterCapableInterface {
 

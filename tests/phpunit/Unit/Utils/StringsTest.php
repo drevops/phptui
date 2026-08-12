@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Utils;
+namespace DrevOps\PhpTui\Tests\Unit\Utils;
 
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Utils\Strings;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

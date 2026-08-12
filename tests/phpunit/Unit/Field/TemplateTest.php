@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Field;
+namespace DrevOps\PhpTui\Tests\Unit\Field;
 
-use DrevOps\Tui\Block\Template as TemplateModel;
-use DrevOps\Tui\Field\Capability\TextEditCapableTrait;
-use DrevOps\Tui\Field\Template;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Testing\ArrayKeyStream;
-use DrevOps\Tui\Testing\FieldRunner;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Block\Template as TemplateModel;
+use DrevOps\PhpTui\Field\Capability\TextEditCapableTrait;
+use DrevOps\PhpTui\Field\Template;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Testing\ArrayKeyStream;
+use DrevOps\PhpTui\Testing\FieldRunner;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -213,7 +213,7 @@ final class TemplateTest extends TestCase {
   /**
    * A two-slot template whose first slot takes a single letter a-c.
    *
-   * @return \DrevOps\Tui\Block\Template
+   * @return \DrevOps\PhpTui\Block\Template
    *   The template.
    */
   protected function gradedTemplate(): TemplateModel {

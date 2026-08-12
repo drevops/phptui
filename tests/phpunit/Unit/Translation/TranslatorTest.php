@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Translation;
+namespace DrevOps\PhpTui\Tests\Unit\Translation;
 
-use DrevOps\Tui\Tests\Traits\IsolatesEnvTrait;
-use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Tests\Traits\IsolatesEnvTrait;
+use DrevOps\PhpTui\Tests\Traits\ResetsTranslatorTrait;
+use DrevOps\PhpTui\Translation\Translator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

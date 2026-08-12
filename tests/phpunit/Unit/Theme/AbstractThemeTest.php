@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Theme;
+namespace DrevOps\PhpTui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Tests\Fixtures\Theme\FloorTheme;
-use DrevOps\Tui\Theme\AbstractTheme;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\FloorTheme;
+use DrevOps\PhpTui\Theme\AbstractTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

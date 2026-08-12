@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Element;
+namespace DrevOps\PhpTui\Block\Element;
 
 /**
  * The elements the legend block composes.
  *
- * @package DrevOps\Tui\Block\Element
+ * @package DrevOps\PhpTui\Block\Element
  */
 interface LegendElementsInterface {
 

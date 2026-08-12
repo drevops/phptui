@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
 /**
  * A field offering inline ghost-text completion of its buffer.
  *
  * {@see CompletionCapableTrait} carries the default implementation.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 interface CompletionCapableInterface {
 

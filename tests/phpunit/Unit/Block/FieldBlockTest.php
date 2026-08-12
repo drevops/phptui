@@ -2,30 +2,30 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Block;
+namespace DrevOps\PhpTui\Tests\Unit\Block;
 
-use DrevOps\Tui\Block\DateBounds;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\FilePickerConstraints;
-use DrevOps\Tui\Block\FilePickerMode;
-use DrevOps\Tui\Block\Mode;
-use DrevOps\Tui\Block\NumberBounds;
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionType;
-use DrevOps\Tui\Block\RenderMode;
-use DrevOps\Tui\Block\SelectionBounds;
-use DrevOps\Tui\Block\Template;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Discovery\PathExists;
-use DrevOps\Tui\Field\FieldInterface;
-use DrevOps\Tui\Field\Select;
-use DrevOps\Tui\Field\Text;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Block\DateBounds;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\FilePickerConstraints;
+use DrevOps\PhpTui\Block\FilePickerMode;
+use DrevOps\PhpTui\Block\Mode;
+use DrevOps\PhpTui\Block\NumberBounds;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Block\OptionType;
+use DrevOps\PhpTui\Block\RenderMode;
+use DrevOps\PhpTui\Block\SelectionBounds;
+use DrevOps\PhpTui\Block\Template;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\Discovery\PathExists;
+use DrevOps\PhpTui\Field\FieldInterface;
+use DrevOps\PhpTui\Field\Select;
+use DrevOps\PhpTui\Field\Text;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -892,7 +892,7 @@ final class FieldBlockTest extends TestCase {
   /**
    * The option rows an open field draws, with the label prefix taken off.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    *
    * @return list<string>

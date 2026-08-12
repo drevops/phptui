@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Derive;
+namespace DrevOps\PhpTui\Derive;
 
-use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\Ansi;
 
 /**
  * Recomputes derived field values until chains settle to a fixpoint.
@@ -12,14 +12,14 @@ use DrevOps\Tui\Terminal\Ansi;
  * Each rule is a {@see Derive} owning its own computation; fields the user
  * has pinned (overridden) are left untouched.
  *
- * @package DrevOps\Tui\Derive
+ * @package DrevOps\PhpTui\Derive
  */
 class Deriver {
 
   /**
    * Recompute derived values until they stop changing.
    *
-   * @param array<string,\DrevOps\Tui\Derive\Derive> $rules
+   * @param array<string,\DrevOps\PhpTui\Derive\Derive> $rules
    *   Derive rules keyed by field id.
    * @param array<string,mixed> $values
    *   The current values keyed by field id.

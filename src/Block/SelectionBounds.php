@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Optional minimum and maximum selection counts for a multi-value field.
@@ -16,7 +16,7 @@ use DrevOps\Tui\Translation\Translator;
  * {@see NumberBounds}, but constraining how many values a list holds rather
  * than the magnitude of a single number.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final readonly class SelectionBounds {
 
@@ -28,7 +28,7 @@ final readonly class SelectionBounds {
    * @param int|null $max
    *   The inclusive maximum number of selections, or NULL for no ceiling.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When a declared bound is below one (a count bound below one is
    *   meaningless; omit the bound instead), or the minimum exceeds the maximum.
    */

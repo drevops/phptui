@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
 /**
  * The kind of a row in a choice field's option list.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Block;
  * Only Option rows are selectable; Separator and Heading rows are visual
  * structure that navigation skips and never collects.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 enum OptionType: string {
 

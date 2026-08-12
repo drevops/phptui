@@ -1,5 +1,5 @@
 @startuml
-' drevops/tui - component architecture.
+' drevops/phptui - component architecture.
 ' Packages group the src/ classes by what they do; arrows show the main
 ' dependencies.
 ' Regenerate every SVG with:  plantuml -tsvg docs/architecture/*.puml
@@ -8,7 +8,7 @@ skinparam backgroundColor white
 skinparam defaultFontName Helvetica
 skinparam shadowing false
 skinparam componentStyle rectangle
-title drevops/tui - component architecture
+title drevops/phptui - component architecture
 
 package "Declaring" #F0F4C3 {
   [Tui]

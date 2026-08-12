@@ -8,7 +8,7 @@
  * The output primitives write finished lines and return - there is nothing to
  * animate, unlike the progress primitive that redraws one line in place - so
  * each subject renders as a single static frame rather than an animation. This
- * drives the real {@see \DrevOps\Tui\Primitive\Output} against an in-memory
+ * drives the real {@see \DrevOps\PhpTui\Primitive\Output} against an in-memory
  * terminal, lays the captured lines into an asciicast for the shared svg-term
  * renderer, and does it in all four glyph and colour display modes. Each dark
  * SVG derives its light twin in the same pass. The result is reproducible on
@@ -25,15 +25,15 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Primitive\Output;
-use DrevOps\Tui\Primitive\Status;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Terminal\TerminalControl;
-use DrevOps\Tui\Testing\BufferedTerminal;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Theme\ThemeManager;
+use DrevOps\PhpTui\Primitive\Output;
+use DrevOps\PhpTui\Primitive\Status;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\TerminalControl;
+use DrevOps\PhpTui\Testing\BufferedTerminal;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\Mode;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Theme\ThemeManager;
 
 require dirname(__DIR__, 2) . '/vendor/autoload.php';
 require_once __DIR__ . '/svg-light-twin.php';
@@ -59,7 +59,7 @@ const DISPLAY_MODES = [
  * Each mirrors a playground/18-output-* script - same content and calls - so
  * the rendered cards match the code a reader runs.
  *
- * @return array<string, callable(\DrevOps\Tui\Primitive\Output): void>
+ * @return array<string, callable(\DrevOps\PhpTui\Primitive\Output): void>
  *   The subject writers keyed by asset name.
  */
 function outputSpecs(): array {
@@ -116,7 +116,7 @@ function outputSpecs(): array {
  *
  * @param string $name
  *   The asset name (box, status or definitions).
- * @param callable(\DrevOps\Tui\Primitive\Output): void $spec
+ * @param callable(\DrevOps\PhpTui\Primitive\Output): void $spec
  *   The subject writer.
  * @param string $assets_dir
  *   The output directory.
@@ -148,9 +148,9 @@ function renderOutput(string $name, callable $spec, string $assets_dir, string $
 /**
  * Drive the real primitive and capture the lines it writes.
  *
- * @param \DrevOps\Tui\Theme\DefaultTheme $theme
+ * @param \DrevOps\PhpTui\Theme\DefaultTheme $theme
  *   The theme that draws the pieces.
- * @param callable(\DrevOps\Tui\Primitive\Output): void $spec
+ * @param callable(\DrevOps\PhpTui\Primitive\Output): void $spec
  *   The subject writer.
  *
  * @return list<string>

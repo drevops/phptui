@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Derive;
+namespace DrevOps\PhpTui\Tests\Unit\Derive;
 
-use DrevOps\Tui\Derive\Transform;
+use DrevOps\PhpTui\Derive\Transform;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

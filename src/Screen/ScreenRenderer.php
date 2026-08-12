@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\PhpTui\Screen;
 
-use DrevOps\Tui\Block\BlockInterface;
-use DrevOps\Tui\Block\Capability\DependCapableInterface;
-use DrevOps\Tui\Block\Element\BorderElementsInterface;
-use DrevOps\Tui\Block\Element\ChromeElementsInterface;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Screen\Layout\LayoutInterface;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Terminal\Box;
-use DrevOps\Tui\Screen\Capability\BorderCapableInterface;
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\BorderSide;
-use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
-use DrevOps\Tui\Theme\Capability\UnicodeCapableInterface;
-use DrevOps\Tui\Theme\Spacing;
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Block\BlockInterface;
+use DrevOps\PhpTui\Block\Capability\DependCapableInterface;
+use DrevOps\PhpTui\Block\Element\BorderElementsInterface;
+use DrevOps\PhpTui\Block\Element\ChromeElementsInterface;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Screen\Layout\LayoutInterface;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\Box;
+use DrevOps\PhpTui\Screen\Capability\BorderCapableInterface;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\BorderSide;
+use DrevOps\PhpTui\Theme\Capability\OccupyCapableInterface;
+use DrevOps\PhpTui\Theme\Capability\UnicodeCapableInterface;
+use DrevOps\PhpTui\Theme\Spacing;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 
 /**
  * Draws a screen, outward from the root.
@@ -38,7 +38,7 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * for, because a block only ever fills the space it is given and never learns
  * where that space ends or what is drawn beside it.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\PhpTui\Screen
  */
 final class ScreenRenderer {
 
@@ -50,12 +50,12 @@ final class ScreenRenderer {
   /**
    * Construct a renderer.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme every block draws through.
-   * @param \DrevOps\Tui\Theme\Border $border
+   * @param \DrevOps\PhpTui\Theme\Border $border
    *   The frame drawn around every region at once; none by default, which
    *   leaves the rows exactly as the layout arranged them.
-   * @param \DrevOps\Tui\Screen\Scroller $scroller
+   * @param \DrevOps\PhpTui\Screen\Scroller $scroller
    *   Resolves the window over content that outran the space it was given.
    */
   public function __construct(
@@ -68,7 +68,7 @@ final class ScreenRenderer {
   /**
    * The cells of a region's grant that its contents can use.
    *
-   * @param \DrevOps\Tui\Screen\Region $region
+   * @param \DrevOps\PhpTui\Screen\Region $region
    *   The region.
    * @param int $cells
    *   The cells the layout granted it.
@@ -83,7 +83,7 @@ final class ScreenRenderer {
   /**
    * The cells a border takes of the axis it is measured along.
    *
-   * @param \DrevOps\Tui\Screen\Capability\BorderCapableInterface $of
+   * @param \DrevOps\PhpTui\Screen\Capability\BorderCapableInterface $of
    *   What declared it.
    * @param bool $down
    *   Whether the axis runs down rather than across.
@@ -106,7 +106,7 @@ final class ScreenRenderer {
   /**
    * Draw a screen.
    *
-   * @param \DrevOps\Tui\Screen\Screen $screen
+   * @param \DrevOps\PhpTui\Screen\Screen $screen
    *   The screen.
    * @param int $rows
    *   The terminal rows.
@@ -131,10 +131,10 @@ final class ScreenRenderer {
   /**
    * The style a border is drawn in, or NULL when none is drawn at all.
    *
-   * @param \DrevOps\Tui\Screen\Capability\BorderCapableInterface $of
+   * @param \DrevOps\PhpTui\Screen\Capability\BorderCapableInterface $of
    *   What declared it.
    *
-   * @return \DrevOps\Tui\Theme\Border|null
+   * @return \DrevOps\PhpTui\Theme\Border|null
    *   The style: the one stated, else the theme's own; NULL when nothing
    *   declared edges, or when the style resolves to none.
    */
@@ -153,9 +153,9 @@ final class ScreenRenderer {
    *
    * @param list<string> $lines
    *   The rows drawn inside the edges.
-   * @param \DrevOps\Tui\Screen\Capability\BorderCapableInterface $of
+   * @param \DrevOps\PhpTui\Screen\Capability\BorderCapableInterface $of
    *   What declared them.
-   * @param \DrevOps\Tui\Theme\Border $style
+   * @param \DrevOps\PhpTui\Theme\Border $style
    *   The style to draw them in.
    * @param int $columns
    *   The columns the edges span, their own included.
@@ -189,9 +189,9 @@ final class ScreenRenderer {
   /**
    * One horizontal edge, with a title written into it when it carries one.
    *
-   * @param \DrevOps\Tui\Block\Element\BorderElementsInterface $pieces
+   * @param \DrevOps\PhpTui\Block\Element\BorderElementsInterface $pieces
    *   The theme, narrowed to the glyphs a border is drawn with.
-   * @param \DrevOps\Tui\Theme\Border $style
+   * @param \DrevOps\PhpTui\Theme\Border $style
    *   The style.
    * @param string $title
    *   The text written into it; empty writes none.
@@ -227,7 +227,7 @@ final class ScreenRenderer {
   /**
    * The theme, narrowed to the glyphs a border is drawn with.
    *
-   * @return \DrevOps\Tui\Block\Element\BorderElementsInterface
+   * @return \DrevOps\PhpTui\Block\Element\BorderElementsInterface
    *   The theme.
    *
    * @throws \InvalidArgumentException
@@ -251,9 +251,9 @@ final class ScreenRenderer {
    * to, and never more than the blocks drawn beside it leave - which is the
    * room it scrolls inside when it holds more than that.
    *
-   * @param \DrevOps\Tui\Screen\Region $region
+   * @param \DrevOps\PhpTui\Screen\Region $region
    *   The region the panel is drawn in.
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel placed in it.
    * @param int $rows
    *   The rows the region was given.
@@ -283,7 +283,7 @@ final class ScreenRenderer {
    * are drawn, and the layout is handed the numbers and divides the axis by
    * them. Neither has to learn the other's business.
    *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   * @param \DrevOps\PhpTui\Screen\Layout\LayoutInterface $layout
    *   The layout.
    * @param int $available
    *   The cells to divide.
@@ -302,9 +302,9 @@ final class ScreenRenderer {
    * line of an arrangement at once - which is what an arrangement that moves as
    * one surface has to be measured against.
    *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   * @param \DrevOps\PhpTui\Screen\Layout\LayoutInterface $layout
    *   The layout.
-   * @param \DrevOps\Tui\Block\BlockInterface|null $of
+   * @param \DrevOps\PhpTui\Block\BlockInterface|null $of
    *   The block to locate, if one is being looked for.
    *
    * @return array{int,int}
@@ -348,7 +348,7 @@ final class ScreenRenderer {
   /**
    * The cells a region asks the layout for, once its box is counted in.
    *
-   * @param \DrevOps\Tui\Screen\Region $region
+   * @param \DrevOps\PhpTui\Screen\Region $region
    *   The region.
    * @param int $content
    *   The cells its contents come to.
@@ -370,11 +370,11 @@ final class ScreenRenderer {
    * in holds - going into a panel is where a layout starts rather than where a
    * row is counted.
    *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   * @param \DrevOps\PhpTui\Screen\Layout\LayoutInterface $layout
    *   The layout the region belongs to.
    * @param string $name
    *   The region name.
-   * @param \DrevOps\Tui\Block\BlockInterface|null $of
+   * @param \DrevOps\PhpTui\Block\BlockInterface|null $of
    *   The block to locate, if one is being looked for.
    *
    * @return array{int,int}
@@ -408,10 +408,10 @@ final class ScreenRenderer {
   /**
    * What a region stacks, piece by piece.
    *
-   * @param \DrevOps\Tui\Screen\Region $region
+   * @param \DrevOps\PhpTui\Screen\Region $region
    *   The region.
    *
-   * @return list<array{rows:int,blocks:list<\DrevOps\Tui\Block\BlockInterface>,offsets:list<int>}>
+   * @return list<array{rows:int,blocks:list<\DrevOps\PhpTui\Block\BlockInterface>,offsets:list<int>}>
    *   Each piece: the rows it comes to, the blocks drawn in it, and the row
    *   each of those starts on within it.
    */
@@ -425,12 +425,12 @@ final class ScreenRenderer {
   /**
    * One piece per block, in the order they are drawn.
    *
-   * @param list<\DrevOps\Tui\Block\BlockInterface> $blocks
+   * @param list<\DrevOps\PhpTui\Block\BlockInterface> $blocks
    *   The blocks.
    * @param bool $previews
    *   Whether a panel among them shows what is behind it rather than a row.
    *
-   * @return list<array{rows:int,blocks:list<\DrevOps\Tui\Block\BlockInterface>,offsets:list<int>}>
+   * @return list<array{rows:int,blocks:list<\DrevOps\PhpTui\Block\BlockInterface>,offsets:list<int>}>
    *   The pieces.
    */
   protected function stacked(array $blocks, bool $previews = FALSE): array {
@@ -464,7 +464,7 @@ final class ScreenRenderer {
   /**
    * The rows a layout comes to when nothing has sized it.
    *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   * @param \DrevOps\PhpTui\Screen\Layout\LayoutInterface $layout
    *   The layout.
    *
    * @return int
@@ -477,7 +477,7 @@ final class ScreenRenderer {
   /**
    * The rows each of a layout's regions comes to, keyed by name.
    *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   * @param \DrevOps\PhpTui\Screen\Layout\LayoutInterface $layout
    *   The layout.
    *
    * @return array<string,int>
@@ -523,7 +523,7 @@ final class ScreenRenderer {
   /**
    * The theme, narrowed to the elements the window chrome composes.
    *
-   * @return \DrevOps\Tui\Block\Element\ChromeElementsInterface
+   * @return \DrevOps\PhpTui\Block\Element\ChromeElementsInterface
    *   The theme, able to draw the chrome.
    *
    * @throws \InvalidArgumentException
@@ -552,7 +552,7 @@ final class ScreenRenderer {
   /**
    * Draw a layout into a space.
    *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   * @param \DrevOps\PhpTui\Screen\Layout\LayoutInterface $layout
    *   The layout.
    * @param int $rows
    *   The rows it may fill.
@@ -642,7 +642,7 @@ final class ScreenRenderer {
   /**
    * Show the part of an arrangement its space has room for.
    *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   * @param \DrevOps\PhpTui\Screen\Layout\LayoutInterface $layout
    *   The arrangement, which is what holds the offset.
    * @param list<string> $lines
    *   Every row it drew.
@@ -665,7 +665,7 @@ final class ScreenRenderer {
   /**
    * Draw the regions sharing one line of the axis, side by side.
    *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   * @param \DrevOps\PhpTui\Screen\Layout\LayoutInterface $layout
    *   The layout, which is what says how much of the line each region takes.
    * @param list<string> $names
    *   The regions drawn on it.
@@ -717,10 +717,10 @@ final class ScreenRenderer {
   /**
    * The panel a window of an arrangement was gone into, if one was.
    *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   * @param \DrevOps\PhpTui\Screen\Layout\LayoutInterface $layout
    *   The layout.
    *
-   * @return \DrevOps\Tui\Block\Panel|null
+   * @return \DrevOps\PhpTui\Block\Panel|null
    *   The panel, or NULL when no window of it has been gone into.
    */
   protected function windowed(LayoutInterface $layout): ?Panel {
@@ -744,7 +744,7 @@ final class ScreenRenderer {
   /**
    * Draw a region's blocks into the space it was given.
    *
-   * @param \DrevOps\Tui\Screen\Region $region
+   * @param \DrevOps\PhpTui\Screen\Region $region
    *   The region.
    * @param int $rows
    *   The rows it was given.
@@ -773,7 +773,7 @@ final class ScreenRenderer {
   /**
    * Draw a region's blocks into the space its box left it.
    *
-   * @param \DrevOps\Tui\Screen\Region $region
+   * @param \DrevOps\PhpTui\Screen\Region $region
    *   The region.
    * @param int $rows
    *   The rows it may fill.
@@ -833,7 +833,7 @@ final class ScreenRenderer {
    * session drew around the form rather than anything the form declared.
    * Coming back out draws every one of them again.
    *
-   * @param \DrevOps\Tui\Screen\Region $region
+   * @param \DrevOps\PhpTui\Screen\Region $region
    *   The region.
    * @param int $rows
    *   The rows it was given.
@@ -864,10 +864,10 @@ final class ScreenRenderer {
   /**
    * The panel a region was entered through, if it holds one.
    *
-   * @param \DrevOps\Tui\Screen\Region $region
+   * @param \DrevOps\PhpTui\Screen\Region $region
    *   The region.
    *
-   * @return \DrevOps\Tui\Block\Panel|null
+   * @return \DrevOps\PhpTui\Block\Panel|null
    *   The panel, or NULL when nothing in it has been gone into.
    */
   protected function entered(Region $region): ?Panel {
@@ -883,7 +883,7 @@ final class ScreenRenderer {
   /**
    * Whether the panel you are in is deeper than a given one.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel.
    *
    * @return bool
@@ -902,9 +902,9 @@ final class ScreenRenderer {
   /**
    * Draw the panel a furnished region holds, and what stands beside it.
    *
-   * @param \DrevOps\Tui\Screen\Region $region
+   * @param \DrevOps\PhpTui\Screen\Region $region
    *   The region.
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel it was entered through.
    * @param int $rows
    *   The rows it was given.
@@ -933,9 +933,9 @@ final class ScreenRenderer {
   /**
    * What a region draws before the panel it holds, and what it draws after it.
    *
-   * @param \DrevOps\Tui\Screen\Region $region
+   * @param \DrevOps\PhpTui\Screen\Region $region
    *   The region.
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel.
    * @param int $columns
    *   The columns the region was given, which is what a block declaring edges
@@ -974,7 +974,7 @@ final class ScreenRenderer {
   /**
    * The rows a panel takes of a region, once its neighbours have theirs.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel.
    * @param list<string> $beside
    *   What the blocks drawn beside it drew.
@@ -1001,7 +1001,7 @@ final class ScreenRenderer {
   /**
    * What a region draws at the far end of its flow, once it runs down it.
    *
-   * @param \DrevOps\Tui\Screen\Region $region
+   * @param \DrevOps\PhpTui\Screen\Region $region
    *   The region.
    *
    * @return list<string>
@@ -1115,7 +1115,7 @@ final class ScreenRenderer {
   /**
    * What each block in a region drew, keyed by where it sits in it.
    *
-   * @param list<\DrevOps\Tui\Block\BlockInterface> $blocks
+   * @param list<\DrevOps\PhpTui\Block\BlockInterface> $blocks
    *   The blocks.
    * @param bool $previews
    *   Whether a panel among them shows what is behind it rather than a row.

@@ -16,7 +16,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 A place to do work inside the form: select the row, press <kbd>Enter</kbd>, and its work runs with a **determinate bar** (when it declares a step count) or an **indeterminate spinner** (when it does not), drawn in the row itself as the work advances. It collects **no value** - it sits beside the fields it depends on, not among the answers, so it's a block of its own rather than a kind of field.
 
 ```php
-use DrevOps\Tui\Primitive\ProgressReporter;
+use DrevOps\PhpTui\Primitive\ProgressReporter;
 
 $p->progress('pack', 'Packing the box')
   ->steps(6) // Omit for an indeterminate spinner.
@@ -28,7 +28,7 @@ $p->progress('pack', 'Packing the box')
   });
 ```
 
-Runnable script: [`playground/02-progress-row.php`](https://github.com/drevops/tui/blob/main/playground/02-progress-row.php).
+Runnable script: [`playground/02-progress-row.php`](https://github.com/drevops/phptui/blob/main/playground/02-progress-row.php).
 
 ## Options
 

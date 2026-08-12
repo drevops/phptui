@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
-use DrevOps\Tui\Block\Element\FieldElementsInterface;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Screen\Scroller;
-use DrevOps\Tui\Screen\Viewport;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\Element\FieldElementsInterface;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Screen\Scroller;
+use DrevOps\PhpTui\Screen\Viewport;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Paging behaviour: window a long list to a page that follows the cursor.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 trait PagingCapableTrait {
 
@@ -55,7 +55,7 @@ trait PagingCapableTrait {
    * @return int
    *   The effective page size.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When a declared page size is not positive.
    */
   protected function resolvePageSize(?int $page_size): int {
@@ -76,7 +76,7 @@ trait PagingCapableTrait {
    * @param int $cursor
    *   The cursor row index (a negative cursor pins the window to the top).
    *
-   * @return \DrevOps\Tui\Screen\Viewport
+   * @return \DrevOps\PhpTui\Screen\Viewport
    *   The window: its offset and whether rows are scrolled off above or below.
    */
   protected function pageViewport(int $total, int $cursor): Viewport {
@@ -89,11 +89,11 @@ trait PagingCapableTrait {
   /**
    * Wrap rendered rows with the scroll indicators for a paging window.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    * @param list<string> $rows
    *   The rendered visible rows.
-   * @param \DrevOps\Tui\Screen\Viewport $viewport
+   * @param \DrevOps\PhpTui\Screen\Viewport $viewport
    *   The paging window.
    *
    * @return list<string>
@@ -122,10 +122,10 @@ trait PagingCapableTrait {
    * draws only what it owns. A theme that styles the two marks alike declares
    * the style in both elements.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
-   * @return \DrevOps\Tui\Block\Element\FieldElementsInterface
+   * @return \DrevOps\PhpTui\Block\Element\FieldElementsInterface
    *   The theme, able to draw the mark.
    *
    * @throws \InvalidArgumentException

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Fixtures\Terminal;
+namespace DrevOps\PhpTui\Tests\Fixtures\Terminal;
 
-use DrevOps\Tui\Terminal\Terminal;
+use DrevOps\PhpTui\Terminal\Terminal;
 
 /**
  * Test fixture: a terminal whose size probe returns a canned reply.
@@ -13,7 +13,7 @@ use DrevOps\Tui\Terminal\Terminal;
  * platform test - so the size resolution is exercised deterministically on any
  * machine, without spawning processes.
  *
- * @package DrevOps\Tui\Tests\Fixtures\Terminal
+ * @package DrevOps\PhpTui\Tests\Fixtures\Terminal
  */
 final class ProbeTerminal extends Terminal {
 

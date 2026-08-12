@@ -89,11 +89,11 @@ Not everything on the keyboard routes through the map: a few field keys are fixe
 Bindings are layered by **scope**: a base layer shared by every field, a navigation layer for the panel browser, and one layer per field type that overrides the base only where it differs (<kbd>Enter</kbd> inserts a newline in a textarea, <kbd>Space</kbd> toggles a checkbox option). To retune individual bindings, pass overrides on top of a preset - each names a scope, an action and its keys. Later bindings win, so re-declaring a scope-and-action pair replaces the preset's keys for it:
 
 ```php
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Binding;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Input\Scope;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Binding;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Input\Scope;
 
 $tui = (new Tui($form))->keys('default', [
   // Quit with x as well as q.
@@ -117,4 +117,4 @@ Bindings are validated the moment they're set, so a bad key map is caught at con
 - a printable character bound in the base scope, or in a scope whose field consumes typed input (text, template, number, rating, password, textarea, search, suggest, toggle, file picker, and the multiple select), would be un-typeable and is rejected - control characters like <kbd>Ctrl-E</kbd> are exempt, since they're command keys, never typed content;
 - an unknown preset name, or a character binding that is not exactly one character, is rejected.
 
-See [`playground/10-key-bindings-*`](https://github.com/drevops/tui/tree/main/playground) for the default map, the vim preset and a custom override side by side.
+See [`playground/10-key-bindings-*`](https://github.com/drevops/phptui/tree/main/playground) for the default map, the vim preset and a custom override side by side.

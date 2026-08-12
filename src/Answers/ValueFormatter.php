@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Answers;
+namespace DrevOps\PhpTui\Answers;
 
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Renders an answer value readably, one rule for every display surface.
@@ -16,7 +16,7 @@ use DrevOps\Tui\Translation\Translator;
  * fixed-length mask conceals both a secret's value and its length, whatever
  * glyph the surface masks with.
  *
- * @package DrevOps\Tui\Answers
+ * @package DrevOps\PhpTui\Answers
  */
 final class ValueFormatter {
 

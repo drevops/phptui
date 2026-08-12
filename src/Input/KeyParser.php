@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Input;
+namespace DrevOps\PhpTui\Input;
 
 /**
  * Parses a raw terminal byte buffer into a list of keys.
@@ -14,7 +14,7 @@ namespace DrevOps\Tui\Input;
  * escape sequences are consumed whole and degrade to Escape, and unknown mouse
  * events are consumed without emitting a key.
  *
- * @package DrevOps\Tui\Input
+ * @package DrevOps\PhpTui\Input
  */
 class KeyParser {
 
@@ -24,7 +24,7 @@ class KeyParser {
    * @param string $bytes
    *   The raw bytes.
    *
-   * @return \DrevOps\Tui\Input\Key[]
+   * @return \DrevOps\PhpTui\Input\Key[]
    *   The parsed keys.
    */
   public function parse(string $bytes): array {
@@ -103,7 +103,7 @@ class KeyParser {
    * @param string $char
    *   The byte.
    *
-   * @return \DrevOps\Tui\Input\Key
+   * @return \DrevOps\PhpTui\Input\Key
    *   The key.
    */
   protected function parseSimple(string $char): Key {
@@ -125,7 +125,7 @@ class KeyParser {
    * @param int $start
    *   The offset of the ESC byte.
    *
-   * @return array{\DrevOps\Tui\Input\Key|null,int}
+   * @return array{\DrevOps\PhpTui\Input\Key|null,int}
    *   The key (or NULL) and the number of bytes consumed.
    */
   protected function parseEscape(string $bytes, int $start): array {
@@ -185,7 +185,7 @@ class KeyParser {
    * @param string $params
    *   The numeric parameters.
    *
-   * @return \DrevOps\Tui\Input\KeyName|null
+   * @return \DrevOps\PhpTui\Input\KeyName|null
    *   The key name, or NULL when unrecognized.
    */
   protected function csiName(string $final, string $params): ?KeyName {
@@ -207,7 +207,7 @@ class KeyParser {
    * @param string $params
    *   The parameter bytes; a modifier after ";" does not change the key.
    *
-   * @return \DrevOps\Tui\Input\KeyName|null
+   * @return \DrevOps\PhpTui\Input\KeyName|null
    *   The key name, or NULL when unrecognized.
    */
   protected function tildeName(string $params): ?KeyName {
@@ -229,7 +229,7 @@ class KeyParser {
    * @param int $start
    *   The offset of the ESC byte.
    *
-   * @return array{\DrevOps\Tui\Input\Key|null,int}
+   * @return array{\DrevOps\PhpTui\Input\Key|null,int}
    *   The key (or NULL) and the number of bytes consumed.
    */
   protected function parseMouse(string $bytes, int $start): array {

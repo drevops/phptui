@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Resolver;
+namespace DrevOps\PhpTui\Resolver;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Assembles the non-interactive input map from the external answer layers.
@@ -24,7 +24,7 @@ use DrevOps\Tui\Translation\Translator;
  * may replace its mechanical name and declare aliases beside it, and the first
  * of those names that is set answers it.
  *
- * @package DrevOps\Tui\Resolver
+ * @package DrevOps\PhpTui\Resolver
  */
 class InputResolver {
 
@@ -40,7 +40,7 @@ class InputResolver {
   /**
    * Build the input map for the given fields.
    *
-   * @param list<\DrevOps\Tui\Block\Field> $fields
+   * @param list<\DrevOps\PhpTui\Block\Field> $fields
    *   The fields to resolve inputs for.
    * @param string $prompts
    *   A `--prompts` JSON string, or a path to a JSON file, or empty.
@@ -76,7 +76,7 @@ class InputResolver {
    *
    * @param string $value
    *   The raw environment value.
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    *
    * @return mixed
@@ -122,7 +122,7 @@ class InputResolver {
    * @return array<string,mixed>
    *   The decoded map keyed by field id.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the operand decodes to anything but a JSON object - failing loudly
    *   instead of silently discarding every supplied answer.
    */

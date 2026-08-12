@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * Inline ghost-text completion over a character buffer.
@@ -15,7 +15,7 @@ use DrevOps\Tui\Utils\Strings;
  * whose buffer is not a plain caret line reuses the matching rule without
  * inheriting the caret arithmetic.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 trait CompletionCapableTrait {
 

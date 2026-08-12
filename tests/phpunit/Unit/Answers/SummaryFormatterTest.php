@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Answers;
+namespace DrevOps\PhpTui\Tests\Unit\Answers;
 
-use DrevOps\Tui\Answers\Answers;
-use DrevOps\Tui\Answers\Provenance;
-use DrevOps\Tui\Answers\SummaryFormatter;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\PhpTui\Answers\Answers;
+use DrevOps\PhpTui\Answers\Provenance;
+use DrevOps\PhpTui\Answers\SummaryFormatter;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Condition\Condition;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\Terminal\Ansi;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;

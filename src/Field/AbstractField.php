@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Block\Element\FieldElementsInterface;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Input\ScopedKeyMap;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Block\Element\FieldElementsInterface;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyMapManager;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Input\ScopedKeyMap;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * Shared field behaviour: accepting what was collected, and cancelling.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 abstract class AbstractField implements FieldInterface {
 
@@ -120,7 +120,7 @@ abstract class AbstractField implements FieldInterface {
    *
    * Fields whose bindings differ from the base defaults override this.
    *
-   * @return \DrevOps\Tui\Input\Scope
+   * @return \DrevOps\PhpTui\Input\Scope
    *   The field's binding scope.
    */
   protected function keyScope(): Scope {
@@ -137,7 +137,7 @@ abstract class AbstractField implements FieldInterface {
   /**
    * Cancel the field when the key triggers the cancel action.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key to test.
    *
    * @return bool
@@ -156,7 +156,7 @@ abstract class AbstractField implements FieldInterface {
   /**
    * Accept the live value when the key triggers the accept action.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key to test.
    *
    * @return bool
@@ -175,10 +175,10 @@ abstract class AbstractField implements FieldInterface {
   /**
    * The theme, narrowed to the elements a field draws with.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
-   * @return \DrevOps\Tui\Block\Element\FieldElementsInterface
+   * @return \DrevOps\PhpTui\Block\Element\FieldElementsInterface
    *   The theme, able to draw a field.
    *
    * @throws \InvalidArgumentException
@@ -195,7 +195,7 @@ abstract class AbstractField implements FieldInterface {
   /**
    * Style one option's label.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    * @param string $label
    *   The option label.
@@ -214,7 +214,7 @@ abstract class AbstractField implements FieldInterface {
   /**
    * Render an exclusive option row: the mark and the label beside it.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    * @param string $label
    *   The option label.
@@ -233,7 +233,7 @@ abstract class AbstractField implements FieldInterface {
   /**
    * The shared fuzzy matcher.
    *
-   * @return \DrevOps\Tui\Field\Matcher
+   * @return \DrevOps\PhpTui\Field\Matcher
    *   The matcher.
    */
   protected function matcher(): Matcher {
@@ -247,7 +247,7 @@ abstract class AbstractField implements FieldInterface {
    * styled on its own, so no SGR code nests inside another. With no matched
    * positions this is exactly {@see optionLabel()}.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    * @param string $label
    *   The option label.
@@ -289,7 +289,7 @@ abstract class AbstractField implements FieldInterface {
   /**
    * Style one run of matched or unmatched characters.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    * @param string $run
    *   The run of characters.
@@ -345,7 +345,7 @@ abstract class AbstractField implements FieldInterface {
   /**
    * What the field expects of an answer.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string
@@ -359,7 +359,7 @@ abstract class AbstractField implements FieldInterface {
   /**
    * The field's own rendered body, before the shared description and error.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string
@@ -391,7 +391,7 @@ abstract class AbstractField implements FieldInterface {
   /**
    * Render an option description, wrapped to the panel width and dimmed.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    * @param string $description
    *   The description text.
@@ -418,7 +418,7 @@ abstract class AbstractField implements FieldInterface {
   /**
    * The column an option's own text starts at, within the field's view.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return int

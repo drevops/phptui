@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Capability;
+namespace DrevOps\PhpTui\Block\Capability;
 
 /**
  * A block that can reject what you gave it, and say why.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Block\Capability;
  * Refusing and holding are separate jobs: a block can refuse a value without
  * ever holding one, and only what is held reaches the result.
  *
- * @package DrevOps\Tui\Block\Capability
+ * @package DrevOps\PhpTui\Block\Capability
  */
 interface RejectCapableInterface {
 

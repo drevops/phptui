@@ -28,7 +28,7 @@ $p->template('crate', 'Crate label')
   ->slot('grade', 'Grade', fn(string $value): ?string => preg_match('/^[a-c]$/', $value) === 1 ? NULL : 'use a single letter a-c');
 ```
 
-Runnable script: [`playground/02-fields-template.php`](https://github.com/drevops/tui/blob/main/playground/02-fields-template.php).
+Runnable script: [`playground/02-fields-template.php`](https://github.com/drevops/phptui/blob/main/playground/02-fields-template.php).
 
 ## Options
 

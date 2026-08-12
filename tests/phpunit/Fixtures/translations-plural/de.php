@@ -7,7 +7,7 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Translation\Translator;
 
 return [
   // A non-closure under the rule key is ignored (the default rule applies).

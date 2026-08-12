@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Schema;
+namespace DrevOps\PhpTui\Schema;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\NumberBounds;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\SelectionBounds;
-use DrevOps\Tui\Block\Template;
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\Condition\ConditionInterface;
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Resolver\EnvNameResolver;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\NumberBounds;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\SelectionBounds;
+use DrevOps\PhpTui\Block\Template;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\Condition\ConditionInterface;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Resolver\EnvNameResolver;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Describes how to answer the form unattended as a JSON Schema.
@@ -36,15 +36,16 @@ use DrevOps\Tui\Translation\Translator;
  * the rule into `if`/`then` was the alternative and is not available honestly:
  * a `contains` reads a list or a substring depending on the answer, and a bare
  * reference tests for a truthy value, and neither has one JSON Schema form.
- * {@see \DrevOps\Tui\Schema\SchemaValidator} composes the same rules against a
- * real answer set and stays the authority on whether a payload is complete.
+ * {@see \DrevOps\PhpTui\Schema\SchemaValidator} composes the same rules
+ * against a real answer set and stays the authority on whether a payload is
+ * complete.
  *
  * Only what the library controls appears here - the CLI flags an agent
  * ultimately calls are the consumer's to define, so they are absent. The
  * resolution order is the root `x-precedence`. A closure default is resolved
  * against the context (see {@see DefaultResolver}) rather than omitted.
  *
- * @package DrevOps\Tui\Schema
+ * @package DrevOps\PhpTui\Schema
  */
 class AgentHelp {
 
@@ -56,10 +57,10 @@ class AgentHelp {
   /**
    * Construct the schema generator.
    *
-   * @param \DrevOps\Tui\Block\Panel $root
+   * @param \DrevOps\PhpTui\Block\Panel $root
    *   The declared tree to describe, read from the panel every declared panel
    *   hangs from.
-   * @param \DrevOps\Tui\Handler\Context $context
+   * @param \DrevOps\PhpTui\Handler\Context $context
    *   The context a closure default is evaluated against; defaults to an empty
    *   context carrying no prior answers.
    * @param string $envPrefix
@@ -116,9 +117,9 @@ class AgentHelp {
   /**
    * Build the schema property for one field.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
-   * @param \DrevOps\Tui\Condition\ConditionInterface|null $gate
+   * @param \DrevOps\PhpTui\Condition\ConditionInterface|null $gate
    *   The rule deciding whether the question is asked at all, or NULL when
    *   nothing decides it or the rule cannot be read.
    * @param bool $gated
@@ -240,7 +241,7 @@ class AgentHelp {
   /**
    * The selectable option values of an option-constrained field.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    *
    * @return list<string>

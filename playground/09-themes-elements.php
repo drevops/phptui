@@ -29,16 +29,16 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\CollectException;
-use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Theme\Override\BreadcrumbOverrides;
-use DrevOps\Tui\Theme\Override\FieldOverrides;
-use DrevOps\Tui\Theme\Override\LegendOverrides;
-use DrevOps\Tui\Theme\Sgr;
-use DrevOps\Tui\Theme\ThemeBuilder;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\CollectException;
+use DrevOps\PhpTui\InterruptException;
+use DrevOps\PhpTui\Theme\Override\BreadcrumbOverrides;
+use DrevOps\PhpTui\Theme\Override\FieldOverrides;
+use DrevOps\PhpTui\Theme\Override\LegendOverrides;
+use DrevOps\PhpTui\Theme\Sgr;
+use DrevOps\PhpTui\Theme\ThemeBuilder;
+use DrevOps\PhpTui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
 

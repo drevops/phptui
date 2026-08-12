@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Playground\Themes;
 
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\Sgr;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\Sgr;
 
 /**
  * A custom theme that overrides as much as it sensibly can.

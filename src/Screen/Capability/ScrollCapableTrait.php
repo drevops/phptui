@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen\Capability;
+namespace DrevOps\PhpTui\Screen\Capability;
 
 /**
  * Holds a surface's offset; scrollTo() throws for one that does not scroll.
  *
- * @package DrevOps\Tui\Screen\Capability
+ * @package DrevOps\PhpTui\Screen\Capability
  */
 trait ScrollCapableTrait {
 

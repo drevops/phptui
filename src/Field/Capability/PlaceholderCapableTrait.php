@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Ghost text over an empty input, in the theme's ghost style.
@@ -14,7 +14,7 @@ use DrevOps\Tui\Translation\Translator;
  * and never apply at once: a completion requires typed input, a placeholder
  * requires none.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 trait PlaceholderCapableTrait {
 
@@ -53,7 +53,7 @@ trait PlaceholderCapableTrait {
   /**
    * The placeholder text for the current input, in the theme's ghost style.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme supplying the ghost styling.
    * @param string $current
    *   The input the placeholder stands in for.

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\Block\Element\BreadcrumbElementsInterface;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\Element\BreadcrumbElementsInterface;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * The trail of panels you have entered.
@@ -15,7 +15,7 @@ use DrevOps\Tui\Translation\Translator;
  * It gains a segment as you descend and loses one as you come back, so its
  * content changes while the block itself never moves.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final class Breadcrumb extends AbstractBlock {
 

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Fixtures\Theme;
+namespace DrevOps\PhpTui\Tests\Fixtures\Theme;
 
-use DrevOps\Tui\Theme\AbstractTheme;
+use DrevOps\PhpTui\Theme\AbstractTheme;
 
 /**
  * Test fixture: a theme whose width has to be two interfaces at once.
@@ -12,7 +12,7 @@ use DrevOps\Tui\Theme\AbstractTheme;
  * Nothing the factory has to offer can be two interfaces at once, so this is
  * the composite a width can never satisfy however it is handed over.
  *
- * @package DrevOps\Tui\Tests\Fixtures\Theme
+ * @package DrevOps\PhpTui\Tests\Fixtures\Theme
  */
 class IntersectedWidthTheme extends AbstractTheme {
 

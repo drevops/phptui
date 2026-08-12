@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Input;
+namespace DrevOps\PhpTui\Input;
 
 /**
  * The resolved bindings for one scope, narrowed for a single field.
@@ -15,16 +15,16 @@ namespace DrevOps\Tui\Input;
  * {@see KeyMap}; a scope resolves every key to at most one action, so matching
  * is a direct lookup.
  *
- * @package DrevOps\Tui\Input
+ * @package DrevOps\PhpTui\Input
  */
 final readonly class ScopedKeyMap {
 
   /**
    * Construct a scoped map.
    *
-   * @param array<string,\DrevOps\Tui\Input\Action> $byKey
+   * @param array<string,\DrevOps\PhpTui\Input\Action> $byKey
    *   The action each key triggers, keyed by the key's token.
-   * @param array<string,list<\DrevOps\Tui\Input\Key>> $byAction
+   * @param array<string,list<\DrevOps\PhpTui\Input\Key>> $byAction
    *   The keys bound to each action, keyed by the action's name.
    */
   public function __construct(
@@ -36,9 +36,9 @@ final readonly class ScopedKeyMap {
   /**
    * Whether a key press triggers an action in this scope.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key pressed.
-   * @param \DrevOps\Tui\Input\Action $action
+   * @param \DrevOps\PhpTui\Input\Action $action
    *   The action to test for.
    *
    * @return bool
@@ -51,10 +51,10 @@ final readonly class ScopedKeyMap {
   /**
    * The keys bound to an action in this scope, in declaration order.
    *
-   * @param \DrevOps\Tui\Input\Action $action
+   * @param \DrevOps\PhpTui\Input\Action $action
    *   The action.
    *
-   * @return list<\DrevOps\Tui\Input\Key>
+   * @return list<\DrevOps\PhpTui\Input\Key>
    *   The keys, empty when the action is unbound here.
    */
   public function keysFor(Action $action): array {
@@ -64,10 +64,10 @@ final readonly class ScopedKeyMap {
   /**
    * The primary (first-declared) key bound to an action, for hint display.
    *
-   * @param \DrevOps\Tui\Input\Action $action
+   * @param \DrevOps\PhpTui\Input\Action $action
    *   The action.
    *
-   * @return \DrevOps\Tui\Input\Key|null
+   * @return \DrevOps\PhpTui\Input\Key|null
    *   The primary key, or NULL when the action is unbound here.
    */
   public function primary(Action $action): ?Key {

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Derive;
+namespace DrevOps\PhpTui\Derive;
 
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * A derive rule: a `{{field}}` template and an optional named transform.
@@ -15,7 +15,7 @@ use DrevOps\Tui\Utils\Strings;
  * construction, so a typo fails at declaration time instead of silently
  * passing values through.
  *
- * @package DrevOps\Tui\Derive
+ * @package DrevOps\PhpTui\Derive
  */
 final readonly class Derive {
 

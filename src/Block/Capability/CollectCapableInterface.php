@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Capability;
+namespace DrevOps\PhpTui\Block\Capability;
 
 /**
  * A block that holds a value which ends up in the result.
@@ -15,7 +15,7 @@ namespace DrevOps\Tui\Block\Capability;
  * is normalized are all facts about the value rather than about the screen, so
  * they belong here beside it.
  *
- * @package DrevOps\Tui\Block\Capability
+ * @package DrevOps\PhpTui\Block\Capability
  */
 interface CollectCapableInterface {
 

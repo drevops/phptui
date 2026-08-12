@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Block;
+namespace DrevOps\PhpTui\Tests\Unit\Block;
 
-use DrevOps\Tui\Block\FilePickerConstraints;
-use DrevOps\Tui\Block\FilePickerMode;
-use DrevOps\Tui\FormException;
+use DrevOps\PhpTui\Block\FilePickerConstraints;
+use DrevOps\PhpTui\Block\FilePickerMode;
+use DrevOps\PhpTui\FormException;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -72,7 +72,7 @@ final class FilePickerConstraintsTest extends TestCase {
   /**
    * Tests whether the constraints report themselves as unconstrained.
    *
-   * @param \DrevOps\Tui\Block\FilePickerMode $mode
+   * @param \DrevOps\PhpTui\Block\FilePickerMode $mode
    *   The selection mode.
    * @param list<string> $extensions
    *   The allowed extensions.
@@ -213,7 +213,7 @@ final class FilePickerConstraintsTest extends TestCase {
   /**
    * Tests the human phrase describing the active limits.
    *
-   * @param \DrevOps\Tui\Block\FilePickerMode $mode
+   * @param \DrevOps\PhpTui\Block\FilePickerMode $mode
    *   The selection mode.
    * @param list<string> $extensions
    *   The allowed extensions.

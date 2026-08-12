@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Schema;
+namespace DrevOps\PhpTui\Schema;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\Discovery\DiscoverInterface;
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Resolver\EnvNameResolver;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\Discovery\DiscoverInterface;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Resolver\EnvNameResolver;
 
 /**
  * Generates a machine-readable schema of every configured question.
@@ -30,17 +30,17 @@ use DrevOps\Tui\Resolver\EnvNameResolver;
  * {@see OptionsResolver}) and are flagged as `options_dynamic`, so tooling can
  * tell a field with no options from one whose options are not fixed.
  *
- * @package DrevOps\Tui\Schema
+ * @package DrevOps\PhpTui\Schema
  */
 class SchemaGenerator {
 
   /**
    * Construct a generator.
    *
-   * @param \DrevOps\Tui\Block\Panel $root
+   * @param \DrevOps\PhpTui\Block\Panel $root
    *   The declared tree to describe, read from the panel every declared panel
    *   hangs from.
-   * @param \DrevOps\Tui\Handler\Context $context
+   * @param \DrevOps\PhpTui\Handler\Context $context
    *   The context a closure default is evaluated against; defaults to an empty
    *   context carrying no prior answers.
    * @param string $envPrefix
@@ -105,7 +105,7 @@ class SchemaGenerator {
   /**
    * Describe a field's options.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    *
    * @return array<int,array<string,string>>

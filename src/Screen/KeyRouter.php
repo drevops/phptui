@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\PhpTui\Screen;
 
-use DrevOps\Tui\Block\Capability\BindCapableInterface;
-use DrevOps\Tui\Block\Capability\DependCapableInterface;
-use DrevOps\Tui\Block\Capability\FocusCapableInterface;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\Legend;
-use DrevOps\Tui\Block\Mode;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMap;
-use DrevOps\Tui\Input\ScopedKeyMap;
+use DrevOps\PhpTui\Block\Capability\BindCapableInterface;
+use DrevOps\PhpTui\Block\Capability\DependCapableInterface;
+use DrevOps\PhpTui\Block\Capability\FocusCapableInterface;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\Legend;
+use DrevOps\PhpTui\Block\Mode;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyMap;
+use DrevOps\PhpTui\Input\ScopedKeyMap;
 
 /**
  * Sends a key to the innermost thing that binds it.
@@ -32,7 +32,7 @@ use DrevOps\Tui\Input\ScopedKeyMap;
  * past it: until you have gone into it, it is a row rather than somewhere you
  * are.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\PhpTui\Screen
  */
 final class KeyRouter {
 
@@ -54,21 +54,21 @@ final class KeyRouter {
   /**
    * The panels left behind on the way in, with the row each was left on.
    *
-   * @var list<array{panel:\DrevOps\Tui\Block\Panel,cursor:int}>
+   * @var list<array{panel:\DrevOps\PhpTui\Block\Panel,cursor:int}>
    */
   protected array $trail = [];
 
   /**
    * The blocks a session draws beside a panel, keyed by the panel.
    *
-   * @var array<int,list<\DrevOps\Tui\Block\Capability\FocusCapableInterface>>
+   * @var array<int,list<\DrevOps\PhpTui\Block\Capability\FocusCapableInterface>>
    */
   protected array $furniture = [];
 
   /**
    * Construct a key router.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel it moves around, which is the panel you are in.
    */
   public function __construct(protected Panel $panel) {
@@ -87,7 +87,7 @@ final class KeyRouter {
   /**
    * Make every block in the panel answer to one set of bindings.
    *
-   * @param \DrevOps\Tui\Input\KeyMap $keys
+   * @param \DrevOps\PhpTui\Input\KeyMap $keys
    *   The resolved bindings for the whole form.
    *
    * @return $this
@@ -107,9 +107,9 @@ final class KeyRouter {
    * panel alone. It reaches them last, after everything the panel holds,
    * because that is where they are drawn.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel they stand beside.
-   * @param \DrevOps\Tui\Block\Capability\FocusCapableInterface ...$blocks
+   * @param \DrevOps\PhpTui\Block\Capability\FocusCapableInterface ...$blocks
    *   The blocks.
    *
    * @return $this
@@ -125,7 +125,7 @@ final class KeyRouter {
   /**
    * The panel you are in.
    *
-   * @return \DrevOps\Tui\Block\Panel
+   * @return \DrevOps\PhpTui\Block\Panel
    *   The panel, which is whichever one was gone into last.
    */
   public function current(): Panel {
@@ -148,7 +148,7 @@ final class KeyRouter {
   /**
    * The block the cursor is on.
    *
-   * @return \DrevOps\Tui\Block\Capability\FocusCapableInterface|null
+   * @return \DrevOps\PhpTui\Block\Capability\FocusCapableInterface|null
    *   The block, or NULL when nothing in the panel takes focus.
    */
   public function focused(): ?FocusCapableInterface {
@@ -158,7 +158,7 @@ final class KeyRouter {
   /**
    * The innermost thing a key reaches right now.
    *
-   * @return \DrevOps\Tui\Block\Capability\BindCapableInterface
+   * @return \DrevOps\PhpTui\Block\Capability\BindCapableInterface
    *   The open block under the cursor, else the panel around it.
    */
   public function binder(): BindCapableInterface {
@@ -170,7 +170,7 @@ final class KeyRouter {
   /**
    * The keys that apply right now.
    *
-   * @return \DrevOps\Tui\Input\ScopedKeyMap
+   * @return \DrevOps\PhpTui\Input\ScopedKeyMap
    *   The innermost binder's bindings.
    */
   public function bindings(): ScopedKeyMap {
@@ -180,7 +180,7 @@ final class KeyRouter {
   /**
    * What those keys do, as labelled fragments.
    *
-   * @return list<\DrevOps\Tui\Input\Hint>
+   * @return list<\DrevOps\PhpTui\Input\Hint>
    *   The fragments.
    */
   public function hints(): array {
@@ -190,10 +190,10 @@ final class KeyRouter {
   /**
    * Rewrite a legend from the keys that apply right now.
    *
-   * @param \DrevOps\Tui\Block\Legend $legend
+   * @param \DrevOps\PhpTui\Block\Legend $legend
    *   The legend.
    *
-   * @return \DrevOps\Tui\Block\Legend
+   * @return \DrevOps\PhpTui\Block\Legend
    *   The same legend, now advertising the innermost binder's keys.
    */
   public function refresh(Legend $legend): Legend {
@@ -213,7 +213,7 @@ final class KeyRouter {
   /**
    * The field whose help is showing.
    *
-   * @return \DrevOps\Tui\Block\Field|null
+   * @return \DrevOps\PhpTui\Block\Field|null
    *   The field, or NULL when none is showing.
    */
   public function helping(): ?Field {
@@ -260,7 +260,7 @@ final class KeyRouter {
   /**
    * Send a key where it belongs.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key.
    */
   public function handle(Key $key): void {
@@ -290,9 +290,9 @@ final class KeyRouter {
   /**
    * Handle a key that travelled outward to the panel.
    *
-   * @param \DrevOps\Tui\Block\Capability\FocusCapableInterface|null $focused
+   * @param \DrevOps\PhpTui\Block\Capability\FocusCapableInterface|null $focused
    *   The block with the cursor, if any has it.
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key.
    */
   protected function inPanel(?FocusCapableInterface $focused, Key $key): void {
@@ -344,7 +344,7 @@ final class KeyRouter {
   /**
    * Do what selecting the block under the cursor does.
    *
-   * @param \DrevOps\Tui\Block\Capability\FocusCapableInterface|null $focused
+   * @param \DrevOps\PhpTui\Block\Capability\FocusCapableInterface|null $focused
    *   The block with the cursor, if any has it.
    */
   protected function activate(?FocusCapableInterface $focused): void {
@@ -362,7 +362,7 @@ final class KeyRouter {
   /**
    * Go into a nested panel, so the screen becomes its contents.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to go into.
    */
   protected function descend(Panel $panel): void {
@@ -674,7 +674,7 @@ final class KeyRouter {
   /**
    * Every block on the form the cursor can be on, wherever that is.
    *
-   * @return list<\DrevOps\Tui\Block\Capability\FocusCapableInterface>
+   * @return list<\DrevOps\PhpTui\Block\Capability\FocusCapableInterface>
    *   The blocks: everything every panel of the form holds, and everything a
    *   session draws beside one of them.
    */
@@ -703,9 +703,9 @@ final class KeyRouter {
   /**
    * Make a panel and everything in it answer to one set of bindings.
    *
-   * @param \DrevOps\Tui\Input\KeyMap $keys
+   * @param \DrevOps\PhpTui\Input\KeyMap $keys
    *   The resolved bindings.
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to spread them through.
    */
   protected function rebind(KeyMap $keys, Panel $panel): void {
@@ -729,7 +729,7 @@ final class KeyRouter {
   /**
    * The blocks the cursor can land on, in the order they are drawn.
    *
-   * @return list<\DrevOps\Tui\Block\Capability\FocusCapableInterface>
+   * @return list<\DrevOps\PhpTui\Block\Capability\FocusCapableInterface>
    *   The blocks: everything the panel you are in holds, then whatever the
    *   session draws beside it.
    */
@@ -748,7 +748,7 @@ final class KeyRouter {
   /**
    * The blocks the cursor can land on, region by region.
    *
-   * @return array<string,list<\DrevOps\Tui\Block\Capability\FocusCapableInterface>>
+   * @return array<string,list<\DrevOps\PhpTui\Block\Capability\FocusCapableInterface>>
    *   The blocks, keyed by the region they are drawn in, in declaration order.
    */
   protected function held(): array {

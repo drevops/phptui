@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Input;
+namespace DrevOps\PhpTui\Tests\Unit\Input;
 
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Binding;
-use DrevOps\Tui\Input\DefaultKeyMap;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMap;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Input\ScopedKeyMap;
-use DrevOps\Tui\Input\VimKeyMap;
-use DrevOps\Tui\Tests\Traits\ResetsRegistriesTrait;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Binding;
+use DrevOps\PhpTui\Input\DefaultKeyMap;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyMap;
+use DrevOps\PhpTui\Input\KeyMapManager;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Input\ScopedKeyMap;
+use DrevOps\PhpTui\Input\VimKeyMap;
+use DrevOps\PhpTui\Tests\Traits\ResetsRegistriesTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

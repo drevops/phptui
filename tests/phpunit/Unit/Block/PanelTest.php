@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Block;
+namespace DrevOps\PhpTui\Tests\Unit\Block;
 
-use DrevOps\Tui\Block\Buttons;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Screen\Layout\DefaultLayout;
-use DrevOps\Tui\Screen\Layout\GridLayout;
-use DrevOps\Tui\Screen\Layout\PanelLayout;
-use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\Spacing;
+use DrevOps\PhpTui\Block\Buttons;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Screen\Layout\DefaultLayout;
+use DrevOps\PhpTui\Screen\Layout\GridLayout;
+use DrevOps\PhpTui\Screen\Layout\PanelLayout;
+use DrevOps\PhpTui\Screen\Layout\TwoColumnLayout;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\Spacing;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

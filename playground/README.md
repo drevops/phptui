@@ -1,6 +1,6 @@
 # TUI playground
 
-Runnable examples of the `drevops/tui` engine, one file per example, grouped by a numbered `NN-topic-` prefix that follows the [documentation](https://phptui.dev) order. Every script is self-contained: it requires the Composer autoloader directly, declares its whole form inline and handles its own output, so any single file can be copied out as a starting point. Most take no CLI options - each demonstrates exactly one thing, and variants are separate scripts - with one exception: [`03-panels-fullscreen.php`](03-panels-fullscreen.php) picks its alignment with `--halign`/`--valign` (plus `--max-width`) rather than spreading nine near-identical files.
+Runnable examples of the `drevops/phptui` engine, one file per example, grouped by a numbered `NN-topic-` prefix that follows the [documentation](https://phptui.dev) order. Every script is self-contained: it requires the Composer autoloader directly, declares its whole form inline and handles its own output, so any single file can be copied out as a starting point. Most take no CLI options - each demonstrates exactly one thing, and variants are separate scripts - with one exception: [`03-panels-fullscreen.php`](03-panels-fullscreen.php) picks its alignment with `--halign`/`--valign` (plus `--max-width`) rather than spreading nine near-identical files.
 
 Reusable helper classes the scripts load sit in [`themes/`](themes), [`layouts/`](layouts) and [`handlers/`](handlers); the fixtures the examples read from are in [`sample-project/`](sample-project) - one example project the file-picker and discovery demos share - and [`translations/`](translations).
 
@@ -9,7 +9,7 @@ composer install
 php playground/01-quickstart.php
 ```
 
-Every interactive script also runs unattended: pipe stdin (or run it from CI) and the answers resolve from defaults and `TUI_<ID>` environment variables instead of prompting.
+Every interactive script also runs unattended: pipe stdin (or run it from CI) and the answers resolve from defaults and `PHPTUI_<ID>` environment variables instead of prompting.
 
 ## Examples
 
@@ -48,7 +48,7 @@ Each script prints how to invoke it in its `@file` docblock. The common patterns
 php playground/14-produce-box.php
 
 # Unattended: defaults and environment answer instead of a keyboard.
-TUI_NAME='Summer Box' php playground/14-produce-box.php < /dev/null
+PHPTUI_NAME='Summer Box' php playground/14-produce-box.php < /dev/null
 
 # Discovery uses its own env prefix, declared by the form.
 BOX_SEASON=winter php playground/07-discovery.php

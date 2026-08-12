@@ -2,33 +2,33 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Screen;
+namespace DrevOps\PhpTui\Tests\Unit\Screen;
 
-use DrevOps\Tui\Block\Actions;
-use DrevOps\Tui\Block\Breadcrumb;
-use DrevOps\Tui\Block\Element\ChromeElementsInterface;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\Legend;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Layout\AbstractLayout;
-use DrevOps\Tui\Screen\Layout\DefaultLayout;
-use DrevOps\Tui\Screen\Layout\GridLayout;
-use DrevOps\Tui\Screen\Layout\PanelLayout;
-use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
-use DrevOps\Tui\Screen\Screen;
-use DrevOps\Tui\Screen\ScreenRenderer;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\BorderSide;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\Spacing;
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Block\Actions;
+use DrevOps\PhpTui\Block\Breadcrumb;
+use DrevOps\PhpTui\Block\Element\ChromeElementsInterface;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\Legend;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\KeyMapManager;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
+use DrevOps\PhpTui\Screen\Layout\DefaultLayout;
+use DrevOps\PhpTui\Screen\Layout\GridLayout;
+use DrevOps\PhpTui\Screen\Layout\PanelLayout;
+use DrevOps\PhpTui\Screen\Layout\TwoColumnLayout;
+use DrevOps\PhpTui\Screen\Screen;
+use DrevOps\PhpTui\Screen\ScreenRenderer;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\BorderSide;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\Mode;
+use DrevOps\PhpTui\Theme\Spacing;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -511,13 +511,13 @@ final class ScreenRenderTest extends TestCase {
   /**
    * Draw a screen and return its rows.
    *
-   * @param \DrevOps\Tui\Screen\Screen $screen
+   * @param \DrevOps\PhpTui\Screen\Screen $screen
    *   The screen.
    * @param int $rows
    *   The terminal rows.
    * @param int $columns
    *   The terminal columns.
-   * @param \DrevOps\Tui\Theme\Border $border
+   * @param \DrevOps\PhpTui\Theme\Border $border
    *   The frame drawn around every region at once.
    *
    * @return list<string>
@@ -532,7 +532,7 @@ final class ScreenRenderTest extends TestCase {
   /**
    * Draw a screen inside a box and return its rows, trailing spaces kept.
    *
-   * @param \DrevOps\Tui\Screen\Screen $screen
+   * @param \DrevOps\PhpTui\Screen\Screen $screen
    *   The screen.
    * @param int $rows
    *   The terminal rows.

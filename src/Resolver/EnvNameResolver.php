@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Resolver;
+namespace DrevOps\PhpTui\Resolver;
 
-use DrevOps\Tui\Block\Field;
+use DrevOps\PhpTui\Block\Field;
 
 /**
  * Names the environment variables that answer a field.
@@ -20,7 +20,7 @@ use DrevOps\Tui\Block\Field;
  * read the environment and to advertise it in machine-readable output; a second
  * copy would let the two drift, advertising a variable that is never read.
  *
- * @package DrevOps\Tui\Resolver
+ * @package DrevOps\PhpTui\Resolver
  */
 class EnvNameResolver {
 
@@ -36,7 +36,7 @@ class EnvNameResolver {
   /**
    * The variable that answers the field when several are set.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    *
    * @return string
@@ -51,7 +51,7 @@ class EnvNameResolver {
   /**
    * The additional variables the field also answers to, in declaration order.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    *
    * @return list<string>
@@ -64,7 +64,7 @@ class EnvNameResolver {
   /**
    * Every variable that answers the field, in precedence order.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    *
    * @return list<string>
@@ -82,7 +82,7 @@ class EnvNameResolver {
    * so it is not offered as an answer route. Declared aliases are absolute and
    * carry no such risk, so they stand on their own.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    *
    * @return bool
@@ -99,7 +99,7 @@ class EnvNameResolver {
   /**
    * The variable name a field declares for itself.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    *
    * @return string

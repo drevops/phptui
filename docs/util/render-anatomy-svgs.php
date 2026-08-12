@@ -17,13 +17,13 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Testing\TuiTester;
-use DrevOps\Tui\Theme\Mode;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Testing\TuiTester;
+use DrevOps\PhpTui\Theme\Mode;
 
 require dirname(__DIR__, 2) . '/vendor/autoload.php';
 require __DIR__ . '/svg-light-twin.php';

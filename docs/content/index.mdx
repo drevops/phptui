@@ -43,9 +43,9 @@ The engine doesn't know (or care) what application it serves. It stays generic: 
 Declare a form with the fluent `Form` builder - a panel of fields, each one a [field](/fields) - then hand it to the `Tui` facade, the one class that wires up collection, the input resolver, the schema tools and the interactive screen for you:
 
 ```php
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Tui;
 
 $form = Form::create('Quick start')
   ->panel('order', 'New order', function (PanelBuilder $p): void {
@@ -91,4 +91,4 @@ Run it on a terminal and the panel opens on the form's fields, ready to fill:
 
 `run()` picks the mode for you - the interactive panel TUI on a terminal, headless otherwise. The facade also exposes `schema()`, `agentHelp()` and `validate()`, and - when you want finer control - `root()` for the declared [block tree](/specification) and `registry()` for the handler registry.
 
-This is the runnable [`playground/01-quickstart.php`](https://github.com/drevops/tui/blob/main/playground/01-quickstart.php) example, so you don't have to type it out. See [Installation](/installation) to get set up, and the [playground](/playground) for more complete examples.
+This is the runnable [`playground/01-quickstart.php`](https://github.com/drevops/phptui/blob/main/playground/01-quickstart.php) example, so you don't have to type it out. See [Installation](/installation) to get set up, and the [playground](/playground) for more complete examples.

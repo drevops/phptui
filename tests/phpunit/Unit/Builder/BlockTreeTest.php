@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Builder;
+namespace DrevOps\PhpTui\Tests\Unit\Builder;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\Legend;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Progress;
-use DrevOps\Tui\Block\TableSpec;
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\Builder\FieldBuilder;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Screen\Layout\LayoutManager;
-use DrevOps\Tui\Tests\Fixtures\Screen\Layout\RegionlessLayout;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\Legend;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Progress;
+use DrevOps\PhpTui\Block\TableSpec;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\Builder\FieldBuilder;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Condition\Condition;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Screen\Layout\LayoutManager;
+use DrevOps\PhpTui\Tests\Fixtures\Screen\Layout\RegionlessLayout;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -426,7 +426,7 @@ final class BlockTreeTest extends TestCase {
    * @param \Closure $declare
    *   The declaration, given the panel builder.
    *
-   * @return \DrevOps\Tui\Block\Panel
+   * @return \DrevOps\PhpTui\Block\Panel
    *   The panel block.
    */
   protected function panel(\Closure $declare): Panel {

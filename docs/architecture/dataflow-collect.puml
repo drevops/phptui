@@ -1,5 +1,5 @@
 @startuml
-' drevops/tui - data flow for headless collection.
+' drevops/phptui - data flow for headless collection.
 ' Traced from src/Tui.php (collect) and src/Screen/Collector.php
 ' (answers -> fetched -> settle -> resolveAll -> transformSupplied -> stabilize
 ' -> refusal).

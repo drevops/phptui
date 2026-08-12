@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme\Capability;
+namespace DrevOps\PhpTui\Theme\Capability;
 
 /**
  * A theme that can push text back behind something drawn over it.
@@ -12,7 +12,7 @@ namespace DrevOps\Tui\Theme\Capability;
  * blanking it, which loses the reader's place, or leaving it at full weight,
  * which leaves two things competing for the eye.
  *
- * @package DrevOps\Tui\Theme\Capability
+ * @package DrevOps\PhpTui\Theme\Capability
  */
 interface DimCapableInterface {
 

@@ -2,25 +2,25 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Screen;
+namespace DrevOps\PhpTui\Tests\Unit\Screen;
 
-use DrevOps\Tui\Block\Actions;
-use DrevOps\Tui\Block\Breadcrumb;
-use DrevOps\Tui\Block\Buttons;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\Legend;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Screen\Assembler;
-use DrevOps\Tui\Screen\Collector;
-use DrevOps\Tui\Screen\ScreenRenderer;
-use DrevOps\Tui\Tests\Fixtures\Screen\Layout\BareLayout;
-use DrevOps\Tui\Tests\Fixtures\Screen\Layout\HomelessLayout;
-use DrevOps\Tui\Tests\Fixtures\Screen\Layout\StallLayout;
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Block\Actions;
+use DrevOps\PhpTui\Block\Breadcrumb;
+use DrevOps\PhpTui\Block\Buttons;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\Legend;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Screen\Assembler;
+use DrevOps\PhpTui\Screen\Collector;
+use DrevOps\PhpTui\Screen\ScreenRenderer;
+use DrevOps\PhpTui\Tests\Fixtures\Screen\Layout\BareLayout;
+use DrevOps\PhpTui\Tests\Fixtures\Screen\Layout\HomelessLayout;
+use DrevOps\PhpTui\Tests\Fixtures\Screen\Layout\StallLayout;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -148,7 +148,7 @@ final class BuilderTest extends TestCase {
    * @param \Closure|null $declare
    *   The declaration, given the panel builder; NULL declares an empty panel.
    *
-   * @return \DrevOps\Tui\Block\Panel
+   * @return \DrevOps\PhpTui\Block\Panel
    *   The panel block.
    */
   protected function panel(?\Closure $declare = NULL): Panel {

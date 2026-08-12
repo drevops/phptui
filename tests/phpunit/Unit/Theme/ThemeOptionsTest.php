@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Theme;
+namespace DrevOps\PhpTui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Tests\Fixtures\Theme\AccentOptionTheme;
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\FieldStyle;
-use DrevOps\Tui\Theme\HAlign;
-use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\Spacing;
-use DrevOps\Tui\Theme\VAlign;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\AccentOptionTheme;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\FieldStyle;
+use DrevOps\PhpTui\Theme\HAlign;
+use DrevOps\PhpTui\Theme\Mode;
+use DrevOps\PhpTui\Theme\Spacing;
+use DrevOps\PhpTui\Theme\VAlign;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -267,7 +267,7 @@ final class ThemeOptionsTest extends TestCase {
    * @param array<string,mixed> $options
    *   The theme options.
    *
-   * @return \DrevOps\Tui\Tests\Fixtures\Theme\AccentOptionTheme
+   * @return \DrevOps\PhpTui\Tests\Fixtures\Theme\AccentOptionTheme
    *   The theme.
    */
   protected function accentTheme(array $options): AccentOptionTheme {

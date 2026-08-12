@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\PhpTui\Screen;
 
 /**
  * A piece of the standard furniture a session puts on a screen.
@@ -13,7 +13,7 @@ namespace DrevOps\Tui\Screen;
  * meant for it. So the layout answers instead, one piece at a time, and a
  * layout that keeps no place for a piece says so rather than being guessed at.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\PhpTui\Screen
  */
 enum Furniture {
 

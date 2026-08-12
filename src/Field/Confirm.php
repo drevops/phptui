@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Field\Capability\StepCapableInterface;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Field\Capability\StepCapableInterface;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * A yes/no toggle.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 class Confirm extends AbstractField implements StepCapableInterface {
 

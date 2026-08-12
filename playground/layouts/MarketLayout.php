@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Playground\Layouts;
 
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Layout\AbstractLayout;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
 
 /**
  * The default arrangement with a taller trail: two rows of it instead of one.

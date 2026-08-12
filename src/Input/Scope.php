@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Input;
+namespace DrevOps\PhpTui\Input;
 
-use DrevOps\Tui\Block\FieldType;
+use DrevOps\PhpTui\Block\FieldType;
 
 /**
  * The binding context a key resolves in: base, navigation, or one field type.
@@ -19,7 +19,7 @@ use DrevOps\Tui\Block\FieldType;
  * toggles, Left/Right select none/all), so the scope also carries a `multiple`
  * flag to keep those two binding sets apart.
  *
- * @package DrevOps\Tui\Input
+ * @package DrevOps\PhpTui\Input
  */
 final readonly class Scope {
 
@@ -72,7 +72,7 @@ final readonly class Scope {
   /**
    * Construct a scope.
    *
-   * @param \DrevOps\Tui\Block\FieldType|null $fieldType
+   * @param \DrevOps\PhpTui\Block\FieldType|null $fieldType
    *   The field type this scope targets, or NULL for the base and navigation
    *   scopes.
    * @param bool $navigation
@@ -110,7 +110,7 @@ final readonly class Scope {
   /**
    * The scope for a single field type.
    *
-   * @param \DrevOps\Tui\Block\FieldType $type
+   * @param \DrevOps\PhpTui\Block\FieldType $type
    *   The field type.
    * @param bool $multiple
    *   Whether the multiple-collecting variant of the type is targeted.

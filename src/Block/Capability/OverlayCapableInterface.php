@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Capability;
+namespace DrevOps\PhpTui\Block\Capability;
 
 /**
  * A block that draws over everything else rather than replacing it.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Block\Capability;
  * It is the same block either way: overlaying changes what is behind it, and
  * nothing about the block itself.
  *
- * @package DrevOps\Tui\Block\Capability
+ * @package DrevOps\PhpTui\Block\Capability
  */
 interface OverlayCapableInterface {
 

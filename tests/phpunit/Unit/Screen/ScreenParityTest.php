@@ -2,44 +2,44 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Screen;
+namespace DrevOps\PhpTui\Tests\Unit\Screen;
 
-use DrevOps\Tui\Answers\Provenance;
-use DrevOps\Tui\Block\Buttons;
-use DrevOps\Tui\Block\Capability\DependCapableTrait;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\NumberBounds;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Prose;
-use DrevOps\Tui\Block\Template;
-use DrevOps\Tui\Builder\Fixup;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\CancelException;
-use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Screen\Collector;
-use DrevOps\Tui\Screen\ExternalEditor;
-use DrevOps\Tui\Screen\KeyRouter;
-use DrevOps\Tui\Screen\Layout\GridLayout;
-use DrevOps\Tui\Screen\Layout\LayoutInterface;
-use DrevOps\Tui\Screen\Layout\PanelLayout;
-use DrevOps\Tui\Screen\ScreenController;
-use DrevOps\Tui\Screen\ScreenRenderer;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Terminal\Terminal;
-use DrevOps\Tui\Testing\ScreenTester;
-use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
-use DrevOps\Tui\Theme\DosTheme;
-use DrevOps\Tui\Theme\Spacing;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Answers\Provenance;
+use DrevOps\PhpTui\Block\Buttons;
+use DrevOps\PhpTui\Block\Capability\DependCapableTrait;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\NumberBounds;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Prose;
+use DrevOps\PhpTui\Block\Template;
+use DrevOps\PhpTui\Builder\Fixup;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\CancelException;
+use DrevOps\PhpTui\Condition\Condition;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyMapManager;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\InterruptException;
+use DrevOps\PhpTui\Screen\Collector;
+use DrevOps\PhpTui\Screen\ExternalEditor;
+use DrevOps\PhpTui\Screen\KeyRouter;
+use DrevOps\PhpTui\Screen\Layout\GridLayout;
+use DrevOps\PhpTui\Screen\Layout\LayoutInterface;
+use DrevOps\PhpTui\Screen\Layout\PanelLayout;
+use DrevOps\PhpTui\Screen\ScreenController;
+use DrevOps\PhpTui\Screen\ScreenRenderer;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\Terminal;
+use DrevOps\PhpTui\Testing\ScreenTester;
+use DrevOps\PhpTui\Tests\Traits\ResetsTranslatorTrait;
+use DrevOps\PhpTui\Theme\DosTheme;
+use DrevOps\PhpTui\Theme\Spacing;
+use DrevOps\PhpTui\Translation\Translator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -1245,7 +1245,7 @@ final class ScreenParityTest extends TestCase {
   /**
    * The keys that open the dialog, change its row, then whatever follows.
    *
-   * @return list<string|\DrevOps\Tui\Input\Key>
+   * @return list<string|\DrevOps\PhpTui\Input\Key>
    *   The scripted keys.
    */
   protected function intoTheDialog(string|Key ...$then): array {
@@ -1315,7 +1315,7 @@ final class ScreenParityTest extends TestCase {
     $windows = 0;
 
     foreach ($blocks as $block) {
-      /** @var \DrevOps\Tui\Block\BlockInterface $block */
+      /** @var \DrevOps\PhpTui\Block\BlockInterface $block */
       $region = $windows === 0 ? $layout->leading() : $layout->trailing();
 
       if ($block instanceof Panel) {
@@ -1336,7 +1336,7 @@ final class ScreenParityTest extends TestCase {
     $panel = (new Panel($id, $title))->layout($layout);
 
     foreach ($blocks as $block) {
-      /** @var \DrevOps\Tui\Block\BlockInterface $block */
+      /** @var \DrevOps\PhpTui\Block\BlockInterface $block */
       $panel->in('content')->add($block);
     }
 

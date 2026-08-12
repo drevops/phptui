@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\PhpTui\Screen;
 
-use DrevOps\Tui\Answers\Answers;
-use DrevOps\Tui\Answers\Provenance;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\CollectException;
-use DrevOps\Tui\Condition\ConditionInterface;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Derive\Deriver;
-use DrevOps\Tui\Discovery\DiscoverInterface;
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Handler\HandlerRegistry;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Answers\Answers;
+use DrevOps\PhpTui\Answers\Provenance;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\CollectException;
+use DrevOps\PhpTui\Condition\ConditionInterface;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\Derive\Deriver;
+use DrevOps\PhpTui\Discovery\DiscoverInterface;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Handler\HandlerRegistry;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Collects a form's answers with no screen at all.
@@ -45,7 +45,7 @@ use DrevOps\Tui\Translation\Translator;
  * are not collected, not refused and not in the result, and they re-enter the
  * settling the moment the condition holds again.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\PhpTui\Screen
  */
 final class Collector {
 
@@ -65,7 +65,7 @@ final class Collector {
    * context of its own retires this memo rather than leaving the collection
    * convinced they are still its own.
    *
-   * @var array<string,array{answers:array<string,mixed>,run:array{string,bool,string},rows:list<\DrevOps\Tui\Block\Option>}>
+   * @var array<string,array{answers:array<string,mixed>,run:array{string,bool,string},rows:list<\DrevOps\PhpTui\Block\Option>}>
    */
   protected array $memo = [];
 
@@ -77,11 +77,11 @@ final class Collector {
   /**
    * Construct a collector.
    *
-   * @param \DrevOps\Tui\Handler\HandlerRegistry|null $handlers
+   * @param \DrevOps\PhpTui\Handler\HandlerRegistry|null $handlers
    *   The registry resolving a field id to the behaviour reusable across every
    *   form that asks for that kind of answer, or NULL when nothing is reused
    *   and each field speaks only for itself.
-   * @param \DrevOps\Tui\Builder\Fixup[] $fixups
+   * @param \DrevOps\PhpTui\Builder\Fixup[] $fixups
    *   The rules applied once the answers have settled. They belong to the form
    *   rather than to any one block, so they arrive beside the tree.
    */
@@ -93,18 +93,18 @@ final class Collector {
   /**
    * Collect a panel's answers.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to collect, and any panels beneath it.
    * @param array<string,mixed> $supplied
    *   Values supplied for its fields, keyed by field id.
-   * @param \DrevOps\Tui\Handler\Context|null $context
+   * @param \DrevOps\PhpTui\Handler\Context|null $context
    *   The run this collection belongs to, or NULL for one that targets no
    *   directory and detects nothing.
    *
    * @return array<string,mixed>
    *   The answers, keyed by field id.
    *
-   * @throws \DrevOps\Tui\CollectException
+   * @throws \DrevOps\PhpTui\CollectException
    *   When a supplied value is refused. The answers were asked for as a whole,
    *   so one that cannot be taken fails the whole collection.
    */
@@ -123,18 +123,18 @@ final class Collector {
    * set: every answer carries its provenance and a snapshot of its question, so
    * a summary needs no form configuration to print.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to collect, and any panels beneath it.
    * @param array<string,mixed> $supplied
    *   Values supplied for its fields, keyed by field id.
-   * @param \DrevOps\Tui\Handler\Context|null $context
+   * @param \DrevOps\PhpTui\Handler\Context|null $context
    *   The run this collection belongs to, or NULL for one that targets no
    *   directory and detects nothing.
    *
-   * @return \DrevOps\Tui\Answers\Answers
+   * @return \DrevOps\PhpTui\Answers\Answers
    *   The answers.
    *
-   * @throws \DrevOps\Tui\CollectException
+   * @throws \DrevOps\PhpTui\CollectException
    *   When a supplied value is refused. The answers were asked for as a whole,
    *   so one that cannot be taken fails the whole collection.
    */
@@ -152,7 +152,7 @@ final class Collector {
    * @param array{string,string}|null $refusal
    *   The field's id and the reason, or NULL when nothing is refused.
    *
-   * @throws \DrevOps\Tui\CollectException
+   * @throws \DrevOps\PhpTui\CollectException
    *   When there is a refusal to report.
    */
   protected function refuse(?array $refusal): void {
@@ -176,15 +176,15 @@ final class Collector {
    * it settled on - so a condition satisfied later surfaces a row that already
    * knows its answer.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to resolve, and any panels beneath it.
    * @param array<string,mixed> $supplied
    *   Values supplied for its fields, keyed by field id.
-   * @param \DrevOps\Tui\Handler\Context|null $context
+   * @param \DrevOps\PhpTui\Handler\Context|null $context
    *   The run this resolution belongs to, or NULL for one that targets no
    *   directory and detects nothing.
    *
-   * @return array{array<string,mixed>,array<string,\DrevOps\Tui\Answers\Provenance>,array<string,bool>}
+   * @return array{array<string,mixed>,array<string,\DrevOps\PhpTui\Answers\Provenance>,array<string,bool>}
    *   The settled values, how each came to be, and which fields are there.
    */
   public function seed(Panel $panel, array $supplied = [], ?Context $context = NULL): array {
@@ -208,14 +208,14 @@ final class Collector {
    * narrowed row set restates it rather than reporting it the way a supplied
    * value is reported.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to settle, and any panels beneath it.
    * @param array<string,mixed> $values
    *   The answers as they now stand, keyed by field id.
    * @param array<string,bool> $pinned
    *   The fields whose computed value must not be recomputed, keyed by field
    *   id: the ones somebody answered over the rule that computes them.
-   * @param \DrevOps\Tui\Handler\Context|null $context
+   * @param \DrevOps\PhpTui\Handler\Context|null $context
    *   The run this collection belongs to, or NULL for one that targets no
    *   directory and detects nothing.
    *
@@ -238,7 +238,7 @@ final class Collector {
    * opens the panel, so a form does not pay on start-up for a list nobody has
    * walked into yet.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel being opened; its own rows only, because a panel further in
    *   has not been opened.
    * @param \Closure|null $waiting
@@ -281,18 +281,18 @@ final class Collector {
   /**
    * Settle every value, having first fetched the rows anyone is owed.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to collect.
    * @param array<string,mixed> $supplied
    *   Values supplied for its fields, keyed by field id.
-   * @param \DrevOps\Tui\Handler\Context $context
+   * @param \DrevOps\PhpTui\Handler\Context $context
    *   The run this collection belongs to.
    *
-   * @return array{list<\DrevOps\Tui\Block\Field>,array<string,mixed>,array<string,\DrevOps\Tui\Screen\Source>,array<string,bool>}
+   * @return array{list<\DrevOps\PhpTui\Block\Field>,array<string,mixed>,array<string,\DrevOps\PhpTui\Screen\Source>,array<string,bool>}
    *   The fields in declaration order, the settled values, where each value
    *   came from, and which fields are there.
    *
-   * @throws \DrevOps\Tui\CollectException
+   * @throws \DrevOps\PhpTui\CollectException
    *   When a resolver or a source cannot answer.
    */
   protected function fetched(Panel $panel, array $supplied, Context $context): array {
@@ -310,14 +310,14 @@ final class Collector {
   /**
    * Resolve and settle every value, and work out who is there at all.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to collect.
    * @param array<string,mixed> $supplied
    *   Values supplied for its fields, keyed by field id.
-   * @param \DrevOps\Tui\Handler\Context $context
+   * @param \DrevOps\PhpTui\Handler\Context $context
    *   The run this collection belongs to.
    *
-   * @return array{list<\DrevOps\Tui\Block\Field>,array<string,mixed>,array<string,\DrevOps\Tui\Screen\Source>,array<string,bool>}
+   * @return array{list<\DrevOps\PhpTui\Block\Field>,array<string,mixed>,array<string,\DrevOps\PhpTui\Screen\Source>,array<string,bool>}
    *   The fields in declaration order, the settled values, where each value
    *   came from, and which fields are there.
    */
@@ -335,9 +335,9 @@ final class Collector {
   /**
    * Whether each row the tree holds only shows something, keyed by id.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel being collected.
-   * @param list<\DrevOps\Tui\Block\Field> $fields
+   * @param list<\DrevOps\PhpTui\Block\Field> $fields
    *   The fields, in declaration order.
    *
    * @return array<string,bool>
@@ -356,14 +356,14 @@ final class Collector {
   /**
    * Resolve each field's initial value and where it came from.
    *
-   * @param list<\DrevOps\Tui\Block\Field> $fields
+   * @param list<\DrevOps\PhpTui\Block\Field> $fields
    *   The fields, in declaration order.
    * @param array<string,mixed> $supplied
    *   Values supplied for its fields, keyed by field id.
-   * @param \DrevOps\Tui\Handler\Context $context
+   * @param \DrevOps\PhpTui\Handler\Context $context
    *   The run this collection belongs to.
    *
-   * @return array{array<string,mixed>,array<string,\DrevOps\Tui\Screen\Source>}
+   * @return array{array<string,mixed>,array<string,\DrevOps\PhpTui\Screen\Source>}
    *   The values and their sources, each keyed by field id.
    */
   protected function resolveAll(array $fields, array $supplied, Context $context): array {
@@ -383,14 +383,14 @@ final class Collector {
   /**
    * Resolve one field's initial value and where it came from.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    * @param array<string,mixed> $supplied
    *   Values supplied for its fields, keyed by field id.
-   * @param \DrevOps\Tui\Handler\Context $context
+   * @param \DrevOps\PhpTui\Handler\Context $context
    *   The run this collection belongs to.
    *
-   * @return array{mixed,\DrevOps\Tui\Screen\Source}
+   * @return array{mixed,\DrevOps\PhpTui\Screen\Source}
    *   The value and its source.
    */
   protected function resolveInitial(Field $field, array $supplied, Context $context): array {
@@ -416,9 +416,9 @@ final class Collector {
   /**
    * Detect a value that already exists outside the form.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
-   * @param \DrevOps\Tui\Handler\Context $context
+   * @param \DrevOps\PhpTui\Handler\Context $context
    *   The run this collection belongs to.
    *
    * @return mixed
@@ -447,7 +447,7 @@ final class Collector {
    * so one the field would refuse falls back to the default instead of
    * poisoning the answers.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    * @param mixed $value
    *   The detected value.
@@ -475,11 +475,11 @@ final class Collector {
    * computed value are the form's own, and a detected one was measured when it
    * was detected.
    *
-   * @param list<\DrevOps\Tui\Block\Field> $fields
+   * @param list<\DrevOps\PhpTui\Block\Field> $fields
    *   The fields, in declaration order.
    * @param array<string,mixed> $values
    *   The resolved values keyed by field id.
-   * @param array<string,\DrevOps\Tui\Screen\Source> $sources
+   * @param array<string,\DrevOps\PhpTui\Screen\Source> $sources
    *   Where each value came from, keyed by field id.
    *
    * @return array<string,mixed>
@@ -501,12 +501,12 @@ final class Collector {
   /**
    * The rules computing values, and the fields whose value is pinned.
    *
-   * @param list<\DrevOps\Tui\Block\Field> $fields
+   * @param list<\DrevOps\PhpTui\Block\Field> $fields
    *   The fields, in declaration order.
-   * @param array<string,\DrevOps\Tui\Screen\Source> $sources
+   * @param array<string,\DrevOps\PhpTui\Screen\Source> $sources
    *   Where each value came from, keyed by field id.
    *
-   * @return array{array<string,\DrevOps\Tui\Derive\Derive>,array<string,bool>}
+   * @return array{array<string,\DrevOps\PhpTui\Derive\Derive>,array<string,bool>}
    *   The rules and the pinned map, each keyed by field id.
    */
   protected function deriveRules(array $fields, array $sources): array {
@@ -523,10 +523,10 @@ final class Collector {
   /**
    * The rules computing a value, keyed by the field each computes.
    *
-   * @param list<\DrevOps\Tui\Block\Field> $fields
+   * @param list<\DrevOps\PhpTui\Block\Field> $fields
    *   The fields, in declaration order.
    *
-   * @return array<string,\DrevOps\Tui\Derive\Derive>
+   * @return array<string,\DrevOps\PhpTui\Derive\Derive>
    *   The rules.
    */
   protected function ruleMap(array $fields): array {
@@ -546,7 +546,7 @@ final class Collector {
   /**
    * The fields whose value was supplied, keyed by field id.
    *
-   * @param array<string,\DrevOps\Tui\Screen\Source> $sources
+   * @param array<string,\DrevOps\PhpTui\Screen\Source> $sources
    *   Where each value came from, keyed by field id.
    *
    * @return array<string,bool>
@@ -559,19 +559,19 @@ final class Collector {
   /**
    * Settle computed values, who is there at all, and the fix-ups.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel being collected.
    * @param array<string,bool> $shows
    *   Whether each row the tree holds only shows something, keyed by id.
-   * @param list<\DrevOps\Tui\Block\Field> $fields
+   * @param list<\DrevOps\PhpTui\Block\Field> $fields
    *   The fields, in declaration order.
    * @param array<string,mixed> $values
    *   The resolved values keyed by field id.
-   * @param array<string,\DrevOps\Tui\Derive\Derive> $rules
+   * @param array<string,\DrevOps\PhpTui\Derive\Derive> $rules
    *   The rules computing a value, keyed by field id.
    * @param array<string,bool> $pinned
    *   The fields whose value must not be recomputed, keyed by field id.
-   * @param \DrevOps\Tui\Handler\Context $context
+   * @param \DrevOps\PhpTui\Handler\Context $context
    *   The run this collection belongs to.
    * @param array<string,bool> $supplied
    *   The fields whose value was supplied, keyed by field id.
@@ -626,7 +626,7 @@ final class Collector {
   /**
    * Resolve each field's rows once, replacing the loader that owed them.
    *
-   * @param list<\DrevOps\Tui\Block\Field> $fields
+   * @param list<\DrevOps\PhpTui\Block\Field> $fields
    *   The fields, in declaration order.
    */
   protected function loadOptions(array $fields): void {
@@ -650,13 +650,13 @@ final class Collector {
    * supplied is left alone for the refusal to report, rather than disappearing
    * without a word.
    *
-   * @param list<\DrevOps\Tui\Block\Field> $fields
+   * @param list<\DrevOps\PhpTui\Block\Field> $fields
    *   The fields, in declaration order.
    * @param array<string,mixed> $values
    *   The current values keyed by field id.
    * @param array<string,bool> $active
    *   Which fields are there, keyed by field id.
-   * @param \DrevOps\Tui\Handler\Context $context
+   * @param \DrevOps\PhpTui\Handler\Context $context
    *   The run this collection belongs to.
    * @param array<string,bool> $supplied
    *   The fields whose value was supplied, keyed by field id.
@@ -664,7 +664,7 @@ final class Collector {
    * @return array<string,mixed>
    *   The values, restated against the resolved rows.
    *
-   * @throws \DrevOps\Tui\CollectException
+   * @throws \DrevOps\PhpTui\CollectException
    *   When a resolver cannot answer.
    */
   protected function resolveOptions(array $fields, array $values, array $active, Context $context, array $supplied): array {
@@ -723,14 +723,14 @@ final class Collector {
    * minimum query length does not apply, because it throttles typing rather
    * than a single lookup.
    *
-   * @param list<\DrevOps\Tui\Block\Field> $fields
+   * @param list<\DrevOps\PhpTui\Block\Field> $fields
    *   The fields, in declaration order.
    * @param array<string,mixed> $values
    *   The settled values keyed by field id.
    * @param array<string,bool> $active
    *   Which fields are there, keyed by field id.
    *
-   * @throws \DrevOps\Tui\CollectException
+   * @throws \DrevOps\PhpTui\CollectException
    *   When a source cannot answer.
    */
   protected function loadQueryOptions(array $fields, array $values, array $active): void {
@@ -774,7 +774,7 @@ final class Collector {
   /**
    * The queries that look a field's supplied value up, one per item.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    * @param mixed $value
    *   The settled value.
@@ -798,12 +798,12 @@ final class Collector {
   /**
    * The error for consumer row code that could not answer.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field whose rows were being resolved.
    * @param \Throwable $throwable
    *   What the consumer code threw.
    *
-   * @return \DrevOps\Tui\CollectException
+   * @return \DrevOps\PhpTui\CollectException
    *   The error naming the field.
    */
   protected function optionsError(Field $field, \Throwable $throwable): CollectException {
@@ -858,11 +858,11 @@ final class Collector {
    * Only supplied values are measured: a default and a computed value are the
    * form's own, and a detected one was measured when it was detected.
    *
-   * @param list<\DrevOps\Tui\Block\Field> $fields
+   * @param list<\DrevOps\PhpTui\Block\Field> $fields
    *   The fields, in declaration order.
    * @param array<string,mixed> $values
    *   The settled values keyed by field id.
-   * @param array<string,\DrevOps\Tui\Screen\Source> $sources
+   * @param array<string,\DrevOps\PhpTui\Screen\Source> $sources
    *   Where each value came from, keyed by field id.
    * @param array<string,bool> $active
    *   Which fields are there, keyed by field id.
@@ -897,7 +897,7 @@ final class Collector {
    * letting NULL read as a wrong shape; the shape follows, so what is measured
    * afterwards is a value of the kind the field collects.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    * @param mixed $value
    *   The value.
@@ -922,7 +922,7 @@ final class Collector {
   /**
    * The values of the fields that are there, in declaration order.
    *
-   * @param list<\DrevOps\Tui\Block\Field> $fields
+   * @param list<\DrevOps\PhpTui\Block\Field> $fields
    *   The fields, in declaration order.
    * @param array<string,mixed> $values
    *   The current values keyed by field id.
@@ -947,14 +947,14 @@ final class Collector {
   /**
    * How each answer came to be, keyed by field id.
    *
-   * @param list<\DrevOps\Tui\Block\Field> $fields
+   * @param list<\DrevOps\PhpTui\Block\Field> $fields
    *   The fields, in declaration order.
-   * @param array<string,\DrevOps\Tui\Screen\Source> $sources
+   * @param array<string,\DrevOps\PhpTui\Screen\Source> $sources
    *   Where each value came from, keyed by field id.
    * @param array<string,bool> $active
    *   Which fields are there, keyed by field id.
    *
-   * @return array<string,\DrevOps\Tui\Answers\Provenance>
+   * @return array<string,\DrevOps\PhpTui\Answers\Provenance>
    *   The provenance of each answer.
    */
   protected function provenance(array $fields, array $sources, array $active): array {

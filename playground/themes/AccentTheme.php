@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Playground\Themes;
 
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\Sgr;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\Sgr;
 
 /**
  * The default theme plus one theme-invented option: a value "accent" colour.

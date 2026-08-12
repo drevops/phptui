@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Discovery;
+namespace DrevOps\PhpTui\Discovery;
 
 /**
  * Base discovery rule with shared path handling.
  *
- * @package DrevOps\Tui\Discovery
+ * @package DrevOps\PhpTui\Discovery
  */
 abstract class AbstractDiscover implements DiscoverInterface {
 

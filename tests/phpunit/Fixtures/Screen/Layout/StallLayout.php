@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Fixtures\Screen\Layout;
+namespace DrevOps\PhpTui\Tests\Fixtures\Screen\Layout;
 
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Furniture;
-use DrevOps\Tui\Screen\Layout\AbstractLayout;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Furniture;
+use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
 
 /**
  * Test fixture: a layout that calls its regions something else.
@@ -15,7 +15,7 @@ use DrevOps\Tui\Screen\Layout\AbstractLayout;
  * conventional names to answer, so a test can prove the assembler reads the
  * layout instead of guessing at the names it happens to have used.
  *
- * @package DrevOps\Tui\Tests\Fixtures\Screen\Layout
+ * @package DrevOps\PhpTui\Tests\Fixtures\Screen\Layout
  */
 final class StallLayout extends AbstractLayout {
 

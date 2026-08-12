@@ -26,13 +26,13 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\CollectException;
-use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Screen\Layout\LayoutManager;
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\CollectException;
+use DrevOps\PhpTui\InterruptException;
+use DrevOps\PhpTui\Screen\Layout\LayoutManager;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Tui;
 use Playground\Layouts\MarketLayout;
 use Playground\Layouts\StallLayout;
 

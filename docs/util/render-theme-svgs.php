@@ -29,13 +29,13 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Testing\TuiTester;
-use DrevOps\Tui\Theme\Mode;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Testing\TuiTester;
+use DrevOps\PhpTui\Theme\Mode;
 
 require dirname(__DIR__, 2) . '/vendor/autoload.php';
 
@@ -46,7 +46,7 @@ const ADAPTIVE_THEMES = ['midnight', 'frost', 'ember', 'mono'];
 /**
  * The preview form every theme renders - the playground/09-themes-* form.
  *
- * @return \DrevOps\Tui\Builder\Form
+ * @return \DrevOps\PhpTui\Builder\Form
  *   The form.
  */
 function previewForm(): Form {
@@ -73,7 +73,7 @@ function previewForm(): Form {
  *
  * @param string $theme
  *   The theme name.
- * @param \DrevOps\Tui\Theme\Mode $mode
+ * @param \DrevOps\PhpTui\Theme\Mode $mode
  *   The palette mode.
  * @param bool $bordered
  *   Whether the rounded border frames the panel.

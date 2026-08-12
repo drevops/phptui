@@ -2,38 +2,38 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit;
+namespace DrevOps\PhpTui\Tests\Unit;
 
-use DrevOps\Tui\Block\Actions;
-use DrevOps\Tui\Block\Breadcrumb;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Progress as ProgressBlock;
-use DrevOps\Tui\Block\TableSpec;
-use DrevOps\Tui\Block\Template;
-use DrevOps\Tui\Builder\Fixup;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Derive\Deriver;
-use DrevOps\Tui\Discovery\Dotenv;
-use DrevOps\Tui\Field\Text;
-use DrevOps\Tui\Field\Textarea;
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Primitive\Output;
-use DrevOps\Tui\Primitive\Progress;
-use DrevOps\Tui\Primitive\Status;
-use DrevOps\Tui\Screen\ExternalEditor;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Testing\BufferedTerminal;
-use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
-use DrevOps\Tui\Tests\Traits\IsolatesEnvTrait;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Block\Actions;
+use DrevOps\PhpTui\Block\Breadcrumb;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Progress as ProgressBlock;
+use DrevOps\PhpTui\Block\TableSpec;
+use DrevOps\PhpTui\Block\Template;
+use DrevOps\PhpTui\Builder\Fixup;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\Derive\Deriver;
+use DrevOps\PhpTui\Discovery\Dotenv;
+use DrevOps\PhpTui\Field\Text;
+use DrevOps\PhpTui\Field\Textarea;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Primitive\Output;
+use DrevOps\PhpTui\Primitive\Progress;
+use DrevOps\PhpTui\Primitive\Status;
+use DrevOps\PhpTui\Screen\ExternalEditor;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Testing\BufferedTerminal;
+use DrevOps\PhpTui\Tests\Traits\BuildsThemesTrait;
+use DrevOps\PhpTui\Tests\Traits\IsolatesEnvTrait;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Tui;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -411,7 +411,7 @@ final class ControlBytesTest extends TestCase {
   /**
    * A borderless, unstyled theme, so an assertion reads the content alone.
    *
-   * @return \DrevOps\Tui\Theme\DefaultTheme
+   * @return \DrevOps\PhpTui\Theme\DefaultTheme
    *   The theme.
    */
   protected function plain(): DefaultTheme {
@@ -421,7 +421,7 @@ final class ControlBytesTest extends TestCase {
   /**
    * A one-question form to collect a value into.
    *
-   * @return \DrevOps\Tui\Builder\Form
+   * @return \DrevOps\PhpTui\Builder\Form
    *   The form.
    */
   protected function form(): Form {

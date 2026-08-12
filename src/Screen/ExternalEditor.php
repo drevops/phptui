@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\PhpTui\Screen;
 
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Terminal\Terminal;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\Terminal;
 
 /**
  * Hands a text buffer off to the user's $EDITOR and captures the result.
@@ -16,7 +16,7 @@ use DrevOps\Tui\Terminal\Terminal;
  * process spawn is the one seam that touches the real TTY and is excluded from
  * coverage; everything around it is testable.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\PhpTui\Screen
  */
 class ExternalEditor {
 
@@ -57,7 +57,7 @@ class ExternalEditor {
    *
    * @param string $initial
    *   The buffer the editor opens with.
-   * @param \DrevOps\Tui\Terminal\Terminal|null $terminal
+   * @param \DrevOps\PhpTui\Terminal\Terminal|null $terminal
    *   The terminal to suspend around the editor, or NULL to leave terminal
    *   state untouched (the editor still runs).
    *

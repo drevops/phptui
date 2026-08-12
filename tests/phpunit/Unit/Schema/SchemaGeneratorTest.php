@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Schema;
+namespace DrevOps\PhpTui\Tests\Unit\Schema;
 
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\Block\Weekday;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Schema\SchemaGenerator;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\Block\Weekday;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Condition\Condition;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Schema\SchemaGenerator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -361,7 +361,7 @@ final class SchemaGeneratorTest extends TestCase {
   /**
    * Data provider for testResolvesDefault().
    *
-   * @return \Iterator<string, array{\Closure, \DrevOps\Tui\Handler\Context, mixed}>
+   * @return \Iterator<string, array{\Closure, \DrevOps\PhpTui\Handler\Context, mixed}>
    *   A panel declaration, the context it resolves against and the default the
    *   schema advertises.
    */

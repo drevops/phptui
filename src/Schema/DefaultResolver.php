@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Schema;
+namespace DrevOps\PhpTui\Schema;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Handler\Context;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Handler\Context;
 
 /**
  * Resolves a field's default for machine-readable output.
@@ -16,16 +16,16 @@ use DrevOps\Tui\Handler\Context;
  * defaults are computed still advertises real values. A closure that cannot be
  * resolved without answers - it throws when evaluated - resolves to null.
  *
- * @package DrevOps\Tui\Schema
+ * @package DrevOps\PhpTui\Schema
  */
 final class DefaultResolver {
 
   /**
    * Resolve the default advertised for a field.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
-   * @param \DrevOps\Tui\Handler\Context $context
+   * @param \DrevOps\PhpTui\Handler\Context $context
    *   The context a closure default is evaluated against; its answers are the
    *   ones known so far - none, for a plain schema.
    *

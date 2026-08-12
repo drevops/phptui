@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Theme;
+namespace DrevOps\PhpTui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Block\Prose;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\Mode;
+use DrevOps\PhpTui\Block\Prose;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\Mode;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -264,7 +264,7 @@ final class ThemeTest extends TestCase {
   /**
    * A default theme in light mode.
    *
-   * @return \DrevOps\Tui\Theme\DefaultTheme
+   * @return \DrevOps\PhpTui\Theme\DefaultTheme
    *   The theme.
    */
   protected static function light(): DefaultTheme {

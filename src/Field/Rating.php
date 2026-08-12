@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Field\Capability\StepCapableInterface;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Field\Capability\StepCapableInterface;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 
 /**
  * A graded answer: a point chosen from a scale, accepted as an int.
@@ -18,7 +18,7 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * The arrows step one point at a time and stop at either end; the ends do
  * not wrap. A typed digit selects its point when the scale includes it.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 class Rating extends AbstractField implements StepCapableInterface {
 

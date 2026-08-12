@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Fixtures\Theme;
+namespace DrevOps\PhpTui\Tests\Fixtures\Theme;
 
-use DrevOps\Tui\Theme\AbstractTheme;
-use DrevOps\Tui\Theme\Capability\ColorSchemeCapableInterface;
-use DrevOps\Tui\Theme\Capability\ColorSchemeCapableTrait;
-use DrevOps\Tui\Theme\Capability\UnicodeCapableInterface;
-use DrevOps\Tui\Theme\Capability\UnicodeCapableTrait;
-use DrevOps\Tui\Theme\Sgr;
+use DrevOps\PhpTui\Theme\AbstractTheme;
+use DrevOps\PhpTui\Theme\Capability\ColorSchemeCapableInterface;
+use DrevOps\PhpTui\Theme\Capability\ColorSchemeCapableTrait;
+use DrevOps\PhpTui\Theme\Capability\UnicodeCapableInterface;
+use DrevOps\PhpTui\Theme\Capability\UnicodeCapableTrait;
+use DrevOps\PhpTui\Theme\Sgr;
 
 /**
  * Test fixture: a theme composing both support capabilities from their traits.
@@ -18,7 +18,7 @@ use DrevOps\Tui\Theme\Sgr;
  * the traits carry, which is the shape a consumer theme takes when it declares
  * a capability rather than reimplementing one.
  *
- * @package DrevOps\Tui\Tests\Fixtures\Theme
+ * @package DrevOps\PhpTui\Tests\Fixtures\Theme
  */
 class CapableTheme extends AbstractTheme implements ColorSchemeCapableInterface, UnicodeCapableInterface {
 

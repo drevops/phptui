@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
 /**
  * The edges a border draws, combined with a bitwise or.
@@ -18,7 +18,7 @@ namespace DrevOps\Tui\Theme;
  * Which sides are drawn is also which cells are spent: a top and a bottom cost
  * a row each and no columns, a left and a right a column each and no rows.
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 final class BorderSide {
 

@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Testing;
+namespace DrevOps\PhpTui\Testing;
 
-use DrevOps\Tui\Field\FieldInterface;
-use DrevOps\Tui\Input\Key;
+use DrevOps\PhpTui\Field\FieldInterface;
+use DrevOps\PhpTui\Input\Key;
 
 /**
  * Drives a field to completion from a key stream.
  *
- * @package DrevOps\Tui\Testing
+ * @package DrevOps\PhpTui\Testing
  */
 final class FieldRunner {
 
   /**
    * Feed keys to a field until it completes or is cancelled.
    *
-   * @param \DrevOps\Tui\Field\FieldInterface $field
+   * @param \DrevOps\PhpTui\Field\FieldInterface $field
    *   The field to drive.
-   * @param \DrevOps\Tui\Testing\KeyStreamInterface $keys
+   * @param \DrevOps\PhpTui\Testing\KeyStreamInterface $keys
    *   The key source.
    *
    * @return mixed

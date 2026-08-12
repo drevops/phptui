@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Input;
+namespace DrevOps\PhpTui\Input;
 
-use DrevOps\Tui\Block\FieldType;
+use DrevOps\PhpTui\Block\FieldType;
 
 /**
  * The built-in key bindings: the defaults every form uses unless it opts out.
@@ -17,14 +17,14 @@ use DrevOps\Tui\Block\FieldType;
  * {@see bindings()} to ship an alternate preset - {@see VimKeyMap} does exactly
  * that.
  *
- * @package DrevOps\Tui\Input
+ * @package DrevOps\PhpTui\Input
  */
 class DefaultKeyMap {
 
   /**
    * The bindings this preset declares.
    *
-   * @return list<\DrevOps\Tui\Input\Binding>
+   * @return list<\DrevOps\PhpTui\Input\Binding>
    *   The bindings, base first, then per-scope overrides.
    */
   public function bindings(): array {

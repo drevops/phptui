@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Field;
+namespace DrevOps\PhpTui\Tests\Unit\Field;
 
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionType;
-use DrevOps\Tui\Field\Matcher;
-use DrevOps\Tui\Field\MatchResult;
-use DrevOps\Tui\Field\MatchTier;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Block\OptionType;
+use DrevOps\PhpTui\Field\Matcher;
+use DrevOps\PhpTui\Field\MatchResult;
+use DrevOps\PhpTui\Field\MatchTier;
+use DrevOps\PhpTui\Utils\Strings;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

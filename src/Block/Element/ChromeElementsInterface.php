@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Element;
+namespace DrevOps\PhpTui\Block\Element;
 
 /**
  * The elements no single block owns.
@@ -22,7 +22,7 @@ namespace DrevOps\Tui\Block\Element;
  * named for its owner, so a theme implements all of them on one class without
  * collisions.
  *
- * @package DrevOps\Tui\Block\Element
+ * @package DrevOps\PhpTui\Block\Element
  */
 interface ChromeElementsInterface {
 

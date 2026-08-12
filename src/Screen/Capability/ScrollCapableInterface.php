@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen\Capability;
+namespace DrevOps\PhpTui\Screen\Capability;
 
 /**
  * A surface whose contents may overflow it and be scrolled through.
@@ -16,7 +16,7 @@ namespace DrevOps\Tui\Screen\Capability;
  * offset indexes into is measured where things are drawn, and the driver
  * moves it, so one rule keeps the cursor in sight whatever is moved.
  *
- * @package DrevOps\Tui\Screen\Capability
+ * @package DrevOps\PhpTui\Screen\Capability
  */
 interface ScrollCapableInterface {
 

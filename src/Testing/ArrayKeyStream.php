@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Testing;
+namespace DrevOps\PhpTui\Testing;
 
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * An in-memory key stream, used for scripted (headless) input.
  *
- * @package DrevOps\Tui\Testing
+ * @package DrevOps\PhpTui\Testing
  */
 final class ArrayKeyStream implements KeyStreamInterface {
 
   /**
    * The queued keys.
    *
-   * @var \DrevOps\Tui\Input\Key[]
+   * @var \DrevOps\PhpTui\Input\Key[]
    */
   protected array $keys;
 
@@ -29,7 +29,7 @@ final class ArrayKeyStream implements KeyStreamInterface {
   /**
    * Construct a stream from a list of keys.
    *
-   * @param \DrevOps\Tui\Input\Key[] $keys
+   * @param \DrevOps\PhpTui\Input\Key[] $keys
    *   The keys to queue.
    */
   public function __construct(array $keys) {
@@ -42,7 +42,7 @@ final class ArrayKeyStream implements KeyStreamInterface {
    * Each string expands to one character key per character; each Key is queued
    * as-is, letting tests write `of('Acme', Key::named(KeyName::Enter))`.
    *
-   * @param string|\DrevOps\Tui\Input\Key ...$items
+   * @param string|\DrevOps\PhpTui\Input\Key ...$items
    *   Strings (expanded per character) and/or keys.
    */
   public static function of(string|Key ...$items): self {

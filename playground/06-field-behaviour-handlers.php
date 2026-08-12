@@ -14,16 +14,16 @@
  *   php playground/06-field-behaviour-handlers.php
  *
  *   # Unattended inputs run the same handler:
- *   TUI_ORDER_CODE=PLUM99 php playground/06-field-behaviour-handlers.php
+ *   PHPTUI_ORDER_CODE=PLUM99 php playground/06-field-behaviour-handlers.php
  */
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\CollectException;
-use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\CollectException;
+use DrevOps\PhpTui\InterruptException;
+use DrevOps\PhpTui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
 // The require makes the handler class loadable; a real consumer would

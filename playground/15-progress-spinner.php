@@ -23,10 +23,10 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Primitive\Progress;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Primitive\Progress;
+use DrevOps\PhpTui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui;
+namespace DrevOps\PhpTui;
 
 /**
  * Thrown when a collection cannot take the answers it was given.
@@ -14,7 +14,7 @@ namespace DrevOps\Tui;
  * collection without a complete answer set, so one import covers every
  * ending.
  *
- * @package DrevOps\Tui
+ * @package DrevOps\PhpTui
  */
 class CollectException extends \RuntimeException {
 

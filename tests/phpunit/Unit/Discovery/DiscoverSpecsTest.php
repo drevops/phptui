@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Discovery;
+namespace DrevOps\PhpTui\Tests\Unit\Discovery;
 
-use DrevOps\Tui\Discovery\Dotenv;
-use DrevOps\Tui\Discovery\JsonValue;
-use DrevOps\Tui\Discovery\PathExists;
-use DrevOps\Tui\Discovery\Scan;
-use DrevOps\Tui\Discovery\ScanType;
+use DrevOps\PhpTui\Discovery\Dotenv;
+use DrevOps\PhpTui\Discovery\JsonValue;
+use DrevOps\PhpTui\Discovery\PathExists;
+use DrevOps\PhpTui\Discovery\Scan;
+use DrevOps\PhpTui\Discovery\ScanType;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;

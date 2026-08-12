@@ -13,7 +13,7 @@ A form built with this library is self-describing: it hands an AI agent (or any 
 `agentHelp()` returns a JSON Schema (draft 2020-12) of the answers - the object an agent supplies, keyed by question id. Each property carries its `type` and allowed values (a `select`'s `enum`, a number's `minimum`/`maximum`), its `title` and `description`, its `default`, and the `env` variable that sets it. What it deliberately doesn't name is CLI flags: the flags an agent ultimately calls are yours to define. You retrieve the schema and fold it into your own help - an "AI agents" section of `--help`, a dedicated flag, a generated README:
 
 ```php
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Tui;
 
 // The library hands back the schema; the consumer decides where it goes.
 echo (new Tui($form))->agentHelp();
@@ -29,14 +29,14 @@ The schema the produce-order form emits:
     "name": {
       "type": "string",
       "title": "Order name",
-      "env": "TUI_NAME"
+      "env": "PHPTUI_NAME"
     },
     "fruit": {
       "type": "string",
       "enum": ["apple", "banana", "cherry"],
       "title": "Fruit",
       "default": "banana",
-      "env": "TUI_FRUIT"
+      "env": "PHPTUI_FRUIT"
     },
     "quantity": {
       "type": "integer",
@@ -44,20 +44,20 @@ The schema the produce-order form emits:
       "maximum": 99,
       "title": "Quantity",
       "default": 6,
-      "env": "TUI_QUANTITY"
+      "env": "PHPTUI_QUANTITY"
     },
     "organic": {
       "type": "boolean",
       "title": "Organic only?",
       "default": false,
-      "env": "TUI_ORGANIC"
+      "env": "PHPTUI_ORGANIC"
     },
     "certifier": {
       "type": "string",
       "title": "Certifier",
       "x-asked-when": {"field": "organic", "eq": true},
       "x-required-when-asked": true,
-      "env": "TUI_CERTIFIER"
+      "env": "PHPTUI_CERTIFIER"
     }
   },
   "required": ["name"],
@@ -65,7 +65,7 @@ The schema the produce-order form emits:
 }
 ```
 
-Each `env` is the variable that sets its answer - the uppercased id under the active prefix, which defaults to `TUI_` and changes with `->envPrefix('MYAPP_')` on the form or `new Tui($form, env_prefix: 'MYAPP_')`. A field that names its own variable advertises that name instead, and any further names it answers to appear beside it in `x-env-aliases` - see [naming the variables](/headless-collection#naming-the-variables). The root `x-precedence` is the resolution order described below.
+Each `env` is the variable that sets its answer - the uppercased id under the active prefix, which defaults to `PHPTUI_` and changes with `->envPrefix('MYAPP_')` on the form or `new Tui($form, env_prefix: 'MYAPP_')`. A field that names its own variable advertises that name instead, and any further names it answers to appear beside it in `x-env-aliases` - see [naming the variables](/headless-collection#naming-the-variables). The root `x-precedence` is the resolution order described below.
 
 ### Required, and required when asked
 
@@ -84,7 +84,7 @@ A field's other two [guidance texts](/field-behaviour#guidance-texts) travel bes
   "description": "The crop this basket was picked from.",
   "x-help": "Type a few letters to filter.",
   "x-placeholder": "E.g. Golden Beetroot",
-  "env": "TUI_CROP"
+  "env": "PHPTUI_CROP"
 }
 ```
 
@@ -110,7 +110,7 @@ Dynamic defaults - the `fn (Context $c): mixed` closures from [field behavior](/
       "options_dynamic": false,
       "default": "",
       "required": true,
-      "env": "TUI_NAME",
+      "env": "PHPTUI_NAME",
       "env_aliases": [],
       "min": null,
       "max": null,
@@ -176,13 +176,13 @@ $tui->validate(['name' => 'Weekly Box', 'organic' => true]);
 The schema's `x-precedence` spells out how every field resolves - the first source that provides a value wins:
 
 1. **Provided** - an explicit value you pass in, however your interface accepts one. Highest precedence.
-2. **Environment** - the per-question variable named in `env` (e.g. `TUI_NAME`), which is the uppercased id under the active prefix unless the field named its own, followed by each name in `x-env-aliases` in declaration order; the first one that is set wins.
+2. **Environment** - the per-question variable named in `env` (e.g. `PHPTUI_NAME`), which is the uppercased id under the active prefix unless the field named its own, followed by each name in `x-env-aliases` in declaration order; the first one that is set wins.
 3. **Discovered** - a value detected from the target directory (see [Discovery](/field-behaviour#discovery)).
 4. **Derived** - a value computed from other fields.
 5. **Default** - the declared default.
 
 ## Runnable example
 
-[`playground/08-headless-agent-cli.php`](https://github.com/drevops/tui/tree/main/playground/08-headless-agent-cli.php) folds `agentHelp()` into a consumer tool's help, and `agentHelp()`, `schema()` and `validate()` each have a script of their own beside it in [`playground/08-headless-*`](https://github.com/drevops/tui/tree/main/playground).
+[`playground/08-headless-agent-cli.php`](https://github.com/drevops/phptui/tree/main/playground/08-headless-agent-cli.php) folds `agentHelp()` into a consumer tool's help, and `agentHelp()`, `schema()` and `validate()` each have a script of their own beside it in [`playground/08-headless-*`](https://github.com/drevops/phptui/tree/main/playground).
 
 See also [Headless collection](/headless-collection) for driving the same form from CI and [self-describing answers](/headless-collection#self-describing-answers) for what comes back.

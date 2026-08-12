@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Primitive\Element;
+namespace DrevOps\PhpTui\Primitive\Element;
 
-use DrevOps\Tui\Primitive\Status;
+use DrevOps\PhpTui\Primitive\Status;
 
 /**
  * The pieces a primitive draws through.
@@ -25,7 +25,7 @@ use DrevOps\Tui\Primitive\Status;
  * for what it draws, so a theme implements this and every element interface on
  * one class without collisions.
  *
- * @package DrevOps\Tui\Primitive\Element
+ * @package DrevOps\PhpTui\Primitive\Element
  */
 interface PrimitiveElementsInterface {
 
@@ -103,7 +103,7 @@ interface PrimitiveElementsInterface {
   /**
    * Draw a status line: the kind's glyph and the message, in its colour.
    *
-   * @param \DrevOps\Tui\Primitive\Status $status
+   * @param \DrevOps\PhpTui\Primitive\Status $status
    *   The kind of status.
    * @param string $text
    *   The message; its line breaks fold to spaces so the status stays one line.

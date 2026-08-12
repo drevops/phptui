@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Discovery;
+namespace DrevOps\PhpTui\Discovery;
 
 /**
  * Discovers a value by reading a key from the project's `.env` file.
  *
- * @package DrevOps\Tui\Discovery
+ * @package DrevOps\PhpTui\Discovery
  */
 class Dotenv extends AbstractDiscover {
 

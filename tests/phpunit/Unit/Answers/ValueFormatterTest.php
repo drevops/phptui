@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Answers;
+namespace DrevOps\PhpTui\Tests\Unit\Answers;
 
-use DrevOps\Tui\Answers\ValueFormatter;
+use DrevOps\PhpTui\Answers\ValueFormatter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

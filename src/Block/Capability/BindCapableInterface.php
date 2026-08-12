@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Capability;
+namespace DrevOps\PhpTui\Block\Capability;
 
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMap;
-use DrevOps\Tui\Input\ScopedKeyMap;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyMap;
+use DrevOps\PhpTui\Input\ScopedKeyMap;
 
 /**
  * A block that says which keys apply while it is in play.
@@ -22,14 +22,14 @@ use DrevOps\Tui\Input\ScopedKeyMap;
  *
  * {@see BindCapableTrait} carries the default implementation.
  *
- * @package DrevOps\Tui\Block\Capability
+ * @package DrevOps\PhpTui\Block\Capability
  */
 interface BindCapableInterface {
 
   /**
    * Answer to a set of bindings rather than to the default ones.
    *
-   * @param \DrevOps\Tui\Input\KeyMap $keys
+   * @param \DrevOps\PhpTui\Input\KeyMap $keys
    *   The resolved bindings for the whole form.
    *
    * @return static
@@ -40,7 +40,7 @@ interface BindCapableInterface {
   /**
    * The keys that apply while this block is in play.
    *
-   * @return \DrevOps\Tui\Input\ScopedKeyMap
+   * @return \DrevOps\PhpTui\Input\ScopedKeyMap
    *   The bindings resolved for this block's scope.
    */
   public function bindings(): ScopedKeyMap;
@@ -48,7 +48,7 @@ interface BindCapableInterface {
   /**
    * Whether a key stops at this block rather than travelling outward.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key.
    *
    * @return bool
@@ -62,7 +62,7 @@ interface BindCapableInterface {
    * The same fragments a legend is written from, so the line advertising a key
    * and the block answering it can never disagree about which keys are live.
    *
-   * @return list<\DrevOps\Tui\Input\Hint>
+   * @return list<\DrevOps\PhpTui\Input\Hint>
    *   The fragments, in the order they are advertised.
    */
   public function hints(): array;

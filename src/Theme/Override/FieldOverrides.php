@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme\Override;
+namespace DrevOps\PhpTui\Theme\Override;
 
 /**
  * The field's elements, as a consumer patches them.
@@ -11,14 +11,14 @@ namespace DrevOps\Tui\Theme\Override;
  * field's selector and nothing else's - and the option's is a call of its own,
  * because the two are different marks.
  *
- * @package DrevOps\Tui\Theme\Override
+ * @package DrevOps\PhpTui\Theme\Override
  */
 final class FieldOverrides {
 
   /**
    * Construct a group over the patch it writes into.
    *
-   * @param \DrevOps\Tui\Theme\Override\Overrides $overrides
+   * @param \DrevOps\PhpTui\Theme\Override\Overrides $overrides
    *   The patch being collected.
    */
   public function __construct(

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Theme;
+namespace DrevOps\PhpTui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\EmberTheme;
-use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Tests\Traits\BuildsThemesTrait;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\EmberTheme;
+use DrevOps\PhpTui\Theme\Mode;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;

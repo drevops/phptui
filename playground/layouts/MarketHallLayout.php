@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Playground\Layouts;
 
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Furniture;
-use DrevOps\Tui\Screen\Layout\AbstractLayout;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Furniture;
+use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
 
 /**
  * A screen with a two-row masthead, a scrolling body and a status bar.

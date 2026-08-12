@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Derive;
+namespace DrevOps\PhpTui\Derive;
 
 use AlexSkrypnyk\Str2Name\Str2Name;
 
@@ -13,7 +13,7 @@ use AlexSkrypnyk\Str2Name\Str2Name;
  * pascal, host, initials, ...) as derive transforms. {@see Derive} validates
  * a declared name against supports() at declaration time.
  *
- * @package DrevOps\Tui\Derive
+ * @package DrevOps\PhpTui\Derive
  */
 class Transform extends Str2Name {
 

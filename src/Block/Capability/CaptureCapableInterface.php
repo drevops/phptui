@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Capability;
+namespace DrevOps\PhpTui\Block\Capability;
 
-use DrevOps\Tui\Block\Mode;
-use DrevOps\Tui\Input\Key;
+use DrevOps\PhpTui\Block\Mode;
+use DrevOps\PhpTui\Input\Key;
 
 /**
  * A block that opens in place to capture something, then closes again.
@@ -20,14 +20,14 @@ use DrevOps\Tui\Input\Key;
  * the keys it answers to, the draft is what it holds, and closing is what
  * decides whether any of it becomes the answer.
  *
- * @package DrevOps\Tui\Block\Capability
+ * @package DrevOps\PhpTui\Block\Capability
  */
 interface CaptureCapableInterface {
 
   /**
    * Which of its two shapes this block is drawing.
    *
-   * @return \DrevOps\Tui\Block\Mode
+   * @return \DrevOps\PhpTui\Block\Mode
    *   The mode.
    */
   public function mode(): Mode;
@@ -62,7 +62,7 @@ interface CaptureCapableInterface {
   /**
    * Send a key to what this block opened onto.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key.
    *
    * @return bool

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Screen;
+namespace DrevOps\PhpTui\Tests\Unit\Screen;
 
-use DrevOps\Tui\Screen\ExternalEditor;
-use DrevOps\Tui\Tests\Fixtures\Screen\SpawnStubEditor;
-use DrevOps\Tui\Tests\Fixtures\Terminal\RecordingTerminal;
-use DrevOps\Tui\Tests\Traits\IsolatesEnvTrait;
+use DrevOps\PhpTui\Screen\ExternalEditor;
+use DrevOps\PhpTui\Tests\Fixtures\Screen\SpawnStubEditor;
+use DrevOps\PhpTui\Tests\Fixtures\Terminal\RecordingTerminal;
+use DrevOps\PhpTui\Tests\Traits\IsolatesEnvTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

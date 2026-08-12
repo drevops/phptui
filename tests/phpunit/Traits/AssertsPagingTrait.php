@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Traits;
+namespace DrevOps\PhpTui\Tests\Traits;
 
-use DrevOps\Tui\Field\Capability\PagingCapableInterface;
-use DrevOps\Tui\Field\FieldInterface;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Field\Capability\PagingCapableInterface;
+use DrevOps\PhpTui\Field\FieldInterface;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 
 /**
  * Shared paging assertions for the list fields.

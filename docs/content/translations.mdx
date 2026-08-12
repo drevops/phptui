@@ -13,9 +13,9 @@ Every string the TUI shows can be presented in another language - both the libra
 Translation is off by default. Turn it on by giving the `Tui` facade a `Translator` - the active language, and optionally the sources your own catalogs come from - the same way you'd set a theme or key map:
 
 ```php
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Translation\Translator;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Translation\Translator;
+use DrevOps\PhpTui\Tui;
 
 // The bundled chrome catalogs load automatically, so this
 // alone renders the chrome in Ukrainian:
@@ -99,7 +99,7 @@ Some strings carry `@name` placeholders (for example `Enter a number @constraint
 A message whose wording depends on a count - "1 apple" versus "5 apples" - is rendered with `Translator::formatPlural($count, $singular, $plural)`. The count picks the form, and `@count` is bound to it:
 
 ```php
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Translation\Translator;
 
 Translator::formatPlural($count, '1 apple', '@count apples');
 ```
@@ -119,7 +119,7 @@ A language with more forms supplies its own rule under the reserved `Translator:
 declare(strict_types=1);
 
 // translations/uk.php
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Translation\Translator;
 
 return [
   Translator::PLURAL_RULE => static function (int $count): int {
@@ -151,7 +151,7 @@ Without a rule the default applies: the first form when the count is one, the se
 The package ships `translations/en.php` - the canonical list of every chrome string the library emits, as an English `key => key` map. Copy it to a locale file and translate the values, and you have a complete chrome catalog to start from:
 
 ```bash
-cp vendor/drevops/tui/translations/en.php translations/de.php
+cp vendor/drevops/phptui/translations/en.php translations/de.php
 ```
 
 A ready-to-use Ukrainian catalog, `translations/uk.php`, ships alongside it and loads automatically whenever the active language is Ukrainian.
@@ -160,4 +160,4 @@ A ready-to-use Ukrainian catalog, `translations/uk.php`, ships alongside it and 
 
 The bundled catalogs load from inside the package, and your own catalogs are ordinary files loaded with `require` - so both bundle into a consumer-built PHAR with no extra configuration. Reference yours by a path relative to your application (for example `__DIR__ . '/translations'`), which resolves inside the archive.
 
-A runnable demo in [`playground/12-translations.php`](https://github.com/drevops/tui/blob/main/playground/12-translations.php) localizes chrome and questions into Ukrainian - the bundled `uk.php` supplies the chrome automatically, a small local catalog adds the form's own labels - and exercises pluralized rendering in its multi-select summary.
+A runnable demo in [`playground/12-translations.php`](https://github.com/drevops/phptui/blob/main/playground/12-translations.php) localizes chrome and questions into Ukrainian - the bundled `uk.php` supplies the chrome automatically, a small local catalog adds the form's own labels - and exercises pluralized rendering in its multi-select summary.

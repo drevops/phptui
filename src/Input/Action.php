@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Input;
+namespace DrevOps\PhpTui\Input;
 
 /**
  * A semantic input action, decoupled from the physical key that triggers it.
@@ -13,7 +13,7 @@ namespace DrevOps\Tui\Input;
  * remap can bind a different key to the same action. The set of actions is
  * fixed; the bindings behind them are configurable.
  *
- * @package DrevOps\Tui\Input
+ * @package DrevOps\PhpTui\Input
  */
 enum Action {
 

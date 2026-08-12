@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Terminal;
+namespace DrevOps\PhpTui\Terminal;
 
-use DrevOps\Tui\Theme\Mode;
+use DrevOps\PhpTui\Theme\Mode;
 
 /**
  * Thin terminal I/O: raw mode, alternate screen, mouse, size, render, restore.
@@ -13,7 +13,7 @@ use DrevOps\Tui\Theme\Mode;
  * are excluded from coverage; the output writing is stream-injectable and the
  * size parsing seam-injectable, so both are testable.
  *
- * @package DrevOps\Tui\Terminal
+ * @package DrevOps\PhpTui\Terminal
  */
 class Terminal {
 
@@ -445,7 +445,7 @@ class Terminal {
    *   The raw OSC 11 reply bytes, or NULL when the terminal was not queried or
    *   did not answer.
    *
-   * @return \DrevOps\Tui\Theme\Mode
+   * @return \DrevOps\PhpTui\Theme\Mode
    *   The detected mode.
    */
   public static function detectMode(?string $osc_response = NULL): Mode {
@@ -470,7 +470,7 @@ class Terminal {
    * @param string $response
    *   The raw reply bytes.
    *
-   * @return \DrevOps\Tui\Theme\Mode|null
+   * @return \DrevOps\PhpTui\Theme\Mode|null
    *   The mode, or NULL when the reply holds no parseable colour.
    */
   protected static function modeFromOsc(string $response): ?Mode {
@@ -525,7 +525,7 @@ class Terminal {
    * The background is the last field; indices 0-6 and 8 are the dark half of
    * the standard sixteen-colour palette, the rest light.
    *
-   * @return \DrevOps\Tui\Theme\Mode|null
+   * @return \DrevOps\PhpTui\Theme\Mode|null
    *   The mode, or NULL when COLORFGBG is unset or its background is not a
    *   palette index.
    */

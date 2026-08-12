@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
-use DrevOps\Tui\Block\SelectionBounds;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\SelectionBounds;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Presents a multi-value field's declared selection-count bounds.
@@ -15,7 +15,7 @@ use DrevOps\Tui\Translation\Translator;
  * reached. Rejecting a count outside the bounds belongs to the block holding
  * the answer, which measures every offered value once.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 trait SelectionBoundedTrait {
 
@@ -31,7 +31,7 @@ trait SelectionBoundedTrait {
    * rejection message match. While an error shows, the hint is suppressed, so
    * the two lines never stack.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Fixtures\Theme;
+namespace DrevOps\PhpTui\Tests\Fixtures\Theme;
 
-use DrevOps\Tui\Theme\AbstractTheme;
+use DrevOps\PhpTui\Theme\AbstractTheme;
 
 /**
  * Test fixture: a theme whose width may be either of two things, neither one.
@@ -12,7 +12,7 @@ use DrevOps\Tui\Theme\AbstractTheme;
  * A parameter declaring alternatives still declares what it will not take, so
  * this is a theme the factory would hand a width to and be refused by.
  *
- * @package DrevOps\Tui\Tests\Fixtures\Theme
+ * @package DrevOps\PhpTui\Tests\Fixtures\Theme
  */
 class AlternativeWidthTheme extends AbstractTheme {
 

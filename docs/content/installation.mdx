@@ -9,22 +9,22 @@ keywords: ['installation', 'composer', 'php', 'quick start', 'setup']
 Install the package with [Composer](https://getcomposer.org/):
 
 ```bash
-composer require drevops/tui
+composer require drevops/phptui
 ```
 
 The package is a library you consume programmatically - it has no CLI entry point of its own. You'll work with two classes:
 
-- **`DrevOps\Tui\Tui`** - the facade: collects a form's answers, headlessly or through the interactive panel TUI.
-- **`DrevOps\Tui\Builder\Form`** - the fluent builder for declaring a form's panels and fields.
+- **`DrevOps\PhpTui\Tui`** - the facade: collects a form's answers, headlessly or through the interactive panel TUI.
+- **`DrevOps\PhpTui\Builder\Form`** - the fluent builder for declaring a form's panels and fields.
 
 ## Usage
 
 Declare a form with the fluent `Form` builder, then hand it to the `Tui` facade - one class that wires up collection, the input resolver, the schema tools and the interactive screen so you don't have to:
 
 ```php
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Tui;
 
 $form = Form::create('Quick start')
   ->panel('order', 'New order', function (PanelBuilder $p): void {
@@ -66,10 +66,10 @@ $answers = $tui->interact();                    // interactive panel TUI
 
 ## Aborting with Ctrl-C or Cancel
 
-Pressing <kbd>Ctrl-C</kbd> part-way through an interactive session aborts it: the panel TUI restores the terminal, clears the screen, and the facade raises a `DrevOps\Tui\InterruptException` instead of returning the partial answers - so an abort can never be mistaken for a completed submission. The **Cancel** button aborts the same way, raising `DrevOps\Tui\CancelException`. That's a subclass of `InterruptException`, so one catch covers both:
+Pressing <kbd>Ctrl-C</kbd> part-way through an interactive session aborts it: the panel TUI restores the terminal, clears the screen, and the facade raises a `DrevOps\PhpTui\InterruptException` instead of returning the partial answers - so an abort can never be mistaken for a completed submission. The **Cancel** button aborts the same way, raising `DrevOps\PhpTui\CancelException`. That's a subclass of `InterruptException`, so one catch covers both:
 
 ```php
-use DrevOps\Tui\InterruptException;
+use DrevOps\PhpTui\InterruptException;
 
 try {
   $answers = $tui->run();
@@ -84,7 +84,7 @@ echo $answers->toSummary();
 
 Catch `CancelException` first when an explicit cancel should react differently from a <kbd>Ctrl-C</kbd>. Only the interactive session raises these: headless collection - `collect()`, or `run()` when prompts are supplied or the input is piped - never interacts, so it never aborts this way.
 
-Headless collection has its own ending. A value the form refuses raises `DrevOps\Tui\CollectException` naming the field and the reason: with no screen there is nobody to retype it, so the whole collection fails rather than handing back answers one of which was never accepted. It sits in the same namespace as the other two, so one import covers every way a collection ends short.
+Headless collection has its own ending. A value the form refuses raises `DrevOps\PhpTui\CollectException` naming the field and the reason: with no screen there is nobody to retype it, so the whole collection fails rather than handing back answers one of which was never accepted. It sits in the same namespace as the other two, so one import covers every way a collection ends short.
 
 ## Next steps
 

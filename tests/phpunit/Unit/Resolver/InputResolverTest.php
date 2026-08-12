@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Resolver;
+namespace DrevOps\PhpTui\Tests\Unit\Resolver;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Resolver\InputResolver;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Resolver\InputResolver;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -61,7 +61,7 @@ final class InputResolverTest extends TestCase {
   /**
    * Data provider for testEnvNameResolution().
    *
-   * @return \Iterator<string, array{\DrevOps\Tui\Block\Field, array<string,string>, array<string,mixed>}>
+   * @return \Iterator<string, array{\DrevOps\PhpTui\Block\Field, array<string,string>, array<string,mixed>}>
    *   The field, the environment it is resolved against and the inputs it
    *   contributes.
    */
@@ -141,7 +141,7 @@ final class InputResolverTest extends TestCase {
   /**
    * Build one field of each coercible type for resolution.
    *
-   * @return list<\DrevOps\Tui\Block\Field>
+   * @return list<\DrevOps\PhpTui\Block\Field>
    *   The fields.
    */
   protected function fields(): array {

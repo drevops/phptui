@@ -2,36 +2,36 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Block;
+namespace DrevOps\PhpTui\Tests\Unit\Block;
 
-use DrevOps\Tui\Block\Actions;
-use DrevOps\Tui\Block\Breadcrumb;
-use DrevOps\Tui\Block\Capability\ActivateCapableInterface;
-use DrevOps\Tui\Block\Capability\BindCapableInterface;
-use DrevOps\Tui\Block\Capability\BindCapableTrait;
-use DrevOps\Tui\Block\Capability\CaptureCapableInterface;
-use DrevOps\Tui\Block\Capability\CollectCapableInterface;
-use DrevOps\Tui\Block\Capability\ConstrainCapableInterface;
-use DrevOps\Tui\Block\Capability\DependCapableInterface;
-use DrevOps\Tui\Block\Capability\DependCapableTrait;
-use DrevOps\Tui\Block\Capability\DescendCapableInterface;
-use DrevOps\Tui\Block\Capability\FocusCapableInterface;
-use DrevOps\Tui\Block\Capability\FocusCapableTrait;
-use DrevOps\Tui\Block\Capability\OverlayCapableInterface;
-use DrevOps\Tui\Block\Capability\RejectCapableInterface;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Legend;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Progress;
-use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Condition\ConditionInterface;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Primitive\ProgressReporter;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Block\Actions;
+use DrevOps\PhpTui\Block\Breadcrumb;
+use DrevOps\PhpTui\Block\Capability\ActivateCapableInterface;
+use DrevOps\PhpTui\Block\Capability\BindCapableInterface;
+use DrevOps\PhpTui\Block\Capability\BindCapableTrait;
+use DrevOps\PhpTui\Block\Capability\CaptureCapableInterface;
+use DrevOps\PhpTui\Block\Capability\CollectCapableInterface;
+use DrevOps\PhpTui\Block\Capability\ConstrainCapableInterface;
+use DrevOps\PhpTui\Block\Capability\DependCapableInterface;
+use DrevOps\PhpTui\Block\Capability\DependCapableTrait;
+use DrevOps\PhpTui\Block\Capability\DescendCapableInterface;
+use DrevOps\PhpTui\Block\Capability\FocusCapableInterface;
+use DrevOps\PhpTui\Block\Capability\FocusCapableTrait;
+use DrevOps\PhpTui\Block\Capability\OverlayCapableInterface;
+use DrevOps\PhpTui\Block\Capability\RejectCapableInterface;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Legend;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Progress;
+use DrevOps\PhpTui\Condition\Condition;
+use DrevOps\PhpTui\Condition\ConditionInterface;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyMapManager;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Primitive\ProgressReporter;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -54,7 +54,7 @@ final class CapabilityTest extends TestCase {
   /**
    * The namespace every block capability is declared in.
    */
-  protected const string CAPABILITIES = 'DrevOps\\Tui\\Block\\Capability\\';
+  protected const string CAPABILITIES = 'DrevOps\\PhpTui\\Block\\Capability\\';
 
   #[DataProvider('dataProviderBlockClaimsExactlyWhatItIsGranted')]
   public function testBlockClaimsExactlyWhatItIsGranted(string $block, array $granted): void {

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Terminal;
+namespace DrevOps\PhpTui\Terminal;
 
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * A lightweight inline-markup parser for label, description and note text.
@@ -20,7 +20,7 @@ use DrevOps\Tui\Utils\Strings;
  * free of colour and glyph decisions. {@see links()}, {@see hyperlink()} and
  * {@see width()} are the flat helpers the summary and the width maths use.
  *
- * @package DrevOps\Tui\Terminal
+ * @package DrevOps\PhpTui\Terminal
  */
 final class Markup {
 
@@ -33,7 +33,7 @@ final class Markup {
    *   Whether the full markdown subset is recognised. When FALSE only links are
    *   parsed and every other marker is left as literal text.
    *
-   * @return list<\DrevOps\Tui\Terminal\MarkupLine>
+   * @return list<\DrevOps\PhpTui\Terminal\MarkupLine>
    *   The parsed lines.
    */
   public static function parse(string $source, bool $markdown): array {
@@ -151,7 +151,7 @@ final class Markup {
   /**
    * The visible text of a segment, as it renders at the given colour setting.
    *
-   * @param \DrevOps\Tui\Terminal\MarkupSegment $segment
+   * @param \DrevOps\PhpTui\Terminal\MarkupSegment $segment
    *   The segment.
    * @param bool $color
    *   Whether a link shows as its label alone (colour on) or `text (url)`.
@@ -210,7 +210,7 @@ final class Markup {
    * @param bool $markdown
    *   Whether the full markdown subset is recognised.
    *
-   * @return list<\DrevOps\Tui\Terminal\MarkupSegment>
+   * @return list<\DrevOps\PhpTui\Terminal\MarkupSegment>
    *   The spans, in order.
    */
   protected static function parseInline(string $text, bool $markdown): array {
@@ -256,7 +256,7 @@ final class Markup {
    * @param bool $markdown
    *   Whether the full markdown subset is recognised.
    *
-   * @return array{\DrevOps\Tui\Terminal\MarkupSegment, int}|null
+   * @return array{\DrevOps\PhpTui\Terminal\MarkupSegment, int}|null
    *   The span and the byte length it consumes, or NULL when no span starts at
    *   the offset.
    */

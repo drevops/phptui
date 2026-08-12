@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Fixtures\Theme;
+namespace DrevOps\PhpTui\Tests\Fixtures\Theme;
 
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 
 /**
  * Test fixture: a theme declaring a custom "accent" display option.
@@ -13,7 +13,7 @@ use DrevOps\Tui\Theme\DefaultTheme;
  * for the hue, so declaring one does not collide with the palette a theme
  * paints from.
  *
- * @package DrevOps\Tui\Tests\Fixtures\Theme
+ * @package DrevOps\PhpTui\Tests\Fixtures\Theme
  */
 class AccentOptionTheme extends DefaultTheme {
 

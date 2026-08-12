@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionType;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Block\OptionType;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * Ranks candidates against a query by fuzzy (subsequence) relevance.
@@ -21,7 +21,7 @@ use DrevOps\Tui\Utils\Strings;
  *
  * The matcher is stateless: one instance serves every candidate and query.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 final class Matcher {
 
@@ -38,7 +38,7 @@ final class Matcher {
    * @param string $needle
    *   The query.
    *
-   * @return \DrevOps\Tui\Field\MatchResult|null
+   * @return \DrevOps\PhpTui\Field\MatchResult|null
    *   The result, or NULL when the query is not a subsequence of the candidate.
    *   An empty query matches everything with a zero score and no positions.
    */
@@ -130,12 +130,12 @@ final class Matcher {
    * carry no label and drop away, so the filtered result reads as a flat
    * relevance list.
    *
-   * @param list<\DrevOps\Tui\Block\Option> $options
+   * @param list<\DrevOps\PhpTui\Block\Option> $options
    *   The option rows.
    * @param string $needle
    *   The query.
    *
-   * @return list<\DrevOps\Tui\Block\Option>
+   * @return list<\DrevOps\PhpTui\Block\Option>
    *   The matching options, most relevant first; ties keep their input order.
    */
   public function rankOptions(array $options, string $needle): array {
@@ -192,7 +192,7 @@ final class Matcher {
    * @param string $needle
    *   The case-folded query.
    *
-   * @return \DrevOps\Tui\Field\MatchTier
+   * @return \DrevOps\PhpTui\Field\MatchTier
    *   The tier.
    */
   protected function tier(string $haystack, string $needle): MatchTier {

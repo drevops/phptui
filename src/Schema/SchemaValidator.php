@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Schema;
+namespace DrevOps\PhpTui\Schema;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Validates an answer set against the configuration.
@@ -26,17 +26,17 @@ use DrevOps\Tui\Translation\Translator;
  * The published schemas describe those rules but cannot resolve them, so what
  * they say about requiredness is written to never refuse a set this accepts.
  *
- * @package DrevOps\Tui\Schema
+ * @package DrevOps\PhpTui\Schema
  */
 class SchemaValidator {
 
   /**
    * Construct a validator.
    *
-   * @param \DrevOps\Tui\Block\Panel $root
+   * @param \DrevOps\PhpTui\Block\Panel $root
    *   The declared tree to validate against, read from the panel every declared
    *   panel hangs from.
-   * @param \DrevOps\Tui\Handler\Context $context
+   * @param \DrevOps\PhpTui\Handler\Context $context
    *   The run context an options resolver is evaluated against, its answers
    *   replaced by the set under validation; defaults to an empty context.
    */
@@ -110,7 +110,7 @@ class SchemaValidator {
   /**
    * Validate a single value against its field.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    * @param mixed $value
    *   The value.
@@ -146,7 +146,7 @@ class SchemaValidator {
   /**
    * Check a value against the field's declared number or date bounds.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    * @param mixed $value
    *   The value.
@@ -163,7 +163,7 @@ class SchemaValidator {
   /**
    * Check a value against the field's declared file picker constraints.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    * @param mixed $value
    *   The value.
@@ -181,7 +181,7 @@ class SchemaValidator {
   /**
    * Frame a constraint fragment as a question-scoped error message.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    * @param string $constraint
    *   The constraint fragment (e.g. "a string", "between 1 and 10").
@@ -199,7 +199,7 @@ class SchemaValidator {
    * Rejects any supplied value that is not a selectable option, telling a
    * disabled option apart from an unknown one.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    * @param mixed $value
    *   The value.

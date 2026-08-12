@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * Character-buffer editing: a movable cursor, insertion and deletion.
@@ -16,7 +16,7 @@ use DrevOps\Tui\Utils\Strings;
  * All arithmetic is by character, not byte, so multibyte input edits and
  * renders correctly.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 trait TextEditCapableTrait {
 
@@ -54,7 +54,7 @@ trait TextEditCapableTrait {
   /**
    * Handle a buffer edit: deletion, cursor movement, insertion.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key to handle.
    *
    * @return bool
@@ -144,7 +144,7 @@ trait TextEditCapableTrait {
   /**
    * Render the buffer split by the caret at the cursor position.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme supplying the caret glyph.
    *
    * @return string
@@ -163,7 +163,7 @@ trait TextEditCapableTrait {
    * The flat style is the plain caret line; the boxed and underline styles fill
    * or underline the field behind the value.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme composing the input.
    * @param string $ghost
    *   The inline ghost-text completion suffix, or an empty string.

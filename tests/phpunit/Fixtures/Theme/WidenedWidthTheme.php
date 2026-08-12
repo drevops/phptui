@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Fixtures\Theme;
+namespace DrevOps\PhpTui\Tests\Fixtures\Theme;
 
-use DrevOps\Tui\Theme\AbstractTheme;
+use DrevOps\PhpTui\Theme\AbstractTheme;
 
 /**
  * A theme asking for its width and options in the widest terms PHP allows.

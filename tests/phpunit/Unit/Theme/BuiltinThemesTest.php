@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Theme;
+namespace DrevOps\PhpTui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Block\Prose;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\DosTheme;
-use DrevOps\Tui\Theme\EmberTheme;
-use DrevOps\Tui\Theme\FrostTheme;
-use DrevOps\Tui\Theme\MidnightTheme;
-use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\MonoTheme;
-use DrevOps\Tui\Theme\Sgr;
+use DrevOps\PhpTui\Block\Prose;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Tests\Traits\BuildsThemesTrait;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\DosTheme;
+use DrevOps\PhpTui\Theme\EmberTheme;
+use DrevOps\PhpTui\Theme\FrostTheme;
+use DrevOps\PhpTui\Theme\MidnightTheme;
+use DrevOps\PhpTui\Theme\Mode;
+use DrevOps\PhpTui\Theme\MonoTheme;
+use DrevOps\PhpTui\Theme\Sgr;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

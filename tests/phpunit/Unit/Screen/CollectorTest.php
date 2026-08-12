@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Screen;
+namespace DrevOps\PhpTui\Tests\Unit\Screen;
 
-use DrevOps\Tui\Answers\Provenance;
-use DrevOps\Tui\Block\Breadcrumb;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Legend;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\NumberBounds;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Progress;
-use DrevOps\Tui\CollectException;
-use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Collector;
-use DrevOps\Tui\Screen\Layout\AbstractLayout;
-use DrevOps\Tui\Screen\Layout\DefaultLayout;
+use DrevOps\PhpTui\Answers\Provenance;
+use DrevOps\PhpTui\Block\Breadcrumb;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Legend;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\NumberBounds;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Progress;
+use DrevOps\PhpTui\CollectException;
+use DrevOps\PhpTui\Condition\Condition;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Collector;
+use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
+use DrevOps\PhpTui\Screen\Layout\DefaultLayout;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -305,7 +305,7 @@ final class CollectorTest extends TestCase {
     $panel = (new Panel('main', 'Delivery'))->layout(new DefaultLayout());
 
     foreach ($blocks as $block) {
-      /** @var \DrevOps\Tui\Block\BlockInterface $block */
+      /** @var \DrevOps\PhpTui\Block\BlockInterface $block */
       $panel->in('content')->add($block);
     }
 

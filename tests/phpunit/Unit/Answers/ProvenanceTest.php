@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Answers;
+namespace DrevOps\PhpTui\Tests\Unit\Answers;
 
-use DrevOps\Tui\Answers\Provenance;
+use DrevOps\PhpTui\Answers\Provenance;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -25,7 +25,7 @@ final class ProvenanceTest extends TestCase {
   /**
    * Data provider for testLabel().
    *
-   * @return \Iterator<string,array{\DrevOps\Tui\Answers\Provenance,string}>
+   * @return \Iterator<string,array{\DrevOps\PhpTui\Answers\Provenance,string}>
    *   Every provenance case and its English badge label.
    */
   public static function dataProviderLabel(): \Iterator {

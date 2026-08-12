@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Discovery;
+namespace DrevOps\PhpTui\Discovery;
 
 /**
  * Discovers a list of directory entries, optionally filtered by type.
@@ -11,7 +11,7 @@ namespace DrevOps\Tui\Discovery;
  * its default - while an existing empty directory yields an empty list, a
  * genuine discovery of "no entries".
  *
- * @package DrevOps\Tui\Discovery
+ * @package DrevOps\PhpTui\Discovery
  */
 class Scan extends AbstractDiscover {
 
@@ -20,7 +20,7 @@ class Scan extends AbstractDiscover {
    *
    * @param string $dir
    *   The directory to scan, relative to the project directory.
-   * @param \DrevOps\Tui\Discovery\ScanType $type
+   * @param \DrevOps\PhpTui\Discovery\ScanType $type
    *   The entry type to keep.
    */
   public function __construct(public readonly string $dir, public readonly ScanType $type = ScanType::Any) {

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Terminal;
+namespace DrevOps\PhpTui\Tests\Unit\Terminal;
 
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Terminal\Box;
-use DrevOps\Tui\Theme\Border;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\Box;
+use DrevOps\PhpTui\Theme\Border;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 
 /**
  * Fuzzy-search presentation over a filtered choice field.
@@ -12,7 +12,7 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * Ranks the filtered rows by fuzzy relevance, highlights the matched
  * characters, and draws the typed query as a search line.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 trait SearchCapableTrait {
 
@@ -22,7 +22,7 @@ trait SearchCapableTrait {
    * @param string $needle
    *   The query.
    *
-   * @return list<\DrevOps\Tui\Block\Option>
+   * @return list<\DrevOps\PhpTui\Block\Option>
    *   The matching option rows, most relevant first.
    */
   protected function filterOptions(string $needle): array {
@@ -45,7 +45,7 @@ trait SearchCapableTrait {
   /**
    * The query line: the typed filter followed by the caret.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string

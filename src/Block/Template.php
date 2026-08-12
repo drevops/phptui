@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * A fixed string shape with named `{{placeholder}}` slots to fill in.
@@ -17,7 +17,7 @@ use DrevOps\Tui\Translation\Translator;
  * declared pattern. Filling the slots ({@see assemble()}) and recovering them
  * from a filled string ({@see extract()}) are therefore exact inverses.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final class Template {
 
@@ -53,7 +53,7 @@ final class Template {
    *   The validator `fn (string $value): ?string` of each slot, keyed by slot
    *   name, returning an error message or NULL when the part is valid.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the pattern declares no slot, repeats a name or places two slots
    *   side by side, or when a label or validator names an absent slot.
    */
@@ -364,7 +364,7 @@ final class Template {
   /**
    * Reject a pattern that cannot be filled in or read back unambiguously.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the pattern declares no slot, repeats a name, or places two slots
    *   side by side.
    */
@@ -395,7 +395,7 @@ final class Template {
    * @param string $kind
    *   The kind of configuration, named in the error message.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When a name is not one of the pattern's slots.
    */
   protected function assertDeclared(array $names, string $kind): void {

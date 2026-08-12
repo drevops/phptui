@@ -2,36 +2,36 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Field;
+namespace DrevOps\PhpTui\Tests\Unit\Field;
 
-use DrevOps\Tui\Block\DateBounds;
-use DrevOps\Tui\Block\Field as BlockField;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\NumberBounds;
-use DrevOps\Tui\Block\Template as TemplateModel;
-use DrevOps\Tui\Field\Calendar;
-use DrevOps\Tui\Field\Capability\QueryOptionsCapableInterface;
-use DrevOps\Tui\Field\Confirm;
-use DrevOps\Tui\Field\FieldFactory;
-use DrevOps\Tui\Field\FilePicker;
-use DrevOps\Tui\Field\Number;
-use DrevOps\Tui\Field\Password;
-use DrevOps\Tui\Field\Pause;
-use DrevOps\Tui\Field\Rating;
-use DrevOps\Tui\Field\Reorder;
-use DrevOps\Tui\Field\Search;
-use DrevOps\Tui\Field\Select;
-use DrevOps\Tui\Field\Suggest;
-use DrevOps\Tui\Field\Template;
-use DrevOps\Tui\Field\Text;
-use DrevOps\Tui\Field\Textarea;
-use DrevOps\Tui\Field\Toggle;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Block\DateBounds;
+use DrevOps\PhpTui\Block\Field as BlockField;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\NumberBounds;
+use DrevOps\PhpTui\Block\Template as TemplateModel;
+use DrevOps\PhpTui\Field\Calendar;
+use DrevOps\PhpTui\Field\Capability\QueryOptionsCapableInterface;
+use DrevOps\PhpTui\Field\Confirm;
+use DrevOps\PhpTui\Field\FieldFactory;
+use DrevOps\PhpTui\Field\FilePicker;
+use DrevOps\PhpTui\Field\Number;
+use DrevOps\PhpTui\Field\Password;
+use DrevOps\PhpTui\Field\Pause;
+use DrevOps\PhpTui\Field\Rating;
+use DrevOps\PhpTui\Field\Reorder;
+use DrevOps\PhpTui\Field\Search;
+use DrevOps\PhpTui\Field\Select;
+use DrevOps\PhpTui\Field\Suggest;
+use DrevOps\PhpTui\Field\Template;
+use DrevOps\PhpTui\Field\Text;
+use DrevOps\PhpTui\Field\Textarea;
+use DrevOps\PhpTui\Field\Toggle;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyMapManager;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -48,7 +48,7 @@ final class FieldFactoryTest extends TestCase {
   /**
    * Tests the value each kind of block opens its field on.
    *
-   * @param \DrevOps\Tui\Block\Field $block
+   * @param \DrevOps\PhpTui\Block\Field $block
    *   The block to open.
    * @param mixed $current
    *   The value it is handed.
@@ -63,7 +63,7 @@ final class FieldFactoryTest extends TestCase {
   /**
    * Data provider for testSeedsValueFromCurrent().
    *
-   * @return \Iterator<string, array{\DrevOps\Tui\Block\Field, mixed, mixed}>
+   * @return \Iterator<string, array{\DrevOps\PhpTui\Block\Field, mixed, mixed}>
    *   The block, the value it is handed and the value the field opens on.
    */
   public static function dataProviderSeedsValueFromCurrent(): \Iterator {
@@ -262,7 +262,7 @@ final class FieldFactoryTest extends TestCase {
   /**
    * Tests that a declared placeholder ghosts every field with a buffer.
    *
-   * @param \DrevOps\Tui\Block\FieldType $type
+   * @param \DrevOps\PhpTui\Block\FieldType $type
    *   The kind.
    */
   #[DataProvider('dataProviderPlaceholderReachesEveryCapableField')]
@@ -277,7 +277,7 @@ final class FieldFactoryTest extends TestCase {
   /**
    * Data provider for testPlaceholderReachesEveryCapableField().
    *
-   * @return \Iterator<string, array{\DrevOps\Tui\Block\FieldType}>
+   * @return \Iterator<string, array{\DrevOps\PhpTui\Block\FieldType}>
    *   The kinds that draw a buffer to ghost.
    */
   public static function dataProviderPlaceholderReachesEveryCapableField(): \Iterator {
@@ -295,7 +295,7 @@ final class FieldFactoryTest extends TestCase {
   /**
    * Tests the field a block's kind opens onto.
    *
-   * @param \DrevOps\Tui\Block\Field $block
+   * @param \DrevOps\PhpTui\Block\Field $block
    *   The block to open.
    * @param mixed $current
    *   The value the block holds.
@@ -310,7 +310,7 @@ final class FieldFactoryTest extends TestCase {
   /**
    * Data provider for testOpensBlockByKind().
    *
-   * @return \Iterator<string, array{\DrevOps\Tui\Block\Field, mixed, class-string}>
+   * @return \Iterator<string, array{\DrevOps\PhpTui\Block\Field, mixed, class-string}>
    *   The block, the value it opens on and the field class it builds.
    */
   public static function dataProviderOpensBlockByKind(): \Iterator {
@@ -400,10 +400,10 @@ final class FieldFactoryTest extends TestCase {
   /**
    * A block of the given kind with two options.
    *
-   * @param \DrevOps\Tui\Block\FieldType $type
+   * @param \DrevOps\PhpTui\Block\FieldType $type
    *   The kind.
    *
-   * @return \DrevOps\Tui\Block\Field
+   * @return \DrevOps\PhpTui\Block\Field
    *   The block.
    */
   protected static function blockWithOptions(FieldType $type): BlockField {
@@ -413,7 +413,7 @@ final class FieldFactoryTest extends TestCase {
   /**
    * A template block with a two-slot shape.
    *
-   * @return \DrevOps\Tui\Block\Field
+   * @return \DrevOps\PhpTui\Block\Field
    *   The block.
    */
   protected static function templateBlock(): BlockField {
@@ -423,7 +423,7 @@ final class FieldFactoryTest extends TestCase {
   /**
    * A rating block over a one-to-five scale with one captioned point.
    *
-   * @return \DrevOps\Tui\Block\Field
+   * @return \DrevOps\PhpTui\Block\Field
    *   The block.
    */
   protected static function ratingBlock(): BlockField {

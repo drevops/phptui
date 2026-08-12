@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\Ansi;
 
 /**
  * A single row in a select, search or suggest option list.
@@ -17,7 +17,7 @@ use DrevOps\Tui\Terminal\Ansi;
  * Every row reaches this constructor, whether a field declares it or a loader,
  * a resolver or a query source returns it. Row text is filtered here only.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final readonly class Option {
 
@@ -52,7 +52,7 @@ final readonly class Option {
    * @param string $description
    *   The option's description. Shown for the highlighted option as a secondary
    *   line beneath the choice list, and carried into the machine schema.
-   * @param \DrevOps\Tui\Block\OptionType $kind
+   * @param \DrevOps\PhpTui\Block\OptionType $kind
    *   The row kind.
    * @param bool $disabled
    *   Whether a selectable Option row is shown but cannot be selected.
@@ -92,10 +92,10 @@ final readonly class Option {
    * options) are passed as {@see Option} instances. A label defaults to its
    * value when empty.
    *
-   * @param array<int|string,\DrevOps\Tui\Block\Option|string> $options
+   * @param array<int|string,\DrevOps\PhpTui\Block\Option|string> $options
    *   Either a value => label map, a list of options, or a mix.
    *
-   * @return list<\DrevOps\Tui\Block\Option>
+   * @return list<\DrevOps\PhpTui\Block\Option>
    *   The normalized option list.
    */
   public static function list(array $options): array {
@@ -125,7 +125,7 @@ final readonly class Option {
    * @param mixed $result
    *   The callable's return value.
    *
-   * @return list<\DrevOps\Tui\Block\Option>
+   * @return list<\DrevOps\PhpTui\Block\Option>
    *   The normalized option list; empty when the result was not a map of
    *   strings.
    */
@@ -136,7 +136,7 @@ final readonly class Option {
   /**
    * The values of the selectable rows, in display order.
    *
-   * @param list<\DrevOps\Tui\Block\Option> $options
+   * @param list<\DrevOps\PhpTui\Block\Option> $options
    *   The option rows.
    *
    * @return list<string>

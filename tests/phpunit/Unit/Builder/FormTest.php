@@ -2,32 +2,32 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Builder;
+namespace DrevOps\PhpTui\Tests\Unit\Builder;
 
-use DrevOps\Tui\Block\DateBounds;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\FilePickerMode;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\NumberBounds;
-use DrevOps\Tui\Block\OptionType;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Progress;
-use DrevOps\Tui\Block\RenderMode;
-use DrevOps\Tui\Block\SelectionBounds;
-use DrevOps\Tui\Block\TableSpec;
-use DrevOps\Tui\Block\Template;
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\Block\Weekday;
-use DrevOps\Tui\Builder\FieldBuilder;
-use DrevOps\Tui\Builder\Fixup;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Discovery\Dotenv;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Screen\Layout\GridLayout;
+use DrevOps\PhpTui\Block\DateBounds;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\FilePickerMode;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\NumberBounds;
+use DrevOps\PhpTui\Block\OptionType;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Progress;
+use DrevOps\PhpTui\Block\RenderMode;
+use DrevOps\PhpTui\Block\SelectionBounds;
+use DrevOps\PhpTui\Block\TableSpec;
+use DrevOps\PhpTui\Block\Template;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\Block\Weekday;
+use DrevOps\PhpTui\Builder\FieldBuilder;
+use DrevOps\PhpTui\Builder\Fixup;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Condition\Condition;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\Discovery\Dotenv;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Screen\Layout\GridLayout;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -1297,12 +1297,12 @@ final class FormTest extends TestCase {
   /**
    * The field of a given id, anywhere in the declared tree.
    *
-   * @param \DrevOps\Tui\Block\Panel $root
+   * @param \DrevOps\PhpTui\Block\Panel $root
    *   The panel every declared panel hangs from.
    * @param string $id
    *   The field id.
    *
-   * @return \DrevOps\Tui\Block\Field|null
+   * @return \DrevOps\PhpTui\Block\Field|null
    *   The field, or NULL when the tree holds none of that id.
    */
   protected static function fieldOf(Panel $root, string $id): ?Field {
@@ -1318,12 +1318,12 @@ final class FormTest extends TestCase {
   /**
    * The markup block of a given id, anywhere in the declared tree.
    *
-   * @param \DrevOps\Tui\Block\Panel $root
+   * @param \DrevOps\PhpTui\Block\Panel $root
    *   The panel every declared panel hangs from.
    * @param string $id
    *   The block id.
    *
-   * @return \DrevOps\Tui\Block\Markup|null
+   * @return \DrevOps\PhpTui\Block\Markup|null
    *   The block, or NULL when the tree holds none of that id.
    */
   protected static function markupOf(Panel $root, string $id): ?Markup {

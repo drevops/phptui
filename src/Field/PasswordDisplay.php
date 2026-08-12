@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
 /**
  * How a password field renders its buffer while editing.
  *
  * The stored value is never affected; this only controls the live view.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 enum PasswordDisplay {
 

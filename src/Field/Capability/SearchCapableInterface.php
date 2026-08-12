@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 
 /**
  * A field that presents its query as a search: ranked rows, highlighted hits.
@@ -12,7 +12,7 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * {@see SearchCapableTrait} carries the default implementation for the choice
  * fields.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 interface SearchCapableInterface {
 
@@ -30,7 +30,7 @@ interface SearchCapableInterface {
   /**
    * The query line: the typed query followed by the caret.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string

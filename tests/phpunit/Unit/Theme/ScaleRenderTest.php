@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Theme;
+namespace DrevOps\PhpTui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Testing\TuiTester;
-use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Testing\TuiTester;
+use DrevOps\PhpTui\Tests\Traits\BuildsThemesTrait;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\Mode;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -117,7 +117,7 @@ final class ScaleRenderTest extends TestCase {
   /**
    * A one-field form whose rating sits on a captioned point.
    *
-   * @return \DrevOps\Tui\Builder\Form
+   * @return \DrevOps\PhpTui\Builder\Form
    *   The form.
    */
   protected function ratingForm(): Form {

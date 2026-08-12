@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Schema;
+namespace DrevOps\PhpTui\Tests\Unit\Schema;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Schema\AgentHelp;
-use DrevOps\Tui\Screen\Layout\PanelLayout;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Condition\Condition;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Schema\AgentHelp;
+use DrevOps\PhpTui\Screen\Layout\PanelLayout;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -264,7 +264,7 @@ final class AgentHelpTest extends TestCase {
   /**
    * Data provider for testResolvesDefault().
    *
-   * @return \Iterator<string, array{\Closure, \DrevOps\Tui\Handler\Context, string[], string[]}>
+   * @return \Iterator<string, array{\Closure, \DrevOps\PhpTui\Handler\Context, string[], string[]}>
    *   A panel declaration and the context it resolves against, then the
    *   fragments the help must carry and the ones it must not.
    */

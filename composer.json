@@ -1,5 +1,5 @@
 {
-    "name": "drevops/tui",
+    "name": "drevops/phptui",
     "description": "Provides terminal UI form-building functionality.",
     "license": "GPL-2.0-or-later",
     "type": "library",
@@ -13,8 +13,8 @@
     ],
     "homepage": "https://phptui.dev/",
     "support": {
-        "issues": "https://github.com/drevops/tui/issues",
-        "source": "https://github.com/drevops/tui"
+        "issues": "https://github.com/drevops/phptui/issues",
+        "source": "https://github.com/drevops/phptui"
     },
     "require": {
         "php": ">=8.3",
@@ -39,12 +39,12 @@
     "prefer-stable": true,
     "autoload": {
         "psr-4": {
-            "DrevOps\\Tui\\": "src/"
+            "DrevOps\\PhpTui\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "DrevOps\\Tui\\Tests\\": "tests/phpunit"
+            "DrevOps\\PhpTui\\Tests\\": "tests/phpunit"
         }
     },
     "config": {

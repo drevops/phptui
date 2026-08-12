@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Answers;
+namespace DrevOps\PhpTui\Answers;
 
-use DrevOps\Tui\Block\FieldType;
+use DrevOps\PhpTui\Block\FieldType;
 
 /**
  * A single collected answer with a snapshot of the question it answers.
@@ -13,7 +13,7 @@ use DrevOps\Tui\Block\FieldType;
  * consumers can present or process an answer set without holding the form
  * configuration.
  *
- * @package DrevOps\Tui\Answers
+ * @package DrevOps\PhpTui\Answers
  */
 final readonly class Answer {
 
@@ -24,11 +24,11 @@ final readonly class Answer {
    *   The question id.
    * @param mixed $value
    *   The answer value.
-   * @param \DrevOps\Tui\Answers\Provenance $provenance
+   * @param \DrevOps\PhpTui\Answers\Provenance $provenance
    *   How the value came to be.
    * @param string $label
    *   The question's human-readable label.
-   * @param \DrevOps\Tui\Block\FieldType $type
+   * @param \DrevOps\PhpTui\Block\FieldType $type
    *   The question kind.
    * @param list<string> $panels
    *   The titles of the panels the question lives under, outermost first.

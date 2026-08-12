@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Block\DateBounds;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Weekday;
-use DrevOps\Tui\Field\Capability\StepCapableInterface;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Input\ScopedKeyMap;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Block\DateBounds;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Weekday;
+use DrevOps\PhpTui\Field\Capability\StepCapableInterface;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Input\ScopedKeyMap;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * A navigable month calendar returning a normalized ISO `Y-m-d` string.
@@ -30,7 +30,7 @@ use DrevOps\Tui\Utils\Strings;
  * never on an out-of-range day; days outside the range stay visible but
  * dimmed.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 class Calendar extends AbstractField implements StepCapableInterface {
 
@@ -59,7 +59,7 @@ class Calendar extends AbstractField implements StepCapableInterface {
    *
    * @param string $default
    *   The initial date as an ISO `Y-m-d` string; empty opens on today.
-   * @param \DrevOps\Tui\Block\DateBounds|null $bounds
+   * @param \DrevOps\PhpTui\Block\DateBounds|null $bounds
    *   Optional min/max range and week-start day; NULL for an open range that
    *   starts the week on Monday.
    */
@@ -105,9 +105,9 @@ class Calendar extends AbstractField implements StepCapableInterface {
    * and month-edge jumps have no action of their own, so they match fixed
    * keys.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key to interpret.
-   * @param \DrevOps\Tui\Input\ScopedKeyMap $keys
+   * @param \DrevOps\PhpTui\Input\ScopedKeyMap $keys
    *   The resolved bindings for this field's scope.
    *
    * @return \DateTimeImmutable|null
@@ -190,7 +190,7 @@ class Calendar extends AbstractField implements StepCapableInterface {
   /**
    * The centered "Month YYYY" heading over the calendar grid.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string
@@ -206,7 +206,7 @@ class Calendar extends AbstractField implements StepCapableInterface {
   /**
    * The weekday heading row, ordered from the configured week-start day.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string
@@ -221,7 +221,7 @@ class Calendar extends AbstractField implements StepCapableInterface {
   /**
    * The calendar grid rows for the visible month.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return list<string>
@@ -251,7 +251,7 @@ class Calendar extends AbstractField implements StepCapableInterface {
    * The cursor cell uses literal brackets so it stays distinguishable even
    * with colour off.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    * @param \DateTimeImmutable $date
    *   The cell's date.

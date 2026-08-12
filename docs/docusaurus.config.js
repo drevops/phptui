@@ -16,8 +16,8 @@ const oneLight = {...prismThemes.oneLight, styles: [...prismThemes.oneLight.styl
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   // The official slogan: it suffixes every page's <title> and stands alone as
-  // the homepage title; the navbar keeps its own short 'TUI' brand.
-  title: 'TUI - Terminal user interfaces for PHP',
+  // the homepage title; the navbar carries the logo instead of a text brand.
+  title: 'PHPTUI - Terminal user interfaces for PHP',
   tagline: 'Terminal user interfaces for PHP',
   favicon: 'img/logo.svg',
 
@@ -29,14 +29,14 @@ const config = {
 
   // GitHub pages deployment config.
   organizationName: 'drevops',
-  projectName: 'tui',
+  projectName: 'phptui',
 
   onBrokenLinks: 'throw',
 
   // Serve the generated widget SVGs (docs/assets) and the architecture diagrams
   // (docs/architecture) as static files alongside docs/static, so the pages can
   // reference them in place - without relocating the asset-generation pipeline
-  // or the diagram sources maintained by the render-tui-diagrams skill.
+  // or the diagram sources maintained by the render-phptui-diagrams skill.
   staticDirectories: ['static', 'assets', 'architecture'],
 
   // Even if you don't use internationalization, you can use this field to set
@@ -56,7 +56,7 @@ const config = {
           routeBasePath: '/',
           sidebarPath: './sidebars.js',
           path: 'content',
-          editUrl: 'https://github.com/drevops/tui/tree/main/docs/',
+          editUrl: 'https://github.com/drevops/phptui/tree/main/docs/',
         },
         blog: false,
         theme: {
@@ -115,12 +115,12 @@ const config = {
       // by docs/util/render-social-card.php as part of the asset pipeline.
       image: 'social-card.png',
       metadata: [
-        {name: 'keywords', content: 'php, tui, terminal user interface, terminal forms, cli, console, prompts, interactive forms'},
+        {name: 'keywords', content: 'php, phptui, tui, terminal user interface, terminal forms, cli, console, prompts, interactive forms'},
       ],
       navbar: {
         title: '',
         logo: {
-          alt: 'TUI Logo',
+          alt: 'PHPTUI Logo',
           src: 'img/logo.svg',
         },
         items: [
@@ -131,12 +131,12 @@ const config = {
           },
           {
             label: 'Download',
-            href: 'https://github.com/drevops/tui/releases/latest',
+            href: 'https://github.com/drevops/phptui/releases/latest',
             position: 'right',
             title: 'Download the latest version',
           },
           {
-            href: 'https://github.com/drevops/tui',
+            href: 'https://github.com/drevops/phptui',
             label: 'GitHub',
             position: 'right',
             title: 'View source on GitHub',
@@ -152,7 +152,7 @@ const config = {
         links: [
           {
             label: 'GitHub',
-            href: 'https://github.com/drevops/tui',
+            href: 'https://github.com/drevops/phptui',
           },
         ],
         copyright: `Version: ${process.env.RELEASE_VERSION || 'development'} <br/> Copyright ©${new Date().getFullYear()} DrevOps. Built with Docusaurus.`,

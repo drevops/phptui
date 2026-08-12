@@ -2,29 +2,29 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Translation;
+namespace DrevOps\PhpTui\Tests\Unit\Translation;
 
-use DrevOps\Tui\Answers\Answers;
-use DrevOps\Tui\Answers\Provenance;
-use DrevOps\Tui\Answers\SummaryFormatter;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Legend;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Field\FieldFactory;
-use DrevOps\Tui\Field\FilePicker;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Schema\AgentHelp;
-use DrevOps\Tui\Schema\SchemaValidator;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Testing\ScreenTester;
-use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Answers\Answers;
+use DrevOps\PhpTui\Answers\Provenance;
+use DrevOps\PhpTui\Answers\SummaryFormatter;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Legend;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Field\FieldFactory;
+use DrevOps\PhpTui\Field\FilePicker;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyMapManager;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Schema\AgentHelp;
+use DrevOps\PhpTui\Schema\SchemaValidator;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Testing\ScreenTester;
+use DrevOps\PhpTui\Tests\Traits\ResetsTranslatorTrait;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -59,7 +59,7 @@ final class TranslationRenderTest extends TestCase {
   /**
    * The declared tree every scenario is driven against.
    *
-   * @return \DrevOps\Tui\Block\Panel
+   * @return \DrevOps\PhpTui\Block\Panel
    *   The panel every declared panel hangs from.
    */
   protected function form(): Panel {
@@ -143,7 +143,7 @@ final class TranslationRenderTest extends TestCase {
 
     // A headless validation error and the agent help both localize.
     $this->assertContains('Falta la pregunta obligatoria "name".', (new SchemaValidator($form))->validate([]));
-    $this->assertStringContainsString('Nombre del sitio', (new AgentHelp($form, envPrefix: 'TUI_'))->generate());
+    $this->assertStringContainsString('Nombre del sitio', (new AgentHelp($form, envPrefix: 'PHPTUI_'))->generate());
   }
 
   public function testUkrainianLegendNamesEveryKeyItAdvertises(): void {
@@ -312,7 +312,7 @@ final class TranslationRenderTest extends TestCase {
   /**
    * The tree the legend scenarios are driven against.
    *
-   * @return \DrevOps\Tui\Block\Panel
+   * @return \DrevOps\PhpTui\Block\Panel
    *   The panel the declared panel hangs from.
    */
   protected function weeklyBox(): Panel {
@@ -327,7 +327,7 @@ final class TranslationRenderTest extends TestCase {
   /**
    * The keystrokes that walk a session past each legend it draws.
    *
-   * @return list<\DrevOps\Tui\Input\Key>
+   * @return list<\DrevOps\PhpTui\Input\Key>
    *   The keystrokes: into the panel, into the list, back out, onto the row
    *   that has help.
    */

@@ -12,7 +12,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 Behavior beyond a static value is declared on the field itself: a dynamic default, validation and a value transform, each a closure right in the form:
 
 ```php
-use DrevOps\Tui\Handler\Context;
+use DrevOps\PhpTui\Handler\Context;
 
 $p->text('name', 'Produce name')
   ->default(fn(Context $c): string => basename($c->directory))
@@ -32,7 +32,7 @@ Reusable validators and transformers live as public static methods on a class in
 
 The TUI only collects. It presents answers and never applies them - **writing files, renaming directories, acting on the answers is your job**. A consumer that processes answers defines its own processor interface, keeping the form for collection and the processors for side effects; one class per field can carry both its `process()` and the reusable static behavior. (This is exactly what a consumer CLI does.)
 
-Both declaration styles are runnable in [`playground/06-field-behaviour-*`](https://github.com/drevops/tui/tree/main/playground).
+Both declaration styles are runnable in [`playground/06-field-behaviour-*`](https://github.com/drevops/phptui/tree/main/playground).
 
 ## Guidance texts
 
@@ -84,7 +84,7 @@ Emptying the name shows the label-derived message in the editor; leaving the bas
 A choice field's list does not have to be fixed. Hand `->options()` a callback that asks for the run context, and one field's choices narrow by another's answer:
 
 ```php
-use DrevOps\Tui\Handler\Context;
+use DrevOps\PhpTui\Handler\Context;
 
 $catalog = [
   'fruit' => ['apple' => 'Apple', 'banana' => 'Banana', 'cherry' => 'Cherry'],
@@ -116,7 +116,7 @@ A choice the narrowed list no longer holds does not survive in the answers: it i
 
 Keep the resolver cheap. It runs for the whole form on every settle, not once per panel, and it is called again whenever the answers change - though a settle that changes nothing costs nothing, since the list already answers those answers. For a list that is expensive to build, drop the context parameter and it loads [once, on panel entry](/progress#inside-the-form); for one that lives behind a search API, [`->optionsFrom()`](/progress#options-from-a-query) follows the query instead.
 
-Runnable in [`playground/19-dynamic-options.php`](https://github.com/drevops/tui/blob/main/playground/19-dynamic-options.php).
+Runnable in [`playground/19-dynamic-options.php`](https://github.com/drevops/phptui/blob/main/playground/19-dynamic-options.php).
 
 ## Discovery
 
@@ -135,4 +135,4 @@ Discovered values are badged in the panels and the summary alike, and explicit i
   <ThemedImage sources={{light: useBaseUrl('/discovery-light-static.svg'), dark: useBaseUrl('/discovery-dark-static.svg')}} alt="Discovery summary with provenance badges" width="100%" />
 </p>
 
-Every rule type runs against a bundled sample project in [`playground/07-discovery.php`](https://github.com/drevops/tui/blob/main/playground/07-discovery.php).
+Every rule type runs against a bundled sample project in [`playground/07-discovery.php`](https://github.com/drevops/phptui/blob/main/playground/07-discovery.php).

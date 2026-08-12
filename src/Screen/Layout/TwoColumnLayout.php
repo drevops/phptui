@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen\Layout;
+namespace DrevOps\PhpTui\Screen\Layout;
 
-use DrevOps\Tui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Axis;
 
 /**
  * Two regions side by side, sharing the width evenly.
  *
- * @package DrevOps\Tui\Screen\Layout
+ * @package DrevOps\PhpTui\Screen\Layout
  */
 final class TwoColumnLayout extends AbstractLayout {
 

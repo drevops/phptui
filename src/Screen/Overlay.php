@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\PhpTui\Screen;
 
-use DrevOps\Tui\Theme\HAlign;
-use DrevOps\Tui\Theme\VAlign;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Theme\HAlign;
+use DrevOps\PhpTui\Theme\VAlign;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * Pure line-compositor: splice a box of lines over a backdrop, centered.
@@ -19,7 +19,7 @@ use DrevOps\Tui\Utils\Strings;
  * verbatim. A caller styles the exposed backdrop (typically dimming it) through
  * the supplied callback.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\PhpTui\Screen
  */
 final class Overlay {
 
@@ -53,9 +53,9 @@ final class Overlay {
    *   The box's width in columns.
    * @param int $box_height
    *   The box's height in rows.
-   * @param \DrevOps\Tui\Theme\HAlign $halign
+   * @param \DrevOps\PhpTui\Theme\HAlign $halign
    *   The horizontal alignment of the box within the area.
-   * @param \DrevOps\Tui\Theme\VAlign $valign
+   * @param \DrevOps\PhpTui\Theme\VAlign $valign
    *   The vertical alignment of the box within the area.
    *
    * @return array{int,int}

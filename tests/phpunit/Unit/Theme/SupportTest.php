@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Theme;
+namespace DrevOps\PhpTui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Tests\Fixtures\Theme\CapableTheme;
-use DrevOps\Tui\Tests\Fixtures\Theme\FloorTheme;
-use DrevOps\Tui\Theme\Capability\ColorSchemeCapableInterface;
-use DrevOps\Tui\Theme\Capability\ColorSchemeCapableTrait;
-use DrevOps\Tui\Theme\Capability\UnicodeCapableInterface;
-use DrevOps\Tui\Theme\Capability\UnicodeCapableTrait;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\Mode;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\CapableTheme;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\FloorTheme;
+use DrevOps\PhpTui\Theme\Capability\ColorSchemeCapableInterface;
+use DrevOps\PhpTui\Theme\Capability\ColorSchemeCapableTrait;
+use DrevOps\PhpTui\Theme\Capability\UnicodeCapableInterface;
+use DrevOps\PhpTui\Theme\Capability\UnicodeCapableTrait;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\Mode;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\Group;

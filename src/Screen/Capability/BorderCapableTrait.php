@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen\Capability;
+namespace DrevOps\PhpTui\Screen\Capability;
 
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\BorderSide;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\BorderSide;
 
 /**
  * The declaration behind {@see BorderCapableInterface}.
  *
- * @package DrevOps\Tui\Screen\Capability
+ * @package DrevOps\PhpTui\Screen\Capability
  */
 trait BorderCapableTrait {
 

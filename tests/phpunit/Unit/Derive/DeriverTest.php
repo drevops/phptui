@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Derive;
+namespace DrevOps\PhpTui\Tests\Unit\Derive;
 
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Derive\Deriver;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\Derive\Deriver;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;

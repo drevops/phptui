@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
 /**
  * The submit/cancel action pair that closes a form or a modal.
@@ -12,7 +12,7 @@ namespace DrevOps\Tui\Block;
  * closes the dialog. The labels are configurable; a dialog always shows its
  * pair, because it is the only way out of one, while a form may hide it.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final readonly class Buttons {
 

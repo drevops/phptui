@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
 /**
  * A field that can toggle the display of concealed content.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Field\Capability;
  * Revealing only changes what is drawn - a masked value, hidden entries -
  * never the collected value itself.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 interface RevealCapableInterface {
 

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Terminal;
+namespace DrevOps\PhpTui\Tests\Unit\Terminal;
 
-use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\Ansi;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

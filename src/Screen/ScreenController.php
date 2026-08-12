@@ -2,49 +2,49 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\PhpTui\Screen;
 
-use DrevOps\Tui\Answers\Answers;
-use DrevOps\Tui\Answers\Provenance;
-use DrevOps\Tui\Block\Actions;
-use DrevOps\Tui\Block\BlockInterface;
-use DrevOps\Tui\Block\Breadcrumb;
-use DrevOps\Tui\Block\Capability\DependCapableInterface;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\Legend;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\Mode;
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionType;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Progress;
-use DrevOps\Tui\Block\RenderMode;
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\CancelException;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Field\Capability\ExternalEditCapableInterface;
-use DrevOps\Tui\Field\Capability\QueryOptionsCapableInterface;
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMap;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Input\KeyParser;
-use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
-use DrevOps\Tui\Primitive\ProgressReporter;
-use DrevOps\Tui\Primitive\Status;
-use DrevOps\Tui\Screen\Layout\DefaultLayout;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Terminal\Box;
-use DrevOps\Tui\Terminal\Terminal;
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\Capability\DimCapableInterface;
-use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Answers\Answers;
+use DrevOps\PhpTui\Answers\Provenance;
+use DrevOps\PhpTui\Block\Actions;
+use DrevOps\PhpTui\Block\BlockInterface;
+use DrevOps\PhpTui\Block\Breadcrumb;
+use DrevOps\PhpTui\Block\Capability\DependCapableInterface;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\Legend;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\Mode;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Block\OptionType;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Progress;
+use DrevOps\PhpTui\Block\RenderMode;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\CancelException;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\Field\Capability\ExternalEditCapableInterface;
+use DrevOps\PhpTui\Field\Capability\QueryOptionsCapableInterface;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyMap;
+use DrevOps\PhpTui\Input\KeyMapManager;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Input\KeyParser;
+use DrevOps\PhpTui\InterruptException;
+use DrevOps\PhpTui\Primitive\Element\PrimitiveElementsInterface;
+use DrevOps\PhpTui\Primitive\ProgressReporter;
+use DrevOps\PhpTui\Primitive\Status;
+use DrevOps\PhpTui\Screen\Layout\DefaultLayout;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\Box;
+use DrevOps\PhpTui\Terminal\Terminal;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\Capability\DimCapableInterface;
+use DrevOps\PhpTui\Theme\Capability\OccupyCapableInterface;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Drives one screen through a terminal session.
@@ -75,11 +75,12 @@ use DrevOps\Tui\Translation\Translator;
  * its condition holds, exactly as it does with no screen at all.
  *
  * How the session ends is the whole of what a caller sees: finishing it hands
- * back the answers, abandoning it raises {@see \DrevOps\Tui\CancelException},
- * and the interrupt key raises {@see \DrevOps\Tui\InterruptException} - so
- * partial answers are never mistaken for a completed form.
+ * back the answers, abandoning it raises
+ * {@see \DrevOps\PhpTui\CancelException}, and the interrupt key raises
+ * {@see \DrevOps\PhpTui\InterruptException} - so partial answers are never
+ * mistaken for a completed form.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\PhpTui\Screen
  */
 class ScreenController {
 
@@ -181,7 +182,7 @@ class ScreenController {
   /**
    * How each answer came to be, keyed by field id.
    *
-   * @var array<string,\DrevOps\Tui\Answers\Provenance>
+   * @var array<string,\DrevOps\PhpTui\Answers\Provenance>
    */
   protected array $provenance = [];
 
@@ -195,7 +196,7 @@ class ScreenController {
   /**
    * The dialogs standing open, with the answers each was opened over.
    *
-   * @var list<array{panel:\DrevOps\Tui\Block\Panel,screen:\DrevOps\Tui\Screen\Screen,values:array<string,mixed>,provenance:array<string,\DrevOps\Tui\Answers\Provenance>}>
+   * @var list<array{panel:\DrevOps\PhpTui\Block\Panel,screen:\DrevOps\PhpTui\Screen\Screen,values:array<string,mixed>,provenance:array<string,\DrevOps\PhpTui\Answers\Provenance>}>
    */
   protected array $dialogs = [];
 
@@ -227,22 +228,22 @@ class ScreenController {
   /**
    * Construct a controller.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel the screen starts in: the tree a form declares.
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme every block draws through.
    * @param array<string,mixed> $supplied
    *   Values supplied for its fields, keyed by field id.
-   * @param \DrevOps\Tui\Input\KeyMap|null $keys
+   * @param \DrevOps\PhpTui\Input\KeyMap|null $keys
    *   The bindings the whole screen answers to, or NULL for the default preset.
-   * @param \DrevOps\Tui\Screen\Collector|null $collector
+   * @param \DrevOps\PhpTui\Screen\Collector|null $collector
    *   What resolves the answers the form opens on, or NULL for one that reuses
    *   no behaviour and applies no rules once they have settled.
-   * @param \DrevOps\Tui\Handler\Context $context
+   * @param \DrevOps\PhpTui\Handler\Context $context
    *   The run this session belongs to.
    * @param string $layout
    *   The layout the screen is arranged by.
-   * @param \DrevOps\Tui\Theme\Border $border
+   * @param \DrevOps\PhpTui\Theme\Border $border
    *   The frame drawn around every region at once.
    * @param bool $clearOnExit
    *   Whether the screen is cleared as the session ends.
@@ -253,13 +254,13 @@ class ScreenController {
    *   onto the first frame.
    * @param string $version
    *   The version shown under that banner.
-   * @param \DrevOps\Tui\Screen\ExternalEditor|null $external_editor
+   * @param \DrevOps\PhpTui\Screen\ExternalEditor|null $external_editor
    *   What hands a passage of text to an editor of the reader's own, or NULL
    *   for one that launches whatever the environment names.
-   * @param list<array{region:string,block:\DrevOps\Tui\Block\BlockInterface,tail:bool}> $placements
+   * @param list<array{region:string,block:\DrevOps\PhpTui\Block\BlockInterface,tail:bool}> $placements
    *   Blocks of the consumer's own, each named against the region it goes in
    *   and the end of that region's run it packs from.
-   * @param array<string,\DrevOps\Tui\Screen\Axis> $flows
+   * @param array<string,\DrevOps\PhpTui\Screen\Axis> $flows
    *   The direction a region runs its blocks, keyed by region name, where the
    *   consumer states one other than the layout's.
    */
@@ -322,15 +323,15 @@ class ScreenController {
   /**
    * Run the session against a terminal until the form ends.
    *
-   * @param \DrevOps\Tui\Terminal\Terminal $terminal
+   * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
    *   The terminal.
    *
-   * @return \DrevOps\Tui\Answers\Answers
+   * @return \DrevOps\PhpTui\Answers\Answers
    *   The collected answers.
    *
-   * @throws \DrevOps\Tui\InterruptException
+   * @throws \DrevOps\PhpTui\InterruptException
    *   When the session was aborted with the interrupt key.
-   * @throws \DrevOps\Tui\CancelException
+   * @throws \DrevOps\PhpTui\CancelException
    *   When the form was abandoned through its cancel button.
    */
   public function run(Terminal $terminal): Answers {
@@ -406,7 +407,7 @@ class ScreenController {
   /**
    * Send one key where it belongs.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key.
    */
   public function handle(Key $key): void {
@@ -465,7 +466,7 @@ class ScreenController {
    * intact if the condition is satisfied again - but contributes no answer,
    * which is what a collection with no screen at all also hands back.
    *
-   * @return \DrevOps\Tui\Answers\Answers
+   * @return \DrevOps\PhpTui\Answers\Answers
    *   The answers, each describing the question it answers.
    */
   public function answers(): Answers {
@@ -530,7 +531,7 @@ class ScreenController {
    * because the anchor places content on a screen the frame fits, which this
    * one is not.
    *
-   * @param \DrevOps\Tui\Terminal\Terminal $terminal
+   * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
    *   The terminal.
    *
    * @return string
@@ -578,7 +579,7 @@ class ScreenController {
    *
    * @param string $frame
    *   The drawn frame.
-   * @param \DrevOps\Tui\Terminal\Terminal $terminal
+   * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
    *   The terminal.
    *
    * @return string
@@ -609,9 +610,9 @@ class ScreenController {
   /**
    * Show what precedes the form, and wait for the key that dismisses it.
    *
-   * @param \DrevOps\Tui\Terminal\Terminal $terminal
+   * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
    *   The terminal.
-   * @param \DrevOps\Tui\Input\KeyParser $parser
+   * @param \DrevOps\PhpTui\Input\KeyParser $parser
    *   What reads keys out of the bytes the terminal delivers.
    */
   protected function welcome(Terminal $terminal, KeyParser $parser): void {
@@ -654,7 +655,7 @@ class ScreenController {
   /**
    * The frame as it stands: the furniture rewritten, then drawn outward.
    *
-   * @param \DrevOps\Tui\Terminal\Terminal $terminal
+   * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
    *   The terminal the frame is sized against.
    *
    * @return string
@@ -715,7 +716,7 @@ class ScreenController {
   /**
    * The rows a frame is laid out to.
    *
-   * @param \DrevOps\Tui\Terminal\Terminal $terminal
+   * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
    *   The terminal.
    *
    * @return int
@@ -750,7 +751,7 @@ class ScreenController {
   /**
    * Do what the wheel does, if that is what a key is.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key.
    *
    * @return bool
@@ -806,7 +807,7 @@ class ScreenController {
    * @param int $rows
    *   The terminal rows.
    *
-   * @return \Generator<int,array{\DrevOps\Tui\Screen\Capability\ScrollCapableInterface,int,int,int}>
+   * @return \Generator<int,array{\DrevOps\PhpTui\Screen\Capability\ScrollCapableInterface,int,int,int}>
    *   The surface, the rows its contents come to, the row the cursor is on,
    *   and the rows it was given.
    */
@@ -876,9 +877,9 @@ class ScreenController {
   /**
    * Do what a key does on the buttons that end the form.
    *
-   * @param \DrevOps\Tui\Block\Actions $actions
+   * @param \DrevOps\PhpTui\Block\Actions $actions
    *   The buttons.
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key.
    *
    * @return bool
@@ -912,7 +913,7 @@ class ScreenController {
   /**
    * Whether a key selects whatever the cursor is on.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key.
    *
    * @return bool
@@ -929,7 +930,7 @@ class ScreenController {
    * is what leaves the key typing itself into an open field: the letter that
    * leaves a panel is a letter while something is collecting one.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key.
    *
    * @return bool
@@ -959,7 +960,7 @@ class ScreenController {
   /**
    * Move the cursor along the buttons, stopping at the ends.
    *
-   * @param \DrevOps\Tui\Block\Actions $actions
+   * @param \DrevOps\PhpTui\Block\Actions $actions
    *   The buttons.
    * @param int $delta
    *   The buttons to move by.
@@ -977,7 +978,7 @@ class ScreenController {
   /**
    * End the form, close the dialog, or say why neither can happen yet.
    *
-   * @param \DrevOps\Tui\Block\Actions $actions
+   * @param \DrevOps\PhpTui\Block\Actions $actions
    *   The buttons.
    */
   protected function press(Actions $actions): void {
@@ -1033,7 +1034,7 @@ class ScreenController {
   /**
    * Run a progress block's work, drawing its indicator as it advances.
    *
-   * @param \DrevOps\Tui\Block\Progress $progress
+   * @param \DrevOps\PhpTui\Block\Progress $progress
    *   The block.
    */
   protected function work(Progress $progress): void {
@@ -1112,9 +1113,9 @@ class ScreenController {
    * reader's when the next no longer offers it, and the row it stands for is
    * still there to measure it against.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
-   * @param list<\DrevOps\Tui\Block\Option> $rows
+   * @param list<\DrevOps\PhpTui\Block\Option> $rows
    *   What the latest query answered.
    *
    * @return array<string,string>
@@ -1139,7 +1140,7 @@ class ScreenController {
    * the terminal to it and taking it back afterwards, which is the session's to
    * do and nothing a block could reach.
    *
-   * @param \DrevOps\Tui\Block\Field|null $open
+   * @param \DrevOps\PhpTui\Block\Field|null $open
    *   The field the key reached, if it reached one that was open.
    */
   protected function handoff(?Field $open): void {
@@ -1167,7 +1168,7 @@ class ScreenController {
    * Taking an answer is what stamps it, whether or not the answer changed: a
    * reader who opened a row and accepted what was there has answered it.
    *
-   * @param \DrevOps\Tui\Block\Field|null $open
+   * @param \DrevOps\PhpTui\Block\Field|null $open
    *   The field the key reached, if it reached one that was open.
    */
   protected function stamp(?Field $open): void {
@@ -1262,7 +1263,7 @@ class ScreenController {
   /**
    * The dialog standing open, if one is.
    *
-   * @return \DrevOps\Tui\Block\Panel|null
+   * @return \DrevOps\PhpTui\Block\Panel|null
    *   The panel it was opened from, or NULL when no dialog is open.
    */
   protected function standing(): ?Panel {
@@ -1272,7 +1273,7 @@ class ScreenController {
   /**
    * The screen the dialog standing open is drawn on, if one is.
    *
-   * @return \DrevOps\Tui\Screen\Screen|null
+   * @return \DrevOps\PhpTui\Screen\Screen|null
    *   The screen, or NULL when no dialog is open.
    */
   protected function staging(): ?Screen {
@@ -1440,7 +1441,7 @@ class ScreenController {
    * are added here: leaving is about the session, and help is a fact about the
    * question rather than about whatever is collecting the answer.
    *
-   * @return list<\DrevOps\Tui\Input\Hint>
+   * @return list<\DrevOps\PhpTui\Input\Hint>
    *   The fragments.
    */
   protected function hints(): array {
@@ -1465,7 +1466,7 @@ class ScreenController {
   /**
    * The field that is open, if one is.
    *
-   * @return \DrevOps\Tui\Block\Field|null
+   * @return \DrevOps\PhpTui\Block\Field|null
    *   The field, or NULL when every row is settled.
    */
   protected function editing(): ?Field {
@@ -1477,7 +1478,7 @@ class ScreenController {
   /**
    * The field that has the whole frame to itself, if one has.
    *
-   * @return \DrevOps\Tui\Block\Field|null
+   * @return \DrevOps\PhpTui\Block\Field|null
    *   The field, or NULL when the panel is what is drawn.
    */
   protected function alone(): ?Field {
@@ -1497,10 +1498,10 @@ class ScreenController {
    * draws, so a field with the frame to itself is the same session with one row
    * in front of the reader instead of a list.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    *
-   * @return \DrevOps\Tui\Screen\Screen
+   * @return \DrevOps\PhpTui\Screen\Screen
    *   The screen.
    */
   protected function stage(Field $field): Screen {
@@ -1518,7 +1519,7 @@ class ScreenController {
   /**
    * Draw the open dialog over the screen it was opened from.
    *
-   * @param \DrevOps\Tui\Screen\Screen $staging
+   * @param \DrevOps\PhpTui\Screen\Screen $staging
    *   The screen the dialog is drawn on.
    * @param int $rows
    *   The terminal rows.
@@ -1553,7 +1554,7 @@ class ScreenController {
   /**
    * Draw the dialog itself: its title over what it holds, inside a border.
    *
-   * @param \DrevOps\Tui\Screen\Screen $staging
+   * @param \DrevOps\PhpTui\Screen\Screen $staging
    *   The screen the dialog is drawn on.
    * @param int $rows
    *   The terminal rows.
@@ -1578,7 +1579,7 @@ class ScreenController {
   /**
    * The rows what a dialog holds comes to, its way out included.
    *
-   * @param \DrevOps\Tui\Screen\Screen $staging
+   * @param \DrevOps\PhpTui\Screen\Screen $staging
    *   The screen the dialog is drawn on.
    *
    * @return int
@@ -1598,10 +1599,10 @@ class ScreenController {
    * panel's, so the buttons stand beside the panel here instead of being
    * written into what the form declared.
    *
-   * @param \DrevOps\Tui\Block\Panel $modal
+   * @param \DrevOps\PhpTui\Block\Panel $modal
    *   The panel the dialog is.
    *
-   * @return \DrevOps\Tui\Screen\Screen
+   * @return \DrevOps\PhpTui\Screen\Screen
    *   The screen.
    */
   protected function dress(Panel $modal): Screen {
@@ -1651,7 +1652,7 @@ class ScreenController {
   /**
    * The theme, when it says how much of the terminal it takes.
    *
-   * @return \DrevOps\Tui\Theme\Capability\OccupyCapableInterface|null
+   * @return \DrevOps\PhpTui\Theme\Capability\OccupyCapableInterface|null
    *   The theme, or NULL when it says nothing about the terminal at all.
    */
   protected function occupancy(): ?OccupyCapableInterface {
@@ -1661,7 +1662,7 @@ class ScreenController {
   /**
    * The theme, narrowed to the finished pieces the session draws around a form.
    *
-   * @return \DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface
+   * @return \DrevOps\PhpTui\Primitive\Element\PrimitiveElementsInterface
    *   The theme, able to draw them.
    *
    * @throws \InvalidArgumentException
@@ -1684,7 +1685,7 @@ class ScreenController {
    * answers would trip and clear again as they grew, which is a screen nobody
    * can work in rather than a guard.
    *
-   * @param \DrevOps\Tui\Theme\Capability\OccupyCapableInterface $occupancy
+   * @param \DrevOps\PhpTui\Theme\Capability\OccupyCapableInterface $occupancy
    *   What the theme says about the terminal it takes.
    *
    * @return int
@@ -1707,7 +1708,7 @@ class ScreenController {
   /**
    * The shortest terminal the frame can be read in.
    *
-   * @param \DrevOps\Tui\Theme\Capability\OccupyCapableInterface $occupancy
+   * @param \DrevOps\PhpTui\Theme\Capability\OccupyCapableInterface $occupancy
    *   What the theme says about the terminal it takes.
    *
    * @return int
@@ -1763,7 +1764,7 @@ class ScreenController {
    * The trail and the keys on offer are the same blocks the panel's own screen
    * draws, so asking for help changes what is being read and nothing else.
    *
-   * @return \DrevOps\Tui\Screen\Screen
+   * @return \DrevOps\PhpTui\Screen\Screen
    *   The screen.
    */
   protected function helpScreen(): Screen {
@@ -1785,9 +1786,9 @@ class ScreenController {
    * needs is placed first, so a block of the consumer's lands after the trail
    * or the hints its region already holds rather than in front of them.
    *
-   * @param list<array{region:string,block:\DrevOps\Tui\Block\BlockInterface,tail:bool}> $placements
+   * @param list<array{region:string,block:\DrevOps\PhpTui\Block\BlockInterface,tail:bool}> $placements
    *   The blocks, each named against the region it goes in.
-   * @param array<string,\DrevOps\Tui\Screen\Axis> $flows
+   * @param array<string,\DrevOps\PhpTui\Screen\Axis> $flows
    *   The direction a region runs its blocks, keyed by region name.
    */
   protected function furnish(array $placements, array $flows): void {
@@ -1812,7 +1813,7 @@ class ScreenController {
    * @return T|null
    *   The block, or NULL when the screen carries no such piece.
    *
-   * @template T of \DrevOps\Tui\Block\BlockInterface
+   * @template T of \DrevOps\PhpTui\Block\BlockInterface
    */
   protected function furniture(?string $name, string $kind): ?object {
     if ($name === NULL) {

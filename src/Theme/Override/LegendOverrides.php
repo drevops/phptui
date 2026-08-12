@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme\Override;
+namespace DrevOps\PhpTui\Theme\Override;
 
-use DrevOps\Tui\Theme\Sgr;
+use DrevOps\PhpTui\Theme\Sgr;
 
 /**
  * The legend's elements, as a consumer patches them.
@@ -12,14 +12,14 @@ use DrevOps\Tui\Theme\Sgr;
  * The block's prefix is implied by the group, so `separator()` here is the
  * legend's separator and nothing else's.
  *
- * @package DrevOps\Tui\Theme\Override
+ * @package DrevOps\PhpTui\Theme\Override
  */
 final class LegendOverrides {
 
   /**
    * Construct a group over the patch it writes into.
    *
-   * @param \DrevOps\Tui\Theme\Override\Overrides $overrides
+   * @param \DrevOps\PhpTui\Theme\Override\Overrides $overrides
    *   The patch being collected.
    */
   public function __construct(
@@ -47,7 +47,7 @@ final class LegendOverrides {
   /**
    * Paint a key in these colours.
    *
-   * @param \DrevOps\Tui\Theme\Sgr ...$parts
+   * @param \DrevOps\PhpTui\Theme\Sgr ...$parts
    *   The palette parts, in order (e.g. Sgr::Bold, Sgr::Cyan).
    *
    * @return $this

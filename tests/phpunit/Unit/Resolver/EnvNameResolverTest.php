@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Resolver;
+namespace DrevOps\PhpTui\Tests\Unit\Resolver;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Resolver\EnvNameResolver;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Resolver\EnvNameResolver;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -85,7 +85,7 @@ final class EnvNameResolverTest extends TestCase {
    * @param list<string> $aliases
    *   The declared aliases.
    *
-   * @return \DrevOps\Tui\Block\Field
+   * @return \DrevOps\PhpTui\Block\Field
    *   The field.
    */
   protected static function field(string $env_name = '', array $aliases = []): Field {

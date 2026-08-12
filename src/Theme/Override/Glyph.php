@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme\Override;
+namespace DrevOps\PhpTui\Theme\Override;
 
 /**
  * A glyph and the ASCII stand-in that reads where it cannot be drawn.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Theme\Override;
  * The pair travels together so a consumer cannot set one display mode and
  * silently leave the other broken.
  *
- * @package DrevOps\Tui\Theme\Override
+ * @package DrevOps\PhpTui\Theme\Override
  */
 final readonly class Glyph {
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Terminal;
+namespace DrevOps\PhpTui\Terminal;
 
 /**
  * Pure terminal control sequences (alternate screen, cursor, mouse).
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Terminal;
  * Kept separate from I/O so the sequences are unit-testable; a Terminal writes
  * them to the real TTY.
  *
- * @package DrevOps\Tui\Terminal
+ * @package DrevOps\PhpTui\Terminal
  */
 final class TerminalControl {
 

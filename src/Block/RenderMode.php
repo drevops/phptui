@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
 /**
  * Where a field's editor is drawn: inline in the panel, or on its own screen.
@@ -14,7 +14,7 @@ namespace DrevOps\Tui\Block;
  * for a field that wants the whole viewport. Fields are inline by default; a
  * consumer opts one out with the builder's standalone() method.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 enum RenderMode {
 

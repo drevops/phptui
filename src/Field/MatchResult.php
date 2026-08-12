@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
 /**
  * The outcome of matching a query against a candidate label.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Field;
  * Carries the relevance score used to rank a candidate against its peers and
  * the label character indices the query matched, used to highlight them.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 final readonly class MatchResult {
 

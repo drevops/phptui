@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Input;
+namespace DrevOps\PhpTui\Input;
 
 /**
  * One authored binding: an action and the keys that trigger it in a scope.
@@ -14,25 +14,25 @@ namespace DrevOps\Tui\Input;
  * action do not merge: the later one wins, so a consumer replaces a preset's
  * binding by re-declaring it.
  *
- * @package DrevOps\Tui\Input
+ * @package DrevOps\PhpTui\Input
  */
 final readonly class Binding {
 
   /**
    * The keys bound to the action, before normalisation.
    *
-   * @var list<\DrevOps\Tui\Input\Key|\DrevOps\Tui\Input\KeyName|string>
+   * @var list<\DrevOps\PhpTui\Input\Key|\DrevOps\PhpTui\Input\KeyName|string>
    */
   public array $keys;
 
   /**
    * Construct a binding.
    *
-   * @param \DrevOps\Tui\Input\Scope $scope
+   * @param \DrevOps\PhpTui\Input\Scope $scope
    *   The scope the binding applies in.
-   * @param \DrevOps\Tui\Input\Action $action
+   * @param \DrevOps\PhpTui\Input\Action $action
    *   The action the keys trigger.
-   * @param \DrevOps\Tui\Input\Key|\DrevOps\Tui\Input\KeyName|string ...$keys
+   * @param \DrevOps\PhpTui\Input\Key|\DrevOps\PhpTui\Input\KeyName|string ...$keys
    *   The keys bound to the action.
    */
   public function __construct(

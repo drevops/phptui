@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 
 /**
  * Anything drawn in a region.
@@ -14,14 +14,14 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * colour and glyph belong to the theme, so render() takes the elements from
  * the theme rather than choosing either itself.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 interface BlockInterface {
 
   /**
    * Draw this block.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme supplying the elements it composes.
    *
    * @return string

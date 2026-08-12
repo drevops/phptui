@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Screen;
+namespace DrevOps\PhpTui\Tests\Unit\Screen;
 
-use DrevOps\Tui\Block\Breadcrumb;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
-use DrevOps\Tui\Screen\Region;
-use DrevOps\Tui\Screen\Sizing;
+use DrevOps\PhpTui\Block\Breadcrumb;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Capability\ScrollCapableTrait;
+use DrevOps\PhpTui\Screen\Region;
+use DrevOps\PhpTui\Screen\Sizing;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\Group;

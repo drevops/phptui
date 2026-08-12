@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\Block\Element\MarkupElementsInterface;
-use DrevOps\Tui\Terminal\Markup as Parser;
-use DrevOps\Tui\Terminal\MarkupType;
-use DrevOps\Tui\Terminal\MarkupSegment;
-use DrevOps\Tui\Theme\Capability\MarkdownCapableInterface;
+use DrevOps\PhpTui\Block\Element\MarkupElementsInterface;
+use DrevOps\PhpTui\Terminal\Markup as Parser;
+use DrevOps\PhpTui\Terminal\MarkupType;
+use DrevOps\PhpTui\Terminal\MarkupSegment;
+use DrevOps\PhpTui\Theme\Capability\MarkdownCapableInterface;
 
 /**
  * Text a reader reads, drawn one span at a time.
@@ -23,7 +23,7 @@ use DrevOps\Tui\Theme\Capability\MarkdownCapableInterface;
  * standing note, the long text behind a help key - and none of them owns how
  * one is drawn, so it lives beside them rather than inside any one of them.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final class Prose {
 
@@ -32,7 +32,7 @@ final class Prose {
    *
    * @param string $source
    *   The passage; newlines separate physical lines.
-   * @param \DrevOps\Tui\Block\Element\MarkupElementsInterface $theme
+   * @param \DrevOps\PhpTui\Block\Element\MarkupElementsInterface $theme
    *   The theme, narrowed to the elements that draw a span.
    * @param \Closure|null $plain
    *   An `fn (string $text): string` drawing the spans that carry no markup of
@@ -62,9 +62,9 @@ final class Prose {
   /**
    * Draw one span with the element that owns it.
    *
-   * @param \DrevOps\Tui\Terminal\MarkupSegment $segment
+   * @param \DrevOps\PhpTui\Terminal\MarkupSegment $segment
    *   The span.
-   * @param \DrevOps\Tui\Block\Element\MarkupElementsInterface $theme
+   * @param \DrevOps\PhpTui\Block\Element\MarkupElementsInterface $theme
    *   The theme.
    * @param \Closure $plain
    *   What draws a span carrying no markup of its own.
@@ -87,7 +87,7 @@ final class Prose {
   /**
    * Whether the theme draws the markdown subset or leaves it literal.
    *
-   * @param \DrevOps\Tui\Block\Element\MarkupElementsInterface $theme
+   * @param \DrevOps\PhpTui\Block\Element\MarkupElementsInterface $theme
    *   The theme.
    *
    * @return bool

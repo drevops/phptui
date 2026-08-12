@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Translation;
+namespace DrevOps\PhpTui\Translation;
 
-use DrevOps\Tui\FormException;
+use DrevOps\PhpTui\FormException;
 
 /**
  * Resolves user-facing strings to a target language, English as the fallback.
@@ -31,7 +31,7 @@ use DrevOps\Tui\FormException;
  * static {@see Translator::t()} entry point, so chrome can translate from
  * anywhere without threading a translator through every constructor.
  *
- * @package DrevOps\Tui\Translation
+ * @package DrevOps\PhpTui\Translation
  */
 final class Translator {
 
@@ -91,7 +91,7 @@ final class Translator {
   /**
    * Set the process-wide translator backing the t() function.
    *
-   * @param \DrevOps\Tui\Translation\Translator|null $translator
+   * @param \DrevOps\PhpTui\Translation\Translator|null $translator
    *   The translator, or NULL to disable translation (English source).
    */
   public static function setShared(?Translator $translator): void {
@@ -101,7 +101,7 @@ final class Translator {
   /**
    * The process-wide translator backing the t() function.
    *
-   * @return \DrevOps\Tui\Translation\Translator|null
+   * @return \DrevOps\PhpTui\Translation\Translator|null
    *   The translator, or NULL when none is set.
    */
   public static function shared(): ?Translator {
@@ -353,7 +353,7 @@ final class Translator {
    * @return array<string,string>
    *   The source => translation entries the source contributes.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the source is neither a directory, file, nor array.
    */
   protected function loadSource(string|array $source, array $candidates): array {

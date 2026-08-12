@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Fixtures\Terminal;
+namespace DrevOps\PhpTui\Tests\Fixtures\Terminal;
 
-use DrevOps\Tui\Terminal\Terminal;
+use DrevOps\PhpTui\Terminal\Terminal;
 
 /**
  * A terminal double that records suspend/restore without touching a TTY.

@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Field\Capability\CompletionCapableInterface;
-use DrevOps\Tui\Field\Capability\CompletionCapableTrait;
-use DrevOps\Tui\Field\Capability\PlaceholderCapableInterface;
-use DrevOps\Tui\Field\Capability\PlaceholderCapableTrait;
-use DrevOps\Tui\Field\Capability\TextEditCapableInterface;
-use DrevOps\Tui\Field\Capability\TextEditCapableTrait;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Field\Capability\CompletionCapableInterface;
+use DrevOps\PhpTui\Field\Capability\CompletionCapableTrait;
+use DrevOps\PhpTui\Field\Capability\PlaceholderCapableInterface;
+use DrevOps\PhpTui\Field\Capability\PlaceholderCapableTrait;
+use DrevOps\PhpTui\Field\Capability\TextEditCapableInterface;
+use DrevOps\PhpTui\Field\Capability\TextEditCapableTrait;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 
 /**
  * Single-line text input with a movable cursor and optional ghost-text.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 class Text extends AbstractField implements TextEditCapableInterface, CompletionCapableInterface, PlaceholderCapableInterface {
 
@@ -103,7 +103,7 @@ class Text extends AbstractField implements TextEditCapableInterface, Completion
    * former needs a typed prefix to complete, the latter an empty buffer, so at
    * most one of them is ever set.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme supplying the caret glyph and the ghost styling.
    *
    * @return string

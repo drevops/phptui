@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Condition;
+namespace DrevOps\PhpTui\Tests\Unit\Condition;
 
-use DrevOps\Tui\Condition\CompositeCondition;
-use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Condition\ConditionInterface;
+use DrevOps\PhpTui\Condition\CompositeCondition;
+use DrevOps\PhpTui\Condition\Condition;
+use DrevOps\PhpTui\Condition\ConditionInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -23,7 +23,7 @@ final class ConditionTest extends TestCase {
   /**
    * Conditions evaluate against answers as expected.
    *
-   * @param \DrevOps\Tui\Condition\ConditionInterface $condition
+   * @param \DrevOps\PhpTui\Condition\ConditionInterface $condition
    *   The condition.
    * @param array<string,mixed> $answers
    *   The answers.
@@ -38,7 +38,7 @@ final class ConditionTest extends TestCase {
   /**
    * Data provider for testMatches().
    *
-   * @return \Iterator<string,array{\DrevOps\Tui\Condition\ConditionInterface,array<string,mixed>,bool}>
+   * @return \Iterator<string,array{\DrevOps\PhpTui\Condition\ConditionInterface,array<string,mixed>,bool}>
    *   Conditions, answers and expected results.
    */
   public static function dataProviderMatches(): \Iterator {

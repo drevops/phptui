@@ -20,22 +20,22 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Block\Breadcrumb;
-use DrevOps\Tui\Block\Legend;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\CollectException;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Screen\Assembler;
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Collector;
-use DrevOps\Tui\Screen\KeyRouter;
-use DrevOps\Tui\Screen\ScreenRenderer;
-use DrevOps\Tui\Testing\ScreenTester;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Block\Breadcrumb;
+use DrevOps\PhpTui\Block\Legend;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\CollectException;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\InterruptException;
+use DrevOps\PhpTui\Screen\Assembler;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Collector;
+use DrevOps\PhpTui\Screen\KeyRouter;
+use DrevOps\PhpTui\Screen\ScreenRenderer;
+use DrevOps\PhpTui\Testing\ScreenTester;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 
 require __DIR__ . '/../vendor/autoload.php';
 

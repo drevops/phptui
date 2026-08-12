@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
 /**
  * A field that edits a character buffer.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Field\Capability;
  * {@see TextEditCapableTrait} carries the default cursor-based implementation;
  * an append-only field may implement the methods directly.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 interface TextEditCapableInterface {
 

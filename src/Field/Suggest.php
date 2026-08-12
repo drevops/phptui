@@ -2,26 +2,26 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Field\Capability\CompletionCapableInterface;
-use DrevOps\Tui\Field\Capability\CompletionCapableTrait;
-use DrevOps\Tui\Field\Capability\PagingCapableInterface;
-use DrevOps\Tui\Field\Capability\PagingCapableTrait;
-use DrevOps\Tui\Field\Capability\PlaceholderCapableInterface;
-use DrevOps\Tui\Field\Capability\PlaceholderCapableTrait;
-use DrevOps\Tui\Field\Capability\QueryOptionsCapableInterface;
-use DrevOps\Tui\Field\Capability\QueryOptionsCapableTrait;
-use DrevOps\Tui\Field\Capability\SearchCapableInterface;
-use DrevOps\Tui\Field\Capability\TextEditCapableInterface;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Field\Capability\CompletionCapableInterface;
+use DrevOps\PhpTui\Field\Capability\CompletionCapableTrait;
+use DrevOps\PhpTui\Field\Capability\PagingCapableInterface;
+use DrevOps\PhpTui\Field\Capability\PagingCapableTrait;
+use DrevOps\PhpTui\Field\Capability\PlaceholderCapableInterface;
+use DrevOps\PhpTui\Field\Capability\PlaceholderCapableTrait;
+use DrevOps\PhpTui\Field\Capability\QueryOptionsCapableInterface;
+use DrevOps\PhpTui\Field\Capability\QueryOptionsCapableTrait;
+use DrevOps\PhpTui\Field\Capability\SearchCapableInterface;
+use DrevOps\PhpTui\Field\Capability\TextEditCapableInterface;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * An autocomplete text input over a set of candidate values.
@@ -30,7 +30,7 @@ use DrevOps\Tui\Utils\Strings;
  * the values as its queries settle, and those arrive already answering the
  * buffer, so they are shown in the order given.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 class Suggest extends AbstractField implements
   SearchCapableInterface,

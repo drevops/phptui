@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Capability;
+namespace DrevOps\PhpTui\Block\Capability;
 
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMap;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Input\ScopedKeyMap;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyMap;
+use DrevOps\PhpTui\Input\KeyMapManager;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Input\ScopedKeyMap;
 
 /**
  * Binding behaviour: the keys that apply while a block is in play.
  *
- * @package DrevOps\Tui\Block\Capability
+ * @package DrevOps\PhpTui\Block\Capability
  */
 trait BindCapableTrait {
 
@@ -49,7 +49,7 @@ trait BindCapableTrait {
   /**
    * The bindings this block resolves its scope against.
    *
-   * @return \DrevOps\Tui\Input\KeyMap
+   * @return \DrevOps\PhpTui\Input\KeyMap
    *   The bindings it was given, else the default preset.
    */
   protected function keyMap(): KeyMap {
@@ -59,10 +59,10 @@ trait BindCapableTrait {
   /**
    * What a key means here.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key.
    *
-   * @return \DrevOps\Tui\Input\Action|null
+   * @return \DrevOps\PhpTui\Input\Action|null
    *   The action it triggers, or NULL when it triggers none here.
    */
   protected function boundAction(Key $key): ?Action {
@@ -80,7 +80,7 @@ trait BindCapableTrait {
   /**
    * The scope this block's keys resolve in.
    *
-   * @return \DrevOps\Tui\Input\Scope
+   * @return \DrevOps\PhpTui\Input\Scope
    *   The scope.
    */
   abstract protected function keyScope(): Scope;

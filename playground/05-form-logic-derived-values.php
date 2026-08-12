@@ -17,12 +17,12 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\CollectException;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\CollectException;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\InterruptException;
+use DrevOps\PhpTui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
 

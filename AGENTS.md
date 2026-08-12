@@ -19,9 +19,9 @@ TUI or headlessly from a JSON payload and environment variables.
 This package is a library consumed programmatically - it has no CLI entry point
 of its own. The public surface is:
 
-- **`DrevOps\Tui\Tui`** - the facade: collect a form's answers, headlessly or
+- **`DrevOps\PhpTui\Tui`** - the facade: collect a form's answers, headlessly or
   through the interactive panel TUI.
-- **`DrevOps\Tui\Builder\Form`** - the fluent builder for declaring a form's
+- **`DrevOps\PhpTui\Builder\Form`** - the fluent builder for declaring a form's
   panels and fields.
 
 A consumer declares a form with `Form::create(...)->panel(...)` and drives it
@@ -30,12 +30,12 @@ through the `Tui` facade.
 The facade also exposes **primitives** - standalone, theme-drawn elements that
 collect no answer and never run inside the panel:
 
-- `Tui::progress()` (`DrevOps\Tui\Primitive\Progress`) wraps a slow callback
+- `Tui::progress()` (`DrevOps\PhpTui\Primitive\Progress`) wraps a slow callback
   with a spinner (unknown length) or a determinate bar (known total) for work
   that runs around the form.
-- `Tui::output()` (`DrevOps\Tui\Primitive\Output`) draws the static chrome
+- `Tui::output()` (`DrevOps\PhpTui\Primitive\Output`) draws the static chrome
   around a form: boxes and cards, aligned tables, the five status lines of
-  `DrevOps\Tui\Primitive\Status`, definition lists, wrapped text, rules and a
+  `DrevOps\PhpTui\Primitive\Status`, definition lists, wrapped text, rules and a
   banner.
 
 Every piece a primitive draws routes through a `render*()` method on the theme
@@ -53,8 +53,8 @@ it was given, so it declares its edges and never draws them.
 
 ### Namespace Structure
 
-- Source code: `DrevOps\Tui\`
-- Tests: `DrevOps\Tui\Tests\`
+- Source code: `DrevOps\PhpTui\`
+- Tests: `DrevOps\PhpTui\Tests\`
 - Autoloading: PSR-4 via Composer
 
 ## Commands
@@ -203,7 +203,7 @@ Key workflows:
 ## Documentation
 
 Architecture diagrams and a narrative walkthrough live in `docs/architecture/`.
-After a structural change, update them with the `render-tui-diagrams` skill.
+After a structural change, update them with the `render-phptui-diagrams` skill.
 
 ### Terminal SVG assets
 

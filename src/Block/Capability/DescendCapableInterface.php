@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Capability;
+namespace DrevOps\PhpTui\Block\Capability;
 
 /**
  * A block you go into: the screen becomes its contents, and you can come back.
@@ -11,7 +11,7 @@ namespace DrevOps\Tui\Block\Capability;
  * is the capability nothing else has - a container holds things and an
  * arrangement places them, but neither is somewhere you go.
  *
- * @package DrevOps\Tui\Block\Capability
+ * @package DrevOps\PhpTui\Block\Capability
  */
 interface DescendCapableInterface {
 
