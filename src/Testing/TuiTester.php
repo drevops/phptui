@@ -13,6 +13,7 @@ use DrevOps\Tui\InterruptException;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Theme\Mode;
+use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Tui;
 
 /**
@@ -55,6 +56,11 @@ final class TuiTester {
    * The theme name or class (empty selects the default theme).
    */
   protected string $theme = '';
+
+  /**
+   * The theme instance, when one was passed directly.
+   */
+  protected ?ThemeInterface $themeInstance = NULL;
 
   /**
    * The reported terminal height.
@@ -116,16 +122,23 @@ final class TuiTester {
   }
 
   /**
-   * Set the theme name or class the form is rendered with.
+   * Set the theme the form is rendered with.
    *
-   * @param string $theme
-   *   The theme name or class.
+   * @param \DrevOps\Tui\Theme\ThemeInterface|string $theme
+   *   The theme instance, name or class.
    *
    * @return $this
    *   The tester.
    */
-  public function theme(string $theme): self {
-    $this->theme = $theme;
+  public function theme(ThemeInterface|string $theme): self {
+    if (is_string($theme)) {
+      $this->theme = $theme;
+      $this->themeInstance = NULL;
+    }
+    else {
+      $this->themeInstance = $theme;
+      $this->theme = '';
+    }
 
     return $this;
   }
@@ -291,6 +304,7 @@ final class TuiTester {
    */
   public function run(string|Key ...$items): Answers {
     $keystrokes = [];
+
     foreach ($items as $item) {
       $keystrokes[] = $item instanceof Key ? KeyEncoder::encode($item) : $item;
     }
@@ -301,7 +315,18 @@ final class TuiTester {
     // terminal's columns.
     $width = Tui::frameWidth($this->options, $this->cols);
 
-    $controller = $this->tui->controller($this->options, $this->theme, '', $this->version, $this->directory, $width, $this->update);
+    // A built theme is handed to the facade as it stands, so a tester passing
+    // an instance still gets the key map, fixups, layout, border and banner the
+    // facade wires for a named one.
+    $controller = $this->tui->controller(
+      $this->options,
+      $this->themeInstance ?? $this->theme,
+      '',
+      $this->version,
+      $this->directory,
+      $width,
+      $this->update
+    );
 
     $this->cancelled = FALSE;
     $this->interrupted = FALSE;

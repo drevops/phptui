@@ -69,7 +69,7 @@ class OceanTheme extends DefaultTheme {
    */
   #[\Override]
   protected function marker(bool $selected): string {
-    return $selected ? $this->paint($this->accent(), $this->hasUnicode() ? '➤' : '>') : ' ';
+    return $selected ? $this->paint($this->accent(), $this->isUnicode() ? '➤' : '>') : ' ';
   }
 
   /**
@@ -89,7 +89,7 @@ class OceanTheme extends DefaultTheme {
    *   The mark.
    */
   protected function lead(): string {
-    return $this->hasUnicode() ? '•' : '*';
+    return $this->isUnicode() ? '•' : '*';
   }
 
   /**
@@ -98,7 +98,7 @@ class OceanTheme extends DefaultTheme {
   #[\Override]
   public function keyGlyph(KeyName|string $key): string {
     if ($key === KeyName::Enter) {
-      return $this->hasUnicode() ? '⏎' : '<';
+      return $this->isUnicode() ? '⏎' : '<';
     }
 
     return parent::keyGlyph($key);
@@ -109,7 +109,7 @@ class OceanTheme extends DefaultTheme {
    */
   #[\Override]
   public function chromeOverflowMarker(bool $above): string {
-    return $this->indicator($above ? ($this->hasUnicode() ? '▴' : '^') : ($this->hasUnicode() ? '▾' : 'v'));
+    return $this->indicator($above ? ($this->isUnicode() ? '▴' : '^') : ($this->isUnicode() ? '▾' : 'v'));
   }
 
   /**
@@ -125,19 +125,19 @@ class OceanTheme extends DefaultTheme {
    */
   #[\Override]
   public function fieldCaret(): string {
-    return $this->paint($this->accent(), $this->hasUnicode() ? '▎' : '|');
+    return $this->paint($this->accent(), $this->isUnicode() ? '▎' : '|');
   }
 
   /**
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntryMarker(bool $chosen, bool $exclusive = FALSE): string {
+  public function fieldOptionMarker(bool $chosen, bool $exclusive = FALSE): string {
     if ($exclusive) {
-      return $chosen ? $this->paint($this->accent(), $this->hasUnicode() ? '◉' : '(o)') : ($this->hasUnicode() ? '◯' : '( )');
+      return $chosen ? $this->paint($this->accent(), $this->isUnicode() ? '◉' : '(o)') : ($this->isUnicode() ? '◯' : '( )');
     }
 
-    return $chosen ? $this->fieldValue($this->hasUnicode() ? '▣' : '[x]') : ($this->hasUnicode() ? '▢' : '[ ]');
+    return $chosen ? $this->fieldValue($this->isUnicode() ? '▣' : '[x]') : ($this->isUnicode() ? '▢' : '[ ]');
   }
 
   /**
@@ -185,7 +185,7 @@ class OceanTheme extends DefaultTheme {
    */
   #[\Override]
   public function panelDescend(): string {
-    return $this->description($this->hasUnicode() ? '»' : '>');
+    return $this->description($this->isUnicode() ? '»' : '>');
   }
 
   /**
@@ -201,7 +201,7 @@ class OceanTheme extends DefaultTheme {
    */
   #[\Override]
   public function panelSummary(string $text): string {
-    return $this->description(($this->hasUnicode() ? '»' : '>') . ' ' . $text);
+    return $this->description(($this->isUnicode() ? '»' : '>') . ' ' . $text);
   }
 
   /**
@@ -240,7 +240,7 @@ class OceanTheme extends DefaultTheme {
    * {@inheritdoc}
    */
   #[\Override]
-  public function renderBanner(string $logo, string $version): string {
+  public function renderBanner(string $logo, string $version): array {
     $lines = [];
 
     foreach (explode("\n", $logo) as $line) {
@@ -252,7 +252,7 @@ class OceanTheme extends DefaultTheme {
       $lines[] = $this->footer('≈ ' . $version . ' ≈');
     }
 
-    return implode("\n", $lines);
+    return $lines;
   }
 
 }

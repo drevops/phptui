@@ -27,17 +27,18 @@ use DrevOps\Tui\Utils\Strings;
  * A filesystem browser that selects a path, or several in multiple mode.
  *
  * Navigation walks directories from a start directory that also bounds the
- * browse - it is a floor the browser cannot ascend above. The constraints
- * govern which entries may be selected (any, files or directories) and which
- * files pass the extension filter; directories stay navigable regardless, so
- * files beneath them remain reachable. Printable characters filter the current
- * directory; Tab reveals or hides dot-entries. In multiple mode Space toggles
- * the highlighted selectable entry and selections accumulate across
- * directories, so the value is the chosen path (single) or the list of chosen
- * paths (multiple). The type and extension limits gate what may be browsed
- * onto and picked; the size limit is weighed against the final value by the
- * block holding the answer, so an oversized file is offered here rather than
- * refused.
+ * browse: the browser never ascends above it. Printable characters filter
+ * the current directory; Tab reveals or hides dot-entries.
+ *
+ * The constraints govern which entries may be selected (any, files or
+ * directories) and which files pass the extension filter. Directories stay
+ * navigable regardless, so files beneath them remain reachable.
+ *
+ * In multiple mode Space toggles the highlighted selectable entry and
+ * selections accumulate across directories, so the value is the chosen path
+ * (single) or the list of chosen paths (multiple). The size limit is checked
+ * against the final value by the block holding the answer, so an oversized
+ * file can still be picked here.
  *
  * @package DrevOps\Tui\Field
  */
@@ -47,7 +48,7 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
   use SelectionBoundedTrait;
 
   /**
-   * The start directory: where the browser opens and the floor it cannot pass.
+   * The start directory: the browser opens here and cannot ascend above it.
    */
   protected string $root;
 
@@ -168,7 +169,6 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
       return;
     }
 
-    // Reveal doubles as the show-hidden toggle, mirroring the password reveal.
     if ($keys->matches($key, Action::Reveal)) {
       $this->toggleReveal();
 
@@ -235,7 +235,7 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
     $entries = $this->entries();
 
     if ($entries === []) {
-      $lines[] = $elements->fieldEntryNote(Translator::t('(empty)'));
+      $lines[] = $elements->fieldOptionNote(Translator::t('(empty)'));
     }
 
     $viewport = $this->pageViewport(count($entries), $this->cursor);
@@ -252,10 +252,9 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
   /**
    * The themed constraint hint line, or an empty string when not shown.
    *
-   * Mirrors the selection-count hint: the active type, extension and size
-   * limits are surfaced as a persistent line so they are visible before a pick
-   * breaks one, giving way to the inline error while a violation is showing so
-   * the two never stack.
+   * The active type, extension and size limits render as one persistent line,
+   * so they are visible before a pick violates them. While an error is
+   * showing the line is suppressed, so the hint and the error never stack.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -270,16 +269,14 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
       return '';
     }
 
-    // The guidance voice, not the description's: this line states what the
-    // field expects, and shares its row with the error that replaces it.
     return $this->elements($theme)->fieldConstraint($describe);
   }
 
   /**
    * {@inheritdoc}
    *
-   * A picker states two limits at once - what may be picked, and how many -
-   * and either may stand alone.
+   * The picker has two limit lines - what may be picked, and how many - and
+   * either may appear without the other.
    */
   #[\Override]
   protected function renderConstraint(ThemeInterface $theme): string {
@@ -289,8 +286,9 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
   /**
    * {@inheritdoc}
    *
-   * The Toggle fragment resolves only in multiple mode, where Space is bound to
-   * it; Accept reads "select" for a single pick and "accept" for multiple.
+   * The Toggle hint renders only in multiple mode, where Space is bound to
+   * it. The Accept label reads "select" for a single pick and "accept" for
+   * multiple.
    */
   #[\Override]
   public function hints(): array {
@@ -433,8 +431,8 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
   /**
    * {@inheritdoc}
    *
-   * Toggles whether dot-entries are shown, landing back at the top of the
-   * refreshed listing.
+   * Toggles whether dot-entries are shown and resets the highlight to the top
+   * of the refreshed listing.
    */
   public function toggleReveal(): void {
     $this->showHidden = !$this->showHidden;
@@ -603,20 +601,20 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
   protected function renderRow(ThemeInterface $theme, string $name, bool $current): string {
     $label = $this->isDir($name) ? $name . '/' : $name;
     $elements = $this->elements($theme);
-    $row = $elements->fieldEntrySelector($current) . ' ';
+    $row = $elements->fieldOptionSelector($current) . ' ';
     $chosen = FALSE;
 
     if ($this->multiple) {
       $chosen = isset($this->selected[$this->join($name)]);
-      $box = $this->isSelectable($name) ? $elements->fieldEntryMarker($chosen) : $this->blankBox($theme);
+      $box = $this->isSelectable($name) ? $elements->fieldOptionMarker($chosen) : $this->blankBox($theme);
       $row .= $box . ' ';
     }
 
-    return $row . $this->entryLabel($theme, $label, $current, $chosen);
+    return $row . $this->optionLabel($theme, $label, $current, $chosen);
   }
 
   /**
-   * A spacer the width of a checkbox, for entries that cannot be selected.
+   * A spacer the width of a checkbox, for options that cannot be selected.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -625,7 +623,7 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
    *   The spacer.
    */
   protected function blankBox(ThemeInterface $theme): string {
-    return str_repeat(' ', Strings::length(Ansi::strip($this->elements($theme)->fieldEntryMarker(FALSE))));
+    return str_repeat(' ', Strings::length(Ansi::strip($this->elements($theme)->fieldOptionMarker(FALSE))));
   }
 
   /**

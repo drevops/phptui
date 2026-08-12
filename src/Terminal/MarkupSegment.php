@@ -14,7 +14,7 @@ final readonly class MarkupSegment {
   /**
    * Construct a segment.
    *
-   * @param \DrevOps\Tui\Terminal\MarkupKind $kind
+   * @param \DrevOps\Tui\Terminal\MarkupType $kind
    *   The span kind.
    * @param string $text
    *   The visible text (the inner text of a styled span, or a link's label).
@@ -22,7 +22,7 @@ final readonly class MarkupSegment {
    *   The link target, for a Link span; empty otherwise.
    */
   public function __construct(
-    public MarkupKind $kind,
+    public MarkupType $kind,
     public string $text,
     public string $url = '',
   ) {

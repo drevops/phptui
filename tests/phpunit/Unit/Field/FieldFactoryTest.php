@@ -74,13 +74,13 @@ final class FieldFactoryTest extends TestCase {
     yield 'template from the assembled value' => [self::templateBlock(), 'one-two', 'one-two'];
     yield 'template from a non-string' => [self::templateBlock(), 42, '-'];
     // The seed order flows through: the given value first, the remaining
-    // entry appended to complete the ranking.
-    yield 'reorder completes the ranking' => [self::blockWithEntries(FieldType::Reorder), ['b'], ['b', 'a']];
-    yield 'multiple from a non-list' => [self::blockWithEntries(FieldType::Select)->multiple(), 'notalist', []];
+    // option appended to complete the ranking.
+    yield 'reorder completes the ranking' => [self::blockWithOptions(FieldType::Reorder), ['b'], ['b', 'a']];
+    yield 'multiple from a non-list' => [self::blockWithOptions(FieldType::Select)->multiple(), 'notalist', []];
     // A multiple choice block opens on the list value, proving the multiple
     // flag reaches the select and search fields.
-    yield 'multiple select' => [self::blockWithEntries(FieldType::Select)->multiple(), ['a', 'b'], ['a', 'b']];
-    yield 'multiple search' => [self::blockWithEntries(FieldType::Search)->multiple(), ['a'], ['a']];
+    yield 'multiple select' => [self::blockWithOptions(FieldType::Select)->multiple(), ['a', 'b'], ['a', 'b']];
+    yield 'multiple search' => [self::blockWithOptions(FieldType::Search)->multiple(), ['a'], ['a']];
   }
 
   public function testFilePickerSeedsValueFromCurrent(): void {
@@ -190,7 +190,7 @@ final class FieldFactoryTest extends TestCase {
   public function testInjectsScopedKeymapIntoField(): void {
     // The vim preset binds j to move-down in the select scope, so the injected
     // field responds to j where a default-preset field would not.
-    $field = (new FieldFactory(KeyMapManager::create('vim')))->open(self::blockWithEntries(FieldType::Select), 'a');
+    $field = (new FieldFactory(KeyMapManager::create('vim')))->open(self::blockWithOptions(FieldType::Select), 'a');
 
     $field->handle(Key::char('j'));
 
@@ -199,8 +199,8 @@ final class FieldFactoryTest extends TestCase {
 
   public function testSuggestReceivesSelectableValuesOnly(): void {
     $block = (new BlockField('tz', 'TZ', FieldType::Suggest))
-      ->entry('utc', 'UTC')
-      ->entry('gmt', 'GMT', '', TRUE)
+      ->option('utc', 'UTC')
+      ->option('gmt', 'GMT', '', TRUE)
       ->separator();
 
     $view = (new FieldFactory())->open($block, '')->view(new DefaultTheme());
@@ -211,8 +211,8 @@ final class FieldFactoryTest extends TestCase {
 
   public function testPerOptionDescriptionReachesChoiceField(): void {
     $block = (new BlockField('f', 'F', FieldType::Select))
-      ->entry('a', 'Apple', 'Crisp and sweet.')
-      ->entry('b', 'Banana', 'Rich in potassium.');
+      ->option('a', 'Apple', 'Crisp and sweet.')
+      ->option('b', 'Banana', 'Rich in potassium.');
 
     $view = Ansi::strip((new FieldFactory())->open($block, 'a')->view(new DefaultTheme()));
 
@@ -220,7 +220,7 @@ final class FieldFactoryTest extends TestCase {
   }
 
   public function testPerOptionDescriptionReachesSuggest(): void {
-    $block = (new BlockField('f', 'F', FieldType::Suggest))->entry('apple', 'Apple', 'Crisp and sweet.');
+    $block = (new BlockField('f', 'F', FieldType::Suggest))->option('apple', 'Apple', 'Crisp and sweet.');
 
     $field = (new FieldFactory())->open($block, '');
     $field->handle(Key::named(KeyName::Down));
@@ -238,10 +238,10 @@ final class FieldFactoryTest extends TestCase {
   }
 
   public function testSuggestGhostFlagReachesField(): void {
-    $off = (new BlockField('fruit', 'Fruit', FieldType::Suggest))->entry('Apple', 'Apple')->entry('Apricot', 'Apricot');
+    $off = (new BlockField('fruit', 'Fruit', FieldType::Suggest))->option('Apple', 'Apple')->option('Apricot', 'Apricot');
     $this->assertStringNotContainsString("\033[90m", (new FieldFactory())->open($off, 'ap')->view(new DefaultTheme()));
 
-    $on = (new BlockField('fruit', 'Fruit', FieldType::Suggest))->entry('Apple', 'Apple')->entry('Apricot', 'Apricot')->ghost();
+    $on = (new BlockField('fruit', 'Fruit', FieldType::Suggest))->option('Apple', 'Apple')->option('Apricot', 'Apricot')->ghost();
     $view = (new FieldFactory())->open($on, 'ap')->view(new DefaultTheme());
 
     // The opted-in field previews the leading candidate's remaining suffix.
@@ -316,12 +316,12 @@ final class FieldFactoryTest extends TestCase {
   public static function dataProviderOpensBlockByKind(): \Iterator {
     yield 'text' => [new BlockField('f', 'F'), 'x', Text::class];
     yield 'confirm' => [new BlockField('f', 'F', FieldType::Confirm), TRUE, Confirm::class];
-    yield 'toggle' => [self::blockWithEntries(FieldType::Toggle), 'a', Toggle::class];
-    yield 'select' => [self::blockWithEntries(FieldType::Select), 'a', Select::class];
-    yield 'multiple select' => [self::blockWithEntries(FieldType::Select)->multiple(), ['a'], Select::class];
-    yield 'search' => [self::blockWithEntries(FieldType::Search), 'a', Search::class];
-    yield 'suggest' => [self::blockWithEntries(FieldType::Suggest), 'a', Suggest::class];
-    yield 'reorder' => [self::blockWithEntries(FieldType::Reorder), ['a', 'b'], Reorder::class];
+    yield 'toggle' => [self::blockWithOptions(FieldType::Toggle), 'a', Toggle::class];
+    yield 'select' => [self::blockWithOptions(FieldType::Select), 'a', Select::class];
+    yield 'multiple select' => [self::blockWithOptions(FieldType::Select)->multiple(), ['a'], Select::class];
+    yield 'search' => [self::blockWithOptions(FieldType::Search), 'a', Search::class];
+    yield 'suggest' => [self::blockWithOptions(FieldType::Suggest), 'a', Suggest::class];
+    yield 'reorder' => [self::blockWithOptions(FieldType::Reorder), ['a', 'b'], Reorder::class];
     yield 'file picker' => [new BlockField('f', 'F', FieldType::FilePicker), '', FilePicker::class];
     yield 'number' => [new BlockField('f', 'F', FieldType::Number), 42, Number::class];
     yield 'rating' => [(new BlockField('f', 'F', FieldType::Rating))->bounds(new NumberBounds(1, 5)), 3, Rating::class];
@@ -335,8 +335,8 @@ final class FieldFactoryTest extends TestCase {
   public function testOpeningTheBlockCarriesItsDeclarationOntoTheField(): void {
     $block = (new BlockField('f', 'F', FieldType::Select))
       ->multiple()
-      ->entry('a', 'A')
-      ->entry('b', 'B')
+      ->option('a', 'A')
+      ->option('b', 'B')
       ->paginate(1)
       ->placeholder('Pick some produce');
 
@@ -398,7 +398,7 @@ final class FieldFactoryTest extends TestCase {
   }
 
   /**
-   * A block of the given kind with two entries.
+   * A block of the given kind with two options.
    *
    * @param \DrevOps\Tui\Block\FieldType $type
    *   The kind.
@@ -406,8 +406,8 @@ final class FieldFactoryTest extends TestCase {
    * @return \DrevOps\Tui\Block\Field
    *   The block.
    */
-  protected static function blockWithEntries(FieldType $type): BlockField {
-    return (new BlockField('f', 'F', $type))->entry('a', 'A')->entry('b', 'B');
+  protected static function blockWithOptions(FieldType $type): BlockField {
+    return (new BlockField('f', 'F', $type))->option('a', 'A')->option('b', 'B');
   }
 
   /**

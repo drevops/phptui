@@ -89,8 +89,8 @@ class ExternalEditor {
         $code = $this->spawn($command, $file);
       }
       finally {
-        // Restore the TUI even if the spawn throws, so a failed launch never
-        // strands the terminal in raw mode.
+        // Restore the TUI even when the spawn throws, so a failed launch
+        // cannot leave the terminal in raw mode.
         $terminal?->setup();
       }
 
@@ -112,7 +112,7 @@ class ExternalEditor {
   }
 
   /**
-   * Condition the saved buffer into a value the field can hold.
+   * Normalize the saved buffer.
    *
    * Drops a single trailing newline the editor appended by convention, and
    * filters the control bytes an externally written file can contain.

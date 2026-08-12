@@ -259,7 +259,7 @@ final class Collector {
       $waiting();
     }
 
-    $this->loadEntries($owed);
+    $this->loadOptions($owed);
 
     return TRUE;
   }
@@ -298,11 +298,11 @@ final class Collector {
   protected function fetched(Panel $panel, array $supplied, Context $context): array {
     // With no cursor to open a field, nothing would ever ask a loader for its
     // rows - and a value cannot be measured against rows that never arrive.
-    $this->loadEntries(Tree::fields($panel));
+    $this->loadOptions(Tree::fields($panel));
 
     [$fields, $values, $sources, $active] = $this->settle($panel, $supplied, $context);
 
-    $this->loadQueryEntries($fields, $values, $active);
+    $this->loadQueryOptions($fields, $values, $active);
 
     return [$fields, $values, $sources, $active];
   }
@@ -462,8 +462,8 @@ final class Collector {
       && $field->requiredViolation($value) === NULL
       && $field->boundsViolation($value) === NULL
       && $field->pickerViolation($value) === NULL
-      && $field->templateError($value) === NULL
-      && $field->entryError($value) === NULL;
+      && $field->templateViolation($value) === NULL
+      && $field->optionViolation($value) === NULL;
   }
 
   /**
@@ -594,7 +594,7 @@ final class Collector {
     for ($pass = 0; $pass <= $limit; $pass++) {
       // Rows resolve first: a set that follows the answers decides what the
       // conditions below then see, and what a value is still allowed to be.
-      $values = $this->resolveEntries($fields, $values, $active, $context, $supplied);
+      $values = $this->resolveOptions($fields, $values, $active, $context, $supplied);
 
       $derived = $this->deriver->derive($rules, $values, $pinned);
 
@@ -629,7 +629,7 @@ final class Collector {
    * @param list<\DrevOps\Tui\Block\Field> $fields
    *   The fields, in declaration order.
    */
-  protected function loadEntries(array $fields): void {
+  protected function loadOptions(array $fields): void {
     foreach ($fields as $field) {
       $loader = $field->loader();
 
@@ -667,7 +667,7 @@ final class Collector {
    * @throws \DrevOps\Tui\CollectException
    *   When a resolver cannot answer.
    */
-  protected function resolveEntries(array $fields, array $values, array $active, Context $context, array $supplied): array {
+  protected function resolveOptions(array $fields, array $values, array $active, Context $context, array $supplied): array {
     $answers = $this->activeAnswers($fields, $values, $active);
     $resolved = new Context($context->directory, $answers, $context->update, $context->version);
 
@@ -685,7 +685,7 @@ final class Collector {
 
       $memo = $this->memo[$field->id()] ?? NULL;
 
-      if ($memo !== NULL && $memo['answers'] === $answers && $memo['run'] === $run && $memo['rows'] === $field->entries()) {
+      if ($memo !== NULL && $memo['answers'] === $answers && $memo['run'] === $run && $memo['rows'] === $field->options()) {
         continue;
       }
 
@@ -693,10 +693,10 @@ final class Collector {
         $field->settle($resolver($resolved));
       }
       catch (\Throwable $throwable) {
-        throw $this->entriesError($field, $throwable);
+        throw $this->optionsError($field, $throwable);
       }
 
-      $this->memo[$field->id()] = ['answers' => $answers, 'run' => $run, 'rows' => $field->entries()];
+      $this->memo[$field->id()] = ['answers' => $answers, 'run' => $run, 'rows' => $field->options()];
 
       if ($supplied[$field->id()] ?? FALSE) {
         continue;
@@ -733,7 +733,7 @@ final class Collector {
    * @throws \DrevOps\Tui\CollectException
    *   When a source cannot answer.
    */
-  protected function loadQueryEntries(array $fields, array $values, array $active): void {
+  protected function loadQueryOptions(array $fields, array $values, array $active): void {
     foreach ($fields as $field) {
       $source = $field->source();
 
@@ -759,7 +759,7 @@ final class Collector {
           // On screen a source that cannot answer degrades to a message in the
           // field, but with no screen there is nobody to retype the query, so
           // the collection fails instead.
-          throw $this->entriesError($field, $throwable);
+          throw $this->optionsError($field, $throwable);
         }
 
         foreach ($resolved as $row) {
@@ -806,7 +806,7 @@ final class Collector {
    * @return \DrevOps\Tui\CollectException
    *   The error naming the field.
    */
-  protected function entriesError(Field $field, \Throwable $throwable): CollectException {
+  protected function optionsError(Field $field, \Throwable $throwable): CollectException {
     // Not every code is an integer - a database driver's SQLSTATE is a string -
     // and consumer code decides which exception arrives here, so it is coerced
     // rather than allowed to fail the report instead of making it.
@@ -913,7 +913,7 @@ final class Collector {
     }
 
     if (!$field->acceptsValue($value)) {
-      return Translator::t('must be @constraint.', ['@constraint' => $field->valueKind()]);
+      return Translator::t('must be @constraint.', ['@constraint' => $field->valueType()]);
     }
 
     return $field->refuses($value, $this->handlers->validator($field->id()));

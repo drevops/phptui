@@ -34,7 +34,7 @@ final class AgentHelpTest extends TestCase {
       })
       ->root();
 
-    $help = (new AgentHelp($form, 'APP_'))->generate();
+    $help = (new AgentHelp($form, envPrefix: 'APP_'))->generate();
 
     $this->assertNotNull(json_decode($help), 'output is valid JSON');
     $this->assertStringContainsString('"$schema": "https://json-schema.org/draft/2020-12/schema"', $help);
@@ -177,7 +177,7 @@ final class AgentHelpTest extends TestCase {
   public function testAdvertisesEnvironmentVariables(\Closure $declare, string $prefix, array $contains, array $absent, array $matches): void {
     $form = Form::create('T')->panel('p', 'p', $declare)->root();
 
-    $this->assertHelp((new AgentHelp($form, $prefix))->generate(), $contains, $absent, $matches);
+    $this->assertHelp((new AgentHelp($form, envPrefix: $prefix))->generate(), $contains, $absent, $matches);
   }
 
   /**
@@ -258,7 +258,7 @@ final class AgentHelpTest extends TestCase {
   public function testResolvesDefault(\Closure $declare, Context $context, array $contains, array $absent): void {
     $form = Form::create('T')->panel('p', 'p', $declare)->root();
 
-    $this->assertHelp((new AgentHelp($form, '', $context))->generate(), $contains, $absent, []);
+    $this->assertHelp((new AgentHelp($form, $context))->generate(), $contains, $absent, []);
   }
 
   /**
@@ -313,7 +313,7 @@ final class AgentHelpTest extends TestCase {
     $form = Form::create('T')->panel('p', 'p', $declare)->root();
 
     // A field that carries no answer is not one an agent is asked to provide.
-    $this->assertHelp((new AgentHelp($form, 'APP_'))->generate(), ['"name"'], [$absent], []);
+    $this->assertHelp((new AgentHelp($form, envPrefix: 'APP_'))->generate(), ['"name"'], [$absent], []);
   }
 
   /**

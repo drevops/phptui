@@ -127,6 +127,22 @@ composer install
 - All files must end with a newline character
 - Local variables/method arguments: `snake_case`
 - Method names/class properties: `camelCase`
+- **A method that answers a yes/no question about state is named `is*`.** The
+  prefix is what marks a return as boolean, so a reader never has to open the
+  method to find out - `isRequired()`, `isMultiple()`, `isScrolling()`,
+  `isSelectable()`, `isQueryDriven()`, `isUnicode()`, `isGhost()`. There is no
+  `has*` form: possession is state, so `has*` and `is*` were one group and
+  `is*` is the one spelling.
+
+  Two things are not state predicates and keep their own names:
+
+  - A **command that reports its own outcome**. Its job is to do something and
+    its boolean says whether that happened - `accept()`, `capture()`,
+    `activate()`, `load()`, `leave()`, `prepare()`. An `is` prefix would
+    misname the work. A method that both acts and answers is a command.
+  - A **lookup taking what it is asked about** - `Answers::has(string $id)`,
+    `Key::is(KeyName $name)`, `Bounds::contains($value)`. These ask about an
+    argument rather than about the object's own state, so they read as verbs.
 - **Never model a closed set of values as string literals.** Any value that is
   one-of-a-fixed-set (a kind, a state, a mode, a source) is a backed or pure
   enum, and every property, parameter and return that carries it is typed with

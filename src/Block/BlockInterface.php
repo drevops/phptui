@@ -9,10 +9,10 @@ use DrevOps\Tui\Theme\ThemeInterface;
 /**
  * Anything drawn in a region.
  *
- * That is the whole definition: a block fills the space it is given, and the
- * region knows nothing else about it. Order and spacing within its own output
- * belong to the block; colour and glyph belong to the theme, which is why
- * render() reaches the theme for elements rather than choosing either itself.
+ * A block fills the space it is given, and the region knows nothing else
+ * about it. Order and spacing within its own output belong to the block;
+ * colour and glyph belong to the theme, so render() takes the elements from
+ * the theme rather than choosing either itself.
  *
  * @package DrevOps\Tui\Block
  */

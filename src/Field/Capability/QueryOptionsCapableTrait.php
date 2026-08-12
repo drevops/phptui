@@ -11,10 +11,10 @@ use DrevOps\Tui\Utils\Strings;
 /**
  * Candidate rows resolved from the live query rather than filtered locally.
  *
- * Holds everything about a query-sourced list that is not I/O: which query the
- * displayed rows answer, whether one is in flight, what a failed or too-short
- * query shows instead of a list, and the per-query cache that makes a repeat -
- * a backspace, a retyped prefix - free.
+ * Holds everything about a query-sourced list that is not I/O. That covers
+ * the resolved query, an in-flight flag, and what a failed or too-short query
+ * shows instead of a list. The per-query cache serves a repeated query - a
+ * backspace, a retyped prefix - without another call.
  *
  * The resolution itself belongs to the panel loop, which is the only place that
  * may block and repaint.
@@ -26,8 +26,8 @@ trait QueryOptionsCapableTrait {
   /**
    * How many resolved queries are kept before the oldest is dropped.
    *
-   * A session's queries are short-lived and short, so the cap is about never
-   * growing without bound rather than about memory pressure.
+   * A session's queries are short-lived and short, so the cap stops unbounded
+   * growth; memory pressure is not the concern.
    */
   public const int QUERY_CACHE_SIZE = 50;
 
@@ -42,7 +42,9 @@ trait QueryOptionsCapableTrait {
   protected int $queryMinLength = 0;
 
   /**
-   * The query the displayed rows answer, or NULL before the first resolution.
+   * The query the displayed rows were resolved for.
+   *
+   * NULL before the first resolution.
    */
   protected ?string $resolvedQuery = NULL;
 
@@ -64,7 +66,7 @@ trait QueryOptionsCapableTrait {
   protected array $queryCache = [];
 
   /**
-   * Turn the field's rows over to a query source.
+   * Drive the field's rows from a query source.
    *
    * @param int $min_length
    *   The query length below which the source is not called.
@@ -142,7 +144,7 @@ trait QueryOptionsCapableTrait {
    * Show a query's rows and leave the loading state.
    *
    * @param string $query
-   *   The query the rows answer.
+   *   The query the rows were resolved for.
    * @param list<\DrevOps\Tui\Block\Option> $rows
    *   The rows to show.
    */
@@ -154,7 +156,7 @@ trait QueryOptionsCapableTrait {
   }
 
   /**
-   * Take on a resolved query's rows as the field's own candidates.
+   * Adopt a resolved query's rows as the field's candidates.
    *
    * @param list<\DrevOps\Tui\Block\Option> $rows
    *   The rows.
@@ -179,8 +181,6 @@ trait QueryOptionsCapableTrait {
     $elements = $this->elements($theme);
 
     if ($this->queryLoading) {
-      // The same mark a lazily loaded field shows in its panel row, so waiting
-      // reads the same wherever it happens.
       return $elements->fieldLoading();
     }
 
@@ -189,8 +189,8 @@ trait QueryOptionsCapableTrait {
     }
 
     if (Strings::length($this->query()) < $this->queryMinLength) {
-      // The guidance voice, not the description's: this line shares its row
-      // with the error above, and states what the field expects.
+      // Rendered as a constraint, not a description: the line shares its row
+      // with the error above and states what the field expects.
       return $elements->fieldConstraint(Translator::formatPlural($this->queryMinLength, 'Type 1 character to search.', 'Type @count characters to search.'));
     }
 

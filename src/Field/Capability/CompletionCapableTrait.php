@@ -10,10 +10,10 @@ use DrevOps\Tui\Utils\Strings;
  * Inline ghost-text completion over a character buffer.
  *
  * Composes with {@see TextEditCapableTrait}: the buffer is completed to the
- * first candidate it is a case-insensitive prefix of. Which candidates are
- * offered, when they are offered at all, and how the accepted one lands in the
- * buffer are each overridable, so a field whose buffer is not a plain caret
- * line reuses the matching rule without inheriting the caret arithmetic.
+ * first candidate it is a case-insensitive prefix of. The candidate list, the
+ * availability check and the acceptance step are each overridable. A field
+ * whose buffer is not a plain caret line reuses the matching rule without
+ * inheriting the caret arithmetic.
  *
  * @package DrevOps\Tui\Field\Capability
  */
@@ -31,7 +31,7 @@ trait CompletionCapableTrait {
    *   The full candidate string, or NULL.
    */
   public function bestMatch(): ?string {
-    if ($this->buffer === '' || !$this->completionAvailable()) {
+    if ($this->buffer === '' || !$this->isCompletionAvailable()) {
       return NULL;
     }
 
@@ -50,13 +50,13 @@ trait CompletionCapableTrait {
   }
 
   /**
-   * Whether the field's current state offers a completion at all.
+   * Whether the field's current state offers a completion.
    *
    * @return bool
    *   TRUE when the caret sits at the end of the buffer, so the ghost text
-   *   continues what is being typed rather than interrupting it.
+   *   continues the typed text instead of interrupting it.
    */
-  protected function completionAvailable(): bool {
+  protected function isCompletionAvailable(): bool {
     return $this->cursor === Strings::length($this->buffer);
   }
 
@@ -69,7 +69,7 @@ trait CompletionCapableTrait {
   abstract protected function completionCandidates(): array;
 
   /**
-   * Land an accepted candidate in the buffer.
+   * Set the buffer to an accepted candidate.
    *
    * @param string $match
    *   The candidate to complete the buffer to.

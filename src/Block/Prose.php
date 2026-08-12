@@ -6,7 +6,7 @@ namespace DrevOps\Tui\Block;
 
 use DrevOps\Tui\Block\Element\MarkupElementsInterface;
 use DrevOps\Tui\Terminal\Markup as Parser;
-use DrevOps\Tui\Terminal\MarkupKind;
+use DrevOps\Tui\Terminal\MarkupType;
 use DrevOps\Tui\Terminal\MarkupSegment;
 use DrevOps\Tui\Theme\Capability\MarkdownCapableInterface;
 
@@ -74,13 +74,13 @@ final class Prose {
    */
   protected static function span(MarkupSegment $segment, MarkupElementsInterface $theme, \Closure $plain): string {
     return match ($segment->kind) {
-      MarkupKind::Bold => $theme->markupStrong($segment->text),
-      MarkupKind::Emphasis => $theme->markupEmphasis($segment->text),
-      MarkupKind::Code => $theme->markupCode($segment->text),
-      MarkupKind::Link => $theme->markupLink($segment->text, $segment->url),
+      MarkupType::Bold => $theme->markupStrong($segment->text),
+      MarkupType::Emphasis => $theme->markupEmphasis($segment->text),
+      MarkupType::Code => $theme->markupCode($segment->text),
+      MarkupType::Link => $theme->markupLink($segment->text, $segment->url),
       // Every link is already a span of its own, so the styling left to do here
       // is whatever the surrounding text is drawn in.
-      MarkupKind::Text => $plain($segment->text),
+      MarkupType::Text => $plain($segment->text),
     };
   }
 
@@ -94,7 +94,7 @@ final class Prose {
    *   TRUE when it draws it.
    */
   protected static function markdown(MarkupElementsInterface $theme): bool {
-    return $theme instanceof MarkdownCapableInterface && $theme->hasMarkdown();
+    return $theme instanceof MarkdownCapableInterface && $theme->isMarkdown();
   }
 
 }

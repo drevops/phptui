@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Theme;
 
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Input\KeyName;
 use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
 use DrevOps\Tui\Primitive\Status;
 use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Terminal\Box;
 use DrevOps\Tui\Terminal\Markup;
-use DrevOps\Tui\Terminal\MarkupKind;
+use DrevOps\Tui\Terminal\MarkupType;
 use DrevOps\Tui\Terminal\MarkupSegment;
 use DrevOps\Tui\Terminal\Table;
 use DrevOps\Tui\Theme\Capability\ColorSchemeCapableInterface;
@@ -170,7 +171,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   /**
    * Validate the options against optionSchema(), failing loudly on a mistake.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\FormException
    *   When an option key is unknown or its value is not allowed.
    */
   protected function validateOptions(): void {
@@ -180,7 +181,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
     foreach ($this->options as $key => $value) {
       if (in_array($key, $integers, TRUE)) {
         if (!is_int($value) || $value < 0) {
-          throw new \InvalidArgumentException(Translator::t('@value is not a valid "@key". Use a non-negative integer.', [
+          throw new FormException(Translator::t('@value is not a valid "@key". Use a non-negative integer.', [
             '@value' => $this->showValue($value),
             '@key' => $key,
           ]));
@@ -190,7 +191,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
       }
 
       if (!array_key_exists($key, $schema)) {
-        throw new \InvalidArgumentException(Translator::t('Unknown theme option "@key". Known: @known.', [
+        throw new FormException(Translator::t('Unknown theme option "@key". Known: @known.', [
           '@key' => $key,
           '@known' => implode(', ', [...array_keys($schema), ...$integers]),
         ]));
@@ -200,7 +201,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
       $candidate = $value instanceof \BackedEnum ? $value->value : $value;
 
       if (!in_array($candidate, $schema[$key], TRUE)) {
-        throw new \InvalidArgumentException(Translator::t('@value is not a valid "@key". Allowed: @allowed.', [
+        throw new FormException(Translator::t('@value is not a valid "@key". Allowed: @allowed.', [
           '@value' => $this->showValue($candidate),
           '@key' => $key,
           '@allowed' => implode(', ', array_map($this->showValue(...), $schema[$key])),
@@ -213,7 +214,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
     // unresolvable resize notice.
     foreach ([['min_width', 'max_width'], ['min_height', 'max_height']] as [$min_key, $max_key]) {
       if (array_key_exists($min_key, $this->options) && $this->intOption($max_key, 0) > 0 && $this->intOption($min_key, 0) > $this->intOption($max_key, 0)) {
-        throw new \InvalidArgumentException(Translator::t('"@min" must not exceed "@max".', [
+        throw new FormException(Translator::t('"@min" must not exceed "@max".', [
           '@min' => $min_key,
           '@max' => $max_key,
         ]));
@@ -352,7 +353,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * @return bool
    *   TRUE when it is drawn rather than left as literal text.
    */
-  public function hasMarkdown(): bool {
+  public function isMarkdown(): bool {
     return $this->markdown;
   }
 
@@ -857,7 +858,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntry(string $text, bool $chosen, bool $focused = FALSE): string {
+  public function fieldOption(string $text, bool $chosen, bool $focused = FALSE): string {
     // Where the cursor rests is the louder of the two facts, and the only one
     // that moves, so it takes the accent and picking takes weight.
     if ($focused) {
@@ -871,7 +872,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntryMatch(string $text): string {
+  public function fieldOptionMatch(string $text): string {
     return $this->paint($this->isDark ? Sgr::of(Sgr::Bold, Sgr::Yellow) : Sgr::of(Sgr::Bold, Sgr::Magenta), $text);
   }
 
@@ -879,8 +880,8 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntrySelector(bool $selected): string {
-    $glyph = $this->overriddenGlyph(ThemeElement::FieldEntrySelector);
+  public function fieldOptionSelector(bool $selected): string {
+    $glyph = $this->overriddenGlyph(ThemeElement::FieldOptionSelector);
 
     if ($glyph === NULL || !$selected) {
       return $this->marker($selected);
@@ -893,10 +894,10 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntryMarker(bool $chosen, bool $exclusive = FALSE): string {
-    $glyph = $this->overriddenGlyph(ThemeElement::FieldEntryMarker);
+  public function fieldOptionMarker(bool $chosen, bool $exclusive = FALSE): string {
+    $glyph = $this->overriddenGlyph(ThemeElement::FieldOptionMarker);
 
-    // Only the picked state is stated, so an entry nobody picked keeps the
+    // Only the picked state is stated, so an option nobody picked keeps the
     // mark the theme draws for it and the patch stays a patch.
     if ($glyph !== NULL && $chosen) {
       return $exclusive ? $this->paint($this->accent(), $glyph) : $this->value($glyph);
@@ -916,7 +917,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntryNote(string $text): string {
+  public function fieldOptionNote(string $text): string {
     return $this->paint(Sgr::of(Sgr::Grey), $text);
   }
 
@@ -924,10 +925,10 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntryDescription(string $text): string {
+  public function fieldOptionDescription(string $text): string {
     // Slanted against the description's grey: it says the same kind of thing
-    // about a smaller subject, and the slant marks it as belonging to the entry
-    // above rather than to the field.
+    // about a smaller subject, and the slant marks it as belonging to the
+    // option above rather than to the field.
     return $this->paint(Sgr::of(Sgr::Italic, Sgr::Grey), $this->linkify($text));
   }
 
@@ -935,7 +936,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntrySeparator(): string {
+  public function fieldOptionSeparator(): string {
     return $this->renderRule();
   }
 
@@ -953,11 +954,11 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   #[\Override]
   public function fieldConstraint(string $text): string {
     // Guidance on how to answer is never louder than the question itself, but
-    // still reads as its own voice - and it sits directly beneath an entry's
+    // still reads as its own voice - and it sits directly beneath an option's
     // own description, so the two must not be mistaken for each other on any
     // surface. Slant reinforces the hue where the surface honours it, and where
     // neither survives the voice falls back to a mark, which nothing can strip.
-    $marked = $this->hasColor() ? $text : $this->glyph('› ', '> ') . $text;
+    $marked = $this->isColor() ? $text : $this->glyph('› ', '> ') . $text;
 
     return $this->paint($this->guidance(), $this->linkify($marked));
   }
@@ -1493,7 +1494,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   /**
    * {@inheritdoc}
    */
-  public function renderBanner(string $logo, string $version): string {
+  public function renderBanner(string $logo, string $version): array {
     $lines = [];
 
     foreach (explode("\n", $logo) as $line) {
@@ -1505,7 +1506,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
       $lines[] = $this->footer(Translator::t('Version: @version', ['@version' => $version]));
     }
 
-    return implode("\n", $lines);
+    return $lines;
   }
 
   /**
@@ -1514,7 +1515,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   public function renderStatus(Status $status, string $text): string {
     // The glyph and the message share one colour so the line reads as a single
     // statement, and the glyph alone still tells the five apart without it.
-    $line = rtrim($this->statusSymbol($status) . ' ' . $this->linkify($this->oneLine($text)));
+    $line = rtrim($this->statusGlyph($status) . ' ' . $this->linkify($this->oneLine($text)));
 
     return match ($status) {
       Status::Note => $this->description($line),
@@ -1572,7 +1573,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    * @return string
    *   The glyph, respecting the theme's Unicode mode.
    */
-  protected function statusSymbol(Status $status): string {
+  protected function statusGlyph(Status $status): string {
     // Every glyph is one column wide in any terminal - none has an emoji
     // presentation or an East Asian width - so a run of status lines aligns.
     return match ($status) {
@@ -1840,13 +1841,13 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    */
   protected function markupSegment(MarkupSegment $segment): string {
     return match ($segment->kind) {
-      MarkupKind::Bold => $this->markupStrong($segment->text),
-      MarkupKind::Emphasis => $this->markupEmphasis($segment->text),
-      MarkupKind::Code => $this->markupCode($segment->text),
-      MarkupKind::Link => $this->markupLink($segment->text, $segment->url),
+      MarkupType::Bold => $this->markupStrong($segment->text),
+      MarkupType::Emphasis => $this->markupEmphasis($segment->text),
+      MarkupType::Code => $this->markupCode($segment->text),
+      MarkupType::Link => $this->markupLink($segment->text, $segment->url),
       // The parser has already split every link into its own span, so the
       // element's own link resolution finds nothing left to do here.
-      MarkupKind::Text => $this->markupLine($segment->text),
+      MarkupType::Text => $this->markupLine($segment->text),
     };
   }
 

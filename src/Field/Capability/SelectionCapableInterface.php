@@ -19,6 +19,6 @@ interface SelectionCapableInterface {
    * @return bool
    *   TRUE when the cursor rests on a selectable option.
    */
-  public function currentSelectable(): bool;
+  public function isCurrentSelectable(): bool;
 
 }

@@ -170,21 +170,21 @@ final class GridLayout extends AbstractLayout {
   /**
    * Assert this grid's slots cover exactly the windows dealt into it.
    *
-   * @param int $windows
-   *   How many windows there are to deal.
+   * @param int $panels
+   *   How many panels there are to deal.
    * @param string $owner
    *   What declared the grid, as the name it goes by.
    *
    * @throws \DrevOps\Tui\FormException
-   *   When the slots do not cover the windows, which would leave one of them
+   *   When the windows do not cover the panels, which would leave one of them
    *   undrawn or a row of the grid empty.
    */
-  public function assertDeals(int $windows, string $owner): void {
-    if (count($this->windows) === $windows) {
+  public function assertDeals(int $panels, string $owner): void {
+    if (count($this->windows) === $panels) {
       return;
     }
 
-    throw new FormException(sprintf('The grid of "%s" declares %d slot(s) for %d window(s).', $owner, count($this->windows), $windows));
+    throw new FormException(sprintf('The grid of "%s" declares %d window(s) for %d panel(s).', $owner, count($this->windows), $panels));
   }
 
   /**

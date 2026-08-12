@@ -22,6 +22,6 @@ interface MarkdownCapableInterface {
    * @return bool
    *   TRUE when it is drawn.
    */
-  public function hasMarkdown(): bool;
+  public function isMarkdown(): bool;
 
 }

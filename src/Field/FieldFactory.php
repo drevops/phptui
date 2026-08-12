@@ -17,11 +17,10 @@ use DrevOps\Tui\Terminal\Ansi;
 use DrevOps\Tui\Translation\Translator;
 
 /**
- * Builds the editor a field opens onto, seeded with the value it holds.
+ * Builds the interactive field for a block, seeded with the value it holds.
  *
- * The kind of answer a field collects is what it turns on, and nothing it
- * builds refuses anything: what a field will not take is the field's own to
- * refuse, so an offered value is measured where the answer is held.
+ * The block's field type selects the field class. A built field does not
+ * validate: an offered value is validated where the answer is held.
  *
  * @package DrevOps\Tui\Field
  */
@@ -30,23 +29,23 @@ class FieldFactory {
   /**
    * The resolved key bindings to inject into each field.
    */
-  protected KeyMap $keymap;
+  protected KeyMap $keyMap;
 
   /**
    * Construct a field factory.
    *
-   * @param \DrevOps\Tui\Input\KeyMap|null $keymap
+   * @param \DrevOps\Tui\Input\KeyMap|null $key_map
    *   The resolved key bindings; NULL uses the default preset.
    * @param bool $externalEditorAvailable
    *   Whether an external editor is launchable here. A textarea field opts in
    *   per-field; the handoff shows only when one is also available.
    */
-  public function __construct(?KeyMap $keymap = NULL, protected bool $externalEditorAvailable = FALSE) {
-    $this->keymap = $keymap ?? KeyMapManager::create();
+  public function __construct(?KeyMap $key_map = NULL, protected bool $externalEditorAvailable = FALSE) {
+    $this->keyMap = $key_map ?? KeyMapManager::create();
   }
 
   /**
-   * Build the field a block opens onto, seeded with the value it holds.
+   * Build the interactive field for a block, seeded with the value it holds.
    *
    * @param \DrevOps\Tui\Block\Field $block
    *   The block being opened.
@@ -59,25 +58,24 @@ class FieldFactory {
    *   The field.
    *
    * @throws \LogicException
-   *   When the block's kind needs a declaration it was not given, so there is
-   *   nothing complete enough to open onto.
+   *   When the block's type requires a declaration the block does not carry.
    */
   public function open(Field $block, mixed $current = NULL, array $answers = []): FieldInterface {
-    $entries = $this->translate($block->entries());
+    $options = $this->translate($block->options());
 
     $field = match ($block->type()) {
       FieldType::Confirm => new Confirm((bool) $current),
-      FieldType::Toggle => new Toggle($this->entryLabels($entries), $this->text($current)),
-      FieldType::Select => new Select($entries, $this->seed($block, $current), $block->isMultiple(), $block->pageSize(), $block->selectionBounds()),
-      FieldType::Reorder => new Reorder($entries, Field::stringList($current), $block->pageSize()),
-      FieldType::Suggest => new Suggest($block->selectableValues(), $this->text($current), $block->pageSize(), $this->entryDescriptions($entries), $block->hasGhost()),
-      FieldType::Search => new Search($entries, $this->seed($block, $current), $block->isMultiple(), $block->pageSize(), $block->selectionBounds()),
+      FieldType::Toggle => new Toggle($this->optionLabels($options), $this->text($current)),
+      FieldType::Select => new Select($options, $this->seed($block, $current), $block->isMultiple(), $block->pageSize(), $block->selectionBounds()),
+      FieldType::Reorder => new Reorder($options, Field::stringList($current), $block->pageSize()),
+      FieldType::Suggest => new Suggest($block->selectableValues(), $this->text($current), $block->pageSize(), $this->optionDescriptions($options), $block->isGhost()),
+      FieldType::Search => new Search($options, $this->seed($block, $current), $block->isMultiple(), $block->pageSize(), $block->selectionBounds()),
       FieldType::FilePicker => new FilePicker($block->pickerStart(), $this->seed($block, $current), $block->pickerConstraints(), $block->showsHidden(), $block->isMultiple(), $block->pageSize(), $block->selectionBounds()),
       FieldType::Number => new Number($this->number($current), $block->numberBounds()),
       FieldType::Rating => $this->rating($block, $current),
       FieldType::Calendar => new Calendar($this->text($current), $block->dateBounds()),
-      FieldType::Textarea => new Textarea($this->text($current), $block->hasExternalEditor() && $this->externalEditorAvailable),
-      FieldType::Password => new Password($this->text($current), $block->isRevealable(), $block->hasConfirmation()),
+      FieldType::Textarea => new Textarea($this->text($current), $block->isExternalEditor() && $this->externalEditorAvailable),
+      FieldType::Password => new Password($this->text($current), $block->isRevealable(), $block->isConfirmation()),
       FieldType::Pause => new Pause(),
       FieldType::Text => new Text($this->text($current), $this->completions($block, $answers)),
       FieldType::Template => new Template($this->template($block), $this->text($current)),
@@ -91,7 +89,7 @@ class FieldFactory {
       $field->setPlaceholder($block->placeholderText());
     }
 
-    return $field->setKeys($this->keymap->forField($block->type(), $block->isMultiple()));
+    return $field->setKeys($this->keyMap->forField($block->type(), $block->isMultiple()));
   }
 
   /**
@@ -134,7 +132,7 @@ class FieldFactory {
   }
 
   /**
-   * The shape a block's template field fills in.
+   * The template a block's template field fills in.
    *
    * @param \DrevOps\Tui\Block\Field $block
    *   The block.
@@ -199,8 +197,8 @@ class FieldFactory {
   /**
    * A rating's captions, localized to the active language.
    *
-   * Translated once here rather than at each draw, the way the option labels
-   * are, so the caption a field shows is the caption the panel row shows.
+   * Translated once here rather than at each draw, so the caption the field
+   * shows is the caption the panel row shows.
    *
    * @param array<int,string> $captions
    *   The caption of each captioned point, keyed by the point.
@@ -219,13 +217,13 @@ class FieldFactory {
    *   The localized options.
    *
    * @return array<string,string>
-   *   The labels keyed by value, for fields that take a flat option map.
+   *   The labels keyed by value.
    */
-  protected function entryLabels(array $options): array {
+  protected function optionLabels(array $options): array {
     $out = [];
 
     foreach ($options as $option) {
-      if ($option->selectable()) {
+      if ($option->isSelectable()) {
         $out[$option->value] = $option->label;
       }
     }
@@ -269,11 +267,11 @@ class FieldFactory {
    * @return array<string,string>
    *   The description for each selectable option value.
    */
-  protected function entryDescriptions(array $options): array {
+  protected function optionDescriptions(array $options): array {
     $out = [];
 
     foreach ($options as $option) {
-      if (!$option->selectable()) {
+      if (!$option->isSelectable()) {
         continue;
       }
 

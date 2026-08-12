@@ -31,20 +31,19 @@ use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Translation\Translator;
 
 /**
- * A destination you can go into and come back from.
+ * A block that navigation enters and leaves.
  *
- * It is the only block that nests a layout, and the only one you navigate into:
- * entering it replaces the screen and grows the trail; leaving restores both.
- * A region can hold blocks and a layout can arrange them, but neither is
- * somewhere you go.
+ * It is the only block that nests a layout and the only one navigation
+ * enters: entering replaces the screen and adds a trail segment; leaving
+ * restores both. A region holds blocks and a layout arranges them, but
+ * neither is entered.
  *
- * Nested inside another panel it draws a row you select. Once entered it draws
- * nothing of its own, because its blocks do.
+ * Nested inside another panel it draws as a selectable row. Once entered it
+ * draws nothing of its own; its blocks draw instead.
  *
- * A whole section can come and go with the answers, exactly as one row can: the
- * condition decides whether the section is there at all, and a section that is
- * not there takes everything it holds with it - so a question inside one is
- * never asked, drawn or navigated into.
+ * A condition decides whether a whole section is there, exactly as one
+ * decides a single row. An absent section takes everything it holds with it,
+ * so a question inside one is never asked, drawn or entered.
  *
  * @package DrevOps\Tui\Block
  */
@@ -55,57 +54,57 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   use FocusCapableTrait;
 
   /**
-   * The region a layout names for the rows a panel holds itself.
+   * The default name of the region holding a panel's own rows.
    */
   protected const string ROWS = 'content';
 
   /**
-   * The gutter the rows under a panel's title are stepped in by.
+   * The indent the rows under a panel's title are stepped in by.
    */
   protected const string INDENT = '    ';
 
   /**
-   * How many answers a panel says it is holding before it stops counting.
+   * The maximum number of answers the summary line lists.
    */
   protected const int SUMMARY_ANSWERS = 4;
 
   /**
-   * How many picks a panel spells out before it says how many there were.
+   * The maximum number of picks listed before a count replaces them.
    */
   protected const int SUMMARY_ITEMS = 3;
 
   /**
-   * The layout arranging this panel's blocks, once one is given.
+   * The layout arranging this panel's blocks, or NULL before one is set.
    */
   protected ?LayoutInterface $layout = NULL;
 
   /**
-   * Whether it draws over what is behind it rather than replacing it.
+   * Whether the panel draws over what is behind it rather than replacing it.
    */
   protected bool $modal = FALSE;
 
   /**
-   * Whether this is the panel you are currently in.
+   * Whether this panel is the entered one.
    */
   protected bool $entered = FALSE;
 
   /**
-   * The title it carries into the trail.
+   * The title shown in the trail.
    */
   protected string $title;
 
   /**
-   * The standing text under its title.
+   * The description shown under the title.
    */
   protected string $description = '';
 
   /**
-   * The way out of it, once it draws over what is behind it.
+   * The button pair that closes a modal panel.
    */
   protected Buttons $buttons;
 
   /**
-   * What prepares it before it is first entered, until that has been done.
+   * The preparation run before the panel is first entered, until it has run.
    */
   protected ?\Closure $preload = NULL;
 
@@ -115,7 +114,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    * @param string $id
    *   The id it is addressed by.
    * @param string $title
-   *   The title it carries into the trail.
+   *   The title shown in the trail.
    */
   public function __construct(
     protected string $id,
@@ -136,7 +135,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   }
 
   /**
-   * The title this panel carries into the trail.
+   * The title shown in the trail.
    *
    * @return string
    *   The title.
@@ -146,7 +145,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   }
 
   /**
-   * Set the standing text under this panel's title.
+   * Set the description shown under this panel's title.
    *
    * @param string $description
    *   The description.
@@ -161,17 +160,17 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   }
 
   /**
-   * The standing text under this panel's title.
+   * The description shown under this panel's title.
    *
    * @return string
-   *   The description, empty when it carries none.
+   *   The description, empty when none is set.
    */
   public function descriptionText(): string {
     return $this->description;
   }
 
   /**
-   * Label the way out of this panel.
+   * Set the button pair that closes this panel.
    *
    * @param \DrevOps\Tui\Block\Buttons $buttons
    *   The pair that closes it.
@@ -180,8 +179,8 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    *   The panel.
    *
    * @throws \DrevOps\Tui\FormException
-   *   When the pair is hidden on a panel that draws over what is behind it,
-   *   which would strand it with no way out.
+   *   When the pair is hidden on a modal panel, whose buttons are its only
+   *   way out.
    */
   public function buttons(Buttons $buttons): static {
     $this->assertWayOut($this->modal, $buttons);
@@ -191,7 +190,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   }
 
   /**
-   * The way out of this panel.
+   * The button pair that closes this panel.
    *
    * @return \DrevOps\Tui\Block\Buttons
    *   The pair that closes it.
@@ -204,8 +203,8 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    * Prepare this panel before it is first entered.
    *
    * @param \Closure $work
-   *   An `fn (): void` doing the preparation, such as one fetch several of the
-   *   panel's fields then read.
+   *   An `fn (): void` doing the preparation, for example one fetch several
+   *   of the panel's fields then read.
    *
    * @return static
    *   The panel.
@@ -217,21 +216,21 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   }
 
   /**
-   * What prepares this panel before it is first entered.
+   * The preparation run before this panel is first entered.
    *
    * @return \Closure|null
-   *   The preparation, or NULL when there is none left to do.
+   *   The preparation, or NULL when none remains.
    */
   public function preparation(): ?\Closure {
     return $this->preload;
   }
 
   /**
-   * Do what was to be done before this panel is first entered.
+   * Run the preparation before this panel is first entered.
    *
    * @return bool
-   *   Whether anything was done. Preparation happens once, so every call after
-   *   the first answers FALSE.
+   *   Whether anything ran. Preparation runs once, so every call after the
+   *   first returns FALSE.
    */
   public function prepare(): bool {
     if (!$this->preload instanceof \Closure) {
@@ -315,8 +314,8 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    * {@inheritdoc}
    *
    * @throws \DrevOps\Tui\FormException
-   *   When its buttons are hidden, which would leave it drawn over everything
-   *   with no way out.
+   *   When its buttons are hidden; a modal panel's buttons are its only way
+   *   out.
    */
   public function modal(): static {
     $this->assertWayOut(TRUE, $this->buttons);
@@ -335,9 +334,8 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * {@inheritdoc}
    *
-   * A nested panel is a row you select rather than somewhere you are, so it
-   * takes no key until you have gone into it - which is what leaves the keys
-   * that move the cursor past it reaching the panel it sits in.
+   * An un-entered panel binds no keys, so the keys that move the cursor past
+   * it reach the panel it sits in.
    */
   public function binds(Key $key): bool {
     return $this->entered && $this->boundAction($key) instanceof Action;
@@ -346,15 +344,14 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * {@inheritdoc}
    *
-   * These are the keys you have while you are in a panel rather than inside
-   * anything it holds, which is why moving the cursor, going into a nested
-   * panel and coming back out again all resolve here.
+   * These keys apply inside a panel itself rather than inside a block it
+   * holds: moving the cursor, entering a nested panel and going back all
+   * resolve here.
    */
   public function hints(): array {
-    // Anything drawn beside something else is moved between in two directions
-    // rather than one, so what the keys do depends on how they are arranged.
-    // A grid says so with several regions on one line; an arrangement running
-    // across says so with its axis, every region of it being drawn abreast.
+    // Regions drawn side by side are moved between in two directions, so the
+    // move hint depends on the arrangement: a Columns axis draws every region
+    // abreast, and a grid places several regions on one line.
     $abreast = $this->layout instanceof LayoutInterface
       && ($this->layout->axis() === Axis::Columns || array_filter($this->layout->lines(), static fn(array $line): bool => count($line) > 1) !== []);
     $move = $abreast
@@ -371,8 +368,8 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * The fields this panel holds, in the order they were placed.
    *
-   * Its own only: a nested panel is somewhere you go rather than something this
-   * one holds, so what it asks belongs to it.
+   * Its own only: a nested panel's fields belong to that panel and are not
+   * included.
    *
    * @return list<\DrevOps\Tui\Block\Field>
    *   The fields.
@@ -392,9 +389,10 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * The ids of the rows this panel holds, in the order they were placed.
    *
-   * Every row that carries one, whether it collects an answer or only shows
-   * something: an id that shows is still an id the form knows, which is what
-   * tells a stray answer apart from one meant for a row that takes none.
+   * Field, markup and progress rows are included, whether they collect an
+   * answer or only show something. A display-only id is still an id the form
+   * knows, so a stray answer can be told from one aimed at a row that takes
+   * none. The ids of nested panels are not included.
    *
    * @return list<string>
    *   The ids.
@@ -412,7 +410,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   }
 
   /**
-   * The panels you can descend into from this one.
+   * The panels that can be entered from this one.
    *
    * @return list<\DrevOps\Tui\Block\Panel>
    *   The sub-panels, in the order they were placed.
@@ -454,8 +452,8 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * {@inheritdoc}
    *
-   * A row you select: the way in, what it is called, and enough of what is
-   * behind it to decide whether to go there.
+   * Draws the panel as a selectable row: its headline, its description and a
+   * summary of the answers it holds.
    */
   public function render(ThemeInterface $theme): string {
     $elements = $this->guard($theme);
@@ -475,37 +473,34 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   }
 
   /**
-   * This panel drawn as the bare way into it.
+   * This panel drawn as its headline row only.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string
-   *   The row: where the cursor is, what the panel is called, and the mark
-   *   saying it leads somewhere.
+   *   The row: the selector, the title and the descend mark.
    */
   public function wayIn(ThemeInterface $theme): string {
     return $this->stepped($this->headline($this->guard($theme)), $this->gutter($theme));
   }
 
   /**
-   * This panel drawn as a window into it rather than as a row.
+   * This panel drawn as a preview of its rows rather than as one row.
    *
-   * Where a row says what is behind it in one line, a window shows the rows
-   * themselves - which is what a panel sitting beside its siblings has the
-   * space for, and what makes a grid of them read as several views of the same
-   * form rather than as a list turned sideways.
+   * A preview shows the panel's rows themselves where {@see render()} shows
+   * one summary line, so a panel drawn beside its siblings in a grid reads
+   * as a view of the form.
    *
-   * A window is a column previewing one panel, so a way into another panel is
-   * drawn as the line that says so and nothing more: the row spelling out a
-   * description and a summary of what is behind it belongs to a list, where
-   * there is a whole width to spend on it.
+   * A preview is one column, so a nested panel inside it is drawn as its
+   * headline line only: the full row with a description and a summary
+   * belongs to a list, which has a whole width to spend on it.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string
-   *   The window; newlines separate rows.
+   *   The preview; newlines separate rows.
    */
   public function preview(ThemeInterface $theme): string {
     $elements = $this->guard($theme);
@@ -537,9 +532,9 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * The region this panel's own rows are drawn in.
    *
-   * Where the form goes on a screen and where a panel's rows go inside it are
-   * the same question asked of two layouts, so both read the same answer off
-   * the layout rather than each going looking for a name.
+   * The screen layout and a panel layout answer this the same way, so the
+   * region is read off the layout's Body furnishing rather than found by a
+   * fixed name.
    *
    * @return \DrevOps\Tui\Screen\Region
    *   The region.
@@ -549,7 +544,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   }
 
   /**
-   * The theme this panel draws through, refusing to draw an entered one.
+   * The theme this panel draws through, rejecting an entered panel.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -558,11 +553,11 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    *   The theme, narrowed to the elements a panel draws with.
    *
    * @throws \LogicException
-   *   When the panel is the one you are in, which draws nothing of its own.
+   *   When the panel is entered; an entered panel draws nothing of its own.
    */
   protected function guard(ThemeInterface $theme): PanelElementsInterface {
-    // Show and Focus are a nested panel's, not an entered one's: once you are
-    // in it, its blocks draw and it draws nothing of its own.
+    // Drawing and focus belong to a nested panel, not an entered one: once
+    // entered, its blocks draw and the panel draws nothing of its own.
     if ($this->entered) {
       throw new \LogicException(sprintf('Panel "%s" is entered, so its blocks draw rather than the panel itself.', $this->id));
     }
@@ -571,20 +566,20 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   }
 
   /**
-   * The gutter this panel's rows are laid out after.
+   * The gutter this panel's rows are stepped in by.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string
-   *   The gutter, empty when nothing steps the section in.
+   *   The gutter, empty when the section is not stepped in.
    */
   protected function gutter(ThemeInterface $theme): string {
     return $this->elements($theme, ChromeElementsInterface::class, 'a conditional section')->chromeIndent($this->depth);
   }
 
   /**
-   * The row that names this panel and says it leads somewhere.
+   * The row joining the selector, the title and the descend mark.
    *
    * @param \DrevOps\Tui\Block\Element\PanelElementsInterface $elements
    *   The theme, narrowed to the elements a panel draws with.
@@ -597,7 +592,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   }
 
   /**
-   * The rows this panel's standing text comes to, as they are drawn.
+   * This panel's description, drawn as rows.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -605,9 +600,9 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    *   The same theme, narrowed to the elements a panel draws with.
    *
    * @return list<string>
-   *   The rows, none when it carries no standing text or there is no room for
-   *   it: the text is secondary to the rows it introduces, so a theme with
-   *   nothing to spare drops it.
+   *   The rows; none when there is no description or the theme is compact.
+   *   The description is secondary to the rows it introduces, so a compact
+   *   theme drops it.
    */
   protected function guidance(ThemeInterface $theme, PanelElementsInterface $elements): array {
     if ($this->description === '' || $this->terse($theme)) {
@@ -620,7 +615,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   }
 
   /**
-   * What this panel is holding, as one line of answers.
+   * The answers this panel holds, as one line.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -628,8 +623,8 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    *   The same theme, narrowed to the elements a panel draws with.
    *
    * @return string
-   *   The answers, empty when it holds none, when none of them is there, or
-   *   when the theme has no room to say them.
+   *   The answers, empty when the panel holds none, when every field is
+   *   hidden, or when the theme is compact.
    */
   protected function summary(ThemeInterface $theme, PanelElementsInterface $elements): string {
     if ($this->terse($theme)) {
@@ -639,16 +634,12 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
     $answers = [];
 
     foreach ($this->fields() as $field) {
-      // A row the answers took off the screen says nothing about the panel,
-      // because it is not there to say it.
       if ($field->isHidden()) {
         continue;
       }
 
       $answers[] = $this->held($theme, $field);
 
-      // A row summarizes rather than lists, so it stops well before it would
-      // be read as the panel itself.
       if (count($answers) >= self::SUMMARY_ANSWERS) {
         break;
       }
@@ -658,11 +649,11 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   }
 
   /**
-   * One answer, as the row that stands for a whole panel says it.
+   * One field's answer, as the summary line shows it.
    *
-   * A handful of picks reads as the picks themselves; more than that would be
-   * the panel's whole content spelled out on the line meant to stand for it,
-   * so past a handful the line says how many were picked instead.
+   * A value of up to SUMMARY_ITEMS picks is listed as the picks themselves;
+   * a longer one is shown as a count, so the summary line stays a summary
+   * rather than the panel's whole content.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -670,7 +661,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    *   The field holding the answer.
    *
    * @return string
-   *   The answer as it reads on the panel's own row.
+   *   The answer as it reads on the summary line.
    */
   protected function held(ThemeInterface $theme, Field $field): string {
     $value = $field->value();
@@ -683,13 +674,13 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   }
 
   /**
-   * Whether the theme has no room for anything but the rows themselves.
+   * Whether the theme is set to compact spacing.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return bool
-   *   TRUE when it says so.
+   *   TRUE when the spacing is compact.
    */
   protected function terse(ThemeInterface $theme): bool {
     return $theme instanceof OccupyCapableInterface && $theme->spacing() === Spacing::Compact;
@@ -703,10 +694,10 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   }
 
   /**
-   * Reject a panel that would draw over everything with no way out.
+   * Reject a modal panel with hidden buttons, which would have no way out.
    *
    * @param bool $modal
-   *   Whether it draws over what is behind it.
+   *   Whether the panel draws over what is behind it.
    * @param \DrevOps\Tui\Block\Buttons $buttons
    *   The pair that closes it.
    *

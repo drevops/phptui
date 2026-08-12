@@ -61,7 +61,7 @@ class CapableTheme extends AbstractTheme implements ColorSchemeCapableInterface,
    * {@inheritdoc}
    */
   #[\Override]
-  public function fieldEntry(string $text, bool $chosen, bool $focused = FALSE): string {
+  public function fieldOption(string $text, bool $chosen, bool $focused = FALSE): string {
     return $this->paint($this->emphasize(Sgr::of(Sgr::Green), $chosen || $focused), $text);
   }
 

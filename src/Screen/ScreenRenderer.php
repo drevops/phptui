@@ -55,10 +55,13 @@ final class ScreenRenderer {
    * @param \DrevOps\Tui\Theme\Border $border
    *   The frame drawn around every region at once; none by default, which
    *   leaves the rows exactly as the layout arranged them.
+   * @param \DrevOps\Tui\Screen\Scroller $scroller
+   *   Resolves the window over content that outran the space it was given.
    */
   public function __construct(
     protected ThemeInterface $theme,
     protected Border $border = Border::None,
+    protected Scroller $scroller = new Scroller(),
   ) {
   }
 
@@ -396,7 +399,7 @@ final class ScreenRenderer {
         $row = $total + $piece['offsets'][$at];
       }
 
-      $total += $piece['height'];
+      $total += $piece['rows'];
     }
 
     return [$total, $row];
@@ -408,7 +411,7 @@ final class ScreenRenderer {
    * @param \DrevOps\Tui\Screen\Region $region
    *   The region.
    *
-   * @return list<array{height:int,blocks:list<\DrevOps\Tui\Block\BlockInterface>,offsets:list<int>}>
+   * @return list<array{rows:int,blocks:list<\DrevOps\Tui\Block\BlockInterface>,offsets:list<int>}>
    *   Each piece: the rows it comes to, the blocks drawn in it, and the row
    *   each of those starts on within it.
    */
@@ -427,7 +430,7 @@ final class ScreenRenderer {
    * @param bool $previews
    *   Whether a panel among them shows what is behind it rather than a row.
    *
-   * @return list<array{height:int,blocks:list<\DrevOps\Tui\Block\BlockInterface>,offsets:list<int>}>
+   * @return list<array{rows:int,blocks:list<\DrevOps\Tui\Block\BlockInterface>,offsets:list<int>}>
    *   The pieces.
    */
   protected function stacked(array $blocks, bool $previews = FALSE): array {
@@ -437,7 +440,7 @@ final class ScreenRenderer {
       // The panel you are in draws its own layout in place of its row, so what
       // it comes to is what that layout comes to.
       if ($block instanceof Panel && $block->isEntered()) {
-        $pieces[] = ['height' => $this->height($block->currentLayout()), 'blocks' => [$block], 'offsets' => [0]];
+        $pieces[] = ['rows' => $this->rows($block->currentLayout()), 'blocks' => [$block], 'offsets' => [0]];
 
         continue;
       }
@@ -449,7 +452,7 @@ final class ScreenRenderer {
       }
 
       $pieces[] = [
-        'height' => substr_count($rendered, "\n") + 1,
+        'rows' => substr_count($rendered, "\n") + 1,
         'blocks' => [$block],
         'offsets' => [0],
       ];
@@ -467,7 +470,7 @@ final class ScreenRenderer {
    * @return int
    *   The rows.
    */
-  protected function height(LayoutInterface $layout): int {
+  protected function rows(LayoutInterface $layout): int {
     return $layout->natural($this->measured($layout));
   }
 
@@ -543,7 +546,7 @@ final class ScreenRenderer {
    *   TRUE when the theme declared it handles them.
    */
   protected function unicode(): bool {
-    return $this->theme instanceof UnicodeCapableInterface && $this->theme->hasUnicode();
+    return $this->theme instanceof UnicodeCapableInterface && $this->theme->isUnicode();
   }
 
   /**
@@ -653,10 +656,10 @@ final class ScreenRenderer {
    */
   protected function moved(LayoutInterface $layout, array $lines, int $rows, int $columns): array {
     $content = count($lines);
-    $from = $layout->offset($content, $rows);
-    $shown = array_slice($lines, $from, max(0, $rows));
+    $window = $this->scroller->viewport($layout->offset($content, $rows), $content, $rows);
+    $shown = $this->scroller->slice($lines, $window->offset, $rows);
 
-    return $this->marked($shown, $columns, $from > 0, $from + $rows < $content);
+    return $this->marked($shown, $columns, $window->hasAbove, $window->hasBelow);
   }
 
   /**
@@ -790,8 +793,8 @@ final class ScreenRenderer {
     // declared to, and clips if it was not. Either way it hands back the rows
     // it was given, so the frame stays the shape the layout worked out.
     $content = count($lines);
-    $from = $region->isScrolling() ? $region->offset($content, $rows) : 0;
-    $lines = array_slice($lines, $from, max(0, $rows));
+    $window = $this->scroller->viewport($region->isScrolling() ? $region->offset($content, $rows) : 0, $content, $rows);
+    $lines = $this->scroller->slice($lines, $window->offset, $rows);
 
     // What packs from the end takes the cells the start left, so where the two
     // meet in the middle the head keeps its rows and the tail is the one cut.
@@ -813,7 +816,7 @@ final class ScreenRenderer {
       return $lines;
     }
 
-    return $this->marked($lines, $columns, $from > 0, $from + $rows < $content);
+    return $this->marked($lines, $columns, $window->hasAbove, $window->hasBelow);
   }
 
   /**
@@ -992,7 +995,7 @@ final class ScreenRenderer {
     // panel is one of them.
     $spent += $this->spaced() ? count($beside) : 0;
 
-    return max(0, min($rows - $spent, $this->height($panel->currentLayout())));
+    return max(0, min($rows - $spent, $this->rows($panel->currentLayout())));
   }
 
   /**

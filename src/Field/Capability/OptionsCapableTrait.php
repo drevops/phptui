@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Field\Capability;
 
 use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\OptionType;
 use DrevOps\Tui\Screen\Viewport;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
  * Shared option-list behaviour for the choice fields.
  *
- * Holds the ordered option rows and centralizes the two things every choice
- * field must agree on: the cursor only ever rests on a selectable row (so
- * separators, headings and disabled options are skipped), and those
- * non-selectable rows render as visual-only structure.
+ * Holds the ordered option rows and the two invariants every choice field
+ * shares. Where a selectable row exists the cursor is placed on one, skipping
+ * separators, headings and disabled options; where none is selectable it
+ * falls back to index 0. Non-selectable rows render as visual-only structure.
  *
  * @package DrevOps\Tui\Field\Capability
  */
@@ -49,7 +49,7 @@ trait OptionsCapableTrait {
    */
   protected function firstSelectable(array $rows): int {
     foreach ($rows as $index => $row) {
-      if ($row->selectable()) {
+      if ($row->isSelectable()) {
         return $index;
       }
     }
@@ -70,7 +70,7 @@ trait OptionsCapableTrait {
    */
   protected function cursorForDefault(array $rows, string $default): int {
     foreach ($rows as $index => $row) {
-      if ($row->selectable() && $row->value === $default) {
+      if ($row->isSelectable() && $row->value === $default) {
         return $index;
       }
     }
@@ -95,7 +95,7 @@ trait OptionsCapableTrait {
     $index = $from + $dir;
 
     while ($index >= 0 && $index < count($rows)) {
-      if ($rows[$index]->selectable()) {
+      if ($rows[$index]->isSelectable()) {
         return $index;
       }
 
@@ -150,10 +150,10 @@ trait OptionsCapableTrait {
    * @return string
    *   The highlighted option's description.
    */
-  protected function highlightedDescription(): string {
+  protected function currentDescription(): string {
     $option = $this->visible()[$this->cursor] ?? NULL;
 
-    return $option instanceof Option && $option->selectable() ? $option->description : '';
+    return $option instanceof Option && $option->isSelectable() ? $option->description : '';
   }
 
   /**
@@ -179,13 +179,13 @@ trait OptionsCapableTrait {
     $lines = [];
 
     foreach (array_slice($rows, $viewport->offset, $this->pageSize) as $slot => $option) {
-      if ($option->kind === OptionKind::Heading) {
+      if ($option->kind === OptionType::Heading) {
         $lines[] = $this->renderHeadingRow($theme, $option);
 
         continue;
       }
 
-      if ($option->kind === OptionKind::Separator) {
+      if ($option->kind === OptionType::Separator) {
         $lines[] = $this->renderSeparatorRow($theme);
 
         continue;
@@ -222,7 +222,7 @@ trait OptionsCapableTrait {
    *   The rendered row.
    */
   protected function renderSeparatorRow(ThemeInterface $theme): string {
-    return $this->elements($theme)->fieldEntrySeparator();
+    return $this->elements($theme)->fieldOptionSeparator();
   }
 
   /**
@@ -243,7 +243,7 @@ trait OptionsCapableTrait {
       $text .= ' (' . $option->disabledReason . ')';
     }
 
-    return $this->elements($theme)->fieldEntryNote($text);
+    return $this->elements($theme)->fieldOptionNote($text);
   }
 
 }

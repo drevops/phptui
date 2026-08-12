@@ -33,10 +33,10 @@ final class ThemeTest extends TestCase {
     yield 'dark title' => [static fn(): string => (new DefaultTheme())->markupTitle('X'), '1;36'];
     yield 'dark value' => [static fn(): string => (new DefaultTheme())->fieldValue('X'), '32'];
     yield 'dark border' => [static fn(): string => (new DefaultTheme())->chromeBorder('X'), '36'];
-    yield 'dark match' => [static fn(): string => (new DefaultTheme())->fieldEntryMatch('X'), '1;33'];
+    yield 'dark match' => [static fn(): string => (new DefaultTheme())->fieldOptionMatch('X'), '1;33'];
     yield 'light title' => [static fn(): string => self::light()->markupTitle('X'), '1;34'];
     yield 'light border' => [static fn(): string => self::light()->chromeBorder('X'), '34'];
-    yield 'light match' => [static fn(): string => self::light()->fieldEntryMatch('X'), '1;35'];
+    yield 'light match' => [static fn(): string => self::light()->fieldOptionMatch('X'), '1;35'];
     // These roles are mode-independent: dimmed chrome and the red error.
     yield 'description' => [static fn(): string => (new DefaultTheme())->fieldDescription('X'), '90'];
     // Guidance on how to answer steps along the grey ramp rather than taking a
@@ -45,7 +45,7 @@ final class ThemeTest extends TestCase {
     yield 'constraint' => [static fn(): string => (new DefaultTheme())->fieldConstraint('X'), '3;38;5;246'];
     yield 'error' => [static fn(): string => (new DefaultTheme())->fieldError('X'), '31'];
     yield 'breadcrumb' => [static fn(): string => self::light()->breadcrumbLabel('X'), '90'];
-    yield 'entry note' => [static fn(): string => (new DefaultTheme())->fieldEntryNote('X'), '90'];
+    yield 'option note' => [static fn(): string => (new DefaultTheme())->fieldOptionNote('X'), '90'];
     yield 'state' => [static fn(): string => (new DefaultTheme())->fieldState('X'), '90'];
     yield 'caption' => [static fn(): string => (new DefaultTheme())->fieldCaption('X'), '1;38;5;109'];
     // Inline ghost-text is dimmed gray, the same as the other dimmed chrome.
@@ -167,17 +167,17 @@ final class ThemeTest extends TestCase {
     $this->assertSame('----------', (new DefaultTheme(10, ['unicode' => FALSE, 'color' => FALSE, 'border' => Border::None]))->renderRule());
     // The rule is dimmed when colour is on.
     $this->assertStringContainsString("\033[90m", (new DefaultTheme(10))->renderRule());
-    // One rule wherever it appears: what stands between two runs of entries is
+    // One rule wherever it appears: what stands between two runs of options is
     // what stands between two blocks of standalone output.
-    $this->assertSame((new DefaultTheme(10))->renderRule(), (new DefaultTheme(10))->fieldEntrySeparator());
+    $this->assertSame((new DefaultTheme(10))->renderRule(), (new DefaultTheme(10))->fieldOptionSeparator());
   }
 
-  public function testPickedEntryTakesWeightAndFocusTakesTheAccent(): void {
+  public function testPickedOptionTakesWeightAndFocusTakesTheAccent(): void {
     $theme = new DefaultTheme();
 
-    $this->assertStringContainsString("\033[1", $theme->fieldEntry('X', TRUE));
-    $this->assertStringNotContainsString("\033[1", $theme->fieldEntry('X', FALSE));
-    $this->assertSame(Ansi::style('X', '1;36'), $theme->fieldEntry('X', FALSE, TRUE));
+    $this->assertStringContainsString("\033[1", $theme->fieldOption('X', TRUE));
+    $this->assertStringNotContainsString("\033[1", $theme->fieldOption('X', FALSE));
+    $this->assertSame(Ansi::style('X', '1;36'), $theme->fieldOption('X', FALSE, TRUE));
   }
 
   public function testColourOffLeavesTextPlain(): void {
@@ -185,7 +185,7 @@ final class ThemeTest extends TestCase {
 
     $this->assertSame('Setup', $theme->markupTitle('Setup'));
     $this->assertSame('X', $theme->fieldValue('X'));
-    $this->assertFalse($theme->hasColor());
+    $this->assertFalse($theme->isColor());
   }
 
   #[DataProvider('dataProviderGlyph')]
@@ -217,22 +217,22 @@ final class ThemeTest extends TestCase {
     $this->assertSame(' ', $theme->fieldSelector(FALSE));
     // A round mark for a question that takes one answer, a square one for a
     // question that takes several.
-    $this->assertSame('●', $theme->fieldEntryMarker(TRUE, TRUE));
-    $this->assertSame('○', $theme->fieldEntryMarker(FALSE, TRUE));
-    $this->assertSame('◼', $theme->fieldEntryMarker(TRUE));
-    $this->assertSame('◻', $theme->fieldEntryMarker(FALSE));
+    $this->assertSame('●', $theme->fieldOptionMarker(TRUE, TRUE));
+    $this->assertSame('○', $theme->fieldOptionMarker(FALSE, TRUE));
+    $this->assertSame('◼', $theme->fieldOptionMarker(TRUE));
+    $this->assertSame('◻', $theme->fieldOptionMarker(FALSE));
 
     $ascii = new DefaultTheme(76, ['unicode' => FALSE, 'color' => FALSE]);
     $this->assertSame('>', $ascii->fieldSelector(TRUE));
-    $this->assertSame('(*)', $ascii->fieldEntryMarker(TRUE, TRUE));
-    $this->assertSame('[ ]', $ascii->fieldEntryMarker(FALSE));
+    $this->assertSame('(*)', $ascii->fieldOptionMarker(TRUE, TRUE));
+    $this->assertSame('[ ]', $ascii->fieldOptionMarker(FALSE));
   }
 
   public function testCursorAccentIsShared(): void {
     // The selector, caret and exclusive mark all carry the cursor accent.
     $this->assertStringContainsString("\033[1;36m", (new DefaultTheme())->fieldSelector(TRUE));
     $this->assertStringContainsString("\033[1;36m", (new DefaultTheme())->fieldCaret());
-    $this->assertStringContainsString("\033[1;36m", (new DefaultTheme())->fieldEntryMarker(TRUE, TRUE));
+    $this->assertStringContainsString("\033[1;36m", (new DefaultTheme())->fieldOptionMarker(TRUE, TRUE));
     $this->assertStringContainsString("\033[1;34m", self::light()->fieldSelector(TRUE));
   }
 
@@ -248,13 +248,13 @@ final class ThemeTest extends TestCase {
 
     // Everything drawn from the accent follows; everything else stays default.
     $this->assertSame(Ansi::style('X', '1;95'), $theme->markupTitle('X'));
-    $this->assertSame(Ansi::style('X', '1;95'), $theme->fieldEntry('X', FALSE, TRUE));
+    $this->assertSame(Ansi::style('X', '1;95'), $theme->fieldOption('X', FALSE, TRUE));
     $this->assertSame(Ansi::style('X', '32'), $theme->fieldValue('X'));
   }
 
   public function testHasUnicode(): void {
-    $this->assertTrue((new DefaultTheme())->hasUnicode());
-    $this->assertFalse((new DefaultTheme(76, ['unicode' => FALSE]))->hasUnicode());
+    $this->assertTrue((new DefaultTheme())->isUnicode());
+    $this->assertFalse((new DefaultTheme(76, ['unicode' => FALSE]))->isUnicode());
   }
 
   public function testDefaultThemePaintsNoBackground(): void {

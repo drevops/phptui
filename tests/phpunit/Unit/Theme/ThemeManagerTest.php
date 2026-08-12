@@ -229,10 +229,10 @@ final class ThemeManagerTest extends TestCase {
 
     $this->assertInstanceOf(DefaultTheme::class, $theme);
     $this->assertInstanceOf(DefaultTheme::class, $default);
-    $this->assertFalse($theme->hasColor());
-    $this->assertFalse($theme->hasUnicode());
-    $this->assertTrue($default->hasColor());
-    $this->assertTrue($default->hasUnicode());
+    $this->assertFalse($theme->isColor());
+    $this->assertFalse($theme->isUnicode());
+    $this->assertTrue($default->isColor());
+    $this->assertTrue($default->isUnicode());
   }
 
 }

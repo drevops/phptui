@@ -55,8 +55,8 @@ final class FieldDeclarationTest extends TestCase {
     $orchard = $root->children()[1];
     $basket = $orchard->fields()[0];
     $this->assertSame(FieldType::Select, $basket->type());
-    $this->assertSame('Standard', $basket->entryOf('standard')?->label);
-    $this->assertNotInstanceOf(Option::class, $basket->entryOf('missing'));
+    $this->assertSame('Standard', $basket->optionOf('standard')?->label);
+    $this->assertNotInstanceOf(Option::class, $basket->optionOf('missing'));
 
     // The trail reaches every panel and every field beneath the root.
     $this->assertCount(1, $orchard->children());
@@ -209,7 +209,7 @@ final class FieldDeclarationTest extends TestCase {
       'b' => static fn(string $part): ?string => $part === 'ok' ? NULL : 'must be ok',
     ]));
 
-    $this->assertSame($expected, $field->templateError($value));
+    $this->assertSame($expected, $field->templateViolation($value));
   }
 
   /**
@@ -229,7 +229,7 @@ final class FieldDeclarationTest extends TestCase {
   }
 
   public function testTemplateErrorIsNullWithoutShape(): void {
-    $this->assertNull((new Field('name', 'Name'))->templateError('anything'));
+    $this->assertNull((new Field('name', 'Name'))->templateViolation('anything'));
   }
 
   /**
@@ -298,7 +298,7 @@ final class FieldDeclarationTest extends TestCase {
    */
   public static function dataProviderOptionsOnFieldWithNoListThrow(): \Iterator {
     yield 'a declared row' => [
-      static fn(Field $field): Field => $field->entry('apple', 'Apple'),
+      static fn(Field $field): Field => $field->option('apple', 'Apple'),
       'Field "f" of type "text" shows no options; only select, search, suggest, toggle and reorder fields have a list.',
     ];
     yield 'a query source' => [

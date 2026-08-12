@@ -12,9 +12,9 @@ use DrevOps\Tui\Translation\Translator;
  * A boolean reads as a translated yes/no, a list joins its scalar items with
  * commas, a scalar casts to its string, and anything else renders empty. The
  * panel rows, the grid previews and the answer summary all route through this
- * one rendering, so a value never reads differently between surfaces. Secret
- * masking rides along: a fixed-length mask conceals both a secret's value and
- * its length, whatever glyph the surface masks with.
+ * one rendering, so a value never reads differently between surfaces. The
+ * fixed-length mask conceals both a secret's value and its length, whatever
+ * glyph the surface masks with.
  *
  * @package DrevOps\Tui\Answers
  */

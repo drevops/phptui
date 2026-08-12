@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Unit\Field;
 
 use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\OptionType;
 use DrevOps\Tui\Field\AbstractField;
 use DrevOps\Tui\Field\Capability\PagingCapableTrait;
 use DrevOps\Tui\Field\Reorder;
@@ -52,7 +52,7 @@ final class ReorderTest extends TestCase {
     // The cursor starts on the non-selectable heading, so its description
     // never renders beneath the list.
     $field = new Reorder([
-      new Option('', 'Group', 'group note', OptionKind::Heading),
+      new Option('', 'Group', 'group note', OptionType::Heading),
       new Option('a', 'Apple', 'Crisp and sweet.'),
     ]);
 

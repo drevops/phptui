@@ -24,11 +24,21 @@ use DrevOps\Tui\Theme\ThemeInterface;
 use DrevOps\Tui\Utils\Strings;
 
 /**
- * An autocomplete text input fuzzy-filtering a fixed option set.
+ * An autocomplete text input over a set of candidate values.
+ *
+ * A declared set is ranked locally against the buffer. A query source replaces
+ * the values as its queries settle, and those arrive already answering the
+ * buffer, so they are shown in the order given.
  *
  * @package DrevOps\Tui\Field
  */
-class Suggest extends AbstractField implements SearchCapableInterface, TextEditCapableInterface, QueryOptionsCapableInterface, PagingCapableInterface, PlaceholderCapableInterface, CompletionCapableInterface {
+class Suggest extends AbstractField implements
+  SearchCapableInterface,
+  TextEditCapableInterface,
+  QueryOptionsCapableInterface,
+  PagingCapableInterface,
+  PlaceholderCapableInterface,
+  CompletionCapableInterface {
 
   use PagingCapableTrait;
   use QueryOptionsCapableTrait;
@@ -107,8 +117,8 @@ class Suggest extends AbstractField implements SearchCapableInterface, TextEditC
       return;
     }
 
-    // Right accepts the ghost-text like Tab; with nothing to complete it is
-    // inert, as it is for a suggest field that never opted into ghost-text.
+    // Right applies the completion like Tab; with nothing to complete, or
+    // with ghost-text off, it does nothing.
     if ($keys->matches($key, Action::MoveRight) && $this->bestMatch() !== NULL) {
       $this->applyCompletion();
 
@@ -154,8 +164,8 @@ class Suggest extends AbstractField implements SearchCapableInterface, TextEditC
   /**
    * {@inheritdoc}
    *
-   * The buffer is append-only - the query grows at its end - so the text is
-   * added there and the suggestion highlight resets.
+   * The buffer is append-only, so the text is appended and the suggestion
+   * highlight resets.
    */
   public function insert(string $text): void {
     $this->buffer .= $text;
@@ -181,28 +191,26 @@ class Suggest extends AbstractField implements SearchCapableInterface, TextEditC
   /**
    * Whether a completion is offered in the field's current state.
    *
-   * The buffer is append-only, so the caret is always at its end; what gates a
-   * completion here is what the rest of the editor is saying. Once a suggestion
-   * is highlighted it, not the buffer, is the live value, so previewing a
-   * completion of the buffer would contradict it. While a query is in flight
-   * the candidates still held are the previous query's, and the list they came
-   * from has already been replaced by the loading indicator - previewing one of
-   * them would put back the very answer the field is withdrawing.
+   * The buffer is append-only, so the caret is always at its end and never
+   * gates the preview. A highlighted suggestion, not the buffer, is the live
+   * value, so a completion of the buffer would contradict it.
+   *
+   * While a query is in flight the candidates are the previous query's and
+   * their list has been replaced by the loading indicator; none is previewed.
    *
    * @return bool
    *   TRUE when the ghost-text preview applies.
    */
-  protected function completionAvailable(): bool {
+  protected function isCompletionAvailable(): bool {
     return $this->ghost && $this->cursor < 0 && !$this->queryLoading;
   }
 
   /**
    * The candidates the buffer is completed against.
    *
-   * Drawn from the displayed list rather than the declared order, so the
-   * previewed completion is always the leading prefix match of the very list
-   * shown beneath it - whether that order came from local ranking or from a
-   * query source.
+   * The candidates are the displayed list, not the declared order. The
+   * preview is always the leading prefix match of the list shown beneath it,
+   * whether the order came from local ranking or a query source.
    *
    * @return list<string>
    *   The suggestion values in display order.
@@ -212,10 +220,10 @@ class Suggest extends AbstractField implements SearchCapableInterface, TextEditC
   }
 
   /**
-   * Land an accepted completion in the query.
+   * Apply an accepted completion to the query.
    *
-   * The completion is a new query, not a selection: the list re-filters around
-   * it and stays open, with nothing highlighted.
+   * The completion is a new query, not a selection: the list re-filters
+   * against it, stays open and highlights nothing.
    *
    * @param string $match
    *   The candidate to complete the query to.
@@ -228,16 +236,16 @@ class Suggest extends AbstractField implements SearchCapableInterface, TextEditC
   /**
    * The suggestions matching the current buffer, ranked by fuzzy relevance.
    *
-   * Suggestions that came from a query source are already the answer to the
-   * buffer, so ranking them again locally would drop the ones that do not
-   * literally match it.
+   * Suggestions from a query source already answer the buffer, so ranking
+   * them locally would drop the ones that do not literally match it.
    *
-   * Only the locally ranked path is memoized, and deliberately so: there the
-   * values are fixed for the field's life, so the query alone determines the
-   * ranking and one pass serves the several reads a frame makes - the list, the
-   * highlighted description, the live value and the ghost-text preview. A query
-   * source replaces the values as each query settles, which a query-keyed
-   * memo could not see, so that path reads them directly every time.
+   * Only the locally ranked path is memoized: the values are fixed for the
+   * field's life, so the buffer alone determines the ranking. One ranking
+   * covers the several reads a frame makes - the list, the highlighted
+   * description, the live value and the ghost-text preview.
+   *
+   * A query source replaces the values as queries settle, which a query-keyed
+   * memo would not see, so that path reads them directly.
    *
    * @return list<string>
    *   The matching suggestion values, most relevant first.
@@ -271,7 +279,7 @@ class Suggest extends AbstractField implements SearchCapableInterface, TextEditC
 
     $this->descriptions = [];
     foreach ($rows as $row) {
-      if ($row->selectable()) {
+      if ($row->isSelectable()) {
         $this->descriptions[$row->value] = $row->description;
       }
     }
@@ -308,7 +316,7 @@ class Suggest extends AbstractField implements SearchCapableInterface, TextEditC
 
     foreach (array_slice($visible, $viewport->offset, $this->pageSize) as $slot => $value) {
       $current = $viewport->offset + $slot === $this->cursor;
-      $rows[] = $this->elements($theme)->fieldEntrySelector($current) . ' ' . $this->renderMatchedLabel($theme, $value, $this->matchPositions($value), $current);
+      $rows[] = $this->elements($theme)->fieldOptionSelector($current) . ' ' . $this->renderMatchedLabel($theme, $value, $this->matchPositions($value), $current);
     }
 
     return implode("\n", [$this->queryLine($theme), ...$this->wrapScrolled($theme, $rows, $viewport)]);
@@ -321,7 +329,7 @@ class Suggest extends AbstractField implements SearchCapableInterface, TextEditC
    *   The highlighted suggestion's description.
    */
   #[\Override]
-  protected function highlightedDescription(): string {
+  protected function currentDescription(): string {
     if ($this->cursor < 0) {
       return '';
     }
@@ -335,8 +343,8 @@ class Suggest extends AbstractField implements SearchCapableInterface, TextEditC
    * {@inheritdoc}
    *
    * The completion suffix and the placeholder share the one ghost slot after
-   * the caret: the former needs a typed query to complete, the latter an empty
-   * one, so at most one of them is ever set.
+   * the caret. The completion needs a typed query and the placeholder an
+   * empty one, so at most one of them is ever set.
    */
   public function queryLine(ThemeInterface $theme): string {
     $completion = $this->ghostSuffix();

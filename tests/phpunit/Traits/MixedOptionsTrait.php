@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Tests\Traits;
 
 use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\OptionType;
 
 /**
  * Provides a choice-list fixture mixing every option kind.
@@ -22,10 +22,10 @@ trait MixedOptionsTrait {
   protected function mixedOptions(): array {
     return [
       new Option('a', 'Apple'),
-      new Option('', 'Fruits', '', OptionKind::Heading),
+      new Option('', 'Fruits', '', OptionType::Heading),
       new Option('b', 'Banana'),
-      new Option('', '', '', OptionKind::Separator),
-      new Option('c', 'Cherry', '', OptionKind::Option, TRUE, 'out of stock'),
+      new Option('', '', '', OptionType::Separator),
+      new Option('c', 'Cherry', '', OptionType::Option, TRUE, 'out of stock'),
       new Option('d', 'Date'),
     ];
   }

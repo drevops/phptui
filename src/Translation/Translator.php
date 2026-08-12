@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DrevOps\Tui\Translation;
 
+use DrevOps\Tui\FormException;
+
 /**
  * Resolves user-facing strings to a target language, English as the fallback.
  *
@@ -139,8 +141,8 @@ final class Translator {
    * @param string $singular
    *   The English singular source, a catalog key and the one-form fallback.
    * @param string $plural
-   *   The English plural source: the key a translation's forms hang from, and
-   *   the fallback form for any count that is not one.
+   *   The English plural source: the key a translation's forms are listed
+   *   under, and the fallback form for any count that is not one.
    * @param array<string,string|int|float|\Stringable> $args
    *   Replacements for the @name placeholders; @count is added automatically.
    *
@@ -180,18 +182,18 @@ final class Translator {
    * A translation lists the forms for the plural source, and the catalog's own
    * rule - or the default one-versus-other when it supplies none - selects
    * among them. Without a translation the two English source forms and the
-   * default rule stand in, so a language's rule never applies to the English
-   * wording, whose singular reads for a count of exactly one. An index the
-   * chosen forms do not cover falls back to the plural source, so a rendering
-   * is always defined.
+   * default rule are used, so a language's rule never applies to the English
+   * wording and the English singular is used only for a count of one. An index
+   * the chosen forms do not cover falls back to the plural source, so a
+   * rendering is always defined.
    *
    * @param int $count
    *   The item count the form is chosen for.
    * @param string $singular
    *   The English singular source, the one-form fallback.
    * @param string $plural
-   *   The English plural source: the key the catalog's forms hang from, and the
-   *   fallback form.
+   *   The English plural source: the key the catalog's forms are listed under,
+   *   and the fallback form.
    * @param array<string,string|int|float|\Stringable> $args
    *   Replacements for the @name placeholders; @count is added automatically.
    *
@@ -228,15 +230,13 @@ final class Translator {
   /**
    * Substitute @name placeholders in a message.
    *
-   * The one substitution routine, shared by the instance path and the t()
-   * fallback path so a translated and an untranslated string interpolate
-   * identically.
+   * One substitution routine serves the instance path and the t() fallback
+   * path, so a translated and an untranslated string interpolate identically.
    *
-   * A placeholder value may itself be an already-translated phrase (as the
-   * bounds `describe()` methods and the schema validator compose one message
-   * inside another); this concatenation cannot honour every locale's word order
-   * or grammatical agreement, so a language needing those would supply
-   * full-sentence catalog keys rather than relying on composition.
+   * A placeholder value may itself be an already-translated phrase; the
+   * concatenation cannot honour every locale's word order or grammatical
+   * agreement, so a language needing those supplies full-sentence catalog
+   * keys rather than relying on composition.
    *
    * @param string $message
    *   The message, possibly carrying @name placeholders.
@@ -252,6 +252,7 @@ final class Translator {
     }
 
     $map = [];
+
     foreach ($args as $placeholder => $value) {
       $map[$placeholder] = (string) $value;
     }
@@ -272,9 +273,11 @@ final class Translator {
   public static function detectLanguage(): string {
     foreach (['LC_ALL', 'LC_MESSAGES', 'LANG'] as $var) {
       $value = getenv($var);
+
       if (!is_string($value)) {
         continue;
       }
+
       if ($value === '') {
         continue;
       }
@@ -320,7 +323,7 @@ final class Translator {
 
     // The bundled defaults are the implicit first source, so any consumer
     // source overrides them. A missing bundled directory (a trimmed archive)
-    // degrades to English rather than erroring on every construction.
+    // degrades to English rather than failing at the first translation.
     $bundled = self::bundledDirectory();
     $sources = is_dir($bundled) ? [$bundled, ...$this->sources] : $this->sources;
 
@@ -349,6 +352,9 @@ final class Translator {
    *
    * @return array<string,string>
    *   The source => translation entries the source contributes.
+   *
+   * @throws \DrevOps\Tui\FormException
+   *   When the source is neither a directory, file, nor array.
    */
   protected function loadSource(string|array $source, array $candidates): array {
     if (is_array($source)) {
@@ -379,7 +385,7 @@ final class Translator {
       return in_array(pathinfo($source, PATHINFO_FILENAME), $candidates, TRUE) ? $this->readCatalog($source) : [];
     }
 
-    throw new \InvalidArgumentException(sprintf('The translation source "%s" is neither a directory nor a catalog file.', $source));
+    throw new FormException(sprintf('The translation source "%s" is neither a directory nor a catalog file.', $source));
   }
 
   /**
@@ -412,8 +418,8 @@ final class Translator {
    *
    * Returns the string => string pairs; the plural-form lists and a plural-rule
    * closure are read as side effects into $this->plurals and $this->pluralRule,
-   * so the caller merges only the returned string map. The one normalisation
-   * routine, shared by file catalogs and inline maps so both shapes honour the
+   * so the caller merges only the returned string map. One normalisation
+   * routine serves file catalogs and inline maps, so both shapes honour the
    * same entry kinds.
    *
    * @param array<mixed> $data

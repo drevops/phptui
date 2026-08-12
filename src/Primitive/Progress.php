@@ -83,7 +83,7 @@ final class Progress {
   /**
    * Run the callback, showing progress while it works.
    *
-   * @param callable(self): TReturn $work
+   * @param \Closure(self): TReturn $work
    *   The work to run; it receives this primitive so it can drive the updates.
    *
    * @return TReturn
@@ -91,7 +91,7 @@ final class Progress {
    *
    * @template TReturn
    */
-  public function run(callable $work): mixed {
+  public function run(\Closure $work): mixed {
     if (!$this->active) {
       // Off a TTY the indicator is invisible chrome, so a single plain caption
       // line is the whole trace. Flush it so a block-buffered stream shows the

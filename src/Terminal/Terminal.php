@@ -193,7 +193,7 @@ class Terminal {
   }
 
   /**
-   * The terminal height in rows.
+   * The terminal rows.
    *
    * A LINES environment override wins; otherwise the size is probed from the
    * terminal once per instance, falling back to the classic 24 rows.
@@ -201,12 +201,12 @@ class Terminal {
    * @return int
    *   The number of rows available for rendering.
    */
-  public function height(): int {
+  public function rows(): int {
     return $this->envDimension('LINES') ?? $this->size()[1];
   }
 
   /**
-   * The terminal width in columns.
+   * The terminal columns.
    *
    * A COLUMNS environment override wins; otherwise the size is probed from the
    * terminal once per instance, falling back to the classic 80 columns.
@@ -214,7 +214,7 @@ class Terminal {
    * @return int
    *   The number of columns available for rendering.
    */
-  public function width(): int {
+  public function columns(): int {
     return $this->envDimension('COLUMNS') ?? $this->size()[0];
   }
 
@@ -371,9 +371,11 @@ class Terminal {
         }
 
         $chunk = fread($this->input, 64);
+
         if (!is_string($chunk)) {
           continue;
         }
+
         if ($chunk === '') {
           continue;
         }
@@ -405,6 +407,7 @@ class Terminal {
   public static function detectUnicode(): bool {
     foreach (['LC_ALL', 'LC_CTYPE', 'LANG'] as $var) {
       $value = getenv($var);
+
       if (is_string($value) && $value !== '') {
         return stripos($value, 'utf') !== FALSE;
       }

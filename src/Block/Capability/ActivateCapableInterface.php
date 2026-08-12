@@ -7,16 +7,15 @@ namespace DrevOps\Tui\Block\Capability;
 /**
  * A block that does something when it is activated.
  *
- * Activating it acts rather than reveals: work runs, or the form ends. Nothing
- * it does reaches the collected result, which is what separates it from the
- * block that holds a value.
+ * Activating runs work or ends the form; it reveals nothing. Nothing it does
+ * reaches the collected result, so holding a value is a separate capability.
  *
  * @package DrevOps\Tui\Block\Capability
  */
 interface ActivateCapableInterface {
 
   /**
-   * Do what activating this block does.
+   * Perform this block's action.
    *
    * @return bool
    *   Whether anything was done.

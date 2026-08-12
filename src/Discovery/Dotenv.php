@@ -38,14 +38,17 @@ class Dotenv extends AbstractDiscover {
     // @codeCoverageIgnoreEnd
     foreach ($lines as $line) {
       $line = trim($line);
+
       if ($line === '') {
         continue;
       }
+
       if (str_starts_with($line, '#')) {
         continue;
       }
 
       $pos = strpos($line, '=');
+
       if ($pos === FALSE) {
         continue;
       }

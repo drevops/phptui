@@ -15,7 +15,7 @@ use DrevOps\Tui\Block\Legend;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\Mode;
 use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\OptionType;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Block\RenderMode;
@@ -518,7 +518,7 @@ class ScreenController {
       return '';
     }
 
-    return $this->pieces()->renderBanner($this->banner, $this->version) . "\n\n" . Translator::t('Press any key to continue...');
+    return implode("\n", $this->pieces()->renderBanner($this->banner, $this->version)) . "\n\n" . Translator::t('Press any key to continue...');
   }
 
   /**
@@ -546,7 +546,7 @@ class ScreenController {
     $columns = $this->narrowest($occupancy);
     $rows = $this->shortest($occupancy);
 
-    if ($terminal->width() >= $columns && $terminal->height() >= $rows) {
+    if ($terminal->columns() >= $columns && $terminal->rows() >= $rows) {
       return '';
     }
 
@@ -555,15 +555,15 @@ class ScreenController {
       Translator::t('Need at least @width x @height - have @w x @h.', [
         '@width' => (string) $columns,
         '@height' => (string) $rows,
-        '@w' => (string) $terminal->width(),
-        '@h' => (string) $terminal->height(),
+        '@w' => (string) $terminal->columns(),
+        '@h' => (string) $terminal->rows(),
       ]),
       (new Legend())->advertise($this->router->bindings(), new Hint('quit', Action::Quit))->render($this->theme),
     ];
 
     $width = Ansi::blockWidth($lines);
-    [$top, $left] = Overlay::center($terminal->width(), $terminal->height(), $width, count($lines));
-    $backdrop = array_fill(0, max(count($lines), $terminal->height()), str_repeat(' ', max($width, $terminal->width())));
+    [$top, $left] = Overlay::center($terminal->columns(), $terminal->rows(), $width, count($lines));
+    $backdrop = array_fill(0, max(count($lines), $terminal->rows()), str_repeat(' ', max($width, $terminal->columns())));
 
     return implode("\n", Overlay::composite($backdrop, $lines, $width, $top, $left));
   }
@@ -592,16 +592,16 @@ class ScreenController {
     }
 
     $lines = explode("\n", $frame);
-    $area_width = $terminal->width();
-    $area_height = $terminal->height();
+    $area_columns = $terminal->columns();
+    $area_rows = $terminal->rows();
     $width = Ansi::blockWidth($lines);
 
-    if (count($lines) >= $area_height && $width >= $area_width) {
+    if (count($lines) >= $area_rows && $width >= $area_columns) {
       return $frame;
     }
 
-    [$top, $left] = Overlay::place($area_width, $area_height, $width, count($lines), $occupancy->halign(), $occupancy->valign());
-    $backdrop = array_fill(0, $area_height, str_repeat(' ', $area_width));
+    [$top, $left] = Overlay::place($area_columns, $area_rows, $width, count($lines), $occupancy->halign(), $occupancy->valign());
+    $backdrop = array_fill(0, $area_rows, str_repeat(' ', $area_columns));
 
     return implode("\n", Overlay::composite($backdrop, $lines, $width, $top, $left));
   }
@@ -725,7 +725,7 @@ class ScreenController {
     $occupancy = $this->occupancy();
     $tallest = $occupancy instanceof OccupyCapableInterface ? $occupancy->maxHeight() : 0;
 
-    return $tallest > 0 ? min($terminal->height(), $tallest) : $terminal->height();
+    return $tallest > 0 ? min($terminal->rows(), $tallest) : $terminal->rows();
   }
 
   /**
@@ -1123,8 +1123,8 @@ class ScreenController {
   protected function offered(Field $field, array $rows): array {
     $offered = [];
 
-    foreach ([...$field->entries(), ...$rows] as $row) {
-      if ($row->kind === OptionKind::Option) {
+    foreach ([...$field->options(), ...$rows] as $row) {
+      if ($row->kind === OptionType::Option) {
         $offered[$row->value] = $row->label;
       }
     }
@@ -1171,7 +1171,7 @@ class ScreenController {
    *   The field the key reached, if it reached one that was open.
    */
   protected function stamp(?Field $open): void {
-    if (!$open instanceof Field || !$open->hasAccepted()) {
+    if (!$open instanceof Field || !$open->isAccepted()) {
       return;
     }
 

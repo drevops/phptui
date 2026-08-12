@@ -12,7 +12,7 @@ namespace DrevOps\Tui\Block;
  *
  * @package DrevOps\Tui\Block
  */
-enum OptionKind: string {
+enum OptionType: string {
 
   case Option = 'option';
   case Separator = 'separator';

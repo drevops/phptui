@@ -29,7 +29,7 @@ final class Ansi {
   protected const string LINK_SEQUENCE = '\033\]8;[^\007\033]*(?:\007|\033\\\\)';
 
   /**
-   * A CSI sequence, which is what carries the styling.
+   * A CSI sequence; CSI sequences carry the styling.
    */
   protected const string STYLE_SEQUENCE = '\033\[[0-9;?<>=]*[A-Za-z]';
 
@@ -64,9 +64,9 @@ final class Ansi {
    *   The hyperlinked text.
    */
   public static function link(string $text, string $url): string {
-    // A raw ESC or BEL in either part would break out of the escape wrapper -
-    // truncating the sequence or injecting arbitrary control codes downstream -
-    // so every control byte is dropped before the URL and text are embedded.
+    // A raw ESC or BEL in either part would truncate the wrapper or inject
+    // arbitrary control codes downstream, so the C0 bytes and DEL are dropped
+    // before the URL and text are embedded.
     $text = self::stripControl($text);
     $url = self::stripControl($url);
 
@@ -94,22 +94,21 @@ final class Ansi {
    * text and are kept; every other C0 control and DEL is removed.
    *
    * A carriage return folds to a newline instead of being dropped, because it
-   * is a line break written on another platform.
+   * is another platform's line break.
    *
    * The C1 controls are removed as the two bytes UTF-8 encodes them as: a
    * terminal in 8-bit mode reads U+009B as a CSI introducer. Their lead byte
    * never appears inside another character, so multi-byte text is unaffected.
    *
    * Invalid UTF-8 is filtered a second time over the bare C1 range. Valid text
-   * cannot hold a bare C1 byte, so the extra pass only reaches input that is
-   * already malformed, and it closes the bypass of encoding a control byte
-   * that way deliberately.
+   * cannot hold a bare C1 byte, so the extra pass only reaches malformed
+   * input. A control byte deliberately encoded as a bare C1 is still removed.
    *
    * @param string $text
    *   The text.
    *
    * @return string
-   *   The text a terminal can only print.
+   *   The text with the control bytes a terminal acts on removed.
    */
   public static function sanitize(string $text): string {
     $text = (string) preg_replace('/\r\n?/', "\n", $text);
@@ -125,14 +124,12 @@ final class Ansi {
   /**
    * Sanitize every string a value holds, whatever shape the value has.
    *
-   * An answer is a string, a list of strings, or a value that is not text.
    * Arrays are walked to their leaves and a non-string value is returned
    * unchanged.
    *
-   * Keys are left alone. A key addresses an entry rather than being read, the
-   * same way an id addresses a field, and filtering two keys into one would
-   * drop an entry. Where a key is drawn it is a label, and it is filtered by
-   * whoever draws it.
+   * Keys are left alone: a key addresses an entry rather than being read, and
+   * filtering two keys into one would drop an entry. A key that is drawn is a
+   * label, filtered by the code that draws it.
    *
    * @param mixed $value
    *   The value.

@@ -7,11 +7,12 @@ namespace DrevOps\Tui;
 /**
  * Thrown when a collection cannot take the answers it was given.
  *
- * With no screen there is nobody to retype a value the form refuses, and no row
- * to say so on, so the whole collection fails rather than handing back answers
- * one of which was never accepted. It sits beside {@see InterruptException} and
- * {@see CancelException} because all three are ways a collection ends without a
- * complete set of answers, so one import covers every ending.
+ * A run with no screen has no way to retype a rejected value and no row to
+ * report it on, so the whole collection fails rather than returning a set
+ * with an answer that was never accepted. It shares a namespace with
+ * {@see InterruptException} and {@see CancelException}: all three end a
+ * collection without a complete answer set, so one import covers every
+ * ending.
  *
  * @package DrevOps\Tui
  */

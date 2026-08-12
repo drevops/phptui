@@ -76,7 +76,7 @@ class SchemaGenerator {
         'help' => $field->helpText(),
         'placeholder' => $field->placeholderText(),
         'options' => $this->options($field),
-        'options_dynamic' => $field->hasDynamicEntries(),
+        'options_dynamic' => $field->isDynamicOptions(),
         'default' => DefaultResolver::resolve($field, $this->context),
         'required' => $field->isRequired(),
         'env' => $names->isAdvertisable($field) ? $names->canonical($field) : NULL,
@@ -117,8 +117,8 @@ class SchemaGenerator {
 
     $out = [];
 
-    foreach ($field->entries() as $option) {
-      if (!$option->selectable()) {
+    foreach ($field->options() as $option) {
+      if (!$option->isSelectable()) {
         continue;
       }
 

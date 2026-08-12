@@ -48,10 +48,10 @@ final class Legend extends AbstractBlock {
    * @param \DrevOps\Tui\Input\Hint ...$hints
    *   What those keys do, each naming the actions whose keys illustrate it.
    *
-   * @return $this
+   * @return static
    *   The block.
    */
-  public function advertise(ScopedKeyMap $keys, Hint ...$hints): self {
+  public function advertise(ScopedKeyMap $keys, Hint ...$hints): static {
     $this->clear();
     $this->keyMap = $keys;
     $this->hints = array_values($hints);
@@ -62,10 +62,10 @@ final class Legend extends AbstractBlock {
   /**
    * Forget every key advertised so far.
    *
-   * @return $this
+   * @return static
    *   The block.
    */
-  public function clear(): self {
+  public function clear(): static {
     $this->keyMap = NULL;
     $this->hints = [];
 

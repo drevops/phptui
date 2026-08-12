@@ -7,9 +7,9 @@ namespace DrevOps\Tui;
 /**
  * Thrown when a form declaration is invalid.
  *
- * A declaration mistake is an argument a caller got wrong, so it lands in the
- * family a caller already catches for one: whichever surface refuses - a
- * builder, a block or a limit - one catch covers the lot.
+ * A declaration mistake is an argument the caller got wrong, so the class
+ * extends the exception family a caller already catches for one. Whichever
+ * surface throws it - a builder, a block or a limit - one catch covers all.
  *
  * @package DrevOps\Tui
  */

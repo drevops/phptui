@@ -42,10 +42,10 @@ final class Breadcrumb extends AbstractBlock {
    * @param string ...$segments
    *   The panel titles, from the root to where you are.
    *
-   * @return $this
+   * @return static
    *   The block.
    */
-  public function trail(string ...$segments): self {
+  public function trail(string ...$segments): static {
     $this->segments = array_map(Ansi::sanitize(...), array_values($segments));
 
     return $this;

@@ -12,7 +12,7 @@ use DrevOps\Tui\Block\FilePickerMode;
 use DrevOps\Tui\Block\Mode;
 use DrevOps\Tui\Block\NumberBounds;
 use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\OptionType;
 use DrevOps\Tui\Block\RenderMode;
 use DrevOps\Tui\Block\SelectionBounds;
 use DrevOps\Tui\Block\Template;
@@ -57,14 +57,14 @@ final class FieldBlockTest extends TestCase {
   }
 
   public function testTheLabelStaysPutAcrossBothModes(): void {
-    $field = (new Field('basket', 'Basket', FieldType::Select))->entry('apple', 'Apple');
+    $field = (new Field('basket', 'Basket', FieldType::Select))->option('apple', 'Apple');
 
     $this->assertStringStartsWith('  Basket', $field->render($this->theme()));
     $this->assertStringStartsWith('  Basket', $field->open()->render($this->theme()));
   }
 
-  public function testEditModeOpensOntoTheEntriesItWasGiven(): void {
-    $field = (new Field('basket', 'Basket', FieldType::Select))->entry('apple', 'Apple')->entry('carrot', 'Carrot');
+  public function testEditModeOpensOntoTheOptionsItWasGiven(): void {
+    $field = (new Field('basket', 'Basket', FieldType::Select))->option('apple', 'Apple')->option('carrot', 'Carrot');
 
     $rendered = $field->open()->render($this->theme());
 
@@ -74,7 +74,7 @@ final class FieldBlockTest extends TestCase {
 
   public function testOpeningFieldHandsTheValueRegionToTheEditorItsKindOpensOnto(): void {
     $courier = (new Field('courier', 'Courier'))->default('Valley Runs');
-    $basket = (new Field('basket', 'Basket', FieldType::Select))->entry('apple', 'Apple');
+    $basket = (new Field('basket', 'Basket', FieldType::Select))->option('apple', 'Apple');
 
     $this->assertNotInstanceOf(FieldInterface::class, $courier->editor());
 
@@ -134,11 +134,11 @@ final class FieldBlockTest extends TestCase {
     $this->assertSame(Mode::View, $field->mode());
   }
 
-  public function testSpaceTogglesAnEntryOfAnOpenMultipleSelect(): void {
+  public function testSpaceTogglesAnOptionOfAnOpenMultipleSelect(): void {
     $field = (new Field('basket', 'Basket contents', FieldType::Select))
       ->multiple()
-      ->entry('apple', 'Apple')
-      ->entry('carrot', 'Carrot')
+      ->option('apple', 'Apple')
+      ->option('carrot', 'Carrot')
       ->open();
 
     // Space belongs to the kind rather than to whatever sends the key: the
@@ -288,7 +288,7 @@ final class FieldBlockTest extends TestCase {
 
     yield 'ghost' => [
       static fn(Field $field): Field => $field->ghost(),
-      static fn(Field $field): bool => $field->hasGhost(),
+      static fn(Field $field): bool => $field->isGhost(),
       TRUE,
     ];
 
@@ -318,13 +318,13 @@ final class FieldBlockTest extends TestCase {
 
     yield 'confirmation' => [
       static fn(Field $field): Field => $field->confirmation(),
-      static fn(Field $field): bool => $field->hasConfirmation(),
+      static fn(Field $field): bool => $field->isConfirmation(),
       TRUE,
     ];
 
     yield 'external editor' => [
       static fn(Field $field): Field => $field->externalEditor(),
-      static fn(Field $field): bool => $field->hasExternalEditor(),
+      static fn(Field $field): bool => $field->isExternalEditor(),
       TRUE,
     ];
 
@@ -410,8 +410,8 @@ final class FieldBlockTest extends TestCase {
   public function testDeclaredNullDefaultIsStillDeclaredInMachineOutput(): void {
     $field = new Field('basket', 'Basket contents');
 
-    $this->assertFalse($field->hasSchemaDefault());
-    $this->assertTrue($field->schemaDefault(NULL)->hasSchemaDefault());
+    $this->assertFalse($field->isSchemaDefault());
+    $this->assertTrue($field->schemaDefault(NULL)->isSchemaDefault());
     $this->assertNull($field->schemaDefaultValue());
   }
 
@@ -556,123 +556,123 @@ final class FieldBlockTest extends TestCase {
     yield 'a ranking' => [new Field('order', 'Order', FieldType::Reorder), TRUE, TRUE];
   }
 
-  public function testEntriesAreDrawnInTheOrderTheyWereDeclared(): void {
+  public function testOptionsAreDrawnInTheOrderTheyWereDeclared(): void {
     $field = (new Field('basket', 'Basket contents', FieldType::Select))
       ->heading('Fruit')
-      ->entry('apple', 'Apple')
+      ->option('apple', 'Apple')
       ->separator()
       ->heading('Vegetables')
-      ->entry('carrot', 'Carrot');
+      ->option('carrot', 'Carrot');
 
-    $kinds = array_map(static fn(object $entry): OptionKind => $entry->kind, $field->entries());
+    $kinds = array_map(static fn(object $option): OptionType => $option->kind, $field->options());
 
-    $expected = [OptionKind::Heading, OptionKind::Option, OptionKind::Separator, OptionKind::Heading, OptionKind::Option];
+    $expected = [OptionType::Heading, OptionType::Option, OptionType::Separator, OptionType::Heading, OptionType::Option];
     $this->assertSame($expected, $kinds);
     $this->assertSame(['apple', 'carrot'], $field->selectableValues());
   }
 
-  public function testEntryValueStaysTheStringItWasDeclaredAs(): void {
+  public function testOptionValueStaysTheStringItWasDeclaredAs(): void {
     // Rows are held as a list carrying their own value, so a numeric-looking
     // value is never coerced the way an array key would be.
-    $field = (new Field('grade', 'Grade', FieldType::Select))->entry('0', 'Unripe')->entry('1', 'Ripe');
+    $field = (new Field('grade', 'Grade', FieldType::Select))->option('0', 'Unripe')->option('1', 'Ripe');
 
     $this->assertSame(['0', '1'], $field->selectableValues());
-    $this->assertSame('Unripe', $field->entryOf('0')?->label);
+    $this->assertSame('Unripe', $field->optionOf('0')?->label);
     $this->assertTrue($field->accept('0'));
     $this->assertSame('0', $field->value());
   }
 
-  public function testDeclaringValueTwiceReplacesTheEntryWhereItAlreadySits(): void {
+  public function testDeclaringValueTwiceReplacesTheOptionWhereItAlreadySits(): void {
     $field = (new Field('basket', 'Basket contents', FieldType::Select))
-      ->entry('apple', 'Apple')
-      ->entry('carrot', 'Carrot')
-      ->entry('apple', 'Golden Apple');
+      ->option('apple', 'Apple')
+      ->option('carrot', 'Carrot')
+      ->option('apple', 'Golden Apple');
 
-    $this->assertCount(2, $field->entries());
-    $this->assertSame('Golden Apple', $field->entryOf('apple')?->label);
+    $this->assertCount(2, $field->options());
+    $this->assertSame('Golden Apple', $field->optionOf('apple')?->label);
     $this->assertSame(['apple', 'carrot'], $field->selectableValues());
   }
 
-  public function testEntryWithNoLabelDrawsItsOwnValue(): void {
-    $field = (new Field('basket', 'Basket contents', FieldType::Select))->entry('apple');
+  public function testOptionWithNoLabelDrawsItsOwnValue(): void {
+    $field = (new Field('basket', 'Basket contents', FieldType::Select))->option('apple');
 
-    $this->assertSame('apple', $field->entryOf('apple')?->label);
-    $this->assertNotInstanceOf(Option::class, $field->entryOf('carrot'));
+    $this->assertSame('apple', $field->optionOf('apple')?->label);
+    $this->assertNotInstanceOf(Option::class, $field->optionOf('carrot'));
   }
 
-  #[DataProvider('dataProviderValueOutsideTheEntriesIsRefused')]
-  public function testValueOutsideTheEntriesIsRefused(Field $field, mixed $value, ?string $error): void {
-    $this->assertSame($error, $field->entryError($value));
+  #[DataProvider('dataProviderValueOutsideTheOptionsIsRefused')]
+  public function testValueOutsideTheOptionsIsRefused(Field $field, mixed $value, ?string $error): void {
+    $this->assertSame($error, $field->optionViolation($value));
   }
 
-  public static function dataProviderValueOutsideTheEntriesIsRefused(): \Iterator {
+  public static function dataProviderValueOutsideTheOptionsIsRefused(): \Iterator {
     $basket = static fn(): Field => (new Field('basket', 'Basket contents', FieldType::Select))
-      ->entry('apple', 'Apple')
-      ->entry('carrot', 'Carrot', disabled: TRUE, disabled_reason: 'Out of season.')
-      ->entry('turnip', 'Turnip', disabled: TRUE);
+      ->option('apple', 'Apple')
+      ->option('carrot', 'Carrot', disabled: TRUE, disabled_reason: 'Out of season.')
+      ->option('turnip', 'Turnip', disabled: TRUE);
 
     yield 'a listed value' => [$basket(), 'apple', NULL];
     yield 'an unlisted value' => [$basket(), 'plum', 'value "plum" is not one of: apple'];
     yield 'a disabled value' => [$basket(), 'carrot', 'option "carrot" is disabled: Out of season.'];
     yield 'a disabled value with no reason' => [$basket(), 'turnip', 'option "turnip" is disabled'];
-    yield 'no entries at all' => [new Field('basket', 'Basket', FieldType::Select), 'plum', NULL];
+    yield 'no options at all' => [new Field('basket', 'Basket', FieldType::Select), 'plum', NULL];
     yield 'nothing to constrain' => [new Field('courier', 'Courier'), 'Valley Runs', NULL];
 
     yield 'one value where a list is owed' => [
-      (new Field('basket', 'Basket', FieldType::Select))->multiple()->entry('apple', 'Apple'),
+      (new Field('basket', 'Basket', FieldType::Select))->multiple()->option('apple', 'Apple'),
       'apple',
       'value must be a list',
     ];
 
-    yield 'a ranking that misses an entry' => [
-      (new Field('order', 'Order', FieldType::Reorder))->entry('apple')->entry('carrot'),
+    yield 'a ranking that misses an option' => [
+      (new Field('order', 'Order', FieldType::Reorder))->option('apple')->option('carrot'),
       ['apple'],
       'must rank every option exactly once (apple, carrot)',
     ];
 
     yield 'a full ranking' => [
-      (new Field('order', 'Order', FieldType::Reorder))->entry('apple')->entry('carrot'),
+      (new Field('order', 'Order', FieldType::Reorder))->option('apple')->option('carrot'),
       ['apple', 'carrot'],
       NULL,
     ];
 
     yield 'a list of listed values' => [
-      (new Field('basket', 'Basket', FieldType::Select))->multiple()->entry('apple')->entry('carrot'),
+      (new Field('basket', 'Basket', FieldType::Select))->multiple()->option('apple')->option('carrot'),
       ['apple', 'carrot'],
       NULL,
     ];
 
     yield 'a list carrying an unlisted value' => [
-      (new Field('basket', 'Basket', FieldType::Select))->multiple()->entry('apple')->entry('carrot'),
+      (new Field('basket', 'Basket', FieldType::Select))->multiple()->option('apple')->option('carrot'),
       ['apple', 'plum'],
       'value "plum" is not one of: apple, carrot',
     ];
   }
 
   public function testValueIsRefusedWhenTheQueryResolvedToNothingThatCarriesIt(): void {
-    // Entries that follow a query constrain the value to whatever they resolved
+    // Options that follow a query constrain the value to whatever they resolved
     // to, so resolving to nothing means the value does not exist.
     $field = (new Field('basket', 'Basket contents', FieldType::Search))->query(static fn(): array => []);
 
-    $this->assertSame('value "plum" was not found', $field->entryError('plum'));
+    $this->assertSame('value "plum" was not found', $field->optionViolation('plum'));
   }
 
-  #[DataProvider('dataProviderEntriesAreUnsettledWhileSomethingOwesThem')]
-  public function testEntriesAreUnsettledWhileSomethingOwesThem(Field $field, bool $settled, bool $dynamic): void {
-    $this->assertSame($settled, $field->hasSettledEntries());
-    $this->assertSame($dynamic, $field->hasDynamicEntries());
+  #[DataProvider('dataProviderOptionsAreUnsettledWhileSomethingOwesThem')]
+  public function testOptionsAreUnsettledWhileSomethingOwesThem(Field $field, bool $settled, bool $dynamic): void {
+    $this->assertSame($settled, $field->isSettledOptions());
+    $this->assertSame($dynamic, $field->isDynamicOptions());
   }
 
-  public static function dataProviderEntriesAreUnsettledWhileSomethingOwesThem(): \Iterator {
+  public static function dataProviderOptionsAreUnsettledWhileSomethingOwesThem(): \Iterator {
     $field = static fn(): Field => new Field('basket', 'Basket contents', FieldType::Select);
 
-    yield 'declared' => [$field()->entry('apple', 'Apple'), TRUE, FALSE];
+    yield 'declared' => [$field()->option('apple', 'Apple'), TRUE, FALSE];
     yield 'loaded once' => [$field()->load(static fn(): array => []), FALSE, FALSE];
     yield 'resolved from the answers' => [$field()->resolve(static fn(array $answers): array => []), FALSE, TRUE];
     yield 'resolved from a query' => [$field()->query(static fn(): array => []), FALSE, TRUE];
   }
 
-  public function testWhatOwesTheEntriesIsReadBackAsItWasDeclared(): void {
+  public function testWhatOwesTheOptionsIsReadBackAsItWasDeclared(): void {
     $loader = static fn(): array => ['apple' => 'Apple'];
     $resolver = static fn(array $answers): array => ['carrot' => 'Carrot'];
     $source = static fn(string $query, array $answers): array => ['plum' => 'Plum'];
@@ -684,28 +684,28 @@ final class FieldBlockTest extends TestCase {
     $this->assertSame($source, $field->source());
   }
 
-  public function testSettlingTheEntriesRetiresTheLoaderThatOwedThem(): void {
+  public function testSettlingTheOptionsRetiresTheLoaderThatOwedThem(): void {
     $field = (new Field('basket', 'Basket contents', FieldType::Select))->load(static fn(): array => ['apple' => 'Apple']);
 
     $field->settle(['apple' => 'Apple', 'carrot' => 'Carrot']);
 
     $this->assertSame(['apple', 'carrot'], $field->selectableValues());
     $this->assertNotInstanceOf(\Closure::class, $field->loader());
-    $this->assertTrue($field->hasSettledEntries());
+    $this->assertTrue($field->isSettledOptions());
   }
 
-  public function testEntriesThatAreNotMapOfLabelsSettleToNone(): void {
-    $field = (new Field('basket', 'Basket contents', FieldType::Select))->entry('apple', 'Apple');
+  public function testOptionsThatAreNotMapOfLabelsSettleToNone(): void {
+    $field = (new Field('basket', 'Basket contents', FieldType::Select))->option('apple', 'Apple');
 
-    $this->assertSame([], $field->settle('not a map')->entries());
+    $this->assertSame([], $field->settle('not a map')->options());
   }
 
   public function testValueThatDoesNotFitTheDeclaredShapeIsRefused(): void {
     $field = (new Field('crate', 'Crate code', FieldType::Template))->pattern(new Template('{{orchard}}-{{fruit}}'));
 
-    $this->assertNull($field->templateError('valley-apple'));
-    $this->assertNull($field->templateError(''));
-    $this->assertNull((new Field('courier', 'Courier'))->templateError('anything'));
+    $this->assertNull($field->templateViolation('valley-apple'));
+    $this->assertNull($field->templateViolation(''));
+    $this->assertNull((new Field('courier', 'Courier'))->templateViolation('anything'));
 
     $this->assertFalse($field->accept('valley'));
     $this->assertStringContainsString('does not match the template', (string) $field->refusal());
@@ -790,12 +790,12 @@ final class FieldBlockTest extends TestCase {
     ];
   }
 
-  public function testEditModeDrawsGroupedDisabledAndDividedEntries(): void {
+  public function testEditModeDrawsGroupedDisabledAndDividedOptions(): void {
     $field = (new Field('basket', 'Basket contents', FieldType::Select))
       ->heading('Fruit')
-      ->entry('apple', 'Apple')
+      ->option('apple', 'Apple')
       ->separator()
-      ->entry('carrot', 'Carrot', disabled: TRUE, disabled_reason: 'Out of season.')
+      ->option('carrot', 'Carrot', disabled: TRUE, disabled_reason: 'Out of season.')
       ->default('apple');
 
     $lines = explode("\n", $field->open()->render($this->theme()));
@@ -824,33 +824,33 @@ final class FieldBlockTest extends TestCase {
     $this->assertSame(['  Basket contents  apple', '                   Pick the produce.'], explode("\n", $field->render($this->theme())));
   }
 
-  public function testChosenEntryIsMarkedAcrossOneValueAndSeveral(): void {
-    $one = (new Field('basket', 'Basket contents', FieldType::Select))->entry('apple', 'Apple')->entry('carrot', 'Carrot')->default('carrot');
+  public function testChosenOptionIsMarkedAcrossOneValueAndSeveral(): void {
+    $one = (new Field('basket', 'Basket contents', FieldType::Select))->option('apple', 'Apple')->option('carrot', 'Carrot')->default('carrot');
     $several = (new Field('basket', 'Basket contents', FieldType::Select))
       ->multiple()
-      ->entry('apple', 'Apple')
-      ->entry('carrot', 'Carrot')
-      ->entry('plum', 'Plum')
+      ->option('apple', 'Apple')
+      ->option('carrot', 'Carrot')
+      ->option('plum', 'Plum')
       ->default(['apple', 'carrot']);
 
     // A single choice is a radio list and several is a checkbox list, which is
     // the editor's shape rather than the row's: the field hands the region over
     // and the kind decides what fills it.
-    $this->assertSame(['○ Apple', '● Carrot'], $this->entryLines($one));
-    $this->assertSame(['❯ ◼ Apple', '◼ Carrot', '◻ Plum'], $this->entryLines($several));
+    $this->assertSame(['○ Apple', '● Carrot'], $this->optionLines($one));
+    $this->assertSame(['❯ ◼ Apple', '◼ Carrot', '◻ Plum'], $this->optionLines($several));
   }
 
   public function testSeveralAnswersReadAsOneLineWhileTheFieldIsSettled(): void {
     $field = (new Field('basket', 'Basket contents', FieldType::Select))
       ->multiple()
-      ->entry('apple', 'Apple')
-      ->entry('carrot', 'Carrot')
+      ->option('apple', 'Apple')
+      ->option('carrot', 'Carrot')
       ->default(['apple', 'carrot']);
 
     $this->assertSame('  Basket contents  apple, carrot', $field->render($this->theme()));
   }
 
-  public function testRowSaysItsEntriesAreStillComingRatherThanReadingAsEmpty(): void {
+  public function testRowSaysItsOptionsAreStillComingRatherThanReadingAsEmpty(): void {
     $field = (new Field('basket', 'Basket contents', FieldType::Select))->load(static fn(): array => ['apple' => 'Apple']);
 
     // Nothing has asked the loader yet, which is what a reader meets while a
@@ -890,7 +890,7 @@ final class FieldBlockTest extends TestCase {
   }
 
   /**
-   * The entry rows an open field draws, with the label prefix taken off.
+   * The option rows an open field draws, with the label prefix taken off.
    *
    * @param \DrevOps\Tui\Block\Field $field
    *   The field.
@@ -898,7 +898,7 @@ final class FieldBlockTest extends TestCase {
    * @return list<string>
    *   The rows.
    */
-  protected function entryLines(Field $field): array {
+  protected function optionLines(Field $field): array {
     $lines = explode("\n", $field->open()->render($this->theme()));
 
     return array_map(static fn(string $line): string => trim(str_replace('Basket contents', '', $line)), $lines);

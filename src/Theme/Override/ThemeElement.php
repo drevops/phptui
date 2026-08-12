@@ -26,9 +26,9 @@ enum ThemeElement: string {
 
   case FieldValueSeparator = 'fieldValueSeparator';
 
-  case FieldEntrySelector = 'fieldEntrySelector';
+  case FieldOptionSelector = 'fieldOptionSelector';
 
-  case FieldEntryMarker = 'fieldEntryMarker';
+  case FieldOptionMarker = 'fieldOptionMarker';
 
   case FieldCaret = 'fieldCaret';
 

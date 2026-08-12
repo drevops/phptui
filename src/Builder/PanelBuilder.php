@@ -21,10 +21,10 @@ use DrevOps\Tui\Screen\Layout\PanelLayout;
  * A fluent builder for a panel: what it holds, and how it is arranged.
  *
  * Every level of the hierarchy has a default, so a three-field panel names no
- * layout and no region: it takes the one region a panel wants most of the time
- * and the fields go in it in the order they are written. Naming a layout is
- * what a panel does only when it needs one, and then a block says which region
- * it belongs to rather than depending on the order it was declared in.
+ * layout and no region: the fields go into the default region in the order
+ * they are written. A panel names a layout only when it needs one, and a
+ * block then names the region it goes in rather than depending on the order
+ * it was declared in.
  *
  * @package DrevOps\Tui\Builder
  */
@@ -123,9 +123,9 @@ final class PanelBuilder {
   /**
    * Set the conditional-visibility rule.
    *
-   * A section comes and goes exactly as a field does, and takes everything it
-   * holds with it: while the condition does not hold, its questions are not
-   * asked, not drawn and not in the answers.
+   * A section is shown and hidden exactly as a field is, and the rule covers
+   * everything it holds: while the condition does not hold, its questions are
+   * not asked, not drawn and not in the answers.
    *
    * @param \DrevOps\Tui\Condition\ConditionInterface $condition
    *   The condition gating the panel, evaluated as the answers settle.
@@ -170,8 +170,8 @@ final class PanelBuilder {
    *   The builder.
    */
   public function in(string $name): self {
-    // Reached now rather than when a block arrives, so a name that was never
-    // declared is caught where it was written.
+    // Called now rather than when a block is added, so an undeclared name
+    // fails at the line that declared it.
     $this->panel->in($name);
     $this->region = $name;
 
@@ -420,9 +420,9 @@ final class PanelBuilder {
   /**
    * Add a titled note: markup written title first.
    *
-   * Sugar over {@see markup()} for the common shape of a card, where the title
-   * is what you write first and the body follows through `->body()`. It builds
-   * the same block, so every markup call is available on it.
+   * Sugar over {@see markup()} for the common shape of a card: the title
+   * comes first and the body follows through `->body()`. It builds the same
+   * block, so every markup call is available on it.
    *
    * @param string $id
    *   The block id.
@@ -437,12 +437,12 @@ final class PanelBuilder {
   }
 
   /**
-   * Add markup: formatted content, and nothing else.
+   * Add markup: formatted content only.
    *
    * Chain `->border()` to draw it inside a card and `->table()` to lay it out
    * as a grid; both are presentation choices over the same block. `->when()`
-   * gates it on an earlier answer, which is what lets a warning appear only
-   * when one calls for it.
+   * gates it on an earlier answer, so a warning can appear only when an
+   * answer calls for it.
    *
    * @param string $id
    *   The block id.
@@ -564,9 +564,9 @@ final class PanelBuilder {
   /**
    * Run a hook once before the panel first opens.
    *
-   * The panel reads as loading while the hook runs, so a drill-in that has to
-   * prepare shared data - one fetch feeding several of the panel's fields -
-   * shows feedback instead of freezing. Runs once, then never again.
+   * The panel shows a loading state while the hook runs, so a drill-in that
+   * has to prepare shared data - one fetch feeding several of the panel's
+   * fields - shows feedback instead of freezing. The hook runs once.
    *
    * @param \Closure $work
    *   An `fn(): void` doing the preparation.
@@ -581,10 +581,7 @@ final class PanelBuilder {
   }
 
   /**
-   * Add a block to the region in hand.
-   *
-   * A region never knows which kind it was given, so anything drawn goes in the
-   * same way a field does.
+   * Add a block to the current region.
    *
    * @param \DrevOps\Tui\Block\BlockInterface $block
    *   The block.
@@ -600,11 +597,11 @@ final class PanelBuilder {
   }
 
   /**
-   * Put a sub-panel where the arrangement keeps it.
+   * Place a sub-panel in the region its layout assigns.
    *
-   * A grid draws each of its sub-panels in a window of its own, and a window is
-   * a region, so which one a sub-panel goes in is settled here rather than left
-   * to something further down to work out from the order they arrived in.
+   * A grid draws each of its sub-panels in a window of its own, and a window
+   * is a region, so the region a sub-panel goes in is settled here rather
+   * than derived later from declaration order.
    *
    * @param \DrevOps\Tui\Block\Panel $panel
    *   The sub-panel.
@@ -624,15 +621,14 @@ final class PanelBuilder {
     $window = $layout->windows()[count($this->panels) - 1] ?? NULL;
 
     if ($window === NULL) {
-      throw new FormException(sprintf('The grid of "%s" declares %d slot(s) for %d window(s).', $this->id, count($layout->windows()), count($this->panels)));
+      throw new FormException(sprintf('The grid of "%s" declares %d window(s) for %d panel(s).', $this->id, count($layout->windows()), count($this->panels)));
     }
 
     $this->panel->in($window)->add($panel);
     $this->placed = TRUE;
 
-    // Where a row sits is which region it is in, and where it was written is
-    // what says which: from here on a row is one written after the windows, so
-    // it goes below them rather than above.
+    // A block declared after the sub-panels goes below the windows, so the
+    // current region becomes the trailing one.
     $this->region = $layout->trailing();
   }
 

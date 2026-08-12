@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Field;
 
 use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\OptionType;
 use DrevOps\Tui\Utils\Strings;
 
 /**
@@ -139,7 +139,7 @@ final class Matcher {
    *   The matching options, most relevant first; ties keep their input order.
    */
   public function rankOptions(array $options, string $needle): array {
-    return $this->rank($options, static fn(Option $option): ?string => $option->kind === OptionKind::Option ? $option->label : NULL, $needle);
+    return $this->rank($options, static fn(Option $option): ?string => $option->kind === OptionType::Option ? $option->label : NULL, $needle);
   }
 
   /**

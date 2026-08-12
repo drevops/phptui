@@ -92,8 +92,8 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
     }
 
     if ($keys->matches($key, Action::Accept)) {
-      // A held item drops on Accept, mirroring Space; nothing is committed
-      // while an item is held, so Enter never accepts mid-move.
+      // Accept drops a held item, as the grab action does, so nothing is
+      // committed mid-move.
       if ($this->grabbed) {
         $this->grabbed = FALSE;
       }
@@ -111,24 +111,24 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
     }
 
     if ($keys->matches($key, Action::MoveUp)) {
-      $this->move(-1);
+      $this->moveCursor(-1);
 
       return;
     }
 
     if ($keys->matches($key, Action::MoveDown)) {
-      $this->move(1);
+      $this->moveCursor(1);
     }
   }
 
   /**
    * Move the cursor, carrying the held item when one is grabbed.
    *
-   * @param int $dir
+   * @param int $delta
    *   The direction: -1 up, +1 down.
    */
-  protected function move(int $dir): void {
-    $target = $this->cursor + $dir;
+  protected function moveCursor(int $delta): void {
+    $target = $this->cursor + $delta;
 
     if ($target < 0 || $target >= count($this->items)) {
       return;
@@ -183,14 +183,14 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
    *   The highlighted item's description.
    */
   #[\Override]
-  protected function highlightedDescription(): string {
+  protected function currentDescription(): string {
     if ($this->items === []) {
       return '';
     }
 
     $current = $this->items[$this->cursor];
 
-    return $current->selectable() ? $current->description : '';
+    return $current->isSelectable() ? $current->description : '';
   }
 
   /**
@@ -207,7 +207,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
    *   The rendered row.
    */
   public function renderOptionRow(ThemeInterface $theme, Option $option, bool $current): string {
-    return $this->marker($theme, $current) . ' ' . $this->entryLabel($theme, $option->label, $current);
+    return $this->marker($theme, $current) . ' ' . $this->optionLabel($theme, $option->label, $current);
   }
 
   /**
@@ -225,21 +225,20 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
    *   The two-column marker cell.
    */
   protected function marker(ThemeInterface $theme, bool $current): string {
-    // The keys that move it, so the mark says what to press rather than
-    // inventing a second vocabulary for the same two directions.
+    // The glyphs name the two directions the item moves in.
     if ($current && $this->grabbed) {
       return $theme->keyGlyph(KeyName::Up) . $theme->keyGlyph(KeyName::Down);
     }
 
-    return $this->elements($theme)->fieldEntrySelector($current) . ' ';
+    return $this->elements($theme)->fieldOptionSelector($current) . ' ';
   }
 
   /**
    * {@inheritdoc}
    *
-   * A held item flips the labels to "reorder"/"drop" and cannot be accepted
-   * mid-move, so the accept hint is dropped until it lands; otherwise "move"
-   * and "grab" lead the base accept/cancel fragments.
+   * While an item is held the labels read "reorder" and "drop", and the
+   * accept hint is omitted - a held item cannot be accepted mid-move.
+   * Otherwise "move" and "grab" precede the base accept/cancel hints.
    */
   #[\Override]
   public function hints(): array {

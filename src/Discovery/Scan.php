@@ -48,10 +48,13 @@ class Scan extends AbstractDiscover {
       if ($entry === '.') {
         continue;
       }
+
       if ($entry === '..') {
         continue;
       }
+
       $path = $full . '/' . $entry;
+
       if ($this->type === ScanType::Dir && !is_dir($path)) {
         continue;
       }

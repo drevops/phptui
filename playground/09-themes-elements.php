@@ -17,7 +17,7 @@
  * order.
  *
  * It is a patch, not a replacement: every element nobody names keeps the
- * selected theme's own answer, which is why the unpicked entries below still
+ * selected theme's own answer, which is why the unpicked options below still
  * carry the mark the theme draws for them.
  *
  * Usage:
@@ -67,12 +67,12 @@ try {
         ->separator('•', '|')
         ->key(Sgr::Bold, Sgr::BrightCyan))
       ->field(static fn(FieldOverrides $f): FieldOverrides => $f
-        // The mark saying which row has the cursor, and which entry inside an
+        // The mark saying which row has the cursor, and which option inside an
         // open one has it - two different marks, so two calls.
         ->selector('▶', '=>')
-        ->entrySelector('▸', '->')
-        // The mark an entry carries once it is picked.
-        ->entryMarker('▣', '[x]')
+        ->optionSelector('▸', '->')
+        // The mark an option carries once it is picked.
+        ->optionMarker('▣', '[x]')
         // The mark showing where the next keystroke lands.
         ->caret('▎', '|')
         // Text rather than a glyph: one argument, no stand-in to state.

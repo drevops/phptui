@@ -76,7 +76,7 @@ final class BufferedTerminal extends Terminal {
    * {@inheritdoc}
    */
   #[\Override]
-  public function height(): int {
+  public function rows(): int {
     return $this->rows;
   }
 
@@ -84,7 +84,7 @@ final class BufferedTerminal extends Terminal {
    * {@inheritdoc}
    */
   #[\Override]
-  public function width(): int {
+  public function columns(): int {
     return $this->cols;
   }
 

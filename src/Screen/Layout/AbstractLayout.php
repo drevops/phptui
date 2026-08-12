@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Screen\Layout;
 
 use DrevOps\Tui\Block\Element\ChromeElementsInterface;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Screen\Axis;
 use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
 use DrevOps\Tui\Screen\Furniture;
@@ -56,9 +57,7 @@ abstract class AbstractLayout implements LayoutInterface {
    * @param \DrevOps\Tui\Screen\Axis $axis
    *   The direction its regions run.
    */
-  public function __construct(
-    protected Axis $axis,
-  ) {
+  public function __construct(protected Axis $axis) {
   }
 
   /**
@@ -77,10 +76,13 @@ abstract class AbstractLayout implements LayoutInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \DrevOps\Tui\FormException
+   *   When the region name is unknown.
    */
   public function in(string $name): Region {
     if (!isset($this->regions[$name])) {
-      throw new \InvalidArgumentException(sprintf('Unknown region "%s". This layout declares: %s.', $name, implode(', ', $this->names())));
+      throw new FormException(sprintf('Unknown region "%s". This layout declares: %s.', $name, implode(', ', $this->names())));
     }
 
     return $this->regions[$name];
@@ -215,10 +217,13 @@ abstract class AbstractLayout implements LayoutInterface {
    *
    * @return \DrevOps\Tui\Screen\Region
    *   The region, for declaring its size, flow and scrolling.
+   *
+   * @throws \DrevOps\Tui\FormException
+   *   When the region name is already declared.
    */
   protected function region(string $name): Region {
     if (isset($this->regions[$name])) {
-      throw new \InvalidArgumentException(sprintf('Region "%s" is already declared on this layout.', $name));
+      throw new FormException(sprintf('Region "%s" is already declared on this layout.', $name));
     }
 
     return $this->regions[$name] = new Region($name);

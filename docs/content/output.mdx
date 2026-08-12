@@ -16,7 +16,7 @@ A form is rarely the whole program. A market-stall order opens with a welcome bo
 ```php
 $out = $tui->output();
 
-$out->box('Everything below is picked the morning it ships.', 'Welcome');
+$out->box('Welcome', 'Everything below is picked the morning it ships.');
 
 $answers = $tui->run();
 
@@ -34,11 +34,11 @@ $out->success('Preserves are ready')
 </p>
 
 ```php
-$out->box([
+$out->box('Welcome to the produce box', [
   'Everything below is picked the morning it ships.',
   '',
   'Nothing is charged until the box leaves the packing shed.',
-], 'Welcome to the produce box');
+]);
 ```
 
 Long lines wrap inside the border rather than being clipped by it, so you can hand `box()` a paragraph and let it fit itself to the terminal.

@@ -990,10 +990,10 @@ Six capabilities exist, and that is the whole set:
 
 | Declaration                   | Grants                                                                                                    | For                                                                   |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `ColorSchemeCapableInterface` | `hasColor()`, `isDark()`                                                                                  | painting at all, and picking a palette for a dark or light terminal   |
-| `UnicodeCapableInterface`     | `hasUnicode()`                                                                                            | choosing between a glyph and its ASCII stand-in                       |
+| `ColorSchemeCapableInterface` | `isColor()`, `isDark()`                                                                                   | painting at all, and picking a palette for a dark or light terminal   |
+| `UnicodeCapableInterface`     | `isUnicode()`                                                                                             | choosing between a glyph and its ASCII stand-in                       |
 | `DimCapableInterface`         | `dim()`                                                                                                   | pushing back what a dialog is drawn over                              |
-| `MarkdownCapableInterface`    | `hasMarkdown()`                                                                                           | drawing the markdown subset rather than its markers                   |
+| `MarkdownCapableInterface`    | `isMarkdown()`                                                                                            | drawing the markdown subset rather than its markers                   |
 | `OccupyCapableInterface`      | `isFullscreen()`, `halign()`, `valign()`, the min/max sizes, `borderStyle()`, `spacing()`, `background()` | saying how much of the terminal the frame takes, and where it anchors |
 | `OverrideCapableInterface`    | `overrides()`                                                                                             | taking the elements a consumer states differently                     |
 

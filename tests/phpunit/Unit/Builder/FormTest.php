@@ -10,7 +10,7 @@ use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Block\FilePickerMode;
 use DrevOps\Tui\Block\Markup;
 use DrevOps\Tui\Block\NumberBounds;
-use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\OptionType;
 use DrevOps\Tui\Block\Panel;
 use DrevOps\Tui\Block\Progress;
 use DrevOps\Tui\Block\RenderMode;
@@ -93,13 +93,13 @@ final class FormTest extends TestCase {
     $this->assertInstanceOf(Field::class, $profile);
     $this->assertSame(FieldType::Select, $profile->type());
     $this->assertSame('standard', $profile->value());
-    $this->assertSame('Standard', $profile->entryOf('standard')?->label);
+    $this->assertSame('Standard', $profile->optionOf('standard')?->label);
 
     $services = self::fieldOf($form, 'services');
     $this->assertInstanceOf(Field::class, $services);
     $this->assertSame(FieldType::Select, $services->type());
     $this->assertTrue($services->isMultiple());
-    $this->assertSame('Search', $services->entryOf('solr')?->description);
+    $this->assertSame('Search', $services->optionOf('solr')?->description);
 
     $docs = self::fieldOf($form, 'docs');
     $this->assertInstanceOf(Field::class, $docs);
@@ -113,13 +113,13 @@ final class FormTest extends TestCase {
     $this->assertInstanceOf(Field::class, $visibility);
     $this->assertSame(FieldType::Toggle, $visibility->type());
     $this->assertSame('private', $visibility->value());
-    $this->assertSame('Public', $visibility->entryOf('public')?->label);
+    $this->assertSame('Public', $visibility->optionOf('public')?->label);
 
     $secret = self::fieldOf($form, 'secret');
     $this->assertInstanceOf(Field::class, $secret);
     $this->assertSame(FieldType::Password, $secret->type());
     $this->assertTrue($secret->isRevealable());
-    $this->assertTrue($secret->hasConfirmation());
+    $this->assertTrue($secret->isConfirmation());
 
     $timezone = self::fieldOf($form, 'timezone');
     $this->assertInstanceOf(Field::class, $timezone);
@@ -177,7 +177,7 @@ final class FormTest extends TestCase {
     $password = self::fieldOf($form, 'pw');
     $this->assertInstanceOf(Field::class, $password);
     $this->assertFalse($password->isRevealable());
-    $this->assertFalse($password->hasConfirmation());
+    $this->assertFalse($password->isConfirmation());
     $this->assertSame('', self::fieldOf($form, 'se')?->value());
     $this->assertSame([], self::fieldOf($form, 'ms')?->value());
     // A toggle defaults to its first option, since it always holds a value.
@@ -199,7 +199,7 @@ final class FormTest extends TestCase {
 
     // Label and option-label fall back to the id/value.
     $this->assertSame('t', self::fieldOf($form, 't')?->label());
-    $this->assertSame('a', self::fieldOf($form, 's')?->entryOf('a')?->label);
+    $this->assertSame('a', self::fieldOf($form, 's')?->optionOf('a')?->label);
 
     // Form-level defaults (the global TUI runtime is tested on the Tui facade).
     $this->assertTrue($form->currentButtons()->show);
@@ -233,8 +233,8 @@ final class FormTest extends TestCase {
       })
       ->root();
 
-    $this->assertTrue(self::fieldOf($form, 'notes')?->hasExternalEditor());
-    $this->assertFalse(self::fieldOf($form, 'plain')?->hasExternalEditor());
+    $this->assertTrue(self::fieldOf($form, 'notes')?->isExternalEditor());
+    $this->assertFalse(self::fieldOf($form, 'plain')?->isExternalEditor());
   }
 
   public function testNoteField(): void {
@@ -373,10 +373,10 @@ final class FormTest extends TestCase {
       })
       ->root();
 
-    $this->assertTrue(self::fieldOf($form, 'fruit')?->hasGhost());
-    $this->assertFalse(self::fieldOf($form, 'berry')?->hasGhost());
+    $this->assertTrue(self::fieldOf($form, 'fruit')?->isGhost());
+    $this->assertFalse(self::fieldOf($form, 'berry')?->isGhost());
     // Ghost-text is opt-in, so a field that never asks for it stays without.
-    $this->assertFalse(self::fieldOf($form, 'plain')?->hasGhost());
+    $this->assertFalse(self::fieldOf($form, 'plain')?->isGhost());
   }
 
   public function testTemplateAssembled(): void {
@@ -642,7 +642,7 @@ final class FormTest extends TestCase {
     $this->assertSame(FilePickerMode::Directory, $assets->pickerConstraints()->mode);
   }
 
-  public function testOptionKindsAndDisabled(): void {
+  public function testOptionTypesAndDisabled(): void {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $p): void {
         $p->select('profile')
@@ -656,12 +656,12 @@ final class FormTest extends TestCase {
     $profile = self::fieldOf($form, 'profile');
     $this->assertInstanceOf(Field::class, $profile);
 
-    $options = $profile->entries();
+    $options = $profile->options();
     $this->assertCount(4, $options);
-    $this->assertSame(OptionKind::Heading, $options[0]->kind);
+    $this->assertSame(OptionType::Heading, $options[0]->kind);
     $this->assertSame('Recommended', $options[0]->label);
-    $this->assertSame(OptionKind::Option, $options[1]->kind);
-    $this->assertSame(OptionKind::Separator, $options[2]->kind);
+    $this->assertSame(OptionType::Option, $options[1]->kind);
+    $this->assertSame(OptionType::Separator, $options[2]->kind);
     $this->assertTrue($options[3]->disabled);
     $this->assertSame('requires PHP 8.4', $options[3]->disabledReason);
 
@@ -679,8 +679,8 @@ final class FormTest extends TestCase {
     $this->assertInstanceOf(Field::class, $field);
 
     // The second declaration overrides the first in place; the separator stays.
-    $this->assertCount(2, $field->entries());
-    $this->assertSame('Second', $field->entryOf('a')?->label);
+    $this->assertCount(2, $field->options());
+    $this->assertSame('Second', $field->optionOf('a')?->label);
     $this->assertSame(['a'], $field->selectableValues());
   }
 
@@ -972,7 +972,7 @@ final class FormTest extends TestCase {
           ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('two', 'Two'))
           ->root();
       },
-      'The grid of "Demo" declares 1 slot(s) for 2 window(s).',
+      'The grid of "Demo" declares 1 window(s) for 2 panel(s).',
     ];
 
     yield 'form slots above the panels' => [
@@ -983,7 +983,7 @@ final class FormTest extends TestCase {
           ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('two', 'Two'))
           ->root();
       },
-      'The grid of "Demo" declares 4 slot(s) for 2 window(s).',
+      'The grid of "Demo" declares 4 window(s) for 2 panel(s).',
     ];
 
     yield 'panel slots mismatch its children' => [
@@ -995,7 +995,7 @@ final class FormTest extends TestCase {
           })
           ->root();
       },
-      'The grid of "a" declares 2 slot(s) for 1 window(s).',
+      'The grid of "a" declares 2 window(s) for 1 panel(s).',
     ];
 
     yield 'zero-width row' => [

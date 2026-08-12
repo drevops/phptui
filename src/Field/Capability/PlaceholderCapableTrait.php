@@ -10,9 +10,9 @@ use DrevOps\Tui\Translation\Translator;
 /**
  * Ghost text over an empty input, in the theme's ghost style.
  *
- * The placeholder and an inline completion suffix share one visual channel and
- * never apply at once: a completion needs something typed, a placeholder needs
- * nothing typed.
+ * The placeholder and an inline completion suffix share one visual channel
+ * and never apply at once: a completion requires typed input, a placeholder
+ * requires none.
  *
  * @package DrevOps\Tui\Field\Capability
  */
@@ -60,7 +60,8 @@ trait PlaceholderCapableTrait {
    *
    * @return string
    *   The styled placeholder, or an empty string when none applies - including
-   *   in no-colour mode, where ghost text would read as a typed value.
+   *   in no-colour mode, where ghost text is indistinguishable from a typed
+   *   value.
    */
   protected function placeholderGhost(ThemeInterface $theme, string $current): string {
     $text = $this->placeholderText($current);

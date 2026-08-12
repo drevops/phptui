@@ -9,17 +9,15 @@ use DrevOps\Tui\Screen\Capability\BorderCapableTrait;
 use DrevOps\Tui\Theme\ThemeInterface;
 
 /**
- * What every block has in common: it draws through a theme, or it cannot draw.
+ * Behaviour every block shares: drawing through a theme's elements.
  *
- * A block fills the space it is given, and the region it sits in knows nothing
- * else about it. Order and spacing within its own output belong to the block;
- * colour and glyph belong to the theme. So the one thing every kind shares is
- * the elements it reaches for - and a theme that declares none cannot draw it,
- * which is a type error rather than a blank line.
+ * A block draws with the elements it declares, and {@see elements()} narrows
+ * the theme to them: a theme that does not implement them throws
+ * \InvalidArgumentException rather than drawing a blank line.
  *
- * Every block may also declare edges. What it occupies is known where it is
- * drawn rather than here, so the declaration carries no geometry and the
- * renderer sizes the box.
+ * Every block may also declare edges. The declaration carries no geometry -
+ * what a block occupies is known where it is drawn - so the renderer sizes
+ * the box.
  *
  * @package DrevOps\Tui\Block
  */
@@ -35,7 +33,7 @@ abstract class AbstractBlock implements BlockInterface, BorderCapableInterface {
    * @param class-string<T> $elements
    *   The elements interface this block declares.
    * @param string $subject
-   *   What could not be drawn, as the phrase the failure names it by.
+   *   The phrase the exception message uses for what could not be drawn.
    *
    * @return T
    *   The theme, able to draw this block.

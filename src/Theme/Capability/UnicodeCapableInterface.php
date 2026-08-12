@@ -20,6 +20,6 @@ interface UnicodeCapableInterface {
    * @return bool
    *   TRUE when an element may reach for one.
    */
-  public function hasUnicode(): bool;
+  public function isUnicode(): bool;
 
 }

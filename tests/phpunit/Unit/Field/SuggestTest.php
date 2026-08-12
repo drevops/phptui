@@ -136,7 +136,7 @@ final class SuggestTest extends TestCase {
 
     // The matched "Pa" prefix is themed as a match run; the label is intact
     // once the styling is stripped.
-    $this->assertStringContainsString($theme->fieldEntryMatch('Pa'), $view);
+    $this->assertStringContainsString($theme->fieldOptionMatch('Pa'), $view);
     $this->assertStringContainsString('Palace', Ansi::strip($view));
   }
 

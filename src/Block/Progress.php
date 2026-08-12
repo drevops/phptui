@@ -19,8 +19,7 @@ use DrevOps\Tui\Theme\ThemeInterface;
 /**
  * Work that runs when activated, with an indicator while it does.
  *
- * It is the block that separates taking the cursor from reaching the result: it
- * focuses and it acts, and nothing it does becomes an answer.
+ * The block takes focus and acts, and nothing it does becomes an answer.
  *
  * @package DrevOps\Tui\Block
  */
@@ -30,12 +29,12 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
   use FocusCapableTrait;
 
   /**
-   * The cells a bar's run takes.
+   * The width of the bar's track, in cells.
    */
   protected const int TRACK_WIDTH = 10;
 
   /**
-   * The steps there are, or NULL when the length is unknown.
+   * The total number of steps, or NULL when the length is unknown.
    */
   protected ?int $total = NULL;
 
@@ -57,7 +56,7 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
   protected ?\Closure $work = NULL;
 
   /**
-   * What the work says it is doing, shown after the indicator.
+   * The text describing what the work is doing, shown after the indicator.
    */
   protected string $label = '';
 
@@ -102,7 +101,7 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
   }
 
   /**
-   * Say how many steps the work has, which is what earns it a bar.
+   * Declare how many steps the work has; a known total draws a bar.
    *
    * @param int $total
    *   The steps.
@@ -124,7 +123,7 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
   }
 
   /**
-   * The steps the work has, which is what earns it a bar.
+   * The number of steps the work has; a known total draws a bar.
    *
    * @return int|null
    *   The steps, or NULL when the length is unknown.
@@ -144,7 +143,7 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
   }
 
   /**
-   * Say what the work is doing right now.
+   * Set the text describing what the work is doing.
    *
    * @param string $label
    *   The label, shown after the bar or the spinner.
@@ -159,10 +158,10 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
   }
 
   /**
-   * What the work says it is doing.
+   * The text describing what the work is doing.
    *
    * @return string
-   *   The label, empty when it says nothing.
+   *   The label, empty when none is set.
    */
   public function labelText(): string {
     return $this->label;
@@ -200,15 +199,14 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
    * @param int $steps
    *   The steps done since the last report.
    * @param string|null $label
-   *   What is being done now, or NULL to leave the label as it stands.
+   *   The new label, or NULL to leave the label unchanged.
    *
    * @return static
    *   The block.
    */
   public function advance(int $steps = 1, ?string $label = NULL): static {
-    // Work can report a step backwards, and a spinner frame is an index: both
-    // are clamped here so no caller can drive the block into a state it could
-    // not draw.
+    // A report may step backwards and the spinner frame is an index, so both
+    // are clamped to keep the block in a drawable state.
     $this->current = max(0, $this->current + $steps);
     $this->frame = max(0, $this->frame + $steps);
 
@@ -231,8 +229,8 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
       return FALSE;
     }
 
-    // The work is handed a reporter rather than the block, so it says only that
-    // one more step is done and never reaches the state behind the indicator.
+    // The work receives a reporter rather than the block, so it can only
+    // report a step and never reaches the state behind the indicator.
     ($this->work)(new ProgressReporter(function (?string $label): void {
       $this->advance(1, $label);
     }));
@@ -247,11 +245,11 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
     $elements = $this->elements($theme, ProgressElementsInterface::class, 'progress');
     $gutter = $this->elements($theme, ChromeElementsInterface::class, 'a conditional row')->chromeIndent($this->depth);
     $caption = $elements->progressCaption($this->caption);
-    // The caption names the work and stays put; the label is what that work is
-    // doing right now, so it trails the indicator and changes under it.
+    // The caption names the work and is fixed; the label describes the
+    // current activity, so it follows the indicator and changes with it.
     $label = $this->label === '' ? '' : ' ' . $elements->progressCaption($this->label);
-    // The row takes the cursor and starting the work is a key press away from
-    // there, so it says where the cursor is the way every other row does.
+    // The row takes focus and activation starts the work, so it draws a
+    // selector mark the way every other row does.
     $mark = $elements->progressSelector($this->isFocused()) . ' ';
 
     if ($this->total === NULL) {

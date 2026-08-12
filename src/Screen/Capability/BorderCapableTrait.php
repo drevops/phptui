@@ -15,7 +15,7 @@ use DrevOps\Tui\Theme\BorderSide;
 trait BorderCapableTrait {
 
   /**
-   * Whether edges are drawn, once one way or the other has been stated.
+   * Whether edges are drawn; NULL before any declaration.
    */
   protected ?bool $bordered = NULL;
 
@@ -38,8 +38,8 @@ trait BorderCapableTrait {
    * {@inheritdoc}
    */
   public function border(int $sides = BorderSide::ALL, ?Border $style = NULL, string $title = ''): static {
-    // Naming no side draws nothing, which is the same refusal as naming no
-    // style: both leave the thing unboxed rather than boxed with no edges.
+    // Naming no side and naming a style of None both mean no border at all,
+    // not a border with no edges.
     $this->bordered = $sides !== BorderSide::NONE && $style !== Border::None;
     $this->borderSides = $sides;
     $this->borderStyle = $style;

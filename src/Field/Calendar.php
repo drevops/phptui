@@ -21,11 +21,13 @@ use DrevOps\Tui\Utils\Strings;
 /**
  * A navigable month calendar returning a normalized ISO `Y-m-d` string.
  *
- * The move actions - bound to the arrow keys by default, and to h/j/k/l too
- * under the vim preset - move the cursor by day and by week; the page keys
- * change month, and Home/End jump to the first/last day of the visible month.
- * Every motion is clamped to the declared min/max range, so the cursor never
- * settles on an out-of-range day; days outside the range stay visible but
+ * The move actions move the cursor by day and by week; they bind to the
+ * arrow keys by default and to h/j/k/l under the vim preset. The page keys
+ * change month, and Home/End jump to the first/last day of the visible
+ * month.
+ *
+ * Every motion is clamped to the declared min/max range, so the cursor is
+ * never on an out-of-range day; days outside the range stay visible but
  * dimmed.
  *
  * @package DrevOps\Tui\Field
@@ -99,8 +101,9 @@ class Calendar extends AbstractField implements StepCapableInterface {
    * The date a navigation key moves to before clamping, or NULL for no move.
    *
    * Day and week movement resolve through the injected key bindings, so the
-   * arrow keys, the vim preset and any consumer remap all reach them; the month
-   * and month-edge jumps have no action of their own and stay on their keys.
+   * arrow keys, the vim preset and any consumer remap all apply. The month
+   * and month-edge jumps have no action of their own, so they match fixed
+   * keys.
    *
    * @param \DrevOps\Tui\Input\Key $key
    *   The key to interpret.
@@ -127,9 +130,9 @@ class Calendar extends AbstractField implements StepCapableInterface {
   /**
    * The cursor moved by whole months, kept on a valid day-of-month.
    *
-   * Anchoring on the first of the month before shifting avoids the day-of-month
-   * overflow that a naive "+1 month" produces (e.g. Jan 31 becoming Mar 3); the
-   * day is then re-applied, capped to the shorter month's length.
+   * Anchoring on the first of the month before shifting avoids the
+   * day-of-month overflow a naive "+1 month" produces (e.g. Jan 31 becoming
+   * Mar 3). The day is then re-applied, capped to the shorter month's length.
    *
    * @param int $months
    *   The signed number of months to move.
@@ -173,7 +176,7 @@ class Calendar extends AbstractField implements StepCapableInterface {
    * {@inheritdoc}
    *
    * Month (PgUp/PgDn) and month-edge (Home/End) jumps have no action of their
-   * own, so the footer advertises the binding-driven day/week motion.
+   * own, so the footer shows the binding-driven day/week motion.
    */
   #[\Override]
   public function hints(): array {
@@ -245,8 +248,8 @@ class Calendar extends AbstractField implements StepCapableInterface {
   /**
    * Render one day cell: bracketed at the cursor, dimmed when out of range.
    *
-   * The cursor cell carries literal brackets so it stays distinguishable even
-   * with colour off, mirroring how the radio glyph marks a selection in ASCII.
+   * The cursor cell uses literal brackets so it stays distinguishable even
+   * with colour off.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.
@@ -260,12 +263,12 @@ class Calendar extends AbstractField implements StepCapableInterface {
    */
   protected function dayCell(ThemeInterface $theme, \DateTimeImmutable $date, int $day): string {
     if ($date->format('Y-m-d') === $this->cursor->format('Y-m-d')) {
-      return $this->entryLabel($theme, sprintf('[%2d]', $day), TRUE);
+      return $this->optionLabel($theme, sprintf('[%2d]', $day), TRUE);
     }
 
     $cell = sprintf(' %2d ', $day);
 
-    return $this->bounds->contains($date) ? $cell : $this->elements($theme)->fieldEntryNote($cell);
+    return $this->bounds->contains($date) ? $cell : $this->elements($theme)->fieldOptionNote($cell);
   }
 
 }

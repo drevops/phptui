@@ -22,7 +22,7 @@ trait UnicodeCapableTrait {
   /**
    * {@inheritdoc}
    */
-  public function hasUnicode(): bool {
+  public function isUnicode(): bool {
     return $this->unicode;
   }
 

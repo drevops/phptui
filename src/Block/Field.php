@@ -104,7 +104,7 @@ final class Field extends AbstractBlock implements
    *
    * @var list<\DrevOps\Tui\Block\Option>
    */
-  protected array $entries = [];
+  protected array $options = [];
 
   /**
    * What owes the field one set of rows, resolved once.
@@ -510,7 +510,7 @@ final class Field extends AbstractBlock implements
    * @return bool
    *   TRUE when the last thing to happen here was an answer being taken.
    */
-  public function hasAccepted(): bool {
+  public function isAccepted(): bool {
     return $this->accepted;
   }
 
@@ -687,7 +687,7 @@ final class Field extends AbstractBlock implements
    * @return string
    *   The fragment (e.g. "a string", "a list"), translated.
    */
-  public function valueKind(): string {
+  public function valueType(): string {
     return match (TRUE) {
       $this->fieldType === FieldType::Confirm, $this->fieldType === FieldType::Pause => Translator::t('a boolean'),
       $this->collectsList() => Translator::t('a list'),
@@ -699,7 +699,7 @@ final class Field extends AbstractBlock implements
   }
 
   /**
-   * A value restated against the entries as they now stand.
+   * A value restated against the options as they now stand.
    *
    * A choice outlives the rows it was picked from: a set that follows the
    * answers narrows as they change, leaving a value that is no longer offered,
@@ -715,7 +715,7 @@ final class Field extends AbstractBlock implements
    *   The current value.
    *
    * @return mixed
-   *   The value the current entries can carry.
+   *   The value the current options can carry.
    */
   public function reconcileValue(mixed $value): mixed {
     if (!$this->fieldType->supportsOptions() || $this->fieldType === FieldType::Suggest) {
@@ -918,12 +918,12 @@ final class Field extends AbstractBlock implements
    * @return bool
    *   TRUE when it was.
    */
-  public function hasSchemaDefault(): bool {
+  public function isSchemaDefault(): bool {
     return $this->hasSchemaDefault;
   }
 
   /**
-   * Offer an entry for edit mode to open onto.
+   * Offer an option for edit mode to open onto.
    *
    * Declaring a value twice replaces the row in place, so the set stays unique
    * and stays in the order it was first declared in.
@@ -933,35 +933,35 @@ final class Field extends AbstractBlock implements
    * @param string $label
    *   The label it draws; empty draws the value.
    * @param string $description
-   *   What the entry means, shown beside the list.
+   *   What the option means, shown beside the list.
    * @param bool $disabled
-   *   Whether the entry is drawn but cannot be picked.
+   *   Whether the option is drawn but cannot be picked.
    * @param string $disabled_reason
    *   Why it cannot be picked.
    *
    * @return static
    *   The field.
    */
-  public function entry(string $value, string $label = '', string $description = '', bool $disabled = FALSE, string $disabled_reason = ''): static {
-    $entry = new Option($value, $label === '' ? $value : $label, $description, OptionKind::Option, $disabled, $disabled_reason);
+  public function option(string $value, string $label = '', string $description = '', bool $disabled = FALSE, string $disabled_reason = ''): static {
+    $option = new Option($value, $label === '' ? $value : $label, $description, OptionType::Option, $disabled, $disabled_reason);
 
-    foreach ($this->entries as $index => $existing) {
+    foreach ($this->options as $index => $existing) {
       // Option filters the value it is given, so the match is made against the
       // filtered form rather than the argument.
-      if ($existing->kind === OptionKind::Option && $existing->value === $entry->value) {
-        $this->entries[$index] = $entry;
+      if ($existing->kind === OptionType::Option && $existing->value === $option->value) {
+        $this->options[$index] = $option;
 
         return $this;
       }
     }
 
-    $this->entries[] = $entry;
+    $this->options[] = $option;
 
     return $this;
   }
 
   /**
-   * Head the entries that follow with a group label.
+   * Head the options that follow with a group label.
    *
    * @param string $label
    *   The heading.
@@ -970,19 +970,19 @@ final class Field extends AbstractBlock implements
    *   The field.
    */
   public function heading(string $label): static {
-    $this->entries[] = new Option('', $label, '', OptionKind::Heading);
+    $this->options[] = new Option('', $label, '', OptionType::Heading);
 
     return $this;
   }
 
   /**
-   * Divide the entries either side of it.
+   * Divide the options either side of it.
    *
    * @return static
    *   The field.
    */
   public function separator(): static {
-    $this->entries[] = new Option('', '', '', OptionKind::Separator);
+    $this->options[] = new Option('', '', '', OptionType::Separator);
 
     return $this;
   }
@@ -993,12 +993,12 @@ final class Field extends AbstractBlock implements
    * @return list<\DrevOps\Tui\Block\Option>
    *   The rows, in the order they were declared.
    */
-  public function entries(): array {
-    return $this->entries;
+  public function options(): array {
+    return $this->options;
   }
 
   /**
-   * The entry standing for a value.
+   * The option standing for a value.
    *
    * A row is found by the value it carries rather than by where it sits, so a
    * numeric-looking value stays the string it was declared as.
@@ -1007,15 +1007,15 @@ final class Field extends AbstractBlock implements
    *   The value.
    *
    * @return \DrevOps\Tui\Block\Option|null
-   *   The entry, or NULL when nothing carries that value. Headings and
+   *   The option, or NULL when nothing carries that value. Headings and
    *   separators carry none and are never returned.
    */
-  public function entryOf(string $value): ?Option {
+  public function optionOf(string $value): ?Option {
     $value = Ansi::sanitize($value);
 
-    foreach ($this->entries as $entry) {
-      if ($entry->kind === OptionKind::Option && $entry->value === $value) {
-        return $entry;
+    foreach ($this->options as $option) {
+      if ($option->kind === OptionType::Option && $option->value === $value) {
+        return $option;
       }
     }
 
@@ -1026,14 +1026,14 @@ final class Field extends AbstractBlock implements
    * The values that can be picked, in the order they are drawn.
    *
    * @return list<string>
-   *   The values, excluding headings, separators and disabled entries.
+   *   The values, excluding headings, separators and disabled options.
    */
   public function selectableValues(): array {
-    return Option::selectableValues($this->entries);
+    return Option::selectableValues($this->options);
   }
 
   /**
-   * Load the entries on demand, once.
+   * Load the options on demand, once.
    *
    * @param \Closure $loader
    *   An `fn (): array<string,string>` returning the value => label map.
@@ -1048,17 +1048,17 @@ final class Field extends AbstractBlock implements
   }
 
   /**
-   * What owes the field one set of entries.
+   * What owes the field one set of options.
    *
    * @return \Closure|null
-   *   The loader, or NULL when the entries stand as declared.
+   *   The loader, or NULL when the options stand as declared.
    */
   public function loader(): ?\Closure {
     return $this->loader;
   }
 
   /**
-   * Resolve the entries from the answers, again whenever they change.
+   * Resolve the options from the answers, again whenever they change.
    *
    * @param \Closure $resolver
    *   An `fn (\DrevOps\Tui\Handler\Context $context): array<string,string>`
@@ -1075,17 +1075,17 @@ final class Field extends AbstractBlock implements
   }
 
   /**
-   * What resolves the entries from the answers.
+   * What resolves the options from the answers.
    *
    * @return \Closure|null
-   *   The resolver, or NULL when the entries do not follow the answers.
+   *   The resolver, or NULL when the options do not follow the answers.
    */
   public function resolver(): ?\Closure {
     return $this->resolver;
   }
 
   /**
-   * Resolve the entries from a live query, again whenever it changes.
+   * Resolve the options from a live query, again whenever it changes.
    *
    * Unlike a loader it is asked again as the query changes, so the candidates
    * can come from a backend that filters for itself.
@@ -1105,10 +1105,10 @@ final class Field extends AbstractBlock implements
   }
 
   /**
-   * What resolves the entries from a live query.
+   * What resolves the options from a live query.
    *
    * @return \Closure|null
-   *   The source, or NULL when the entries do not follow a query.
+   *   The source, or NULL when the options do not follow a query.
    */
   public function source(): ?\Closure {
     return $this->source;
@@ -1147,18 +1147,18 @@ final class Field extends AbstractBlock implements
   }
 
   /**
-   * Replace the entries with a set a loader, resolver or query resolved to.
+   * Replace the options with a set a loader, resolver or query resolved to.
    *
-   * @param mixed $entries
+   * @param mixed $options
    *   What the callable returned; anything but a map of strings settles to no
-   *   entries, because consumer code running mid-session has no good way to
+   *   options, because consumer code running mid-session has no good way to
    *   report a mistake.
    *
    * @return static
    *   The field.
    */
-  public function settle(mixed $entries): static {
-    $this->entries = Option::resolved($entries);
+  public function settle(mixed $options): static {
+    $this->options = Option::resolved($options);
     // A loader owes the field one list and has now given it; a resolver and a
     // query source answer again as their input changes, so they stand.
     $this->loader = NULL;
@@ -1167,24 +1167,24 @@ final class Field extends AbstractBlock implements
   }
 
   /**
-   * Whether the entries stand as declared.
+   * Whether the options stand as declared.
    *
    * @return bool
    *   FALSE while a loader, a resolver or a query source still owes them, so
    *   there is nothing yet to count or to check a value against.
    */
-  public function hasSettledEntries(): bool {
+  public function isSettledOptions(): bool {
     return !$this->loader instanceof \Closure && !$this->resolver instanceof \Closure && !$this->source instanceof \Closure;
   }
 
   /**
-   * Whether the entries follow the answers rather than standing.
+   * Whether the options follow the answers rather than standing.
    *
    * @return bool
    *   TRUE when they are resolved from the answers or from a live query, so no
    *   one list describes the field.
    */
-  public function hasDynamicEntries(): bool {
+  public function isDynamicOptions(): bool {
     return $this->resolver instanceof \Closure || $this->source instanceof \Closure;
   }
 
@@ -1391,7 +1391,7 @@ final class Field extends AbstractBlock implements
    * @return string|null
    *   The message, or NULL when the value fits or no shape is declared.
    */
-  public function templateError(mixed $value): ?string {
+  public function templateViolation(mixed $value): ?string {
     if (!$this->template instanceof Template || !is_string($value) || $value === '') {
       return NULL;
     }
@@ -1453,7 +1453,7 @@ final class Field extends AbstractBlock implements
   }
 
   /**
-   * The reason a value is not among the entries, as a fragment, else NULL.
+   * The reason a value is not among the options, as a fragment, else NULL.
    *
    * A fragment rather than a sentence, so each caller frames it its own way.
    *
@@ -1462,18 +1462,18 @@ final class Field extends AbstractBlock implements
    *
    * @return string|null
    *   The fragment, or NULL when nothing constrains the value or every item is
-   *   among the entries.
+   *   among the options.
    */
-  public function entryError(mixed $value): ?string {
-    // A field that declares no entries constrains nothing - but one whose
-    // entries follow a query or the answers is constrained by whatever they
+  public function optionViolation(mixed $value): ?string {
+    // A field that declares no options constrains nothing - but one whose
+    // options follow a query or the answers is constrained by whatever they
     // resolved to, and resolving to nothing means the value does not exist.
-    if (!$this->fieldType->constrainsToOptions() || ($this->entries === [] && !$this->hasDynamicEntries())) {
+    if (!$this->fieldType->constrainsToOptions() || ($this->options === [] && !$this->isDynamicOptions())) {
       return NULL;
     }
 
     if (!$this->isMultiChoice()) {
-      return $this->scalarEntryError(is_scalar($value) ? (string) $value : '');
+      return $this->scalarOptionViolation(is_scalar($value) ? (string) $value : '');
     }
 
     if (!is_array($value)) {
@@ -1481,14 +1481,14 @@ final class Field extends AbstractBlock implements
     }
 
     foreach ($value as $item) {
-      $error = $this->scalarEntryError(is_scalar($item) ? (string) $item : '');
+      $error = $this->scalarOptionViolation(is_scalar($item) ? (string) $item : '');
 
       if ($error !== NULL) {
         return $error;
       }
     }
 
-    return $this->fieldType === FieldType::Reorder ? $this->rankingError($value) : NULL;
+    return $this->fieldType === FieldType::Reorder ? $this->rankingViolation($value) : NULL;
   }
 
   /**
@@ -1649,7 +1649,7 @@ final class Field extends AbstractBlock implements
    * @return bool
    *   TRUE when it is.
    */
-  public function hasGhost(): bool {
+  public function isGhost(): bool {
     return $this->ghost;
   }
 
@@ -1731,7 +1731,7 @@ final class Field extends AbstractBlock implements
    * @return bool
    *   TRUE when it does.
    */
-  public function hasConfirmation(): bool {
+  public function isConfirmation(): bool {
     return $this->confirm;
   }
 
@@ -1756,7 +1756,7 @@ final class Field extends AbstractBlock implements
    * @return bool
    *   TRUE when it may.
    */
-  public function hasExternalEditor(): bool {
+  public function isExternalEditor(): bool {
     return $this->externalEditor;
   }
 
@@ -1784,7 +1784,7 @@ final class Field extends AbstractBlock implements
    * @return bool
    *   TRUE when one can be launched.
    */
-  public function hasHandoff(): bool {
+  public function isHandoff(): bool {
     return $this->handoff;
   }
 
@@ -1919,7 +1919,7 @@ final class Field extends AbstractBlock implements
       return $missing;
     }
 
-    $outside = $this->limitRefusal($value);
+    $outside = $this->limitViolation($value);
 
     if ($outside !== NULL) {
       return $outside;
@@ -1927,7 +1927,7 @@ final class Field extends AbstractBlock implements
 
     // The shape is checked before the field's own validator, which reads the
     // value as an assembled template and would otherwise see a foreign string.
-    $misshapen = $this->templateError($value);
+    $misshapen = $this->templateViolation($value);
 
     if ($misshapen !== NULL) {
       return $misshapen;
@@ -1938,7 +1938,7 @@ final class Field extends AbstractBlock implements
 
     // A validator that answers with nothing has not said why, and a refusal
     // nobody can read is no refusal at all.
-    return is_string($refusal) && $refusal !== '' ? $refusal : $this->entryError($value);
+    return is_string($refusal) && $refusal !== '' ? $refusal : $this->optionViolation($value);
   }
 
   /**
@@ -1954,7 +1954,7 @@ final class Field extends AbstractBlock implements
    * @return string|null
    *   The reason, or NULL when every declared limit is met.
    */
-  protected function limitRefusal(mixed $value): ?string {
+  protected function limitViolation(mixed $value): ?string {
     $number = $this->bounds?->violation($value);
 
     if ($number !== NULL) {
@@ -2046,7 +2046,7 @@ final class Field extends AbstractBlock implements
   }
 
   /**
-   * The reason one value is not among the entries, as a fragment, else NULL.
+   * The reason one value is not among the options, as a fragment, else NULL.
    *
    * @param string $value
    *   The candidate value.
@@ -2055,7 +2055,7 @@ final class Field extends AbstractBlock implements
    *   The fragment naming the value when it is disabled or unknown, or NULL
    *   when it can be picked.
    */
-  protected function scalarEntryError(string $value): ?string {
+  protected function scalarOptionViolation(string $value): ?string {
     if (in_array($value, $this->selectableValues(), TRUE)) {
       return NULL;
     }
@@ -2063,20 +2063,20 @@ final class Field extends AbstractBlock implements
     // Listing what is allowed is what makes the message useful, so when a query
     // found nothing there is no list to offer and naming the value is all that
     // can honestly be said.
-    if ($this->entries === []) {
+    if ($this->options === []) {
       return Translator::t('value "@value" was not found', ['@value' => $value]);
     }
 
-    $entry = $this->entryOf($value);
+    $option = $this->optionOf($value);
 
-    if ($entry instanceof Option && $entry->disabled) {
-      if ($entry->disabledReason === '') {
+    if ($option instanceof Option && $option->disabled) {
+      if ($option->disabledReason === '') {
         return Translator::t('option "@value" is disabled', ['@value' => $value]);
       }
 
       return Translator::t('option "@value" is disabled: @reason', [
         '@value' => $value,
-        '@reason' => $entry->disabledReason,
+        '@reason' => $option->disabledReason,
       ]);
     }
 
@@ -2087,18 +2087,18 @@ final class Field extends AbstractBlock implements
   }
 
   /**
-   * The reason a ranking is not a full ordering of the entries, else NULL.
+   * The reason a ranking is not a full ordering of the options, else NULL.
    *
    * Membership is checked by the caller, so a ranking that is a full ordering
-   * has as many items as there are entries, with no repeats.
+   * has as many items as there are options, with no repeats.
    *
    * @param array<array-key,mixed> $items
    *   The ranking, already known to hold only values that can be picked.
    *
    * @return string|null
-   *   The fragment, or NULL when the ranking covers every entry once.
+   *   The fragment, or NULL when the ranking covers every option once.
    */
-  protected function rankingError(array $items): ?string {
+  protected function rankingViolation(array $items): ?string {
     $selectable = $this->selectableValues();
 
     $seen = [];
@@ -2328,61 +2328,61 @@ final class Field extends AbstractBlock implements
       return explode("\n", $this->editor->view($theme));
     }
 
-    if ($this->entries === []) {
+    if ($this->options === []) {
       return [$elements->fieldValue($this->readable($theme, $elements))];
     }
 
-    return array_map(fn(Option $entry): string => $this->entryLine($elements, $entry), $this->entries);
+    return array_map(fn(Option $option): string => $this->optionLine($elements, $option), $this->options);
   }
 
   /**
-   * One entry as it is drawn.
+   * One option as it is drawn.
    *
-   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $theme
-   *   The theme.
-   * @param \DrevOps\Tui\Block\Option $entry
-   *   The entry.
+   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   *   The theme narrowed to the field elements.
+   * @param \DrevOps\Tui\Block\Option $option
+   *   The option.
    *
    * @return string
-   *   The drawn entry; empty for a divider, which is a gap and nothing else.
+   *   The drawn option; empty for a divider, which is a gap and nothing else.
    */
-  protected function entryLine(FieldElementsInterface $theme, Option $entry): string {
-    if ($entry->kind === OptionKind::Heading) {
-      return $theme->fieldCaption($entry->label);
+  protected function optionLine(FieldElementsInterface $elements, Option $option): string {
+    if ($option->kind === OptionType::Heading) {
+      return $elements->fieldCaption($option->label);
     }
 
-    if ($entry->kind === OptionKind::Separator) {
-      return $theme->fieldEntrySeparator();
+    if ($option->kind === OptionType::Separator) {
+      return $elements->fieldOptionSeparator();
     }
 
     // Marking and naming are two elements: the mark records what was picked
     // and the text says what it was, so a theme can restyle either alone.
-    $chosen = $this->isChosen($entry);
-    $line = $theme->fieldEntryMarker($chosen, !$this->multiple) . ' ' . $theme->fieldEntry($entry->label, $chosen);
+    $chosen = $this->isChosen($option);
+    $line = $elements->fieldOptionMarker($chosen, !$this->multiple) . ' ' . $elements->fieldOption($option->label, $chosen);
 
-    // Why an entry cannot be picked belongs beside it, or a row that is drawn
+    // Why an option cannot be picked belongs beside it, or a row that is drawn
     // and refuses the cursor reads as a fault rather than a decision.
-    return $entry->disabled && $entry->disabledReason !== '' ? $line . ' ' . $theme->fieldEntryNote($entry->disabledReason) : $line;
+    return $option->disabled && $option->disabledReason !== '' ? $line . ' ' . $elements->fieldOptionNote($option->disabledReason) : $line;
   }
 
   /**
-   * Whether an entry is the one picked.
+   * Whether an option is the one picked.
    *
-   * @param \DrevOps\Tui\Block\Option $entry
-   *   The entry.
+   * @param \DrevOps\Tui\Block\Option $option
+   *   The option.
    *
    * @return bool
    *   TRUE when the answer being drawn holds its value.
    */
-  protected function isChosen(Option $entry): bool {
+  protected function isChosen(Option $option): bool {
     $shown = $this->mode === Mode::Edit ? $this->draft : $this->value;
 
     if (!is_array($shown)) {
-      return is_scalar($shown) && (string) $shown === $entry->value;
+      return is_scalar($shown) && (string) $shown === $option->value;
     }
 
     foreach ($shown as $item) {
-      if (is_scalar($item) && (string) $item === $entry->value) {
+      if (is_scalar($item) && (string) $item === $option->value) {
         return TRUE;
       }
     }

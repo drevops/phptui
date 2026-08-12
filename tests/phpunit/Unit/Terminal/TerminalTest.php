@@ -82,12 +82,12 @@ final class TerminalTest extends TestCase {
     $this->assertStringContainsString("\033[2J", $contents);
   }
 
-  public function testHeight(): void {
-    $this->assertGreaterThan(0, (new Terminal())->height());
+  public function testRows(): void {
+    $this->assertGreaterThan(0, (new Terminal())->rows());
   }
 
-  public function testWidth(): void {
-    $this->assertGreaterThan(0, (new Terminal())->width());
+  public function testColumns(): void {
+    $this->assertGreaterThan(0, (new Terminal())->columns());
   }
 
   public function testSizeFromEnvironmentOverrides(): void {
@@ -96,8 +96,8 @@ final class TerminalTest extends TestCase {
 
     $terminal = new ProbeTerminal();
 
-    $this->assertSame(120, $terminal->width());
-    $this->assertSame(40, $terminal->height());
+    $this->assertSame(120, $terminal->columns());
+    $this->assertSame(40, $terminal->rows());
   }
 
   public function testSizeIgnoresNonPositiveEnvironment(): void {
@@ -106,8 +106,8 @@ final class TerminalTest extends TestCase {
 
     $terminal = new ProbeTerminal("34 132\n");
 
-    $this->assertSame(132, $terminal->width());
-    $this->assertSame(34, $terminal->height());
+    $this->assertSame(132, $terminal->columns());
+    $this->assertSame(34, $terminal->rows());
   }
 
   #[DataProvider('dataProviderSizeFromProbe')]
@@ -117,8 +117,8 @@ final class TerminalTest extends TestCase {
 
     $terminal = new ProbeTerminal($reply, $windows);
 
-    $this->assertSame($width, $terminal->width());
-    $this->assertSame($height, $terminal->height());
+    $this->assertSame($width, $terminal->columns());
+    $this->assertSame($height, $terminal->rows());
   }
 
   public static function dataProviderSizeFromProbe(): \Iterator {

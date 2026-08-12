@@ -6,7 +6,7 @@ namespace DrevOps\Tui\Tests\Unit\Field;
 
 use DrevOps\Tui\Block\FieldType;
 use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionKind;
+use DrevOps\Tui\Block\OptionType;
 use DrevOps\Tui\Block\SelectionBounds;
 use DrevOps\Tui\Field\AbstractField;
 use DrevOps\Tui\Field\Capability\FilterCapableTrait;
@@ -209,13 +209,13 @@ final class SelectTest extends TestCase {
   public function testNonSelectableRowDescriptionNeverShows(): void {
     // With no selectable option the cursor parks on the heading; its
     // description must not render as an option description.
-    $field = new Select([new Option('', 'Fruit', 'group note', OptionKind::Heading)]);
+    $field = new Select([new Option('', 'Fruit', 'group note', OptionType::Heading)]);
 
     $this->assertStringNotContainsString('group note', Ansi::strip($field->view(new DefaultTheme())));
   }
 
   public function testNoSelectableRowYieldsNoValue(): void {
-    $field = new Select([new Option('', 'Group', '', OptionKind::Heading)]);
+    $field = new Select([new Option('', 'Group', '', OptionType::Heading)]);
 
     $field->handle(Key::named(KeyName::Enter));
 
@@ -513,8 +513,8 @@ final class SelectTest extends TestCase {
     // the field is stating cannot be told from prose about the highlighted
     // option.
     $this->assertStringContainsString($this->styleOf($theme->fieldConstraint(...)) . 'Select between 1 and 2 items.', $view);
-    $this->assertStringContainsString($this->styleOf($theme->fieldEntryDescription(...)) . 'Crisp and sweet, the everyday choice.', $view);
-    $this->assertNotSame($this->styleOf($theme->fieldConstraint(...)), $this->styleOf($theme->fieldEntryDescription(...)));
+    $this->assertStringContainsString($this->styleOf($theme->fieldOptionDescription(...)) . 'Crisp and sweet, the everyday choice.', $view);
+    $this->assertNotSame($this->styleOf($theme->fieldConstraint(...)), $this->styleOf($theme->fieldOptionDescription(...)));
   }
 
   /**

@@ -35,14 +35,14 @@ final class SupportTest extends TestCase {
     $this->assertInstanceOf(ColorSchemeCapableInterface::class, $dark);
     $this->assertTrue($dark->isDark());
     $this->assertFalse($light->isDark());
-    $this->assertTrue((new DefaultTheme(80, ['color' => TRUE]))->hasColor());
-    $this->assertFalse((new DefaultTheme(80, ['color' => FALSE]))->hasColor());
+    $this->assertTrue((new DefaultTheme(80, ['color' => TRUE]))->isColor());
+    $this->assertFalse((new DefaultTheme(80, ['color' => FALSE]))->isColor());
   }
 
   public function testUnicodeIsDeclaredAndCanBeTurnedOff(): void {
     $this->assertInstanceOf(UnicodeCapableInterface::class, new DefaultTheme());
-    $this->assertTrue((new DefaultTheme(80, ['unicode' => TRUE]))->hasUnicode());
-    $this->assertFalse((new DefaultTheme(80, ['unicode' => FALSE]))->hasUnicode());
+    $this->assertTrue((new DefaultTheme(80, ['unicode' => TRUE]))->isUnicode());
+    $this->assertFalse((new DefaultTheme(80, ['unicode' => FALSE]))->isUnicode());
   }
 
   public function testThemeDeclaringNothingSupportsNothing(): void {
@@ -68,8 +68,8 @@ final class SupportTest extends TestCase {
   public function testSelectingAnItemAddsWeightRatherThanReplacingItsColour(): void {
     $theme = new CapableTheme();
 
-    $this->assertSame("\033[32mApple\033[0m", $theme->fieldEntry('Apple', FALSE));
-    $this->assertSame("\033[1;32mApple\033[0m", $theme->fieldEntry('Apple', TRUE));
+    $this->assertSame("\033[32mApple\033[0m", $theme->fieldOption('Apple', FALSE));
+    $this->assertSame("\033[1;32mApple\033[0m", $theme->fieldOption('Apple', TRUE));
   }
 
   public function testAnElementPicksItsGlyphFromWhatTheThemeSupports(): void {

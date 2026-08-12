@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\Tui\Field\Capability;
 
 use DrevOps\Tui\Block\Element\FieldElementsInterface;
+use DrevOps\Tui\FormException;
 use DrevOps\Tui\Screen\Scroller;
 use DrevOps\Tui\Screen\Viewport;
 use DrevOps\Tui\Theme\ThemeInterface;
@@ -54,12 +55,12 @@ trait PagingCapableTrait {
    * @return int
    *   The effective page size.
    *
-   * @throws \InvalidArgumentException
+   * @throws \DrevOps\Tui\FormException
    *   When a declared page size is not positive.
    */
   protected function resolvePageSize(?int $page_size): int {
     if ($page_size !== NULL && $page_size < 1) {
-      throw new \InvalidArgumentException(Translator::t('Page size must be a positive integer, @size given.', [
+      throw new FormException(Translator::t('Page size must be a positive integer, @size given.', [
         '@size' => $page_size,
       ]));
     }
@@ -115,11 +116,11 @@ trait PagingCapableTrait {
   }
 
   /**
-   * The theme, narrowed to the mark that says a list runs past its page.
+   * The theme, narrowed to the elements that draw the overflow mark.
    *
-   * The field's own mark rather than the chrome's: a field draws only what it
-   * owns, so the page it windows a list to is marked with an element of its
-   * own, and a theme that wants the two to read alike says so once in each.
+   * The mark is the field's own element, not the chrome's, because a field
+   * draws only what it owns. A theme that styles the two marks alike declares
+   * the style in both elements.
    *
    * @param \DrevOps\Tui\Theme\ThemeInterface $theme
    *   The theme.

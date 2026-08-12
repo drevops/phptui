@@ -28,7 +28,7 @@ use DrevOps\Tui\Theme\Override\Overrides;
  *     ->selector('❯', '>')
  *     ->helpMarker('ⁱ', '[?]')
  *     ->valueSeparator(', ')
- *     ->entryMarker('◼', '[x]')
+ *     ->optionMarker('◼', '[x]')
  *     ->caret('█', '|'))
  *   ->overrides();
  * @endcode

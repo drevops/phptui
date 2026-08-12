@@ -26,14 +26,14 @@ final class BufferedTerminalTest extends TestCase {
     $this->assertSame('', $terminal->read());
   }
 
-  public function testHeightIsFixed(): void {
-    $this->assertSame(24, (new BufferedTerminal())->height());
-    $this->assertSame(30, (new BufferedTerminal([], 30))->height());
+  public function testRowsIsFixed(): void {
+    $this->assertSame(24, (new BufferedTerminal())->rows());
+    $this->assertSame(30, (new BufferedTerminal([], 30))->rows());
   }
 
-  public function testWidthIsFixed(): void {
-    $this->assertSame(80, (new BufferedTerminal())->width());
-    $this->assertSame(120, (new BufferedTerminal([], 24, 120))->width());
+  public function testColumnsIsFixed(): void {
+    $this->assertSame(80, (new BufferedTerminal())->columns());
+    $this->assertSame(120, (new BufferedTerminal([], 24, 120))->columns());
   }
 
   public function testSetupAndRestoreProduceNoOutput(): void {

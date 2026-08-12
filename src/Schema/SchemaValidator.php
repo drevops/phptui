@@ -127,7 +127,7 @@ class SchemaValidator {
     }
 
     if (!$field->acceptsValue($value)) {
-      return $this->constraintMessage($field, $field->valueKind());
+      return $this->constraintMessage($field, $field->valueType());
     }
 
     $bounds_error = $this->checkBounds($field, $value);
@@ -208,7 +208,7 @@ class SchemaValidator {
    *   An error, or NULL when valid.
    */
   protected function checkOptions(Field $field, mixed $value): ?string {
-    $error = $field->entryError($value);
+    $error = $field->optionViolation($value);
 
     return $error === NULL ? NULL : Translator::t('Question "@id": @error.', ['@id' => $field->id(), '@error' => $error]);
   }

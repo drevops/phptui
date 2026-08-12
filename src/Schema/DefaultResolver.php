@@ -40,7 +40,7 @@ final class DefaultResolver {
       return $default;
     }
 
-    if ($field->hasSchemaDefault()) {
+    if ($field->isSchemaDefault()) {
       return $field->schemaDefaultValue();
     }
 

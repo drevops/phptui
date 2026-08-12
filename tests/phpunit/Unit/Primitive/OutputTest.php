@@ -25,7 +25,7 @@ final class OutputTest extends TestCase {
   public function testBoxWritesTheFramedLines(): void {
     $terminal = new BufferedTerminal();
 
-    (new Output($terminal, $this->theme(color: FALSE)))->box('Pick your fruit.', 'Welcome');
+    (new Output($terminal, $this->theme(color: FALSE)))->box('Welcome', 'Pick your fruit.');
 
     $output = $terminal->output();
 
@@ -38,7 +38,7 @@ final class OutputTest extends TestCase {
   public function testBoxAcceptsLineList(): void {
     $terminal = new BufferedTerminal();
 
-    (new Output($terminal, $this->theme(color: FALSE)))->box(['Apples', 'Pears']);
+    (new Output($terminal, $this->theme(color: FALSE)))->box('', ['Apples', 'Pears']);
 
     $lines = explode("\n", trim($terminal->output(), "\n"));
 
@@ -184,7 +184,7 @@ final class OutputTest extends TestCase {
     $terminal = new BufferedTerminal();
 
     (new Output($terminal, $this->theme(color: FALSE)))
-      ->box('Pick your fruit.', 'Welcome')
+      ->box('Welcome', 'Pick your fruit.')
       ->success('Preserves are ready')
       ->definitions(['Jars' => '12']);
 
@@ -195,7 +195,7 @@ final class OutputTest extends TestCase {
     $terminal = new BufferedTerminal();
 
     (new Output($terminal, $this->theme(color: TRUE)))
-      ->box('Pick your fruit.', 'Welcome')
+      ->box('Welcome', 'Pick your fruit.')
       ->success('Preserves are ready')
       ->definitions(['Jars' => '12']);
 
