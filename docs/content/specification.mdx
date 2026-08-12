@@ -1,15 +1,20 @@
 ---
 title: Specification
-description: 'What a screen is made of, what each part is allowed to do, how a block reaches the theme to draw itself, and what survives with no screen at all.'
-keywords: ['specification', 'structure', 'screen', 'layout', 'region', 'block', 'field', 'panel', 'capability', 'theme']
+description: 'What a screen is made of, what each part is allowed to do, how a block reaches the theme to draw itself, which class does which part when it runs, and what survives with no screen at all.'
+keywords: ['specification', 'structure', 'screen', 'layout', 'region', 'block', 'field', 'panel', 'capability', 'theme', 'architecture']
 toc_max_heading_level: 4
 ---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Specification
 
 A screen is built from four kinds of thing - a _screen_, its _layout_, that layout's _regions_, and the _blocks_ drawn in them. Each kind owns a fixed set of capabilities, and owns them alone.
 
 That last part is what makes the model useful. When something doesn't obviously fit - a new kind of block, a feature that could live in two places - the question is never "where does this go", it's **which level owns the capability it needs**. The answer follows.
+
+The page runs in four parts: what a screen is made of, how a block reaches the theme to draw itself, [what actually runs](#how-it-runs) and in what order, and how to settle a question the model does not obviously cover. Every piece a theme draws, and how to restyle one, is [Themes](/themes).
 
 ## Structure
 
@@ -714,9 +719,9 @@ edit mode    ❯ Basket contents    ● Apple
                                     the field collecting it
 ```
 
-The _label_ and the _selector_ stay put across both. Only the _value_ region changes shape, which is why a field in _edit_ mode is still one row of its _panel_ rather than something new on the screen. [Anatomy](/anatomy) names every piece of both.
+The _label_ and the _selector_ stay put across both. Only the _value_ region changes shape, which is why a field in _edit_ mode is still one row of its _panel_ rather than something new on the screen. [Themes](/themes#what-a-theme-draws) names every piece of both.
 
-_Constrain_ and _Reject_ are two capabilities rather than one because they answer different questions. _Constrain_ states what the field will accept before you act; _Reject_ explains why what you did was refused. They share one line on screen and never appear together - which is why [Anatomy](/anatomy) names that line's two states the **constraint** and the **error**.
+_Constrain_ and _Reject_ are two capabilities rather than one because they answer different questions. _Constrain_ states what the field will accept before you act; _Reject_ explains why what you did was refused. They share one line on screen and never appear together - which is why [Themes](/themes#what-a-theme-draws) names that line's two states the **constraint** and the **error**.
 
 Between the field and the theme sit its **capabilities** - the shared behavior a field draws on rather than reimplements. The chain runs one way and never doubles back:
 
@@ -959,7 +964,7 @@ Eight ship, one per block plus one for the frame that belongs to no block:
 
 `ChromeElementsInterface` is the one named for something other than a block, and the reason is the model's own: what it draws belongs to none of them. A block only ever fills the space it is given, and never learns where that space ends or what is drawn beside it - so the frame surrounding every region at once, the mark saying a region's contents outran it, and the air between two things drawn side by side are all things no block could ask for. They belong to whatever draws the screen instead.
 
-What each interface actually declares - every element, what it draws and which atom it puts on screen - is [Anatomy](/anatomy#elements-what-a-theme-actually-implements).
+What each interface actually declares - every element, what it draws and which atom it puts on screen - is [Themes](/themes#elements-what-a-theme-actually-implements).
 
 Two things follow from the shape. A theme that doesn't implement the interface can't draw that block, and the failure names the theme and the interface rather than leaving a blank line. And adding a block to the library adds one interface instead of growing a single theme class that already knows about everything.
 
@@ -975,13 +980,55 @@ What a theme keeps behind its elements is its own business. `DefaultTheme` write
 
 A consumer can also restate a handful of elements without writing a class at all, and that changes nothing about the contract. A patch is a preference, so a theme that doesn't take one keeps every answer of its own and the form still draws - which is why a patch can never be what decides whether a form draws at all. [Patching an element](/themes#patching-an-element) is the closed set of nine it reaches.
 
-## Behavior
+## How it runs
 
-How a screen moves, and what happens when there is not one.
+Everything above is the model. This part is the same thing seen from the outside: which class does which part, and in what order. The diagrams are rendered from the PlantUML sources in [`docs/architecture/`](https://github.com/drevops/phptui/tree/main/docs/architecture), and all of it is derived from `src/`, so if the prose and the code ever disagree, the code wins.
+
+### The classes behind it
+
+At the center is the **block tree**. A form is declared as one, and everything else either writes into it, reads it or draws it. The packages below group the `src/` classes by what they do, and the arrows are the main dependencies.
+
+<p align="center">
+  <ThemedImage alt="Component architecture" sources={{light: useBaseUrl('/architecture.svg'), dark: useBaseUrl('/architecture-dark.svg')}} width="100%" />
+</p>
+
+Read it as three concerns around that tree:
+
+- **Declaring.** `Form`, `PanelBuilder` and `FieldBuilder` write the tree; `Tui` is the facade you hold. Everything that describes the terminal rather than the questionnaire - the [theme](/themes), the [layout](/layouts), the [key bindings](/key-bindings), color, Unicode, the footer - is set on the facade, so one declaration serves every way of running it.
+- **The tree itself.** `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions` and `Progress` all implement `BlockInterface`. Each declares what it can do as a capability interface (`Block\Capability`) and what it needs drawn as an elements interface (`Block\Element`). `Tree` is the one walk of it, so the collector, the screen and the schema tools read one order and one answer to which blocks are there.
+- **Running it.** `Collector` collects the tree with no screen at all. `ScreenController` drives it through a terminal - arranging it with a `Screen`, a layout and its regions, sending each key inward with `KeyRouter`, drawing outward with `ScreenRenderer`. Both paths settle the same rules and produce the same `Answers`.
+
+Under all three sits the terminal. `Terminal` is the device - raw mode, the alternate screen, the size it reports - and beside it is the text machinery every drawn line passes through: `Ansi` for escape sequences, `Box` and `Table` for the geometry of a frame and a grid, and `Terminal\Markup` - distinct from the `Markup` block above - for the [markdown subset](/markdown). All of it takes plain strings and hands plain strings back, so nothing above it has to know how a glyph reaches the screen.
+
+### Text you supply is filtered at the door
+
+A terminal acts on some bytes rather than printing them, so a label, a markup body or a collected answer containing `ESC[2J` would clear the screen instead of reading as text. `Ansi::sanitize()` filters every string you hand the library, at the point it is taken in: a block setter, a value the collection resolves, a save from your `$EDITOR`, a key you type. Escapes are removed. Newline and tab are kept, and `CRLF` or a lone `CR` folds to a newline, so multi-line content keeps its lines.
+
+A block therefore never holds a byte a terminal would act on, and that applies to your own theme too - an element only ever receives filtered text. The library's own escapes are unaffected, because the theme composes styling after the filter runs, so a form built from untrusted content keeps its color.
+
+Identifiers are excluded: field, panel and markup ids, action names, and the keys of a collected answer address something rather than being read, and the library never draws one. Pick them yourself rather than from untrusted input.
+
+### Declaring the questions
+
+You declare the questions in PHP with the fluent `Form` builder: panels holding fields. A field has an `id`, a type (`text`, `select`, `suggest`, `search`, `filepicker`, `confirm` and the rest; `select`, `search` and `filepicker` collect a list with `->multiple()`) and optional rules - `default`, `required`, `options`, `when` (show it only when a condition holds), `derive` (compute it from other fields) and `discover` (detect it from the target directory).
+
+What the builder produces is not a separate model: **it writes the block tree directly**. `$form->root()` hands back the root `Panel`, its regions hold the blocks, and a sub-panel is a block in a region like any other. There is one tree, and every call on the facade reads that one - `collect()`, `interact()`, `schema()`, `validate()`, `agentHelp()`.
+
+The declaration is checked as it is written. Anything a single call can decide throws at that call - an unknown layout name, a setter on a kind that has nothing to set it on - and anything only the finished tree can decide throws when the form is built: duplicate field ids, an unknown transform name, a modal declaring sub-panels. Either way it is caught before a session starts rather than mid-session. Nothing runs yet; this is pure description.
+
+Most fields need no code beyond that. When one does - a dynamic default, discovery, validation or a normalization - it is declared on the field itself: `->default(fn ...)`, `->validate(fn ...)`, `->transform(fn ...)`, `->discover(...)`. Reusable validators and transformers are public static methods on a class named after the field id (`red_apple` -> `RedApple`) in a registered namespace - referenced explicitly as first-class callables, or resolved by the `HandlerRegistry` as the fallback. When both exist, the field declaration wins.
 
 ### Driving a screen
 
-Everything above describes a screen at rest. What moves it is one key at a time, and the two directions are worth seeing together: **keys travel inward, drawing travels outward.**
+For interactive use, `ScreenController::run()` seeds itself from the same collector and drives a terminal session until the form ends:
+
+<p align="center">
+  <ThemedImage alt="Interactive session" sources={{light: useBaseUrl('/dataflow-tui.svg'), dark: useBaseUrl('/dataflow-tui-dark.svg')}} width="100%" />
+</p>
+
+**Assembling.** `Assembler` builds a `Screen` around the panel and asks the layout, one `Furniture` role at a time, which of its regions each piece belongs in: the trail, the form itself with its `Actions`, and the keys. `AbstractLayout` answers with the conventional `header`, `content` and `footer`, so a layout using those names is furnished without writing a line, and one calling its regions something else overrides `furnishes()` and says where each piece goes. A piece it answers `NULL` for is never drawn; only the form itself has to be answered, and a layout with nowhere for it is refused where it is named. Whatever the facade's `place()` and `flow()` stated goes in after that, so a block of your own lands behind the furniture its region already holds rather than in front of it. Everything placed goes into the screen's own regions, never into the panel tree, so after a session the declared tree holds exactly what the form declared and a second run over it opens on the same first frame. The layout comes from `LayoutManager`: a shipped name, a name you registered, or the class itself. See [Layouts](/layouts).
+
+What moves the assembled screen is one key at a time, and the two directions are worth seeing together: **keys travel inward, drawing travels outward.**
 
 A key goes to the innermost thing that _Binds_ it, and only outward from there:
 
@@ -991,7 +1038,7 @@ key ──▸ the focused block, if it binds that key
     ──▸ else the screen, which claims none of its own
 ```
 
-`KeyRouter` is what applies that rule, and it is the whole of what a key does to the screen: move the cursor, open a field, go into a panel, come back out, show a field's help.
+`KeyParser` turns the raw bytes into `Key` objects and a `KeyMap` resolves each to a semantic action rather than a fixed key - configurable per field type, shipping a vim preset beside the default, validated when `->keys()` is called. `KeyRouter` then applies the rule above, and it is the whole of what a key does to the screen: move the cursor, open a field, go into a panel, come back out, show a field's help.
 
 That one rule explains a behavior that otherwise looks like a special case. An open _text_ field binds every printable key, because each is something you're typing - so <kbd>?</kbd> reaches it and becomes a character. Close the field and it binds nothing printable, so the same <kbd>?</kbd> travels outward to the panel and opens help. Nobody wrote an exception; the key simply stopped at a different level.
 
@@ -1011,11 +1058,23 @@ Block   ──▸ render()s, reaching the Theme for elements
 Theme   ──▸ returns styled strings
 ```
 
-Each step hands down exactly one thing and knows nothing of the step after it. A layout hands a region a number; a region hands a block a space; a block hands the theme a string. Nothing reaches back up.
+Each step hands down exactly one thing and knows nothing of the step after it. A layout hands a region a number; a region hands a block a space; a block hands the theme a string. Nothing reaches back up. In classes: the `Screen` gives its layout the terminal, `ScreenRenderer` counts what each region holds and hands the layout the numbers, `AbstractLayout` takes the sized regions off the top - the fixed ones and the measured ones alike - and divides the remainder by the declared shares, and each `Region` flows its blocks and scrolls them if it was declared to.
+
+**Every answer re-settles the form.** An accepted edit goes back through `Collector::resettle()`: derive rules recompute, `when` conditions show and hide rows, answer-driven option lists re-resolve and fix-ups re-apply - so the session honors exactly what a headless collection would.
+
+**The frame.** Border, spacing, alignment and the min/max sizes are [theme options](/themes#display-options) read through `OccupyCapableInterface`, and a theme that declares none is drawn where the cursor already is, with no frame and no air around it. In [fullscreen](/panels#fullscreen) the frame stretches to the terminal and the content anchors at `halign`/`valign`; below the minimum size a resize notice takes the frame's place and every key but the one that leaves is dropped. A panel declared `->modal()` is drawn as a centered dialog over the dimmed screen behind it - `DimCapableInterface` is what pushes the backdrop back - with its own submit/cancel pair, where submit keeps the edits and cancel restores the answers the dialog opened with.
+
+**How it ends** is the whole of what a caller sees. Finishing hands back `Answers`; abandoning through the cancel button raises `CancelException`; <kbd>Ctrl-C</kbd> raises `InterruptException` from anywhere, including from inside an open field. Partial answers are never mistaken for a completed form.
 
 ### Collecting headlessly
 
-The same form can collect with no screen at all - from a JSON payload, from environment variables, from an agent. Nothing is drawn, and the capabilities split cleanly in two:
+The same form can collect with no screen at all - from a JSON payload, from environment variables, from an agent. `Tui::collect()` turns the tree plus whatever you supplied into a settled set of answers:
+
+<p align="center">
+  <ThemedImage alt="Headless collection" sources={{light: useBaseUrl('/dataflow-collect.svg'), dark: useBaseUrl('/dataflow-collect-dark.svg')}} width="100%" />
+</p>
+
+Nothing is drawn, and the capabilities split cleanly in two:
 
 | Capability                                                        | Headless |                                                     |
 | ----------------------------------------------------------------- | -------- | --------------------------------------------------- |
@@ -1033,6 +1092,20 @@ _Fields_ are built, because they're the blocks that _Collect_. They're built wit
 _Panels_ are built too, but for what they hold rather than for what they draw: a section is where the questions are, and a condition on one decides which of them are asked. Nothing about it that belongs to the screen survives - no row, no trail, nowhere to go into.
 
 That's why the same declaration serves both. A form doesn't say how to draw itself; it says what it collects, and the drawing is a separate set of capabilities layered on top.
+
+Walking the sequence:
+
+1. **Resolve each field's starting value**, in priority order: an explicit input (from a JSON payload or the environment, through `InputResolver`) beats a discovered value (in update mode, adopted only when it passes the field's emptiness, type, bounds and rows), which beats a dynamic default, which beats the static one.
+2. **Normalize each supplied value** through its declared or resolved transform, so derivation, conditions and fix-ups all see the final value. Defaults and derived values are the form's own and skip the transformers.
+3. **Settle.** `Deriver` recomputes `derive` values until they stop changing, one `Tree::within()` walk over the `Condition` rules decides which blocks are there at all - a panel carrying whatever it holds - [option lists that follow the answers](/field-behaviour#options-from-the-answers) re-resolve, and fix-ups reconcile dependents, repeated until nothing moves.
+4. **Measure each supplied value** that survived: emptiness on a required field first, then type, bounds and rows. A value the form refuses raises `CollectException` naming the field and the reason, because with no screen there is nobody to retype it.
+5. **Emit `Answers`** - the values plus their provenance (default, detected, edited, derived, override).
+
+Only supplied values are measured, and only once the set has settled, because until then there is nothing final to measure them against.
+
+### Applying the answers
+
+Collecting produces answers; acting on them - writing files, renaming directories - is your job, never the library's. A consumer that processes answers defines its own processor contract with a `process()` hook, resolves each processor class by field id through the `HandlerRegistry`, and sequences the work by its own rules - ordering is a processing concern the form declaration does not carry. One class per field can carry both its `process()` and the reusable static `validate()`/`transform()` the collector resolves.
 
 ## In practice
 

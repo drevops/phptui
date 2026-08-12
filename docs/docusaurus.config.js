@@ -94,7 +94,9 @@ const config = {
         redirects: [
           {from: '/discovery', to: '/field-behaviour'},
           {from: '/self-describing-answers', to: '/headless-collection'},
-          {from: '/fields/anatomy', to: '/anatomy'},
+          {from: '/fields/anatomy', to: '/themes'},
+          {from: '/anatomy', to: '/themes'},
+          {from: '/architecture', to: '/specification'},
         ],
       },
     ],

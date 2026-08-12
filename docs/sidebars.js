@@ -56,13 +56,13 @@ const sidebars = {
       type: 'category',
       label: 'Customization',
       collapsible: false,
-      items: ['anatomy', 'themes', 'display-modes', 'markdown', 'key-bindings', 'translations'],
+      items: ['themes', 'display-modes', 'markdown', 'key-bindings', 'translations'],
     },
     {
       type: 'category',
       label: 'About',
       collapsible: false,
-      items: ['playground', 'architecture', 'contributing'],
+      items: ['playground', 'contributing'],
     },
   ],
 };

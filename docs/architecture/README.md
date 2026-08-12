@@ -1,6 +1,6 @@
 # Architecture diagrams
 
-The PlantUML sources behind the diagrams on **[phptui.dev/architecture](https://phptui.dev/architecture)**, and the SVGs rendered from them. This directory is served as a static directory, so each `.svg` here is reachable at the site root.
+The PlantUML sources behind the diagrams on **[phptui.dev/specification](https://phptui.dev/specification#how-it-runs)**, and the SVGs rendered from them. This directory is served as a static directory, so each `.svg` here is reachable at the site root.
 
 | Source                  | Renders                                              | Shows                                                     |
 | ----------------------- | ---------------------------------------------------- | --------------------------------------------------------- |
@@ -8,7 +8,7 @@ The PlantUML sources behind the diagrams on **[phptui.dev/architecture](https://
 | `dataflow-collect.puml` | `dataflow-collect.svg`, `dataflow-collect-dark.svg`  | headless collection, with no screen anywhere               |
 | `dataflow-tui.puml`     | `dataflow-tui.svg`, `dataflow-tui-dark.svg`          | an interactive session, keys inward and drawing outward    |
 
-The walkthrough that embeds them - what you assemble to build a form, and what happens when it runs - is [phptui.dev/architecture](https://phptui.dev/architecture), written in [`docs/content/architecture.mdx`](../content/architecture.mdx). The model underneath it is [phptui.dev/specification](https://phptui.dev/specification). Both are derived from `src/`, so if the prose and the code disagree, the code wins.
+The walkthrough that embeds them - what you assemble to build a form, and what happens when it runs - is the [How it runs](https://phptui.dev/specification#how-it-runs) part of [`docs/content/specification.mdx`](../content/specification.mdx), below the model it implements. It is derived from `src/`, so if the prose and the code disagree, the code wins.
 
 ## Regenerating
 
