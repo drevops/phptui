@@ -19,7 +19,15 @@ const config = {
   // the homepage title; the navbar carries the logo instead of a text brand.
   title: 'PHPTUI - Terminal user interfaces for PHP',
   tagline: 'Terminal user interfaces for PHP',
-  favicon: 'img/logo.svg',
+  favicon: 'img/favicon.ico',
+
+  // The favicon setting emits one <link>. The PNG and Apple variants sit under
+  // /img/ rather than the site root a browser probes, so each needs declaring.
+  headTags: [
+    {tagName: 'link', attributes: {rel: 'icon', type: 'image/png', sizes: '32x32', href: '/img/favicon-32x32.png'}},
+    {tagName: 'link', attributes: {rel: 'icon', type: 'image/png', sizes: '16x16', href: '/img/favicon-16x16.png'}},
+    {tagName: 'link', attributes: {rel: 'apple-touch-icon', sizes: '180x180', href: '/img/apple-touch-icon.png'}},
+  ],
 
   // Set the production url of your site here.
   url: 'https://phptui.dev',
