@@ -28,7 +28,6 @@ const sidebars = {
       collapsible: false,
       items: [
         {type: 'doc', id: 'fields/index', label: 'Overview'},
-        'fields/anatomy',
         'fields/calendar',
         'fields/confirm',
         'fields/filepicker',
@@ -63,7 +62,7 @@ const sidebars = {
       type: 'category',
       label: 'About',
       collapsible: false,
-      items: ['playground', 'architecture', 'contributing'],
+      items: ['playground', 'contributing'],
     },
   ],
 };

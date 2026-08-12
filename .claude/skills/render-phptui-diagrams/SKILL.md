@@ -10,7 +10,7 @@ description: Use when regenerating the TUI architecture diagrams under docs/arch
 - `architecture.puml` - layered component architecture
 - `dataflow-collect.puml` - the headless collection lifecycle (a sequence diagram)
 - `dataflow-tui.puml` - the interactive panel-TUI loop (a sequence diagram)
-- `README.md` - a narrative walkthrough that explains how the TUI is set up and how it runs, embedding the rendered SVGs as supporting visuals (not a bare index)
+- `README.md` - an index of the sources: one table listing each `.puml` with the renders it produces and what it shows, plus the regeneration commands. The walkthrough that embeds the SVGs lives in `docs/content/specification.mdx`
 
 Each `.puml` renders to a light `<name>.svg`, and a dark-scheme `<name>-dark.svg` is derived from that light render by `docs/util/derive-dark-diagram.js`. Both are committed and served so the diagrams read well in light and dark browsers.
 
@@ -43,15 +43,8 @@ The light render stays the single source of truth; the dark variant is derived f
 2. **Create** `docs/architecture/dataflow-<flow>.puml` from the template below.
 3. **Fill** the participants and messages from the real call path: solid arrows (`->`) for the forward path, dashed (`-->`) for returns. Mirror `dataflow-collect.puml`.
 4. **Render and derive** it: `plantuml -tsvg docs/architecture/dataflow-<flow>.puml`, then `node docs/util/derive-dark-diagram.js docs/architecture/dataflow-<flow>.svg` for the dark variant.
-5. **Index** it in the README walkthrough (`docs/architecture/README.md`) with a `<picture>` that swaps the dark variant on GitHub:
-
-   ```html
-   <picture>
-     <source media="(prefers-color-scheme: dark)" srcset="dataflow-<flow>-dark.svg">
-     <img alt="<caption>" src="dataflow-<flow>.svg">
-   </picture>
-   ```
-6. **Embed** it in the Docusaurus page (`docs/content/architecture.mdx`) with `<ThemedImage>` so it follows the site's dark-mode toggle:
+5. **List** its source and both renders in the table in `docs/architecture/README.md`, alongside the diagrams already there.
+6. **Embed** it in the walkthrough - the "How it runs" part of `docs/content/specification.mdx` - with `<ThemedImage>` so it follows the site's dark-mode toggle:
 
    ```jsx
    <ThemedImage alt="<caption>" sources={{light: useBaseUrl('/dataflow-<flow>.svg'), dark: useBaseUrl('/dataflow-<flow>-dark.svg')}} width="100%" />
@@ -87,7 +80,9 @@ deactivate Eng
 
 ## Task C - keep the walkthrough current
 
-`docs/architecture/README.md` is a walkthrough, not an index: it walks the reader through describing a config, attaching handlers, the headless collection lifecycle and the interactive TUI, embedding `architecture.svg`, `dataflow-collect.svg` and `dataflow-tui.svg` at the points they support. After any structural change (a new package, a changed lifecycle step, a new diagram), update the prose so it still matches `src/`, and embed any new SVG where it supports the narrative. Always regenerate the SVGs (Task A) in the same pass so the visuals and the prose agree.
+The walkthrough is the "How it runs" part of `docs/content/specification.mdx`, and it is the only one: it walks the reader through describing a form, attaching handlers, the headless collection lifecycle and the interactive TUI, embedding `architecture.svg`, `dataflow-collect.svg` and `dataflow-tui.svg` at the points they support. `docs/architecture/README.md` is an index of the sources beside it - a table and the regeneration commands - so a diagram is described in one place and listed in the other. After any structural change (a new package, a changed lifecycle step, a new diagram), update the walkthrough's prose so it still matches `src/`, and embed any new SVG where it supports the narrative. Always regenerate the SVGs (Task A) in the same pass so the visuals and the prose agree.
+
+The project keeps two pages about the library as a whole and no more: `specification.mdx` for how it works (the model, then which class does which part when it runs) and `themes.mdx` for how it looks (every atom, every element, and how to restyle one). Put a structural change on whichever of the two owns the question it answers - never start a third page for it.
 
 ## Conventions
 

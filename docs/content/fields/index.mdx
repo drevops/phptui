@@ -9,7 +9,9 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Fields
 
-The fields cover text entry, choices, filesystem browsing and gates. Every field of the form opens its field in an editor, and the same fields also run standalone (see [`playground/02-fields-*`](https://github.com/drevops/phptui/tree/main/playground)). Fields pull their glyphs and colors from the theme, so each one is shown in all four display modes.
+The fields cover text entry, choices, filesystem browsing and gates. Every field of the form opens its editor in place, and the same fields also run standalone (see [`playground/02-fields-*`](https://github.com/drevops/phptui/tree/main/playground)). Fields pull their glyphs and colors from the theme, so each one is shown in all four display modes.
+
+[Themes](/themes#what-a-theme-draws) names every piece a field draws in both of its modes - the label, the value, the entries, the caret - and gives the theme element behind each one.
 
 <p align="center">
   <ThemedImage sources={{light: useBaseUrl('/fields-light-animated.svg'), dark: useBaseUrl('/fields-dark-animated.svg')}} alt="All fields, one after another" width="100%" />
