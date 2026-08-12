@@ -55,7 +55,7 @@ A screen is built from four levels, and each owns a fixed set of capabilities. W
 ```
 Screen        the root; occupies the terminal, or fits its contents
 └─ Layout     arranges; reusable by name; scrolls what it stacks
-   └─ Region  holds blocks and flows them; declares whether it scrolls
+   └─ Region  holds blocks and flows them; declares whether it scrolls and whether it draws edges
       └─ Block   drawn in a region
 ```
 

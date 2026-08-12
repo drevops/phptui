@@ -89,10 +89,12 @@ const config = {
     [
       '@docusaurus/plugin-client-redirects',
       {
-        // Pages absorbed into larger ones keep their old URLs working.
+        // Pages that were absorbed into larger ones, or that moved, keep their
+        // old URLs working.
         redirects: [
           {from: '/discovery', to: '/field-behaviour'},
           {from: '/self-describing-answers', to: '/headless-collection'},
+          {from: '/fields/anatomy', to: '/anatomy'},
         ],
       },
     ],

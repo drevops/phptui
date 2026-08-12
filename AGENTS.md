@@ -202,8 +202,27 @@ Key workflows:
 
 ## Documentation
 
-Architecture diagrams and a narrative walkthrough live in `docs/architecture/`.
-After a structural change, update them with the `render-phptui-diagrams` skill.
+Four pages describe the library as a whole, and each owns a different question.
+State a thing on the page that owns it and link from the others - a fact
+restated on two pages drifts on one of them.
+
+- **`docs/content/specification.mdx`** - the model. The four levels, the
+  seventeen capabilities, what claims what, and the rules that follow: a block
+  reaches the theme for elements, a theme takes plain scalars and enums and
+  nothing else, order and spacing belong to the block while color and glyph
+  belong to the theme. It names no individual element and no theme capability.
+- **`docs/content/anatomy.mdx`** - what there is to draw. Every atom on screen
+  and every element behind it, one table per block. The inventory, not the
+  authoring.
+- **`docs/content/themes.mdx`** - how to draw it. Writing a theme, the six
+  theme capabilities and what each grants, and the closed set of nine elements
+  a patch can restate.
+- **`docs/content/architecture.mdx`** - what runs. Which class does which part
+  and in what order, with the diagrams. The only walkthrough; the diagrams
+  themselves are indexed in `docs/architecture/README.md`.
+
+After a structural change, update the page that owns what changed, and
+re-render the diagrams with the `render-phptui-diagrams` skill.
 
 ### Terminal SVG assets
 

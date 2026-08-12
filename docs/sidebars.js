@@ -28,7 +28,6 @@ const sidebars = {
       collapsible: false,
       items: [
         {type: 'doc', id: 'fields/index', label: 'Overview'},
-        'fields/anatomy',
         'fields/calendar',
         'fields/confirm',
         'fields/filepicker',
@@ -57,7 +56,7 @@ const sidebars = {
       type: 'category',
       label: 'Customization',
       collapsible: false,
-      items: ['themes', 'display-modes', 'markdown', 'key-bindings', 'translations'],
+      items: ['anatomy', 'themes', 'display-modes', 'markdown', 'key-bindings', 'translations'],
     },
     {
       type: 'category',

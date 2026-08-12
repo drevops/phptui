@@ -43,15 +43,8 @@ The light render stays the single source of truth; the dark variant is derived f
 2. **Create** `docs/architecture/dataflow-<flow>.puml` from the template below.
 3. **Fill** the participants and messages from the real call path: solid arrows (`->`) for the forward path, dashed (`-->`) for returns. Mirror `dataflow-collect.puml`.
 4. **Render and derive** it: `plantuml -tsvg docs/architecture/dataflow-<flow>.puml`, then `node docs/util/derive-dark-diagram.js docs/architecture/dataflow-<flow>.svg` for the dark variant.
-5. **Index** it in the README walkthrough (`docs/architecture/README.md`) with a `<picture>` that swaps the dark variant on GitHub:
-
-   ```html
-   <picture>
-     <source media="(prefers-color-scheme: dark)" srcset="dataflow-<flow>-dark.svg">
-     <img alt="<caption>" src="dataflow-<flow>.svg">
-   </picture>
-   ```
-6. **Embed** it in the Docusaurus page (`docs/content/architecture.mdx`) with `<ThemedImage>` so it follows the site's dark-mode toggle:
+5. **List** its source and both renders in the table in `docs/architecture/README.md`, alongside the diagrams already there.
+6. **Embed** it in the walkthrough (`docs/content/architecture.mdx`) with `<ThemedImage>` so it follows the site's dark-mode toggle:
 
    ```jsx
    <ThemedImage alt="<caption>" sources={{light: useBaseUrl('/dataflow-<flow>.svg'), dark: useBaseUrl('/dataflow-<flow>-dark.svg')}} width="100%" />
@@ -87,7 +80,9 @@ deactivate Eng
 
 ## Task C - keep the walkthrough current
 
-`docs/architecture/README.md` is a walkthrough, not an index: it walks the reader through describing a config, attaching handlers, the headless collection lifecycle and the interactive TUI, embedding `architecture.svg`, `dataflow-collect.svg` and `dataflow-tui.svg` at the points they support. After any structural change (a new package, a changed lifecycle step, a new diagram), update the prose so it still matches `src/`, and embed any new SVG where it supports the narrative. Always regenerate the SVGs (Task A) in the same pass so the visuals and the prose agree.
+`docs/content/architecture.mdx` is the walkthrough, and the only one: it walks the reader through describing a form, attaching handlers, the headless collection lifecycle and the interactive TUI, embedding `architecture.svg`, `dataflow-collect.svg` and `dataflow-tui.svg` at the points they support. `docs/architecture/README.md` is an index of the sources beside it - a table and the regeneration commands - so a diagram is described in one place and listed in the other. After any structural change (a new package, a changed lifecycle step, a new diagram), update the walkthrough's prose so it still matches `src/`, and embed any new SVG where it supports the narrative. Always regenerate the SVGs (Task A) in the same pass so the visuals and the prose agree.
+
+The walkthrough says which class does which part, in what order. The model underneath it - the levels, the capabilities and what claims what - is `docs/content/specification.mdx`, and the elements a theme draws are `docs/content/anatomy.mdx`. Keep a structural change in the one page that owns it rather than restating it across the three.
 
 ## Conventions
 

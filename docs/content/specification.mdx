@@ -21,7 +21,7 @@ Four levels, and nothing else:
 
 ```
 Screen        the root; occupies the terminal, or fits its contents
-└─ Layout     arranges; reusable by name
+└─ Layout     arranges; reusable by name; scrolls what it stacks
    └─ Region  holds blocks and flows them; declares whether it scrolls and whether it draws edges
       └─ Block   drawn in a region
 ```
@@ -714,9 +714,9 @@ edit mode    ❯ Basket contents    ● Apple
                                     the field collecting it
 ```
 
-The _label_ and the _selector_ stay put across both. Only the _value_ region changes shape, which is why a field in _edit_ mode is still one row of its _panel_ rather than something new on the screen. [Anatomy](/fields/anatomy) names every piece of both.
+The _label_ and the _selector_ stay put across both. Only the _value_ region changes shape, which is why a field in _edit_ mode is still one row of its _panel_ rather than something new on the screen. [Anatomy](/anatomy) names every piece of both.
 
-_Constrain_ and _Reject_ are two capabilities rather than one because they answer different questions. _Constrain_ states what the field will accept before you act; _Reject_ explains why what you did was refused. They share one line on screen and never appear together - which is why [Anatomy](/fields/anatomy) names that line's two states the **constraint** and the **error**.
+_Constrain_ and _Reject_ are two capabilities rather than one because they answer different questions. _Constrain_ states what the field will accept before you act; _Reject_ explains why what you did was refused. They share one line on screen and never appear together - which is why [Anatomy](/anatomy) names that line's two states the **constraint** and the **error**.
 
 Between the field and the theme sit its **capabilities** - the shared behavior a field draws on rather than reimplements. The chain runs one way and never doubles back:
 
@@ -932,7 +932,7 @@ final class Breadcrumb extends AbstractBlock {
 }
 ```
 
-`ThemeInterface` itself carries only the two things no block could own - the width they all lay out against, and how the theme writes a key - so the block narrows it to its own elements interface before drawing. That narrowing is the whole reason the core stays thin: a theme grows by implementing more element interfaces, not by growing `ThemeInterface`. The one other thing it carries is a number rather than a method: `DEFAULT_WIDTH`, the width a theme lays out to when no terminal has been measured, which belongs to the contract because everything that builds a theme without a terminal in front of it needs the same answer.
+`ThemeInterface` itself carries only the two things no block could own - the width they all lay out against, and how the theme writes a key - so the block narrows it to its own elements interface before drawing. That narrowing is the whole reason the core stays thin: a theme grows by implementing more element interfaces, not by growing `ThemeInterface`.
 
 An **element** takes a plain string and returns a styled one. It knows nothing about what surrounds it, which is what lets the same element draw a separator inside a form and inside a standalone line of output.
 
@@ -957,83 +957,23 @@ Eight ship, one per block plus one for the frame that belongs to no block:
 | `ActionsElementsInterface`    | the buttons, the gaps and rules around them, and a withheld submit   |
 | `ProgressElementsInterface`   | the caption, the spinner frame, the bar's track and its tally        |
 
-`ChromeElementsInterface` is the one named for something other than a block, and for a reason worth stating: what it draws belongs to none of them. The frame surrounds every region at once and the overflow mark says a region's contents outran it - neither is anything a block could ask for, since a block only ever fills the space it is given and never learns where that space ends, so both belong to whatever draws the screen. The gutter a conditional block steps in behind is the other kind: every block that can come and go draws the same one, so a chain of a row, a passage of markup and a row steps in together rather than one kind at a time. The air between two things drawn side by side is that kind too, and two levels spend it - an arrangement takes it off the width before dividing what is left, and the renderer leaves it when it joins what they drew - so both read the one answer rather than each keeping its own.
+`ChromeElementsInterface` is the one named for something other than a block, and the reason is the model's own: what it draws belongs to none of them. A block only ever fills the space it is given, and never learns where that space ends or what is drawn beside it - so the frame surrounding every region at once, the mark saying a region's contents outran it, and the air between two things drawn side by side are all things no block could ask for. They belong to whatever draws the screen instead.
 
-A field that windows a long list to a page marks its own overflow with `fieldOverflowMarker()` rather than borrowing the chrome's. The two say different things - one that a list the field owns ran past its page, the other that a region ran past the space the layout gave it - so each belongs to whoever draws it. The shipped theme answers both alike, so a reader still learns one mark; a theme that wants them told apart says so once in each.
+What each interface actually declares - every element, what it draws and which atom it puts on screen - is [Anatomy](/anatomy#elements-what-a-theme-actually-implements).
 
 Two things follow from the shape. A theme that doesn't implement the interface can't draw that block, and the failure names the theme and the interface rather than leaving a blank line. And adding a block to the library adds one interface instead of growing a single theme class that already knows about everything.
 
 ### A theme declares what it supports
 
-A terminal may have no color, no Unicode, or a background the theme should read. A theme declares which of those it handles, and declaring one is what grants the facility that goes with it:
-
-```php
-final class OrchardTheme extends AbstractTheme implements ColorSchemeCapableInterface, UnicodeCapableInterface {
-
-  use ColorSchemeCapableTrait;
-  use UnicodeCapableTrait;
-
-  public function breadcrumbLabel(string $text): string {
-    // isDark() and paint() exist because the theme declared the scheme.
-    return $this->paint($this->isDark() ? Sgr::of(Sgr::Jade) : Sgr::of(Sgr::Forest), $text);
-  }
-
-  public function breadcrumbSeparator(): string {
-    // glyph() exists because the theme declared Unicode.
-    return $this->glyph('›', '>');
-  }
-
-}
-```
-
-Six capabilities exist, and that is the whole set:
-
-| Declaration                   | Grants                                                                                                    | For                                                                   |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `ColorSchemeCapableInterface` | `isColor()`, `isDark()`                                                                                   | painting at all, and picking a palette for a dark or light terminal   |
-| `UnicodeCapableInterface`     | `isUnicode()`                                                                                             | choosing between a glyph and its ASCII stand-in                       |
-| `DimCapableInterface`         | `dim()`                                                                                                   | pushing back what a dialog is drawn over                              |
-| `MarkdownCapableInterface`    | `isMarkdown()`                                                                                            | drawing the markdown subset rather than its markers                   |
-| `OccupyCapableInterface`      | `isFullscreen()`, `halign()`, `valign()`, the min/max sizes, `borderStyle()`, `spacing()`, `background()` | saying how much of the terminal the frame takes, and where it anchors |
-| `OverrideCapableInterface`    | `overrides()`                                                                                             | taking the elements a consumer states differently                     |
-
-Color and the background are one declaration rather than two, because the two questions are never asked apart: a color is chosen against a background, and a color legible on a dark terminal is not legible on a light one. The border and the air between rows join them for the same reason: an edge costs two columns and a rule, so what a frame spends on itself is part of how much of the terminal it takes.
-
-Two of the six carry a **trait** with the plumbing, so a theme states a flag and inherits the rest. `ColorSchemeCapableTrait` brings `paint()` and `emphasize()`, and `UnicodeCapableTrait` brings `glyph()` - which is why the palette above reads as color choices rather than as escape-sequence handling. The other four are small enough to answer directly.
+A terminal may have no color, no Unicode, or a background the theme should read. A theme declares which of those it handles, and **declaring one is what grants the facility that goes with it**: `paint()` exists on a theme because it declared the color scheme, `glyph()` because it declared Unicode. Six declarations exist, and [what a theme is allowed to do](/themes#what-a-theme-is-allowed-to-do) is the whole set.
 
 `AbstractTheme` is the floor. It implements all eight of the elements interfaces above and declares no capability at all, so it may not paint and may not reach past ASCII: what is left is the strings it was handed and the stand-ins that read without them. That is why a form renders in a terminal that supports nothing, and why a theme adds what its terminal can do rather than working around what it cannot. It's also the list: what a theme has to draw is read off the floor rather than written down a second time, so adding a block changes what a theme owes by changing the one class that already owes it.
 
-`DefaultTheme` is that floor with all six declared, and it's the class a theme extends when it wants a palette rather than a blank page. It isn't a requirement. `ThemeManager` builds anything implementing `ThemeInterface` from a frame width and an options array - the constructor `AbstractTheme` carries - so `->theme(OrchardTheme::class)` reaches a theme built straight on the floor exactly as it reaches one built on `DefaultTheme`, whether it's named by class, registered under a short name or shipped. What the floor doesn't declare, the driver does without: no edge is drawn around it, no air shows between its rows, nothing recedes behind a dialog, and an element patch goes nowhere. The [primitives](/output) are the one thing it can't do at all, because a card, a grid and a status line are composed rather than styled: they want `PrimitiveElementsInterface`, and a theme without it is named rather than drawn blank.
-
-**A theme is checked where it's picked.** Naming one - `->theme(OrchardTheme::class)`, or registering it under a short name - is where it's asked for the whole of the floor: that it can be built from a width and an options array, and that it answers for every element a form is drawn from. A class that can't is refused there by name, so a theme that would go blank on the third row never gets as far as the first. The per-block check stays as the backstop for the other way in, where a theme instance is handed straight to a block or a screen with no manager between them - that one is a type error naming the block and the interface, and it's what a test that draws one block through a theme of its own runs into.
+**A theme is checked where it's picked**, not partway through a frame - a class that cannot be built from a width and an options array, or that cannot answer for every element the floor does, is refused by name at `->theme(...)`. The per-block check stays as the backstop for a theme instance handed straight to a block with no manager between them.
 
 What a theme keeps behind its elements is its own business. `DefaultTheme` writes each hue down once in a small set of protected voices - `accent()`, `value()`, `guidance()` - so a subclass repaints a whole family in a line. Those voices aren't API: nothing outside the class may name one, and no driver, block or test may reach for one. **The element is the whole of the contract**, and the palette behind it is an implementation detail a subclass may lean on and everything else can only see through the element that draws from it.
 
-### Overriding an element
-
-Subclassing a theme is the full answer, and overkill when all you want is a different glyph. The facade takes element overrides directly, grouped by the block that declares them:
-
-```php
-$tui->theme(fn(ThemeBuilder $t) => $t
-  ->breadcrumb(fn(BreadcrumbOverrides $b) => $b
-    ->separator('›', '>'))
-  ->legend(fn(LegendOverrides $l) => $l
-    ->separator('·', '|')
-    ->key(Sgr::Bold, Sgr::BrightCyan))
-  ->field(fn(FieldOverrides $f) => $f
-    ->selector('❯', '>')
-    ->helpMarker('ⁱ', '[?]')
-    ->valueSeparator(', ')
-    ->entrySelector('▸', '->')
-    ->entryMarker('◼', '[x]')
-    ->caret('█', '|')));
-```
-
-Inside a group the block's prefix is implied, so `->separator()` under `->breadcrumb()` is `breadcrumbSeparator()`. Three kinds of thing can be restated, and the argument count says which is which. A **glyph** takes the mark and its ASCII stand-in, so a patch can't set one display mode and silently break the other - `->entryMarker('◼', '[x]')` states the mark a picked entry carries and what stands in for it, not two states of the entry. **Text** takes one argument, because a phrase the reader parses is not something a terminal fails to draw. A **color** takes the palette parts in order.
-
-Nine elements can be patched this way, and that is the closed set: the breadcrumb's separator; the legend's key and separator; and the field's selector, help marker, value separator, entry selector, entry marker and caret. Naming anything else is a type error rather than a knob that quietly does nothing.
-
-Anything the override doesn't mention keeps the theme's own answer, which is what makes this a patch rather than a replacement. Reach for a subclass when you're changing a palette; reach for this when you're changing a handful of glyphs.
+A consumer can also restate a handful of elements without writing a class at all, and that changes nothing about the contract. A patch is a preference, so a theme that doesn't take one keeps every answer of its own and the form still draws - which is why a patch can never be what decides whether a form draws at all. [Patching an element](/themes#patching-an-element) is the closed set of nine it reaches.
 
 ## Behavior
 
