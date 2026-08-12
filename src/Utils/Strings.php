@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Utils;
+namespace DrevOps\PhpTui\Utils;
 
 use AlexSkrypnyk\Str2Name\Str2Name;
 
@@ -14,7 +14,7 @@ use AlexSkrypnyk\Str2Name\Str2Name;
  * terminal needs and a name formatter does not: measuring, slicing and
  * wrapping a line, and filling a template.
  *
- * @package DrevOps\Tui\Utils
+ * @package DrevOps\PhpTui\Utils
  */
 final class Strings extends Str2Name {
 

@@ -27,14 +27,14 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Primitive\ProgressReporter;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Testing\TuiTester;
-use DrevOps\Tui\Theme\Mode;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Primitive\ProgressReporter;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Testing\TuiTester;
+use DrevOps\PhpTui\Theme\Mode;
 
 require dirname(__DIR__, 2) . '/vendor/autoload.php';
 require_once __DIR__ . '/svg-slowdown.php';
@@ -74,7 +74,7 @@ const DISPLAY_MODES = [
  * @param string $tree
  *   The fixture directory the file-picker fields browse.
  *
- * @return array<string, array{form: callable(): \DrevOps\Tui\Builder\Form, keys: list<string|\DrevOps\Tui\Input\Key>, rows: int, static_keys?: list<string|\DrevOps\Tui\Input\Key>, subject?: string}>
+ * @return array<string, array{form: callable(): \DrevOps\PhpTui\Builder\Form, keys: list<string|\DrevOps\PhpTui\Input\Key>, rows: int, static_keys?: list<string|\DrevOps\PhpTui\Input\Key>, subject?: string}>
  *   The specs keyed by name. A spec may add "static_keys" when the opened
  *   editor needs a keystroke before its static frame is worth capturing, and
  *   "subject" when what it draws is not a field, so its assets carry the name
@@ -283,7 +283,7 @@ function fieldSpecs(string $tree): array {
  *
  * @param string $name
  *   The spec name.
- * @param array{form: callable(): \DrevOps\Tui\Builder\Form, keys: list<string|\DrevOps\Tui\Input\Key>, rows: int} $spec
+ * @param array{form: callable(): \DrevOps\PhpTui\Builder\Form, keys: list<string|\DrevOps\PhpTui\Input\Key>, rows: int} $spec
  *   The spec.
  * @param string $assets_dir
  *   The output directory.
@@ -349,7 +349,7 @@ function assetSubject(string $name, array $spec): string {
  *
  * @param string $name
  *   The spec name.
- * @param array{form: callable(): \DrevOps\Tui\Builder\Form, keys: list<string|\DrevOps\Tui\Input\Key>, rows: int} $spec
+ * @param array{form: callable(): \DrevOps\PhpTui\Builder\Form, keys: list<string|\DrevOps\PhpTui\Input\Key>, rows: int} $spec
  *   The spec.
  * @param string $assets_dir
  *   The output directory.

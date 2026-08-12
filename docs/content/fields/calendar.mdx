@@ -16,7 +16,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 A month-grid date picker. It collects a single **normalized ISO `YYYY-MM-DD` string**; give it no default and it opens on today.
 
 ```php
-use DrevOps\Tui\Block\Weekday;
+use DrevOps\PhpTui\Block\Weekday;
 
 $p->calendar('harvest', 'Harvest date')
   ->default('2026-07-15')       // Date the grid opens on.
@@ -25,7 +25,7 @@ $p->calendar('harvest', 'Harvest date')
   ->weekStart(Weekday::Sunday); // Day the week grid starts on.
 ```
 
-Runnable script: [`playground/02-fields-calendar.php`](https://github.com/drevops/tui/blob/main/playground/02-fields-calendar.php).
+Runnable script: [`playground/02-fields-calendar.php`](https://github.com/drevops/phptui/blob/main/playground/02-fields-calendar.php).
 
 ## Options
 

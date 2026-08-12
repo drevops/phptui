@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Capability;
+namespace DrevOps\PhpTui\Block\Capability;
 
 /**
  * A block that does something when it is activated.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Block\Capability;
  * Activating runs work or ends the form; it reveals nothing. Nothing it does
  * reaches the collected result, so holding a value is a separate capability.
  *
- * @package DrevOps\Tui\Block\Capability
+ * @package DrevOps\PhpTui\Block\Capability
  */
 interface ActivateCapableInterface {
 

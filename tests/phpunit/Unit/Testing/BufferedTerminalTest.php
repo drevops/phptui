@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Testing;
+namespace DrevOps\PhpTui\Tests\Unit\Testing;
 
-use DrevOps\Tui\Testing\BufferedTerminal;
+use DrevOps\PhpTui\Testing\BufferedTerminal;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;

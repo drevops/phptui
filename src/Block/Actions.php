@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\Block\Capability\ActivateCapableInterface;
-use DrevOps\Tui\Block\Capability\FocusCapableInterface;
-use DrevOps\Tui\Block\Capability\FocusCapableTrait;
-use DrevOps\Tui\Block\Capability\RejectCapableInterface;
-use DrevOps\Tui\Block\Element\ActionsElementsInterface;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\Capability\ActivateCapableInterface;
+use DrevOps\PhpTui\Block\Capability\FocusCapableInterface;
+use DrevOps\PhpTui\Block\Capability\FocusCapableTrait;
+use DrevOps\PhpTui\Block\Capability\RejectCapableInterface;
+use DrevOps\PhpTui\Block\Element\ActionsElementsInterface;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * The buttons that end the form.
@@ -24,7 +24,7 @@ use DrevOps\Tui\Translation\Translator;
  * so. Withholding it is drawn here too: the reason a form cannot be ended yet
  * is what the buttons say about themselves.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final class Actions extends AbstractBlock implements ActivateCapableInterface, FocusCapableInterface, RejectCapableInterface {
 
@@ -89,7 +89,7 @@ final class Actions extends AbstractBlock implements ActivateCapableInterface, F
    * @return static
    *   The block.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the action name is unknown.
    */
   public function select(string $name): static {

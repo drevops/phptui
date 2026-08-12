@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Terminal;
+namespace DrevOps\PhpTui\Tests\Unit\Terminal;
 
-use DrevOps\Tui\Terminal\TerminalControl;
+use DrevOps\PhpTui\Terminal\TerminalControl;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;

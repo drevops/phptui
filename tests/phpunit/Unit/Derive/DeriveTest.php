@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Derive;
+namespace DrevOps\PhpTui\Tests\Unit\Derive;
 
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\FormException;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\FormException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -21,7 +21,7 @@ final class DeriveTest extends TestCase {
   /**
    * Templates interpolate and transforms normalize.
    *
-   * @param \DrevOps\Tui\Derive\Derive $derive
+   * @param \DrevOps\PhpTui\Derive\Derive $derive
    *   The rule.
    * @param array<string,mixed> $values
    *   The current values.
@@ -36,7 +36,7 @@ final class DeriveTest extends TestCase {
   /**
    * Data provider for testCompute().
    *
-   * @return \Iterator<string,array{\DrevOps\Tui\Derive\Derive,array<string,mixed>,string}>
+   * @return \Iterator<string,array{\DrevOps\PhpTui\Derive\Derive,array<string,mixed>,string}>
    *   Rules, values and expected results.
    */
   public static function dataProviderCompute(): \Iterator {

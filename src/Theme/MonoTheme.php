@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
 /**
  * A hue-free theme: contrast from weight, grey levels and reverse video.
@@ -13,7 +13,7 @@ namespace DrevOps\Tui\Theme;
  * semantic red error is inherited on purpose. It states its colours and
  * inherits every element from the default theme, including its dark/light mode.
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 class MonoTheme extends DefaultTheme {
 

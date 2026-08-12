@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Terminal;
+namespace DrevOps\PhpTui\Terminal;
 
 /**
  * The kinds of inline span a {@see Markup} source resolves to.
  *
- * @package DrevOps\Tui\Terminal
+ * @package DrevOps\PhpTui\Terminal
  */
 enum MarkupType {
 

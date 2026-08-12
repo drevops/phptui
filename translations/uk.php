@@ -18,7 +18,7 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Translation\Translator;
 
 return [
   // The count-to-form rule: 0 one, 1 few, 2 many (Unicode CLDR for Ukrainian).

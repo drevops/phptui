@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Screen\Layout;
+namespace DrevOps\PhpTui\Tests\Unit\Screen\Layout;
 
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Layout\AbstractLayout;
-use DrevOps\Tui\Screen\Layout\DefaultLayout;
-use DrevOps\Tui\Screen\Layout\GridLayout;
-use DrevOps\Tui\Screen\Layout\LayoutInterface;
-use DrevOps\Tui\Screen\Layout\LayoutManager;
-use DrevOps\Tui\Screen\Layout\PanelLayout;
-use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
+use DrevOps\PhpTui\Screen\Layout\DefaultLayout;
+use DrevOps\PhpTui\Screen\Layout\GridLayout;
+use DrevOps\PhpTui\Screen\Layout\LayoutInterface;
+use DrevOps\PhpTui\Screen\Layout\LayoutManager;
+use DrevOps\PhpTui\Screen\Layout\PanelLayout;
+use DrevOps\PhpTui\Screen\Layout\TwoColumnLayout;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;

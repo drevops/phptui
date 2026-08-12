@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Field;
+namespace DrevOps\PhpTui\Tests\Unit\Field;
 
-use DrevOps\Tui\Field\AbstractField;
-use DrevOps\Tui\Field\Toggle;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Testing\ArrayKeyStream;
-use DrevOps\Tui\Testing\FieldRunner;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Field\AbstractField;
+use DrevOps\PhpTui\Field\Toggle;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Testing\ArrayKeyStream;
+use DrevOps\PhpTui\Testing\FieldRunner;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -61,7 +61,7 @@ final class ToggleTest extends TestCase {
   /**
    * Data provider for testFlipKeys().
    *
-   * @return \Iterator<string, array{\DrevOps\Tui\Input\Key}>
+   * @return \Iterator<string, array{\DrevOps\PhpTui\Input\Key}>
    *   Each key that flips the switch.
    */
   public static function dataProviderFlipKeys(): \Iterator {

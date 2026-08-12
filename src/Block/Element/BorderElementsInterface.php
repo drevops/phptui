@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Element;
+namespace DrevOps\PhpTui\Block\Element;
 
-use DrevOps\Tui\Theme\Border;
+use DrevOps\PhpTui\Theme\Border;
 
 /**
  * The glyphs a border is drawn with.
@@ -17,14 +17,14 @@ use DrevOps\Tui\Theme\Border;
  * without restating the rest, and a reader sees which character is which
  * without counting positions in a packed string.
  *
- * @package DrevOps\Tui\Block\Element
+ * @package DrevOps\PhpTui\Block\Element
  */
 interface BorderElementsInterface {
 
   /**
    * The corner where the top edge meets the left.
    *
-   * @param \DrevOps\Tui\Theme\Border $style
+   * @param \DrevOps\PhpTui\Theme\Border $style
    *   The style.
    *
    * @return string
@@ -35,7 +35,7 @@ interface BorderElementsInterface {
   /**
    * The corner where the top edge meets the right.
    *
-   * @param \DrevOps\Tui\Theme\Border $style
+   * @param \DrevOps\PhpTui\Theme\Border $style
    *   The style.
    *
    * @return string
@@ -46,7 +46,7 @@ interface BorderElementsInterface {
   /**
    * The corner where the bottom edge meets the left.
    *
-   * @param \DrevOps\Tui\Theme\Border $style
+   * @param \DrevOps\PhpTui\Theme\Border $style
    *   The style.
    *
    * @return string
@@ -57,7 +57,7 @@ interface BorderElementsInterface {
   /**
    * The corner where the bottom edge meets the right.
    *
-   * @param \DrevOps\Tui\Theme\Border $style
+   * @param \DrevOps\PhpTui\Theme\Border $style
    *   The style.
    *
    * @return string
@@ -68,7 +68,7 @@ interface BorderElementsInterface {
   /**
    * The junction where a rule meets the left edge.
    *
-   * @param \DrevOps\Tui\Theme\Border $style
+   * @param \DrevOps\PhpTui\Theme\Border $style
    *   The style.
    *
    * @return string
@@ -79,7 +79,7 @@ interface BorderElementsInterface {
   /**
    * The junction where a rule meets the right edge.
    *
-   * @param \DrevOps\Tui\Theme\Border $style
+   * @param \DrevOps\PhpTui\Theme\Border $style
    *   The style.
    *
    * @return string
@@ -90,7 +90,7 @@ interface BorderElementsInterface {
   /**
    * The run a horizontal edge is filled with.
    *
-   * @param \DrevOps\Tui\Theme\Border $style
+   * @param \DrevOps\PhpTui\Theme\Border $style
    *   The style.
    *
    * @return string
@@ -101,7 +101,7 @@ interface BorderElementsInterface {
   /**
    * The run a vertical edge is filled with.
    *
-   * @param \DrevOps\Tui\Theme\Border $style
+   * @param \DrevOps\PhpTui\Theme\Border $style
    *   The style.
    *
    * @return string

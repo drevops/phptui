@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Fixtures\Handler;
+namespace DrevOps\PhpTui\Tests\Fixtures\Handler;
 
 /**
  * Test fixture: a resolvable class declaring no reusable behaviour.
  *
- * @package DrevOps\Tui\Tests\Fixtures\Handler
+ * @package DrevOps\PhpTui\Tests\Fixtures\Handler
  */
 class Plain {
 

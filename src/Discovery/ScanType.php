@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Discovery;
+namespace DrevOps\PhpTui\Discovery;
 
 /**
  * Which directory entries a {@see Scan} rule keeps.
  *
- * @package DrevOps\Tui\Discovery
+ * @package DrevOps\PhpTui\Discovery
  */
 enum ScanType: string {
 

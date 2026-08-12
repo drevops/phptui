@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="logo-light.svg">
-    <img width="300" src="logo-dark.svg" alt="TUI logo">
+    <img width="300" src="logo-dark.svg" alt="PHPTUI logo">
   </picture>
 </p>
 
@@ -9,12 +9,12 @@
 
 <div align="center">
 
-[![GitHub Issues](https://img.shields.io/github/issues/drevops/tui.svg)](https://github.com/drevops/tui/issues)
-[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/drevops/tui.svg)](https://github.com/drevops/tui/pulls)
-[![Test PHP](https://github.com/drevops/tui/actions/workflows/test-php.yml/badge.svg)](https://github.com/drevops/tui/actions/workflows/test-php.yml)
-[![codecov](https://codecov.io/gh/drevops/tui/graph/badge.svg?token=7WEB1IXBYT)](https://codecov.io/gh/drevops/tui)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/drevops/tui)
-![LICENSE](https://img.shields.io/github/license/drevops/tui)
+[![GitHub Issues](https://img.shields.io/github/issues/drevops/phptui.svg)](https://github.com/drevops/phptui/issues)
+[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/drevops/phptui.svg)](https://github.com/drevops/phptui/pulls)
+[![Test PHP](https://github.com/drevops/phptui/actions/workflows/test-php.yml/badge.svg)](https://github.com/drevops/phptui/actions/workflows/test-php.yml)
+[![codecov](https://codecov.io/gh/drevops/phptui/graph/badge.svg?token=7WEB1IXBYT)](https://codecov.io/gh/drevops/phptui)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/drevops/phptui)
+![LICENSE](https://img.shields.io/github/license/drevops/phptui)
 ![Renovate](https://img.shields.io/badge/renovate-enabled-green?logo=renovatebot)
 
 </div>
@@ -28,7 +28,7 @@
   </picture>
 </p>
 
-`drevops/tui` is a PHP library for panel-based terminal forms: keyboard-driven questionnaires that collect a set of answers and hand them back to your code as typed values.
+`drevops/phptui` is a PHP library for panel-based terminal forms: keyboard-driven questionnaires that collect a set of answers and hand them back to your code as typed values.
 
 - **Declarative form model.** A form is declared with a fluent builder (`Form` / `PanelBuilder` / `FieldBuilder`): panels of typed fields, each with its own options, conditions, derivation rules and behavior.
 - **Two collection modes, one declaration.** The same form runs as a full-screen interactive TUI on a terminal, or resolves non-interactively from a JSON payload, per-field environment variables, discovery rules and defaults.
@@ -83,7 +83,7 @@ Every feature has a reference page and a runnable, self-contained example in [`p
 | ⚡ Inline editing | A field's editor opens in place on the panel row; `->standalone()` opts a field out to full-screen | [panels](https://phptui.dev/panels#inline-editing) | [`04-inline-editing`](playground/04-inline-editing.php) |
 | 🧩 Fields | 15 field types: text, template, number, rating, calendar, textarea, password, select, reorder, suggest, search, file picker, confirm, toggle, pause - plus markup and progress blocks, which collect nothing | [fields](https://phptui.dev/fields) | [`02-fields-*`](playground) |
 | 🏗️ Builder-driven | The form is declared in PHP with a fluent builder; the common cases need no code | [configuration](https://phptui.dev/configuration) | [`01-quickstart`](playground/01-quickstart.php) |
-| 🎛️ Interactive or unattended | `run()` picks the mode: keyboard on a terminal, otherwise JSON payload + `TUI_<ID>` environment variables | [headless collection](https://phptui.dev/headless-collection) | [`08-headless-*`](playground) |
+| 🎛️ Interactive or unattended | `run()` picks the mode: keyboard on a terminal, otherwise JSON payload + `PHPTUI_<ID>` environment variables | [headless collection](https://phptui.dev/headless-collection) | [`08-headless-*`](playground) |
 | 🔗 Derived values | Fields computed from other answers via `{{field}}` templates and str2name transforms, settling to a fixpoint | [configuration](https://phptui.dev/configuration#derived-values) | [`05-form-logic-*`](playground) |
 | 🔀 Conditional fields | `->when()` conditions (eq/ne/in/contains, composable with all/any/not) drive visibility; form-level fix-ups reconcile answers, and an opt-in indent steps each field in from the answer that reveals it | [configuration](https://phptui.dev/configuration#conditional-fields) | [`05-form-logic-*`](playground) |
 | ⚙️ Declared behavior | `->required()` rejects an empty value with a label-derived or declared message; dynamic defaults, validation and transforms as field closures, or as per-field handler classes resolved by naming convention | [field behavior](https://phptui.dev/field-behaviour) | [`06-field-behaviour-*`](playground) |
@@ -102,7 +102,7 @@ Every feature has a reference page and a runnable, self-contained example in [`p
 ## Installation
 
 ```bash
-composer require drevops/tui
+composer require drevops/phptui
 ```
 
 ## Quick start
@@ -110,9 +110,9 @@ composer require drevops/tui
 Declare a form with the `Form` builder, then drive it through the `Tui` facade - the one class that wires up collection, the input resolver, the schema tools and the interactive screen for you:
 
 ```php
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Tui;
 
 $form = Form::create('Quick start')
   ->panel('order', 'New order', function (PanelBuilder $p): void {

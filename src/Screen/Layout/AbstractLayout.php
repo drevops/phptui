@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen\Layout;
+namespace DrevOps\PhpTui\Screen\Layout;
 
-use DrevOps\Tui\Block\Element\ChromeElementsInterface;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
-use DrevOps\Tui\Screen\Furniture;
-use DrevOps\Tui\Screen\Region;
-use DrevOps\Tui\Screen\Sizing;
+use DrevOps\PhpTui\Block\Element\ChromeElementsInterface;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Capability\ScrollCapableTrait;
+use DrevOps\PhpTui\Screen\Furniture;
+use DrevOps\PhpTui\Screen\Region;
+use DrevOps\PhpTui\Screen\Sizing;
 
 /**
  * The sizing arithmetic every layout inherits, and the conventional names.
@@ -23,7 +23,7 @@ use DrevOps\Tui\Screen\Sizing;
  * how big it is - its siblings' fixed cells come off the top before the
  * remainder is divided, and only the layout sees them all.
  *
- * @package DrevOps\Tui\Screen\Layout
+ * @package DrevOps\PhpTui\Screen\Layout
  */
 abstract class AbstractLayout implements LayoutInterface {
 
@@ -47,14 +47,14 @@ abstract class AbstractLayout implements LayoutInterface {
   /**
    * The regions, keyed by name, in declaration order.
    *
-   * @var array<string,\DrevOps\Tui\Screen\Region>
+   * @var array<string,\DrevOps\PhpTui\Screen\Region>
    */
   protected array $regions = [];
 
   /**
    * Construct a layout.
    *
-   * @param \DrevOps\Tui\Screen\Axis $axis
+   * @param \DrevOps\PhpTui\Screen\Axis $axis
    *   The direction its regions run.
    */
   public function __construct(protected Axis $axis) {
@@ -77,7 +77,7 @@ abstract class AbstractLayout implements LayoutInterface {
   /**
    * {@inheritdoc}
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the region name is unknown.
    */
   public function in(string $name): Region {
@@ -215,10 +215,10 @@ abstract class AbstractLayout implements LayoutInterface {
    * @param string $name
    *   The name a block addresses it by.
    *
-   * @return \DrevOps\Tui\Screen\Region
+   * @return \DrevOps\PhpTui\Screen\Region
    *   The region, for declaring its size, flow and scrolling.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the region name is already declared.
    */
   protected function region(string $name): Region {

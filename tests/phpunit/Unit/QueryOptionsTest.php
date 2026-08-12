@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit;
+namespace DrevOps\PhpTui\Tests\Unit;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Builder\FieldBuilder;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\CollectException;
-use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Field\Capability\QueryOptionsCapableTrait;
-use DrevOps\Tui\Field\FieldFactory;
-use DrevOps\Tui\Field\Search;
-use DrevOps\Tui\Field\Suggest;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Screen\Collector;
-use DrevOps\Tui\Screen\ScreenController;
-use DrevOps\Tui\Testing\TuiTester;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Builder\FieldBuilder;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\CollectException;
+use DrevOps\PhpTui\Condition\Condition;
+use DrevOps\PhpTui\Field\Capability\QueryOptionsCapableTrait;
+use DrevOps\PhpTui\Field\FieldFactory;
+use DrevOps\PhpTui\Field\Search;
+use DrevOps\PhpTui\Field\Suggest;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Screen\Collector;
+use DrevOps\PhpTui\Screen\ScreenController;
+use DrevOps\PhpTui\Testing\TuiTester;
+use DrevOps\PhpTui\Tui;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -381,7 +381,7 @@ final class QueryOptionsTest extends TestCase {
    * @param \Closure|null $declare
    *   A `fn (FieldBuilder): FieldBuilder` adding further declarations.
    *
-   * @return \DrevOps\Tui\Builder\Form
+   * @return \DrevOps\PhpTui\Builder\Form
    *   The form.
    */
   protected function form(?\Closure $answer = NULL, ?\Closure $declare = NULL): Form {
@@ -419,10 +419,10 @@ final class QueryOptionsTest extends TestCase {
   /**
    * A tester rendering the form deterministically at a workable height.
    *
-   * @param \DrevOps\Tui\Builder\Form $form
+   * @param \DrevOps\PhpTui\Builder\Form $form
    *   The form.
    *
-   * @return \DrevOps\Tui\Testing\TuiTester
+   * @return \DrevOps\PhpTui\Testing\TuiTester
    *   The tester.
    */
   protected function tester(Form $form): TuiTester {
@@ -432,7 +432,7 @@ final class QueryOptionsTest extends TestCase {
   /**
    * The Enter key, as its own read.
    *
-   * @return \DrevOps\Tui\Input\Key
+   * @return \DrevOps\PhpTui\Input\Key
    *   The key.
    */
   protected function enter(): Key {

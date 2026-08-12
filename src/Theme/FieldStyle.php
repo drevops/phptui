@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
 /**
  * How a field's value input is drawn in the editor.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Theme;
  * A consumer passes a case (or its string value) as the "field" theme option;
  * when the option is unset, the flat style applies.
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 enum FieldStyle: string {
 

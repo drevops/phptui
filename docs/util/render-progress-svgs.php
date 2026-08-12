@@ -7,7 +7,7 @@
  *
  * The progress primitive is not a keystroke-driven field: it is a single line
  * the theme redraws in place with a carriage return while a callback runs. So
- * this drives the real {@see \DrevOps\Tui\Primitive\Progress} against an
+ * this drives the real {@see \DrevOps\PhpTui\Primitive\Progress} against an
  * in-memory terminal, splits the captured output into frames on the carriage
  * return, and lays them into an asciicast for the shared svg-term renderer -
  * both an animation (every frame) and a single static frame - in all four glyph
@@ -25,14 +25,14 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Primitive\Progress;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Terminal\TerminalControl;
-use DrevOps\Tui\Testing\BufferedTerminal;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Theme\ThemeManager;
+use DrevOps\PhpTui\Primitive\Progress;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\TerminalControl;
+use DrevOps\PhpTui\Testing\BufferedTerminal;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\Mode;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Theme\ThemeManager;
 
 require dirname(__DIR__, 2) . '/vendor/autoload.php';
 require_once __DIR__ . '/svg-slowdown.php';
@@ -132,7 +132,7 @@ function renderProgress(string $name, array $spec, string $assets_dir, string $u
  * are stripped to leave the visible line, and the finish repaint (a duplicate of
  * the last state) is folded away.
  *
- * @param \DrevOps\Tui\Theme\DefaultTheme $theme
+ * @param \DrevOps\PhpTui\Theme\DefaultTheme $theme
  *   The theme that draws the line.
  * @param array{total: int|null, caption: string, labels: list<string|null>} $spec
  *   The subject spec.

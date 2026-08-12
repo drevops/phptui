@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Primitive;
+namespace DrevOps\PhpTui\Tests\Unit\Primitive;
 
-use DrevOps\Tui\Primitive\Progress;
-use DrevOps\Tui\Testing\BufferedTerminal;
-use DrevOps\Tui\Tests\Traits\BuildsThemesTrait;
+use DrevOps\PhpTui\Primitive\Progress;
+use DrevOps\PhpTui\Testing\BufferedTerminal;
+use DrevOps\PhpTui\Tests\Traits\BuildsThemesTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;

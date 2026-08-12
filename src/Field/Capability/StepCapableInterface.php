@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
 /**
  * A field whose value advances through an ordered (or cyclic) domain.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Field\Capability;
  * The domain is the field's own: bounded integers step by the declared step,
  * a date cursor steps by days, a fixed value set cycles.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 interface StepCapableInterface {
 

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Fixtures\Screen\Layout;
+namespace DrevOps\PhpTui\Tests\Fixtures\Screen\Layout;
 
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Furniture;
-use DrevOps\Tui\Screen\Layout\AbstractLayout;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Furniture;
+use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
 
 /**
  * Test fixture: a layout with regions that keeps no place for the form.
@@ -14,7 +14,7 @@ use DrevOps\Tui\Screen\Layout\AbstractLayout;
  * The one case the assembler refuses outright, so a test can prove a form with
  * nowhere to be drawn is named where the layout is rather than mid-session.
  *
- * @package DrevOps\Tui\Tests\Fixtures\Screen\Layout
+ * @package DrevOps\PhpTui\Tests\Fixtures\Screen\Layout
  */
 final class HomelessLayout extends AbstractLayout {
 

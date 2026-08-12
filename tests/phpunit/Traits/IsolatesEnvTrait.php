@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Traits;
+namespace DrevOps\PhpTui\Tests\Traits;
 
 /**
  * Sets environment variables for a test and restores them afterwards.

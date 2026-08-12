@@ -2,28 +2,28 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Screen;
+namespace DrevOps\PhpTui\Tests\Unit\Screen;
 
-use DrevOps\Tui\Answers\Answer;
-use DrevOps\Tui\Answers\Answers;
-use DrevOps\Tui\Answers\Provenance;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\Builder\Fixup;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\CollectException;
-use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Discovery\Dotenv;
-use DrevOps\Tui\Discovery\JsonValue;
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Handler\HandlerRegistry;
-use DrevOps\Tui\Screen\Collector;
-use DrevOps\Tui\Screen\Layout\PanelLayout;
+use DrevOps\PhpTui\Answers\Answer;
+use DrevOps\PhpTui\Answers\Answers;
+use DrevOps\PhpTui\Answers\Provenance;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\Builder\Fixup;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\CollectException;
+use DrevOps\PhpTui\Condition\Condition;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\Discovery\Dotenv;
+use DrevOps\PhpTui\Discovery\JsonValue;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Handler\HandlerRegistry;
+use DrevOps\PhpTui\Screen\Collector;
+use DrevOps\PhpTui\Screen\Layout\PanelLayout;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -44,7 +44,7 @@ final class CollectorResolutionTest extends TestCase {
   /**
    * The reusable behaviour of the fixture handlers.
    */
-  protected const string HANDLERS = 'DrevOps\\Tui\\Tests\\Fixtures\\Handler';
+  protected const string HANDLERS = 'DrevOps\\PhpTui\\Tests\\Fixtures\\Handler';
 
   public function testSuppliedValueWinsOverEverythingElse(): void {
     $answers = $this->collect($this->sourcesForm(), ['name' => 'Supplied'], $this->project(TRUE));
@@ -116,7 +116,7 @@ final class CollectorResolutionTest extends TestCase {
    *   The values supplied to the collection.
    * @param bool $update
    *   Whether values already outside the form are detected.
-   * @param array<string,\DrevOps\Tui\Answers\Provenance> $expected
+   * @param array<string,\DrevOps\PhpTui\Answers\Provenance> $expected
    *   The expected provenance of each answer.
    */
   #[DataProvider('dataProviderProvenanceFollowsTheSource')]
@@ -131,7 +131,7 @@ final class CollectorResolutionTest extends TestCase {
   /**
    * Data provider for testProvenanceFollowsTheSource().
    *
-   * @return \Iterator<string,array{array<string,mixed>,bool,array<string,\DrevOps\Tui\Answers\Provenance>}>
+   * @return \Iterator<string,array{array<string,mixed>,bool,array<string,\DrevOps\PhpTui\Answers\Provenance>}>
    *   The supplied values, the update flag and the expected provenance.
    */
   public static function dataProviderProvenanceFollowsTheSource(): \Iterator {
@@ -626,16 +626,16 @@ final class CollectorResolutionTest extends TestCase {
   /**
    * Collect a form's answers with no screen at all.
    *
-   * @param \DrevOps\Tui\Builder\Form $form
+   * @param \DrevOps\PhpTui\Builder\Form $form
    *   The form to collect.
    * @param array<string,mixed> $supplied
    *   The values supplied for its fields.
-   * @param \DrevOps\Tui\Handler\Context|null $context
+   * @param \DrevOps\PhpTui\Handler\Context|null $context
    *   The run the collection belongs to.
-   * @param \DrevOps\Tui\Handler\HandlerRegistry|null $registry
+   * @param \DrevOps\PhpTui\Handler\HandlerRegistry|null $registry
    *   The registry of behaviour reused across forms.
    *
-   * @return \DrevOps\Tui\Answers\Answers
+   * @return \DrevOps\PhpTui\Answers\Answers
    *   The answers.
    */
   protected function collect(Form $form, array $supplied = [], ?Context $context = NULL, ?HandlerRegistry $registry = NULL): Answers {
@@ -647,7 +647,7 @@ final class CollectorResolutionTest extends TestCase {
   /**
    * A form whose answers can arrive from every source there is.
    *
-   * @return \DrevOps\Tui\Builder\Form
+   * @return \DrevOps\PhpTui\Builder\Form
    *   The form.
    */
   protected function sourcesForm(): Form {
@@ -667,7 +667,7 @@ final class CollectorResolutionTest extends TestCase {
   /**
    * The rule stripping the wrapping off anything that is not a gift.
    *
-   * @return \DrevOps\Tui\Builder\Fixup
+   * @return \DrevOps\PhpTui\Builder\Fixup
    *   The rule.
    */
   protected function wrapRule(): Fixup {
@@ -680,7 +680,7 @@ final class CollectorResolutionTest extends TestCase {
    * @param bool $update
    *   Whether those answers are detected.
    *
-   * @return \DrevOps\Tui\Handler\Context
+   * @return \DrevOps\PhpTui\Handler\Context
    *   The context.
    */
   protected function project(bool $update): Context {

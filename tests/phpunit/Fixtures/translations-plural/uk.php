@@ -7,7 +7,7 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Translation\Translator;
 
 return [
   Translator::PLURAL_RULE => static function (int $count): int {

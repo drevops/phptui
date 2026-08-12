@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Testing;
+namespace DrevOps\PhpTui\Tests\Unit\Testing;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\Progress;
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Testing\TuiTester;
-use DrevOps\Tui\Tests\Fixtures\Form\AllFieldsForm;
-use DrevOps\Tui\Tests\Fixtures\Theme\OceanTheme;
-use DrevOps\Tui\Theme\Mode;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\Progress;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Testing\TuiTester;
+use DrevOps\PhpTui\Tests\Fixtures\Form\AllFieldsForm;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\OceanTheme;
+use DrevOps\PhpTui\Theme\Mode;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -133,7 +133,7 @@ final class AllFieldsFormTest extends TestCase {
   /**
    * The scripted keystrokes that open and accept every field, then submit.
    *
-   * @return list<string|\DrevOps\Tui\Input\Key>
+   * @return list<string|\DrevOps\PhpTui\Input\Key>
    *   The keystrokes.
    */
   protected function keystrokes(): array {

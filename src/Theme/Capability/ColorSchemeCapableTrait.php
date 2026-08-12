@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme\Capability;
+namespace DrevOps\PhpTui\Theme\Capability;
 
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\Sgr;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\Sgr;
 
 /**
  * Painting behaviour: the palette plumbing every painted element builds on.
@@ -14,7 +14,7 @@ use DrevOps\Tui\Theme\Sgr;
  * palette is written as colour choices rather than as escape-sequence
  * handling.
  *
- * @package DrevOps\Tui\Theme\Capability
+ * @package DrevOps\PhpTui\Theme\Capability
  */
 trait ColorSchemeCapableTrait {
 

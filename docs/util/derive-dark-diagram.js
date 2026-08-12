@@ -34,7 +34,7 @@ const BACKGROUND = {from: 'background:#FFFFFF', to: 'background:transparent'};
 // become a raised surface (kept lighter than every package tint so component
 // boxes still read as cards); black text and strokes become light grey; each
 // pastel package fill becomes a dark tint of the same hue. Keep this table in
-// step with the palette documented in the render-tui-diagrams skill.
+// step with the palette documented in the render-phptui-diagrams skill.
 const COLORS = {
   '#FFFFFF': '#3b3b3d',
   '#000000': '#e3e3e3',

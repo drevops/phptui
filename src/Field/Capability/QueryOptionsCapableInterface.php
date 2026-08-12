@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
 /**
  * A field whose candidate list is resolved from its live query.
@@ -12,7 +12,7 @@ namespace DrevOps\Tui\Field\Capability;
  * block and repaint. The loop reads {@see pendingQuery()} for the query still
  * needing resolution, calls the field's source, and passes the result back.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 interface QueryOptionsCapableInterface {
 
@@ -64,7 +64,7 @@ interface QueryOptionsCapableInterface {
    *
    * @param string $query
    *   The query that was resolved.
-   * @param list<\DrevOps\Tui\Block\Option> $rows
+   * @param list<\DrevOps\PhpTui\Block\Option> $rows
    *   The rows the source returned for it.
    */
   public function applyQuery(string $query, array $rows): void;

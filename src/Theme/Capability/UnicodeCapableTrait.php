@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme\Capability;
+namespace DrevOps\PhpTui\Theme\Capability;
 
 /**
  * Glyph behaviour: the one place a glyph is weighed against its stand-in.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Theme\Capability;
  * A theme that composes this states the flag and inherits the choice, so no
  * element has to remember which display mode it is drawing for.
  *
- * @package DrevOps\Tui\Theme\Capability
+ * @package DrevOps\PhpTui\Theme\Capability
  */
 trait UnicodeCapableTrait {
 

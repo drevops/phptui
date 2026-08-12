@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Input;
+namespace DrevOps\PhpTui\Input;
 
-use DrevOps\Tui\Block\FieldType;
+use DrevOps\PhpTui\Block\FieldType;
 
 /**
  * A vim-style preset: h/j/k/l navigate alongside the arrow keys.
@@ -17,7 +17,7 @@ use DrevOps\Tui\Block\FieldType;
  * un-typeable, which the key map rejects outright. Everything else is inherited
  * from {@see DefaultKeyMap}.
  *
- * @package DrevOps\Tui\Input
+ * @package DrevOps\PhpTui\Input
  */
 class VimKeyMap extends DefaultKeyMap {
 

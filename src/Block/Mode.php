@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
 /**
  * Which of its two shapes a field is drawing.
@@ -11,7 +11,7 @@ namespace DrevOps\Tui\Block;
  * the value region changes shape, which is why a field in edit mode is still
  * one row of its panel rather than something new on the screen.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 enum Mode: string {
 

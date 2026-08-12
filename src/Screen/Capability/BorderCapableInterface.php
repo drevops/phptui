@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen\Capability;
+namespace DrevOps\PhpTui\Screen\Capability;
 
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\BorderSide;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\BorderSide;
 
 /**
  * Declares that something draws edges around the space it occupies.
@@ -18,7 +18,7 @@ use DrevOps\Tui\Theme\BorderSide;
  * is drawn rather than where it is declared, so the renderer sizes the box and
  * the theme draws it in the style named here, or in its own when none is.
  *
- * @package DrevOps\Tui\Screen\Capability
+ * @package DrevOps\PhpTui\Screen\Capability
  */
 interface BorderCapableInterface {
 
@@ -32,7 +32,7 @@ interface BorderCapableInterface {
    *
    * @param int $sides
    *   The edges to draw, combined from {@see BorderSide}.
-   * @param \DrevOps\Tui\Theme\Border|null $style
+   * @param \DrevOps\PhpTui\Theme\Border|null $style
    *   The style to draw them in, or NULL for the theme's own.
    * @param string $title
    *   The text written into the top edge; empty writes none, and so does a
@@ -55,7 +55,7 @@ interface BorderCapableInterface {
   /**
    * The style the edges are drawn in.
    *
-   * @return \DrevOps\Tui\Theme\Border|null
+   * @return \DrevOps\PhpTui\Theme\Border|null
    *   The style, or NULL when the theme's own is used.
    */
   public function borderStyle(): ?Border;

@@ -21,9 +21,9 @@ Keystrokes are `Key` objects and/or raw byte strings (the bytes a terminal emits
 `TuiTester` wraps the `Tui` facade, so it runs exactly what a consumer's `run()` would.
 
 ```php
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Testing\TuiTester;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Testing\TuiTester;
 
 $tester = new TuiTester($form);
 
@@ -46,16 +46,16 @@ $this->assertFalse($tester->isCancelled());
 
 `run()` returns the collected `Answers`. `display()` is the ANSI-stripped output for substring assertions, `output()` the raw frames, and `isCancelled()` / `isInterrupted()` report how the run ended. `theme()`, `layout()`, `options()`, `rows()`, `cols()`, `version()`, `directory()` and `update()` tune the run before it starts.
 
-The harness outside PHPUnit is shown in [`playground/13-testing.php`](https://github.com/drevops/tui/blob/main/playground/13-testing.php).
+The harness outside PHPUnit is shown in [`playground/13-testing.php`](https://github.com/drevops/phptui/blob/main/playground/13-testing.php).
 
 ## One screen
 
 `ScreenTester` is the screen-native companion. It takes the block tree directly - `$form->root()`, or a `Panel` you built yourself - and drives the same session loop, so it is the tool for asserting on **what was drawn** rather than on what came back.
 
 ```php
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Testing\ScreenTester;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Testing\ScreenTester;
 
 $tester = new ScreenTester($form->root());
 

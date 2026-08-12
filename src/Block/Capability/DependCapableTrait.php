@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Capability;
+namespace DrevOps\PhpTui\Block\Capability;
 
-use DrevOps\Tui\Condition\ConditionInterface;
+use DrevOps\PhpTui\Condition\ConditionInterface;
 
 /**
  * Dependency behaviour: whether a block is there at all.
  *
- * @package DrevOps\Tui\Block\Capability
+ * @package DrevOps\PhpTui\Block\Capability
  */
 trait DependCapableTrait {
 
@@ -51,7 +51,7 @@ trait DependCapableTrait {
    * absent here: anything describing the form has to be able to say which
    * answers a dependency is about.
    *
-   * @return \DrevOps\Tui\Condition\ConditionInterface|null
+   * @return \DrevOps\PhpTui\Condition\ConditionInterface|null
    *   The rule, or NULL when the block is always there or decides for itself.
    */
   public function rule(): ?ConditionInterface {

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Fixtures\Screen;
+namespace DrevOps\PhpTui\Tests\Fixtures\Screen;
 
-use DrevOps\Tui\Screen\ExternalEditor;
+use DrevOps\PhpTui\Screen\ExternalEditor;
 
 /**
  * An external editor whose spawn records inputs and simulates a save.

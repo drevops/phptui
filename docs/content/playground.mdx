@@ -6,7 +6,7 @@ keywords: ['playground', 'examples', 'scripts', 'demos', 'php']
 
 # Playground
 
-Runnable examples live in [`playground/`](https://github.com/drevops/tui/tree/main/playground) - one file per example, grouped by a numbered prefix that follows this documentation's order, from the quick start to the capstone form:
+Runnable examples live in [`playground/`](https://github.com/drevops/phptui/tree/main/playground) - one file per example, grouped by a numbered prefix that follows this documentation's order, from the quick start to the capstone form:
 
 | Group                     | Demonstrates                                                                                                                                                                                                                                                               |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -36,7 +36,7 @@ Runnable examples live in [`playground/`](https://github.com/drevops/tui/tree/ma
 
 The reusable helper classes the scripts load sit beside them - `themes/`, `layouts/` and `handlers/` - with the fixtures the examples read from in `sample-project/` and `translations/`.
 
-Every script is self-contained: it requires the Composer autoloader directly and declares its whole form inline, so you can copy any single file out as a starting point. Most take no CLI options - each demonstrates exactly one thing, variants are separate scripts, and unattended runs are driven by piping stdin and setting `TUI_<ID>` environment variables. The exception is `03-panels-fullscreen.php`, which takes `--halign`/`--valign` and `--max-width` to pick one alignment from its grid.
+Every script is self-contained: it requires the Composer autoloader directly and declares its whole form inline, so you can copy any single file out as a starting point. Most take no CLI options - each demonstrates exactly one thing, variants are separate scripts, and unattended runs are driven by piping stdin and setting `PHPTUI_<ID>` environment variables. The exception is `03-panels-fullscreen.php`, which takes `--halign`/`--valign` and `--max-width` to pick one alignment from its grid.
 
 ```bash
 composer install

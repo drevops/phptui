@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit;
+namespace DrevOps\PhpTui\Tests\Unit;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Builder\FieldBuilder;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\CollectException;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Screen\Collector;
-use DrevOps\Tui\Screen\ScreenController;
-use DrevOps\Tui\Testing\TuiTester;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Builder\FieldBuilder;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\CollectException;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Screen\Collector;
+use DrevOps\PhpTui\Screen\ScreenController;
+use DrevOps\PhpTui\Testing\TuiTester;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Tui;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -115,7 +115,7 @@ final class ProgressableTest extends TestCase {
    * @param int $calls
    *   A counter incremented each time the loader runs.
    *
-   * @return \DrevOps\Tui\Builder\Form
+   * @return \DrevOps\PhpTui\Builder\Form
    *   The form.
    */
   protected function form(int &$calls): Form {

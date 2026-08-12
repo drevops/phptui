@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\Block\Element\LegendElementsInterface;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\ScopedKeyMap;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\Element\LegendElementsInterface;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\ScopedKeyMap;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * The keys that apply right now.
@@ -24,7 +24,7 @@ use DrevOps\Tui\Translation\Translator;
  * against and the fragments naming what those keys do, and reads the glyphs
  * back out of it.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final class Legend extends AbstractBlock {
 
@@ -36,16 +36,16 @@ final class Legend extends AbstractBlock {
   /**
    * What the bound keys do, in the order they are advertised.
    *
-   * @var list<\DrevOps\Tui\Input\Hint>
+   * @var list<\DrevOps\PhpTui\Input\Hint>
    */
   protected array $hints = [];
 
   /**
    * Advertise whatever a set of bindings makes live.
    *
-   * @param \DrevOps\Tui\Input\ScopedKeyMap $keys
+   * @param \DrevOps\PhpTui\Input\ScopedKeyMap $keys
    *   The bindings a key press resolves against.
-   * @param \DrevOps\Tui\Input\Hint ...$hints
+   * @param \DrevOps\PhpTui\Input\Hint ...$hints
    *   What those keys do, each naming the actions whose keys illustrate it.
    *
    * @return static
@@ -104,7 +104,7 @@ final class Legend extends AbstractBlock {
   /**
    * The entries to draw, one per fragment the bindings can illustrate.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme, which is what says how a key is written.
    *
    * @return list<array{key:string,does:string}>
@@ -131,9 +131,9 @@ final class Legend extends AbstractBlock {
   /**
    * The keys illustrating one fragment, as the theme writes them.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Input\Hint $hint
+   * @param \DrevOps\PhpTui\Input\Hint $hint
    *   The fragment.
    *
    * @return string

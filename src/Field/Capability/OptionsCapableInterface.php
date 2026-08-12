@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 
 /**
  * A field that presents a list of option rows.
@@ -14,14 +14,14 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * options share the list with the selectable ones; {@see OptionsCapableTrait}
  * carries the default implementation.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 interface OptionsCapableInterface {
 
   /**
    * The rows the field currently shows.
    *
-   * @return list<\DrevOps\Tui\Block\Option>
+   * @return list<\DrevOps\PhpTui\Block\Option>
    *   The visible rows.
    */
   public function visible(): array;
@@ -29,9 +29,9 @@ interface OptionsCapableInterface {
   /**
    * Render one option row.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Block\Option $option
+   * @param \DrevOps\PhpTui\Block\Option $option
    *   The option row.
    * @param bool $current
    *   Whether the row holds the cursor.

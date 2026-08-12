@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 
 /**
  * Choice behaviour over the option rows, single-value or multiple-value.
@@ -22,7 +22,7 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * toggles the highlighted option, Left/Right deselect or select every visible
  * option - and commits the selected values in display order.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 trait SelectionCapableTrait {
 
@@ -46,7 +46,7 @@ trait SelectionCapableTrait {
   /**
    * The field type this field binds its keys under.
    *
-   * @return \DrevOps\Tui\Block\FieldType
+   * @return \DrevOps\PhpTui\Block\FieldType
    *   The choice field type.
    */
   abstract protected function choiceType(): FieldType;
@@ -65,7 +65,7 @@ trait SelectionCapableTrait {
   /**
    * Seed the option rows and the cursor, and the selection set when multiple.
    *
-   * @param array<int|string,\DrevOps\Tui\Block\Option|string> $options
+   * @param array<int|string,\DrevOps\PhpTui\Block\Option|string> $options
    *   Option rows in display order - a list of options or the value => label
    *   shorthand map.
    * @param string|list<string> $default
@@ -124,7 +124,7 @@ trait SelectionCapableTrait {
    * single-choice field overrides this to route typed characters to the
    * filter.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key to handle.
    */
   protected function handleSingleMode(Key $key): void {
@@ -134,7 +134,7 @@ trait SelectionCapableTrait {
   /**
    * Handle cancel, cursor movement and acceptance of the highlighted option.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key to handle.
    */
   protected function handleSingleChoiceKey(Key $key): void {
@@ -164,7 +164,7 @@ trait SelectionCapableTrait {
   /**
    * Handle cancel, acceptance, cursor movement and selection toggles.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key to handle.
    *
    * @return bool
@@ -304,9 +304,9 @@ trait SelectionCapableTrait {
   /**
    * Render one option row: a radio (single) or marker and checkbox (multiple).
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Block\Option $option
+   * @param \DrevOps\PhpTui\Block\Option $option
    *   The option row.
    * @param bool $current
    *   Whether the row holds the cursor.

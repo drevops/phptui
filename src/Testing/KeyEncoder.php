@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Testing;
+namespace DrevOps\PhpTui\Testing;
 
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
 
 /**
  * Encodes a key into the terminal bytes a KeyParser decodes back into it.
  *
- * The inverse of {@see \DrevOps\Tui\Input\KeyParser}: it turns a Key into the
- * canonical byte sequence a real terminal would emit for that keypress, so
- * scripted input can be delivered through a terminal's read() and decoded
+ * The inverse of {@see \DrevOps\PhpTui\Input\KeyParser}: it turns a Key into
+ * the canonical byte sequence a real terminal would emit for that keypress,
+ * so scripted input can be delivered through a terminal's read() and decoded
  * back by the production parser.
  *
- * @package DrevOps\Tui\Testing
+ * @package DrevOps\PhpTui\Testing
  */
 final class KeyEncoder {
 
   /**
    * Encode a key into its terminal byte sequence.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key.
    *
    * @return string

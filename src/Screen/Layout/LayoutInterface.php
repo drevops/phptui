@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen\Layout;
+namespace DrevOps\PhpTui\Screen\Layout;
 
-use DrevOps\Tui\Block\Element\ChromeElementsInterface;
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Capability\ScrollCapableInterface;
-use DrevOps\Tui\Screen\Furniture;
-use DrevOps\Tui\Screen\Region;
+use DrevOps\PhpTui\Block\Element\ChromeElementsInterface;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Capability\ScrollCapableInterface;
+use DrevOps\PhpTui\Screen\Furniture;
+use DrevOps\PhpTui\Screen\Region;
 
 /**
  * An arrangement of named regions along one axis.
@@ -30,14 +30,14 @@ use DrevOps\Tui\Screen\Region;
  *
  * {@see AbstractLayout} carries the sizing arithmetic every layout inherits.
  *
- * @package DrevOps\Tui\Screen\Layout
+ * @package DrevOps\PhpTui\Screen\Layout
  */
 interface LayoutInterface extends ScrollCapableInterface {
 
   /**
    * The direction this layout's regions run.
    *
-   * @return \DrevOps\Tui\Screen\Axis
+   * @return \DrevOps\PhpTui\Screen\Axis
    *   The axis.
    */
   public function axis(): Axis;
@@ -56,7 +56,7 @@ interface LayoutInterface extends ScrollCapableInterface {
    * @param string $name
    *   The region name.
    *
-   * @return \DrevOps\Tui\Screen\Region
+   * @return \DrevOps\PhpTui\Screen\Region
    *   The region.
    */
   public function in(string $name): Region;
@@ -64,7 +64,7 @@ interface LayoutInterface extends ScrollCapableInterface {
   /**
    * The region a piece of the standard furniture goes in.
    *
-   * @param \DrevOps\Tui\Screen\Furniture $piece
+   * @param \DrevOps\PhpTui\Screen\Furniture $piece
    *   The piece.
    *
    * @return string|null
@@ -118,7 +118,7 @@ interface LayoutInterface extends ScrollCapableInterface {
    *   The cells across the line.
    * @param int $count
    *   How many regions share it.
-   * @param \DrevOps\Tui\Block\Element\ChromeElementsInterface $chrome
+   * @param \DrevOps\PhpTui\Block\Element\ChromeElementsInterface $chrome
    *   The theme, for the gutter left between two things drawn side by side:
    *   an arrangement cannot divide a width without knowing what the air
    *   between the pieces costs, and how wide that air is is the theme's.

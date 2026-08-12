@@ -2,39 +2,39 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Screen;
+namespace DrevOps\PhpTui\Tests\Unit\Screen;
 
-use DrevOps\Tui\Answers\Provenance;
-use DrevOps\Tui\Block\Buttons;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\FilePickerConstraints;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\NumberBounds;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Progress;
-use DrevOps\Tui\Block\SelectionBounds;
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\CancelException;
-use DrevOps\Tui\Condition\Condition;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Primitive\ProgressReporter;
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Collector;
-use DrevOps\Tui\Screen\Furniture;
-use DrevOps\Tui\Screen\Layout\AbstractLayout;
-use DrevOps\Tui\Screen\Layout\PanelLayout;
-use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
-use DrevOps\Tui\Screen\ScreenController;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Terminal\TerminalControl;
-use DrevOps\Tui\Testing\BufferedTerminal;
-use DrevOps\Tui\Testing\ScreenTester;
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Answers\Provenance;
+use DrevOps\PhpTui\Block\Buttons;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\FilePickerConstraints;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\NumberBounds;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Progress;
+use DrevOps\PhpTui\Block\SelectionBounds;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\CancelException;
+use DrevOps\PhpTui\Condition\Condition;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\InterruptException;
+use DrevOps\PhpTui\Primitive\ProgressReporter;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Collector;
+use DrevOps\PhpTui\Screen\Furniture;
+use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
+use DrevOps\PhpTui\Screen\Layout\PanelLayout;
+use DrevOps\PhpTui\Screen\Layout\TwoColumnLayout;
+use DrevOps\PhpTui\Screen\ScreenController;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\TerminalControl;
+use DrevOps\PhpTui\Testing\BufferedTerminal;
+use DrevOps\PhpTui\Testing\ScreenTester;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -689,7 +689,7 @@ final class ScreenControllerTest extends TestCase {
   /**
    * Data provider for testFrameIsDrawnToTheWidthTheThemeStates().
    *
-   * @return \Iterator<string, array{\DrevOps\Tui\Theme\Border, int, int}>
+   * @return \Iterator<string, array{\DrevOps\PhpTui\Theme\Border, int, int}>
    *   The frame's border, the width the theme is built for, and the columns
    *   every drawn row comes to.
    */
@@ -721,7 +721,7 @@ final class ScreenControllerTest extends TestCase {
   /**
    * A run of rows, more of them than any frame here has room for.
    *
-   * @return list<\DrevOps\Tui\Block\Field>
+   * @return list<\DrevOps\PhpTui\Block\Field>
    *   The fields.
    */
   protected function crates(int $count): array {
@@ -737,7 +737,7 @@ final class ScreenControllerTest extends TestCase {
   /**
    * Everything each panel of a tree holds, keyed by the panel it belongs to.
    *
-   * @return array<string,list<\DrevOps\Tui\Block\BlockInterface>>
+   * @return array<string,list<\DrevOps\PhpTui\Block\BlockInterface>>
    *   The blocks.
    */
   protected function declared(Panel $panel): array {
@@ -764,7 +764,7 @@ final class ScreenControllerTest extends TestCase {
     $panel = (new Panel($id, $title))->layout(new PanelLayout());
 
     foreach ($blocks as $block) {
-      /** @var \DrevOps\Tui\Block\BlockInterface $block */
+      /** @var \DrevOps\PhpTui\Block\BlockInterface $block */
       $panel->in('content')->add($block);
     }
 

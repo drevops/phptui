@@ -16,21 +16,21 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Field\Calendar;
-use DrevOps\Tui\Field\Confirm;
-use DrevOps\Tui\Field\FieldInterface;
-use DrevOps\Tui\Field\Number;
-use DrevOps\Tui\Field\Password;
-use DrevOps\Tui\Field\Pause;
-use DrevOps\Tui\Field\Reorder;
-use DrevOps\Tui\Field\Search;
-use DrevOps\Tui\Field\Select;
-use DrevOps\Tui\Field\Suggest;
-use DrevOps\Tui\Field\Text;
-use DrevOps\Tui\Field\Textarea;
-use DrevOps\Tui\Field\Toggle;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Field\Calendar;
+use DrevOps\PhpTui\Field\Confirm;
+use DrevOps\PhpTui\Field\FieldInterface;
+use DrevOps\PhpTui\Field\Number;
+use DrevOps\PhpTui\Field\Password;
+use DrevOps\PhpTui\Field\Pause;
+use DrevOps\PhpTui\Field\Reorder;
+use DrevOps\PhpTui\Field\Search;
+use DrevOps\PhpTui\Field\Select;
+use DrevOps\PhpTui\Field\Suggest;
+use DrevOps\PhpTui\Field\Text;
+use DrevOps\PhpTui\Field\Textarea;
+use DrevOps\PhpTui\Field\Toggle;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Utils\Strings;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -41,7 +41,7 @@ $ascii = new DefaultTheme(76, ['color' => FALSE, 'unicode' => FALSE]);
 /**
  * The fields to showcase, each built freshly (fields are stateful).
  *
- * @var array<string,callable():\DrevOps\Tui\Field\FieldInterface>
+ * @var array<string,callable():\DrevOps\PhpTui\Field\FieldInterface>
  */
 $fields = [
   'Text' => static fn(): FieldInterface => new Text('Pear'),

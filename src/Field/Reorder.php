@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Field\Capability\OptionsCapableInterface;
-use DrevOps\Tui\Field\Capability\PagingCapableInterface;
-use DrevOps\Tui\Field\Capability\PagingCapableTrait;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Field\Capability\OptionsCapableInterface;
+use DrevOps\PhpTui\Field\Capability\PagingCapableInterface;
+use DrevOps\PhpTui\Field\Capability\PagingCapableTrait;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 
 /**
  * A ranking list: pick up the highlighted item and move it to reorder.
@@ -25,7 +25,7 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * drops it. The field returns every item in its final order - a permutation
  * of the options, never a subset.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 class Reorder extends AbstractField implements OptionsCapableInterface, PagingCapableInterface {
 
@@ -34,7 +34,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
   /**
    * The items in their current arrangement.
    *
-   * @var list<\DrevOps\Tui\Block\Option>
+   * @var list<\DrevOps\PhpTui\Block\Option>
    */
   protected array $items;
 
@@ -51,7 +51,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
   /**
    * Construct a reorder field.
    *
-   * @param array<int|string,\DrevOps\Tui\Block\Option|string> $options
+   * @param array<int|string,\DrevOps\PhpTui\Block\Option|string> $options
    *   The items to rank, in display order - a list of options or the
    *   value => label shorthand map.
    * @param list<string> $default
@@ -153,7 +153,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
   /**
    * The rows currently shown: the full arrangement, in its current order.
    *
-   * @return list<\DrevOps\Tui\Block\Option>
+   * @return list<\DrevOps\PhpTui\Block\Option>
    *   The visible rows.
    */
   public function visible(): array {
@@ -196,9 +196,9 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
   /**
    * Render one row: the marker cell and the (possibly held) item's label.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Block\Option $option
+   * @param \DrevOps\PhpTui\Block\Option $option
    *   The item row.
    * @param bool $current
    *   Whether the row holds the cursor.
@@ -216,7 +216,7 @@ class Reorder extends AbstractField implements OptionsCapableInterface, PagingCa
    * A held item shows the up-down glyphs, the plain cursor shows the marker,
    * and every other row is blank - all two columns wide so the labels align.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    * @param bool $current
    *   Whether the row holds the cursor.

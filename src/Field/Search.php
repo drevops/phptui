@@ -2,28 +2,28 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\SelectionBounds;
-use DrevOps\Tui\Field\Capability\FilterCapableInterface;
-use DrevOps\Tui\Field\Capability\FilterCapableTrait;
-use DrevOps\Tui\Field\Capability\OptionsCapableInterface;
-use DrevOps\Tui\Field\Capability\OptionsCapableTrait;
-use DrevOps\Tui\Field\Capability\PagingCapableInterface;
-use DrevOps\Tui\Field\Capability\PagingCapableTrait;
-use DrevOps\Tui\Field\Capability\PlaceholderCapableInterface;
-use DrevOps\Tui\Field\Capability\PlaceholderCapableTrait;
-use DrevOps\Tui\Field\Capability\QueryOptionsCapableInterface;
-use DrevOps\Tui\Field\Capability\QueryOptionsCapableTrait;
-use DrevOps\Tui\Field\Capability\SearchCapableInterface;
-use DrevOps\Tui\Field\Capability\SearchCapableTrait;
-use DrevOps\Tui\Field\Capability\SelectionBoundedTrait;
-use DrevOps\Tui\Field\Capability\SelectionCapableInterface;
-use DrevOps\Tui\Field\Capability\SelectionCapableTrait;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\SelectionBounds;
+use DrevOps\PhpTui\Field\Capability\FilterCapableInterface;
+use DrevOps\PhpTui\Field\Capability\FilterCapableTrait;
+use DrevOps\PhpTui\Field\Capability\OptionsCapableInterface;
+use DrevOps\PhpTui\Field\Capability\OptionsCapableTrait;
+use DrevOps\PhpTui\Field\Capability\PagingCapableInterface;
+use DrevOps\PhpTui\Field\Capability\PagingCapableTrait;
+use DrevOps\PhpTui\Field\Capability\PlaceholderCapableInterface;
+use DrevOps\PhpTui\Field\Capability\PlaceholderCapableTrait;
+use DrevOps\PhpTui\Field\Capability\QueryOptionsCapableInterface;
+use DrevOps\PhpTui\Field\Capability\QueryOptionsCapableTrait;
+use DrevOps\PhpTui\Field\Capability\SearchCapableInterface;
+use DrevOps\PhpTui\Field\Capability\SearchCapableTrait;
+use DrevOps\PhpTui\Field\Capability\SelectionBoundedTrait;
+use DrevOps\PhpTui\Field\Capability\SelectionCapableInterface;
+use DrevOps\PhpTui\Field\Capability\SelectionCapableTrait;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 
 /**
  * A fuzzy type-to-filter choice list under a query line.
@@ -32,7 +32,7 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * characters narrow the list, ranked by fuzzy relevance, and the matched
  * characters are highlighted.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 class Search extends AbstractField implements
   OptionsCapableInterface,
@@ -57,7 +57,7 @@ class Search extends AbstractField implements
   /**
    * Construct a search field.
    *
-   * @param array<int|string,\DrevOps\Tui\Block\Option|string> $options
+   * @param array<int|string,\DrevOps\PhpTui\Block\Option|string> $options
    *   Option rows in display order - a list of options or the value => label
    *   shorthand map.
    * @param string|list<string> $default
@@ -67,7 +67,7 @@ class Search extends AbstractField implements
    * @param int|null $page_size
    *   The number of option rows shown at once before the list pages; NULL uses
    *   the default.
-   * @param \DrevOps\Tui\Block\SelectionBounds|null $selection_bounds
+   * @param \DrevOps\PhpTui\Block\SelectionBounds|null $selection_bounds
    *   The minimum/maximum selection counts enforced on accept, or NULL for no
    *   count limit.
    */
@@ -80,7 +80,7 @@ class Search extends AbstractField implements
   /**
    * The field type this field binds its keys under.
    *
-   * @return \DrevOps\Tui\Block\FieldType
+   * @return \DrevOps\PhpTui\Block\FieldType
    *   The search field type.
    */
   protected function choiceType(): FieldType {

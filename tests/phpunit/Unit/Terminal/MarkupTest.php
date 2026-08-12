@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Terminal;
+namespace DrevOps\PhpTui\Tests\Unit\Terminal;
 
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Terminal\Markup;
-use DrevOps\Tui\Terminal\MarkupType;
-use DrevOps\Tui\Terminal\MarkupSegment;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\Markup;
+use DrevOps\PhpTui\Terminal\MarkupType;
+use DrevOps\PhpTui\Terminal\MarkupSegment;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

@@ -28,7 +28,7 @@ const TITLE_PHRASES = [
   'Testable terminal UIs for your PHP projects',
 ];
 
-const INSTALL_CMD = 'composer require drevops/tui';
+const INSTALL_CMD = 'composer require drevops/phptui';
 
 const SUBHEAD =
   'A dependency-light PHP engine for interactive, keyboard-driven terminal ' +
@@ -36,16 +36,16 @@ const SUBHEAD =
   'scrollable, themeable TUI - or collects the answers headlessly from JSON ' +
   'and environment variables.';
 
-const REPO_BLOB = 'https://github.com/drevops/tui/blob/main/';
+const REPO_BLOB = 'https://github.com/drevops/phptui/blob/main/';
 
 /* ────────────────────────────────────────────────────────────────────────
  *  PHP snippets. Plain strings highlighted by highlightPhp() below; every
  *  snippet is an excerpt of the playground script its feature links to, so
  *  the code, the recording and the full script always tell the same story.
  * ──────────────────────────────────────────────────────────────────────── */
-const QUICKSTART_CODE = `use DrevOps\\Tui\\Builder\\Form;
-use DrevOps\\Tui\\Builder\\PanelBuilder;
-use DrevOps\\Tui\\Tui;
+const QUICKSTART_CODE = `use DrevOps\\PhpTui\\Builder\\Form;
+use DrevOps\\PhpTui\\Builder\\PanelBuilder;
+use DrevOps\\PhpTui\\Tui;
 
 $form = Form::create('Quick start')
   ->panel('order', 'New order', function (PanelBuilder $p): void {
@@ -203,9 +203,9 @@ $answers = (new Tui($form))
       script: 'playground/08-headless-collect.php',
       doc: '/headless-collection',
       code: `// The same form, no terminal: collect() resolves every field from
-// the prompts JSON, TUI_<ID> environment variables, discovered and
+// the prompts JSON, PHPTUI_<ID> environment variables, discovered and
 // derived values, then the declared defaults - in that order.
-putenv('TUI_ORGANIC=1');
+putenv('PHPTUI_ORGANIC=1');
 
 $answers = (new Tui($form))->collect('{"name": "Weekly Box", "fruit": "cherry"}');
 
@@ -843,7 +843,7 @@ export default function Home() {
 
               <div className={clsx(styles.ctaRow, styles.loadReveal)} style={{'--d': '.6s'}}>
                 <a className={clsx(styles.btn, styles.btnPrimary)} href={withBaseUrl('/installation')}>Get started</a>
-                <a className={clsx(styles.btn, styles.btnGhost)} href="https://github.com/drevops/tui">
+                <a className={clsx(styles.btn, styles.btnGhost)} href="https://github.com/drevops/phptui">
                   <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor"><path d={GITHUB_PATH} /></svg>
                   View on GitHub
                 </a>
@@ -853,7 +853,7 @@ export default function Home() {
               <div className={clsx(styles.term, styles.loadReveal)} style={{'--d': '.72s'}} role="img" aria-label="A form built with TUI, recorded in the terminal">
                 <div className={styles.termBar}>
                   <span className={styles.dots} aria-hidden="true"><span /><span /><span /></span>
-                  <span className={styles.termTitle}>tui - zsh</span>
+                  <span className={styles.termTitle}>phptui - zsh</span>
                   <span className={styles.termMeta} aria-hidden="true">UTF-8</span>
                 </div>
                 <div className={styles.termScreen}>

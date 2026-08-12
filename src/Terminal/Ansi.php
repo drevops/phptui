@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Terminal;
+namespace DrevOps\PhpTui\Terminal;
 
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * ANSI helpers: styling, escape stripping and visible-width alignment.
  *
- * @package DrevOps\Tui\Terminal
+ * @package DrevOps\PhpTui\Terminal
  */
 final class Ansi {
 

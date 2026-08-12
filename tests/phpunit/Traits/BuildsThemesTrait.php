@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Traits;
+namespace DrevOps\PhpTui\Tests\Traits;
 
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\Spacing;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Theme\ThemeManager;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\Mode;
+use DrevOps\PhpTui\Theme\Spacing;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Theme\ThemeManager;
 
 /**
  * Provides the two themes rendering assertions are made against.
@@ -24,7 +24,7 @@ trait BuildsThemesTrait {
    * @param bool $unicode
    *   Whether Unicode glyphs are on.
    *
-   * @return \DrevOps\Tui\Theme\DefaultTheme
+   * @return \DrevOps\PhpTui\Theme\DefaultTheme
    *   The theme.
    */
   protected function theme(bool $color = TRUE, bool $unicode = TRUE): DefaultTheme {
@@ -45,7 +45,7 @@ trait BuildsThemesTrait {
    * @param array<string,mixed> $options
    *   The display options.
    *
-   * @return \DrevOps\Tui\Theme\DefaultTheme
+   * @return \DrevOps\PhpTui\Theme\DefaultTheme
    *   The theme.
    */
   protected function builtin(string $name, int $width = ThemeInterface::DEFAULT_WIDTH, array $options = []): DefaultTheme {
@@ -62,7 +62,7 @@ trait BuildsThemesTrait {
    * Independent of the theme's bordered-and-padded defaults, so an assertion
    * reads against the content alone.
    *
-   * @return \DrevOps\Tui\Theme\DefaultTheme
+   * @return \DrevOps\PhpTui\Theme\DefaultTheme
    *   The theme.
    */
   protected function plainTheme(): DefaultTheme {

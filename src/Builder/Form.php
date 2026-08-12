@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Builder;
+namespace DrevOps\PhpTui\Builder;
 
-use DrevOps\Tui\Block\Buttons;
-use DrevOps\Tui\Block\Capability\DependCapableInterface;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Template;
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\Condition\ConditionInterface;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Screen\Layout\GridLayout;
-use DrevOps\Tui\Screen\Layout\PanelLayout;
+use DrevOps\PhpTui\Block\Buttons;
+use DrevOps\PhpTui\Block\Capability\DependCapableInterface;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Template;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\Condition\ConditionInterface;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Screen\Layout\GridLayout;
+use DrevOps\PhpTui\Screen\Layout\PanelLayout;
 
 /**
  * A fluent builder declaring a form: its panels, fields and own chrome.
@@ -23,9 +23,9 @@ use DrevOps\Tui\Screen\Layout\PanelLayout;
  * Declares only what belongs to a specific questionnaire - its title, panels
  * and fields, its start banner and submit/cancel buttons, its fix-ups and
  * env-variable prefix. The global TUI runtime (theme, key bindings, colour,
- * language) is configured on the {@see \DrevOps\Tui\Tui} facade, not here.
+ * language) is configured on the {@see \DrevOps\PhpTui\Tui} facade, not here.
  *
- * @package DrevOps\Tui\Builder
+ * @package DrevOps\PhpTui\Builder
  */
 final class Form {
 
@@ -62,14 +62,14 @@ final class Form {
   /**
    * The post-settle fix-up rules.
    *
-   * @var \DrevOps\Tui\Builder\Fixup[]
+   * @var \DrevOps\PhpTui\Builder\Fixup[]
    */
   protected array $fixups = [];
 
   /**
    * The top-level panel builders, in declaration order.
    *
-   * @var \DrevOps\Tui\Builder\PanelBuilder[]
+   * @var \DrevOps\PhpTui\Builder\PanelBuilder[]
    */
   protected array $panels = [];
 
@@ -133,7 +133,7 @@ final class Form {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the form's tree has already been built.
    */
   public function buttons(bool $show, string $submit_label = 'Submit', string $cancel_label = 'Cancel'): self {
@@ -164,7 +164,7 @@ final class Form {
   /**
    * Add a post-settle fix-up rule.
    *
-   * @param \DrevOps\Tui\Builder\Fixup $fixup
+   * @param \DrevOps\PhpTui\Builder\Fixup $fixup
    *   The fix-up, evaluated once the answers have settled.
    *
    * @return $this
@@ -189,7 +189,7 @@ final class Form {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the form's tree has already been built.
    */
   public function panel(string $id, string $title, \Closure $build): self {
@@ -207,7 +207,7 @@ final class Form {
    *
    * Each argument declares one visual row and names how many panels sit side
    * by side in it; the panels fill the rows in declaration order. Mirrors
-   * {@see \DrevOps\Tui\Builder\PanelBuilder::layout()}, which arranges a
+   * {@see \DrevOps\PhpTui\Builder\PanelBuilder::layout()}, which arranges a
    * drilled-in panel's own children.
    *
    * @param int ...$rows
@@ -216,7 +216,7 @@ final class Form {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the form's tree has already been built, or a visual row holds fewer
    *   than one panel.
    */
@@ -236,10 +236,10 @@ final class Form {
    * collection traverses. The tree is built once; later calls return the same
    * instance.
    *
-   * @return \DrevOps\Tui\Block\Panel
+   * @return \DrevOps\PhpTui\Block\Panel
    *   The root panel, carrying the form's own name.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When a declaration contradicts itself.
    */
   public function root(): Panel {
@@ -297,7 +297,7 @@ final class Form {
   /**
    * The rules this form applies once its answers have settled.
    *
-   * @return \DrevOps\Tui\Builder\Fixup[]
+   * @return \DrevOps\PhpTui\Builder\Fixup[]
    *   The rules, in declaration order.
    */
   public function currentFixups(): array {
@@ -313,7 +313,7 @@ final class Form {
    * @param string $declaration
    *   What is being declared, as a fragment naming it.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the tree has already been built.
    */
   protected function assertUnbuilt(string $declaration): void {
@@ -325,7 +325,7 @@ final class Form {
   /**
    * Assert that every field id is unique across the panel tree.
    *
-   * @param \DrevOps\Tui\Block\Panel $root
+   * @param \DrevOps\PhpTui\Block\Panel $root
    *   The root panel holding every declared panel.
    */
   protected function assertUniqueFieldIds(Panel $root): void {
@@ -347,7 +347,7 @@ final class Form {
    * holds, so a block's depth is a fact about the whole form: it can only be
    * computed once every panel has been placed.
    *
-   * @param \DrevOps\Tui\Block\Panel $root
+   * @param \DrevOps\PhpTui\Block\Panel $root
    *   The root panel holding every declared panel.
    */
   protected function nestConditionals(Panel $root): void {
@@ -369,13 +369,13 @@ final class Form {
   /**
    * Every block a condition can hide, and the panel holding each.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel to walk.
-   * @param array<int,\DrevOps\Tui\Block\Panel> $holders
+   * @param array<int,\DrevOps\PhpTui\Block\Panel> $holders
    *   The section each block sits in, keyed by the block's object id,
    *   populated as the walk proceeds.
    *
-   * @return list<\DrevOps\Tui\Block\Capability\DependCapableInterface>
+   * @return list<\DrevOps\PhpTui\Block\Capability\DependCapableInterface>
    *   The blocks, in declaration order.
    */
   protected function conditionals(Panel $panel, array &$holders): array {
@@ -407,11 +407,11 @@ final class Form {
    * Measured by object rather than by id, because a section and a row it
    * holds may share the same id.
    *
-   * @param \DrevOps\Tui\Block\Capability\DependCapableInterface $block
+   * @param \DrevOps\PhpTui\Block\Capability\DependCapableInterface $block
    *   The block to measure.
-   * @param array<int,\DrevOps\Tui\Block\Panel> $holders
+   * @param array<int,\DrevOps\PhpTui\Block\Panel> $holders
    *   The section each block sits in, keyed by the block's object id.
-   * @param array<string,\DrevOps\Tui\Block\Field> $by_id
+   * @param array<string,\DrevOps\PhpTui\Block\Field> $by_id
    *   Every field in the form, keyed by id.
    * @param array<int,int> $resolved
    *   The depths measured so far, so a block named by several rules is walked
@@ -460,7 +460,7 @@ final class Form {
   /**
    * Assert that nothing is declared on a field that never draws it.
    *
-   * @param \DrevOps\Tui\Block\Panel $root
+   * @param \DrevOps\PhpTui\Block\Panel $root
    *   The root panel holding every declared panel.
    */
   protected function assertFieldSurfaces(Panel $root): void {
@@ -483,7 +483,7 @@ final class Form {
    * field offered two of them has no one set, and a field offered any of them
    * on a kind that shows no list has nowhere to put them.
    *
-   * @param \DrevOps\Tui\Block\Panel $root
+   * @param \DrevOps\PhpTui\Block\Panel $root
    *   The root panel holding every declared panel.
    */
   protected function assertOptionSources(Panel $root): void {
@@ -516,7 +516,7 @@ final class Form {
   /**
    * Assert that every toggle field declares exactly two options.
    *
-   * @param \DrevOps\Tui\Block\Panel $root
+   * @param \DrevOps\PhpTui\Block\Panel $root
    *   The root panel holding every declared panel.
    */
   protected function assertToggleOptions(Panel $root): void {
@@ -558,7 +558,7 @@ final class Form {
    * A ranking arranges a flat list, so headings, separators and disabled rows
    * are not allowed in it, and fewer than two items leaves nothing to reorder.
    *
-   * @param \DrevOps\Tui\Block\Panel $root
+   * @param \DrevOps\PhpTui\Block\Panel $root
    *   The root panel holding every declared panel.
    */
   protected function assertReorderOptions(Panel $root): void {
@@ -588,7 +588,7 @@ final class Form {
   /**
    * Assert that every template field declares the shape it fills in.
    *
-   * @param \DrevOps\Tui\Block\Panel $root
+   * @param \DrevOps\PhpTui\Block\Panel $root
    *   The root panel holding every declared panel.
    */
   protected function assertTemplateShapes(Panel $root): void {
@@ -610,7 +610,7 @@ final class Form {
    * fields and a description, but nesting panels (or another modal) inside it
    * has no defined layout.
    *
-   * @param \DrevOps\Tui\Block\Panel $root
+   * @param \DrevOps\PhpTui\Block\Panel $root
    *   The root panel holding every declared panel.
    */
   protected function assertModalPanels(Panel $root): void {
@@ -624,7 +624,7 @@ final class Form {
   /**
    * Whether a field's options stand as declared.
    *
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field.
    *
    * @return bool

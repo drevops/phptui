@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
 /**
  * A calm, arctic theme: frost-blue accents, sage values, sand highlights.
@@ -11,7 +11,7 @@ namespace DrevOps\Tui\Theme;
  * colours and inherits every element from the default theme, so it renders
  * across every field and degrades to plain text when colour is off.
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 class FrostTheme extends DefaultTheme {
 

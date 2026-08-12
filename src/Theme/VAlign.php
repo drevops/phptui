@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
 /**
  * The vertical alignment of content within the available height.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Theme;
  * A consumer passes a case (or its string value) as the "valign" theme
  * option; it takes effect in fullscreen mode.
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 enum VAlign: string {
 

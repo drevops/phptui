@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme\Override;
+namespace DrevOps\PhpTui\Theme\Override;
 
 /**
  * The patch a theme consults before answering for an element.
@@ -11,14 +11,14 @@ namespace DrevOps\Tui\Theme\Override;
  * at all, which is what keeps this a patch rather than a replacement: the theme
  * goes on answering for everything else exactly as it did.
  *
- * @package DrevOps\Tui\Theme\Override
+ * @package DrevOps\PhpTui\Theme\Override
  */
 final class Overrides {
 
   /**
    * The glyph pairs, keyed by the element they replace.
    *
-   * @var array<string,\DrevOps\Tui\Theme\Override\Glyph>
+   * @var array<string,\DrevOps\PhpTui\Theme\Override\Glyph>
    */
   protected array $glyphs = [];
 
@@ -39,7 +39,7 @@ final class Overrides {
   /**
    * State the glyph an element draws.
    *
-   * @param \DrevOps\Tui\Theme\Override\ThemeElement $element
+   * @param \DrevOps\PhpTui\Theme\Override\ThemeElement $element
    *   The element.
    * @param string $glyph
    *   The glyph.
@@ -53,7 +53,7 @@ final class Overrides {
   /**
    * State the text an element draws.
    *
-   * @param \DrevOps\Tui\Theme\Override\ThemeElement $element
+   * @param \DrevOps\PhpTui\Theme\Override\ThemeElement $element
    *   The element.
    * @param string $text
    *   The text.
@@ -65,7 +65,7 @@ final class Overrides {
   /**
    * State the colour an element is painted in.
    *
-   * @param \DrevOps\Tui\Theme\Override\ThemeElement $element
+   * @param \DrevOps\PhpTui\Theme\Override\ThemeElement $element
    *   The element.
    * @param string $sgr
    *   The SGR parameters.
@@ -77,10 +77,10 @@ final class Overrides {
   /**
    * The glyph stated for an element.
    *
-   * @param \DrevOps\Tui\Theme\Override\ThemeElement $element
+   * @param \DrevOps\PhpTui\Theme\Override\ThemeElement $element
    *   The element.
    *
-   * @return \DrevOps\Tui\Theme\Override\Glyph|null
+   * @return \DrevOps\PhpTui\Theme\Override\Glyph|null
    *   The pair, or NULL when nobody stated one.
    */
   public function glyph(ThemeElement $element): ?Glyph {
@@ -90,7 +90,7 @@ final class Overrides {
   /**
    * The text stated for an element.
    *
-   * @param \DrevOps\Tui\Theme\Override\ThemeElement $element
+   * @param \DrevOps\PhpTui\Theme\Override\ThemeElement $element
    *   The element.
    *
    * @return string|null
@@ -103,7 +103,7 @@ final class Overrides {
   /**
    * The colour stated for an element.
    *
-   * @param \DrevOps\Tui\Theme\Override\ThemeElement $element
+   * @param \DrevOps\PhpTui\Theme\Override\ThemeElement $element
    *   The element.
    *
    * @return string|null

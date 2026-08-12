@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Element;
+namespace DrevOps\PhpTui\Block\Element;
 
 /**
  * The elements the field block composes.
@@ -19,7 +19,7 @@ namespace DrevOps\Tui\Block\Element;
  * scalars and nothing else, so the piece is the theme's to arrange without the
  * field having to hand over any of its state.
  *
- * @package DrevOps\Tui\Block\Element
+ * @package DrevOps\PhpTui\Block\Element
  */
 interface FieldElementsInterface {
 

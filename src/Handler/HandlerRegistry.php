@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Handler;
+namespace DrevOps\PhpTui\Handler;
 
 /**
  * Resolves a consumer's per-field class and its reusable static behaviour.
@@ -14,7 +14,7 @@ namespace DrevOps\Tui\Handler;
  * transform(), a collection uses them as the field's reusable behaviour unless
  * the form declares its own closure, which always wins.
  *
- * @package DrevOps\Tui\Handler
+ * @package DrevOps\PhpTui\Handler
  */
 class HandlerRegistry {
 

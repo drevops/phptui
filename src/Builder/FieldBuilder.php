@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Builder;
+namespace DrevOps\PhpTui\Builder;
 
-use DrevOps\Tui\Block\DateBounds;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\FilePickerConstraints;
-use DrevOps\Tui\Block\FilePickerMode;
-use DrevOps\Tui\Block\NumberBounds;
-use DrevOps\Tui\Block\SelectionBounds;
-use DrevOps\Tui\Block\Template;
-use DrevOps\Tui\Block\Weekday;
-use DrevOps\Tui\Condition\ConditionInterface;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Discovery\DiscoverInterface;
-use DrevOps\Tui\FormException;
+use DrevOps\PhpTui\Block\DateBounds;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\FilePickerConstraints;
+use DrevOps\PhpTui\Block\FilePickerMode;
+use DrevOps\PhpTui\Block\NumberBounds;
+use DrevOps\PhpTui\Block\SelectionBounds;
+use DrevOps\PhpTui\Block\Template;
+use DrevOps\PhpTui\Block\Weekday;
+use DrevOps\PhpTui\Condition\ConditionInterface;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\Discovery\DiscoverInterface;
+use DrevOps\PhpTui\FormException;
 
 /**
  * A fluent builder for a single field: the block that collects.
@@ -30,7 +30,7 @@ use DrevOps\Tui\FormException;
  * declaration the kind has nowhere to put is rejected where it was written
  * rather than quietly dropped, so the error points at the line that made it.
  *
- * @package DrevOps\Tui\Builder
+ * @package DrevOps\PhpTui\Builder
  */
 final class FieldBuilder {
 
@@ -142,7 +142,7 @@ final class FieldBuilder {
    *   The unique field id.
    * @param string $label
    *   The human-readable label.
-   * @param \DrevOps\Tui\Block\FieldType $fieldType
+   * @param \DrevOps\PhpTui\Block\FieldType $fieldType
    *   The field type.
    */
   public function __construct(protected string $id, protected string $label, protected FieldType $fieldType) {
@@ -152,7 +152,7 @@ final class FieldBuilder {
   /**
    * The block this builder is declaring.
    *
-   * @return \DrevOps\Tui\Block\Field
+   * @return \DrevOps\PhpTui\Block\Field
    *   The field, whose identity never changes, so it can be placed in a region
    *   as it is declared.
    */
@@ -163,7 +163,7 @@ final class FieldBuilder {
   /**
    * Finish the declaration, writing what was stated in parts onto the block.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the finished declaration contradicts itself.
    */
   public function seal(): void {
@@ -238,7 +238,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field draws no input buffer to ghost.
    */
   public function placeholder(string $placeholder): self {
@@ -356,7 +356,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field type does not support collecting several values.
    */
   public function multiple(bool $multiple = TRUE): self {
@@ -375,7 +375,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field masks nothing to reveal.
    */
   public function revealable(bool $revealable = TRUE): self {
@@ -394,7 +394,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field keeps no secret to confirm.
    */
   public function confirmation(bool $confirm = TRUE): self {
@@ -416,7 +416,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field composes no long-form text to hand off.
    */
   public function externalEditor(bool $enabled = TRUE): self {
@@ -456,7 +456,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field counts through no numbers.
    */
   public function min(int $min): self {
@@ -475,7 +475,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field counts through no numbers.
    */
   public function max(int $max): self {
@@ -494,7 +494,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the step is not positive, or the field draws a scale whose points
    *   are already its steps.
    */
@@ -531,7 +531,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field draws no scale to caption.
    */
   public function captions(array $captions): self {
@@ -550,7 +550,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field does not collect several values.
    */
   public function minSelections(int $min): self {
@@ -569,7 +569,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field does not collect several values.
    */
   public function maxSelections(int $max): self {
@@ -592,7 +592,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field browses no filesystem.
    */
   public function startIn(string $directory): self {
@@ -610,7 +610,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field browses no filesystem.
    */
   public function filesOnly(): self {
@@ -626,7 +626,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field browses no filesystem.
    */
   public function directoriesOnly(): self {
@@ -646,7 +646,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field browses no filesystem.
    */
   public function extensions(array $extensions): self {
@@ -665,7 +665,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field browses no filesystem.
    */
   public function showHidden(bool $show = TRUE): self {
@@ -687,7 +687,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field browses no filesystem, or the size is not positive.
    */
   public function maxSize(int $bytes): self {
@@ -713,7 +713,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field draws no list to page, or the size is not positive.
    */
   public function pageSize(int $size): self {
@@ -737,7 +737,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field picks no date, or the value is not a valid `Y-m-d` date.
    */
   public function minDate(string $date): self {
@@ -756,7 +756,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field picks no date, or the value is not a valid `Y-m-d` date.
    */
   public function maxDate(string $date): self {
@@ -769,13 +769,13 @@ final class FieldBuilder {
   /**
    * Calendar only: set the day the calendar week begins on.
    *
-   * @param \DrevOps\Tui\Block\Weekday $weekday
+   * @param \DrevOps\PhpTui\Block\Weekday $weekday
    *   The week-start day.
    *
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field picks no date.
    */
   public function weekStart(Weekday $weekday): self {
@@ -788,7 +788,7 @@ final class FieldBuilder {
   /**
    * Set the conditional-visibility rule.
    *
-   * @param \DrevOps\Tui\Condition\ConditionInterface $condition
+   * @param \DrevOps\PhpTui\Condition\ConditionInterface $condition
    *   The condition gating the field, evaluated as the answers settle.
    *
    * @return $this
@@ -803,7 +803,7 @@ final class FieldBuilder {
   /**
    * Set the derive rule.
    *
-   * @param \DrevOps\Tui\Derive\Derive $derive
+   * @param \DrevOps\PhpTui\Derive\Derive $derive
    *   The derive rule, evaluated as the answers settle.
    *
    * @return $this
@@ -818,7 +818,7 @@ final class FieldBuilder {
   /**
    * Set the discovery rule.
    *
-   * @param \DrevOps\Tui\Discovery\DiscoverInterface|\Closure $discover
+   * @param \DrevOps\PhpTui\Discovery\DiscoverInterface|\Closure $discover
    *   The discovery rule - or a custom `fn (Context): mixed` detector -
    *   evaluated in update mode.
    *
@@ -877,7 +877,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field completes no typed text.
    */
   public function complete(array|\Closure $source): self {
@@ -901,7 +901,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field ranks no options to preview.
    */
   public function ghost(bool $ghost = TRUE): self {
@@ -924,7 +924,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field fills in no fixed shape.
    */
   public function pattern(string $pattern): self {
@@ -950,7 +950,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field fills in no fixed shape.
    */
   public function slot(string $name, string $label = '', ?\Closure $validate = NULL): self {
@@ -984,7 +984,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field shows no options.
    */
   public function option(string $value, string $label = '', string $description = '', bool $disabled = FALSE, string $disabled_reason = ''): self {
@@ -1000,7 +1000,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field shows no options.
    */
   public function separator(): self {
@@ -1019,7 +1019,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field shows no options.
    */
   public function heading(string $label): self {
@@ -1058,7 +1058,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field shows no options.
    */
   public function options(array|\Closure $options): self {
@@ -1106,7 +1106,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field runs no query.
    */
   public function optionsFrom(\Closure $source): self {
@@ -1129,7 +1129,7 @@ final class FieldBuilder {
    * @return $this
    *   The builder.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the field runs no query, or the length is below one character.
    */
   public function minQuery(int $length): self {
@@ -1206,7 +1206,7 @@ final class FieldBuilder {
    * @param string $method
    *   The refused method, without its parentheses.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When this field's kind is not one the declaration applies to.
    */
   protected function scoped(\Closure $applies, string $lacks, string $method): void {
@@ -1222,10 +1222,10 @@ final class FieldBuilder {
   /**
    * Assemble the template of a template field from the declared pattern.
    *
-   * @return \DrevOps\Tui\Block\Template|null
+   * @return \DrevOps\PhpTui\Block\Template|null
    *   The template, or NULL for any other field type or an absent pattern.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the pattern cannot be filled in or read back unambiguously.
    */
   protected function buildTemplate(): ?Template {
@@ -1295,10 +1295,10 @@ final class FieldBuilder {
   /**
    * Assemble the number bounds from the declared min/max/step, if any.
    *
-   * @return \DrevOps\Tui\Block\NumberBounds|null
+   * @return \DrevOps\PhpTui\Block\NumberBounds|null
    *   The bounds, or NULL when none were declared.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When min exceeds max.
    */
   protected function buildBounds(): ?NumberBounds {
@@ -1324,10 +1324,10 @@ final class FieldBuilder {
    * draws - so both ends always resolve, and the arrows walk the range one
    * point at a time rather than by a declared increment.
    *
-   * @return \DrevOps\Tui\Block\NumberBounds
+   * @return \DrevOps\PhpTui\Block\NumberBounds
    *   The scale.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the range holds fewer than two points.
    */
   protected function buildScale(): NumberBounds {
@@ -1344,10 +1344,10 @@ final class FieldBuilder {
   /**
    * Assemble the selection bounds from the declared min/max selections, if any.
    *
-   * @return \DrevOps\Tui\Block\SelectionBounds|null
+   * @return \DrevOps\PhpTui\Block\SelectionBounds|null
    *   The bounds, or NULL when no selection limit was declared.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When selection limits are declared on a non-multiple field, or the
    *   minimum exceeds the maximum.
    */
@@ -1370,7 +1370,7 @@ final class FieldBuilder {
   /**
    * Assemble the file picker constraints from the declared type/extension/size.
    *
-   * @return \DrevOps\Tui\Block\FilePickerConstraints
+   * @return \DrevOps\PhpTui\Block\FilePickerConstraints
    *   The constraints; unconstrained when nothing was declared.
    */
   protected function buildPickerConstraints(): FilePickerConstraints {
@@ -1380,10 +1380,10 @@ final class FieldBuilder {
   /**
    * Assemble the date bounds for a date field from the declared min/max/start.
    *
-   * @return \DrevOps\Tui\Block\DateBounds|null
+   * @return \DrevOps\PhpTui\Block\DateBounds|null
    *   The bounds for a date field, or NULL for any other field type.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When a declared date is not a valid `Y-m-d` date, or min is after max.
    */
   protected function buildDateBounds(): ?DateBounds {
@@ -1410,7 +1410,7 @@ final class FieldBuilder {
    * @return \DateTimeImmutable
    *   The parsed date.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the value is not a valid `Y-m-d` date.
    */
   protected function parseBoundDate(string $value): \DateTimeImmutable {
@@ -1426,7 +1426,7 @@ final class FieldBuilder {
   /**
    * The default a field type settles on when none is declared.
    *
-   * @param \DrevOps\Tui\Block\FieldType $type
+   * @param \DrevOps\PhpTui\Block\FieldType $type
    *   The field type.
    *
    * @return mixed

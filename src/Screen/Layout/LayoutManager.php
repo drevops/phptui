@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen\Layout;
+namespace DrevOps\PhpTui\Screen\Layout;
 
 use AlexSkrypnyk\Str2Name\Str2Name;
 
@@ -20,7 +20,7 @@ use AlexSkrypnyk\Str2Name\Str2Name;
  * nothing else, so an arrangement built from anything a name cannot carry is
  * reached none of these ways: it is built where that something is written.
  *
- * @package DrevOps\Tui\Screen\Layout
+ * @package DrevOps\PhpTui\Screen\Layout
  */
 final class LayoutManager {
 
@@ -32,14 +32,14 @@ final class LayoutManager {
   /**
    * The shipped layouts, keyed by name, once the directory has been read.
    *
-   * @var array<string,class-string<\DrevOps\Tui\Screen\Layout\LayoutInterface>>|null
+   * @var array<string,class-string<\DrevOps\PhpTui\Screen\Layout\LayoutInterface>>|null
    */
   protected static ?array $shipped = NULL;
 
   /**
    * The layouts a consumer registered, keyed by name.
    *
-   * @var array<string,class-string<\DrevOps\Tui\Screen\Layout\LayoutInterface>>
+   * @var array<string,class-string<\DrevOps\PhpTui\Screen\Layout\LayoutInterface>>
    */
   protected static array $registry = [];
 
@@ -61,7 +61,7 @@ final class LayoutManager {
    * @param string $name
    *   A shipped name, a registered name, or a layout class name.
    *
-   * @return \DrevOps\Tui\Screen\Layout\LayoutInterface
+   * @return \DrevOps\PhpTui\Screen\Layout\LayoutInterface
    *   The layout.
    */
   public static function create(string $name = 'default'): LayoutInterface {
@@ -100,7 +100,7 @@ final class LayoutManager {
   /**
    * The layouts that ship, keyed by the name a form picks them by.
    *
-   * @return array<string,class-string<\DrevOps\Tui\Screen\Layout\LayoutInterface>>
+   * @return array<string,class-string<\DrevOps\PhpTui\Screen\Layout\LayoutInterface>>
    *   The classes, keyed by name.
    */
   protected static function shipped(): array {
@@ -156,7 +156,7 @@ final class LayoutManager {
    * @param string $class
    *   The class name.
    *
-   * @return class-string<\DrevOps\Tui\Screen\Layout\LayoutInterface>
+   * @return class-string<\DrevOps\PhpTui\Screen\Layout\LayoutInterface>
    *   The class.
    */
   protected static function vouch(string $class): string {

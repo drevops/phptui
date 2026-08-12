@@ -13,11 +13,11 @@ $answers = $tui->collect('{"name":"Weekly Box"}');
 $answers = $tui->run($prompts, '1.0.0'); // Headless when prompts are supplied; otherwise the TUI on a TTY.
 ```
 
-A value the form refuses ends the whole call with a `DrevOps\Tui\CollectException` naming the field and the reason. There is nobody to retype it and no row to say so on, so the collection fails rather than handing back answers one of which was never accepted.
+A value the form refuses ends the whole call with a `DrevOps\PhpTui\CollectException` naming the field and the reason. There is nobody to retype it and no row to say so on, so the collection fails rather than handing back answers one of which was never accepted.
 
 ## Naming the variables
 
-Environment overrides are named `<PREFIX><FIELD_ID>` - the uppercased field id under a prefix. `->envPrefix('MYAPP_')` declares that namespace on the form, a `new Tui($form, env_prefix: 'MYAPP_')` constructor argument overrides it, and if you set neither, the prefix is `TUI_`:
+Environment overrides are named `<PREFIX><FIELD_ID>` - the uppercased field id under a prefix. `->envPrefix('MYAPP_')` declares that namespace on the form, a `new Tui($form, env_prefix: 'MYAPP_')` constructor argument overrides it, and if you set neither, the prefix is `PHPTUI_`:
 
 ```bash
 MYAPP_TIMEZONE=UTC php my-installer.php
@@ -41,4 +41,4 @@ Both names reach machine-readable output: `agentHelp()` advertises the canonical
 
 The `Answers` set that comes back needs no form configuration to present or process: each answer carries a snapshot of its question (label, kind, panel trail) taken at collection time, plus its provenance - default, detected, edited, derived, or override (a user value pinning a derived one). `$answers->toSummary()` prints the provenance-badged, panel-grouped summary, `$answers->toJson()` the raw values, and `$answers->items` exposes the per-answer snapshots.
 
-For automation and AI agents, the form describes itself: `schema()`, `agentHelp()` and `validate()` let a tool discover and drive it without prompting. See [AI agents](/ai-agents) for the full surface, with the runnable scripts in [`playground/08-headless-*`](https://github.com/drevops/tui/tree/main/playground).
+For automation and AI agents, the form describes itself: `schema()`, `agentHelp()` and `validate()` let a tool discover and drive it without prompting. See [AI agents](/ai-agents) for the full surface, with the runnable scripts in [`playground/08-headless-*`](https://github.com/drevops/phptui/tree/main/playground).

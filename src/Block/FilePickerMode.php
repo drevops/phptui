@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
 /**
  * What a file picker may select: any entry, files only or directories only.
@@ -11,7 +11,7 @@ namespace DrevOps\Tui\Block;
  * directory is always enterable so files beneath it stay reachable, even when
  * only files may be chosen.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 enum FilePickerMode {
 

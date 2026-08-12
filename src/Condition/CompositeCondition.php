@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Condition;
+namespace DrevOps\PhpTui\Condition;
 
 /**
  * A composite condition: all / any / not over other conditions.
@@ -10,16 +10,16 @@ namespace DrevOps\Tui\Condition;
  * Construct via {@see Condition::all()}, {@see Condition::any()} and
  * {@see Condition::not()}.
  *
- * @package DrevOps\Tui\Condition
+ * @package DrevOps\PhpTui\Condition
  */
 final readonly class CompositeCondition implements ConditionInterface {
 
   /**
    * Construct a composite condition.
    *
-   * @param \DrevOps\Tui\Condition\CompositeOperator $compositeOperator
+   * @param \DrevOps\PhpTui\Condition\CompositeOperator $compositeOperator
    *   How the conditions combine.
-   * @param list<\DrevOps\Tui\Condition\ConditionInterface> $conditions
+   * @param list<\DrevOps\PhpTui\Condition\ConditionInterface> $conditions
    *   The combined conditions (exactly one for Not).
    */
   public function __construct(protected CompositeOperator $compositeOperator, protected array $conditions) {

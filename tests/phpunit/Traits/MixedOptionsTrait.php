@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Traits;
+namespace DrevOps\PhpTui\Tests\Traits;
 
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionType;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Block\OptionType;
 
 /**
  * Provides a choice-list fixture mixing every option kind.
@@ -15,7 +15,7 @@ trait MixedOptionsTrait {
   /**
    * A list mixing selectable options with a heading, separator and disabled.
    *
-   * @return list<\DrevOps\Tui\Block\Option>
+   * @return list<\DrevOps\PhpTui\Block\Option>
    *   The option rows: Apple, a heading, Banana, a separator, a disabled
    *   Cherry and Date.
    */

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme\Capability;
+namespace DrevOps\PhpTui\Theme\Capability;
 
-use DrevOps\Tui\Theme\Override\Overrides;
+use DrevOps\PhpTui\Theme\Override\Overrides;
 
 /**
  * A theme that takes the elements a consumer states differently.
@@ -14,14 +14,14 @@ use DrevOps\Tui\Theme\Override\Overrides;
  * declares nothing keeps every answer of its own and the patch goes nowhere,
  * which is why a patch can never be what decides whether a form draws.
  *
- * @package DrevOps\Tui\Theme\Capability
+ * @package DrevOps\PhpTui\Theme\Capability
  */
 interface OverrideCapableInterface {
 
   /**
    * Take the elements a consumer states differently.
    *
-   * @param \DrevOps\Tui\Theme\Override\Overrides $overrides
+   * @param \DrevOps\PhpTui\Theme\Override\Overrides $overrides
    *   The patch; anything it does not name keeps the theme's own answer.
    *
    * @return static

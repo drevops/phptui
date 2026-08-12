@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Block;
+namespace DrevOps\PhpTui\Tests\Unit\Block;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionType;
-use DrevOps\Tui\Builder\FieldBuilder;
-use DrevOps\Tui\FormException;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Block\OptionType;
+use DrevOps\PhpTui\Builder\FieldBuilder;
+use DrevOps\PhpTui\FormException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -269,14 +269,14 @@ final class OptionTest extends TestCase {
   /**
    * A field offering the given rows, each declared as the kind of row it is.
    *
-   * @param \DrevOps\Tui\Block\FieldType $type
+   * @param \DrevOps\PhpTui\Block\FieldType $type
    *   The kind of answer it collects.
    * @param bool $multiple
    *   Whether it collects several values.
-   * @param array<array-key,\DrevOps\Tui\Block\Option> $options
+   * @param array<array-key,\DrevOps\PhpTui\Block\Option> $options
    *   The rows it offers.
    *
-   * @return \DrevOps\Tui\Block\Field
+   * @return \DrevOps\PhpTui\Block\Field
    *   The field.
    */
   protected static function offering(FieldType $type, bool $multiple, array $options): Field {

@@ -78,7 +78,7 @@ Both calls resolve through the same registry, which is the whole of what _reuse_
 The grid is the one arrangement built from a shape rather than picked by a name:
 
 ```php
-use DrevOps\Tui\Screen\Layout\GridLayout;
+use DrevOps\PhpTui\Screen\Layout\GridLayout;
 
 // One window on the first visual row, two sharing the second.
 $panel->layout(new GridLayout(1, 2));
@@ -164,7 +164,7 @@ public function __construct() {
 
 Use it where no single region can do the moving, which is exactly what a [grid](#a-grid-of-windows) needs: its lines have to move together, and none of them sees its siblings. The layout is then drawn whole and shows what its space has room for, marking whichever edge the rest is past - the region rules, one level up.
 
-[`playground/20-layouts-scrolling.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-scrolling.php) runs one grid in a frame deliberately too short for it, so the arrow keys move the whole surface and the panel's own rows travel with the windows.
+[`playground/20-layouts-scrolling.php`](https://github.com/drevops/phptui/blob/main/playground/20-layouts-scrolling.php) runs one grid in a frame deliberately too short for it, so the arrow keys move the whole surface and the panel's own rows travel with the windows.
 
 ## Drawing a region's edges
 
@@ -185,7 +185,7 @@ The box **spends the region's own cells**: a row top and bottom and a column eac
 
 Passing no caption writes the region's own name.
 
-[`playground/20-layouts-nested.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-nested.php) stacks four arrangements in one form - a custom screen layout, a custom two-column panel layout, a grid of windows, and the shipped `two-column` on a panel inside one of those windows - and runs it twice, once as it ships and once inspected.
+[`playground/20-layouts-nested.php`](https://github.com/drevops/phptui/blob/main/playground/20-layouts-nested.php) stacks four arrangements in one form - a custom screen layout, a custom two-column panel layout, a grid of windows, and the shipped `two-column` on a panel inside one of those windows - and runs it twice, once as it ships and once inspected.
 
 ## Flow: two blocks on one line
 
@@ -239,15 +239,15 @@ Flow is what a layout and a region share; sizing is what only a layout does. Bot
 | Areas that scroll independently   | a layout                                 |
 | Somewhere you can navigate into   | a [panel](/panels), which nests a layout |
 
-[`playground/20-layouts-region-flow.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-region-flow.php) runs the same form twice, the same two blocks placed in both, with only the regions turned - across, where the note shares the header row and the version string the footer row, then down, where the note stacks under the trail and the one-row footer cuts the version.
+[`playground/20-layouts-region-flow.php`](https://github.com/drevops/phptui/blob/main/playground/20-layouts-region-flow.php) runs the same form twice, the same two blocks placed in both, with only the regions turned - across, where the note shares the header row and the version string the footer row, then down, where the note stacks under the trail and the one-row footer cuts the version.
 
 ## Putting your own blocks in a region
 
 The regions around the form are the **session's** rather than the form's, so what stands in them is stated on the facade rather than declared on a panel. `->place()` puts a block in a named region and `->flow()` turns that region:
 
 ```php
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Screen\Axis;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Screen\Axis;
 
 (new Tui($form))
   ->layout('market')
@@ -268,8 +268,8 @@ A region running down gives each block a row and clips what outruns it, so a one
 Every layout is a class extending `AbstractLayout`, shipped ones included. `AbstractLayout` carries every line of the sizing arithmetic, so a subclass declares an axis and its regions and inherits the rest:
 
 ```php
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Layout\AbstractLayout;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
 
 final class StallLayout extends AbstractLayout {
 
@@ -296,7 +296,7 @@ Two more are not arithmetic at all. `natural(array $measured = []): int` says wh
 Three ways reach a layout, and they are the same three a [theme](/themes) offers:
 
 ```php
-use DrevOps\Tui\Screen\Layout\LayoutManager;
+use DrevOps\PhpTui\Screen\Layout\LayoutManager;
 
 LayoutManager::create('two-column');          // shipped
 LayoutManager::register('stall', StallLayout::class);
@@ -310,7 +310,7 @@ Each call builds its own instance, because two forms picking the same layout mus
 
 That last check is why a [grid](#a-grid-of-windows) is reached by none of these three routes: all of them hand over a name and nothing else, and a name carries no shape. A layout whose constructor takes an argument is left out of the shipped names and refused by the other two routes, naming the class rather than failing at the first frame - so `layout('grid')` throws exactly as a misspelled name does, and a grid is written where its shape is.
 
-Both routes are in [`playground/20-layouts-custom.php`](https://github.com/drevops/tui/blob/main/playground/20-layouts-custom.php), which registers one layout for a panel and another for the screen.
+Both routes are in [`playground/20-layouts-custom.php`](https://github.com/drevops/phptui/blob/main/playground/20-layouts-custom.php), which registers one layout for a panel and another for the screen.
 
 ## Where the standard furniture goes
 
@@ -327,7 +327,7 @@ Those are the conventional names, so a layout that uses them is furnished withou
 A layout that calls its regions something else, or wants a piece somewhere else, says so:
 
 ```php
-use DrevOps\Tui\Screen\Furniture;
+use DrevOps\PhpTui\Screen\Furniture;
 
 final class StallLayout extends AbstractLayout {
 

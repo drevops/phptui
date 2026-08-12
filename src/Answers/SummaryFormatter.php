@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Answers;
+namespace DrevOps\PhpTui\Answers;
 
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Terminal\Markup;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Terminal\Markup;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Formats a self-describing answer set as a human summary grouped by panel.
@@ -15,7 +15,7 @@ use DrevOps\Tui\Translation\Translator;
  * active answers appear; each value is rendered readably and non-default
  * answers carry a provenance badge.
  *
- * @package DrevOps\Tui\Answers
+ * @package DrevOps\PhpTui\Answers
  */
 class SummaryFormatter {
 
@@ -32,7 +32,7 @@ class SummaryFormatter {
   /**
    * Format the answers grouped by their panel trails.
    *
-   * @param \DrevOps\Tui\Answers\Answers $answers
+   * @param \DrevOps\PhpTui\Answers\Answers $answers
    *   The answer set, however it was collected.
    *
    * @return string
@@ -96,7 +96,7 @@ class SummaryFormatter {
   /**
    * Render an answer's value readably, masking secret values.
    *
-   * @param \DrevOps\Tui\Answers\Answer $answer
+   * @param \DrevOps\PhpTui\Answers\Answer $answer
    *   The answer.
    *
    * @return string
@@ -116,7 +116,7 @@ class SummaryFormatter {
   /**
    * The provenance badge for a value (empty for defaults).
    *
-   * @param \DrevOps\Tui\Answers\Provenance $provenance
+   * @param \DrevOps\PhpTui\Answers\Provenance $provenance
    *   The provenance.
    *
    * @return string

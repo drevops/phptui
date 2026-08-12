@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui;
+namespace DrevOps\PhpTui;
 
 /**
  * Thrown when the user aborts an interactive session with the interrupt key.
@@ -13,7 +13,7 @@ namespace DrevOps\Tui;
  * exit code is 130). Catching it also covers the {@see CancelException}
  * subclass, so one catch handles every user abort.
  *
- * @package DrevOps\Tui
+ * @package DrevOps\PhpTui
  */
 class InterruptException extends \RuntimeException {
 

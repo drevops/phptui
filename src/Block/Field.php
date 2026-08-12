@@ -2,36 +2,36 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\Answers\ValueFormatter;
-use DrevOps\Tui\Block\Capability\BindCapableInterface;
-use DrevOps\Tui\Block\Capability\BindCapableTrait;
-use DrevOps\Tui\Block\Capability\CaptureCapableInterface;
-use DrevOps\Tui\Block\Capability\CollectCapableInterface;
-use DrevOps\Tui\Block\Capability\ConstrainCapableInterface;
-use DrevOps\Tui\Block\Capability\DependCapableInterface;
-use DrevOps\Tui\Block\Capability\DependCapableTrait;
-use DrevOps\Tui\Block\Capability\FocusCapableInterface;
-use DrevOps\Tui\Block\Capability\FocusCapableTrait;
-use DrevOps\Tui\Block\Capability\RejectCapableInterface;
-use DrevOps\Tui\Block\Element\ChromeElementsInterface;
-use DrevOps\Tui\Block\Element\FieldElementsInterface;
-use DrevOps\Tui\Block\Element\MarkupElementsInterface;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Discovery\DiscoverInterface;
-use DrevOps\Tui\Field\FieldFactory;
-use DrevOps\Tui\Field\FieldInterface;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Input\ScopedKeyMap;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
-use DrevOps\Tui\Theme\Spacing;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Answers\ValueFormatter;
+use DrevOps\PhpTui\Block\Capability\BindCapableInterface;
+use DrevOps\PhpTui\Block\Capability\BindCapableTrait;
+use DrevOps\PhpTui\Block\Capability\CaptureCapableInterface;
+use DrevOps\PhpTui\Block\Capability\CollectCapableInterface;
+use DrevOps\PhpTui\Block\Capability\ConstrainCapableInterface;
+use DrevOps\PhpTui\Block\Capability\DependCapableInterface;
+use DrevOps\PhpTui\Block\Capability\DependCapableTrait;
+use DrevOps\PhpTui\Block\Capability\FocusCapableInterface;
+use DrevOps\PhpTui\Block\Capability\FocusCapableTrait;
+use DrevOps\PhpTui\Block\Capability\RejectCapableInterface;
+use DrevOps\PhpTui\Block\Element\ChromeElementsInterface;
+use DrevOps\PhpTui\Block\Element\FieldElementsInterface;
+use DrevOps\PhpTui\Block\Element\MarkupElementsInterface;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\Discovery\DiscoverInterface;
+use DrevOps\PhpTui\Field\FieldFactory;
+use DrevOps\PhpTui\Field\FieldInterface;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Input\ScopedKeyMap;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\Capability\OccupyCapableInterface;
+use DrevOps\PhpTui\Theme\Spacing;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * The block that collects.
@@ -51,7 +51,7 @@ use DrevOps\Tui\Translation\Translator;
  * Depend's. What is left over - the text around the row, and the per-kind
  * switches a single kind of editor honours - is the field's own.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final class Field extends AbstractBlock implements
   BindCapableInterface,
@@ -102,7 +102,7 @@ final class Field extends AbstractBlock implements
   /**
    * The rows edit mode opens onto, in the order they were declared.
    *
-   * @var list<\DrevOps\Tui\Block\Option>
+   * @var list<\DrevOps\PhpTui\Block\Option>
    */
   protected array $options = [];
 
@@ -327,7 +327,7 @@ final class Field extends AbstractBlock implements
    *   The id it is addressed by.
    * @param string $label
    *   The name it draws.
-   * @param \DrevOps\Tui\Block\FieldType $fieldType
+   * @param \DrevOps\PhpTui\Block\FieldType $fieldType
    *   The kind of answer it collects, which is what decides the editor it
    *   opens onto and the keys that editor binds.
    */
@@ -360,7 +360,7 @@ final class Field extends AbstractBlock implements
   /**
    * The kind of answer this field collects.
    *
-   * @return \DrevOps\Tui\Block\FieldType
+   * @return \DrevOps\PhpTui\Block\FieldType
    *   The type.
    */
   public function type(): FieldType {
@@ -442,7 +442,7 @@ final class Field extends AbstractBlock implements
   /**
    * What this field opened onto.
    *
-   * @return \DrevOps\Tui\Field\FieldInterface|null
+   * @return \DrevOps\PhpTui\Field\FieldInterface|null
    *   The editor, or NULL while the field is settled.
    */
   public function editor(): ?FieldInterface {
@@ -759,7 +759,7 @@ final class Field extends AbstractBlock implements
   /**
    * Compute this field's answer from the others.
    *
-   * @param \DrevOps\Tui\Derive\Derive $derive
+   * @param \DrevOps\PhpTui\Derive\Derive $derive
    *   The rule.
    *
    * @return static
@@ -774,7 +774,7 @@ final class Field extends AbstractBlock implements
   /**
    * What computes this field's answer from the others.
    *
-   * @return \DrevOps\Tui\Derive\Derive|null
+   * @return \DrevOps\PhpTui\Derive\Derive|null
    *   The rule, or NULL when the answer is not computed.
    */
   public function derivation(): ?Derive {
@@ -784,7 +784,7 @@ final class Field extends AbstractBlock implements
   /**
    * Detect an answer that already exists outside the form.
    *
-   * @param \DrevOps\Tui\Discovery\DiscoverInterface|\Closure $discover
+   * @param \DrevOps\PhpTui\Discovery\DiscoverInterface|\Closure $discover
    *   The rule, or an `fn (string $directory): mixed` detector of its own.
    *
    * @return static
@@ -799,7 +799,7 @@ final class Field extends AbstractBlock implements
   /**
    * What detects an answer that already exists outside the form.
    *
-   * @return \DrevOps\Tui\Discovery\DiscoverInterface|\Closure|null
+   * @return \DrevOps\PhpTui\Discovery\DiscoverInterface|\Closure|null
    *   The rule, or NULL when nothing is detected.
    */
   public function discovery(): DiscoverInterface|\Closure|null {
@@ -818,7 +818,7 @@ final class Field extends AbstractBlock implements
    * @return static
    *   The field.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the name could not be set portably from a shell.
    */
   public function env(string $name): static {
@@ -850,7 +850,7 @@ final class Field extends AbstractBlock implements
    * @return static
    *   The field.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When a name could not be set portably from a shell, or an alias repeats
    *   a name it would never be reached behind.
    */
@@ -990,7 +990,7 @@ final class Field extends AbstractBlock implements
   /**
    * The rows edit mode opens onto.
    *
-   * @return list<\DrevOps\Tui\Block\Option>
+   * @return list<\DrevOps\PhpTui\Block\Option>
    *   The rows, in the order they were declared.
    */
   public function options(): array {
@@ -1006,7 +1006,7 @@ final class Field extends AbstractBlock implements
    * @param string $value
    *   The value.
    *
-   * @return \DrevOps\Tui\Block\Option|null
+   * @return \DrevOps\PhpTui\Block\Option|null
    *   The option, or NULL when nothing carries that value. Headings and
    *   separators carry none and are never returned.
    */
@@ -1061,7 +1061,7 @@ final class Field extends AbstractBlock implements
    * Resolve the options from the answers, again whenever they change.
    *
    * @param \Closure $resolver
-   *   An `fn (\DrevOps\Tui\Handler\Context $context): array<string,string>`
+   *   An `fn (\DrevOps\PhpTui\Handler\Context $context): array<string,string>`
    *   returning the value => label map, read from the answers the context
    *   carries and the run it describes.
    *
@@ -1123,7 +1123,7 @@ final class Field extends AbstractBlock implements
    * @return static
    *   The field.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the length is below one character.
    */
   public function minQuery(int $length): static {
@@ -1262,7 +1262,7 @@ final class Field extends AbstractBlock implements
   /**
    * Limit what may be picked from the filesystem.
    *
-   * @param \DrevOps\Tui\Block\FilePickerConstraints $constraints
+   * @param \DrevOps\PhpTui\Block\FilePickerConstraints $constraints
    *   The type, extension and size limits.
    *
    * @return static
@@ -1277,7 +1277,7 @@ final class Field extends AbstractBlock implements
   /**
    * What may be picked from the filesystem.
    *
-   * @return \DrevOps\Tui\Block\FilePickerConstraints
+   * @return \DrevOps\PhpTui\Block\FilePickerConstraints
    *   The limits; unconstrained when none were declared.
    */
   public function pickerConstraints(): FilePickerConstraints {
@@ -1357,7 +1357,7 @@ final class Field extends AbstractBlock implements
   /**
    * Fix the shape of the answer, leaving named slots to fill in.
    *
-   * @param \DrevOps\Tui\Block\Template $template
+   * @param \DrevOps\PhpTui\Block\Template $template
    *   The shape.
    *
    * @return static
@@ -1372,7 +1372,7 @@ final class Field extends AbstractBlock implements
   /**
    * The shape the answer is filled into.
    *
-   * @return \DrevOps\Tui\Block\Template|null
+   * @return \DrevOps\PhpTui\Block\Template|null
    *   The template, or NULL when the answer has no fixed shape.
    */
   public function template(): ?Template {
@@ -1427,7 +1427,7 @@ final class Field extends AbstractBlock implements
    * @return static
    *   The field.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When a caption names a point outside the scale.
    */
   public function captions(array $captions): static {
@@ -1662,7 +1662,7 @@ final class Field extends AbstractBlock implements
    * @return static
    *   The field.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the size is below one row.
    */
   public function paginate(int $size): static {
@@ -1806,7 +1806,7 @@ final class Field extends AbstractBlock implements
   /**
    * Where the editor is drawn.
    *
-   * @return \DrevOps\Tui\Block\RenderMode
+   * @return \DrevOps\PhpTui\Block\RenderMode
    *   In place on the panel, or full-screen on its own.
    */
   public function renderMode(): RenderMode {
@@ -1888,7 +1888,7 @@ final class Field extends AbstractBlock implements
    * @param mixed $current
    *   The value it starts from.
    *
-   * @return \DrevOps\Tui\Field\FieldInterface
+   * @return \DrevOps\PhpTui\Field\FieldInterface
    *   The editor.
    */
   protected function editorFor(mixed $current): FieldInterface {
@@ -2119,7 +2119,7 @@ final class Field extends AbstractBlock implements
    * @param string $name
    *   The declared name.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the name could not be set portably from a shell.
    */
   protected function assertEnvName(string $name): void {
@@ -2135,7 +2135,7 @@ final class Field extends AbstractBlock implements
    * so somewhere that quotes an answer rather than asking for it - a panel
    * saying what it holds - reads it exactly as the row does.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string
@@ -2155,9 +2155,9 @@ final class Field extends AbstractBlock implements
    * the frame it is drawn in, so each line of the answer is a row of its own,
    * aligned under the first.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   * @param \DrevOps\PhpTui\Block\Element\FieldElementsInterface $elements
    *   The same theme, narrowed to the elements a field draws with.
    * @param string $label
    *   The already-styled label.
@@ -2203,9 +2203,9 @@ final class Field extends AbstractBlock implements
    * be a block working out its own space, and taking it from the region would
    * be a second answer free to disagree with the first.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   * @param \DrevOps\PhpTui\Block\Element\FieldElementsInterface $elements
    *   The same theme, narrowed to the elements a field draws with.
    * @param string $row
    *   The row the badge trails.
@@ -2226,9 +2226,9 @@ final class Field extends AbstractBlock implements
   /**
    * The rows this field draws while it is open.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   * @param \DrevOps\PhpTui\Block\Element\FieldElementsInterface $elements
    *   The same theme, narrowed to the elements a field draws with.
    * @param string $label
    *   The already-styled label.
@@ -2268,7 +2268,7 @@ final class Field extends AbstractBlock implements
    * the reason already shows it where its own expectation would have gone, so
    * nothing is said twice.
    *
-   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   * @param \DrevOps\PhpTui\Block\Element\FieldElementsInterface $elements
    *   The theme, narrowed to the elements a field draws with.
    *
    * @return string
@@ -2288,9 +2288,9 @@ final class Field extends AbstractBlock implements
    * The explanation is secondary to the question it explains, so a theme with
    * no room to spare drops it rather than crowding the answer with it.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   * @param \DrevOps\PhpTui\Block\Element\FieldElementsInterface $elements
    *   The same theme, narrowed to the elements a field draws with.
    *
    * @return list<string>
@@ -2313,9 +2313,9 @@ final class Field extends AbstractBlock implements
   /**
    * What fills the region right of the label while the field is open.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   * @param \DrevOps\PhpTui\Block\Element\FieldElementsInterface $elements
    *   The same theme, narrowed to the elements a field draws with.
    *
    * @return list<string>
@@ -2338,9 +2338,9 @@ final class Field extends AbstractBlock implements
   /**
    * One option as it is drawn.
    *
-   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   * @param \DrevOps\PhpTui\Block\Element\FieldElementsInterface $elements
    *   The theme narrowed to the field elements.
-   * @param \DrevOps\Tui\Block\Option $option
+   * @param \DrevOps\PhpTui\Block\Option $option
    *   The option.
    *
    * @return string
@@ -2368,7 +2368,7 @@ final class Field extends AbstractBlock implements
   /**
    * Whether an option is the one picked.
    *
-   * @param \DrevOps\Tui\Block\Option $option
+   * @param \DrevOps\PhpTui\Block\Option $option
    *   The option.
    *
    * @return bool
@@ -2399,9 +2399,9 @@ final class Field extends AbstractBlock implements
    * those rules lives here, so the row, and the region an open field hands to
    * whatever has no rows of its own, can never disagree about one answer.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   * @param \DrevOps\PhpTui\Block\Element\FieldElementsInterface $elements
    *   The same theme, narrowed to the elements a field draws with.
    *
    * @return string
@@ -2447,7 +2447,7 @@ final class Field extends AbstractBlock implements
   /**
    * The point a scale is sitting on, drawn as the whole scale.
    *
-   * @param \DrevOps\Tui\Block\Element\FieldElementsInterface $elements
+   * @param \DrevOps\PhpTui\Block\Element\FieldElementsInterface $elements
    *   The theme, narrowed to the elements a field draws with.
    * @param mixed $value
    *   The chosen point.

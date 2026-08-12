@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Fixtures\Form;
+namespace DrevOps\PhpTui\Tests\Fixtures\Form;
 
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\Primitive\ProgressReporter;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\Primitive\ProgressReporter;
 
 /**
  * Test fixture: a form exercising one field of every field type.
@@ -15,7 +15,7 @@ use DrevOps\Tui\Primitive\ProgressReporter;
  * through each field in a single run; a guard test asserts the coverage stays
  * complete as field types are added.
  *
- * @package DrevOps\Tui\Tests\Fixtures\Form
+ * @package DrevOps\PhpTui\Tests\Fixtures\Form
  */
 final class AllFieldsForm {
 
@@ -26,7 +26,7 @@ final class AllFieldsForm {
    *   The directory the file-picker fields open at (a controlled directory so
    *   the browser lands on a known entry).
    *
-   * @return \DrevOps\Tui\Builder\Form
+   * @return \DrevOps\PhpTui\Builder\Form
    *   The form.
    */
   public static function create(string $picker_start = ''): Form {

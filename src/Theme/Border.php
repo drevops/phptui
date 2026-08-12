@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
 /**
  * The frame border style.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Theme;
  * A consumer passes a case (or its string value) as the "border" theme
  * option.
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 enum Border: string {
 

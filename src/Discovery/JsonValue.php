@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Discovery;
+namespace DrevOps\PhpTui\Discovery;
 
 /**
  * Discovers a scalar by reading a dot-path from a JSON file.
  *
- * @package DrevOps\Tui\Discovery
+ * @package DrevOps\PhpTui\Discovery
  */
 class JsonValue extends AbstractDiscover {
 

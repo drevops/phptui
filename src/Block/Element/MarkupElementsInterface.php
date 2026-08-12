@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Element;
+namespace DrevOps\PhpTui\Block\Element;
 
 /**
  * The elements the markup block composes.
@@ -12,7 +12,7 @@ namespace DrevOps\Tui\Block\Element;
  * own element. A theme that restyles what is emphatic restyles it wherever a
  * passage is drawn rather than in the one place that happened to compose it.
  *
- * @package DrevOps\Tui\Block\Element
+ * @package DrevOps\PhpTui\Block\Element
  */
 interface MarkupElementsInterface {
 

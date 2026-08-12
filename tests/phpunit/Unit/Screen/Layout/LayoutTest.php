@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Screen\Layout;
+namespace DrevOps\PhpTui\Tests\Unit\Screen\Layout;
 
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
-use DrevOps\Tui\Screen\Furniture;
-use DrevOps\Tui\Screen\Layout\AbstractLayout;
-use DrevOps\Tui\Screen\Layout\DefaultLayout;
-use DrevOps\Tui\Screen\Layout\TwoColumnLayout;
-use DrevOps\Tui\Screen\Region;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Capability\ScrollCapableTrait;
+use DrevOps\PhpTui\Screen\Furniture;
+use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
+use DrevOps\PhpTui\Screen\Layout\DefaultLayout;
+use DrevOps\PhpTui\Screen\Layout\TwoColumnLayout;
+use DrevOps\PhpTui\Screen\Region;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -224,7 +224,7 @@ final class LayoutTest extends TestCase {
   /**
    * Data provider for testLayoutSaysWhereEachPieceOfFurnitureGoes().
    *
-   * @return \Iterator<string, array{\DrevOps\Tui\Screen\Furniture, string|null, string|null}>
+   * @return \Iterator<string, array{\DrevOps\PhpTui\Screen\Furniture, string|null, string|null}>
    *   The piece, the region the default layout keeps for it, and the region
    *   the two-column layout keeps for it.
    */

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Playground\Themes;
 
-use DrevOps\Tui\Theme\AbstractTheme;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Theme\AbstractTheme;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * A theme built on the floor rather than on the default one.

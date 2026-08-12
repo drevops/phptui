@@ -2,26 +2,26 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\Block\Capability\ActivateCapableInterface;
-use DrevOps\Tui\Block\Capability\DependCapableInterface;
-use DrevOps\Tui\Block\Capability\DependCapableTrait;
-use DrevOps\Tui\Block\Capability\FocusCapableInterface;
-use DrevOps\Tui\Block\Capability\FocusCapableTrait;
-use DrevOps\Tui\Block\Element\ChromeElementsInterface;
-use DrevOps\Tui\Block\Element\ProgressElementsInterface;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Primitive\ProgressReporter;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Block\Capability\ActivateCapableInterface;
+use DrevOps\PhpTui\Block\Capability\DependCapableInterface;
+use DrevOps\PhpTui\Block\Capability\DependCapableTrait;
+use DrevOps\PhpTui\Block\Capability\FocusCapableInterface;
+use DrevOps\PhpTui\Block\Capability\FocusCapableTrait;
+use DrevOps\PhpTui\Block\Element\ChromeElementsInterface;
+use DrevOps\PhpTui\Block\Element\ProgressElementsInterface;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Primitive\ProgressReporter;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 
 /**
  * Work that runs when activated, with an indicator while it does.
  *
  * The block takes focus and acts, and nothing it does becomes an answer.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final class Progress extends AbstractBlock implements ActivateCapableInterface, DependCapableInterface, FocusCapableInterface {
 
@@ -51,7 +51,7 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
   /**
    * The work activating this block runs, or NULL when it has none.
    *
-   * @var \Closure(\DrevOps\Tui\Primitive\ProgressReporter): void|null
+   * @var \Closure(\DrevOps\PhpTui\Primitive\ProgressReporter): void|null
    */
   protected ?\Closure $work = NULL;
 
@@ -109,7 +109,7 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
    * @return static
    *   The block.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the declared step count is below one.
    */
   public function steps(int $total): static {
@@ -171,7 +171,7 @@ final class Progress extends AbstractBlock implements ActivateCapableInterface, 
    * Set the work this block runs.
    *
    * @param \Closure $work
-   *   An `fn(\DrevOps\Tui\Primitive\ProgressReporter $reporter): void` doing
+   *   An `fn(\DrevOps\PhpTui\Primitive\ProgressReporter $reporter): void` doing
    *   the work, calling `advance()` on the reporter once per step.
    *
    * @return static

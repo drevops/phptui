@@ -2,31 +2,31 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
-use DrevOps\Tui\Primitive\Status;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Terminal\Box;
-use DrevOps\Tui\Terminal\Markup;
-use DrevOps\Tui\Terminal\MarkupType;
-use DrevOps\Tui\Terminal\MarkupSegment;
-use DrevOps\Tui\Terminal\Table;
-use DrevOps\Tui\Theme\Capability\ColorSchemeCapableInterface;
-use DrevOps\Tui\Theme\Capability\ColorSchemeCapableTrait;
-use DrevOps\Tui\Theme\Capability\DimCapableInterface;
-use DrevOps\Tui\Theme\Capability\MarkdownCapableInterface;
-use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
-use DrevOps\Tui\Theme\Capability\OverrideCapableInterface;
-use DrevOps\Tui\Theme\Capability\UnicodeCapableInterface;
-use DrevOps\Tui\Theme\Capability\UnicodeCapableTrait;
-use DrevOps\Tui\Theme\Override\Glyph;
-use DrevOps\Tui\Theme\Override\Overrides;
-use DrevOps\Tui\Theme\Override\ThemeElement;
-use DrevOps\Tui\Translation\Translator;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Primitive\Element\PrimitiveElementsInterface;
+use DrevOps\PhpTui\Primitive\Status;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\Box;
+use DrevOps\PhpTui\Terminal\Markup;
+use DrevOps\PhpTui\Terminal\MarkupType;
+use DrevOps\PhpTui\Terminal\MarkupSegment;
+use DrevOps\PhpTui\Terminal\Table;
+use DrevOps\PhpTui\Theme\Capability\ColorSchemeCapableInterface;
+use DrevOps\PhpTui\Theme\Capability\ColorSchemeCapableTrait;
+use DrevOps\PhpTui\Theme\Capability\DimCapableInterface;
+use DrevOps\PhpTui\Theme\Capability\MarkdownCapableInterface;
+use DrevOps\PhpTui\Theme\Capability\OccupyCapableInterface;
+use DrevOps\PhpTui\Theme\Capability\OverrideCapableInterface;
+use DrevOps\PhpTui\Theme\Capability\UnicodeCapableInterface;
+use DrevOps\PhpTui\Theme\Capability\UnicodeCapableTrait;
+use DrevOps\PhpTui\Theme\Override\Glyph;
+use DrevOps\PhpTui\Theme\Override\Overrides;
+use DrevOps\PhpTui\Theme\Override\ThemeElement;
+use DrevOps\PhpTui\Translation\Translator;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * The theme that ships: every element painted, and the pieces they assemble.
@@ -50,7 +50,7 @@ use DrevOps\Tui\Utils\Strings;
  * }
  * @endcode
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, ColorSchemeCapableInterface, DimCapableInterface, MarkdownCapableInterface, OccupyCapableInterface, OverrideCapableInterface, UnicodeCapableInterface {
 
@@ -171,7 +171,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   /**
    * Validate the options against optionSchema(), failing loudly on a mistake.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When an option key is unknown or its value is not allowed.
    */
   protected function validateOptions(): void {
@@ -340,7 +340,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   /**
    * The colour-mode option.
    *
-   * @return \DrevOps\Tui\Theme\Mode
+   * @return \DrevOps\PhpTui\Theme\Mode
    *   The mode; dark when unset.
    */
   protected function mode(): Mode {
@@ -370,7 +370,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   /**
    * The field-input style option.
    *
-   * @return \DrevOps\Tui\Theme\FieldStyle
+   * @return \DrevOps\PhpTui\Theme\FieldStyle
    *   The field style; flat when unset.
    */
   protected function field(): FieldStyle {
@@ -464,7 +464,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   /**
    * The glyph a consumer stated for an element, resolved for the display mode.
    *
-   * @param \DrevOps\Tui\Theme\Override\ThemeElement $element
+   * @param \DrevOps\PhpTui\Theme\Override\ThemeElement $element
    *   The element.
    *
    * @return string|null
@@ -1567,7 +1567,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   /**
    * The glyph that leads a status line.
    *
-   * @param \DrevOps\Tui\Primitive\Status $status
+   * @param \DrevOps\PhpTui\Primitive\Status $status
    *   The kind of status.
    *
    * @return string
@@ -1833,7 +1833,7 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   /**
    * Style one parsed markup span with its element.
    *
-   * @param \DrevOps\Tui\Terminal\MarkupSegment $segment
+   * @param \DrevOps\PhpTui\Terminal\MarkupSegment $segment
    *   The span.
    *
    * @return string

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Capability;
+namespace DrevOps\PhpTui\Block\Capability;
 
-use DrevOps\Tui\Condition\ConditionInterface;
+use DrevOps\PhpTui\Condition\ConditionInterface;
 
 /**
  * A block that appears or disappears depending on other answers.
@@ -22,14 +22,14 @@ use DrevOps\Tui\Condition\ConditionInterface;
  *
  * {@see DependCapableTrait} carries the default implementation.
  *
- * @package DrevOps\Tui\Block\Capability
+ * @package DrevOps\PhpTui\Block\Capability
  */
 interface DependCapableInterface {
 
   /**
    * Decide whether this block is there at all.
    *
-   * @param \Closure|\DrevOps\Tui\Condition\ConditionInterface $when
+   * @param \Closure|\DrevOps\PhpTui\Condition\ConditionInterface $when
    *   A declared condition matched against the answers, or an
    *   `fn (array<string,mixed> $answers): bool` deciding for itself.
    *
@@ -41,7 +41,7 @@ interface DependCapableInterface {
   /**
    * What decides whether this block is there at all.
    *
-   * @return \Closure|\DrevOps\Tui\Condition\ConditionInterface|null
+   * @return \Closure|\DrevOps\PhpTui\Condition\ConditionInterface|null
    *   The condition, or NULL when the block is always there.
    */
   public function condition(): \Closure|ConditionInterface|null;

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Terminal;
+namespace DrevOps\PhpTui\Tests\Unit\Terminal;
 
-use DrevOps\Tui\Terminal\Terminal;
-use DrevOps\Tui\Testing\BufferedTerminal;
-use DrevOps\Tui\Tests\Fixtures\Terminal\ProbeTerminal;
-use DrevOps\Tui\Tests\Traits\IsolatesEnvTrait;
-use DrevOps\Tui\Theme\Mode;
+use DrevOps\PhpTui\Terminal\Terminal;
+use DrevOps\PhpTui\Testing\BufferedTerminal;
+use DrevOps\PhpTui\Tests\Fixtures\Terminal\ProbeTerminal;
+use DrevOps\PhpTui\Tests\Traits\IsolatesEnvTrait;
+use DrevOps\PhpTui\Theme\Mode;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

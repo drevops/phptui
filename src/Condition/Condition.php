@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Condition;
+namespace DrevOps\PhpTui\Condition;
 
 /**
  * A leaf condition: a field reference and one operator.
@@ -12,7 +12,7 @@ namespace DrevOps\Tui\Condition;
  * the referenced field is tested for a truthy value. Compose conditions with
  * {@see all()}, {@see any()} and {@see not()}.
  *
- * @package DrevOps\Tui\Condition
+ * @package DrevOps\PhpTui\Condition
  */
 final readonly class Condition implements ConditionInterface {
 
@@ -43,10 +43,10 @@ final readonly class Condition implements ConditionInterface {
   /**
    * A composite matching when every condition matches.
    *
-   * @param \DrevOps\Tui\Condition\ConditionInterface ...$conditions
+   * @param \DrevOps\PhpTui\Condition\ConditionInterface ...$conditions
    *   The conditions to combine.
    *
-   * @return \DrevOps\Tui\Condition\CompositeCondition
+   * @return \DrevOps\PhpTui\Condition\CompositeCondition
    *   The composite condition.
    */
   public static function all(ConditionInterface ...$conditions): CompositeCondition {
@@ -56,10 +56,10 @@ final readonly class Condition implements ConditionInterface {
   /**
    * A composite matching when at least one condition matches.
    *
-   * @param \DrevOps\Tui\Condition\ConditionInterface ...$conditions
+   * @param \DrevOps\PhpTui\Condition\ConditionInterface ...$conditions
    *   The conditions to combine.
    *
-   * @return \DrevOps\Tui\Condition\CompositeCondition
+   * @return \DrevOps\PhpTui\Condition\CompositeCondition
    *   The composite condition.
    */
   public static function any(ConditionInterface ...$conditions): CompositeCondition {
@@ -69,10 +69,10 @@ final readonly class Condition implements ConditionInterface {
   /**
    * A composite matching when the condition does not match.
    *
-   * @param \DrevOps\Tui\Condition\ConditionInterface $condition
+   * @param \DrevOps\PhpTui\Condition\ConditionInterface $condition
    *   The condition to negate.
    *
-   * @return \DrevOps\Tui\Condition\CompositeCondition
+   * @return \DrevOps\PhpTui\Condition\CompositeCondition
    *   The composite condition.
    */
   public static function not(ConditionInterface $condition): CompositeCondition {

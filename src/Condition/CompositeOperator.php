@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Condition;
+namespace DrevOps\PhpTui\Condition;
 
 /**
  * How a composite condition combines its parts.
  *
- * @package DrevOps\Tui\Condition
+ * @package DrevOps\PhpTui\Condition
  */
 enum CompositeOperator: string {
 

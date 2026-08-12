@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
 /**
  * The named SGR palette: colour and attribute names for the theme atoms.
@@ -14,7 +14,7 @@ namespace DrevOps\Tui\Theme;
  * string paint() expects. The 256-colour hues are grouped by the theme that
  * introduced them, but any theme may reuse any case.
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 enum Sgr: string {
 
@@ -82,7 +82,7 @@ enum Sgr: string {
   /**
    * Compose one or more parts into an SGR parameter string.
    *
-   * @param \DrevOps\Tui\Theme\Sgr ...$parts
+   * @param \DrevOps\PhpTui\Theme\Sgr ...$parts
    *   The parts, in order (e.g. Sgr::Bold, Sgr::Cyan).
    *
    * @return string

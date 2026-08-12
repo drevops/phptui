@@ -1067,7 +1067,7 @@ function getJobs(string $project_dir): array {
   // box name is a dynamic default read off the directory the demo runs from,
   // and the derived slug, code and label all follow it - so the run is pinned
   // to a directory named for a box, and the whole chain reads as produce.
-  // Only an unattended run resolves TUI_* overrides, so an interactive
+  // Only an unattended run resolves PHPTUI_* overrides, so an interactive
   // recording cannot be pinned through the environment.
   foreach ($env_variants as $suffix => $env) {
     $jobs['produce-box' . $suffix] = [

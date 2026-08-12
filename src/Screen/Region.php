@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\PhpTui\Screen;
 
-use DrevOps\Tui\Block\BlockInterface;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Screen\Capability\BorderCapableInterface;
-use DrevOps\Tui\Screen\Capability\BorderCapableTrait;
-use DrevOps\Tui\Screen\Capability\ScrollCapableInterface;
-use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
+use DrevOps\PhpTui\Block\BlockInterface;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Screen\Capability\BorderCapableInterface;
+use DrevOps\PhpTui\Screen\Capability\BorderCapableTrait;
+use DrevOps\PhpTui\Screen\Capability\ScrollCapableInterface;
+use DrevOps\PhpTui\Screen\Capability\ScrollCapableTrait;
 
 /**
  * A named container inside a layout.
@@ -26,7 +26,7 @@ use DrevOps\Tui\Screen\Capability\ScrollCapableTrait;
  * content-sized region's extent is counted where blocks are drawn, and the
  * layout is handed the number.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\PhpTui\Screen
  */
 final class Region implements BorderCapableInterface, ScrollCapableInterface {
 
@@ -56,14 +56,14 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   /**
    * The blocks packed from the start of its flow, in the order they were added.
    *
-   * @var list<\DrevOps\Tui\Block\BlockInterface>
+   * @var list<\DrevOps\PhpTui\Block\BlockInterface>
    */
   protected array $head = [];
 
   /**
    * The blocks packed from the end of its flow, in the order they were added.
    *
-   * @var list<\DrevOps\Tui\Block\BlockInterface>
+   * @var list<\DrevOps\PhpTui\Block\BlockInterface>
    */
   protected array $tail = [];
 
@@ -97,7 +97,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
    * @return $this
    *   The region.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the cell count is 0 or negative.
    */
   public function fixed(int $cells): self {
@@ -123,7 +123,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
    * @return $this
    *   The region.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the share is 0 or negative.
    */
   public function flex(int $share): self {
@@ -156,7 +156,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   /**
    * How this region's share of the axis is determined.
    *
-   * @return \DrevOps\Tui\Screen\Sizing
+   * @return \DrevOps\PhpTui\Screen\Sizing
    *   The kind.
    */
   public function sizing(): Sizing {
@@ -176,7 +176,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   /**
    * Run the blocks inside this region along an axis.
    *
-   * @param \DrevOps\Tui\Screen\Axis $axis
+   * @param \DrevOps\PhpTui\Screen\Axis $axis
    *   The direction they run.
    *
    * @return $this
@@ -191,7 +191,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   /**
    * The direction the blocks inside this region run.
    *
-   * @return \DrevOps\Tui\Screen\Axis
+   * @return \DrevOps\PhpTui\Screen\Axis
    *   The direction.
    */
   public function flowAxis(): Axis {
@@ -228,7 +228,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   /**
    * Draw a block in this region.
    *
-   * @param \DrevOps\Tui\Block\BlockInterface $block
+   * @param \DrevOps\PhpTui\Block\BlockInterface $block
    *   The block.
    *
    * @return $this
@@ -243,7 +243,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   /**
    * Draw a block before everything already in this region.
    *
-   * @param \DrevOps\Tui\Block\BlockInterface $block
+   * @param \DrevOps\PhpTui\Block\BlockInterface $block
    *   The block.
    *
    * @return $this
@@ -261,7 +261,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
    * Where {@see self::add()} packs from the start of the axis the blocks run
    * along, this packs from the end of it.
    *
-   * @param \DrevOps\Tui\Block\BlockInterface $block
+   * @param \DrevOps\PhpTui\Block\BlockInterface $block
    *   The block.
    *
    * @return $this
@@ -276,7 +276,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   /**
    * The blocks drawn in this region, in the order they are drawn.
    *
-   * @return list<\DrevOps\Tui\Block\BlockInterface>
+   * @return list<\DrevOps\PhpTui\Block\BlockInterface>
    *   The blocks packed from the start, then the ones packed from the end.
    */
   public function blocks(): array {
@@ -286,7 +286,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   /**
    * The blocks packed from the start of this region's flow.
    *
-   * @return list<\DrevOps\Tui\Block\BlockInterface>
+   * @return list<\DrevOps\PhpTui\Block\BlockInterface>
    *   The blocks.
    */
   public function headBlocks(): array {
@@ -296,7 +296,7 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
   /**
    * The blocks packed from the end of this region's flow.
    *
-   * @return list<\DrevOps\Tui\Block\BlockInterface>
+   * @return list<\DrevOps\PhpTui\Block\BlockInterface>
    *   The blocks; empty when none were packed from the end.
    */
   public function tailBlocks(): array {

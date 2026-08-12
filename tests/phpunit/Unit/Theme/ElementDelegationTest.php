@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Theme;
+namespace DrevOps\PhpTui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Tests\Fixtures\Theme\OceanTheme;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\MonoTheme;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\OceanTheme;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\MonoTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

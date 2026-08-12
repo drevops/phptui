@@ -1,6 +1,6 @@
 # How the TUI works
 
-This is a walkthrough of the `drevops/tui` library - what you assemble to build a form, and what happens when it runs. The diagrams are rendered from the PlantUML sources in this directory by the [`render-tui-diagrams`](../../.claude/skills/render-tui-diagrams/SKILL.md) skill; everything below is derived from `src/`, so if the prose and the code disagree, the code wins.
+This is a walkthrough of the `drevops/phptui` library - what you assemble to build a form, and what happens when it runs. The diagrams are rendered from the PlantUML sources in this directory by the [`render-phptui-diagrams`](../../.claude/skills/render-phptui-diagrams/SKILL.md) skill; everything below is derived from `src/`, so if the prose and the code disagree, the code wins.
 
 The model the whole library is built on - four levels, seventeen capabilities, one canonical tree - is written out on the [specification](https://phptui.dev/specification) page. This walkthrough is the same thing seen from the outside: which class does which part, and in what order.
 
@@ -88,4 +88,4 @@ The diagrams are PlantUML (`.puml`) rendered to a light `.svg`, each with a dark
     plantuml -tsvg docs/architecture/*.puml
     node docs/util/derive-dark-diagram.js docs/architecture/*.svg
 
-The [`render-tui-diagrams`](../../.claude/skills/render-tui-diagrams/SKILL.md) skill covers rendering, adding a new data-flow diagram, and keeping this walkthrough current.
+The [`render-phptui-diagrams`](../../.claude/skills/render-phptui-diagrams/SKILL.md) skill covers rendering, adding a new data-flow diagram, and keeping this walkthrough current.

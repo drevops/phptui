@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\NumberBounds;
-use DrevOps\Tui\Field\Capability\PlaceholderCapableInterface;
-use DrevOps\Tui\Field\Capability\PlaceholderCapableTrait;
-use DrevOps\Tui\Field\Capability\StepCapableInterface;
-use DrevOps\Tui\Field\Capability\TextEditCapableInterface;
-use DrevOps\Tui\Field\Capability\TextEditCapableTrait;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\NumberBounds;
+use DrevOps\PhpTui\Field\Capability\PlaceholderCapableInterface;
+use DrevOps\PhpTui\Field\Capability\PlaceholderCapableTrait;
+use DrevOps\PhpTui\Field\Capability\StepCapableInterface;
+use DrevOps\PhpTui\Field\Capability\TextEditCapableInterface;
+use DrevOps\PhpTui\Field\Capability\TextEditCapableTrait;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * Integer input: digits with an optional leading minus, accepted as an int.
@@ -26,7 +26,7 @@ use DrevOps\Tui\Utils\Strings;
  * keys inert. The bounds move the value here and never refuse one: what the
  * answer must be is measured where the answer is held.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 class Number extends AbstractField implements TextEditCapableInterface, StepCapableInterface, PlaceholderCapableInterface {
 
@@ -40,7 +40,7 @@ class Number extends AbstractField implements TextEditCapableInterface, StepCapa
    *
    * @param string $default
    *   The initial value (and live input buffer).
-   * @param \DrevOps\Tui\Block\NumberBounds|null $bounds
+   * @param \DrevOps\PhpTui\Block\NumberBounds|null $bounds
    *   Optional bounds and step; NULL for a plain integer entry.
    */
   public function __construct(string $default = '', protected ?NumberBounds $bounds = NULL) {

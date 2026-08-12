@@ -15,8 +15,8 @@ Three classes carry the arrangement. `AbstractTheme` is the floor: it implements
 Six themes ship built-in, each selectable by name:
 
 ```php
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Tui;
 
 $tui = (new Tui(Form::create('My form')))->theme('midnight');
 ```
@@ -32,7 +32,7 @@ $tui = (new Tui(Form::create('My form')))->theme('midnight');
 
 The colorful themes use 256-color palettes, `mono` the grayscale ramp and `dos` the classic 16-color CGA set. Every one renders across all fields and degrades to plain text when color is off. An unknown theme name fails loudly, so a typo never silently lands you back on the default.
 
-Each adaptive theme below is shown in four looks: the dark and light palettes, each rendered once inside the default rounded [border](/panels#bordered-panels) and once with the frame explicitly stripped (`['border' => 'none']`). Every adaptive theme has a runnable script in [`playground/09-themes-*`](https://github.com/drevops/tui/tree/main/playground).
+Each adaptive theme below is shown in four looks: the dark and light palettes, each rendered once inside the default rounded [border](/panels#bordered-panels) and once with the frame explicitly stripped (`['border' => 'none']`). Every adaptive theme has a runnable script in [`playground/09-themes-*`](https://github.com/drevops/phptui/tree/main/playground).
 
 ### midnight
 
@@ -154,7 +154,7 @@ Every theme built on `DefaultTheme` takes the same options array, validated in i
 | `max_width`          | any non-negative integer                                            | the widest the frame will grow; `0` is uncapped                                                               |
 | `max_height`         | any non-negative integer                                            | the tallest it will grow; `0` is uncapped                                                                     |
 
-Each enum case is interchangeable with its string value, so `['border' => Border::Rounded]` and `['border' => 'rounded']` mean the same thing. A theme can declare options of its own by merging over `optionSchema()`, and the [playground's accent theme](https://github.com/drevops/tui/blob/main/playground/themes/AccentTheme.php) is that recipe in fifteen lines.
+Each enum case is interchangeable with its string value, so `['border' => Border::Rounded]` and `['border' => 'rounded']` mean the same thing. A theme can declare options of its own by merging over `optionSchema()`, and the [playground's accent theme](https://github.com/drevops/phptui/blob/main/playground/themes/AccentTheme.php) is that recipe in fifteen lines.
 
 ## Writing a theme
 
@@ -175,8 +175,8 @@ A custom theme subclasses `DefaultTheme` and repaints. Most of what a palette wa
 | `error()`       | something that failed                                        |
 
 ```php
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\Sgr;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\Sgr;
 
 class AquaTheme extends DefaultTheme {
 
@@ -215,10 +215,10 @@ class AquaTheme extends DefaultTheme {
 The lowest-friction route to using it: name the class directly on the facade, no registration needed:
 
 ```php
-$tui = (new \DrevOps\Tui\Tui($form))->theme(AquaTheme::class);
+$tui = (new \DrevOps\PhpTui\Tui($form))->theme(AquaTheme::class);
 ```
 
-Or register a short alias with `ThemeManager::register('aqua', AquaTheme::class)`, then `->theme('aqua')`. Either way the class must implement `ThemeInterface`, take a frame width and an options array, and answer for every element a form is drawn from - all of which is what extending `AbstractTheme` or `DefaultTheme` gives you - and both naming and registering say so up front rather than failing at the first frame. The [playground's ocean theme](https://github.com/drevops/tui/blob/main/playground/09-themes-custom.php) goes further, repainting many voices and elements for a distinct look with a start banner:
+Or register a short alias with `ThemeManager::register('aqua', AquaTheme::class)`, then `->theme('aqua')`. Either way the class must implement `ThemeInterface`, take a frame width and an options array, and answer for every element a form is drawn from - all of which is what extending `AbstractTheme` or `DefaultTheme` gives you - and both naming and registering say so up front rather than failing at the first frame. The [playground's ocean theme](https://github.com/drevops/phptui/blob/main/playground/09-themes-custom.php) goes further, repainting many voices and elements for a distinct look with a start banner:
 
 <p align="center">
   <img src="/theme-ocean-dark-animated.svg" width="100%" alt="Custom ocean theme with a banner" />
@@ -250,11 +250,11 @@ A theme built on the floor is selected like any other - `->theme(MyFloorTheme::c
 Restyling a handful of glyphs doesn't need a class at all. Hand `->theme()` a closure instead of a name and it is given a `ThemeBuilder`, whose groups are the blocks that declare the elements - so the prefix is implied, and `->separator()` means one thing under `->breadcrumb()` and another under `->legend()`:
 
 ```php
-use DrevOps\Tui\Theme\Override\BreadcrumbOverrides;
-use DrevOps\Tui\Theme\Override\FieldOverrides;
-use DrevOps\Tui\Theme\Override\LegendOverrides;
-use DrevOps\Tui\Theme\Sgr;
-use DrevOps\Tui\Theme\ThemeBuilder;
+use DrevOps\PhpTui\Theme\Override\BreadcrumbOverrides;
+use DrevOps\PhpTui\Theme\Override\FieldOverrides;
+use DrevOps\PhpTui\Theme\Override\LegendOverrides;
+use DrevOps\PhpTui\Theme\Sgr;
+use DrevOps\PhpTui\Theme\ThemeBuilder;
 
 $tui = (new Tui($form))
   ->theme('midnight')
@@ -268,4 +268,4 @@ The name picks the theme; the closure states what that theme draws differently. 
 
 A glyph takes two arguments, the mark and its ASCII stand-in, so a patch can't set one display mode and silently leave the other broken. Text takes one, and a color takes `Sgr` parts in order. [Anatomy](/fields/anatomy#patching-an-element) lists the nine elements this reaches, which is the closed set - naming anything else is a type error rather than a knob that quietly does nothing.
 
-Anything the patch doesn't name keeps the theme's own answer, which is what makes it a patch rather than a replacement. Reach for a subclass when you're changing a palette; reach for this when you're changing a handful of glyphs. Runnable in [`playground/09-themes-elements.php`](https://github.com/drevops/tui/blob/main/playground/09-themes-elements.php).
+Anything the patch doesn't name keeps the theme's own answer, which is what makes it a patch rather than a replacement. Reach for a subclass when you're changing a palette; reach for this when you're changing a handful of glyphs. Runnable in [`playground/09-themes-elements.php`](https://github.com/drevops/phptui/blob/main/playground/09-themes-elements.php).

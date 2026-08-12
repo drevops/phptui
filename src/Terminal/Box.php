@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Terminal;
+namespace DrevOps\PhpTui\Terminal;
 
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * Pure box-drawing geometry: character sets and line/rule fitting.
@@ -14,14 +14,14 @@ use DrevOps\Tui\Utils\Strings;
  * colours. A theme picks a border style and colours the result; this returns
  * the raw characters and does the width maths.
  *
- * @package DrevOps\Tui\Terminal
+ * @package DrevOps\PhpTui\Terminal
  */
 final class Box {
 
   /**
    * The corner, junction, horizontal and vertical glyphs for a border style.
    *
-   * @param \DrevOps\Tui\Theme\Border $style
+   * @param \DrevOps\PhpTui\Theme\Border $style
    *   The border style; None shares the single-line set (a caller normally
    *   skips boxing entirely for a borderless frame).
    * @param bool $unicode

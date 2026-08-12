@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Primitive;
+namespace DrevOps\PhpTui\Primitive;
 
 /**
  * The handle a progress row's work drives to advance its indicator.
@@ -12,7 +12,7 @@ namespace DrevOps\Tui\Primitive;
  * own - it forwards to the supplied callback, which owns the field's live count
  * and the repaint.
  *
- * @package DrevOps\Tui\Primitive
+ * @package DrevOps\PhpTui\Primitive
  */
 final class ProgressReporter {
 

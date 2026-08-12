@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Traits;
+namespace DrevOps\PhpTui\Tests\Traits;
 
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Resets the process-wide translator after each test.

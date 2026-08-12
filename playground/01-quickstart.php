@@ -12,18 +12,18 @@
  * Usage:
  *   php playground/01-quickstart.php
  *
- *   # Unattended: answers come from TUI_<ID> environment variables and
+ *   # Unattended: answers come from PHPTUI_<ID> environment variables and
  *   # defaults, no terminal needed ("name" is required, so it must be given).
- *   TUI_NAME='Weekly Box' php playground/01-quickstart.php < /dev/null
+ *   PHPTUI_NAME='Weekly Box' php playground/01-quickstart.php < /dev/null
  */
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\CollectException;
-use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\CollectException;
+use DrevOps\PhpTui\InterruptException;
+use DrevOps\PhpTui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
 

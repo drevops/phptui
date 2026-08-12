@@ -2,33 +2,33 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\Block\Capability\BindCapableInterface;
-use DrevOps\Tui\Block\Capability\BindCapableTrait;
-use DrevOps\Tui\Block\Capability\DependCapableInterface;
-use DrevOps\Tui\Block\Capability\DependCapableTrait;
-use DrevOps\Tui\Block\Capability\DescendCapableInterface;
-use DrevOps\Tui\Block\Capability\FocusCapableInterface;
-use DrevOps\Tui\Block\Capability\FocusCapableTrait;
-use DrevOps\Tui\Block\Capability\OverlayCapableInterface;
-use DrevOps\Tui\Block\Element\ChromeElementsInterface;
-use DrevOps\Tui\Block\Element\MarkupElementsInterface;
-use DrevOps\Tui\Block\Element\PanelElementsInterface;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Furniture;
-use DrevOps\Tui\Screen\Layout\LayoutInterface;
-use DrevOps\Tui\Screen\Region;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\Capability\OccupyCapableInterface;
-use DrevOps\Tui\Theme\Spacing;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\Capability\BindCapableInterface;
+use DrevOps\PhpTui\Block\Capability\BindCapableTrait;
+use DrevOps\PhpTui\Block\Capability\DependCapableInterface;
+use DrevOps\PhpTui\Block\Capability\DependCapableTrait;
+use DrevOps\PhpTui\Block\Capability\DescendCapableInterface;
+use DrevOps\PhpTui\Block\Capability\FocusCapableInterface;
+use DrevOps\PhpTui\Block\Capability\FocusCapableTrait;
+use DrevOps\PhpTui\Block\Capability\OverlayCapableInterface;
+use DrevOps\PhpTui\Block\Element\ChromeElementsInterface;
+use DrevOps\PhpTui\Block\Element\MarkupElementsInterface;
+use DrevOps\PhpTui\Block\Element\PanelElementsInterface;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Furniture;
+use DrevOps\PhpTui\Screen\Layout\LayoutInterface;
+use DrevOps\PhpTui\Screen\Region;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\Capability\OccupyCapableInterface;
+use DrevOps\PhpTui\Theme\Spacing;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * A block that navigation enters and leaves.
@@ -45,7 +45,7 @@ use DrevOps\Tui\Translation\Translator;
  * decides a single row. An absent section takes everything it holds with it,
  * so a question inside one is never asked, drawn or entered.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final class Panel extends AbstractBlock implements BindCapableInterface, DependCapableInterface, DescendCapableInterface, FocusCapableInterface, OverlayCapableInterface {
 
@@ -172,13 +172,13 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * Set the button pair that closes this panel.
    *
-   * @param \DrevOps\Tui\Block\Buttons $buttons
+   * @param \DrevOps\PhpTui\Block\Buttons $buttons
    *   The pair that closes it.
    *
    * @return static
    *   The panel.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the pair is hidden on a modal panel, whose buttons are its only
    *   way out.
    */
@@ -192,7 +192,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * The button pair that closes this panel.
    *
-   * @return \DrevOps\Tui\Block\Buttons
+   * @return \DrevOps\PhpTui\Block\Buttons
    *   The pair that closes it.
    */
   public function currentButtons(): Buttons {
@@ -246,7 +246,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * Arrange this panel's blocks with a layout.
    *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   * @param \DrevOps\PhpTui\Screen\Layout\LayoutInterface $layout
    *   The layout.
    *
    * @return static
@@ -261,7 +261,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * The layout arranging this panel's blocks.
    *
-   * @return \DrevOps\Tui\Screen\Layout\LayoutInterface
+   * @return \DrevOps\PhpTui\Screen\Layout\LayoutInterface
    *   The layout.
    */
   public function currentLayout(): LayoutInterface {
@@ -278,7 +278,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    * @param string $name
    *   The region name.
    *
-   * @return \DrevOps\Tui\Screen\Region
+   * @return \DrevOps\PhpTui\Screen\Region
    *   The region.
    */
   public function in(string $name): Region {
@@ -313,7 +313,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * {@inheritdoc}
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When its buttons are hidden; a modal panel's buttons are its only way
    *   out.
    */
@@ -371,7 +371,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    * Its own only: a nested panel's fields belong to that panel and are not
    * included.
    *
-   * @return list<\DrevOps\Tui\Block\Field>
+   * @return list<\DrevOps\PhpTui\Block\Field>
    *   The fields.
    */
   public function fields(): array {
@@ -412,7 +412,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * The panels that can be entered from this one.
    *
-   * @return list<\DrevOps\Tui\Block\Panel>
+   * @return list<\DrevOps\PhpTui\Block\Panel>
    *   The sub-panels, in the order they were placed.
    */
   public function children(): array {
@@ -430,7 +430,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * Everything placed in this panel, region by region, in placement order.
    *
-   * @return list<\DrevOps\Tui\Block\BlockInterface>
+   * @return list<\DrevOps\PhpTui\Block\BlockInterface>
    *   The blocks; empty while the panel has no layout to hold any.
    */
   public function blocks(): array {
@@ -475,7 +475,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * This panel drawn as its headline row only.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string
@@ -496,7 +496,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    * headline line only: the full row with a description and a summary
    * belongs to a list, which has a whole width to spend on it.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string
@@ -536,7 +536,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    * region is read off the layout's Body furnishing rather than found by a
    * fixed name.
    *
-   * @return \DrevOps\Tui\Screen\Region
+   * @return \DrevOps\PhpTui\Screen\Region
    *   The region.
    */
   public function place(): Region {
@@ -546,10 +546,10 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * The theme this panel draws through, rejecting an entered panel.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
-   * @return \DrevOps\Tui\Block\Element\PanelElementsInterface
+   * @return \DrevOps\PhpTui\Block\Element\PanelElementsInterface
    *   The theme, narrowed to the elements a panel draws with.
    *
    * @throws \LogicException
@@ -568,7 +568,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * The gutter this panel's rows are stepped in by.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string
@@ -581,7 +581,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * The row joining the selector, the title and the descend mark.
    *
-   * @param \DrevOps\Tui\Block\Element\PanelElementsInterface $elements
+   * @param \DrevOps\PhpTui\Block\Element\PanelElementsInterface $elements
    *   The theme, narrowed to the elements a panel draws with.
    *
    * @return string
@@ -594,9 +594,9 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * This panel's description, drawn as rows.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Block\Element\PanelElementsInterface $elements
+   * @param \DrevOps\PhpTui\Block\Element\PanelElementsInterface $elements
    *   The same theme, narrowed to the elements a panel draws with.
    *
    * @return list<string>
@@ -617,9 +617,9 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * The answers this panel holds, as one line.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Block\Element\PanelElementsInterface $elements
+   * @param \DrevOps\PhpTui\Block\Element\PanelElementsInterface $elements
    *   The same theme, narrowed to the elements a panel draws with.
    *
    * @return string
@@ -655,9 +655,9 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    * a longer one is shown as a count, so the summary line stays a summary
    * rather than the panel's whole content.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Block\Field $field
+   * @param \DrevOps\PhpTui\Block\Field $field
    *   The field holding the answer.
    *
    * @return string
@@ -676,7 +676,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * Whether the theme is set to compact spacing.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return bool
@@ -698,10 +698,10 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    *
    * @param bool $modal
    *   Whether the panel draws over what is behind it.
-   * @param \DrevOps\Tui\Block\Buttons $buttons
+   * @param \DrevOps\PhpTui\Block\Buttons $buttons
    *   The pair that closes it.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When such a panel hides its buttons.
    */
   protected function assertWayOut(bool $modal, Buttons $buttons): void {

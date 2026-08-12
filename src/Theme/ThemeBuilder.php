@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
-use DrevOps\Tui\Theme\Override\BreadcrumbOverrides;
-use DrevOps\Tui\Theme\Override\FieldOverrides;
-use DrevOps\Tui\Theme\Override\LegendOverrides;
-use DrevOps\Tui\Theme\Override\Overrides;
+use DrevOps\PhpTui\Theme\Override\BreadcrumbOverrides;
+use DrevOps\PhpTui\Theme\Override\FieldOverrides;
+use DrevOps\PhpTui\Theme\Override\LegendOverrides;
+use DrevOps\PhpTui\Theme\Override\Overrides;
 
 /**
  * Patches a theme's elements without subclassing it.
@@ -36,7 +36,7 @@ use DrevOps\Tui\Theme\Override\Overrides;
  * Reach for a subclass when you are changing a palette; reach for this when you
  * are changing a handful of glyphs.
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 final class ThemeBuilder {
 
@@ -100,7 +100,7 @@ final class ThemeBuilder {
   /**
    * The patch collected so far.
    *
-   * @return \DrevOps\Tui\Theme\Override\Overrides
+   * @return \DrevOps\PhpTui\Theme\Override\Overrides
    *   The overrides, holding only the elements that were stated.
    */
   public function overrides(): Overrides {

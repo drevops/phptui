@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Answers;
+namespace DrevOps\PhpTui\Answers;
 
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * How an answer's value came to be.
  *
- * @package DrevOps\Tui\Answers
+ * @package DrevOps\PhpTui\Answers
  */
 enum Provenance: string {
 

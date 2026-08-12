@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\PhpTui\Screen;
 
 /**
  * How a region asks for its share of the axis its layout runs along.
@@ -13,7 +13,7 @@ namespace DrevOps\Tui\Screen;
  * states the kind and the layout does the arithmetic, which is why this says
  * nothing about cells.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\PhpTui\Screen
  */
 enum Sizing {
 

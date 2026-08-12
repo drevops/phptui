@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Primitive;
+namespace DrevOps\PhpTui\Primitive;
 
-use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Terminal\Terminal;
-use DrevOps\Tui\Terminal\TerminalControl;
+use DrevOps\PhpTui\Primitive\Element\PrimitiveElementsInterface;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\Terminal;
+use DrevOps\PhpTui\Terminal\TerminalControl;
 
 /**
  * A progress primitive for slow work: a spinner, or a determinate bar.
@@ -25,7 +25,7 @@ use DrevOps\Tui\Terminal\TerminalControl;
  * throws. Off a TTY it emits no control sequences: it prints the caption once
  * as a plain line and every advance renders nothing.
  *
- * @package DrevOps\Tui\Primitive
+ * @package DrevOps\PhpTui\Primitive
  */
 final class Progress {
 
@@ -57,9 +57,9 @@ final class Progress {
   /**
    * Construct a progress primitive.
    *
-   * @param \DrevOps\Tui\Terminal\Terminal $terminal
+   * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
    *   The terminal the line is drawn on.
-   * @param \DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface $theme
+   * @param \DrevOps\PhpTui\Primitive\Element\PrimitiveElementsInterface $theme
    *   The theme that draws the spinner glyphs and the bar.
    * @param bool $active
    *   Whether to draw control sequences (TRUE) or stay plain (FALSE).

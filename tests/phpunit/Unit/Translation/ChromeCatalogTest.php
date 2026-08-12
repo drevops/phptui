@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Translation;
+namespace DrevOps\PhpTui\Tests\Unit\Translation;
 
-use DrevOps\Tui\Block\Buttons;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\Buttons;
+use DrevOps\PhpTui\Translation\Translator;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;

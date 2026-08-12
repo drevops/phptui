@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Handler;
+namespace DrevOps\PhpTui\Tests\Unit\Handler;
 
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Handler\HandlerRegistry;
-use DrevOps\Tui\Tests\Fixtures\Handler\MachineName;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Handler\HandlerRegistry;
+use DrevOps\PhpTui\Tests\Fixtures\Handler\MachineName;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -33,7 +33,7 @@ final class HandlerRegistryTest extends TestCase {
     $this->assertNull($registry->resolve('machine_name'));
 
     // Surrounding backslashes are tolerated and normalized away.
-    $registry->addNamespace('\\DrevOps\\Tui\\Tests\\Fixtures\\Handler\\');
+    $registry->addNamespace('\\DrevOps\\PhpTui\\Tests\\Fixtures\\Handler\\');
     $this->assertSame(MachineName::class, $registry->resolve('machine_name'));
   }
 
@@ -65,7 +65,7 @@ final class HandlerRegistryTest extends TestCase {
    * Build a registry scoped to the fixture namespace.
    */
   protected function registry(): HandlerRegistry {
-    return new HandlerRegistry(['DrevOps\\Tui\\Tests\\Fixtures\\Handler']);
+    return new HandlerRegistry(['DrevOps\\PhpTui\\Tests\\Fixtures\\Handler']);
   }
 
 }

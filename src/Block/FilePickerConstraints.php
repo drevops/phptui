@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Optional type, extension and size limits on what a file picker may accept.
@@ -17,7 +17,7 @@ use DrevOps\Tui\Translation\Translator;
  * agree - mirroring {@see NumberBounds} and {@see SelectionBounds}, but
  * constraining a filesystem path rather than a number or a count.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final readonly class FilePickerConstraints {
 
@@ -31,7 +31,7 @@ final readonly class FilePickerConstraints {
   /**
    * Construct file picker constraints.
    *
-   * @param \DrevOps\Tui\Block\FilePickerMode $mode
+   * @param \DrevOps\PhpTui\Block\FilePickerMode $mode
    *   Which entries may be selected (any, files or directories).
    * @param list<string> $extensions
    *   The extensions selectable files are limited to (dot-less,
@@ -39,7 +39,7 @@ final readonly class FilePickerConstraints {
    * @param int|null $maxSize
    *   The inclusive maximum file size in bytes, or NULL for no size limit.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the maximum size is below one byte (a size limit below one byte can
    *   never be met; omit it instead).
    */

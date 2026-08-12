@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme\Capability;
+namespace DrevOps\PhpTui\Theme\Capability;
 
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\HAlign;
-use DrevOps\Tui\Theme\Spacing;
-use DrevOps\Tui\Theme\VAlign;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\HAlign;
+use DrevOps\PhpTui\Theme\Spacing;
+use DrevOps\PhpTui\Theme\VAlign;
 
 /**
  * A theme that says how much of the terminal it takes, and where.
@@ -20,7 +20,7 @@ use DrevOps\Tui\Theme\VAlign;
  * one that has none draws where the cursor already is, unframed and unspaced,
  * which is what a frame in a plain terminal does.
  *
- * @package DrevOps\Tui\Theme\Capability
+ * @package DrevOps\PhpTui\Theme\Capability
  */
 interface OccupyCapableInterface {
 
@@ -35,7 +35,7 @@ interface OccupyCapableInterface {
   /**
    * Where a frame narrower than the terminal sits across it.
    *
-   * @return \DrevOps\Tui\Theme\HAlign
+   * @return \DrevOps\PhpTui\Theme\HAlign
    *   The anchor.
    */
   public function halign(): HAlign;
@@ -43,7 +43,7 @@ interface OccupyCapableInterface {
   /**
    * Where a frame shorter than the terminal sits down it.
    *
-   * @return \DrevOps\Tui\Theme\VAlign
+   * @return \DrevOps\PhpTui\Theme\VAlign
    *   The anchor.
    */
   public function valign(): VAlign;
@@ -87,7 +87,7 @@ interface OccupyCapableInterface {
    * the terminal before anything is laid out in what is left - so the edge a
    * theme draws around itself is part of the room it takes.
    *
-   * @return \DrevOps\Tui\Theme\Border
+   * @return \DrevOps\PhpTui\Theme\Border
    *   The border style.
    */
   public function borderStyle(): Border;
@@ -95,7 +95,7 @@ interface OccupyCapableInterface {
   /**
    * What shows between the rows a region holds.
    *
-   * @return \DrevOps\Tui\Theme\Spacing
+   * @return \DrevOps\PhpTui\Theme\Spacing
    *   The spacing.
    */
   public function spacing(): Spacing;

@@ -2,29 +2,29 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Testing;
+namespace DrevOps\PhpTui\Testing;
 
-use DrevOps\Tui\Answers\Answers;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMap;
-use DrevOps\Tui\Screen\Collector;
-use DrevOps\Tui\Screen\ExternalEditor;
-use DrevOps\Tui\Screen\ScreenController;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Terminal\TerminalControl;
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Theme\ThemeManager;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Answers\Answers;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyMap;
+use DrevOps\PhpTui\Screen\Collector;
+use DrevOps\PhpTui\Screen\ExternalEditor;
+use DrevOps\PhpTui\Screen\ScreenController;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\TerminalControl;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\Mode;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Theme\ThemeManager;
+use DrevOps\PhpTui\Tui;
 
 /**
  * Drives a screen from scripted keystrokes, and hands back what it drew.
  *
- * The screen-native companion to {@see \DrevOps\Tui\Testing\TuiTester}: it
+ * The screen-native companion to {@see \DrevOps\PhpTui\Testing\TuiTester}: it
  * feeds keystrokes through a scripted terminal's read() and runs the real
  * session loop, so a consumer can assert on the answers and on every frame that
  * reached the terminal - without a real TTY. Keystrokes are raw byte strings
@@ -41,7 +41,7 @@ use DrevOps\Tui\Tui;
  * $this->assertSame('Ada', $answers->value('courier'));
  * @endcode
  *
- * @package DrevOps\Tui\Testing
+ * @package DrevOps\PhpTui\Testing
  */
 final class ScreenTester {
 
@@ -151,7 +151,7 @@ final class ScreenTester {
   /**
    * Construct a tester for a panel.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel the screen starts in: the tree a form declares.
    */
   public function __construct(protected Panel $panel) {
@@ -161,7 +161,7 @@ final class ScreenTester {
   /**
    * Set the theme the blocks draw through.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface|string $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface|string $theme
    *   The theme instance or name.
    *
    * @return $this
@@ -199,7 +199,7 @@ final class ScreenTester {
   /**
    * Set the bindings the screen answers to.
    *
-   * @param \DrevOps\Tui\Input\KeyMap $keys
+   * @param \DrevOps\PhpTui\Input\KeyMap $keys
    *   The bindings.
    *
    * @return $this
@@ -214,7 +214,7 @@ final class ScreenTester {
   /**
    * Set what resolves the answers the form opens on.
    *
-   * @param \DrevOps\Tui\Screen\Collector $collector
+   * @param \DrevOps\PhpTui\Screen\Collector $collector
    *   The collector, carrying whatever behaviour is reused across forms and
    *   whatever rules apply once the answers have settled.
    *
@@ -230,7 +230,7 @@ final class ScreenTester {
   /**
    * Set the run the session belongs to.
    *
-   * @param \DrevOps\Tui\Handler\Context $context
+   * @param \DrevOps\PhpTui\Handler\Context $context
    *   The context.
    *
    * @return $this
@@ -275,7 +275,7 @@ final class ScreenTester {
   /**
    * Set the frame drawn around every region at once.
    *
-   * @param \DrevOps\Tui\Theme\Border $border
+   * @param \DrevOps\PhpTui\Theme\Border $border
    *   The border.
    *
    * @return $this
@@ -338,7 +338,7 @@ final class ScreenTester {
   /**
    * Set what hands a passage of text to an editor of the reader's own.
    *
-   * @param \DrevOps\Tui\Screen\ExternalEditor $editor
+   * @param \DrevOps\PhpTui\Screen\ExternalEditor $editor
    *   The editor service, so a test can answer for one without launching a
    *   program or depending on the environment naming one.
    *
@@ -391,16 +391,16 @@ final class ScreenTester {
   /**
    * Run the session, feeding it the given scripted keystrokes.
    *
-   * @param string|\DrevOps\Tui\Input\Key ...$items
+   * @param string|\DrevOps\PhpTui\Input\Key ...$items
    *   The scripted input: each item is either raw keystroke bytes (a string,
    *   e.g. "\n" or "Ada") or a Key, encoded to its canonical bytes.
    *
-   * @return \DrevOps\Tui\Answers\Answers
+   * @return \DrevOps\PhpTui\Answers\Answers
    *   The collected answers.
    *
-   * @throws \DrevOps\Tui\InterruptException
+   * @throws \DrevOps\PhpTui\InterruptException
    *   When the scripted keys aborted the session.
-   * @throws \DrevOps\Tui\CancelException
+   * @throws \DrevOps\PhpTui\CancelException
    *   When the scripted keys abandoned the form.
    */
   public function run(string|Key ...$items): Answers {
@@ -419,7 +419,7 @@ final class ScreenTester {
   /**
    * The answers the last run() collected.
    *
-   * @return \DrevOps\Tui\Answers\Answers
+   * @return \DrevOps\PhpTui\Answers\Answers
    *   The answers.
    *
    * @throws \LogicException
@@ -512,7 +512,7 @@ final class ScreenTester {
   /**
    * The controller the run drives.
    *
-   * @return \DrevOps\Tui\Screen\ScreenController
+   * @return \DrevOps\PhpTui\Screen\ScreenController
    *   The controller.
    */
   protected function controller(): ScreenController {
@@ -544,7 +544,7 @@ final class ScreenTester {
    * @param array<string,mixed> $options
    *   The resolved display options.
    *
-   * @return \DrevOps\Tui\Theme\ThemeInterface
+   * @return \DrevOps\PhpTui\Theme\ThemeInterface
    *   The theme, laid out to the scripted terminal's frame width.
    */
   protected function buildTheme(array $options): ThemeInterface {

@@ -2,25 +2,25 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Testing;
+namespace DrevOps\PhpTui\Tests\Unit\Testing;
 
-use DrevOps\Tui\Answers\Provenance;
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Builder\Fixup;
-use DrevOps\Tui\CancelException;
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Collector;
-use DrevOps\Tui\Screen\Layout\AbstractLayout;
-use DrevOps\Tui\Screen\Layout\PanelLayout;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Testing\ScreenTester;
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Answers\Provenance;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Builder\Fixup;
+use DrevOps\PhpTui\CancelException;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyMapManager;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Collector;
+use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
+use DrevOps\PhpTui\Screen\Layout\PanelLayout;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Testing\ScreenTester;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -202,7 +202,7 @@ final class ScreenTesterTest extends TestCase {
     $panel = (new Panel('main', 'Delivery'))->layout(new PanelLayout());
 
     foreach ($blocks as $block) {
-      /** @var \DrevOps\Tui\Block\BlockInterface $block */
+      /** @var \DrevOps\PhpTui\Block\BlockInterface $block */
       $panel->in('content')->add($block);
     }
 

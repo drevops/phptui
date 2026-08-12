@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Optional min/max date range and the calendar's week-start day.
@@ -16,7 +16,7 @@ use DrevOps\Tui\Translation\Translator;
  * all agree. The week-start day is a display concern that rides along the way
  * the number field's keyboard step rides along in {@see NumberBounds}.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final readonly class DateBounds {
 
@@ -27,10 +27,10 @@ final readonly class DateBounds {
    *   The inclusive earliest date, or NULL for an open lower bound.
    * @param \DateTimeImmutable|null $max
    *   The inclusive latest date, or NULL for an open upper bound.
-   * @param \DrevOps\Tui\Block\Weekday $weekStart
+   * @param \DrevOps\PhpTui\Block\Weekday $weekStart
    *   The day the calendar week begins on.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When both bounds are declared and the minimum falls after the maximum.
    */
   public function __construct(

@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Testing;
+namespace DrevOps\PhpTui\Testing;
 
-use DrevOps\Tui\Answers\Answers;
-use DrevOps\Tui\Block\BlockInterface;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\CancelException;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Answers\Answers;
+use DrevOps\PhpTui\Block\BlockInterface;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\CancelException;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\InterruptException;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\Mode;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Tui;
 
 /**
  * Drives a form's interactive panel TUI from scripted keystrokes.
  *
- * The form-level companion to {@see \DrevOps\Tui\Testing\FieldRunner}: it
+ * The form-level companion to {@see \DrevOps\PhpTui\Testing\FieldRunner}: it
  * feeds keystrokes through a scripted terminal's read() and runs the real
  * panel loop, so a consumer can assert on the collected answers and on what
  * was rendered - without a real TTY. Keystrokes are supplied as raw byte
@@ -31,7 +31,7 @@ use DrevOps\Tui\Tui;
  * $this->assertSame('Ada', $answers->value('name'));
  * @endcode
  *
- * @package DrevOps\Tui\Testing
+ * @package DrevOps\PhpTui\Testing
  */
 final class TuiTester {
 
@@ -110,7 +110,7 @@ final class TuiTester {
   /**
    * Construct a tester for a form.
    *
-   * @param \DrevOps\Tui\Builder\Form $form
+   * @param \DrevOps\PhpTui\Builder\Form $form
    *   The form under test.
    * @param string[] $handler_namespaces
    *   Namespaces searched for per-field consumer classes.
@@ -124,7 +124,7 @@ final class TuiTester {
   /**
    * Set the theme the form is rendered with.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface|string $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface|string $theme
    *   The theme instance, name or class.
    *
    * @return $this
@@ -163,7 +163,7 @@ final class TuiTester {
    *
    * @param string $region
    *   The region name.
-   * @param \DrevOps\Tui\Block\BlockInterface $block
+   * @param \DrevOps\PhpTui\Block\BlockInterface $block
    *   The block.
    * @param bool $tail
    *   Whether it packs from the end of the region's run rather than the start.
@@ -182,7 +182,7 @@ final class TuiTester {
    *
    * @param string $region
    *   The region name.
-   * @param \DrevOps\Tui\Screen\Axis $axis
+   * @param \DrevOps\PhpTui\Screen\Axis $axis
    *   The direction its blocks run.
    *
    * @return $this
@@ -295,11 +295,11 @@ final class TuiTester {
   /**
    * Run the form, feeding it the given scripted keystrokes.
    *
-   * @param string|\DrevOps\Tui\Input\Key ...$items
+   * @param string|\DrevOps\PhpTui\Input\Key ...$items
    *   The scripted input: each item is either raw keystroke bytes (a string,
    *   e.g. "\n" or "Ada") or a Key (encoded to its canonical bytes).
    *
-   * @return \DrevOps\Tui\Answers\Answers
+   * @return \DrevOps\PhpTui\Answers\Answers
    *   The collected answers.
    */
   public function run(string|Key ...$items): Answers {
@@ -356,7 +356,7 @@ final class TuiTester {
   /**
    * The answers collected by the last run().
    *
-   * @return \DrevOps\Tui\Answers\Answers
+   * @return \DrevOps\PhpTui\Answers\Answers
    *   The answers.
    *
    * @throws \LogicException

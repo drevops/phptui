@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Primitive;
+namespace DrevOps\PhpTui\Primitive;
 
 /**
  * The kind of a status line: what the message says about the run.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Primitive;
  * The case picks both the glyph and the colour the theme draws the line in, so
  * the five stay distinguishable with colour off and in ASCII alike.
  *
- * @package DrevOps\Tui\Primitive
+ * @package DrevOps\PhpTui\Primitive
  */
 enum Status: string {
 

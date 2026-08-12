@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\Block\Capability\DependCapableInterface;
-use DrevOps\Tui\Block\Capability\DependCapableTrait;
-use DrevOps\Tui\Block\Element\ChromeElementsInterface;
-use DrevOps\Tui\Block\Element\MarkupElementsInterface;
-use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\Capability\DependCapableInterface;
+use DrevOps\PhpTui\Block\Capability\DependCapableTrait;
+use DrevOps\PhpTui\Block\Element\ChromeElementsInterface;
+use DrevOps\PhpTui\Block\Element\MarkupElementsInterface;
+use DrevOps\PhpTui\Primitive\Element\PrimitiveElementsInterface;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Formatted content, and nothing else.
@@ -26,7 +26,7 @@ use DrevOps\Tui\Translation\Translator;
  * wrap it and align it - so both go to the theme's card renderer, the same
  * one that draws a card everywhere else in the library.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final class Markup extends AbstractBlock implements DependCapableInterface {
 
@@ -146,7 +146,7 @@ final class Markup extends AbstractBlock implements DependCapableInterface {
   /**
    * The grid drawn beneath this block's body.
    *
-   * @return \DrevOps\Tui\Block\TableSpec|null
+   * @return \DrevOps\PhpTui\Block\TableSpec|null
    *   The grid, or NULL when it carries none.
    */
   public function tableSpec(): ?TableSpec {

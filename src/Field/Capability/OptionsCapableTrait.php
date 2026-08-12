@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\OptionType;
-use DrevOps\Tui\Screen\Viewport;
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Block\OptionType;
+use DrevOps\PhpTui\Screen\Viewport;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 
 /**
  * Shared option-list behaviour for the choice fields.
@@ -17,21 +17,21 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * separators, headings and disabled options; where none is selectable it
  * falls back to index 0. Non-selectable rows render as visual-only structure.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 trait OptionsCapableTrait {
 
   /**
    * The option rows in display order.
    *
-   * @var list<\DrevOps\Tui\Block\Option>
+   * @var list<\DrevOps\PhpTui\Block\Option>
    */
   protected array $options = [];
 
   /**
    * Normalize and store the option rows.
    *
-   * @param array<int|string,\DrevOps\Tui\Block\Option|string> $options
+   * @param array<int|string,\DrevOps\PhpTui\Block\Option|string> $options
    *   A list of options or the value => label shorthand map.
    */
   protected function initOptions(array $options): void {
@@ -41,7 +41,7 @@ trait OptionsCapableTrait {
   /**
    * The index of the first selectable row, or 0 when none is selectable.
    *
-   * @param list<\DrevOps\Tui\Block\Option> $rows
+   * @param list<\DrevOps\PhpTui\Block\Option> $rows
    *   The rows to scan.
    *
    * @return int
@@ -60,7 +60,7 @@ trait OptionsCapableTrait {
   /**
    * The cursor for a default value: its selectable row, else the first one.
    *
-   * @param list<\DrevOps\Tui\Block\Option> $rows
+   * @param list<\DrevOps\PhpTui\Block\Option> $rows
    *   The rows to scan.
    * @param string $default
    *   The default value to land on.
@@ -81,7 +81,7 @@ trait OptionsCapableTrait {
   /**
    * Step the cursor to the next selectable row, skipping non-selectable rows.
    *
-   * @param list<\DrevOps\Tui\Block\Option> $rows
+   * @param list<\DrevOps\PhpTui\Block\Option> $rows
    *   The rows to move over.
    * @param int $from
    *   The current cursor index.
@@ -108,7 +108,7 @@ trait OptionsCapableTrait {
   /**
    * The rows the field currently shows.
    *
-   * @return list<\DrevOps\Tui\Block\Option>
+   * @return list<\DrevOps\PhpTui\Block\Option>
    *   The visible rows.
    */
   abstract public function visible(): array;
@@ -116,9 +116,9 @@ trait OptionsCapableTrait {
   /**
    * Render one option row.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Block\Option $option
+   * @param \DrevOps\PhpTui\Block\Option $option
    *   The option row.
    * @param bool $current
    *   Whether the row holds the cursor.
@@ -131,7 +131,7 @@ trait OptionsCapableTrait {
   /**
    * Render the visible rows as the field's paged option-list body.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string
@@ -163,11 +163,11 @@ trait OptionsCapableTrait {
    * closure renders an option row (including its disabled state), receiving
    * the option and its absolute index within the rows.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param list<\DrevOps\Tui\Block\Option> $rows
+   * @param list<\DrevOps\PhpTui\Block\Option> $rows
    *   The rows the field currently shows.
-   * @param \DrevOps\Tui\Screen\Viewport $viewport
+   * @param \DrevOps\PhpTui\Screen\Viewport $viewport
    *   The paging window over the rows.
    * @param \Closure $render
    *   Renders one option row: `fn (Option $option, int $index): string`.
@@ -200,9 +200,9 @@ trait OptionsCapableTrait {
   /**
    * Render a group heading row.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Block\Option $option
+   * @param \DrevOps\PhpTui\Block\Option $option
    *   The heading row.
    *
    * @return string
@@ -215,7 +215,7 @@ trait OptionsCapableTrait {
   /**
    * Render a separator row.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string
@@ -228,9 +228,9 @@ trait OptionsCapableTrait {
   /**
    * Render a disabled option's label, appending its reason when present.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
-   * @param \DrevOps\Tui\Block\Option $option
+   * @param \DrevOps\PhpTui\Block\Option $option
    *   The disabled option row.
    *
    * @return string

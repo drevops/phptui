@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Element;
+namespace DrevOps\PhpTui\Block\Element;
 
 /**
  * The elements the breadcrumb block composes.
@@ -11,7 +11,7 @@ namespace DrevOps\Tui\Block\Element;
  * type error rather than a blank line, and so adding a block adds an interface
  * instead of growing one theme class that knows about everything.
  *
- * @package DrevOps\Tui\Block\Element
+ * @package DrevOps\PhpTui\Block\Element
  */
 interface BreadcrumbElementsInterface {
 

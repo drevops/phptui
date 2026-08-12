@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
-use DrevOps\Tui\Block\Element\ActionsElementsInterface;
-use DrevOps\Tui\Block\Element\BorderElementsInterface;
-use DrevOps\Tui\Block\Element\BreadcrumbElementsInterface;
-use DrevOps\Tui\Block\Element\ChromeElementsInterface;
-use DrevOps\Tui\Block\Element\FieldElementsInterface;
-use DrevOps\Tui\Block\Element\LegendElementsInterface;
-use DrevOps\Tui\Block\Element\MarkupElementsInterface;
-use DrevOps\Tui\Block\Element\PanelElementsInterface;
-use DrevOps\Tui\Block\Element\ProgressElementsInterface;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\Element\ActionsElementsInterface;
+use DrevOps\PhpTui\Block\Element\BorderElementsInterface;
+use DrevOps\PhpTui\Block\Element\BreadcrumbElementsInterface;
+use DrevOps\PhpTui\Block\Element\ChromeElementsInterface;
+use DrevOps\PhpTui\Block\Element\FieldElementsInterface;
+use DrevOps\PhpTui\Block\Element\LegendElementsInterface;
+use DrevOps\PhpTui\Block\Element\MarkupElementsInterface;
+use DrevOps\PhpTui\Block\Element\PanelElementsInterface;
+use DrevOps\PhpTui\Block\Element\ProgressElementsInterface;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * The floor a theme starts from: every element, drawn with nothing at all.
@@ -26,11 +26,11 @@ use DrevOps\Tui\Translation\Translator;
  * do rather than working around what it cannot.
  *
  * A theme extends this and overrides the elements it wants to style, declaring
- * {@see \DrevOps\Tui\Theme\Capability\ColorSchemeCapableInterface} or
- * {@see \DrevOps\Tui\Theme\Capability\UnicodeCapableInterface} for the
+ * {@see \DrevOps\PhpTui\Theme\Capability\ColorSchemeCapableInterface} or
+ * {@see \DrevOps\PhpTui\Theme\Capability\UnicodeCapableInterface} for the
  * facilities those elements need.
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 abstract class AbstractTheme implements ThemeInterface, ActionsElementsInterface, BorderElementsInterface, BreadcrumbElementsInterface, ChromeElementsInterface, FieldElementsInterface, LegendElementsInterface, MarkupElementsInterface, PanelElementsInterface, ProgressElementsInterface {
 

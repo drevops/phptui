@@ -2,47 +2,47 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit;
+namespace DrevOps\PhpTui\Tests\Unit;
 
-use DrevOps\Tui\Answers\Answers;
-use DrevOps\Tui\Answers\Provenance;
-use DrevOps\Tui\Block\Actions;
-use DrevOps\Tui\Block\Markup;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\CancelException;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\Discovery\Dotenv;
-use DrevOps\Tui\Discovery\JsonValue;
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Handler\HandlerRegistry;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Binding;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMap;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\InterruptException;
-use DrevOps\Tui\Primitive\Progress;
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\ScreenController;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Terminal\Terminal;
-use DrevOps\Tui\Terminal\TerminalControl;
-use DrevOps\Tui\Testing\BufferedTerminal;
-use DrevOps\Tui\Testing\KeyEncoder;
-use DrevOps\Tui\Testing\TuiTester;
-use DrevOps\Tui\Tests\Fixtures\Theme\FloorTheme;
-use DrevOps\Tui\Tests\Traits\IsolatesEnvTrait;
-use DrevOps\Tui\Tests\Traits\ResetsTranslatorTrait;
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\Override\BreadcrumbOverrides;
-use DrevOps\Tui\Theme\Override\FieldOverrides;
-use DrevOps\Tui\Theme\ThemeBuilder;
-use DrevOps\Tui\Translation\Translator;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Answers\Answers;
+use DrevOps\PhpTui\Answers\Provenance;
+use DrevOps\PhpTui\Block\Actions;
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\CancelException;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\Discovery\Dotenv;
+use DrevOps\PhpTui\Discovery\JsonValue;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Handler\HandlerRegistry;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Binding;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyMap;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\InterruptException;
+use DrevOps\PhpTui\Primitive\Progress;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\ScreenController;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\Terminal;
+use DrevOps\PhpTui\Terminal\TerminalControl;
+use DrevOps\PhpTui\Testing\BufferedTerminal;
+use DrevOps\PhpTui\Testing\KeyEncoder;
+use DrevOps\PhpTui\Testing\TuiTester;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\FloorTheme;
+use DrevOps\PhpTui\Tests\Traits\IsolatesEnvTrait;
+use DrevOps\PhpTui\Tests\Traits\ResetsTranslatorTrait;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Theme\Mode;
+use DrevOps\PhpTui\Theme\Override\BreadcrumbOverrides;
+use DrevOps\PhpTui\Theme\Override\FieldOverrides;
+use DrevOps\PhpTui\Theme\ThemeBuilder;
+use DrevOps\PhpTui\Translation\Translator;
+use DrevOps\PhpTui\Tui;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -194,7 +194,7 @@ final class TuiTest extends TestCase {
       });
 
     // No prefix anywhere falls back to the package default.
-    $this->assertStringContainsString('TUI_NAME', (new Tui($form))->agentHelp());
+    $this->assertStringContainsString('PHPTUI_NAME', (new Tui($form))->agentHelp());
     // A constructor prefix wins.
     $this->assertStringContainsString('ARG_NAME', (new Tui($form, env_prefix: 'ARG_'))->agentHelp());
 
@@ -770,7 +770,7 @@ final class TuiTest extends TestCase {
    * @param bool $unicode
    *   Whether the terminal is told it draws glyphs outside ASCII.
    *
-   * @return \DrevOps\Tui\Testing\BufferedTerminal
+   * @return \DrevOps\PhpTui\Testing\BufferedTerminal
    *   The terminal the session drew on.
    */
   protected function floorRun(bool $color, bool $unicode): BufferedTerminal {

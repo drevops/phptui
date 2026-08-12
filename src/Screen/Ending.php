@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\PhpTui\Screen;
 
 /**
  * The two ways a form ends from the buttons that end it.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Screen;
  * Finishing it answers for the fields that are owed an answer; abandoning it
  * never does, and that is the whole of the difference between them.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\PhpTui\Screen
  */
 enum Ending: string {
 

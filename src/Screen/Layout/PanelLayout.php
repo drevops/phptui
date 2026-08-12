@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen\Layout;
+namespace DrevOps\PhpTui\Screen\Layout;
 
-use DrevOps\Tui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Axis;
 
 /**
  * One scrolling region, which is what a panel is most of the time.
@@ -13,7 +13,7 @@ use DrevOps\Tui\Screen\Axis;
  * declare one - so it ships as a class a panel reaches for rather than as a
  * name a form picks, which would suggest a choice where there is none.
  *
- * @package DrevOps\Tui\Screen\Layout
+ * @package DrevOps\PhpTui\Screen\Layout
  */
 final class PanelLayout extends AbstractLayout {
 

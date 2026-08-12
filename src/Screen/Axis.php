@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\PhpTui\Screen;
 
 /**
  * The direction things inside a layout or a region run.
@@ -11,7 +11,7 @@ namespace DrevOps\Tui\Screen;
  * nesting rather than from a grid: a panel is a block that contains a layout,
  * so any arrangement is rows of columns of rows.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\PhpTui\Screen
  */
 enum Axis: string {
 

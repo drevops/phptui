@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Fixtures\Theme;
+namespace DrevOps\PhpTui\Tests\Fixtures\Theme;
 
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 
 /**
  * Test fixture: a theme by type that answers for no element at all.
@@ -13,7 +13,7 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * It carries the two theme-wide methods and stops there, so it is a theme
  * every type check accepts and nothing on a screen can be drawn with.
  *
- * @package DrevOps\Tui\Tests\Fixtures\Theme
+ * @package DrevOps\PhpTui\Tests\Fixtures\Theme
  */
 class BlankTheme implements ThemeInterface {
 

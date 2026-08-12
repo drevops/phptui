@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Field\Capability\PlaceholderCapableInterface;
-use DrevOps\Tui\Field\Capability\PlaceholderCapableTrait;
-use DrevOps\Tui\Field\Capability\RevealCapableInterface;
-use DrevOps\Tui\Field\Capability\TextEditCapableInterface;
-use DrevOps\Tui\Field\Capability\TextEditCapableTrait;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Field\Capability\PlaceholderCapableInterface;
+use DrevOps\PhpTui\Field\Capability\PlaceholderCapableTrait;
+use DrevOps\PhpTui\Field\Capability\RevealCapableInterface;
+use DrevOps\PhpTui\Field\Capability\TextEditCapableInterface;
+use DrevOps\PhpTui\Field\Capability\TextEditCapableTrait;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * Single-line text input rendered masked; the accepted value stays plain.
@@ -26,7 +26,7 @@ use DrevOps\Tui\Utils\Strings;
  * value; and a confirmation mode that prompts for the value a second time and
  * rejects a mismatch before accepting.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 class Password extends AbstractField implements TextEditCapableInterface, RevealCapableInterface, PlaceholderCapableInterface {
 
@@ -171,7 +171,7 @@ class Password extends AbstractField implements TextEditCapableInterface, Reveal
   /**
    * Render the input line for the current display mode.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme supplying the mask and caret glyphs.
    *
    * @return string

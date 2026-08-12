@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
-use DrevOps\Tui\Input\KeyName;
+use DrevOps\PhpTui\Input\KeyName;
 
 /**
  * A theme, in what belongs to no one part of what it draws.
@@ -20,8 +20,8 @@ use DrevOps\Tui\Input\KeyName;
  * a value object and never anything a form is holding.
  *
  * A theme says what it can do rather than being asked: declaring
- * {@see \DrevOps\Tui\Theme\Capability\ColorSchemeCapableInterface},
- * {@see \DrevOps\Tui\Theme\Capability\UnicodeCapableInterface} or any other
+ * {@see \DrevOps\PhpTui\Theme\Capability\ColorSchemeCapableInterface},
+ * {@see \DrevOps\PhpTui\Theme\Capability\UnicodeCapableInterface} or any other
  * capability is what grants the facility that goes with it. A theme that
  * declares none still draws - it hands back the strings it was given - which is
  * why a form renders in a terminal that supports nothing.
@@ -38,7 +38,7 @@ use DrevOps\Tui\Input\KeyName;
  * options a consumer passes in the theme options array (as enum cases or their
  * string values).
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 interface ThemeInterface {
 
@@ -77,7 +77,7 @@ interface ThemeInterface {
    * character, so this takes what an element takes - an enum or a scalar - and
    * never the value object an input layer carries a key around in.
    *
-   * @param \DrevOps\Tui\Input\KeyName|string $key
+   * @param \DrevOps\PhpTui\Input\KeyName|string $key
    *   The named key, or the character a typed key writes.
    *
    * @return string

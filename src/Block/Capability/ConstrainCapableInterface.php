@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Capability;
+namespace DrevOps\PhpTui\Block\Capability;
 
-use DrevOps\Tui\Block\DateBounds;
-use DrevOps\Tui\Block\NumberBounds;
-use DrevOps\Tui\Block\SelectionBounds;
+use DrevOps\PhpTui\Block\DateBounds;
+use DrevOps\PhpTui\Block\NumberBounds;
+use DrevOps\PhpTui\Block\SelectionBounds;
 
 /**
  * A block that says what it will accept, before you act.
@@ -20,7 +20,7 @@ use DrevOps\Tui\Block\SelectionBounds;
  * surface measures with, so the panel, the headless path and the schema cannot
  * disagree about what is in range.
  *
- * @package DrevOps\Tui\Block\Capability
+ * @package DrevOps\PhpTui\Block\Capability
  */
 interface ConstrainCapableInterface {
 
@@ -46,7 +46,7 @@ interface ConstrainCapableInterface {
   /**
    * Bound how large a number may be.
    *
-   * @param \DrevOps\Tui\Block\NumberBounds $bounds
+   * @param \DrevOps\PhpTui\Block\NumberBounds $bounds
    *   The minimum, maximum and keyboard step.
    *
    * @return static
@@ -57,7 +57,7 @@ interface ConstrainCapableInterface {
   /**
    * How large a number may be.
    *
-   * @return \DrevOps\Tui\Block\NumberBounds|null
+   * @return \DrevOps\PhpTui\Block\NumberBounds|null
    *   The bounds, or NULL when the magnitude is unbounded.
    */
   public function numberBounds(): ?NumberBounds;
@@ -65,7 +65,7 @@ interface ConstrainCapableInterface {
   /**
    * Bound how early or late a date may be.
    *
-   * @param \DrevOps\Tui\Block\DateBounds $bounds
+   * @param \DrevOps\PhpTui\Block\DateBounds $bounds
    *   The range, and the day its calendar week begins on.
    *
    * @return static
@@ -76,7 +76,7 @@ interface ConstrainCapableInterface {
   /**
    * How early or late a date may be.
    *
-   * @return \DrevOps\Tui\Block\DateBounds|null
+   * @return \DrevOps\PhpTui\Block\DateBounds|null
    *   The bounds, or NULL when the range is unbounded.
    */
   public function dateBounds(): ?DateBounds;
@@ -84,7 +84,7 @@ interface ConstrainCapableInterface {
   /**
    * Bound how many values a list may hold.
    *
-   * @param \DrevOps\Tui\Block\SelectionBounds $bounds
+   * @param \DrevOps\PhpTui\Block\SelectionBounds $bounds
    *   The minimum and maximum count.
    *
    * @return static
@@ -95,7 +95,7 @@ interface ConstrainCapableInterface {
   /**
    * How many values a list may hold.
    *
-   * @return \DrevOps\Tui\Block\SelectionBounds|null
+   * @return \DrevOps\PhpTui\Block\SelectionBounds|null
    *   The bounds, or NULL when the count is unbounded.
    */
   public function selectionBounds(): ?SelectionBounds;

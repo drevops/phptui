@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\Ansi;
 
 /**
  * A presentational table: header cells and body rows, coerced to strings.
@@ -12,7 +12,7 @@ use DrevOps\Tui\Terminal\Ansi;
  * The cells are stored as plain strings; how they are styled and interpolated
  * is the renderer's concern, not this value object's.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final readonly class TableSpec {
 

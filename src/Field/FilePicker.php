@@ -2,26 +2,26 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\FilePickerConstraints;
-use DrevOps\Tui\Block\FilePickerMode;
-use DrevOps\Tui\Block\SelectionBounds;
-use DrevOps\Tui\Field\Capability\FilterCapableInterface;
-use DrevOps\Tui\Field\Capability\PagingCapableInterface;
-use DrevOps\Tui\Field\Capability\PagingCapableTrait;
-use DrevOps\Tui\Field\Capability\RevealCapableInterface;
-use DrevOps\Tui\Field\Capability\SelectionBoundedTrait;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\FilePickerConstraints;
+use DrevOps\PhpTui\Block\FilePickerMode;
+use DrevOps\PhpTui\Block\SelectionBounds;
+use DrevOps\PhpTui\Field\Capability\FilterCapableInterface;
+use DrevOps\PhpTui\Field\Capability\PagingCapableInterface;
+use DrevOps\PhpTui\Field\Capability\PagingCapableTrait;
+use DrevOps\PhpTui\Field\Capability\RevealCapableInterface;
+use DrevOps\PhpTui\Field\Capability\SelectionBoundedTrait;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * A filesystem browser that selects a path, or several in multiple mode.
@@ -40,7 +40,7 @@ use DrevOps\Tui\Utils\Strings;
  * against the final value by the block holding the answer, so an oversized
  * file can still be picked here.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 class FilePicker extends AbstractField implements FilterCapableInterface, RevealCapableInterface, PagingCapableInterface {
 
@@ -89,7 +89,7 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
    *   The pre-selected path (single) or paths (multiple). A single path opens
    *   the browser at its directory with the entry highlighted; in multiple mode
    *   every path seeds the selection.
-   * @param \DrevOps\Tui\Block\FilePickerConstraints|null $constraints
+   * @param \DrevOps\PhpTui\Block\FilePickerConstraints|null $constraints
    *   The type, extension and size limits on a valid pick; NULL leaves the
    *   picker unconstrained.
    * @param bool $showHidden
@@ -99,7 +99,7 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
    * @param int|null $page_size
    *   The number of entry rows shown at once before the list pages; NULL uses
    *   the default.
-   * @param \DrevOps\Tui\Block\SelectionBounds|null $selection_bounds
+   * @param \DrevOps\PhpTui\Block\SelectionBounds|null $selection_bounds
    *   The minimum/maximum selection counts enforced on accept, or NULL for no
    *   count limit.
    */
@@ -256,7 +256,7 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
    * so they are visible before a pick violates them. While an error is
    * showing the line is suppressed, so the hint and the error never stack.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string
@@ -588,7 +588,7 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
   /**
    * Render a single entry row.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    * @param string $name
    *   The entry name.
@@ -616,7 +616,7 @@ class FilePicker extends AbstractField implements FilterCapableInterface, Reveal
   /**
    * A spacer the width of a checkbox, for options that cannot be selected.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string

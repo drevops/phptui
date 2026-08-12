@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Input;
+namespace DrevOps\PhpTui\Input;
 
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\FormException;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\FormException;
 
 /**
  * The resolved, validated key bindings for a whole form.
@@ -24,7 +24,7 @@ use DrevOps\Tui\FormException;
  *   consumes typed input, would be un-typeable and is rejected;
  * - a character binding that is not exactly one character is rejected.
  *
- * @package DrevOps\Tui\Input
+ * @package DrevOps\PhpTui\Input
  */
 final class KeyMap {
 
@@ -41,14 +41,14 @@ final class KeyMap {
   /**
    * The scopes that override the base, keyed by their scope token.
    *
-   * @var array<string,\DrevOps\Tui\Input\ScopedKeyMap>
+   * @var array<string,\DrevOps\PhpTui\Input\ScopedKeyMap>
    */
   protected array $fields = [];
 
   /**
    * Resolve and validate a list of bindings into scoped maps.
    *
-   * @param list<\DrevOps\Tui\Input\Binding> $bindings
+   * @param list<\DrevOps\PhpTui\Input\Binding> $bindings
    *   The bindings, a preset's defaults followed by any overrides.
    *
    * @throws \InvalidArgumentException
@@ -75,7 +75,7 @@ final class KeyMap {
   /**
    * The panel-navigation scope.
    *
-   * @return \DrevOps\Tui\Input\ScopedKeyMap
+   * @return \DrevOps\PhpTui\Input\ScopedKeyMap
    *   The navigation bindings.
    */
   public function navigation(): ScopedKeyMap {
@@ -85,12 +85,12 @@ final class KeyMap {
   /**
    * The scope for a field type, or the base when the type has no overrides.
    *
-   * @param \DrevOps\Tui\Block\FieldType $type
+   * @param \DrevOps\PhpTui\Block\FieldType $type
    *   The field type.
    * @param bool $multiple
    *   Whether the multiple-collecting variant of the type is targeted.
    *
-   * @return \DrevOps\Tui\Input\ScopedKeyMap
+   * @return \DrevOps\PhpTui\Input\ScopedKeyMap
    *   The bindings for that field type.
    */
   public function forField(FieldType $type, bool $multiple = FALSE): ScopedKeyMap {
@@ -100,10 +100,10 @@ final class KeyMap {
   /**
    * The bindings for a scope.
    *
-   * @param \DrevOps\Tui\Input\Scope $scope
+   * @param \DrevOps\PhpTui\Input\Scope $scope
    *   The scope.
    *
-   * @return \DrevOps\Tui\Input\ScopedKeyMap
+   * @return \DrevOps\PhpTui\Input\ScopedKeyMap
    *   The bindings for that scope.
    */
   public function scope(Scope $scope): ScopedKeyMap {
@@ -117,10 +117,10 @@ final class KeyMap {
   /**
    * Group bindings into per-scope, per-action layers, later bindings winning.
    *
-   * @param list<\DrevOps\Tui\Input\Binding> $bindings
+   * @param list<\DrevOps\PhpTui\Input\Binding> $bindings
    *   The bindings.
    *
-   * @return array<string,array<string,array{action:\DrevOps\Tui\Input\Action,keys:list<\DrevOps\Tui\Input\Key>}>>
+   * @return array<string,array<string,array{action:\DrevOps\PhpTui\Input\Action,keys:list<\DrevOps\PhpTui\Input\Key>}>>
    *   The layers, keyed by scope token then action name.
    */
   protected function layer(array $bindings): array {
@@ -139,14 +139,14 @@ final class KeyMap {
   /**
    * Build a scope by overlaying its own layer onto the base bindings.
    *
-   * @param array<string,array{key:\DrevOps\Tui\Input\Key,action:\DrevOps\Tui\Input\Action}> $base_inverted
+   * @param array<string,array{key:\DrevOps\PhpTui\Input\Key,action:\DrevOps\PhpTui\Input\Action}> $base_inverted
    *   The base bindings, inverted to key token => key/action.
-   * @param array<string,array<string,array{action:\DrevOps\Tui\Input\Action,keys:list<\DrevOps\Tui\Input\Key>}>> $layers
+   * @param array<string,array<string,array{action:\DrevOps\PhpTui\Input\Action,keys:list<\DrevOps\PhpTui\Input\Key>}>> $layers
    *   All layers, keyed by scope token.
-   * @param \DrevOps\Tui\Input\Scope $scope
+   * @param \DrevOps\PhpTui\Input\Scope $scope
    *   The scope to build.
    *
-   * @return \DrevOps\Tui\Input\ScopedKeyMap
+   * @return \DrevOps\PhpTui\Input\ScopedKeyMap
    *   The resolved scope.
    */
   protected function buildScope(array $base_inverted, array $layers, Scope $scope): ScopedKeyMap {
@@ -168,15 +168,15 @@ final class KeyMap {
   /**
    * Invert an action => keys layer to a key token => key/action map.
    *
-   * @param array<string,array{action:\DrevOps\Tui\Input\Action,keys:list<\DrevOps\Tui\Input\Key>}> $layer
+   * @param array<string,array{action:\DrevOps\PhpTui\Input\Action,keys:list<\DrevOps\PhpTui\Input\Key>}> $layer
    *   The layer.
-   * @param \DrevOps\Tui\Input\Scope $scope
+   * @param \DrevOps\PhpTui\Input\Scope $scope
    *   The scope, for the conflict message.
    *
-   * @return array<string,array{key:\DrevOps\Tui\Input\Key,action:\DrevOps\Tui\Input\Action}>
+   * @return array<string,array{key:\DrevOps\PhpTui\Input\Key,action:\DrevOps\PhpTui\Input\Action}>
    *   The inverted map.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When one key is bound to two different actions in the layer.
    */
   protected function invert(array $layer, Scope $scope): array {
@@ -200,10 +200,10 @@ final class KeyMap {
   /**
    * Assemble the two lookup tables a scoped map needs from an inverted map.
    *
-   * @param array<string,array{key:\DrevOps\Tui\Input\Key,action:\DrevOps\Tui\Input\Action}> $inverted
+   * @param array<string,array{key:\DrevOps\PhpTui\Input\Key,action:\DrevOps\PhpTui\Input\Action}> $inverted
    *   The inverted map.
    *
-   * @return \DrevOps\Tui\Input\ScopedKeyMap
+   * @return \DrevOps\PhpTui\Input\ScopedKeyMap
    *   The scoped map.
    */
   protected function toScoped(array $inverted): ScopedKeyMap {
@@ -221,12 +221,12 @@ final class KeyMap {
   /**
    * Reject printable-character bindings where they would be un-typeable.
    *
-   * @param array<string,array{key:\DrevOps\Tui\Input\Key,action:\DrevOps\Tui\Input\Action}> $inverted
+   * @param array<string,array{key:\DrevOps\PhpTui\Input\Key,action:\DrevOps\PhpTui\Input\Action}> $inverted
    *   The inverted bindings for the scope.
-   * @param \DrevOps\Tui\Input\Scope $scope
+   * @param \DrevOps\PhpTui\Input\Scope $scope
    *   The scope being checked.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When a printable character is bound in the base or a text-entry scope.
    */
   protected function assertTypeable(array $inverted, Scope $scope): void {
@@ -265,15 +265,15 @@ final class KeyMap {
   /**
    * Normalize authored keys to Key objects.
    *
-   * @param list<\DrevOps\Tui\Input\Key|\DrevOps\Tui\Input\KeyName|string> $keys
+   * @param list<\DrevOps\PhpTui\Input\Key|\DrevOps\PhpTui\Input\KeyName|string> $keys
    *   The authored keys.
-   * @param \DrevOps\Tui\Input\Scope $scope
+   * @param \DrevOps\PhpTui\Input\Scope $scope
    *   The scope, for the error message.
    *
-   * @return list<\DrevOps\Tui\Input\Key>
+   * @return list<\DrevOps\PhpTui\Input\Key>
    *   The normalized keys.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When a character binding is not exactly one character.
    */
   protected function normalize(array $keys, Scope $scope): array {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
 /**
  * The units a byte count is scaled through when formatted for display.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Block;
  * Ordered smallest to largest, each a factor of 1024 above the previous, so a
  * formatter can walk the cases while a value stays above one unit.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 enum FileSizeUnit: string {
 

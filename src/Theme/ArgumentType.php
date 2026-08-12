@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
 /**
  * What a theme's constructor is handed.
@@ -12,7 +12,7 @@ namespace DrevOps\Tui\Theme;
  * them is satisfied by more than one declared type, since a parameter widening
  * what it accepts still accepts what it is given.
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 enum ArgumentType {
 
@@ -25,7 +25,7 @@ enum ArgumentType {
   /**
    * The types a parameter can declare and still take this argument.
    *
-   * @return list<\DrevOps\Tui\Theme\DeclaredType>
+   * @return list<\DrevOps\PhpTui\Theme\DeclaredType>
    *   The types.
    */
   public function accepted(): array {

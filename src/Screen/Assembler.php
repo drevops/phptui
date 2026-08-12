@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\PhpTui\Screen;
 
-use DrevOps\Tui\Block\Actions;
-use DrevOps\Tui\Block\Breadcrumb;
-use DrevOps\Tui\Block\Buttons;
-use DrevOps\Tui\Block\Legend;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Screen\Layout\LayoutManager;
-use DrevOps\Tui\Theme\BorderSide;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\Actions;
+use DrevOps\PhpTui\Block\Breadcrumb;
+use DrevOps\PhpTui\Block\Buttons;
+use DrevOps\PhpTui\Block\Legend;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Screen\Layout\LayoutManager;
+use DrevOps\PhpTui\Theme\BorderSide;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Puts the standard furniture into a screen.
@@ -31,22 +31,22 @@ use DrevOps\Tui\Translation\Translator;
  * outlives the session driving it, so a session that wrote its furniture into
  * the panel tree would hand the next one a form nobody declared.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\PhpTui\Screen
  */
 final class Assembler {
 
   /**
    * Build a screen around a panel.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel filling the body region.
    * @param string $layout
    *   The layout the screen is arranged by.
    *
-   * @return \DrevOps\Tui\Screen\Screen
+   * @return \DrevOps\PhpTui\Screen\Screen
    *   The screen.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When the layout keeps no place for the form itself.
    */
   public function assemble(Panel $panel, string $layout = 'default'): Screen {
@@ -89,10 +89,10 @@ final class Assembler {
   /**
    * The buttons that end a form, or close a panel drawn over it.
    *
-   * @param \DrevOps\Tui\Block\Buttons $declared
+   * @param \DrevOps\PhpTui\Block\Buttons $declared
    *   The pair as the panel they close declares it.
    *
-   * @return \DrevOps\Tui\Block\Actions
+   * @return \DrevOps\PhpTui\Block\Actions
    *   The actions.
    */
   public function actions(Buttons $declared = new Buttons()): Actions {
@@ -110,10 +110,10 @@ final class Assembler {
    * Read out of the panel's own bindings rather than written out beside them,
    * so a retuned key changes the line that advertises it too.
    *
-   * @param \DrevOps\Tui\Block\Panel $panel
+   * @param \DrevOps\PhpTui\Block\Panel $panel
    *   The panel filling the body region.
    *
-   * @return \DrevOps\Tui\Block\Legend
+   * @return \DrevOps\PhpTui\Block\Legend
    *   The legend.
    */
   protected function legend(Panel $panel): Legend {

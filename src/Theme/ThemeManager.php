@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
 /**
  * The theme registry and factory.
@@ -13,7 +13,7 @@ namespace DrevOps\Tui\Theme;
  * {@see create()} also accepts a fully-qualified theme class name directly, so
  * a one-off theme needs no registration at all. Terminal-capability detection
  * (colour, Unicode, dark/light background) lives on
- * {@see \DrevOps\Tui\Terminal\Terminal}.
+ * {@see \DrevOps\PhpTui\Terminal\Terminal}.
  *
  * What it asks of a theme is the floor and nothing above it: a
  * {@see ThemeInterface} that can be built from a frame width and the options a
@@ -25,14 +25,14 @@ namespace DrevOps\Tui\Theme;
  * for and does without, so a theme that declares none is still a theme this
  * builds and a session runs.
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 final class ThemeManager {
 
   /**
    * The name => theme-class registry.
    *
-   * @var array<string,class-string<\DrevOps\Tui\Theme\ThemeInterface>>
+   * @var array<string,class-string<\DrevOps\PhpTui\Theme\ThemeInterface>>
    */
   protected static array $registry = [
     'default' => DefaultTheme::class,
@@ -78,7 +78,7 @@ final class ThemeManager {
    *   Display options passed to the theme (e.g. "mode", "color", "unicode",
    *   "spacing", "border").
    *
-   * @return \DrevOps\Tui\Theme\ThemeInterface
+   * @return \DrevOps\PhpTui\Theme\ThemeInterface
    *   The theme instance.
    *
    * @throws \InvalidArgumentException
@@ -107,7 +107,7 @@ final class ThemeManager {
    * @param string $class
    *   The class name.
    *
-   * @return class-string<\DrevOps\Tui\Theme\ThemeInterface>
+   * @return class-string<\DrevOps\PhpTui\Theme\ThemeInterface>
    *   The class.
    *
    * @throws \InvalidArgumentException
@@ -172,7 +172,7 @@ final class ThemeManager {
    *
    * @param \ReflectionParameter $parameter
    *   The parameter.
-   * @param \DrevOps\Tui\Theme\ArgumentType $type
+   * @param \DrevOps\PhpTui\Theme\ArgumentType $type
    *   The type a caller hands it.
    *
    * @return bool
@@ -205,7 +205,7 @@ final class ThemeManager {
    *
    * @param \ReflectionType $declared
    *   The declared type.
-   * @param \DrevOps\Tui\Theme\ArgumentType $type
+   * @param \DrevOps\PhpTui\Theme\ArgumentType $type
    *   The argument a caller hands it.
    *
    * @return bool

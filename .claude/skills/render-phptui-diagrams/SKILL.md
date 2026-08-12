@@ -1,5 +1,5 @@
 ---
-name: render-tui-diagrams
+name: render-phptui-diagrams
 description: Use when regenerating the TUI architecture diagrams under docs/architecture/ after editing a .puml source, or when adding a new data-flow (sequence) diagram. Renders the PlantUML sources to SVG and scaffolds new data-flow diagrams traced from src/. Triggers on "render diagrams", "regenerate architecture diagrams", "update the architecture diagrams", "add a data-flow diagram for <flow>".
 ---
 
@@ -61,7 +61,7 @@ The light render stays the single source of truth; the dark variant is derived f
 
 ```plantuml
 @startuml
-' drevops/tui - data flow for <flow>.
+' drevops/phptui - data flow for <flow>.
 ' Traced from src/<entry class and method>.
 ' Regenerate every SVG with:  plantuml -tsvg docs/architecture/*.puml
 !theme plain

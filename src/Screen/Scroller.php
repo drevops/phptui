@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\PhpTui\Screen;
 
 /**
  * Computes the visible window of a scrolling list.
@@ -11,7 +11,7 @@ namespace DrevOps\Tui\Screen;
  * window for an offset alone. Both clamp to the valid range, and a viewport
  * reports ▲/▼.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\PhpTui\Screen
  */
 class Scroller {
 
@@ -27,7 +27,7 @@ class Scroller {
    * @param int $offset
    *   The current first-visible-line index.
    *
-   * @return \DrevOps\Tui\Screen\Viewport
+   * @return \DrevOps\PhpTui\Screen\Viewport
    *   The computed viewport.
    */
   public function follow(int $total, int $rows, int $cursor, int $offset): Viewport {
@@ -59,7 +59,7 @@ class Scroller {
    * @param int $rows
    *   The viewport height.
    *
-   * @return \DrevOps\Tui\Screen\Viewport
+   * @return \DrevOps\PhpTui\Screen\Viewport
    *   The resolved viewport.
    */
   public function viewport(int $offset, int $total, int $rows): Viewport {

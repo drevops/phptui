@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Template as TemplateModel;
-use DrevOps\Tui\Field\Capability\TextEditCapableInterface;
-use DrevOps\Tui\Field\Capability\TextEditCapableTrait;
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\Scope;
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Template as TemplateModel;
+use DrevOps\PhpTui\Field\Capability\TextEditCapableInterface;
+use DrevOps\PhpTui\Field\Capability\TextEditCapableTrait;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\Scope;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Fills the named slots of a fixed shape, one slot at a time.
@@ -24,7 +24,7 @@ use DrevOps\Tui\Translation\Translator;
  * left and again for every slot on accept, and the accepted value is the
  * assembled string.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 class Template extends AbstractField implements TextEditCapableInterface {
 
@@ -52,7 +52,7 @@ class Template extends AbstractField implements TextEditCapableInterface {
   /**
    * Construct a template field.
    *
-   * @param \DrevOps\Tui\Block\Template $template
+   * @param \DrevOps\PhpTui\Block\Template $template
    *   The shape to fill in.
    * @param string $default
    *   The initial assembled value; a value that does not match the shape
@@ -248,7 +248,7 @@ class Template extends AbstractField implements TextEditCapableInterface {
   /**
    * Render one chunk of the shape's fixed text, dimmed to read as context.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme supplying the dimmed styling.
    * @param int $index
    *   The chunk position.
@@ -266,7 +266,7 @@ class Template extends AbstractField implements TextEditCapableInterface {
   /**
    * Render one slot: the live caret line, a filled value, or a dimmed hint.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme supplying the caret glyph and the dimmed styling.
    * @param int $index
    *   The slot index.

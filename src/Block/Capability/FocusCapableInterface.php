@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Capability;
+namespace DrevOps\PhpTui\Block\Capability;
 
 /**
  * A block you can move onto, so your keys then act on it.
@@ -13,7 +13,7 @@ namespace DrevOps\Tui\Block\Capability;
  *
  * {@see FocusCapableTrait} carries the default implementation.
  *
- * @package DrevOps\Tui\Block\Capability
+ * @package DrevOps\PhpTui\Block\Capability
  */
 interface FocusCapableInterface {
 

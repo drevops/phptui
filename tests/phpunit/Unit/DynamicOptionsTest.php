@@ -2,28 +2,28 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit;
+namespace DrevOps\PhpTui\Tests\Unit;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Builder\FieldBuilder;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\CollectException;
-use DrevOps\Tui\Derive\Derive;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Handler\Context;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Schema\AgentHelp;
-use DrevOps\Tui\Schema\OptionsResolver;
-use DrevOps\Tui\Schema\SchemaGenerator;
-use DrevOps\Tui\Schema\SchemaValidator;
-use DrevOps\Tui\Screen\Collector;
-use DrevOps\Tui\Screen\ScreenController;
-use DrevOps\Tui\Testing\TuiTester;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Builder\FieldBuilder;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\CollectException;
+use DrevOps\PhpTui\Derive\Derive;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Handler\Context;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Schema\AgentHelp;
+use DrevOps\PhpTui\Schema\OptionsResolver;
+use DrevOps\PhpTui\Schema\SchemaGenerator;
+use DrevOps\PhpTui\Schema\SchemaValidator;
+use DrevOps\PhpTui\Screen\Collector;
+use DrevOps\PhpTui\Screen\ScreenController;
+use DrevOps\PhpTui\Testing\TuiTester;
+use DrevOps\PhpTui\Tui;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -59,7 +59,7 @@ final class DynamicOptionsTest extends TestCase {
   /**
    * The contexts the scripted resolver was called with, in order.
    *
-   * @var list<\DrevOps\Tui\Handler\Context>
+   * @var list<\DrevOps\PhpTui\Handler\Context>
    */
   protected array $contexts = [];
 
@@ -399,7 +399,7 @@ final class DynamicOptionsTest extends TestCase {
    * @param \Closure|null $declare
    *   A `fn (FieldBuilder): FieldBuilder` adding further declarations.
    *
-   * @return \DrevOps\Tui\Builder\Form
+   * @return \DrevOps\PhpTui\Builder\Form
    *   The form.
    */
   protected function form(?\Closure $answer = NULL, ?\Closure $declare = NULL): Form {
@@ -523,7 +523,7 @@ final class DynamicOptionsTest extends TestCase {
   /**
    * The context of the resolver's most recent call.
    *
-   * @return \DrevOps\Tui\Handler\Context
+   * @return \DrevOps\PhpTui\Handler\Context
    *   The context.
    */
   protected function lastContext(): Context {
@@ -535,10 +535,10 @@ final class DynamicOptionsTest extends TestCase {
   /**
    * A tester rendering the form deterministically at a workable height.
    *
-   * @param \DrevOps\Tui\Builder\Form $form
+   * @param \DrevOps\PhpTui\Builder\Form $form
    *   The form.
    *
-   * @return \DrevOps\Tui\Testing\TuiTester
+   * @return \DrevOps\PhpTui\Testing\TuiTester
    *   The tester.
    */
   protected function tester(Form $form): TuiTester {
@@ -548,7 +548,7 @@ final class DynamicOptionsTest extends TestCase {
   /**
    * The Enter key, as its own read.
    *
-   * @return \DrevOps\Tui\Input\Key
+   * @return \DrevOps\PhpTui\Input\Key
    *   The key.
    */
   protected function enter(): Key {
@@ -558,7 +558,7 @@ final class DynamicOptionsTest extends TestCase {
   /**
    * The Down key, as its own read.
    *
-   * @return \DrevOps\Tui\Input\Key
+   * @return \DrevOps\PhpTui\Input\Key
    *   The key.
    */
   protected function down(): Key {
@@ -568,7 +568,7 @@ final class DynamicOptionsTest extends TestCase {
   /**
    * The Up key, as its own read.
    *
-   * @return \DrevOps\Tui\Input\Key
+   * @return \DrevOps\PhpTui\Input\Key
    *   The key.
    */
   protected function up(): Key {

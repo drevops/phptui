@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Theme;
+namespace DrevOps\PhpTui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Block\Element\ActionsElementsInterface;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Tests\Fixtures\Theme\AccentOptionTheme;
-use DrevOps\Tui\Tests\Fixtures\Theme\AlternativeWidthTheme;
-use DrevOps\Tui\Tests\Fixtures\Theme\BlankTheme;
-use DrevOps\Tui\Tests\Fixtures\Theme\CapableTheme;
-use DrevOps\Tui\Tests\Fixtures\Theme\FloorOptionTheme;
-use DrevOps\Tui\Tests\Fixtures\Theme\FloorTheme;
-use DrevOps\Tui\Tests\Fixtures\Theme\IntersectedWidthTheme;
-use DrevOps\Tui\Tests\Fixtures\Theme\LenientWidthTheme;
-use DrevOps\Tui\Tests\Fixtures\Theme\WidenedWidthTheme;
-use DrevOps\Tui\Tests\Fixtures\Theme\OceanTheme;
-use DrevOps\Tui\Tests\Fixtures\Theme\UnbuildableTheme;
-use DrevOps\Tui\Tests\Traits\ResetsRegistriesTrait;
-use DrevOps\Tui\Theme\AbstractTheme;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\MidnightTheme;
-use DrevOps\Tui\Theme\Mode;
-use DrevOps\Tui\Theme\ThemeManager;
+use DrevOps\PhpTui\Block\Element\ActionsElementsInterface;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\AccentOptionTheme;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\AlternativeWidthTheme;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\BlankTheme;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\CapableTheme;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\FloorOptionTheme;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\FloorTheme;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\IntersectedWidthTheme;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\LenientWidthTheme;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\WidenedWidthTheme;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\OceanTheme;
+use DrevOps\PhpTui\Tests\Fixtures\Theme\UnbuildableTheme;
+use DrevOps\PhpTui\Tests\Traits\ResetsRegistriesTrait;
+use DrevOps\PhpTui\Theme\AbstractTheme;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\MidnightTheme;
+use DrevOps\PhpTui\Theme\Mode;
+use DrevOps\PhpTui\Theme\ThemeManager;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

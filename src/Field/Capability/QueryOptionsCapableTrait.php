@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
-use DrevOps\Tui\Theme\ThemeInterface;
-use DrevOps\Tui\Translation\Translator;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Translation\Translator;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * Candidate rows resolved from the live query rather than filtered locally.
@@ -19,7 +19,7 @@ use DrevOps\Tui\Utils\Strings;
  * The resolution itself belongs to the panel loop, which is the only place that
  * may block and repaint.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 trait QueryOptionsCapableTrait {
 
@@ -61,7 +61,7 @@ trait QueryOptionsCapableTrait {
   /**
    * The rows resolved for each query so far, oldest first.
    *
-   * @var array<string,list<\DrevOps\Tui\Block\Option>>
+   * @var array<string,list<\DrevOps\PhpTui\Block\Option>>
    */
   protected array $queryCache = [];
 
@@ -145,7 +145,7 @@ trait QueryOptionsCapableTrait {
    *
    * @param string $query
    *   The query the rows were resolved for.
-   * @param list<\DrevOps\Tui\Block\Option> $rows
+   * @param list<\DrevOps\PhpTui\Block\Option> $rows
    *   The rows to show.
    */
   protected function settle(string $query, array $rows): void {
@@ -158,7 +158,7 @@ trait QueryOptionsCapableTrait {
   /**
    * Adopt a resolved query's rows as the field's candidates.
    *
-   * @param list<\DrevOps\Tui\Block\Option> $rows
+   * @param list<\DrevOps\PhpTui\Block\Option> $rows
    *   The rows.
    */
   abstract protected function adoptQueryRows(array $rows): void;
@@ -166,7 +166,7 @@ trait QueryOptionsCapableTrait {
   /**
    * The line shown in place of the candidate list, when one applies.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    *
    * @return string|null

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Fixtures\Theme;
+namespace DrevOps\PhpTui\Tests\Fixtures\Theme;
 
-use DrevOps\Tui\Theme\AbstractTheme;
+use DrevOps\PhpTui\Theme\AbstractTheme;
 
 /**
  * Test fixture: a theme asking for an argument nothing can supply.
@@ -13,7 +13,7 @@ use DrevOps\Tui\Theme\AbstractTheme;
  * besides, so it is a theme every type check accepts and the factory has no
  * way to build.
  *
- * @package DrevOps\Tui\Tests\Fixtures\Theme
+ * @package DrevOps\PhpTui\Tests\Fixtures\Theme
  */
 class UnbuildableTheme extends AbstractTheme {
 

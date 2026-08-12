@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block\Element;
+namespace DrevOps\PhpTui\Block\Element;
 
 /**
  * The elements the progress block composes.
@@ -12,7 +12,7 @@ namespace DrevOps\Tui\Block\Element;
  * element of its own - and a glyph, so a terminal drawing no colour still
  * answers it.
  *
- * @package DrevOps\Tui\Block\Element
+ * @package DrevOps\PhpTui\Block\Element
  */
 interface ProgressElementsInterface {
 

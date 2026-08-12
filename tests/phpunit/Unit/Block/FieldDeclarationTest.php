@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Block;
+namespace DrevOps\PhpTui\Tests\Unit\Block;
 
-use DrevOps\Tui\Block\Field;
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\Panel;
-use DrevOps\Tui\Block\Template;
-use DrevOps\Tui\Block\Tree;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\FormException;
+use DrevOps\PhpTui\Block\Field;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Block\Template;
+use DrevOps\PhpTui\Block\Tree;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\FormException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -318,7 +318,7 @@ final class FieldDeclarationTest extends TestCase {
   /**
    * Tests that only a field drawing a buffer accepts ghost text.
    *
-   * @param \DrevOps\Tui\Block\FieldType $type
+   * @param \DrevOps\PhpTui\Block\FieldType $type
    *   The kind of answer the field collects.
    * @param bool $accepted
    *   Whether it draws a buffer to ghost.
@@ -344,7 +344,7 @@ final class FieldDeclarationTest extends TestCase {
   /**
    * Data provider for testPlaceholderIsRejectedWhenTypeHasNoInput().
    *
-   * @return \Iterator<string,array{\DrevOps\Tui\Block\FieldType,bool}>
+   * @return \Iterator<string,array{\DrevOps\PhpTui\Block\FieldType,bool}>
    *   Each kind, and whether it draws a buffer to ghost.
    */
   public static function dataProviderPlaceholderIsRejectedWhenTypeHasNoInput(): \Iterator {
@@ -368,7 +368,7 @@ final class FieldDeclarationTest extends TestCase {
   /**
    * Tests that every kind of field takes the long text behind its help key.
    *
-   * @param \DrevOps\Tui\Block\FieldType $type
+   * @param \DrevOps\PhpTui\Block\FieldType $type
    *   The kind of answer the field collects.
    */
   #[DataProvider('dataProviderHelpIsAcceptedOnEveryType')]
@@ -379,7 +379,7 @@ final class FieldDeclarationTest extends TestCase {
   /**
    * Data provider for testHelpIsAcceptedOnEveryType().
    *
-   * @return \Iterator<string,array{\DrevOps\Tui\Block\FieldType}>
+   * @return \Iterator<string,array{\DrevOps\PhpTui\Block\FieldType}>
    *   Each kind of answer a field collects.
    */
   public static function dataProviderHelpIsAcceptedOnEveryType(): \Iterator {

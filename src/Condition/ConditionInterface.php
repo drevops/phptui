@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Condition;
+namespace DrevOps\PhpTui\Condition;
 
 /**
  * A condition evaluated against a set of answers.
  *
- * @package DrevOps\Tui\Condition
+ * @package DrevOps\PhpTui\Condition
  */
 interface ConditionInterface {
 

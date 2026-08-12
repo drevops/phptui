@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme\Capability;
+namespace DrevOps\PhpTui\Theme\Capability;
 
 /**
  * A theme that paints, and reads the background it paints onto.
@@ -15,7 +15,7 @@ namespace DrevOps\Tui\Theme\Capability;
  * A theme that declares nothing still works - it hands back the strings it was
  * given - which is why a form renders in a terminal that supports nothing.
  *
- * @package DrevOps\Tui\Theme\Capability
+ * @package DrevOps\PhpTui\Theme\Capability
  */
 interface ColorSchemeCapableInterface {
 

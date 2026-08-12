@@ -11,7 +11,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 A form is rarely the whole program. A market-stall order opens with a welcome box, says what it is doing between steps, and closes with a summary and its next steps. The `output()` primitives draw that chrome with the same theme the panel uses, so the text around the form belongs to the same program as the form itself.
 
-`output()` returns a `DrevOps\Tui\Primitive\Output` carrying the pieces: a **box** and a **card**, an aligned **table**, five **status lines**, a **definition list**, wrapped **text**, a **rule** and a **banner**. Like [`progress()`](/progress), it is a primitive: it collects no answer and never runs inside the interactive panel. Hold onto the object and call it as often as you need - every call returns it, so the calls chain.
+`output()` returns a `DrevOps\PhpTui\Primitive\Output` carrying the pieces: a **box** and a **card**, an aligned **table**, five **status lines**, a **definition list**, wrapped **text**, a **rule** and a **banner**. Like [`progress()`](/progress), it is a primitive: it collects no answer and never runs inside the interactive panel. Hold onto the object and call it as often as you need - every call returns it, so the calls chain.
 
 ```php
 $out = $tui->output();
@@ -43,7 +43,7 @@ $out->box('Welcome to the produce box', [
 
 Long lines wrap inside the border rather than being clipped by it, so you can hand `box()` a paragraph and let it fit itself to the terminal.
 
-Runnable in [`playground/18-output-box.php`](https://github.com/drevops/tui/blob/main/playground/18-output-box.php).
+Runnable in [`playground/18-output-box.php`](https://github.com/drevops/phptui/blob/main/playground/18-output-box.php).
 
 In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
@@ -83,7 +83,7 @@ $out->table(['Item', 'Crates', 'Picked'], [
 
 Pass an empty header list to draw the rows with no header row. When the natural width exceeds the terminal, the widest columns shrink and over-long cells are cut short with an ellipsis, so the borders always stay whole.
 
-Runnable in [`playground/18-output-table.php`](https://github.com/drevops/tui/blob/main/playground/18-output-table.php).
+Runnable in [`playground/18-output-table.php`](https://github.com/drevops/phptui/blob/main/playground/18-output-table.php).
 
 <table>
   <tr>
@@ -141,12 +141,12 @@ The glyph carries the meaning on its own, so the five stay distinguishable with 
 To choose the kind at runtime, pass a `Status` case to `status()`:
 
 ```php
-use DrevOps\Tui\Primitive\Status;
+use DrevOps\PhpTui\Primitive\Status;
 
 $out->status($ok ? Status::Success : Status::Error, 'Packed the box');
 ```
 
-Runnable in [`playground/18-output-status.php`](https://github.com/drevops/tui/blob/main/playground/18-output-status.php).
+Runnable in [`playground/18-output-status.php`](https://github.com/drevops/phptui/blob/main/playground/18-output-status.php).
 
 <table>
   <tr>
@@ -184,7 +184,7 @@ $out->definitions([
 ]);
 ```
 
-Runnable in [`playground/18-output-definitions.php`](https://github.com/drevops/tui/blob/main/playground/18-output-definitions.php).
+Runnable in [`playground/18-output-definitions.php`](https://github.com/drevops/phptui/blob/main/playground/18-output-definitions.php).
 
 <table>
   <tr>
@@ -226,7 +226,7 @@ $out = $tui->markdown()->output();
 $out->text("**Before you order:**\n\n- Pick a *delivery day* between Monday and Saturday\n- Leave a note if the gate code is not `1234`");
 ```
 
-Runnable in [`playground/18-output-text.php`](https://github.com/drevops/tui/blob/main/playground/18-output-text.php).
+Runnable in [`playground/18-output-text.php`](https://github.com/drevops/phptui/blob/main/playground/18-output-text.php).
 
 ## Theme-drawn
 
@@ -252,7 +252,7 @@ The frames, glyphs and alignment survive, because they are text. Forcing wins ov
 To write somewhere other than standard error - standard output, or a stream you control - pass your own terminal:
 
 ```php
-use DrevOps\Tui\Terminal\Terminal;
+use DrevOps\PhpTui\Terminal\Terminal;
 
 $out = $tui->output(new Terminal(STDOUT));
 ```

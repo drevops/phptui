@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\ScopedKeyMap;
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\ScopedKeyMap;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 
 /**
  * A single interactive field collector driven one key at a time.
@@ -15,14 +15,14 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * Measuring an offered value belongs to whatever holds the answer, so nothing
  * here refuses one.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 interface FieldInterface {
 
   /**
    * Process one key press, mutating the field state.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key to process.
    */
   public function handle(Key $key): void;
@@ -30,7 +30,7 @@ interface FieldInterface {
   /**
    * Give the field the resolved bindings for its scope.
    *
-   * @param \DrevOps\Tui\Input\ScopedKeyMap $keys
+   * @param \DrevOps\PhpTui\Input\ScopedKeyMap $keys
    *   The scoped key bindings.
    *
    * @return static
@@ -82,7 +82,7 @@ interface FieldInterface {
   /**
    * A rendering of the current state, using the theme's glyphs.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme supplying Unicode or ASCII glyphs.
    *
    * @return string
@@ -97,7 +97,7 @@ interface FieldInterface {
    * the footer renders them against the field's bindings. This is the field's
    * own contribution to the contextual help footer.
    *
-   * @return list<\DrevOps\Tui\Input\Hint>
+   * @return list<\DrevOps\PhpTui\Input\Hint>
    *   The ordered hint fragments.
    */
   public function hints(): array;
@@ -109,7 +109,7 @@ interface FieldInterface {
    * that illustrates it, so the two can never disagree about which keys are
    * live.
    *
-   * @return \DrevOps\Tui\Input\ScopedKeyMap
+   * @return \DrevOps\PhpTui\Input\ScopedKeyMap
    *   The scoped bindings.
    */
   public function keys(): ScopedKeyMap;

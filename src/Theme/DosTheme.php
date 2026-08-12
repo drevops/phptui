@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
 /**
  * A retro MS-DOS theme: the bright 16-colour CGA palette on the blue screen.
@@ -13,7 +13,7 @@ namespace DrevOps\Tui\Theme;
  * states its colours, defaults to a double-line border and washes the screen
  * blue, and inherits every element from the default theme.
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 class DosTheme extends DefaultTheme {
 

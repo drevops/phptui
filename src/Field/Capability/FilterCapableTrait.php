@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field\Capability;
+namespace DrevOps\PhpTui\Field\Capability;
 
-use DrevOps\Tui\Input\Action;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * Type-to-filter behaviour over a choice field's option rows.
@@ -15,7 +15,7 @@ use DrevOps\Tui\Utils\Strings;
  * Backspace widens them again; the match strategy itself (substring, fuzzy)
  * is the field's own.
  *
- * @package DrevOps\Tui\Field\Capability
+ * @package DrevOps\PhpTui\Field\Capability
  */
 trait FilterCapableTrait {
 
@@ -40,7 +40,7 @@ trait FilterCapableTrait {
    * @param string $needle
    *   The query.
    *
-   * @return list<\DrevOps\Tui\Block\Option>
+   * @return list<\DrevOps\PhpTui\Block\Option>
    *   The matching option rows.
    */
   abstract protected function filterOptions(string $needle): array;
@@ -48,7 +48,7 @@ trait FilterCapableTrait {
   /**
    * Handle a filter edit: Backspace deletes a character, a printable appends.
    *
-   * @param \DrevOps\Tui\Input\Key $key
+   * @param \DrevOps\PhpTui\Input\Key $key
    *   The key to handle.
    *
    * @return bool
@@ -89,7 +89,7 @@ trait FilterCapableTrait {
    * against the query, so filtering them again locally would drop rows whose
    * labels do not literally match it.
    *
-   * @return list<\DrevOps\Tui\Block\Option>
+   * @return list<\DrevOps\PhpTui\Block\Option>
    *   The visible rows.
    */
   public function visible(): array {

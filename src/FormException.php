@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui;
+namespace DrevOps\PhpTui;
 
 /**
  * Thrown when a form declaration is invalid.
@@ -11,7 +11,7 @@ namespace DrevOps\Tui;
  * extends the exception family a caller already catches for one. Whichever
  * surface throws it - a builder, a block or a limit - one catch covers all.
  *
- * @package DrevOps\Tui
+ * @package DrevOps\PhpTui
  */
 class FormException extends \InvalidArgumentException {
 

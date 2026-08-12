@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Primitive;
+namespace DrevOps\PhpTui\Primitive;
 
-use DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Terminal\Terminal;
+use DrevOps\PhpTui\Primitive\Element\PrimitiveElementsInterface;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\Terminal;
 
 /**
  * Static output primitives: a box, a status line, a definition list.
@@ -28,16 +28,16 @@ use DrevOps\Tui\Terminal\Terminal;
  * $out->definitions(['Jars' => '12', 'Fruit' => 'Apricot']);
  * @endcode
  *
- * @package DrevOps\Tui\Primitive
+ * @package DrevOps\PhpTui\Primitive
  */
 final class Output {
 
   /**
    * Construct an output primitive.
    *
-   * @param \DrevOps\Tui\Terminal\Terminal $terminal
+   * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
    *   The terminal the lines are written to.
-   * @param \DrevOps\Tui\Primitive\Element\PrimitiveElementsInterface $theme
+   * @param \DrevOps\PhpTui\Primitive\Element\PrimitiveElementsInterface $theme
    *   The theme that draws the box, the status glyphs and the list.
    */
   public function __construct(protected Terminal $terminal, protected PrimitiveElementsInterface $theme) {
@@ -137,7 +137,7 @@ final class Output {
   /**
    * Write a status line of the given kind.
    *
-   * @param \DrevOps\Tui\Primitive\Status $status
+   * @param \DrevOps\PhpTui\Primitive\Status $status
    *   The kind of status.
    * @param string $text
    *   The message.

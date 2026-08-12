@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Field;
+namespace DrevOps\PhpTui\Tests\Unit\Field;
 
-use DrevOps\Tui\Field\PasswordDisplay;
+use DrevOps\PhpTui\Field\PasswordDisplay;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -25,7 +25,7 @@ final class PasswordDisplayTest extends TestCase {
   /**
    * Data provider for testNext().
    *
-   * @return \Iterator<string, array{\DrevOps\Tui\Field\PasswordDisplay, \DrevOps\Tui\Field\PasswordDisplay}>
+   * @return \Iterator<string, array{\DrevOps\PhpTui\Field\PasswordDisplay, \DrevOps\PhpTui\Field\PasswordDisplay}>
    *   The current display and the one that follows it.
    */
   public static function dataProviderNext(): \Iterator {

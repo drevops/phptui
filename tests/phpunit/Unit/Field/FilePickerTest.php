@@ -2,26 +2,26 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Field;
+namespace DrevOps\PhpTui\Tests\Unit\Field;
 
-use DrevOps\Tui\Block\FieldType;
-use DrevOps\Tui\Block\FilePickerConstraints;
-use DrevOps\Tui\Block\FilePickerMode;
-use DrevOps\Tui\Block\Legend;
-use DrevOps\Tui\Block\SelectionBounds;
-use DrevOps\Tui\Field\AbstractField;
-use DrevOps\Tui\Field\Capability\PagingCapableTrait;
-use DrevOps\Tui\Field\Capability\SelectionBoundedTrait;
-use DrevOps\Tui\Field\FilePicker;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyMapManager;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Input\ScopedKeyMap;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Testing\ArrayKeyStream;
-use DrevOps\Tui\Testing\FieldRunner;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\FilePickerConstraints;
+use DrevOps\PhpTui\Block\FilePickerMode;
+use DrevOps\PhpTui\Block\Legend;
+use DrevOps\PhpTui\Block\SelectionBounds;
+use DrevOps\PhpTui\Field\AbstractField;
+use DrevOps\PhpTui\Field\Capability\PagingCapableTrait;
+use DrevOps\PhpTui\Field\Capability\SelectionBoundedTrait;
+use DrevOps\PhpTui\Field\FilePicker;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyMapManager;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Input\ScopedKeyMap;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Testing\ArrayKeyStream;
+use DrevOps\PhpTui\Testing\FieldRunner;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
@@ -541,7 +541,7 @@ final class FilePickerTest extends TestCase {
   /**
    * Render a field's view with the default theme, stripped of ANSI codes.
    *
-   * @param \DrevOps\Tui\Field\FilePicker $field
+   * @param \DrevOps\PhpTui\Field\FilePicker $field
    *   The field.
    *
    * @return string
@@ -554,11 +554,11 @@ final class FilePickerTest extends TestCase {
   /**
    * The legend a set of bindings and hint fragments comes to.
    *
-   * @param \DrevOps\Tui\Theme\DefaultTheme $theme
+   * @param \DrevOps\PhpTui\Theme\DefaultTheme $theme
    *   The theme.
-   * @param \DrevOps\Tui\Input\ScopedKeyMap $keys
+   * @param \DrevOps\PhpTui\Input\ScopedKeyMap $keys
    *   The bindings a key press resolves against.
-   * @param \DrevOps\Tui\Input\Hint ...$hints
+   * @param \DrevOps\PhpTui\Input\Hint ...$hints
    *   What those keys do.
    *
    * @return string

@@ -191,8 +191,8 @@ if (!file_exists($logo_path)) {
   throw new \RuntimeException('Logo asset missing: ' . $logo_path);
 }
 
-info('TUI - Social card');
-info('=================');
+info('PHPTUI - Social card');
+info('====================');
 
 $tmp_dir = $project_dir . '/.artifacts/tmp/social-card';
 
@@ -210,7 +210,7 @@ if (file_put_contents($html_path, $html) === FALSE) {
 
 info('Rendering ' . CARD_WIDTH . 'x' . CARD_HEIGHT . ' via agent-browser...');
 
-$session = 'tui-social-card';
+$session = 'phptui-social-card';
 run(['agent-browser', '--session', $session, 'open', 'file://' . $html_path]);
 
 try {

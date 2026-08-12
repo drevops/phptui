@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Translation\Translator;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Translation\Translator;
 
 /**
  * Optional integer bounds and step for a number field.
@@ -15,7 +15,7 @@ use DrevOps\Tui\Translation\Translator;
  * human range phrase live here once, so the interactive field, the headless
  * collection and the answer-set validator all agree.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 final readonly class NumberBounds {
 
@@ -29,7 +29,7 @@ final readonly class NumberBounds {
    * @param int|null $step
    *   The Up/Down increment, or NULL to step by one.
    *
-   * @throws \DrevOps\Tui\FormException
+   * @throws \DrevOps\PhpTui\FormException
    *   When both bounds are declared and the minimum exceeds the maximum -
    *   mirroring the {@see DateBounds} constructor guard.
    */

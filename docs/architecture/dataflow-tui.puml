@@ -1,5 +1,5 @@
 @startuml
-' drevops/tui - data flow for the interactive screen session.
+' drevops/phptui - data flow for the interactive screen session.
 ' Traced from src/Screen/ScreenController.php (run -> paint/handle), with
 ' src/Screen/ScreenRenderer.php drawing outward from the Screen, src/Screen/
 ' KeyRouter.php sending each key inward, src/Input/ resolving a key press to a

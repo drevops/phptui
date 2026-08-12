@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Screen;
+namespace DrevOps\PhpTui\Tests\Unit\Screen;
 
-use DrevOps\Tui\Screen\Overlay;
-use DrevOps\Tui\Theme\HAlign;
-use DrevOps\Tui\Theme\VAlign;
+use DrevOps\PhpTui\Screen\Overlay;
+use DrevOps\PhpTui\Theme\HAlign;
+use DrevOps\PhpTui\Theme\VAlign;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

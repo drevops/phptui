@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Terminal;
+namespace DrevOps\PhpTui\Terminal;
 
-use DrevOps\Tui\Theme\Border;
-use DrevOps\Tui\Utils\Strings;
+use DrevOps\PhpTui\Theme\Border;
+use DrevOps\PhpTui\Utils\Strings;
 
 /**
  * Pure table geometry: column widths and aligned, bordered row assembly.
@@ -16,7 +16,7 @@ use DrevOps\Tui\Utils\Strings;
  * styler closures colour the header cells, body cells and border glyphs during
  * assembly, so the width maths always runs on the raw text.
  *
- * @package DrevOps\Tui\Terminal
+ * @package DrevOps\PhpTui\Terminal
  */
 final class Table {
 
@@ -28,7 +28,7 @@ final class Table {
    * @param list<list<string>> $rows
    *   The body rows. A short row is padded with empty cells and a row with more
    *   cells than the header widens the grid to fit it.
-   * @param \DrevOps\Tui\Theme\Border $border
+   * @param \DrevOps\PhpTui\Theme\Border $border
    *   The border style; None shares the single-line glyph set.
    * @param bool $unicode
    *   Whether Unicode glyphs are used; FALSE draws the ASCII fallback.

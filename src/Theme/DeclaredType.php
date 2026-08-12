@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
 /**
  * A type a constructor parameter declares, as PHP names it.
@@ -11,7 +11,7 @@ namespace DrevOps\Tui\Theme;
  * the two themselves, the two PHP accepts them as, and the one that rules
  * nothing out. Anything else a parameter declares takes neither.
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 enum DeclaredType: string {
 

@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Field;
+namespace DrevOps\PhpTui\Tests\Unit\Field;
 
-use DrevOps\Tui\Block\Option;
-use DrevOps\Tui\Block\SelectionBounds;
-use DrevOps\Tui\Field\Capability\FilterCapableTrait;
-use DrevOps\Tui\Field\Capability\OptionsCapableTrait;
-use DrevOps\Tui\Field\Capability\PagingCapableTrait;
-use DrevOps\Tui\Field\Capability\PlaceholderCapableTrait;
-use DrevOps\Tui\Field\Capability\SearchCapableTrait;
-use DrevOps\Tui\Field\Capability\SelectionBoundedTrait;
-use DrevOps\Tui\Field\Capability\SelectionCapableTrait;
-use DrevOps\Tui\Field\Search;
-use DrevOps\Tui\Input\Hint;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Terminal\Ansi;
-use DrevOps\Tui\Testing\ArrayKeyStream;
-use DrevOps\Tui\Testing\FieldRunner;
-use DrevOps\Tui\Tests\Traits\AssertsPagingTrait;
-use DrevOps\Tui\Tests\Traits\MixedOptionsTrait;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Block\Option;
+use DrevOps\PhpTui\Block\SelectionBounds;
+use DrevOps\PhpTui\Field\Capability\FilterCapableTrait;
+use DrevOps\PhpTui\Field\Capability\OptionsCapableTrait;
+use DrevOps\PhpTui\Field\Capability\PagingCapableTrait;
+use DrevOps\PhpTui\Field\Capability\PlaceholderCapableTrait;
+use DrevOps\PhpTui\Field\Capability\SearchCapableTrait;
+use DrevOps\PhpTui\Field\Capability\SelectionBoundedTrait;
+use DrevOps\PhpTui\Field\Capability\SelectionCapableTrait;
+use DrevOps\PhpTui\Field\Search;
+use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Testing\ArrayKeyStream;
+use DrevOps\PhpTui\Testing\FieldRunner;
+use DrevOps\PhpTui\Tests\Traits\AssertsPagingTrait;
+use DrevOps\PhpTui\Tests\Traits\MixedOptionsTrait;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\Group;

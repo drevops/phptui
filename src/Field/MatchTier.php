@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Field;
+namespace DrevOps\PhpTui\Field;
 
 /**
  * How closely a candidate matches a query, coarsest band first.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Field;
  * A tighter tier always outranks a looser one regardless of the finer
  * within-tier refinement, so the tier's weight dominates the match score.
  *
- * @package DrevOps\Tui\Field
+ * @package DrevOps\PhpTui\Field
  */
 enum MatchTier {
 

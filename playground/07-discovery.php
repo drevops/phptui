@@ -9,7 +9,7 @@
  * bundled sample-project/ directory. Four rule types are shown: a .env key, a
  * JSON dot-path, a path-exists check and a directory scan; ->discover() also
  * takes a closure for anything custom. Per-field environment variables use the
- * form-declared BOX_ prefix instead of the default TUI_.
+ * form-declared BOX_ prefix instead of the default PHPTUI_.
  *
  * Usage:
  *   php playground/07-discovery.php
@@ -20,20 +20,20 @@
 
 declare(strict_types=1);
 
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\CollectException;
-use DrevOps\Tui\Discovery\Dotenv;
-use DrevOps\Tui\Discovery\JsonValue;
-use DrevOps\Tui\Discovery\PathExists;
-use DrevOps\Tui\Discovery\Scan;
-use DrevOps\Tui\Discovery\ScanType;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\CollectException;
+use DrevOps\PhpTui\Discovery\Dotenv;
+use DrevOps\PhpTui\Discovery\JsonValue;
+use DrevOps\PhpTui\Discovery\PathExists;
+use DrevOps\PhpTui\Discovery\Scan;
+use DrevOps\PhpTui\Discovery\ScanType;
+use DrevOps\PhpTui\Tui;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Discovery demo')
-  // Per-field env overrides read BOX_<ID> instead of the default TUI_<ID>.
+  // Per-field env overrides read BOX_<ID> instead of the default PHPTUI_<ID>.
   ->envPrefix('BOX_')
   ->panel('box', 'Box', function (PanelBuilder $p): void {
     // A dot-path into a JSON file: sample-project/box.json carries a "name"

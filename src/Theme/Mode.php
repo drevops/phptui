@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Theme;
+namespace DrevOps\PhpTui\Theme;
 
 /**
  * The colour mode: which palette suits the terminal background.
@@ -10,7 +10,7 @@ namespace DrevOps\Tui\Theme;
  * A consumer passes a case (or its string value) as the "mode" theme option;
  * when the option is unset, detection resolves one from the terminal.
  *
- * @package DrevOps\Tui\Theme
+ * @package DrevOps\PhpTui\Theme
  */
 enum Mode: string {
 

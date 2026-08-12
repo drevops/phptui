@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Fixtures\Theme;
+namespace DrevOps\PhpTui\Tests\Fixtures\Theme;
 
-use DrevOps\Tui\Theme\AbstractTheme;
+use DrevOps\PhpTui\Theme\AbstractTheme;
 
 /**
  * Test fixture: a theme on the floor that reads an option of its own.
@@ -13,7 +13,7 @@ use DrevOps\Tui\Theme\AbstractTheme;
  * consumer stated - shown on a theme that declares no capability at all, so
  * the options reaching it cannot have come from anything above the floor.
  *
- * @package DrevOps\Tui\Tests\Fixtures\Theme
+ * @package DrevOps\PhpTui\Tests\Fixtures\Theme
  */
 class FloorOptionTheme extends AbstractTheme {
 

@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Theme;
+namespace DrevOps\PhpTui\Tests\Unit\Theme;
 
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Theme\Override\BreadcrumbOverrides;
-use DrevOps\Tui\Theme\Override\FieldOverrides;
-use DrevOps\Tui\Theme\Override\Glyph;
-use DrevOps\Tui\Theme\Override\LegendOverrides;
-use DrevOps\Tui\Theme\Override\Overrides;
-use DrevOps\Tui\Theme\Override\ThemeElement;
-use DrevOps\Tui\Theme\Sgr;
-use DrevOps\Tui\Theme\ThemeBuilder;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Theme\Override\BreadcrumbOverrides;
+use DrevOps\PhpTui\Theme\Override\FieldOverrides;
+use DrevOps\PhpTui\Theme\Override\Glyph;
+use DrevOps\PhpTui\Theme\Override\LegendOverrides;
+use DrevOps\PhpTui\Theme\Override\Overrides;
+use DrevOps\PhpTui\Theme\Override\ThemeElement;
+use DrevOps\PhpTui\Theme\Sgr;
+use DrevOps\PhpTui\Theme\ThemeBuilder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -171,7 +171,7 @@ final class ThemeBuilderTest extends TestCase {
   /**
    * Every element an override can reach, drawn once.
    *
-   * @param \DrevOps\Tui\Theme\DefaultTheme $theme
+   * @param \DrevOps\PhpTui\Theme\DefaultTheme $theme
    *   The theme.
    *
    * @return array<string,string>

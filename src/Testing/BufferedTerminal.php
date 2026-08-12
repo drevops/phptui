@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Testing;
+namespace DrevOps\PhpTui\Testing;
 
-use DrevOps\Tui\Terminal\Terminal;
+use DrevOps\PhpTui\Terminal\Terminal;
 
 /**
  * A terminal that feeds scripted keystrokes and captures rendered output.
@@ -15,7 +15,7 @@ use DrevOps\Tui\Terminal\Terminal;
  * raw-mode and alternate-screen calls are no-ops because there is no TTY to
  * switch, and the height is fixed so rendered frames are deterministic.
  *
- * @package DrevOps\Tui\Testing
+ * @package DrevOps\PhpTui\Testing
  */
 final class BufferedTerminal extends Terminal {
 

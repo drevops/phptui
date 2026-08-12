@@ -14,7 +14,7 @@ Collection sometimes triggers slow work: a discovery scan of a target directory,
 `progress()` is one of the facade's **primitives**: it collects no answer and never runs inside the interactive panel. It is for slow work that happens _around_ the form - before it opens, after it closes, or wrapping a slow `->default` / `->discover`. The active theme draws it, so it matches the panel's look and honors the color and Unicode switches. Off a TTY, or in headless collection, it degrades to a single plain caption line with no control sequences. The callback receives the primitive and drives it with `advance()`.
 
 ```php
-use DrevOps\Tui\Primitive\Progress;
+use DrevOps\PhpTui\Primitive\Progress;
 
 // No total: an indeterminate spinner. Each advance() ticks a frame.
 $total = $tui->progress(null, 'Counting the baskets', function (Progress $progress): int {
@@ -44,7 +44,7 @@ With a `null` total the indicator is an animated spinner: an accent glyph beside
   <ThemedImage sources={{light: useBaseUrl('/progress-spinner-light-animated.svg'), dark: useBaseUrl('/progress-spinner-dark-animated.svg')}} alt="Progress spinner" />
 </p>
 
-Runnable in [`playground/15-progress-spinner.php`](https://github.com/drevops/tui/blob/main/playground/15-progress-spinner.php).
+Runnable in [`playground/15-progress-spinner.php`](https://github.com/drevops/phptui/blob/main/playground/15-progress-spinner.php).
 
 In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 
@@ -74,7 +74,7 @@ With a known total the indicator is a determinate bar: it fills as it advances, 
   <ThemedImage sources={{light: useBaseUrl('/progress-bar-light-animated.svg'), dark: useBaseUrl('/progress-bar-dark-animated.svg')}} alt="Progress bar" />
 </p>
 
-Runnable in [`playground/15-progress-bar.php`](https://github.com/drevops/tui/blob/main/playground/15-progress-bar.php).
+Runnable in [`playground/15-progress-bar.php`](https://github.com/drevops/phptui/blob/main/playground/15-progress-bar.php).
 
 <table>
   <tr>
@@ -127,7 +127,7 @@ $form->panel('order', 'New order', function (PanelBuilder $p) use ($pack): void 
 });
 ```
 
-Runnable in [`playground/16-loading-data.php`](https://github.com/drevops/tui/blob/main/playground/16-loading-data.php) and [`playground/02-progress-row.php`](https://github.com/drevops/tui/blob/main/playground/02-progress-row.php).
+Runnable in [`playground/16-loading-data.php`](https://github.com/drevops/phptui/blob/main/playground/16-loading-data.php) and [`playground/02-progress-row.php`](https://github.com/drevops/phptui/blob/main/playground/02-progress-row.php).
 
 ## Options from a query
 
@@ -155,4 +155,4 @@ A source that throws does not end the session: the field shows `Could not load o
 
 Headless collection has nothing typed to query with, so it looks the supplied value up **as** the query and checks the value against what comes back - a value no query can produce is rejected, exactly as one outside a static option list is. A suggest field's candidates are hints rather than a closed set, so its value is not checked in either mode.
 
-Runnable in [`playground/17-query-options.php`](https://github.com/drevops/tui/blob/main/playground/17-query-options.php).
+Runnable in [`playground/17-query-options.php`](https://github.com/drevops/phptui/blob/main/playground/17-query-options.php).

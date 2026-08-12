@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit\Screen\Layout;
+namespace DrevOps\PhpTui\Tests\Unit\Screen\Layout;
 
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Screen\Axis;
-use DrevOps\Tui\Screen\Layout\GridLayout;
-use DrevOps\Tui\Screen\Sizing;
-use DrevOps\Tui\Theme\DefaultTheme;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Layout\GridLayout;
+use DrevOps\PhpTui\Screen\Sizing;
+use DrevOps\PhpTui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;

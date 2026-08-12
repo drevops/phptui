@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Screen;
+namespace DrevOps\PhpTui\Screen;
 
-use DrevOps\Tui\Screen\Capability\BorderCapableInterface;
-use DrevOps\Tui\Screen\Capability\BorderCapableTrait;
-use DrevOps\Tui\Screen\Layout\LayoutInterface;
+use DrevOps\PhpTui\Screen\Capability\BorderCapableInterface;
+use DrevOps\PhpTui\Screen\Capability\BorderCapableTrait;
+use DrevOps\PhpTui\Screen\Layout\LayoutInterface;
 
 /**
  * The root: one layout, and whether the frame takes the whole terminal.
@@ -15,7 +15,7 @@ use DrevOps\Tui\Screen\Layout\LayoutInterface;
  * about the terminal, not about any arrangement inside it - which is what makes
  * a layout portable between a frame that stretches and one that shrinks.
  *
- * @package DrevOps\Tui\Screen
+ * @package DrevOps\PhpTui\Screen
  */
 final class Screen implements BorderCapableInterface {
 
@@ -34,7 +34,7 @@ final class Screen implements BorderCapableInterface {
   /**
    * Arrange this screen with a layout.
    *
-   * @param \DrevOps\Tui\Screen\Layout\LayoutInterface $layout
+   * @param \DrevOps\PhpTui\Screen\Layout\LayoutInterface $layout
    *   The layout.
    *
    * @return $this
@@ -49,7 +49,7 @@ final class Screen implements BorderCapableInterface {
   /**
    * The layout arranging this screen.
    *
-   * @return \DrevOps\Tui\Screen\Layout\LayoutInterface
+   * @return \DrevOps\PhpTui\Screen\Layout\LayoutInterface
    *   The layout.
    */
   public function currentLayout(): LayoutInterface {
@@ -88,7 +88,7 @@ final class Screen implements BorderCapableInterface {
    * @param string $name
    *   The region name.
    *
-   * @return \DrevOps\Tui\Screen\Region
+   * @return \DrevOps\PhpTui\Screen\Region
    *   The region.
    */
   public function in(string $name): Region {

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Builder;
+namespace DrevOps\PhpTui\Builder;
 
-use DrevOps\Tui\Condition\ConditionInterface;
-use DrevOps\Tui\Terminal\Ansi;
+use DrevOps\PhpTui\Condition\ConditionInterface;
+use DrevOps\PhpTui\Terminal\Ansi;
 
 /**
  * A post-settle fix-up: set a field's value when a condition holds.
@@ -15,7 +15,7 @@ use DrevOps\Tui\Terminal\Ansi;
  * or a copy of another field's value when `from` names one. With no condition
  * the fix-up always applies.
  *
- * @package DrevOps\Tui\Builder
+ * @package DrevOps\PhpTui\Builder
  */
 final readonly class Fixup {
 
@@ -33,7 +33,7 @@ final readonly class Fixup {
    *   The literal value to set (ignored when $from names a field).
    * @param string $from
    *   The id of a field whose value is copied (empty to use $to).
-   * @param \DrevOps\Tui\Condition\ConditionInterface|null $when
+   * @param \DrevOps\PhpTui\Condition\ConditionInterface|null $when
    *   The guard condition (NULL to always apply).
    */
   public function __construct(

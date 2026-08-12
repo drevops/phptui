@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
-use DrevOps\Tui\Screen\Capability\BorderCapableInterface;
-use DrevOps\Tui\Screen\Capability\BorderCapableTrait;
-use DrevOps\Tui\Theme\ThemeInterface;
+use DrevOps\PhpTui\Screen\Capability\BorderCapableInterface;
+use DrevOps\PhpTui\Screen\Capability\BorderCapableTrait;
+use DrevOps\PhpTui\Theme\ThemeInterface;
 
 /**
  * Behaviour every block shares: drawing through a theme's elements.
@@ -19,7 +19,7 @@ use DrevOps\Tui\Theme\ThemeInterface;
  * what a block occupies is known where it is drawn - so the renderer sizes
  * the box.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 abstract class AbstractBlock implements BlockInterface, BorderCapableInterface {
 
@@ -28,7 +28,7 @@ abstract class AbstractBlock implements BlockInterface, BorderCapableInterface {
   /**
    * The theme, narrowed to the elements this block draws with.
    *
-   * @param \DrevOps\Tui\Theme\ThemeInterface $theme
+   * @param \DrevOps\PhpTui\Theme\ThemeInterface $theme
    *   The theme.
    * @param class-string<T> $elements
    *   The elements interface this block declares.

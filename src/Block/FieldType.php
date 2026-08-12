@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Block;
+namespace DrevOps\PhpTui\Block;
 
 /**
  * The kinds of answer a field collects.
@@ -11,7 +11,7 @@ namespace DrevOps\Tui\Block;
  * reader can supply. A block that shows content or runs work is a block kind
  * of its own, not a kind of answer.
  *
- * @package DrevOps\Tui\Block
+ * @package DrevOps\PhpTui\Block
  */
 enum FieldType: string {
 

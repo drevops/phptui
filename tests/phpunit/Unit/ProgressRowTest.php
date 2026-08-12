@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace DrevOps\Tui\Tests\Unit;
+namespace DrevOps\PhpTui\Tests\Unit;
 
-use DrevOps\Tui\Block\Progress;
-use DrevOps\Tui\Builder\Form;
-use DrevOps\Tui\Builder\PanelBuilder;
-use DrevOps\Tui\FormException;
-use DrevOps\Tui\Input\Key;
-use DrevOps\Tui\Input\KeyName;
-use DrevOps\Tui\Primitive\ProgressReporter;
-use DrevOps\Tui\Schema\AgentHelp;
-use DrevOps\Tui\Screen\Collector;
-use DrevOps\Tui\Screen\ScreenController;
-use DrevOps\Tui\Testing\TuiTester;
-use DrevOps\Tui\Theme\DefaultTheme;
-use DrevOps\Tui\Tui;
+use DrevOps\PhpTui\Block\Progress;
+use DrevOps\PhpTui\Builder\Form;
+use DrevOps\PhpTui\Builder\PanelBuilder;
+use DrevOps\PhpTui\FormException;
+use DrevOps\PhpTui\Input\Key;
+use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Primitive\ProgressReporter;
+use DrevOps\PhpTui\Schema\AgentHelp;
+use DrevOps\PhpTui\Screen\Collector;
+use DrevOps\PhpTui\Screen\ScreenController;
+use DrevOps\PhpTui\Testing\TuiTester;
+use DrevOps\PhpTui\Theme\DefaultTheme;
+use DrevOps\PhpTui\Tui;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -135,7 +135,7 @@ final class ProgressRowTest extends TestCase {
    * @param int|null $steps
    *   The step count for a determinate bar, or NULL for a spinner.
    *
-   * @return \DrevOps\Tui\Builder\Form
+   * @return \DrevOps\PhpTui\Builder\Form
    *   The form.
    */
   protected function form(\Closure $work, ?int $steps = NULL): Form {
