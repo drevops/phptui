@@ -46,7 +46,7 @@ The padded rounded border above is the default look. The same form explicitly op
 
 ## 📖 Documentation
 
-Full documentation lives at **[phptui.dev](https://phptui.dev)**. The in-development build, rebuilt from `main` ahead of each release, is previewed at **[tui-docs.netlify.app](https://tui-docs.netlify.app/)**.
+Full documentation lives at **[phptui.dev](https://phptui.dev)**. The in-development build, rebuilt from `main` ahead of each release, is previewed at **[phptui-docs.netlify.app](https://phptui-docs.netlify.app/)**.
 
 ## Core concepts
 
@@ -291,7 +291,7 @@ Write your own by subclassing `DefaultTheme` and repainting just the voices a pa
 
 ## Contributing
 
-See the [Contributing guide](https://tui-docs.netlify.app/contributing) for the development workflow, quality gates and how the documentation and SVG assets are built.
+See the [Contributing guide](https://phptui-docs.netlify.app/contributing) for the development workflow, quality gates and how the documentation and SVG assets are built.
 
 ---
 _This repository was created using the [Scaffold](https://getscaffold.dev/) project template_
