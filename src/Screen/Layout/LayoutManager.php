@@ -110,8 +110,7 @@ final class LayoutManager {
 
     $shipped = [];
 
-    foreach (glob(__DIR__ . '/*.php') ?: [] as $file) {
-      $short = basename($file, '.php');
+    foreach (self::files(__DIR__) as $short) {
       $class = __NAMESPACE__ . '\\' . $short;
 
       // The directory holds this manager and the interface too.
@@ -129,6 +128,40 @@ final class LayoutManager {
     }
 
     return self::$shipped = $shipped;
+  }
+
+  /**
+   * The class names a directory's PHP files carry.
+   *
+   * Reading with glob() does not go through the stream wrapper layer, so it
+   * matches nothing on a phar:// path and a packaged library finds no layouts
+   * at all. scandir() goes through the wrapper, and sorts ascending as glob()
+   * does.
+   *
+   * @param string $dir
+   *   The directory to read.
+   *
+   * @return list<string>
+   *   The class names, without their namespace, in ascending order.
+   */
+  protected static function files(string $dir): array {
+    $entries = scandir($dir);
+    // @codeCoverageIgnoreStart
+    if ($entries === FALSE) {
+      return [];
+    }
+    // @codeCoverageIgnoreEnd
+    $names = [];
+
+    foreach ($entries as $entry) {
+      if (!str_ends_with($entry, '.php')) {
+        continue;
+      }
+
+      $names[] = basename($entry, '.php');
+    }
+
+    return $names;
   }
 
   /**
