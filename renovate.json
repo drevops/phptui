@@ -12,6 +12,11 @@
             "enabled": false
         },
         {
+            "matchManagers": ["composer"],
+            "matchUpdateTypes": ["major"],
+            "enabled": false
+        },
+        {
             "matchPackageNames": ["*"],
             "groupName": "all dependencies",
             "groupSlug": "all"

@@ -29,7 +29,6 @@ use Rector\Naming\Rector\ClassMethod\RenameParamToMatchTypeRector;
 use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
 use Rector\Php80\Rector\Switch_\ChangeSwitchToMatchRector;
 use Rector\Php81\Rector\FuncCall\NullToStrictStringFuncCallArgRector;
-use Rector\PHPUnit\Set\PHPUnitSetList;
 use Rector\Strict\Rector\Empty_\DisallowedEmptyRuleFixerRector;
 use Rector\TypeDeclaration\Rector\StmtsAwareInterface\DeclareStrictTypesRector;
 
@@ -48,9 +47,7 @@ return RectorConfig::configure()
     earlyReturn: TRUE,
     phpunitCodeQuality: TRUE,
   )
-  ->withSets([
-    PHPUnitSetList::PHPUNIT_120,
-  ])
+  ->withComposerBased(phpunit: TRUE)
   ->withRules([
     DeclareStrictTypesRector::class,
   ])

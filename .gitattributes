@@ -11,10 +11,12 @@
 /.gitattributes  export-ignore
 /.github         export-ignore
 /.gitignore      export-ignore
-/docs/assets     export-ignore
-/docs/util       export-ignore
+/docs            export-ignore
+/logo-dark.svg   export-ignore
+/logo-light.svg  export-ignore
 /tests           export-ignore
 /phpcs.xml       export-ignore
 /phpstan.neon    export-ignore
 /phpunit.xml     export-ignore
 /rector.php      export-ignore
+/renovate.json   export-ignore

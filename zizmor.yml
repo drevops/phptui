@@ -1,0 +1,34 @@
+# Zizmor configuration for auditing this project's GitHub Actions workflows.
+# Consumed by the "Check GitHub Actions security with Zizmor" step in
+# ".github/workflows/test-actions.yml". Every entry documents an intentional,
+# accepted finding - genuine issues are fixed in the workflows, not ignored here.
+#
+# https://docs.zizmor.sh/configuration/
+rules:
+  dangerous-triggers:
+    # The author-assignment workflow uses "pull_request_target" only to obtain a
+    # write token; it never checks out or executes pull-request-supplied code, so
+    # the elevated trigger carries no code-injection risk.
+    ignore:
+      - assign-author.yml
+  cache-poisoning:
+    # Low-confidence findings on tag-triggered release workflows. The Node.js
+    # setup steps do not enable caching, and the Composer cache is keyed on the
+    # "composer.lock" hash, so the cache-poisoning surface is negligible.
+    ignore:
+      - release-php.yml
+      - release-nodejs.yml
+      - release-docs.yml
+  superfluous-actions:
+    # The release uses "softprops/action-gh-release" for richer release-asset
+    # handling than an equivalent "gh release" script step would provide.
+    ignore:
+      - release-php.yml
+      - release-nodejs.yml
+  ref-version-mismatch:
+    # Actions are pinned by commit SHA - the actual security control - while the
+    # trailing version comment is managed by Renovate and may briefly lag the
+    # moving tag. This online audit resolves inconsistently across runs, so it is
+    # disabled to keep a stable baseline; SHA pinning stays enforced by the
+    # "unpinned-uses" audit.
+    disable: true
