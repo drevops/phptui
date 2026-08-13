@@ -12,6 +12,7 @@ use DrevOps\PhpTui\Screen\Layout\LayoutInterface;
 use DrevOps\PhpTui\Screen\Layout\LayoutManager;
 use DrevOps\PhpTui\Screen\Layout\PanelLayout;
 use DrevOps\PhpTui\Screen\Layout\TwoColumnLayout;
+use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -46,6 +47,23 @@ final class LayoutManagerTest extends TestCase {
       'panel' => PanelLayout::class,
       'two-column' => TwoColumnLayout::class,
     ], $built);
+  }
+
+  public function testTheDirectoryIsReadThroughStreamWrapper(): void {
+    // A packaged library reads its own directory over phar://, which glob()
+    // cannot do. vfsStream is a stream wrapper too, so it reproduces that
+    // without building a PHAR.
+    vfsStream::setup('layouts', NULL, [
+      'PanelLayout.php' => '',
+      'DefaultLayout.php' => '',
+      'LayoutInterface.php' => '',
+      'README.md' => '',
+      'Nested' => [],
+    ]);
+
+    $files = (new \ReflectionMethod(LayoutManager::class, 'files'))->invoke(NULL, vfsStream::url('layouts'));
+
+    $this->assertSame(['DefaultLayout', 'LayoutInterface', 'PanelLayout'], $files);
   }
 
   public function testEachCallHandsBackLayoutOfItsOwn(): void {
