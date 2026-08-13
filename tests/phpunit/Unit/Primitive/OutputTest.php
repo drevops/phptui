@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\PhpTui\Tests\Unit\Primitive;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use DrevOps\PhpTui\Primitive\Output;
 use DrevOps\PhpTui\Primitive\Status;
 use DrevOps\PhpTui\Testing\BufferedTerminal;
@@ -18,6 +19,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(Output::class)]
 #[Group('primitive')]
+#[AllowMockObjectsWithoutExpectations]
 final class OutputTest extends TestCase {
 
   use BuildsThemesTrait;

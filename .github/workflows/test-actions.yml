@@ -1,0 +1,41 @@
+name: Test Actions
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      - 'feature/**'
+
+jobs:
+  test-actions:
+    name: Test Actions
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read # Read workflow files for the linters.
+      security-events: write # Upload the zizmor SARIF report to code scanning.
+      actions: read # Required by the SARIF upload on private repositories.
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Check coding standards with yamllint
+        run: yamllint --config-file .github/.yamllint-for-gha.yml .github/workflows
+        continue-on-error: ${{ vars.CI_ACTIONLINT_IGNORE_FAILURE == '1' }}
+
+      - name: Check coding standards with actionlint
+        run: docker run --rm -v "${GITHUB_WORKSPACE:-.}":/app:ro --workdir /app rhysd/actionlint@sha256:82244e1db1c60d82c7792180a48dd0bcb838370bb589d53ff132503fc9485868 # 1.7.4
+        continue-on-error: ${{ vars.CI_ACTIONLINT_IGNORE_FAILURE == '1' }}
+
+      - name: Check GitHub Actions security with Zizmor
+        uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
+        with:
+          inputs: .github/workflows
+          config: zizmor.yml
+        continue-on-error: ${{ vars.CI_ZIZMOR_IGNORE_FAILURE == '1' }}
