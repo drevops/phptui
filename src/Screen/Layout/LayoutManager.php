@@ -133,9 +133,10 @@ final class LayoutManager {
   /**
    * The class names a directory's PHP files carry.
    *
-   * glob() does not go through the stream wrapper layer, so it reads nothing
-   * from a phar:// path and a packaged library finds no layouts at all.
-   * scandir() goes through the wrapper, and sorts ascending as glob() does.
+   * Reading with glob() does not go through the stream wrapper layer, so it
+   * matches nothing on a phar:// path and a packaged library finds no layouts
+   * at all. scandir() goes through the wrapper, and sorts ascending as glob()
+   * does.
    *
    * @param string $dir
    *   The directory to read.
@@ -150,7 +151,6 @@ final class LayoutManager {
       return [];
     }
     // @codeCoverageIgnoreEnd
-
     $names = [];
 
     foreach ($entries as $entry) {
