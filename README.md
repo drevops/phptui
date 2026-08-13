@@ -48,27 +48,6 @@ The padded rounded border above is the default look. The same form explicitly op
 
 Full documentation lives at **[phptui.dev](https://phptui.dev)**. The in-development build, rebuilt from `main` ahead of each release, is previewed at **[phptui-docs.netlify.app](https://phptui-docs.netlify.app/)**.
 
-## Core concepts
-
-A screen is built from four levels, and each owns a fixed set of capabilities. When something does not obviously fit, the question is never "where does this go" but **which level owns the capability it needs**.
-
-```
-Screen        the root; occupies the terminal, or fits its contents
-└─ Layout     arranges; reusable by name; scrolls what it stacks
-   └─ Region  holds blocks and flows them; declares whether it scrolls and whether it draws edges
-      └─ Block   drawn in a region
-```
-
-One kind of block - a **panel** - contains a layout, which starts the chain again. That is where depth comes from, rather than from a fifth level. Seven kinds of block exist: `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions` and `Progress`. Only a field collects, so only a field reaches the answers; everything else shows, focuses or activates.
-
-Three things follow, and they are what the rest of the library is shaped by:
-
-- **One tree.** The builder writes blocks directly, so `$form->root()` is what the interactive screen draws, what the headless collector reads, and what the JSON schema describes.
-- **Blocks say what they can do.** Each declares its capabilities as interfaces, so a driver asks "does this bind keys, does it collect" rather than "which class is this".
-- **Themes say how it looks.** A block asks the theme for one **element** at a time and hands it a plain string; order and spacing belong to the block, color and glyph to the theme.
-
-The whole model is written out at **[phptui.dev/specification](https://phptui.dev/specification)**.
-
 ## Features
 
 Every feature has a reference page and a runnable, self-contained example in [`playground/`](playground):
@@ -204,6 +183,27 @@ The facade's surface:
 | `root()` / `registry()` | The declared block tree, and the handler registry - for finer control |
 
 Read the [full guide at phptui.dev](https://phptui.dev), and browse [`playground/`](playground) for complete, runnable examples - the numbered scripts for each feature listed above.
+
+## Core concepts
+
+A screen is built from four levels, and each owns a fixed set of capabilities. When something does not obviously fit, the question is never "where does this go" but **which level owns the capability it needs**.
+
+```
+Screen        the root; occupies the terminal, or fits its contents
+└─ Layout     arranges; reusable by name; scrolls what it stacks
+   └─ Region  holds blocks and flows them; declares whether it scrolls and whether it draws edges
+      └─ Block   drawn in a region
+```
+
+One kind of block - a **panel** - contains a layout, which starts the chain again. That is where depth comes from, rather than from a fifth level. Seven kinds of block exist: `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions` and `Progress`. Only a field collects, so only a field reaches the answers; everything else shows, focuses or activates.
+
+Three things follow, and they are what the rest of the library is shaped by:
+
+- **One tree.** The builder writes blocks directly, so `$form->root()` is what the interactive screen draws, what the headless collector reads, and what the JSON schema describes.
+- **Blocks say what they can do.** Each declares its capabilities as interfaces, so a driver asks "does this bind keys, does it collect" rather than "which class is this".
+- **Themes say how it looks.** A block asks the theme for one **element** at a time and hands it a plain string; order and spacing belong to the block, color and glyph to the theme.
+
+The whole model is written out at **[phptui.dev/specification](https://phptui.dev/specification)**.
 
 ## Fields
 
