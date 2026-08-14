@@ -32,10 +32,10 @@ $catalog = [
 ];
 
 $form = Form::create('Quick start')
-  ->panel('order', 'New order', function (PanelBuilder $p) use ($catalog): void {
-    $p->text('name', 'Order name')->required();
+  ->panel('New order', function (PanelBuilder $p) use ($catalog): void {
+    $p->text('Order name')->required();
 
-    $p->select('category', 'Category')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable'])->default('fruit');
+    $p->select('Category')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable'])->default('fruit');
 
     // An answer is whatever was supplied until it is validated, so the category
     // is read defensively before it indexes anything.
@@ -47,11 +47,11 @@ $form = Form::create('Quick start')
 
     // Called again whenever the answers change: pick another category and the
     // item list follows, dropping an item the new category does not stock.
-    $p->select('item', 'Item')->options($stock);
+    $p->select('Item')->options($stock);
 
     // The same narrowing over several picks - the basket keeps only what the
     // chosen category still offers.
-    $p->select('basket', 'Basket')->multiple()->options($stock);
+    $p->select('Basket')->multiple()->options($stock);
   });
 
 try {

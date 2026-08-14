@@ -53,9 +53,9 @@ LayoutManager::register('market', MarketLayout::class);
 // Each session gets a form of its own, so the second opens on the answers the
 // form declares rather than on whatever the first was left holding.
 $form = static fn (): Form => Form::create('Orchard')
-  ->panel('delivery', 'Delivery', function (PanelBuilder $p): void {
-    $p->text('courier', 'Courier')->default('Valley Runs');
-    $p->number('weight', 'Basket weight')->default(1200)->min(200)->max(9000);
+  ->panel('Delivery', function (PanelBuilder $p): void {
+    $p->text('Courier')->default('Valley Runs');
+    $p->number('Basket weight')->default(1200)->min(200)->max(9000);
   });
 
 // The box is what makes the regions legible: it says where the frame ends, so

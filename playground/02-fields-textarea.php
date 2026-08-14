@@ -23,8 +23,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Textarea field')
-  ->panel('main', 'Textarea', function (PanelBuilder $p): void {
-    $p->textarea('notes', 'Tasting notes')->default('Crisp and sweet' . chr(10) . 'Hint of citrus')->externalEditor();
+  ->panel('Textarea', function (PanelBuilder $p): void {
+    $p->textarea('Tasting notes')->default('Crisp and sweet' . chr(10) . 'Hint of citrus')->externalEditor();
   });
 
 try {

@@ -24,8 +24,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Search field')
-  ->panel('main', 'Search', function (PanelBuilder $p): void {
-    $p->search('vegetable', 'Vegetable')->default('carrot')->options([
+  ->panel('Search', function (PanelBuilder $p): void {
+    $p->search('Vegetable')->default('carrot')->options([
       'carrot' => 'Carrot',
       'potato' => 'Potato',
       'onion' => 'Onion',

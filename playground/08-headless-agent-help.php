@@ -23,15 +23,15 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Produce order')
-  ->panel('order', 'New order', function (PanelBuilder $p): void {
-    $p->text('name', 'Order name')->required();
-    $p->select('fruit', 'Fruit')->default('banana')->options([
+  ->panel('New order', function (PanelBuilder $p): void {
+    $p->text('Order name')->required();
+    $p->select('Fruit')->default('banana')->options([
       'apple' => 'Apple',
       'banana' => 'Banana',
       'cherry' => 'Cherry',
     ]);
-    $p->number('quantity', 'Quantity')->min(1)->max(99)->default(6);
-    $p->confirm('organic', 'Organic only?')->default(FALSE);
+    $p->number('Quantity')->min(1)->max(99)->default(6);
+    $p->confirm('Organic only?')->default(FALSE);
   });
 
 echo (new Tui($form))->agentHelp() . PHP_EOL;

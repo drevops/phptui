@@ -48,29 +48,29 @@ $valign = $down === '' ? VAlign::Middle : VAlign::tryFrom($down) ?? throw new In
 $form = Form::create('Market stall')
   ->layout(1, 2)
   ->buttons(TRUE, 'Place order', 'Cancel')
-  ->panel('summary', 'Summary', function (PanelBuilder $p): void {
+  ->panel('Summary', function (PanelBuilder $p): void {
     $p->description('The order at a glance.');
-    $p->text('name', 'Order name')->default('Weekly Box')->required();
+    $p->text('Order name')->default('Weekly Box')->required();
   })
-  ->panel('produce', 'Produce', function (PanelBuilder $p): void {
+  ->panel('Produce', function (PanelBuilder $p): void {
     $p->layout(2);
-    $p->panel('fruit', 'Fruit', function (PanelBuilder $sp): void {
-      $sp->select('fruit', 'Fruit')->default('apple')->options([
+    $p->panel('Fruit', function (PanelBuilder $sp): void {
+      $sp->select('Fruit')->default('apple')->options([
         'apple' => 'Apple',
         'banana' => 'Banana',
         'cherry' => 'Cherry',
       ]);
     });
-    $p->panel('veg', 'Vegetables', function (PanelBuilder $sp): void {
-      $sp->select('veg', 'Vegetables')->multiple()->default(['carrot'])->options([
+    $p->panel('Vegetables', function (PanelBuilder $sp): void {
+      $sp->select('Vegetables')->multiple()->default(['carrot'])->options([
         'carrot' => 'Carrot',
         'tomato' => 'Tomato',
         'spinach' => 'Spinach',
       ]);
     });
   })
-  ->panel('delivery', 'Delivery', function (PanelBuilder $p): void {
-    $p->confirm('gift', 'Gift wrap?')->default(FALSE);
+  ->panel('Delivery', function (PanelBuilder $p): void {
+    $p->confirm('Gift wrap?')->default(FALSE);
   });
 
 try {

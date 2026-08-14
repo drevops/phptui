@@ -57,52 +57,52 @@ LayoutManager::register('market-hall', MarketHallLayout::class);
 LayoutManager::register('stall-floor', StallFloorLayout::class);
 
 $form = Form::create('Market hall')
-  ->panel('hall', 'Hall', function (PanelBuilder $p): void {
+  ->panel('Hall', function (PanelBuilder $p): void {
     // Declared before anything is placed, so every block below knows the
     // regions it may go in.
     $p->layout('stall-floor');
 
     $p->in('stalls');
-    $p->text('order', 'Order name')->default('Weekly Box');
+    $p->text('Order name')->default('Weekly Box');
 
-    $p->panel('produce', 'Produce', function (PanelBuilder $sp): void {
+    $p->panel('Produce', function (PanelBuilder $sp): void {
       // Two visual rows of two windows, with a row of the panel's own above
       // them and another below.
       $sp->layout(2, 2);
 
-      $sp->text('crates', 'Crates')->default('6');
+      $sp->text('Crates')->default('6');
 
-      $sp->panel('fruit', 'Fruit', function (PanelBuilder $wp): void {
+      $sp->panel('Fruit', function (PanelBuilder $wp): void {
         // A shipped layout on a panel, reached by the same name the facade
         // reaches it by.
         $wp->layout('two-column');
 
         $wp->in('left');
-        $wp->select('fruit', 'Fruit')->default('apple')->options([
+        $wp->select('Fruit')->default('apple')->options([
           'apple' => 'Apple',
           'pear' => 'Pear',
           'plum' => 'Plum',
         ]);
-        $wp->rating('freshness', 'Freshness')->default(4)->min(1)->max(5);
+        $wp->rating('Freshness')->default(4)->min(1)->max(5);
 
         $wp->in('right');
         $wp->markup('picked', 'Picked at dawn, graded at the bench.');
       });
 
-      $sp->panel('vegetables', 'Vegetables', function (PanelBuilder $wp): void {
-        $wp->select('vegetables', 'Vegetables')->multiple()->default(['carrot'])->options([
+      $sp->panel('Vegetables', function (PanelBuilder $wp): void {
+        $wp->select('Vegetables')->multiple()->default(['carrot'])->options([
           'carrot' => 'Carrot',
           'leek' => 'Leek',
           'tomato' => 'Tomato',
         ]);
       });
 
-      $sp->panel('herbs', 'Herbs', function (PanelBuilder $wp): void {
-        $wp->confirm('bundle', 'Herb bundle?')->default(TRUE);
+      $sp->panel('Herbs', function (PanelBuilder $wp): void {
+        $wp->confirm('Herb bundle?')->default(TRUE);
       });
 
-      $sp->panel('roots', 'Roots', function (PanelBuilder $wp): void {
-        $wp->toggle('washed', 'Washed')->default('yes')->options([
+      $sp->panel('Roots', function (PanelBuilder $wp): void {
+        $wp->toggle('Washed')->default('yes')->options([
           'yes' => 'Yes',
           'no' => 'No',
         ]);
@@ -111,23 +111,23 @@ $form = Form::create('Market hall')
       $sp->markup('scales', 'Crates are weighed at the bench.');
     });
 
-    $p->panel('delivery', 'Delivery', function (PanelBuilder $sp): void {
-      $sp->toggle('slot', 'Slot')->default('morning')->options([
+    $p->panel('Delivery', function (PanelBuilder $sp): void {
+      $sp->toggle('Slot')->default('morning')->options([
         'morning' => 'Morning',
         'afternoon' => 'Afternoon',
       ]);
-      $sp->confirm('gift', 'Gift wrap?')->default(FALSE);
+      $sp->confirm('Gift wrap?')->default(FALSE);
     });
 
     // The cursor steps between the columns with the left and right keys, so the
     // noticeboard holds rows to land on rather than standing text alone.
     $p->in('noticeboard');
     $p->markup('hours', "Stalls open at six.\nScales close at four.");
-    $p->toggle('season', 'Season')->default('summer')->options([
+    $p->toggle('Season')->default('summer')->options([
       'summer' => 'Summer',
       'autumn' => 'Autumn',
     ]);
-    $p->confirm('newsletter', 'Weekly list?')->default(TRUE);
+    $p->confirm('Weekly list?')->default(TRUE);
   });
 
 // Stacking the rows against each other keeps the frames about the arrangement

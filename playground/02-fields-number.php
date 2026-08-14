@@ -23,8 +23,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Number field')
-  ->panel('main', 'Number', function (PanelBuilder $p): void {
-    $p->number('weight', 'Basket weight (g)')->default(1200)->min(200)->max(9000)->step(100);
+  ->panel('Number', function (PanelBuilder $p): void {
+    $p->number('Basket weight (g)')->default(1200)->min(200)->max(9000)->step(100);
   });
 
 try {

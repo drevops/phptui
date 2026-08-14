@@ -25,12 +25,12 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Markup')
-  ->panel('main', 'Order', function (PanelBuilder $p): void {
+  ->panel('Order', function (PanelBuilder $p): void {
     // Prose: bare lines in the flow, written body first.
     $p->markup('weighing', 'Every crate is weighed at the packing bench.');
-    $p->note('intro', 'Fresh produce order')->body('This card is read-only - the cursor skips it and it collects nothing.');
-    $p->text('item', 'Item')->default('Pear');
-    $p->note('summary', 'Ready to pack')->body('Packing {{item}} into the basket.')->border();
+    $p->note('Fresh produce order')->body('This card is read-only - the cursor skips it and it collects nothing.');
+    $p->text('Item')->default('Pear');
+    $p->note('Ready to pack')->body('Packing {{item}} into the basket.')->border();
   });
 
 try {

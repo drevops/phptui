@@ -24,8 +24,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Calendar field')
-  ->panel('main', 'Calendar', function (PanelBuilder $p): void {
-    $p->calendar('harvest', 'Harvest date')->default('2026-07-15');
+  ->panel('Calendar', function (PanelBuilder $p): void {
+    $p->calendar('Harvest date')->default('2026-07-15');
   });
 
 try {

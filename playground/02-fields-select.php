@@ -23,9 +23,9 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Select field')
-  ->panel('main', 'Select', function (PanelBuilder $p): void {
+  ->panel('Select', function (PanelBuilder $p): void {
     // Options are a value => label map; the default names a value.
-    $p->select('fruit', 'Fruit')->default('apple')->options([
+    $p->select('Fruit')->default('apple')->options([
       'apple' => 'Apple',
       'banana' => 'Banana',
       'cherry' => 'Cherry',

@@ -24,9 +24,9 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Bounded MultiSelect')
-  ->panel('main', 'MultiSelect', function (PanelBuilder $p): void {
+  ->panel('MultiSelect', function (PanelBuilder $p): void {
     // Pick at least two and at most three of the options.
-    $p->select('basket', 'Basket')->multiple()->minSelections(2)->maxSelections(3)->options([
+    $p->select('Basket')->multiple()->minSelections(2)->maxSelections(3)->options([
       'apple' => 'Apple',
       'carrot' => 'Carrot',
       'tomato' => 'Tomato',

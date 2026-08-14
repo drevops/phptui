@@ -29,33 +29,33 @@ require __DIR__ . '/../vendor/autoload.php';
 $form = Form::create('Produce order')
   // Custom button labels; the buttons render on the root hub only.
   ->buttons(TRUE, 'Save', 'Discard')
-  ->panel('identity', 'Order', function (PanelBuilder $p): void {
+  ->panel('Order', function (PanelBuilder $p): void {
     // A panel description renders under the panel title.
     $p->description('Who this order is for.');
-    $p->text('name', 'Order name')->default('Weekly')->required();
+    $p->text('Order name')->default('Weekly')->required();
     // Derived from another answer; see playground/05-form-logic-*.
-    $p->text('slug', 'Slug')->description('Derived from the order name.')->derive(new Derive('{{name}}', 'machine'));
+    $p->text('Slug')->description('Derived from the order name.')->derive(new Derive('{{order_name}}', 'machine'));
   })
-  ->panel('shipping', 'Delivery', function (PanelBuilder $p): void {
+  ->panel('Delivery', function (PanelBuilder $p): void {
     $p->description('How it arrives.');
     // Options declared one by one carry their own descriptions.
-    $p->select('delivery', 'Delivery')->default('pickup')->option('pickup', 'Pickup', 'At the stall')->option('locker', 'Locker', 'Nearby locker')->option('doorstep', 'Doorstep', 'To your door');
-    $p->confirm('gift', 'Gift wrap?')->default(TRUE);
+    $p->select('Delivery')->default('pickup')->option('pickup', 'Pickup', 'At the stall')->option('locker', 'Locker', 'Nearby locker')->option('doorstep', 'Doorstep', 'To your door');
+    $p->confirm('Gift wrap?')->default(TRUE);
 
     // A nested sub-panel: rendered as a drillable row with a value summary.
-    $p->panel('extras', 'Extras', function (PanelBuilder $sp): void {
+    $p->panel('Extras', function (PanelBuilder $sp): void {
       $sp->description('Optional add-ons.');
-      $sp->select('addons', 'Add-ons')->multiple()->options([
+      $sp->select('Add-ons')->multiple()->options([
         'herbs' => 'Herbs',
         'nuts' => 'Nuts',
         'seeds' => 'Seeds',
       ]);
       // Conditional visibility; see playground/05-form-logic-*.
-      $sp->text('herb_note', 'Herb note')->default('mixed')->when(new Condition('addons', contains: 'herbs'));
+      $sp->text('Herb note')->default('mixed')->when(new Condition('add_ons', contains: 'herbs'));
 
       // Sub-panels nest to any depth.
-      $sp->panel('packaging', 'Packaging', function (PanelBuilder $tp): void {
-        $tp->suggest('weight', 'Bag weight')->default('250g')->options([
+      $sp->panel('Packaging', function (PanelBuilder $tp): void {
+        $tp->suggest('Bag weight')->default('250g')->options([
           '250g' => '250g',
           '500g' => '500g',
           '1kg' => '1kg',

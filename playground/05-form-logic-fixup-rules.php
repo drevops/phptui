@@ -29,15 +29,15 @@ require __DIR__ . '/../vendor/autoload.php';
 $form = Form::create('Fix-up rules')
   // Fix-ups are declared on the form, not on a field: each names the field
   // it sets, the value, and the condition under which it applies.
-  ->fixup(new Fixup(set: 'gift', to: FALSE, when: new Condition('delivery', ne: 'doorstep')))
-  ->panel('shipping', 'Delivery', function (PanelBuilder $p): void {
+  ->fixup(new Fixup(set: 'gift_wrap', to: FALSE, when: new Condition('delivery', ne: 'doorstep')))
+  ->panel('Delivery', function (PanelBuilder $p): void {
     $p->description('Pick a non-doorstep delivery and watch gift wrap reset.');
-    $p->select('delivery', 'Delivery')->default('doorstep')->options([
+    $p->select('Delivery')->default('doorstep')->options([
       'pickup' => 'Pickup',
       'locker' => 'Locker',
       'doorstep' => 'Doorstep',
     ]);
-    $p->confirm('gift', 'Gift wrap?')->default(TRUE);
+    $p->confirm('Gift wrap?')->default(TRUE);
   });
 
 try {

@@ -24,14 +24,14 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Display modes demo')
-  ->panel('appearance', 'Appearance', function (PanelBuilder $p): void {
-    $p->text('name', 'Order name')->default('Weekly');
-    $p->select('fruit', 'Fruit')->default('apple')->options([
+  ->panel('Appearance', function (PanelBuilder $p): void {
+    $p->text('Order name')->default('Weekly');
+    $p->select('Fruit')->default('apple')->options([
       'apple' => 'Apple',
       'cherry' => 'Cherry',
       'grape' => 'Grape',
     ]);
-    $p->confirm('organic', 'Organic only?')->default(TRUE);
+    $p->confirm('Organic only?')->default(TRUE);
   });
 
 try {

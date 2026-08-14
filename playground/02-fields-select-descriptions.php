@@ -25,9 +25,9 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Option descriptions')
-  ->panel('main', 'Select', function (PanelBuilder $p): void {
+  ->panel('Select', function (PanelBuilder $p): void {
     // A description travels with each option and shows for the highlighted one.
-    $p->select('fruit', 'Fruit')->default('apple')
+    $p->select('Fruit')->default('apple')
       ->option('apple', 'Apple', description: 'Crisp and sweet, the everyday choice.')
       ->option('banana', 'Banana', description: 'Rich in potassium; ripens off the tree.')
       ->option('cherry', 'Cherry', description: 'Short season; best eaten fresh.');

@@ -26,8 +26,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Suggest field')
-  ->panel('main', 'Suggest', function (PanelBuilder $p): void {
-    $p->suggest('fruit', 'Fruit')->options([
+  ->panel('Suggest', function (PanelBuilder $p): void {
+    $p->suggest('Fruit')->options([
       'Apple' => 'Apple',
       'Apricot' => 'Apricot',
       'Banana' => 'Banana',

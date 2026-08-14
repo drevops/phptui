@@ -26,29 +26,29 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Conditional indentation')
-  ->panel('order', 'Produce order', function (PanelBuilder $p): void {
+  ->panel('Produce order', function (PanelBuilder $p): void {
     $p->description('Pick Vegetable, then add Carrot, to step the chain open.');
-    $p->select('category', 'Category')->default('fruit')->options([
+    $p->select('Category')->default('fruit')->options([
       'fruit' => 'Fruit',
       'vegetable' => 'Vegetable',
       'herb' => 'Herb',
     ]);
 
     // One condition deep: it hangs off the unconditional category above.
-    $p->select('basket', 'Basket')->multiple()->default(['carrot'])->options([
+    $p->select('Basket')->multiple()->default(['carrot'])->options([
       'carrot' => 'Carrot',
       'potato' => 'Potato',
       'tomato' => 'Tomato',
     ])->when(new Condition('category', eq: 'vegetable'));
 
     // Two deep: its rule names a field that is itself conditional.
-    $p->confirm('weekly', 'Weekly delivery?')->default(TRUE)->when(new Condition('basket', contains: 'carrot'));
+    $p->confirm('Weekly delivery?')->default(TRUE)->when(new Condition('basket', contains: 'carrot'));
 
     // Three deep, and the steps keep going for as long as the chain does.
-    $p->text('courier', 'Courier note')->default('Leave at the gate')->when(new Condition('weekly', eq: TRUE));
+    $p->text('Courier note')->default('Leave at the gate')->when(new Condition('weekly_delivery', eq: TRUE));
 
     // Unconditional again, so the rows return to the frame edge.
-    $p->number('quantity', 'Quantity')->min(1)->max(99)->default(6);
+    $p->number('Quantity')->min(1)->max(99)->default(6);
   });
 
 try {

@@ -23,10 +23,10 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Template field')
-  ->panel('main', 'Template', function (PanelBuilder $p): void {
+  ->panel('Template', function (PanelBuilder $p): void {
     // ->pattern() declares the shape; ->slot() labels one slot and gives it a
     // validator of its own, checked apart from the others.
-    $p->template('crate', 'Crate label')
+    $p->template('Crate label')
       ->pattern('{{orchard}}-{{fruit}}-{{grade}}')
       ->default('valley-pear-a')
       ->slot('orchard', 'Orchard')
@@ -40,7 +40,7 @@ try {
 
   echo $answers->toJson() . PHP_EOL;
   // The whole label and the pieces it was built from, side by side.
-  echo json_encode($answers->parts('crate')) . PHP_EOL;
+  echo json_encode($answers->parts('crate_label')) . PHP_EOL;
 }
 catch (InterruptException) {
   // Leave quietly on Ctrl-C.

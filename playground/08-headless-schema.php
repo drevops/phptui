@@ -22,14 +22,14 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Produce order')
-  ->panel('order', 'New order', function (PanelBuilder $p): void {
-    $p->text('name', 'Order name')->required();
-    $p->select('fruit', 'Fruit')->default('banana')->options([
+  ->panel('New order', function (PanelBuilder $p): void {
+    $p->text('Order name')->required();
+    $p->select('Fruit')->default('banana')->options([
       'apple' => 'Apple',
       'banana' => 'Banana',
       'cherry' => 'Cherry',
     ]);
-    $p->number('quantity', 'Quantity')->min(1)->max(99)->default(6);
+    $p->number('Quantity')->min(1)->max(99)->default(6);
   });
 
 $tui = new Tui($form);
@@ -41,7 +41,7 @@ echo PHP_EOL;
 // Validation without collection: each violation is one message. This set
 // trips two rules - "grape" is not an option and 500 is over the maximum -
 // and an empty list means the answers are valid.
-$errors = $tui->validate(['name' => 'Weekly Box', 'fruit' => 'grape', 'quantity' => 500]);
+$errors = $tui->validate(['order_name' => 'Weekly Box', 'fruit' => 'grape', 'quantity' => 500]);
 
 foreach ($errors as $error) {
   echo '- ' . $error . PHP_EOL;

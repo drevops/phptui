@@ -23,8 +23,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('MultiSearch field')
-  ->panel('main', 'MultiSearch', function (PanelBuilder $p): void {
-    $p->search('basket', 'Basket')->multiple()->default(['apple'])->options([
+  ->panel('MultiSearch', function (PanelBuilder $p): void {
+    $p->search('Basket')->multiple()->default(['apple'])->options([
       'apple' => 'Apple',
       'banana' => 'Banana',
       'carrot' => 'Carrot',

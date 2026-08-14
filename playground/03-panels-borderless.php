@@ -26,23 +26,23 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Fruit basket')
   ->buttons(TRUE, 'Create', 'Cancel')
-  ->panel('basics', 'Basics', function (PanelBuilder $p): void {
+  ->panel('Basics', function (PanelBuilder $p): void {
     $p->description('What the basket holds.');
-    $p->text('name', 'Basket name')->default('weekly')->required();
-    $p->select('fruit', 'Fruit')->default('apple')->options([
+    $p->text('Basket name')->default('weekly')->required();
+    $p->select('Fruit')->default('apple')->options([
       'apple' => 'Apple',
       'banana' => 'Banana',
       'cherry' => 'Cherry',
     ]);
-    $p->number('quantity', 'Quantity')->default(6)->min(1)->max(99);
+    $p->number('Quantity')->default(6)->min(1)->max(99);
   })
-  ->panel('delivery', 'Delivery', function (PanelBuilder $p): void {
+  ->panel('Delivery', function (PanelBuilder $p): void {
     $p->description('How it arrives.');
-    $p->select('method', 'Method')->default('pickup')->option('pickup', 'Pickup', 'At the stall')->option('doorstep', 'Doorstep', 'To your door');
-    $p->confirm('gift', 'Gift wrap?')->default(FALSE);
+    $p->select('Method')->default('pickup')->option('pickup', 'Pickup', 'At the stall')->option('doorstep', 'Doorstep', 'To your door');
+    $p->confirm('Gift wrap?')->default(FALSE);
 
-    $p->panel('extras', 'Extras', function (PanelBuilder $sp): void {
-      $sp->suggest('bag', 'Bag size')->default('Medium')->options([
+    $p->panel('Extras', function (PanelBuilder $sp): void {
+      $sp->suggest('Bag size')->default('Medium')->options([
         'Small' => 'Small',
         'Medium' => 'Medium',
         'Large' => 'Large',

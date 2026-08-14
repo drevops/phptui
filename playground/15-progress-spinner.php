@@ -31,8 +31,8 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Quick start')
-  ->panel('order', 'New order', function (PanelBuilder $p): void {
-    $p->text('name', 'Order name')->required();
+  ->panel('New order', function (PanelBuilder $p): void {
+    $p->text('Order name')->required();
   });
 
 $tui = new Tui($form);

@@ -27,13 +27,13 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Field styles')
-  ->panel('order', 'Order details', function (PanelBuilder $p): void {
+  ->panel('Order details', function (PanelBuilder $p): void {
     $p->description('Press Enter on a field to edit it and see the input style.');
-    $p->text('name', 'Name')->default('Weekly Box');
-    $p->number('quantity', 'Quantity')->default(6);
-    $p->password('code', 'Order code')->default('melon7');
+    $p->text('Name')->default('Weekly Box');
+    $p->number('Quantity')->default(6);
+    $p->password('Order code')->default('melon7');
     // Empty by default: editing it shows the boxed style as an empty bar.
-    $p->text('notes', 'Notes');
+    $p->text('Notes');
   });
 
 try {

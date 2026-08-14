@@ -40,11 +40,11 @@ use DrevOps\PhpTui\Theme\DefaultTheme;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Orchard')
-  ->panel('delivery', 'Delivery', function (PanelBuilder $p): void {
-    $p->text('courier', 'Courier')->default('Valley Runs')->help('Every crate is weighed and labelled at the packing bench.');
+  ->panel('Delivery', function (PanelBuilder $p): void {
+    $p->text('Courier')->default('Valley Runs')->help('Every crate is weighed and labelled at the packing bench.');
     $p->markup('weighing', 'Weighed at the packing bench.');
-    $p->number('weight', 'Basket weight')->default(1200)->min(200)->max(9000);
-    $p->select('basket', 'Basket contents')->multiple()->option('apple', 'Apple')->option('carrot', 'Carrot')->default(['apple']);
+    $p->number('Basket weight')->default(1200)->min(200)->max(9000);
+    $p->select('Basket contents')->multiple()->option('apple', 'Apple')->option('carrot', 'Carrot')->default(['apple']);
   });
 
 // Wide enough that the editor's legend is read rather than clipped: a region
@@ -104,7 +104,7 @@ foreach ((new Collector())->collect($panel) as $id => $value) {
 print "\nA value the field refuses\n\n";
 
 try {
-  (new Collector())->collect($panel, ['weight' => 10]);
+  (new Collector())->collect($panel, ['basket_weight' => 10]);
 }
 catch (CollectException $exception) {
   print '  ' . $exception->getMessage() . "\n";
@@ -120,9 +120,9 @@ print "\nDriven as a session, from the first frame to the submit\n\n";
 
 // A second declaration, so the session opens on a form nobody has typed into.
 $driven = Form::create('Orchard')
-  ->panel('delivery', 'Delivery', function (PanelBuilder $p): void {
-    $p->text('courier', 'Courier')->default('Valley Runs');
-    $p->number('weight', 'Basket weight')->default(1200)->min(200)->max(9000);
+  ->panel('Delivery', function (PanelBuilder $p): void {
+    $p->text('Courier')->default('Valley Runs');
+    $p->number('Basket weight')->default(1200)->min(200)->max(9000);
   });
 
 // The session reads keys from a terminal and writes frames back to it, so it is
@@ -154,6 +154,6 @@ foreach ([1, 3, 5] as $index) {
 
 print "Collected by the session\n\n";
 
-foreach (['courier', 'weight'] as $id) {
+foreach (['courier', 'basket_weight'] as $id) {
   printf("  %-8s %s\n", $id, var_export($collected->value($id), TRUE));
 }

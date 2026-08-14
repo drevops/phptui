@@ -42,15 +42,15 @@ require __DIR__ . '/../vendor/autoload.php';
 // The form is declared in English; the catalog translates it at render time,
 // so the answer ids and values stay language-neutral.
 $form = Form::create('Produce order')
-  ->panel('order', 'New order', function (PanelBuilder $p): void {
+  ->panel('New order', function (PanelBuilder $p): void {
     $p->description('Your weekly produce order.');
-    $p->text('name', 'Order name')->default('Weekly');
+    $p->text('Order name')->default('Weekly');
 
     // A nested sub-panel renders as a drillable row with a value summary; the
     // multi-select condenses there to a pluralized "@count items selected".
-    $p->panel('basket', 'Basket', function (PanelBuilder $sp): void {
+    $p->panel('Basket', function (PanelBuilder $sp): void {
       $sp->description('Pick your fruits.');
-      $sp->select('fruits', 'Fruits')->multiple()->default(['apple', 'banana', 'cherry', 'pear'])->options([
+      $sp->select('Fruits')->multiple()->default(['apple', 'banana', 'cherry', 'pear'])->options([
         'apple' => 'Apple',
         'banana' => 'Banana',
         'cherry' => 'Cherry',

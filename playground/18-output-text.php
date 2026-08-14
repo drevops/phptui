@@ -28,8 +28,8 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Produce order')
-  ->panel('order', 'New order', function (PanelBuilder $p): void {
-    $p->text('name', 'Order name')->required();
+  ->panel('New order', function (PanelBuilder $p): void {
+    $p->text('Order name')->required();
   });
 
 // Markdown is off by default; ->markdown() turns the subset on for text().

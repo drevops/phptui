@@ -27,11 +27,11 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Produce order')
   ->buttons(TRUE, 'Place order', 'Cancel')
-  ->panel('basket', 'Basket', function (PanelBuilder $p): void {
+  ->panel('Basket', function (PanelBuilder $p): void {
     $p->description('Your produce selection.');
-    $p->text('item', 'Item')->default('Pear');
-    $p->number('quantity', 'Quantity')->default(6)->min(1)->max(99);
-    $p->select('ripeness', 'Ripeness')->default('ripe')->options([
+    $p->text('Item')->default('Pear');
+    $p->number('Quantity')->default(6)->min(1)->max(99);
+    $p->select('Ripeness')->default('ripe')->options([
       'ripe' => 'Ripe',
       'unripe' => 'Unripe',
     ]);
@@ -39,16 +39,16 @@ $form = Form::create('Produce order')
     // A modal that collects fields: activating it opens a centered dialog
     // over the dimmed basket. Save keeps the edits; Discard (or Escape)
     // restores the fields exactly as they were when the dialog opened.
-    $p->panel('gift', 'Gift options', function (PanelBuilder $m): void {
+    $p->panel('Gift options', function (PanelBuilder $m): void {
       $m->modal('Save', 'Discard');
       $m->description('Wrap this order as a gift.');
-      $m->confirm('gift_wrap', 'Gift wrap?')->default(TRUE);
-      $m->text('gift_note', 'Gift message')->default('Enjoy the harvest');
+      $m->confirm('Gift wrap?')->default(TRUE);
+      $m->text('Gift message')->default('Enjoy the harvest');
     });
 
     // A text-only modal: a warning the reader acknowledges. With no fields,
     // the dialog is the whole message, and either button dismisses it.
-    $p->panel('empty', 'Empty the basket', function (PanelBuilder $m): void {
+    $p->panel('Empty the basket', function (PanelBuilder $m): void {
       $m->modal('Empty it', 'Keep it');
       $m->description('This clears every item from your basket.' . chr(10) . 'There is no undo.');
     });

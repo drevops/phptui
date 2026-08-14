@@ -23,8 +23,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('File picker field')
-  ->panel('main', 'File picker', function (PanelBuilder $p): void {
-    $p->filePicker('price_lists', 'Price lists')->multiple()->startIn(__DIR__ . '/sample-project');
+  ->panel('File picker', function (PanelBuilder $p): void {
+    $p->filePicker('Price lists')->multiple()->startIn(__DIR__ . '/sample-project');
   });
 
 try {

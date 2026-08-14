@@ -48,7 +48,7 @@ LayoutManager::register('market', MarketLayout::class);
 
 $form = Form::create('Market stall')
   ->buttons(TRUE, 'Place order', 'Cancel')
-  ->panel('order', 'Order', function (PanelBuilder $p): void {
+  ->panel('Order', function (PanelBuilder $p): void {
     // Declared before anything is placed, so every block below knows the
     // regions it may go in.
     $p->layout('stall');
@@ -56,17 +56,17 @@ $form = Form::create('Market stall')
     // A block says which region it belongs to; the ones after it keep that
     // region until another is named.
     $p->in('produce');
-    $p->text('item', 'Item')->default('Pear');
-    $p->number('crates', 'Crates')->default(6)->min(1)->max(99);
-    $p->select('basket', 'Basket')->multiple()->default(['apple'])->options([
+    $p->text('Item')->default('Pear');
+    $p->number('Crates')->default(6)->min(1)->max(99);
+    $p->select('Basket')->multiple()->default(['apple'])->options([
       'apple' => 'Apple',
       'carrot' => 'Carrot',
       'tomato' => 'Tomato',
     ]);
 
     $p->in('delivery');
-    $p->confirm('gift', 'Gift wrap?')->default(FALSE);
-    $p->suggest('day', 'Delivery day')->default('Friday')->options([
+    $p->confirm('Gift wrap?')->default(FALSE);
+    $p->suggest('Delivery day')->default('Friday')->options([
       'Monday' => 'Monday',
       'Wednesday' => 'Wednesday',
       'Friday' => 'Friday',
