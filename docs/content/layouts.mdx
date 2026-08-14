@@ -49,17 +49,17 @@ $tui = (new Tui($form))->layout('two-column');
 
 ```php
 $form = Form::create('Market stall')
-  ->panel('order', 'Order', function (PanelBuilder $p): void {
+  ->panel('Order', function (PanelBuilder $p): void {
     $p->layout('two-column');
 
     // A block says which region it belongs to; the ones after it keep that
     // region until another is named.
     $p->in('left');
-    $p->text('item', 'Item')->default('Pear');
-    $p->number('crates', 'Crates')->default(6)->min(1)->max(99);
+    $p->text('Item')->default('Pear');
+    $p->number('Crates')->default(6)->min(1)->max(99);
 
     $p->in('right');
-    $p->confirm('gift', 'Gift wrap?')->default(FALSE);
+    $p->confirm('Gift wrap?')->default(FALSE);
   });
 ```
 
@@ -92,10 +92,10 @@ The builder's `->layout(1, 2)` is the same thing said shorter, and it is how a f
 
 ```php
 $p->layout(2);
-$p->text('name', 'Order name');                  // above the grid
-$p->panel('fruit', 'Fruit', $declare);           // window-1
-$p->panel('veg', 'Vegetables', $declare);        // window-2
-$p->markup('note', 'Crates are weighed at the bench.'); // below the grid
+$p->text('Order name');                         // above the grid
+$p->panel('Fruit', $declare);                   // window-1
+$p->panel('Vegetables', $declare);              // window-2
+$p->markup('Crates are weighed at the bench.'); // below the grid
 ```
 
 Both questions a window raises are the layout's, which is the whole of what a grid adds:

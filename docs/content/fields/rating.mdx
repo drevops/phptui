@@ -16,7 +16,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 A graded answer - how fresh the produce was, how ripe a fruit is, a one-to-five score. The arrows walk a row of points and the chosen one is collected as an **`int`**.
 
 ```php
-$p->rating('freshness', 'Freshness')
+$p->rating('Freshness')
   ->min(1)      // Lowest point of the scale.
   ->max(5)      // Highest point of the scale.
   ->default(4)  // Point the scale starts on.

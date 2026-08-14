@@ -16,7 +16,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 Multi-line text input. It collects a **`string`** that may contain newlines.
 
 ```php
-$p->textarea('notes', 'Tasting notes')
+$p->textarea('Tasting notes')
   ->default("Crisp and sweet\nHint of citrus") // Initial value (newlines allowed).
   ->externalEditor();                          // Allow a handoff to $EDITOR / $VISUAL.
 ```

@@ -51,20 +51,20 @@ const ADAPTIVE_THEMES = ['midnight', 'frost', 'ember', 'mono'];
  */
 function previewForm(): Form {
   return Form::create('Theme preview')
-    ->panel('preview', 'Preview', function (PanelBuilder $p): void {
-      $p->text('name', 'Box name')->default('Weekly Box')->description('Shown in the header.');
-      $p->select('grade', 'Grade')->default('premium')->description('Quality grade.')->options([
+    ->panel('Preview', 'preview', function (PanelBuilder $p): void {
+      $p->text('Box name', 'name')->default('Weekly Box')->description('Shown in the header.');
+      $p->select('Grade', 'grade')->default('premium')->description('Quality grade.')->options([
         'basic' => 'Basic',
         'premium' => 'Premium',
         'organic' => 'Organic',
       ]);
-      $p->select('extras', 'Extras')->multiple()->default(['herbs', 'nuts'])->description('Added extras.')->options([
+      $p->select('Extras', 'extras')->multiple()->default(['herbs', 'nuts'])->description('Added extras.')->options([
         'herbs' => 'Herbs',
         'nuts' => 'Nuts',
         'seeds' => 'Seeds',
         'flowers' => 'Flowers',
       ]);
-      $p->confirm('gift', 'Gift wrap')->default(TRUE)->description('Wrap the box as a gift.');
+      $p->confirm('Gift wrap', 'gift')->default(TRUE)->description('Wrap the box as a gift.');
     });
 }
 

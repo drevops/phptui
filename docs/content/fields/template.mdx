@@ -16,12 +16,12 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 A fixed shape with named slots to fill in. The shape's fixed text renders as context and only the slots are typed into, so a value that has to be formatted a particular way does not put that burden on the reader. It collects a **`string`** - the assembled shape - and its parts are available alongside it.
 
 ```php
-$p->template('crate', 'Crate label')
+$p->template('Crate label')
   ->pattern('{{orchard}}-{{fruit}}-{{grade}}') // The shape to fill in.
   ->default('valley-pear-a');                  // Initial value, assembled.
 
 // Label a slot, and validate it apart from the others:
-$p->template('crate', 'Crate label')
+$p->template('Crate label')
   ->pattern('{{orchard}}-{{fruit}}-{{grade}}')
   ->slot('orchard', 'Orchard')
   ->slot('fruit', 'Fruit')
@@ -51,8 +51,8 @@ The answer is the whole assembled string; the parts are read back off it, so the
 ```php
 $answers = (new Tui($form))->run();
 
-$answers->value('crate'); // 'valley-pear-a'
-$answers->parts('crate'); // ['orchard' => 'valley', 'fruit' => 'pear', 'grade' => 'a']
+$answers->value('crate_label'); // 'valley-pear-a'
+$answers->parts('crate_label'); // ['orchard' => 'valley', 'fruit' => 'pear', 'grade' => 'a']
 ```
 
 `parts()` returns an empty array for any question that is not a template, and for a template answer that does not have the shape.

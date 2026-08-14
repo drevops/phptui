@@ -16,7 +16,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 Free text with autocomplete over a fixed candidate set. As you type, candidates are fuzzy-matched and ranked by relevance. It's an **open set** - it collects a **`string`** that doesn't have to be one of the candidates.
 
 ```php
-$p->suggest('fruit', 'Fruit')
+$p->suggest('Fruit')
   ->options([
     'Apple' => 'Apple',
     'Apricot' => 'Apricot',
@@ -128,5 +128,5 @@ The highlighted suggestion's [description](/fields/select#option-descriptions), 
 The suggestions can come from the query itself rather than a fixed list, for a catalog too large to hold - see [options from a query](/progress#options-from-a-query):
 
 ```php
-$p->suggest('extra', 'Add another')->optionsFrom(fn(string $query): array => $pantry->search($query))->minQuery(2);
+$p->suggest('Add another')->optionsFrom(fn(string $query): array => $pantry->search($query))->minQuery(2);
 ```

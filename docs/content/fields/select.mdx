@@ -16,7 +16,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 Single choice from a list of options. It collects the **selected option value** (a `string`).
 
 ```php
-$p->select('fruit', 'Fruit')
+$p->select('Fruit')
   ->options([
     'apple' => 'Apple',
     'banana' => 'Banana',
@@ -47,7 +47,7 @@ Give an option a description to explain what the choice implies. It shows as a s
 </p>
 
 ```php
-$p->select('fruit', 'Fruit')
+$p->select('Fruit')
   ->option('apple', 'Apple', description: 'Crisp and sweet, the everyday choice.')
   ->option('banana', 'Banana', description: 'Rich in potassium; ripens off the tree.')
   ->option('cherry', 'Cherry', description: 'Short season; best eaten fresh.');
@@ -110,7 +110,7 @@ In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 Add `->multiple()` to collect a **`list<string>`** of checked values instead of one. <kbd>Space</kbd> toggles the highlighted option, typing narrows the list by substring, <kbd>→</kbd> / <kbd>←</kbd> select or deselect all visible, and <kbd>Enter</kbd> accepts the checked set.
 
 ```php
-$p->select('basket', 'Basket')
+$p->select('Basket')
   ->multiple()
   ->options([
     'apple' => 'Apple',
@@ -147,7 +147,7 @@ $p->select('basket', 'Basket')
 Bound how many values a multiple field collects with `->minSelections()` and `->maxSelections()`. The active limit shows as a hint below the list, an out-of-range selection is rejected inline when you accept, and the same bounds are enforced in [headless collection](/headless-collection).
 
 ```php
-$p->select('basket', 'Basket')
+$p->select('Basket')
   ->multiple()
   ->minSelections(2) // Reject fewer than two checked.
   ->maxSelections(3) // Reject more than three checked.

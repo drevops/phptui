@@ -16,7 +16,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 Single choice with a filter line above the options. Typing fuzzy-matches and ranks the labels - exact matches lead, then prefix, then substring, with looser scattered subsequence matches last - and highlights the matched characters. It collects the **selected option value** (a `string`).
 
 ```php
-$p->search('vegetable', 'Vegetable')
+$p->search('Vegetable')
   ->options([
     'carrot' => 'Carrot',
     'potato' => 'Potato',
@@ -76,7 +76,7 @@ In all four [display modes](/display-modes) - Unicode or ASCII, color on or off:
 Add `->multiple()` to collect a **`list<string>`** of checked values under the filter line. Typing fuzzy-matches and ranks with the matched characters highlighted, <kbd>Space</kbd> toggles, <kbd>→</kbd> / <kbd>←</kbd> select or deselect all visible, and <kbd>Enter</kbd> accepts the checked set.
 
 ```php
-$p->search('basket', 'Basket')
+$p->search('Basket')
   ->multiple()
   ->options([
     'apple' => 'Apple',
@@ -114,7 +114,7 @@ $p->search('basket', 'Basket')
 Bound how many values a multiple field collects with `->minSelections()` and `->maxSelections()`. The active limit shows as a hint below the list, an out-of-range selection is rejected inline when you accept, and the same bounds are enforced in [headless collection](/headless-collection).
 
 ```php
-$p->search('basket', 'Basket')
+$p->search('Basket')
   ->multiple()
   ->minSelections(2) // Reject fewer than two checked.
   ->maxSelections(3) // Reject more than three checked.
@@ -177,5 +177,5 @@ The highlighted match's [description](/fields/select#option-descriptions), in ev
 The options can come from the query itself rather than a fixed list, for a catalog too large to hold - see [options from a query](/progress#options-from-a-query):
 
 ```php
-$p->search('veg', 'Vegetable')->optionsFrom(fn(string $query): array => $pantry->search($query));
+$p->search('Vegetable')->optionsFrom(fn(string $query): array => $pantry->search($query));
 ```

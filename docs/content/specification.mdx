@@ -442,7 +442,7 @@ final class SidebarLayout extends AbstractLayout {
     parent::__construct(Axis::Columns);
 
     $this->region('sidebar')->fixed(24);
-    $this->region('main')->flex(1)->scrolls();
+    $this->region('delivery')->flex(1)->scrolls();
   }
 
 }
@@ -674,9 +674,9 @@ One panel fills the screen at a time. A **modal** is the same block that _Overla
 _Depend_ reads on a panel exactly as it reads on a field, and a section takes everything it holds with it:
 
 ```php
-$p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
-  $sp->when(new Condition('organic', eq: TRUE));
-  $sp->text('certifier', 'Certifier');
+$p->panel('Certification', function (PanelBuilder $sp): void {
+  $sp->when(new Condition('organic_only', eq: TRUE));
+  $sp->text('Certifier');
 });
 ```
 
@@ -691,15 +691,15 @@ A **field** is the _block_ that collects. It's the only kind that contributes to
 A field claims eight capabilities, more than any other block. Seven of them show up in one declaration:
 
 ```php
-$p->select('basket', 'Basket contents')       // Show, Focus
+$p->select('Basket contents')                      // Show, Focus
   ->description('Pick the produce.')
-  ->option('apple', 'Apple')                  // Capture
+  ->option('apple', 'Apple')                       // Capture
   ->option('carrot', 'Carrot')
   ->multiple()
-  ->default(['apple'])                        // Collect
-  ->minSelections(2)->maxSelections(3)        // Constrain
-  ->validate($ripeness)                       // Reject
-  ->when(new Condition('organic', eq: TRUE)); // Depend
+  ->default(['apple'])                             // Collect
+  ->minSelections(2)->maxSelections(3)             // Constrain
+  ->validate($ripeness)                            // Reject
+  ->when(new Condition('organic_only', eq: TRUE)); // Depend
 ```
 
 The entries are what _edit_ mode opens onto, the default is what reaches the result until you change it, the bounds are stated before you act and the validator explains itself after, and the condition decides whether the field is there at all. The line that declares an entry is `->option()`, and the element that draws it is `fieldEntry()` - the declaration names what you supply, the element names what appears.
@@ -735,21 +735,21 @@ Field  ──▸  capabilities  ──▸  render()  ──▸  theme elements
 
 ```php
 // Prose.
-$p->markup('weighing', 'Every crate is weighed at the packing bench.');
+$p->markup('Every crate is weighed at the packing bench.');
 
 // The same block in a bordered card.
-$p->markup('notice', 'Deliveries leave at dawn.')->border();
+$p->markup('Deliveries leave at dawn.')->border();
 
 // The same block again, laid out as a table under a title.
-$p->markup('yields', '', 'Yields per crate')
+$p->markup('', 'Yields per crate', 'yields')
   ->table(['Produce', 'Crates'], [['Apple', '12'], ['Carrot', '8']]);
 ```
 
 Prose, a bordered card and a table are the same block laid out three ways. _Depend_ is what lets a warning appear only when an earlier answer calls for it:
 
 ```php
-$p->markup('certified', 'Organic crates need current certification.')
-  ->when(new Condition('organic', eq: TRUE));
+$p->markup('Organic crates need current certification.')
+  ->when(new Condition('organic_only', eq: TRUE));
 ```
 
 #### Breadcrumb
@@ -1117,10 +1117,10 @@ The hierarchy is what's there, not what you have to type. A three-field form nam
 
 ```php
 $form = Form::create('Orchard')
-  ->panel('main', 'Delivery', function (PanelBuilder $p): void {
-    $p->text('courier', 'Courier');
-    $p->number('weight', 'Basket weight')->min(200)->max(9000);
-    $p->confirm('organic', 'Organic only?');
+  ->panel('Delivery', function (PanelBuilder $p): void {
+    $p->text('Courier');
+    $p->number('Basket weight')->min(200)->max(9000);
+    $p->confirm('Organic only?');
   });
 
 (new Tui($form))->run();
@@ -1141,20 +1141,20 @@ $layout->in('footer')->add(new Legend());
 Adding _markup_ between two _fields_ doesn't change the shape of the code, because markup and a number are both blocks in the same region. Only one of them answers:
 
 ```php
-->panel('main', 'Delivery', function (PanelBuilder $p): void {
-  $p->text('courier', 'Courier');
-  $p->markup('weighing', 'Every crate is weighed at the packing bench.');
-  $p->number('weight', 'Basket weight')->min(200)->max(9000);
+->panel('Delivery', function (PanelBuilder $p): void {
+  $p->text('Courier');
+  $p->markup('Every crate is weighed at the packing bench.');
+  $p->number('Basket weight')->min(200)->max(9000);
 })
 ```
 
 Two columns is the first thing that needs a _layout_, so it's the first thing that names one:
 
 ```php
-->panel('main', 'Delivery', function (PanelBuilder $p): void {
+->panel('Delivery', function (PanelBuilder $p): void {
   $p->layout('two-column');
-  $p->in('left')->text('courier', 'Courier');
-  $p->in('right')->number('weight', 'Basket weight');
+  $p->in('left')->text('Courier');
+  $p->in('right')->number('Basket weight');
 })
 ```
 

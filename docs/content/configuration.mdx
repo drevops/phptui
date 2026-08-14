@@ -18,21 +18,21 @@ use DrevOps\PhpTui\Condition\Condition;
 use DrevOps\PhpTui\Derive\Derive;
 
 $form = Form::create('My form')
-  ->panel('general', 'General', function (PanelBuilder $p): void {
+  ->panel('General', function (PanelBuilder $p): void {
     // text | template | select | suggest | confirm | toggle | number | rating
     // calendar | textarea | password | search | reorder | filepicker | pause
     // select, search and filepicker collect a list with ->multiple()
-    $p->text('name', 'Produce name')->required();
+    $p->text('Produce name')->required();
 
     // Compute one field from others.
-    $p->text('slug', 'Slug')->derive(new Derive('{{name}}', transform: 'machine'));
+    $p->text('Slug')->derive(new Derive('{{produce_name}}', transform: 'machine'));
 
-    $p->select('category', 'Category')
+    $p->select('Category')
       ->default('fruit')
       ->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable']);
 
     // Shown only when the condition holds; compose with Condition::all()/any()/not().
-    $p->text('variety', 'Variety')->when(new Condition('category', eq: 'vegetable'));
+    $p->text('Variety')->when(new Condition('category', eq: 'vegetable'));
   });
 ```
 
@@ -42,14 +42,51 @@ The form declares its own chrome: `->banner()` sets a start banner and `->button
 
 A panel can be arranged too - `$p->layout('two-column')`, then `$p->in('left')` - which is the same registry the facade reads. That is the one structural choice a form does make for itself, because it is about where a panel's own blocks go rather than about the terminal.
 
+## Field ids
+
+Every block carries two names: the label it draws, and the id it answers to. You declare the label, and the id is the machine form of it - so a question is written once:
+
+```php
+$p->text('Order name')->required();   // collects into "order_name"
+$p->confirm('Organic only?');         // collects into "organic_only"
+$p->number('quantity');               // already an id shape: "quantity"
+```
+
+Case and punctuation drop on the way to the id, accented letters fold to their base, and spaces and hyphens become underscores - `Weight (per-crate)` answers to `weight_per_crate`. A label with nothing an id can be made of throws when the form is declared, rather than collecting into an empty key.
+
+The id is what everything else addresses. The answers are keyed by it, `PHPTUI_<ID>` sets it from the environment, and a `Condition`, `Derive` or `Fixup` names it - never the label:
+
+```php
+$p->text('Produce name')->required();
+$p->text('Slug')->derive(new Derive('{{produce_name}}', 'machine'));
+```
+
+Declare the id after the label when it has to be a particular string - a payload key, an environment variable or a contract another system already fixed:
+
+```php
+$p->text('Stock code', 'sku')->default('PEAR-01');
+```
+
+Panels, notes and progress rows are named the same way. A panel's callback comes last either way, so the slot before it takes the id when one is declared:
+
+```php
+// Answers to "fresh_produce".
+->panel('Fresh produce', function (PanelBuilder $p): void { ... })
+
+// Answers to "produce".
+->panel('Fresh produce', 'produce', function (PanelBuilder $p): void { ... })
+```
+
+Runnable in [`playground/01-field-ids.php`](https://github.com/drevops/phptui/blob/main/playground/01-field-ids.php).
+
 ## Derived values
 
 A `Derive` computes one field from others: a template with `{{field}}` placeholders plus a transform. A transform is any [str2name](https://github.com/AlexSkrypnyk/str2name) conversion (`machine`, `kebab`, `pascal`, ...) plus `host`, `lower`, `upper` and `initials` - and an unknown name throws when the form is declared, so a typo can't sit unnoticed. Derives can feed other derives; chains settle to a fixpoint:
 
 ```php
-$p->text('slug', 'Slug')->derive(new Derive('{{name}}', 'machine'));
-$p->text('label', 'Label')->derive(new Derive('{{category}}/{{slug}}', 'lower'));
-$p->text('code', 'Code')->derive(new Derive('{{name}}', 'constant'));
+$p->text('Slug')->derive(new Derive('{{produce_name}}', 'machine'));
+$p->text('Label')->derive(new Derive('{{category}}/{{slug}}', 'lower'));
+$p->text('Code')->derive(new Derive('{{produce_name}}', 'constant'));
 ```
 
 ## Conditional fields
@@ -57,16 +94,16 @@ $p->text('code', 'Code')->derive(new Derive('{{name}}', 'constant'));
 A `->when()` rule shows or hides a field based on other answers, with operators `eq` / `ne` / `in` / `contains`. Compose them with `Condition::all()`, `Condition::any()` and `Condition::not()`:
 
 ```php
-$p->text('heat_level', 'Heat level')->default('mild')->when(new Condition('category', eq: 'vegetable'));
-$p->confirm('warning_label', 'Add a heat warning?')->when(Condition::all(new Condition('category', eq: 'vegetable'), new Condition('heat_level', ne: 'mild')));
+$p->text('Heat level')->default('mild')->when(new Condition('category', eq: 'vegetable'));
+$p->confirm('Add a heat warning?')->when(Condition::all(new Condition('category', eq: 'vegetable'), new Condition('heat_level', ne: 'mild')));
 ```
 
 The same rule gates a whole panel, a markup block and a progress row - anything that can come and go carries `->when()`. A panel declares it inside its own callback, and takes everything it holds with it: while the condition doesn't hold, its questions aren't asked, aren't drawn and aren't in the answers, and a question inside it that carries a rule of its own waits on both.
 
 ```php
-$p->panel('heat', 'Heat', function (PanelBuilder $sp): void {
+$p->panel('Heat', function (PanelBuilder $sp): void {
   $sp->when(new Condition('category', eq: 'vegetable'));
-  $sp->select('heat_level', 'Heat level')->default('mild')->options(['mild' => 'Mild', 'hot' => 'Hot']);
+  $sp->select('Heat level')->default('mild')->options(['mild' => 'Mild', 'hot' => 'Hot']);
 });
 ```
 
