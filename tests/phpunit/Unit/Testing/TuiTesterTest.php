@@ -60,8 +60,8 @@ final class TuiTesterTest extends TestCase {
 
   public function testRunEnforcesHandlerBehaviourWhileEditing(): void {
     $form = Form::create('Demo')
-      ->panel('stall', 'Stall', static function (PanelBuilder $p): void {
-        $p->text('machine_name', 'Machine name');
+      ->panel('Stall', 'stall', static function (PanelBuilder $p): void {
+        $p->text('Machine name', 'machine_name');
       });
 
     $tester = new TuiTester($form, ['DrevOps\PhpTui\Tests\Fixtures\Handler']);
@@ -131,9 +131,9 @@ final class TuiTesterTest extends TestCase {
 
   public function testConditionalFieldSurfacesWithDefault(): void {
     $form = Form::create('Demo')
-      ->panel('packing', 'Packing', function (PanelBuilder $p): void {
-        $p->confirm('extra', 'Extra')->default(FALSE);
-        $p->text('notes', 'Notes')->default('mixed')->when(new Condition('extra'));
+      ->panel('Packing', 'packing', function (PanelBuilder $p): void {
+        $p->confirm('Extra', 'extra')->default(FALSE);
+        $p->text('Notes', 'notes')->default('mixed')->when(new Condition('extra'));
       });
 
     // Drill in, flip the gate on, back out, submit: the surfaced field carries
@@ -322,8 +322,8 @@ final class TuiTesterTest extends TestCase {
    */
   protected function form(): Form {
     return Form::create('Demo')
-      ->panel('main', 'Main', function (PanelBuilder $p): void {
-        $p->text('name', 'Name');
+      ->panel('Main', 'main', function (PanelBuilder $p): void {
+        $p->text('Name', 'name');
       });
   }
 
@@ -332,12 +332,12 @@ final class TuiTesterTest extends TestCase {
    */
   protected function modalForm(): Form {
     return Form::create('Demo')
-      ->panel('main', 'Main', function (PanelBuilder $p): void {
-        $p->text('name', 'Name');
+      ->panel('Main', 'main', function (PanelBuilder $p): void {
+        $p->text('Name', 'name');
       })
-      ->panel('edit', 'Quick edit', function (PanelBuilder $m): void {
+      ->panel('Quick edit', 'edit', function (PanelBuilder $m): void {
         $m->modal('Apply', 'Discard');
-        $m->text('nick', 'Nickname');
+        $m->text('Nickname', 'nick');
       });
   }
 
@@ -346,9 +346,9 @@ final class TuiTesterTest extends TestCase {
    */
   protected function discoveryForm(): Form {
     return Form::create('Update')
-      ->panel('box', 'Box', function (PanelBuilder $p): void {
-        $p->text('name', 'Box name')->default('')->discover(new JsonValue('box.json', 'name'));
-        $p->text('season', 'Season')->default('summer')->discover(new Dotenv('SEASON'));
+      ->panel('Box', 'box', function (PanelBuilder $p): void {
+        $p->text('Box name', 'name')->default('')->discover(new JsonValue('box.json', 'name'));
+        $p->text('Season', 'season')->default('summer')->discover(new Dotenv('SEASON'));
       });
   }
 

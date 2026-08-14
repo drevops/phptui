@@ -4,10 +4,10 @@
  * @file
  * Field ids: derived from the label, or declared when they have to be exact.
  *
- * A block declared with one name is named by its label, and the id it answers
- * to is the machine form of that label - so a question is written once. A
- * block declared with two names states its id first, for an id a payload key,
- * an environment variable or an existing contract already fixed.
+ * A block is declared by the label it draws, and the id it answers to is the
+ * machine form of that label - so a question is written once. An id that has
+ * to be a particular string - one a payload key, an environment variable or an
+ * existing contract already fixed - is declared after the label.
  *
  * Usage:
  *   php playground/01-field-ids.php
@@ -30,7 +30,8 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Field ids')
-  // One name: the panel draws "Fresh produce" and answers to "fresh_produce".
+  // The panel draws "Fresh produce" and answers to "fresh_produce"; a panel
+  // declaring its own id states it between the title and the callback.
   ->panel('Fresh produce', function (PanelBuilder $p): void {
     // "Order name" collects into "order_name", read from PHPTUI_ORDER_NAME.
     $p->text('Order name')->default('Weekly Box')->required();
@@ -42,9 +43,9 @@ $form = Form::create('Field ids')
     // A label already shaped like an id derives itself: "quantity".
     $p->number('quantity')->min(1)->max(99)->default(6);
 
-    // Two names, id first: the stock system calls this field "sku", so the
+    // An id after the label: the stock system calls this field "sku", so the
     // label is free to read as a question without changing what it answers to.
-    $p->text('sku', 'Stock code')->default('PEAR-01');
+    $p->text('Stock code', 'sku')->default('PEAR-01');
 
     // A rule names the id, never the label - derived or declared, both are
     // just ids by the time a rule reads them.

@@ -28,11 +28,11 @@ final class SchemaGeneratorTest extends TestCase {
   public function testGenerate(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $profile = $p->select('profile', 'Profile')->description('The profile')->default('standard')->required();
+        $profile = $p->select('Profile', 'profile')->description('The profile')->default('standard')->required();
         $profile->option('standard', 'Standard', 'Std')->option('minimal', 'Minimal');
         $p->text('theme')->help('Leave empty to follow the profile.')->placeholder('E.g. Golden Beetroot')->derive(new Derive('{{profile}}'))->when(new Condition('profile', eq: 'standard'));
-        $p->number('port', 'Port')->min(1)->max(65535)->step(5);
-        $p->calendar('release', 'Release date')->minDate('2000-01-01')->maxDate('2030-12-31')->weekStart(Weekday::Sunday);
+        $p->number('Port', 'port')->min(1)->max(65535)->step(5);
+        $p->calendar('Release date', 'release')->minDate('2000-01-01')->maxDate('2030-12-31')->weekStart(Weekday::Sunday);
       })
       ->root();
 
@@ -168,7 +168,7 @@ final class SchemaGeneratorTest extends TestCase {
   public function testDescribesTemplateShape(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{grade}}')->default('valley-a');
+        $p->template('Crate label', 'crate')->pattern('{{orchard}}-{{grade}}')->default('valley-a');
       })
       ->root();
 
@@ -193,7 +193,7 @@ final class SchemaGeneratorTest extends TestCase {
   public function testExcludesNonSelectableOptions(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->select('profile', 'Profile')
+        $p->select('Profile', 'profile')
           ->heading('Recommended')
           ->option('standard', 'Standard')
           ->separator()
@@ -233,13 +233,13 @@ final class SchemaGeneratorTest extends TestCase {
   public function testCarriesTheSectionsRule(string $id, ?array $expected_when, ?array $expected_asked, array $expected_depends): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->confirm('organic', 'Organic only?');
-        $p->text('courier', 'Courier');
+        $p->confirm('Organic only?', 'organic');
+        $p->text('Courier', 'courier');
 
-        $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
+        $p->panel('Certification', 'certification', function (PanelBuilder $sp): void {
           $sp->when(new Condition('organic', eq: TRUE));
-          $sp->text('certifier', 'Certifier');
-          $sp->text('expiry', 'Expiry')->when(new Condition('certifier', eq: 'Soil Board'));
+          $sp->text('Certifier', 'certifier');
+          $sp->text('Expiry', 'expiry')->when(new Condition('certifier', eq: 'Soil Board'));
         });
       })
       ->root();
@@ -309,7 +309,7 @@ final class SchemaGeneratorTest extends TestCase {
   public static function dataProviderDescribesFieldInJson(): \Iterator {
     yield 'selection bounds' => [
       static function (PanelBuilder $p): void {
-        $p->select('tags', 'Tags')->multiple()->minSelections(2)->maxSelections(5)->option('a')->option('b');
+        $p->select('Tags', 'tags')->multiple()->minSelections(2)->maxSelections(5)->option('a')->option('b');
       },
       ['"min_selections":2', '"max_selections":5'],
     ];
@@ -325,7 +325,7 @@ final class SchemaGeneratorTest extends TestCase {
 
     yield 'toggle carries both values' => [
       static function (PanelBuilder $p): void {
-        $p->toggle('visibility', 'Visibility')->options(['public' => 'Public', 'private' => 'Private'])->default('public');
+        $p->toggle('Visibility', 'visibility')->options(['public' => 'Public', 'private' => 'Private'])->default('public');
       },
       ['"type":"toggle"', '"value":"public"', '"value":"private"'],
     ];
@@ -333,7 +333,7 @@ final class SchemaGeneratorTest extends TestCase {
     // The points are the steps, so a rating never advertises an increment.
     yield 'rating carries its scale' => [
       static function (PanelBuilder $p): void {
-        $p->rating('taste', 'Taste')->min(0)->max(10);
+        $p->rating('Taste', 'taste')->min(0)->max(10);
       },
       ['"type":"rating"', '"min":0', '"max":10', '"step":null'],
     ];
@@ -341,7 +341,7 @@ final class SchemaGeneratorTest extends TestCase {
     // The partial default is completed to a full ranking in the schema.
     yield 'reorder completes its ranking' => [
       static function (PanelBuilder $p): void {
-        $p->reorder('ranking', 'Ranking')->options(['a' => 'A', 'b' => 'B', 'c' => 'C'])->default(['c']);
+        $p->reorder('Ranking', 'ranking')->options(['a' => 'A', 'b' => 'B', 'c' => 'C'])->default(['c']);
       },
       ['"type":"reorder"', '"default":["c","a","b"]', '"value":"a"'],
     ];
@@ -368,7 +368,7 @@ final class SchemaGeneratorTest extends TestCase {
   public static function dataProviderResolvesDefault(): \Iterator {
     yield 'closure resolved' => [
       static function (PanelBuilder $p): void {
-        $p->text('name', 'Name')->default(fn (Context $context): string => 'computed');
+        $p->text('Name', 'name')->default(fn (Context $context): string => 'computed');
       },
       new Context(),
       'computed',
@@ -376,7 +376,7 @@ final class SchemaGeneratorTest extends TestCase {
 
     yield 'closure reads the provided context' => [
       static function (PanelBuilder $p): void {
-        $p->text('version', 'Version')->default(fn (Context $context): string => $context->version);
+        $p->text('Version', 'version')->default(fn (Context $context): string => $context->version);
       },
       new Context(version: '9.9.9'),
       '9.9.9',
@@ -384,7 +384,7 @@ final class SchemaGeneratorTest extends TestCase {
 
     yield 'declared schema default stands in' => [
       static function (PanelBuilder $p): void {
-        $p->text('name', 'Name')->default(fn (Context $context): string => 'live')->schemaDefault('static');
+        $p->text('Name', 'name')->default(fn (Context $context): string => 'live')->schemaDefault('static');
       },
       new Context(),
       'static',
@@ -394,7 +394,7 @@ final class SchemaGeneratorTest extends TestCase {
     // keeps every key and advertises the unresolvable default as null.
     yield 'unresolvable closure is null' => [
       static function (PanelBuilder $p): void {
-        $p->text('name', 'Name')->default(fn (Context $context): string => throw new \RuntimeException('needs answers'));
+        $p->text('Name', 'name')->default(fn (Context $context): string => throw new \RuntimeException('needs answers'));
       },
       new Context(),
       NULL,
@@ -423,8 +423,8 @@ final class SchemaGeneratorTest extends TestCase {
    */
   public static function dataProviderDescribesEnvironmentVariables(): \Iterator {
     $named = static function (PanelBuilder $p): void {
-      $p->text('crate_size', 'Crate size');
-      $p->text('grade', 'Grade')->env('LEGACY_GRADE')->envAliases(['OLD_GRADE']);
+      $p->text('Crate size', 'crate_size');
+      $p->text('Grade', 'grade')->env('LEGACY_GRADE')->envAliases(['OLD_GRADE']);
     };
 
     yield 'mechanical name takes the prefix' => [$named, 'APP_', 0, 'APP_CRATE_SIZE', []];
@@ -434,7 +434,7 @@ final class SchemaGeneratorTest extends TestCase {
     // is advertised for it.
     yield 'bare mechanical name is not advertised' => [
       static function (PanelBuilder $p): void {
-        $p->text('crate_size', 'Crate size');
+        $p->text('Crate size', 'crate_size');
       },
       '',
       0,
@@ -446,8 +446,8 @@ final class SchemaGeneratorTest extends TestCase {
   public function testExcludesPresentationalNote(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->note('intro', 'Intro')->body('Welcome.');
-        $p->text('name', 'Name');
+        $p->note('Intro', 'intro')->body('Welcome.');
+        $p->text('Name', 'name');
       })
       ->root();
 

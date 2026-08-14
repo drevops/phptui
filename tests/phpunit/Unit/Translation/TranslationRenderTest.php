@@ -64,11 +64,11 @@ final class TranslationRenderTest extends TestCase {
    */
   protected function form(): Panel {
     return Form::create('Demo')
-      ->panel('general', 'General', function (PanelBuilder $panel): void {
-        $panel->text('name', 'Site name')->description('The name.');
-        $panel->select('plan', 'Plan')->options(['basic' => 'Basic tier']);
-        $panel->rating('grade', 'Grade')->default(5)->captions([5 => 'Excellent']);
-        $panel->confirm('agree', 'Agree');
+      ->panel('General', 'general', function (PanelBuilder $panel): void {
+        $panel->text('Site name', 'name')->description('The name.');
+        $panel->select('Plan', 'plan')->options(['basic' => 'Basic tier']);
+        $panel->rating('Grade', 'grade')->default(5)->captions([5 => 'Excellent']);
+        $panel->confirm('Agree', 'agree');
       })
       ->root();
   }
@@ -136,8 +136,8 @@ final class TranslationRenderTest extends TestCase {
 
   public function testHeadlessMessagesTranslated(): void {
     $form = Form::create('Demo')
-      ->panel('general', 'General', function (PanelBuilder $panel): void {
-        $panel->text('name', 'Site name')->required();
+      ->panel('General', 'general', function (PanelBuilder $panel): void {
+        $panel->text('Site name', 'name')->required();
       })
       ->root();
 
@@ -201,9 +201,9 @@ final class TranslationRenderTest extends TestCase {
     $this->ukrainian();
 
     $form = Form::create('Produce order')
-      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
-        $panel->text('courier', 'Courier')->required();
-        $panel->text('crate', 'Crate')->default('Valley Runs');
+      ->panel('Weekly box', 'order', static function (PanelBuilder $panel): void {
+        $panel->text('Courier', 'courier')->required();
+        $panel->text('Crate', 'crate')->default('Valley Runs');
       })
       ->root();
 
@@ -226,8 +226,8 @@ final class TranslationRenderTest extends TestCase {
     $this->ukrainian();
 
     $form = Form::create('Produce order')
-      ->panel('order', 'Weekly box', static function (PanelBuilder $panel) use ($minimum): void {
-        $panel->select('basket', 'Basket')->multiple()->minSelections($minimum)
+      ->panel('Weekly box', 'order', static function (PanelBuilder $panel) use ($minimum): void {
+        $panel->select('Basket', 'basket')->multiple()->minSelections($minimum)
           ->options(['apple' => 'Apple', 'beet' => 'Beet', 'carrot' => 'Carrot', 'date' => 'Date', 'endive' => 'Endive', 'fennel' => 'Fennel']);
       })
       ->root();
@@ -249,8 +249,8 @@ final class TranslationRenderTest extends TestCase {
     $this->ukrainian();
 
     $form = Form::create('Produce order')
-      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
-        $panel->select('basket', 'Basket')->multiple()->default(['apple', 'beet', 'carrot', 'date'])
+      ->panel('Weekly box', 'order', static function (PanelBuilder $panel): void {
+        $panel->select('Basket', 'basket')->multiple()->default(['apple', 'beet', 'carrot', 'date'])
           ->options(['apple' => 'Apple', 'beet' => 'Beet', 'carrot' => 'Carrot', 'date' => 'Date']);
       })
       ->root();
@@ -267,8 +267,8 @@ final class TranslationRenderTest extends TestCase {
     $this->ukrainian();
 
     $form = Form::create('Produce order')
-      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
-        $panel->calendar('due', 'Due date')->default('2026-03-15');
+      ->panel('Weekly box', 'order', static function (PanelBuilder $panel): void {
+        $panel->calendar('Due date', 'due')->default('2026-03-15');
       })
       ->root();
 
@@ -288,8 +288,8 @@ final class TranslationRenderTest extends TestCase {
     $this->ukrainian();
 
     $form = Form::create('Produce order')
-      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
-        $panel->text('courier', 'Courier')->required();
+      ->panel('Weekly box', 'order', static function (PanelBuilder $panel): void {
+        $panel->text('Courier', 'courier')->required();
       })
       ->root();
 
@@ -317,9 +317,9 @@ final class TranslationRenderTest extends TestCase {
    */
   protected function weeklyBox(): Panel {
     return Form::create('Produce order')
-      ->panel('order', 'Weekly box', static function (PanelBuilder $panel): void {
-        $panel->select('basket', 'Basket')->multiple()->options(['apple' => 'Apple', 'beet' => 'Beet']);
-        $panel->text('courier', 'Courier')->help('Weighed at the packing bench.');
+      ->panel('Weekly box', 'order', static function (PanelBuilder $panel): void {
+        $panel->select('Basket', 'basket')->multiple()->options(['apple' => 'Apple', 'beet' => 'Beet']);
+        $panel->text('Courier', 'courier')->help('Weighed at the packing bench.');
       })
       ->root();
   }

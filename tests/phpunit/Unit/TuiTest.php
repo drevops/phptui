@@ -166,7 +166,7 @@ final class TuiTest extends TestCase {
   public function testSchemaResolvesClosureDefaultWithContext(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $panel): void {
-        $panel->text('version', 'Version')->default(fn (Context $context): string => $context->version);
+        $panel->text('Version', 'version')->default(fn (Context $context): string => $context->version);
       });
 
     $prompts = (new Tui($form))->schema(new Context(version: '4.5.6'))['prompts'];
@@ -179,7 +179,7 @@ final class TuiTest extends TestCase {
   public function testAgentHelpResolvesClosureDefaultWithContext(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $panel): void {
-        $panel->text('version', 'Version')->default(fn (Context $context): string => $context->version);
+        $panel->text('Version', 'version')->default(fn (Context $context): string => $context->version);
       });
 
     $help = (new Tui($form))->agentHelp(new Context(version: '4.5.6'));
@@ -231,8 +231,8 @@ final class TuiTest extends TestCase {
   }
 
   public function testLayoutArrangesTheSessionItNames(): void {
-    $form = Form::create('Orchard')->panel('main', 'Delivery', function (PanelBuilder $p): void {
-      $p->text('courier', 'Courier')->default('Valley Runs');
+    $form = Form::create('Orchard')->panel('Delivery', 'main', function (PanelBuilder $p): void {
+      $p->text('Courier', 'courier')->default('Valley Runs');
     });
 
     $tester = (new TuiTester($form))->layout('two-column');
@@ -743,9 +743,9 @@ final class TuiTest extends TestCase {
    */
   protected function discoveryTui(): Tui {
     $form = Form::create('Update')
-      ->panel('box', 'Box', function (PanelBuilder $panel): void {
-        $panel->text('name', 'Box name')->default('')->discover(new JsonValue('box.json', 'name'));
-        $panel->text('season', 'Season')->default('summer')->discover(new Dotenv('SEASON'));
+      ->panel('Box', 'box', function (PanelBuilder $panel): void {
+        $panel->text('Box name', 'name')->default('')->discover(new JsonValue('box.json', 'name'));
+        $panel->text('Season', 'season')->default('summer')->discover(new Dotenv('SEASON'));
       });
 
     return new Tui($form);

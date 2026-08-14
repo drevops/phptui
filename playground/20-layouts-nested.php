@@ -86,7 +86,7 @@ $form = Form::create('Market hall')
         $wp->rating('Freshness')->default(4)->min(1)->max(5);
 
         $wp->in('right');
-        $wp->markup('picked', 'Picked at dawn, graded at the bench.');
+        $wp->markup('Picked at dawn, graded at the bench.');
       });
 
       $sp->panel('Vegetables', function (PanelBuilder $wp): void {
@@ -108,7 +108,7 @@ $form = Form::create('Market hall')
         ]);
       });
 
-      $sp->markup('scales', 'Crates are weighed at the bench.');
+      $sp->markup('Crates are weighed at the bench.');
     });
 
     $p->panel('Delivery', function (PanelBuilder $sp): void {
@@ -122,7 +122,7 @@ $form = Form::create('Market hall')
     // The cursor steps between the columns with the left and right keys, so the
     // noticeboard holds rows to land on rather than standing text alone.
     $p->in('noticeboard');
-    $p->markup('hours', "Stalls open at six.\nScales close at four.");
+    $p->markup("Stalls open at six.\nScales close at four.", id: 'hours');
     $p->toggle('Season')->default('summer')->options([
       'summer' => 'Summer',
       'autumn' => 'Autumn',

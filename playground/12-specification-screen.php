@@ -42,7 +42,7 @@ require __DIR__ . '/../vendor/autoload.php';
 $form = Form::create('Orchard')
   ->panel('Delivery', function (PanelBuilder $p): void {
     $p->text('Courier')->default('Valley Runs')->help('Every crate is weighed and labelled at the packing bench.');
-    $p->markup('weighing', 'Weighed at the packing bench.');
+    $p->markup('Weighed at the packing bench.');
     $p->number('Basket weight')->default(1200)->min(200)->max(9000);
     $p->select('Basket contents')->multiple()->option('apple', 'Apple')->option('carrot', 'Carrot')->default(['apple']);
   });

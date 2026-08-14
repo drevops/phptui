@@ -20,39 +20,39 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests the names a block is declared with.
+ * Tests the id a block answers to, derived from the label it draws.
  */
 #[CoversClass(Name::class)]
 #[Group('builder')]
 final class NameTest extends TestCase {
 
-  #[DataProvider('dataProviderPair')]
-  public function testPair(string $id, string $label, string $expected_id, string $expected_label): void {
-    $this->assertSame([$expected_id, $expected_label], Name::pair($id, $label));
+  #[DataProvider('dataProviderId')]
+  public function testId(string $label, string $id, string $expected): void {
+    $this->assertSame($expected, Name::id($label, $id));
   }
 
-  public static function dataProviderPair(): \Iterator {
-    yield 'both names stand as written' => ['name', 'Order name', 'name', 'Order name'];
-    yield 'one name derives the id' => ['Order name', '', 'order_name', 'Order name'];
-    yield 'a machine-shaped name derives itself' => ['basket', '', 'basket', 'basket'];
-    yield 'punctuation is dropped' => ['Organic only?', '', 'organic_only', 'Organic only?'];
-    yield 'accents fold to their base letters' => ['Épicerie', '', 'epicerie', 'Épicerie'];
-    yield 'hyphens and brackets separate words' => ['Weight (per-crate)', '', 'weight_per_crate', 'Weight (per-crate)'];
-    yield 'a declared id is never derived' => ['Order name', 'Order name', 'Order name', 'Order name'];
+  public static function dataProviderId(): \Iterator {
+    yield 'a label derives its id' => ['Order name', '', 'order_name'];
+    yield 'a label already shaped like an id derives itself' => ['basket', '', 'basket'];
+    yield 'punctuation is dropped' => ['Organic only?', '', 'organic_only'];
+    yield 'accents fold to their base letters' => ['Épicerie', '', 'epicerie'];
+    yield 'hyphens and brackets separate words' => ['Weight (per-crate)', '', 'weight_per_crate'];
+    yield 'a declared id stands as written' => ['Order name', 'name', 'name'];
+    yield 'a declared id is never machined' => ['Order name', 'Order Name', 'Order Name'];
   }
 
-  public function testPairRejectsLabelWithoutId(): void {
+  public function testIdRejectsLabelWithNothingToDeriveFrom(): void {
     $this->expectException(FormException::class);
-    $this->expectExceptionMessage('No id can be derived from label "???"; declare the id before it.');
+    $this->expectExceptionMessage('No id can be derived from label "???"; declare the id after it.');
 
-    Name::pair('???', '');
+    Name::id('???', '');
   }
 
   public function testFieldDerivesId(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
         $panel->text('Order name');
-        $panel->number('qty', 'Quantity');
+        $panel->number('Quantity', 'qty');
       })
       ->root();
 
@@ -77,16 +77,28 @@ final class NameTest extends TestCase {
     $this->assertSame(['T', 'Fresh produce', 'Root vegetables'], array_map(static fn(Panel $panel): string => $panel->title(), $panels));
   }
 
-  public function testPanelRejectsMissingCallback(): void {
-    $this->expectException(FormException::class);
-    $this->expectExceptionMessage('Panel "orchard" is declared without a callback to build it with.');
+  public function testPanelKeepsDeclaredId(): void {
+    $form = Form::create('T')
+      ->panel('Fresh produce', 'produce', function (PanelBuilder $panel): void {
+        $panel->panel('Root vegetables', 'roots', function (PanelBuilder $sub): void {
+          $sub->text('Crate label');
+        });
+      })
+      ->root();
 
-    Form::create('T')->panel('orchard', 'Orchard');
+    $this->assertSame(['T', 'produce', 'roots'], array_map(static fn(Panel $panel): string => $panel->id(), Tree::panels($form)));
   }
 
-  public function testNoteDerivesId(): void {
+  public function testPanelRejectsMissingCallback(): void {
+    $this->expectException(FormException::class);
+    $this->expectExceptionMessage('Panel "Orchard" is declared without a callback to build it with.');
+
+    Form::create('T')->panel('Orchard', 'orchard');
+  }
+
+  public function testNoteDerivesIdFromTitle(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
         $panel->note('Getting started')->body('Fill in each field.');
       })
       ->root();
@@ -98,9 +110,30 @@ final class NameTest extends TestCase {
     $this->assertSame('Getting started', $note->titleText());
   }
 
-  public function testProgressDerivesId(): void {
+  public function testMarkupDerivesIdFromBodyWhenItHasNoTitle(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->markup('Weighed at the bench');
+        $panel->markup('Picked this morning', 'Freshness');
+      })
+      ->root();
+
+    $ids = [];
+
+    foreach (Tree::panels($form) as $panel) {
+      foreach ($panel->blocks() as $block) {
+        if ($block instanceof Markup) {
+          $ids[] = $block->id();
+        }
+      }
+    }
+
+    $this->assertSame(['weighed_at_the_bench', 'freshness'], $ids);
+  }
+
+  public function testProgressDerivesIdFromCaption(): void {
+    $form = Form::create('T')
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
         $panel->progress('Fetching prices');
       })
       ->root();

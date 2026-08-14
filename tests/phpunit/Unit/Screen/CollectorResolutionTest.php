@@ -80,7 +80,7 @@ final class CollectorResolutionTest extends TestCase {
   public function testDetectorReadsTheRunContextItWasGiven(): void {
     $seen = NULL;
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p) use (&$seen): void {
-      $p->text('version', 'Version')->default('')->discover(function (Context $context) use (&$seen): string {
+      $p->text('Version', 'version')->default('')->discover(function (Context $context) use (&$seen): string {
         $seen = $context;
 
         return $context->version;
@@ -96,8 +96,8 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testClosureDefaultReadsTheContextAndTheAnswersSoFar(): void {
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p): void {
-      $p->text('grower', 'Grower')->default('sunny');
-      $p->text('lot', 'Lot')->default(static function (Context $context): string {
+      $p->text('Grower', 'grower')->default('sunny');
+      $p->text('Lot', 'lot')->default(static function (Context $context): string {
         $grower = $context->answers['grower'] ?? '';
 
         return $context->version . ':' . (is_string($grower) ? $grower : '');
@@ -188,7 +188,7 @@ final class CollectorResolutionTest extends TestCase {
   public static function dataProviderValueOfTheWrongShapeIsRefused(): \Iterator {
     yield 'text takes a string' => [
       static function (PanelBuilder $p): void {
-        $p->text('x', 'X');
+        $p->text('X', 'x');
       },
       42,
       'Invalid value for field "x": must be a string.',
@@ -196,7 +196,7 @@ final class CollectorResolutionTest extends TestCase {
 
     yield 'number takes a number' => [
       static function (PanelBuilder $p): void {
-        $p->number('x', 'X');
+        $p->number('X', 'x');
       },
       'many',
       'Invalid value for field "x": must be a number.',
@@ -204,7 +204,7 @@ final class CollectorResolutionTest extends TestCase {
 
     yield 'rating takes a whole number' => [
       static function (PanelBuilder $p): void {
-        $p->rating('x', 'X');
+        $p->rating('X', 'x');
       },
       2.5,
       'Invalid value for field "x": must be a whole number.',
@@ -212,7 +212,7 @@ final class CollectorResolutionTest extends TestCase {
 
     yield 'confirm takes a boolean' => [
       static function (PanelBuilder $p): void {
-        $p->confirm('x', 'X');
+        $p->confirm('X', 'x');
       },
       'yes',
       'Invalid value for field "x": must be a boolean.',
@@ -220,7 +220,7 @@ final class CollectorResolutionTest extends TestCase {
 
     yield 'a multiple field takes a list' => [
       static function (PanelBuilder $p): void {
-        $p->select('x', 'X')->multiple()->options(['a' => 'Alpha']);
+        $p->select('X', 'x')->multiple()->options(['a' => 'Alpha']);
       },
       'a',
       'Invalid value for field "x": must be a list.',
@@ -228,7 +228,7 @@ final class CollectorResolutionTest extends TestCase {
 
     yield 'calendar takes an ISO date' => [
       static function (PanelBuilder $p): void {
-        $p->calendar('x', 'X');
+        $p->calendar('X', 'x');
       },
       '2026-7-5',
       'Invalid value for field "x": must be a date (YYYY-MM-DD).',
@@ -237,7 +237,7 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testEmptinessIsAnsweredBeforeTheShape(): void {
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p): void {
-      $p->select('x', 'Picks')->multiple()->required()->options(['a' => 'Alpha']);
+      $p->select('Picks', 'x')->multiple()->required()->options(['a' => 'Alpha']);
     });
 
     $this->expectException(CollectException::class);
@@ -248,7 +248,7 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testShapeIsAnsweredBeforeTheFieldsOwnValidator(): void {
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p): void {
-      $p->number('x', 'X')->validate(static fn(): string => 'never reached');
+      $p->number('X', 'x')->validate(static fn(): string => 'never reached');
     });
 
     $this->expectException(CollectException::class);
@@ -259,7 +259,7 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testShapeOfTemplateAnswerIsMeasuredBeforeItsValidator(): void {
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p): void {
-      $p->template('x', 'X')->pattern('{{head}}-{{tail}}');
+      $p->template('X', 'x')->pattern('{{head}}-{{tail}}');
     });
 
     $this->expectException(CollectException::class);
@@ -270,7 +270,7 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testReusableBehaviourStandsInWhereTheFieldDeclaresNone(): void {
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p): void {
-      $p->text('machine_name', 'Machine name');
+      $p->text('Machine name', 'machine_name');
     });
 
     $answers = $this->collect($form, ['machine_name' => 'Golden Beetroot'], NULL, new HandlerRegistry([self::HANDLERS]));
@@ -281,7 +281,7 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testReusableBehaviourRefusesWhatItCannotAccept(): void {
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p): void {
-      $p->text('machine_name', 'Machine name');
+      $p->text('Machine name', 'machine_name');
     });
 
     $this->expectException(CollectException::class);
@@ -292,7 +292,7 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testTheFieldsOwnBehaviourWinsOverTheReusableOne(): void {
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p): void {
-      $p->text('machine_name', 'Machine name')
+      $p->text('Machine name', 'machine_name')
         ->validate(static fn(mixed $value): ?string => $value === 'REFUSED' ? 'The field says so.' : NULL)
         ->transform(static fn(mixed $value): mixed => is_string($value) ? strtoupper($value) : $value);
     });
@@ -309,8 +309,8 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testOnlySuppliedValuesAreNormalized(): void {
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p): void {
-      $p->text('a', 'A')->default(' kept ')->transform(static fn(mixed $value): mixed => is_string($value) ? trim($value) : $value);
-      $p->text('b', 'B')->default('')->transform(static fn(mixed $value): mixed => is_string($value) ? trim($value) : $value);
+      $p->text('A', 'a')->default(' kept ')->transform(static fn(mixed $value): mixed => is_string($value) ? trim($value) : $value);
+      $p->text('B', 'b')->default('')->transform(static fn(mixed $value): mixed => is_string($value) ? trim($value) : $value);
     });
 
     $answers = $this->collect($form, ['b' => ' trimmed ']);
@@ -321,8 +321,8 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testNormalizationHappensBeforeAnythingReadsTheValue(): void {
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p): void {
-      $p->text('name', 'Name')->transform(static fn(mixed $value): mixed => is_string($value) ? trim($value) : $value);
-      $p->text('echo', 'Echo')->derive(new Derive('{{name}}'));
+      $p->text('Name', 'name')->transform(static fn(mixed $value): mixed => is_string($value) ? trim($value) : $value);
+      $p->text('Echo', 'echo')->derive(new Derive('{{name}}'));
     });
 
     $answers = $this->collect($form, ['name' => '  Pear  ']);
@@ -356,35 +356,35 @@ final class CollectorResolutionTest extends TestCase {
 
     yield 'a choice the set dropped falls away' => [
       static function (PanelBuilder $p) use ($rows): void {
-        $p->select('x', 'X')->default('apple')->options($rows);
+        $p->select('X', 'x')->default('apple')->options($rows);
       },
       '',
     ];
 
     yield 'a list keeps only what the set still holds' => [
       static function (PanelBuilder $p) use ($rows): void {
-        $p->select('x', 'X')->multiple()->default(['apple', 'carrot'])->options($rows);
+        $p->select('X', 'x')->multiple()->default(['apple', 'carrot'])->options($rows);
       },
       ['carrot'],
     ];
 
     yield 'a ranking is completed to the resolved set' => [
       static function (PanelBuilder $p) use ($rows): void {
-        $p->reorder('x', 'X')->options($rows);
+        $p->reorder('X', 'x')->options($rows);
       },
       ['carrot', 'potato'],
     ];
 
     yield 'a toggle falls back to the first resolved state' => [
       static function (PanelBuilder $p) use ($rows): void {
-        $p->toggle('x', 'X')->options($rows);
+        $p->toggle('X', 'x')->options($rows);
       },
       'carrot',
     ];
 
     yield 'a hint set leaves the value alone' => [
       static function (PanelBuilder $p) use ($rows): void {
-        $p->suggest('x', 'X')->default('Quince')->options($rows);
+        $p->suggest('X', 'x')->default('Quince')->options($rows);
       },
       'Quince',
     ];
@@ -392,7 +392,7 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testSuppliedValueIsReportedRatherThanQuietlyDropped(): void {
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p): void {
-      $p->select('x', 'X')->options(static fn(Context $context): array => ['carrot' => 'Carrot']);
+      $p->select('X', 'x')->options(static fn(Context $context): array => ['carrot' => 'Carrot']);
     });
 
     $this->expectException(CollectException::class);
@@ -404,7 +404,7 @@ final class CollectorResolutionTest extends TestCase {
   public function testRowsOwedOnceAreAskedForOnce(): void {
     $calls = 0;
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p) use (&$calls): void {
-      $p->select('x', 'X')->default('carrot')->options(function () use (&$calls): array {
+      $p->select('X', 'x')->default('carrot')->options(function () use (&$calls): array {
         $calls++;
 
         return ['carrot' => 'Carrot'];
@@ -418,7 +418,7 @@ final class CollectorResolutionTest extends TestCase {
   public function testEachSuppliedItemIsLookedUpThroughTheQuery(): void {
     $queries = [];
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p) use (&$queries): void {
-      $p->search('x', 'X')->multiple()->optionsFrom(static function (string $query) use (&$queries): array {
+      $p->search('X', 'x')->multiple()->optionsFrom(static function (string $query) use (&$queries): array {
         $queries[] = $query;
 
         return [$query => ucfirst($query)];
@@ -434,7 +434,7 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testSourceThatCannotAnswerFailsTheCollection(): void {
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p): void {
-      $p->search('x', 'X')->optionsFrom(static function (): array {
+      $p->search('X', 'x')->optionsFrom(static function (): array {
         throw new \RuntimeException('The pantry is unreachable.');
       });
     });
@@ -455,11 +455,11 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testConditionReadsTheSettledAnswersRatherThanTheDeclaredOnes(): void {
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p): void {
-      $p->text('name', 'Name')->default('');
-      $p->text('slug', 'Slug')->derive(new Derive('{{name}}', 'machine'));
+      $p->text('Name', 'name')->default('');
+      $p->text('Slug', 'slug')->derive(new Derive('{{name}}', 'machine'));
       // The rule reads a computed answer, so it can only hold once that answer
       // has been computed rather than when it was declared.
-      $p->text('note', 'Note')->default('seen')->when(new Condition('slug', eq: 'golden_beetroot'));
+      $p->text('Note', 'note')->default('seen')->when(new Condition('slug', eq: 'golden_beetroot'));
     });
 
     $this->assertTrue($this->collect($form, ['name' => 'Golden Beetroot'])->has('note'));
@@ -481,8 +481,8 @@ final class CollectorResolutionTest extends TestCase {
       ->fixup(new Fixup(set: 'hint', to: 'written'))
       ->fixup(new Fixup(set: 'name', from: 'hint'))
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->markup('hint', 'Read the label.');
-        $p->text('name', 'Name')->default('Pear');
+        $p->markup('Read the label.', id: 'hint');
+        $p->text('Name', 'name')->default('Pear');
       });
 
     // Neither rule reaches an answer: the row it names carries none, so the
@@ -492,10 +492,10 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testAnswersDescribeTheQuestionsTheyAnswer(): void {
     $form = Form::create('Orchard')
-      ->panel('main', 'Main', function (PanelBuilder $p): void {
-        $p->template('code', 'Code')->pattern('{{head}}-{{tail}}')->default('a-b');
-        $p->panel('deep', 'Deep', function (PanelBuilder $q): void {
-          $q->text('inner', 'Inner')->default('deep');
+      ->panel('Main', 'main', function (PanelBuilder $p): void {
+        $p->template('Code', 'code')->pattern('{{head}}-{{tail}}')->default('a-b');
+        $p->panel('Deep', 'deep', function (PanelBuilder $q): void {
+          $q->text('Inner', 'inner')->default('deep');
         });
       });
 
@@ -518,15 +518,15 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testAnswersFollowTheOrderTheFormDeclaresThem(): void {
     $form = Form::create('Orchard')
-      ->panel('first', 'First', function (PanelBuilder $p): void {
-        $p->text('a', 'A')->default('a');
-        $p->panel('nested', 'Nested', function (PanelBuilder $q): void {
-          $q->text('b', 'B')->default('b');
+      ->panel('First', 'first', function (PanelBuilder $p): void {
+        $p->text('A', 'a')->default('a');
+        $p->panel('Nested', 'nested', function (PanelBuilder $q): void {
+          $q->text('B', 'b')->default('b');
         });
-        $p->text('c', 'C')->default('c');
+        $p->text('C', 'c')->default('c');
       })
-      ->panel('second', 'Second', function (PanelBuilder $p): void {
-        $p->text('d', 'D')->default('d');
+      ->panel('Second', 'second', function (PanelBuilder $p): void {
+        $p->text('D', 'd')->default('d');
       });
 
     // A panel asks its own questions before the ones beneath it, whatever order
@@ -536,12 +536,12 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testTheTreeIsWalkedForEveryRowItHolds(): void {
     $root = Form::create('Orchard')
-      ->panel('main', 'Main', function (PanelBuilder $p): void {
-        $p->markup('hint', 'Read the label.');
-        $p->text('name', 'Name')->default('Pear');
-        $p->progress('packing', 'Packing');
-        $p->panel('deep', 'Deep', function (PanelBuilder $q): void {
-          $q->text('inner', 'Inner')->default('deep');
+      ->panel('Main', 'main', function (PanelBuilder $p): void {
+        $p->markup('Read the label.', id: 'hint');
+        $p->text('Name', 'name')->default('Pear');
+        $p->progress('Packing', 'packing');
+        $p->panel('Deep', 'deep', function (PanelBuilder $q): void {
+          $q->text('Inner', 'inner')->default('deep');
         });
       })
       ->root();
@@ -564,7 +564,7 @@ final class CollectorResolutionTest extends TestCase {
   public function testResolverIsNotAskedAgainWhileItsWholeInputStands(): void {
     $calls = 0;
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p) use (&$calls): void {
-      $p->select('item', 'Item')->default('carrot')->options(function (Context $context) use (&$calls): array {
+      $p->select('Item', 'item')->default('carrot')->options(function (Context $context) use (&$calls): array {
         $calls++;
 
         return ['carrot' => 'Carrot'];
@@ -586,7 +586,7 @@ final class CollectorResolutionTest extends TestCase {
 
   public function testResolverThatCannotAnswerFailsTheCollection(): void {
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p): void {
-      $p->select('x', 'X')->options(static function (Context $context): array {
+      $p->select('X', 'x')->options(static function (Context $context): array {
         throw new \RuntimeException('The pantry is unreachable.');
       });
     });
@@ -600,16 +600,16 @@ final class CollectorResolutionTest extends TestCase {
   public function testQuerySourceIsNotConsultedWhereItConstrainsNothing(): void {
     $calls = 0;
     $form = Form::create('T')->panel('p', 'p', function (PanelBuilder $p) use (&$calls): void {
-      $p->text('open', 'Open')->default('no');
+      $p->text('Open', 'open')->default('no');
       // Hints are never a closed set, so nothing is measured against them.
-      $p->suggest('hint', 'Hint')->optionsFrom(static function (string $query) use (&$calls): array {
+      $p->suggest('Hint', 'hint')->optionsFrom(static function (string $query) use (&$calls): array {
         $calls++;
 
         return [];
       });
       // A field its condition hides was never asked for, so nothing is looked
       // up for it either.
-      $p->search('hidden', 'Hidden')->optionsFrom(static function (string $query) use (&$calls): array {
+      $p->search('Hidden', 'hidden')->optionsFrom(static function (string $query) use (&$calls): array {
         $calls++;
 
         return [];
@@ -653,14 +653,14 @@ final class CollectorResolutionTest extends TestCase {
   protected function sourcesForm(): Form {
     return Form::create('Orchard')
       ->fixup($this->wrapRule())
-      ->panel('main', 'Main', function (PanelBuilder $p): void {
-        $p->text('name', 'Name')->default('Weekly Box')->discover(new JsonValue('box.json', 'name'));
-        $p->text('slug', 'Slug')->derive(new Derive('{{name}}', 'machine'))->discover(new JsonValue('box.json', 'slug'));
-        $p->text('season', 'Season')->default('spring')->discover(new Dotenv('SEASON'));
-        $p->number('crates', 'Crates')->min(1)->max(9)->default(2)->discover(new JsonValue('box.json', 'crates'));
-        $p->select('delivery', 'Delivery')->options(['doorstep' => 'Doorstep', 'gift' => 'Gift'])->default('doorstep');
-        $p->confirm('wrap', 'Wrap?')->default(TRUE);
-        $p->text('note', 'Note')->default('n/a')->when(new Condition('delivery', eq: 'gift'));
+      ->panel('Main', 'main', function (PanelBuilder $p): void {
+        $p->text('Name', 'name')->default('Weekly Box')->discover(new JsonValue('box.json', 'name'));
+        $p->text('Slug', 'slug')->derive(new Derive('{{name}}', 'machine'))->discover(new JsonValue('box.json', 'slug'));
+        $p->text('Season', 'season')->default('spring')->discover(new Dotenv('SEASON'));
+        $p->number('Crates', 'crates')->min(1)->max(9)->default(2)->discover(new JsonValue('box.json', 'crates'));
+        $p->select('Delivery', 'delivery')->options(['doorstep' => 'Doorstep', 'gift' => 'Gift'])->default('doorstep');
+        $p->confirm('Wrap?', 'wrap')->default(TRUE);
+        $p->text('Note', 'note')->default('n/a')->when(new Condition('delivery', eq: 'gift'));
       });
   }
 

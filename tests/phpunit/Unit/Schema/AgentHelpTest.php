@@ -29,8 +29,8 @@ final class AgentHelpTest extends TestCase {
   public function testGenerate(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->text('name', 'Site name')->required();
-        $p->confirm('agree', 'Agree');
+        $p->text('Site name', 'name')->required();
+        $p->confirm('Agree', 'agree');
       })
       ->root();
 
@@ -64,7 +64,7 @@ final class AgentHelpTest extends TestCase {
   public static function dataProviderDescribesFieldShape(): \Iterator {
     yield 'select is an enum' => [
       static function (PanelBuilder $p): void {
-        $p->select('fruit', 'Fruit')->default('banana')->options([
+        $p->select('Fruit', 'fruit')->default('banana')->options([
           'apple' => 'Apple',
           'banana' => 'Banana',
           'cherry' => 'Cherry',
@@ -77,7 +77,7 @@ final class AgentHelpTest extends TestCase {
 
     yield 'multiple select is an array of options' => [
       static function (PanelBuilder $p): void {
-        $p->select('veg', 'Vegetables')->multiple()->options(['carrot' => 'Carrot', 'tomato' => 'Tomato']);
+        $p->select('Vegetables', 'veg')->multiple()->options(['carrot' => 'Carrot', 'tomato' => 'Tomato']);
       },
       ['"type": "array"'],
       [],
@@ -86,7 +86,7 @@ final class AgentHelpTest extends TestCase {
 
     yield 'selection bounds are item bounds' => [
       static function (PanelBuilder $p): void {
-        $p->select('veg', 'Vegetables')->multiple()->minSelections(2)->maxSelections(4)->options([
+        $p->select('Vegetables', 'veg')->multiple()->minSelections(2)->maxSelections(4)->options([
           'carrot' => 'Carrot',
           'tomato' => 'Tomato',
           'potato' => 'Potato',
@@ -101,7 +101,7 @@ final class AgentHelpTest extends TestCase {
     // must accept every in-range integer the collection accepts.
     yield 'number bounds without the step' => [
       static function (PanelBuilder $p): void {
-        $p->number('port', 'HTTP port')->min(1)->max(65535)->step(5);
+        $p->number('HTTP port', 'port')->min(1)->max(65535)->step(5);
       },
       ['"type": "integer"', '"minimum": 1', '"maximum": 65535'],
       ['multipleOf'],
@@ -113,7 +113,7 @@ final class AgentHelpTest extends TestCase {
     // they never narrow the answer to an enum.
     yield 'rating is an integer range' => [
       static function (PanelBuilder $p): void {
-        $p->rating('taste', 'Taste')->min(1)->max(5)->captions([1 => 'Poor', 5 => 'Excellent']);
+        $p->rating('Taste', 'taste')->min(1)->max(5)->captions([1 => 'Poor', 5 => 'Excellent']);
       },
       ['"type": "integer"', '"minimum": 1', '"maximum": 5'],
       ['enum'],
@@ -122,7 +122,7 @@ final class AgentHelpTest extends TestCase {
 
     yield 'calendar is a date' => [
       static function (PanelBuilder $p): void {
-        $p->calendar('due', 'Due date');
+        $p->calendar('Due date', 'due');
       },
       ['"format": "date"'],
       [],
@@ -133,7 +133,7 @@ final class AgentHelpTest extends TestCase {
     // match rather than by the pattern's own slot syntax.
     yield 'template is a matched string' => [
       static function (PanelBuilder $p): void {
-        $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{grade}}');
+        $p->template('Crate label', 'crate')->pattern('{{orchard}}-{{grade}}');
       },
       ['"type": "string"', '"pattern": "^(.*?)-(.*?)$"'],
       ['{{orchard}}'],
@@ -142,7 +142,7 @@ final class AgentHelpTest extends TestCase {
 
     yield 'description travels' => [
       static function (PanelBuilder $p): void {
-        $p->text('name', 'Site name')->description('The public name');
+        $p->text('Site name', 'name')->description('The public name');
       },
       ['"description": "The public name"'],
       [],
@@ -153,7 +153,7 @@ final class AgentHelpTest extends TestCase {
     // texts a human does rather than one merged description.
     yield 'help and placeholder travel as extension keys' => [
       static function (PanelBuilder $p): void {
-        $p->text('name', 'Site name')
+        $p->text('Site name', 'name')
           ->description('The public name')
           ->help('Type a few letters to filter.')
           ->placeholder('E.g. Golden Beetroot');
@@ -165,7 +165,7 @@ final class AgentHelpTest extends TestCase {
 
     yield 'undeclared help and placeholder are omitted' => [
       static function (PanelBuilder $p): void {
-        $p->text('name', 'Site name');
+        $p->text('Site name', 'name');
       },
       [],
       ['"x-help"', '"x-placeholder"'],
@@ -190,7 +190,7 @@ final class AgentHelpTest extends TestCase {
   public static function dataProviderAdvertisesEnvironmentVariables(): \Iterator {
     yield 'no prefix advertises nothing' => [
       static function (PanelBuilder $p): void {
-        $p->text('x', 'X');
+        $p->text('X', 'x');
       },
       '',
       [],
@@ -200,7 +200,7 @@ final class AgentHelpTest extends TestCase {
 
     yield 'declared name replaces the mechanical one' => [
       static function (PanelBuilder $p): void {
-        $p->text('crate_size', 'Crate size')->env('LEGACY_CRATE');
+        $p->text('Crate size', 'crate_size')->env('LEGACY_CRATE');
       },
       'APP_',
       ['"env": "LEGACY_CRATE"'],
@@ -212,8 +212,8 @@ final class AgentHelpTest extends TestCase {
     // namespaced variable to offer, so it stays absent.
     yield 'declared name is advertised without a prefix' => [
       static function (PanelBuilder $p): void {
-        $p->text('crate_size', 'Crate size')->env('LEGACY_CRATE');
-        $p->text('grade', 'Grade');
+        $p->text('Crate size', 'crate_size')->env('LEGACY_CRATE');
+        $p->text('Grade', 'grade');
       },
       '',
       ['"env": "LEGACY_CRATE"'],
@@ -223,7 +223,7 @@ final class AgentHelpTest extends TestCase {
 
     yield 'aliases keep their declaration order' => [
       static function (PanelBuilder $p): void {
-        $p->text('crate_size', 'Crate size')->envAliases(['OLD_CRATE', 'OLDER_CRATE']);
+        $p->text('Crate size', 'crate_size')->envAliases(['OLD_CRATE', 'OLDER_CRATE']);
       },
       'APP_',
       ['"env": "APP_CRATE_SIZE"'],
@@ -235,7 +235,7 @@ final class AgentHelpTest extends TestCase {
     // either way, so withholding it would advertise less than is honoured.
     yield 'aliases show without an advertisable canonical name' => [
       static function (PanelBuilder $p): void {
-        $p->text('crate_size', 'Crate size')->envAliases(['OLD_CRATE']);
+        $p->text('Crate size', 'crate_size')->envAliases(['OLD_CRATE']);
       },
       '',
       [],
@@ -245,7 +245,7 @@ final class AgentHelpTest extends TestCase {
 
     yield 'no aliases omits the annotation' => [
       static function (PanelBuilder $p): void {
-        $p->text('crate_size', 'Crate size');
+        $p->text('Crate size', 'crate_size');
       },
       'APP_',
       [],
@@ -271,7 +271,7 @@ final class AgentHelpTest extends TestCase {
   public static function dataProviderResolvesDefault(): \Iterator {
     yield 'closure resolved' => [
       static function (PanelBuilder $p): void {
-        $p->text('name', 'Name')->default(fn (Context $context): string => 'computed');
+        $p->text('Name', 'name')->default(fn (Context $context): string => 'computed');
       },
       new Context(),
       ['"default": "computed"'],
@@ -280,7 +280,7 @@ final class AgentHelpTest extends TestCase {
 
     yield 'closure reads the provided context' => [
       static function (PanelBuilder $p): void {
-        $p->text('version', 'Version')->default(fn (Context $context): string => $context->version);
+        $p->text('Version', 'version')->default(fn (Context $context): string => $context->version);
       },
       new Context(version: '7.7.7'),
       ['"default": "7.7.7"'],
@@ -289,7 +289,7 @@ final class AgentHelpTest extends TestCase {
 
     yield 'declared schema default stands in' => [
       static function (PanelBuilder $p): void {
-        $p->text('name', 'Name')->default(fn (Context $context): string => 'live')->schemaDefault('static');
+        $p->text('Name', 'name')->default(fn (Context $context): string => 'live')->schemaDefault('static');
       },
       new Context(),
       ['"default": "static"'],
@@ -300,7 +300,7 @@ final class AgentHelpTest extends TestCase {
     // in the x-precedence list, so match the key form with its colon.
     yield 'unresolvable closure omits the key' => [
       static function (PanelBuilder $p): void {
-        $p->text('name', 'Name')->default(fn (Context $context): string => throw new \RuntimeException('needs answers'));
+        $p->text('Name', 'name')->default(fn (Context $context): string => throw new \RuntimeException('needs answers'));
       },
       new Context(),
       ['"name"'],
@@ -325,16 +325,16 @@ final class AgentHelpTest extends TestCase {
   public static function dataProviderSkipsNonAnsweringField(): \Iterator {
     yield 'pause' => [
       static function (PanelBuilder $p): void {
-        $p->text('name', 'Name')->required();
-        $p->pause('ready', 'Review');
+        $p->text('Name', 'name')->required();
+        $p->pause('Review', 'ready');
       },
       'ready',
     ];
 
     yield 'note' => [
       static function (PanelBuilder $p): void {
-        $p->text('name', 'Name')->required();
-        $p->note('intro', 'Intro')->body('Welcome.');
+        $p->text('Name', 'name')->required();
+        $p->note('Intro', 'intro')->body('Welcome.');
       },
       'intro',
     ];
@@ -343,12 +343,12 @@ final class AgentHelpTest extends TestCase {
   public function testCarriesTheWholeRuleGatingTheQuestion(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->confirm('organic', 'Organic only?');
-        $p->text('courier', 'Courier');
+        $p->confirm('Organic only?', 'organic');
+        $p->text('Courier', 'courier');
 
-        $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
+        $p->panel('Certification', 'certification', function (PanelBuilder $sp): void {
           $sp->when(new Condition('organic', eq: TRUE));
-          $sp->text('certifier', 'Certifier');
+          $sp->text('Certifier', 'certifier');
         });
       })
       ->root();
@@ -364,12 +364,12 @@ final class AgentHelpTest extends TestCase {
   public function testGatedRequiredQuestionStaysOutOfTheRequiredList(): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->confirm('organic', 'Organic only?');
-        $p->text('name', 'Order name')->required();
+        $p->confirm('Organic only?', 'organic');
+        $p->text('Order name', 'name')->required();
 
-        $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
+        $p->panel('Certification', 'certification', function (PanelBuilder $sp): void {
           $sp->when(new Condition('organic', eq: TRUE));
-          $sp->text('certifier', 'Certifier')->required();
+          $sp->text('Certifier', 'certifier')->required();
         });
       })
       ->root();

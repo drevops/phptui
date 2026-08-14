@@ -27,7 +27,7 @@ require __DIR__ . '/../vendor/autoload.php';
 $form = Form::create('Markup')
   ->panel('Order', function (PanelBuilder $p): void {
     // Prose: bare lines in the flow, written body first.
-    $p->markup('weighing', 'Every crate is weighed at the packing bench.');
+    $p->markup('Every crate is weighed at the packing bench.');
     $p->note('Fresh produce order')->body('This card is read-only - the cursor skips it and it collects nothing.');
     $p->text('Item')->default('Pear');
     $p->note('Ready to pack')->body('Packing {{item}} into the basket.')->border();

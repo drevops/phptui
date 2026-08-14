@@ -131,8 +131,8 @@ final class BuilderGapsTest extends TestCase {
   public function testBuilderPlacesBlocksInWhicheverRegionWasNamed(): void {
     $panel = $this->panel(static function (PanelBuilder $p): void {
       $p->layout('two-column');
-      $p->in('left')->text('courier', 'Courier');
-      $p->in('right')->markup('note', 'Weighed at the bench.');
+      $p->in('left')->text('Courier', 'courier');
+      $p->in('right')->markup('Weighed at the bench.', id: 'note');
     });
 
     $this->assertCount(1, $panel->in('left')->blocks());
@@ -156,8 +156,8 @@ final class BuilderGapsTest extends TestCase {
 
   public function testFieldDeclaresEveryCapabilityItClaimsThroughItsBuilder(): void {
     $panel = $this->panel(static function (PanelBuilder $p): void {
-      $p->text('organic', 'Organic only?')->default('yes');
-      $p->select('basket', 'Basket contents')
+      $p->text('Organic only?', 'organic')->default('yes');
+      $p->select('Basket contents', 'basket')
         ->option('apple', 'Apple')
         ->default('apple')
         ->required()

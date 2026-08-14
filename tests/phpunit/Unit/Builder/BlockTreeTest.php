@@ -62,18 +62,18 @@ final class BlockTreeTest extends TestCase {
    *   A declaration, and the block class it writes.
    */
   public static function dataProviderDeclarationWritesTheBlockItsAnswerNeeds(): \Iterator {
-    yield 'a question collects' => [static fn(PanelBuilder $p): FieldBuilder => $p->text('courier', 'Courier'), Field::class];
-    yield 'a choice collects' => [static fn(PanelBuilder $p): FieldBuilder => $p->select('basket', 'Basket'), Field::class];
-    yield 'a note only shows' => [static fn(PanelBuilder $p): Markup => $p->note('intro', 'Fresh produce'), Markup::class];
-    yield 'markup only shows' => [static fn(PanelBuilder $p): Markup => $p->markup('intro', 'Fresh produce'), Markup::class];
-    yield 'a progress row only runs' => [static fn(PanelBuilder $p): Progress => $p->progress('packing', 'Packing'), Progress::class];
+    yield 'a question collects' => [static fn(PanelBuilder $p): FieldBuilder => $p->text('Courier', 'courier'), Field::class];
+    yield 'a choice collects' => [static fn(PanelBuilder $p): FieldBuilder => $p->select('Basket', 'basket'), Field::class];
+    yield 'a note only shows' => [static fn(PanelBuilder $p): Markup => $p->note('Fresh produce', 'intro'), Markup::class];
+    yield 'markup only shows' => [static fn(PanelBuilder $p): Markup => $p->markup('Fresh produce', id: 'intro'), Markup::class];
+    yield 'a progress row only runs' => [static fn(PanelBuilder $p): Progress => $p->progress('Packing', 'packing'), Progress::class];
   }
 
   public function testBlocksAreInTheRegionInTheOrderTheyWereWritten(): void {
     $panel = $this->panel(static function (PanelBuilder $p): void {
-      $p->text('courier', 'Courier');
-      $p->markup('weighing', 'Weighed at the packing bench.');
-      $p->number('weight', 'Basket weight');
+      $p->text('Courier', 'courier');
+      $p->markup('Weighed at the packing bench.', id: 'weighing');
+      $p->number('Basket weight', 'weight');
     });
 
     $ids = array_map(static fn(object $block): string => method_exists($block, 'id') ? (string) $block->id() : '', $panel->in('content')->blocks());
@@ -83,7 +83,7 @@ final class BlockTreeTest extends TestCase {
 
   public function testTheBlockIsPlacedAsItIsWrittenRatherThanCopiedLater(): void {
     $builder = new PanelBuilder('main', 'Delivery');
-    $field = $builder->text('courier', 'Courier');
+    $field = $builder->text('Courier', 'courier');
     $builder->seal();
 
     $this->assertSame($field->block(), $builder->block()->in('content')->blocks()[0]);
@@ -91,15 +91,15 @@ final class BlockTreeTest extends TestCase {
 
   public function testWithoutDeclaredLayoutPanelKeepsItsOneRegion(): void {
     $this->assertSame(['content'], $this->panel(static function (PanelBuilder $p): void {
-      $p->text('courier', 'Courier');
+      $p->text('Courier', 'courier');
     })->currentLayout()->names());
   }
 
   public function testNamedLayoutGivesThePanelTheRegionsItDeclares(): void {
     $panel = $this->panel(static function (PanelBuilder $p): void {
       $p->layout('two-column');
-      $p->in('left')->text('courier', 'Courier');
-      $p->in('right')->number('weight', 'Basket weight');
+      $p->in('left')->text('Courier', 'courier');
+      $p->in('right')->number('Basket weight', 'weight');
     });
 
     $this->assertSame(['left', 'right'], $panel->currentLayout()->names());
@@ -110,7 +110,7 @@ final class BlockTreeTest extends TestCase {
   public function testBlockGoesInTheFirstRegionUntilAnotherIsNamed(): void {
     $panel = $this->panel(static function (PanelBuilder $p): void {
       $p->layout('two-column');
-      $p->text('courier', 'Courier');
+      $p->text('Courier', 'courier');
     });
 
     $this->assertCount(1, $panel->in('left')->blocks());
@@ -120,10 +120,10 @@ final class BlockTreeTest extends TestCase {
   public function testGridDrawsEachSubPanelInTheWindowThatNamesIt(): void {
     $panel = $this->panel(static function (PanelBuilder $p): void {
       $p->layout(2);
-      $p->text('courier', 'Courier');
-      $p->panel('left', 'Left', static fn(PanelBuilder $sp): FieldBuilder => $sp->text('one', 'One'));
-      $p->panel('right', 'Right', static fn(PanelBuilder $sp): FieldBuilder => $sp->text('two', 'Two'));
-      $p->markup('note', 'Every crate is weighed at the bench.');
+      $p->text('Courier', 'courier');
+      $p->panel('Left', 'left', static fn(PanelBuilder $sp): FieldBuilder => $sp->text('One', 'one'));
+      $p->panel('Right', 'right', static fn(PanelBuilder $sp): FieldBuilder => $sp->text('Two', 'two'));
+      $p->markup('Every crate is weighed at the bench.', id: 'note');
     });
 
     // Each sub-panel goes in the window that names it, and where a row sits is
@@ -181,7 +181,7 @@ final class BlockTreeTest extends TestCase {
 
     yield 'a name after the blocks' => [
       static function (PanelBuilder $p): void {
-        $p->text('courier', 'Courier');
+        $p->text('Courier', 'courier');
         $p->layout('two-column');
       },
       'Panel "main" declares a layout after placing blocks in the one it had',
@@ -189,7 +189,7 @@ final class BlockTreeTest extends TestCase {
 
     yield 'a grid after the blocks' => [
       static function (PanelBuilder $p): void {
-        $p->text('courier', 'Courier');
+        $p->text('Courier', 'courier');
         $p->layout(2);
       },
       'Panel "main" declares a layout after placing blocks in the one it had',
@@ -231,7 +231,7 @@ final class BlockTreeTest extends TestCase {
   public static function dataProviderMarkupPresentationsAreOneBlockDrawnThreeWays(): \Iterator {
     yield 'prose' => [
       static function (PanelBuilder $p): void {
-        $p->markup('weighing', 'Every crate is weighed at the packing bench.');
+        $p->markup('Every crate is weighed at the packing bench.', id: 'weighing');
       },
       FALSE,
       FALSE,
@@ -239,7 +239,7 @@ final class BlockTreeTest extends TestCase {
 
     yield 'a card' => [
       static function (PanelBuilder $p): void {
-        $p->markup('notice', 'Deliveries leave at dawn.')->border();
+        $p->markup('Deliveries leave at dawn.', id: 'notice')->border();
       },
       TRUE,
       FALSE,
@@ -247,7 +247,7 @@ final class BlockTreeTest extends TestCase {
 
     yield 'a grid' => [
       static function (PanelBuilder $p): void {
-        $p->markup('yields', 'Yields per crate')->table(['Produce', 'Crates'], [['Apple', '12']]);
+        $p->markup('Yields per crate', id: 'yields')->table(['Produce', 'Crates'], [['Apple', '12']]);
       },
       FALSE,
       TRUE,
@@ -255,7 +255,7 @@ final class BlockTreeTest extends TestCase {
 
     yield 'a note is the same block' => [
       static function (PanelBuilder $p): void {
-        $p->note('packing', 'Ready to pack')->body('Framed with a border.')->border();
+        $p->note('Ready to pack', 'packing')->body('Framed with a border.')->border();
       },
       TRUE,
       FALSE,
@@ -264,8 +264,8 @@ final class BlockTreeTest extends TestCase {
 
   public function testNoteAndMarkupCarryTheSameTitleAndBody(): void {
     $panel = $this->panel(static function (PanelBuilder $p): void {
-      $p->note('note', 'Ready to pack')->body('Packed at dawn.');
-      $p->markup('markup', 'Packed at dawn.', 'Ready to pack');
+      $p->note('Ready to pack', 'note')->body('Packed at dawn.');
+      $p->markup('Packed at dawn.', 'Ready to pack', 'markup');
     });
 
     $blocks = $panel->in('content')->blocks();
@@ -279,7 +279,7 @@ final class BlockTreeTest extends TestCase {
 
   public function testMarkupAppearsOnlyWhenAnEarlierAnswerCallsForIt(): void {
     $block = $this->panel(static function (PanelBuilder $p): void {
-      $p->markup('certified', 'Organic crates need current certification.')->when(new Condition('organic', eq: TRUE));
+      $p->markup('Organic crates need current certification.', id: 'certified')->when(new Condition('organic', eq: TRUE));
     })->in('content')->blocks()[0];
 
     $this->assertInstanceOf(Markup::class, $block);
@@ -289,9 +289,9 @@ final class BlockTreeTest extends TestCase {
 
   public function testSectionAppearsOnlyWhenAnEarlierAnswerCallsForIt(): void {
     $panel = $this->panel(static function (PanelBuilder $p): void {
-      $p->panel('certification', 'Certification', static function (PanelBuilder $sp): void {
+      $p->panel('Certification', 'certification', static function (PanelBuilder $sp): void {
         $sp->when(new Condition('organic', eq: TRUE));
-        $sp->text('certifier', 'Certifier');
+        $sp->text('Certifier', 'certifier');
       });
     });
 
@@ -303,18 +303,18 @@ final class BlockTreeTest extends TestCase {
 
   public function testChainOfRulesStepsEveryBlockInFromWhatItWaitsOn(): void {
     $form = Form::create('Orchard')
-      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
-        $p->confirm('organic', 'Organic only?');
-        $p->text('certifier', 'Certifier')->when(new Condition('organic', eq: TRUE));
-        $p->markup('crates', 'Certified crates are packed apart.')->when(new Condition('certifier', ne: ''));
+      ->panel('Produce order', 'order', static function (PanelBuilder $p): void {
+        $p->confirm('Organic only?', 'organic');
+        $p->text('Certifier', 'certifier')->when(new Condition('organic', eq: TRUE));
+        $p->markup('Certified crates are packed apart.', id: 'crates')->when(new Condition('certifier', ne: ''));
 
-        $p->panel('renewal', 'Renewal', static function (PanelBuilder $sp): void {
+        $p->panel('Renewal', 'renewal', static function (PanelBuilder $sp): void {
           $sp->when(new Condition('certifier', ne: ''));
-          $sp->text('renewed_on', 'Renewed on');
-          $sp->confirm('reminder', 'Send a reminder?')->when(new Condition('renewed_on', ne: ''));
+          $sp->text('Renewed on', 'renewed_on');
+          $sp->confirm('Send a reminder?', 'reminder')->when(new Condition('renewed_on', ne: ''));
         });
 
-        $p->number('quantity', 'Quantity');
+        $p->number('Quantity', 'quantity');
         // Nothing can take a legend off the form, so it waits on no answer and
         // the walk passes over it rather than stamping a chain on it.
         $p->add(new Legend());
@@ -349,9 +349,9 @@ final class BlockTreeTest extends TestCase {
 
   public function testRulesThatNameEachOtherStopRatherThanDeepenForever(): void {
     $form = Form::create('Orchard')
-      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
-        $p->confirm('organic', 'Organic only?')->when(new Condition('certified', eq: TRUE));
-        $p->confirm('certified', 'Certified?')->when(new Condition('organic', eq: TRUE));
+      ->panel('Produce order', 'order', static function (PanelBuilder $p): void {
+        $p->confirm('Organic only?', 'organic')->when(new Condition('certified', eq: TRUE));
+        $p->confirm('Certified?', 'certified')->when(new Condition('organic', eq: TRUE));
       });
 
     $depths = [];
@@ -370,8 +370,8 @@ final class BlockTreeTest extends TestCase {
 
   public function testNestedPanelIsBlockInTheRegionAndPanelYouCanGoInto(): void {
     $panel = $this->panel(static function (PanelBuilder $p): void {
-      $p->text('courier', 'Courier');
-      $p->panel('advanced', 'Advanced', static fn(PanelBuilder $sp): FieldBuilder => $sp->text('webroot', 'Web root'));
+      $p->text('Courier', 'courier');
+      $p->panel('Advanced', 'advanced', static fn(PanelBuilder $sp): FieldBuilder => $sp->text('Web root', 'webroot'));
     });
 
     $blocks = $panel->in('content')->blocks();
@@ -382,8 +382,8 @@ final class BlockTreeTest extends TestCase {
 
   public function testEveryDeclaredPanelHangsFromOneRoot(): void {
     $form = Form::create('Orchard')
-      ->panel('delivery', 'Delivery', static fn(PanelBuilder $p): FieldBuilder => $p->text('courier', 'Courier'))
-      ->panel('packing', 'Packing', static fn(PanelBuilder $p): FieldBuilder => $p->text('bench', 'Bench'));
+      ->panel('Delivery', 'delivery', static fn(PanelBuilder $p): FieldBuilder => $p->text('Courier', 'courier'))
+      ->panel('Packing', 'packing', static fn(PanelBuilder $p): FieldBuilder => $p->text('Bench', 'bench'));
 
     $root = $form->root();
 
@@ -395,8 +395,8 @@ final class BlockTreeTest extends TestCase {
   }
 
   public function testTheTreeIsWrittenOnceAndHandedBackAsItStands(): void {
-    $form = Form::create('Orchard')->panel('delivery', 'Delivery', static function (PanelBuilder $p): void {
-      $p->select('basket', 'Basket contents')->option('apple', 'Apple')->default('apple');
+    $form = Form::create('Orchard')->panel('Delivery', 'delivery', static function (PanelBuilder $p): void {
+      $p->select('Basket contents', 'basket')->option('apple', 'Apple')->default('apple');
     });
 
     $block = $form->root()->children()[0]->in('content')->blocks()[0];

@@ -50,19 +50,19 @@ final class FormTest extends TestCase {
       ->buttons(TRUE, 'Install', 'Quit')
       ->envPrefix('APP_')
       ->fixup($fixup)
-      ->panel('general', 'General', function (PanelBuilder $p): void {
+      ->panel('General', 'general', function (PanelBuilder $p): void {
         $p->description('General settings.');
-        $p->text('name', 'Site name')->description('The name.')->required()->default('Acme');
-        $p->text('machine_name', 'Machine name')->derive(new Derive('{{ name }}'));
-        $p->select('profile', 'Profile')->options(['standard' => 'Standard', 'minimal' => 'Minimal'])->default('standard');
-        $p->select('services', 'Services')->multiple()->option('solr', 'Solr', 'Search')->option('redis', 'Redis');
-        $p->confirm('docs', 'Keep docs?')->default(TRUE)->when(new Condition('profile', eq: 'standard'));
-        $p->toggle('visibility', 'Visibility')->options(['public' => 'Public', 'private' => 'Private'])->default('private');
-        $p->password('secret', 'Secret')->revealable()->confirmation();
-        $p->suggest('timezone', 'Timezone')->discover(new Dotenv('TZ'));
-        $p->reorder('ranking', 'Priorities')->options(['fast' => 'Fast', 'cheap' => 'Cheap', 'good' => 'Good'])->default(['good', 'fast']);
-        $p->panel('advanced', 'Advanced', function (PanelBuilder $sp): void {
-          $sp->text('webroot', 'Web root')->default('web');
+        $p->text('Site name', 'name')->description('The name.')->required()->default('Acme');
+        $p->text('Machine name', 'machine_name')->derive(new Derive('{{ name }}'));
+        $p->select('Profile', 'profile')->options(['standard' => 'Standard', 'minimal' => 'Minimal'])->default('standard');
+        $p->select('Services', 'services')->multiple()->option('solr', 'Solr', 'Search')->option('redis', 'Redis');
+        $p->confirm('Keep docs?', 'docs')->default(TRUE)->when(new Condition('profile', eq: 'standard'));
+        $p->toggle('Visibility', 'visibility')->options(['public' => 'Public', 'private' => 'Private'])->default('private');
+        $p->password('Secret', 'secret')->revealable()->confirmation();
+        $p->suggest('Timezone', 'timezone')->discover(new Dotenv('TZ'));
+        $p->reorder('Priorities', 'ranking')->options(['fast' => 'Fast', 'cheap' => 'Cheap', 'good' => 'Good'])->default(['good', 'fast']);
+        $p->panel('Advanced', 'advanced', function (PanelBuilder $sp): void {
+          $sp->text('Web root', 'webroot')->default('web');
         });
       });
 
@@ -142,7 +142,7 @@ final class FormTest extends TestCase {
 
   public function testDefaultsAndFallbacks(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
         $panel->text('t');
         $panel->select('s')->option('a');
         $panel->select('m')->multiple();
@@ -209,7 +209,7 @@ final class FormTest extends TestCase {
 
   public function testStandaloneOptsOutOfInlineEditing(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
         $panel->confirm('a');
         $panel->select('b')->option('x')->standalone();
         // A later standalone(FALSE) restores inline editing.
@@ -227,9 +227,9 @@ final class FormTest extends TestCase {
 
   public function testExternalEditorFlag(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->textarea('notes', 'Notes')->externalEditor();
-        $panel->textarea('plain', 'Plain');
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->textarea('Notes', 'notes')->externalEditor();
+        $panel->textarea('Plain', 'plain');
       })
       ->root();
 
@@ -239,11 +239,11 @@ final class FormTest extends TestCase {
 
   public function testNoteField(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->note('intro', 'Getting started')->body('Fill in each field.');
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->note('Getting started', 'intro')->body('Fill in each field.');
         $panel->note('Bare');
-        $panel->note('boxed', 'Boxed')->border();
-        $panel->note('stock', 'Stock')->table(['Fruit', 'Qty'], [['Apple', '3'], ['Pear', '5']]);
+        $panel->note('Boxed', 'boxed')->border();
+        $panel->note('Stock', 'stock')->table(['Fruit', 'Qty'], [['Apple', '3'], ['Pear', '5']]);
       })
       ->root();
 
@@ -276,7 +276,7 @@ final class FormTest extends TestCase {
     $transformer = fn (mixed $v): mixed => $v;
 
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel) use ($validator, $transformer): void {
+      ->panel('P', 'p', function (PanelBuilder $panel) use ($validator, $transformer): void {
         $panel->text('x')->validate($validator)->transform($transformer);
       })
       ->root();
@@ -289,11 +289,11 @@ final class FormTest extends TestCase {
 
   public function testRequiredFlagAndMessageStored(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->text('plain', 'Plain');
-        $panel->text('name', 'Produce name')->required();
-        $panel->text('plot', 'Garden plot name')->required(message: 'The garden plot name is required.');
-        $panel->text('note', 'Delivery note')->required(FALSE);
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->text('Plain', 'plain');
+        $panel->text('Produce name', 'name')->required();
+        $panel->text('Garden plot name', 'plot')->required(message: 'The garden plot name is required.');
+        $panel->text('Delivery note', 'note')->required(FALSE);
       })
       ->root();
 
@@ -322,10 +322,10 @@ final class FormTest extends TestCase {
     $closure = fn (array $answers): array => [];
 
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel) use ($list, $closure): void {
-        $panel->text('name', 'Name')->complete($list);
-        $panel->text('repo', 'Repo')->complete($closure);
-        $panel->text('plain', 'Plain');
+      ->panel('P', 'p', function (PanelBuilder $panel) use ($list, $closure): void {
+        $panel->text('Name', 'name')->complete($list);
+        $panel->text('Repo', 'repo')->complete($closure);
+        $panel->text('Plain', 'plain');
       })
       ->root();
 
@@ -337,9 +337,9 @@ final class FormTest extends TestCase {
 
   public function testEnvNameAndAliasesStored(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->text('crate_size', 'Crate size')->env('LEGACY_CRATE')->envAliases(['OLD_CRATE', 'OLDER_CRATE']);
-        $panel->text('grade', 'Grade');
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->text('Crate size', 'crate_size')->env('LEGACY_CRATE')->envAliases(['OLD_CRATE', 'OLDER_CRATE']);
+        $panel->text('Grade', 'grade');
       })
       ->root();
 
@@ -357,8 +357,8 @@ final class FormTest extends TestCase {
 
   public function testEnvAliasesAreReindexed(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->text('crate_size', 'Crate size')->envAliases([2 => 'OLD_CRATE', 5 => 'OLDER_CRATE']);
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->text('Crate size', 'crate_size')->envAliases([2 => 'OLD_CRATE', 5 => 'OLDER_CRATE']);
       })
       ->root();
 
@@ -367,10 +367,10 @@ final class FormTest extends TestCase {
 
   public function testGhostTextOptInStored(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->suggest('fruit', 'Fruit')->options(['Apple' => 'Apple'])->ghost();
-        $panel->suggest('berry', 'Berry')->options(['Fig' => 'Fig'])->ghost(FALSE);
-        $panel->suggest('plain', 'Plain')->options(['Pear' => 'Pear']);
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->suggest('Fruit', 'fruit')->options(['Apple' => 'Apple'])->ghost();
+        $panel->suggest('Berry', 'berry')->options(['Fig' => 'Fig'])->ghost(FALSE);
+        $panel->suggest('Plain', 'plain')->options(['Pear' => 'Pear']);
       })
       ->root();
 
@@ -384,8 +384,8 @@ final class FormTest extends TestCase {
     $grade = fn (string $value): ?string => $value === 'a' ? NULL : 'nope';
 
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel) use ($grade): void {
-        $panel->template('crate', 'Crate label')
+      ->panel('P', 'p', function (PanelBuilder $panel) use ($grade): void {
+        $panel->template('Crate label', 'crate')
           ->pattern('{{orchard}}-{{grade}}')
           ->slot('orchard', 'Orchard')
           ->slot('grade', 'Grade', $grade)
@@ -406,8 +406,8 @@ final class FormTest extends TestCase {
 
   public function testSlotWithoutLabelOrValidatorLeavesBothUnset(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->template('crate', 'Crate')->pattern('{{a}}-{{b}}')->slot('a');
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->template('Crate', 'crate')->pattern('{{a}}-{{b}}')->slot('a');
       })
       ->root();
 
@@ -419,8 +419,8 @@ final class FormTest extends TestCase {
 
   public function testHelpAndPlaceholderCarryOntoTheField(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->text('crop', 'Crop')
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->text('Crop', 'crop')
           ->description('The crop being logged.')
           ->help('Type a few letters to filter.')
           ->placeholder('E.g. Golden Beetroot');
@@ -436,8 +436,8 @@ final class FormTest extends TestCase {
 
   public function testHelpAndPlaceholderDefaultToEmpty(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->text('crop', 'Crop');
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->text('Crop', 'crop');
       })
       ->root();
 
@@ -452,17 +452,17 @@ final class FormTest extends TestCase {
     $this->expectExceptionMessage('Field "name" of type "text" fills in no fixed shape; ->pattern() applies to template.');
 
     Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->text('name', 'Name')->pattern('{{a}}-{{b}}');
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->text('Name', 'name')->pattern('{{a}}-{{b}}');
       })
       ->root();
   }
 
   public function testNumberBoundsAssembled(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->number('port', 'Port')->min(1)->max(65535)->step(5);
-        $panel->number('plain', 'Plain');
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->number('Port', 'port')->min(1)->max(65535)->step(5);
+        $panel->number('Plain', 'plain');
       })
       ->root();
 
@@ -479,9 +479,9 @@ final class FormTest extends TestCase {
 
   public function testRatingScaleAssembled(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->rating('nps', 'Recommend us')->min(0)->max(10);
-        $panel->rating('taste', 'Taste');
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->rating('Recommend us', 'nps')->min(0)->max(10);
+        $panel->rating('Taste', 'taste');
       })
       ->root();
 
@@ -504,7 +504,7 @@ final class FormTest extends TestCase {
 
   public function testRatingKeepsDeclaredDefault(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->rating('taste')->default(4))
+      ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->rating('taste')->default(4))
       ->root();
 
     $this->assertSame(4, self::fieldOf($form, 'taste')?->value());
@@ -512,7 +512,7 @@ final class FormTest extends TestCase {
 
   public function testRatingCaptionsAssembled(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->rating('taste')->captions([1 => 'Poor', 5 => 'Excellent']))
+      ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->rating('taste')->captions([1 => 'Poor', 5 => 'Excellent']))
       ->root();
 
     $this->assertSame([1 => 'Poor', 5 => 'Excellent'], self::fieldOf($form, 'taste')?->ratingCaptions());
@@ -524,7 +524,7 @@ final class FormTest extends TestCase {
     $this->expectExceptionMessage(sprintf('Field "r" declares a scale from %d to %d; a scale needs at least two points', $min, $max));
 
     Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->rating('r')->min($min)->max($max))
+      ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->rating('r')->min($min)->max($max))
       ->root();
   }
 
@@ -541,9 +541,9 @@ final class FormTest extends TestCase {
 
   public function testDateBoundsAssembled(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->calendar('birthday', 'Birthday')->minDate('2000-01-01')->maxDate('2030-12-31')->weekStart(Weekday::Sunday);
-        $panel->calendar('plain', 'Plain');
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->calendar('Birthday', 'birthday')->minDate('2000-01-01')->maxDate('2030-12-31')->weekStart(Weekday::Sunday);
+        $panel->calendar('Plain', 'plain');
       })
       ->root();
 
@@ -568,15 +568,15 @@ final class FormTest extends TestCase {
     $this->expectExceptionMessage('Field "t" of type "text" picks no date; ->minDate() applies to calendar.');
 
     Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->text('t')->minDate('2020-01-01'))
+      ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->text('t')->minDate('2020-01-01'))
       ->root();
   }
 
   public function testPageSizeAssembled(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->search('paged', 'Paged')->options(['a' => 'A'])->pageSize(5);
-        $panel->search('plain', 'Plain')->options(['a' => 'A']);
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->search('Paged', 'paged')->options(['a' => 'A'])->pageSize(5);
+        $panel->search('Plain', 'plain')->options(['a' => 'A']);
       })
       ->root();
 
@@ -588,11 +588,11 @@ final class FormTest extends TestCase {
 
   public function testSelectionBoundsAssembled(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->select('tags', 'Tags')->multiple()->minSelections(2)->maxSelections(4)->option('a')->option('b');
-        $panel->search('svc', 'Services')->multiple()->minSelections(1)->option('x');
-        $panel->filePicker('files', 'Files')->multiple()->maxSelections(3);
-        $panel->select('plain', 'Plain')->multiple()->option('a');
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->select('Tags', 'tags')->multiple()->minSelections(2)->maxSelections(4)->option('a')->option('b');
+        $panel->search('Services', 'svc')->multiple()->minSelections(1)->option('x');
+        $panel->filePicker('Files', 'files')->multiple()->maxSelections(3);
+        $panel->select('Plain', 'plain')->multiple()->option('a');
       })
       ->root();
 
@@ -621,9 +621,9 @@ final class FormTest extends TestCase {
 
   public function testFilePickerOptions(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $panel): void {
-        $panel->filePicker('config', 'Config')->startIn('/opt')->filesOnly()->extensions(['yml', 'yaml'])->showHidden()->maxSize(1048576);
-        $panel->filePicker('assets', 'Assets')->multiple()->directoriesOnly();
+      ->panel('P', 'p', function (PanelBuilder $panel): void {
+        $panel->filePicker('Config', 'config')->startIn('/opt')->filesOnly()->extensions(['yml', 'yaml'])->showHidden()->maxSize(1048576);
+        $panel->filePicker('Assets', 'assets')->multiple()->directoriesOnly();
       })
       ->root();
 
@@ -645,7 +645,7 @@ final class FormTest extends TestCase {
 
   public function testOptionTypesAndDisabled(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $p): void {
+      ->panel('P', 'p', function (PanelBuilder $p): void {
         $p->select('profile')
           ->heading('Recommended')
           ->option('standard', 'Standard')
@@ -671,7 +671,7 @@ final class FormTest extends TestCase {
 
   public function testRepeatedOptionValueOverridesInPlace(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $p): void {
+      ->panel('P', 'p', function (PanelBuilder $p): void {
         $p->select('s')->option('a', 'First')->separator()->option('a', 'Second');
       })
       ->root();
@@ -691,7 +691,7 @@ final class FormTest extends TestCase {
     $this->expectExceptionMessage('Toggle field "t" default must be one of: a, b.');
 
     Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->toggle('t')->option('a')->option('b')->default($default))
+      ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->toggle('t')->option('a')->option('b')->default($default))
       ->root();
   }
 
@@ -710,7 +710,7 @@ final class FormTest extends TestCase {
 
   public function testToggleNumericStringOptionsDefaultToFirstValue(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->toggle('flag')->option('0', 'Off')->option('1', 'On'))
+      ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->toggle('flag')->option('0', 'Off')->option('1', 'On'))
       ->root();
 
     // The implicit default is the first option's value "0" as a string, not a
@@ -720,7 +720,7 @@ final class FormTest extends TestCase {
 
   public function testReorderToleratesDirtyDefault(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $p): void {
+      ->panel('P', 'p', function (PanelBuilder $p): void {
         $p->reorder('rk')->option('a')->option('b')->default('notalist');
         $p->reorder('rk2')->option('a')->option('b')->default(['b', 42, 'a']);
       })
@@ -734,9 +734,9 @@ final class FormTest extends TestCase {
 
   public function testModalPanelBuildsWithConfiguredButtons(): void {
     $form = Form::create('T')
-      ->panel('root', 'Root', function (PanelBuilder $p): void {
+      ->panel('Root', 'root', function (PanelBuilder $p): void {
         $p->text('name');
-        $p->panel('confirm', 'Delete?', function (PanelBuilder $m): void {
+        $p->panel('Delete?', 'confirm', function (PanelBuilder $m): void {
           $m->modal('Yes', 'No')->description('This cannot be undone.');
           $m->confirm('sure');
         });
@@ -753,7 +753,7 @@ final class FormTest extends TestCase {
 
   public function testModalDefaultsButtonLabels(): void {
     $form = Form::create('T')
-      ->panel('m', 'M', fn(PanelBuilder $p): PanelBuilder => $p->modal())
+      ->panel('M', 'm', fn(PanelBuilder $p): PanelBuilder => $p->modal())
       ->root();
 
     $modal = $form->children()[0];
@@ -765,13 +765,13 @@ final class FormTest extends TestCase {
   public function testLayoutFlowsToTheTreeAndItsPanels(): void {
     $form = Form::create('Demo')
       ->layout(1, 2)
-      ->panel('a', 'A', function (PanelBuilder $p): void {
+      ->panel('A', 'a', function (PanelBuilder $p): void {
         $p->layout(2);
-        $p->panel('a1', 'A1', fn(PanelBuilder $sp): FieldBuilder => $sp->text('one', 'One'));
-        $p->panel('a2', 'A2', fn(PanelBuilder $sp): FieldBuilder => $sp->text('two', 'Two'));
+        $p->panel('A1', 'a1', fn(PanelBuilder $sp): FieldBuilder => $sp->text('One', 'one'));
+        $p->panel('A2', 'a2', fn(PanelBuilder $sp): FieldBuilder => $sp->text('Two', 'two'));
       })
-      ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('three', 'Three'))
-      ->panel('c', 'C', fn(PanelBuilder $p): FieldBuilder => $p->text('four', 'Four'))
+      ->panel('B', 'b', fn(PanelBuilder $p): FieldBuilder => $p->text('Three', 'three'))
+      ->panel('C', 'c', fn(PanelBuilder $p): FieldBuilder => $p->text('Four', 'four'))
       ->root();
 
     // The counts are the arrangement, so what they declare is the layout the
@@ -801,7 +801,7 @@ final class FormTest extends TestCase {
     yield 'template without a pattern' => [
       static function (): void {
         Form::create('T')
-          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->template('crate', 'Crate'))
+          ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->template('Crate', 'crate'))
           ->root();
       },
       'Field "crate" is a template field but declares no pattern',
@@ -810,7 +810,7 @@ final class FormTest extends TestCase {
     yield 'rating with a step' => [
       static function (): void {
         Form::create('T')
-          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->rating('r')->step(2))
+          ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->rating('r')->step(2))
           ->root();
       },
       'Field "r" declares a step of 2 on a scale whose points are its steps',
@@ -819,7 +819,7 @@ final class FormTest extends TestCase {
     yield 'unparseable date bound' => [
       static function (): void {
         Form::create('T')
-          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->calendar('d')->minDate('2026-13-01'))
+          ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->calendar('d')->minDate('2026-13-01'))
           ->root();
       },
       'Field "d" declares an invalid date "2026-13-01".',
@@ -828,7 +828,7 @@ final class FormTest extends TestCase {
     yield 'min date after max date' => [
       static function (): void {
         Form::create('T')
-          ->panel('p', 'P', function (PanelBuilder $p): void {
+          ->panel('P', 'p', function (PanelBuilder $p): void {
             $p->calendar('d')->minDate('2026-12-31')->maxDate('2026-01-01');
           })
           ->root();
@@ -839,7 +839,7 @@ final class FormTest extends TestCase {
     yield 'number min above max' => [
       static function (): void {
         Form::create('T')
-          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->number('n')->min(10)->max(1))
+          ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->number('n')->min(10)->max(1))
           ->root();
       },
       'Field "n" declares min 10 greater than max 1.',
@@ -848,7 +848,7 @@ final class FormTest extends TestCase {
     yield 'non-positive number step' => [
       static function (): void {
         Form::create('T')
-          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->number('n')->step(0))
+          ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->number('n')->step(0))
           ->root();
       },
       'Field "n" declares a non-positive step 0.',
@@ -857,7 +857,7 @@ final class FormTest extends TestCase {
     yield 'non-positive file size' => [
       static function (): void {
         Form::create('T')
-          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->filePicker('f')->maxSize(0))
+          ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->filePicker('f')->maxSize(0))
           ->root();
       },
       'Field "f" declares a maximum file size of 0 below one byte.',
@@ -866,7 +866,7 @@ final class FormTest extends TestCase {
     yield 'non-positive page size' => [
       static function (): void {
         Form::create('T')
-          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->search('n')->pageSize(0))
+          ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->search('n')->pageSize(0))
           ->root();
       },
       'Field "n" declares a non-positive page size 0.',
@@ -875,7 +875,7 @@ final class FormTest extends TestCase {
     yield 'multiple on a single-value type' => [
       static function (): void {
         Form::create('T')
-          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->text('t')->multiple())
+          ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->text('t')->multiple())
           ->root();
       },
       'Field "t" of type "text" does not collect several values',
@@ -884,7 +884,7 @@ final class FormTest extends TestCase {
     yield 'selection limits without multiple' => [
       static function (): void {
         Form::create('T')
-          ->panel('p', 'P', function (PanelBuilder $p): void {
+          ->panel('P', 'p', function (PanelBuilder $p): void {
             $p->select('s')->minSelections(2)->option('a');
           })
           ->root();
@@ -895,7 +895,7 @@ final class FormTest extends TestCase {
     yield 'selection min above max' => [
       static function (): void {
         Form::create('T')
-          ->panel('p', 'P', function (PanelBuilder $p): void {
+          ->panel('P', 'p', function (PanelBuilder $p): void {
             $p->select('s')->multiple()->minSelections(5)->maxSelections(2);
           })
           ->root();
@@ -906,7 +906,7 @@ final class FormTest extends TestCase {
     yield 'selection min below one' => [
       static function (): void {
         Form::create('T')
-          ->panel('p', 'P', function (PanelBuilder $p): void {
+          ->panel('P', 'p', function (PanelBuilder $p): void {
             $p->select('s')->multiple()->minSelections(0);
           })
           ->root();
@@ -917,8 +917,8 @@ final class FormTest extends TestCase {
     yield 'field id used twice' => [
       static function (): void {
         Form::create('T')
-          ->panel('a', 'A', fn(PanelBuilder $p): FieldBuilder => $p->text('x'))
-          ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('x'))
+          ->panel('A', 'a', fn(PanelBuilder $p): FieldBuilder => $p->text('x'))
+          ->panel('B', 'b', fn(PanelBuilder $p): FieldBuilder => $p->text('x'))
           ->root();
       },
       'Duplicate field id "x".',
@@ -927,7 +927,7 @@ final class FormTest extends TestCase {
     yield 'toggle without two options' => [
       static function (): void {
         Form::create('T')
-          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->toggle('t')->option('only'))
+          ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->toggle('t')->option('only'))
           ->root();
       },
       'Toggle field "t" must have exactly two options, 1 given.',
@@ -936,7 +936,7 @@ final class FormTest extends TestCase {
     yield 'reorder with a single option' => [
       static function (): void {
         Form::create('T')
-          ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->reorder('r')->option('only'))
+          ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->reorder('r')->option('only'))
           ->root();
       },
       'Reorder field "r" must have at least two options, 1 given.',
@@ -945,7 +945,7 @@ final class FormTest extends TestCase {
     yield 'reorder with a structural option' => [
       static function (): void {
         Form::create('T')
-          ->panel('p', 'P', function (PanelBuilder $p): void {
+          ->panel('P', 'p', function (PanelBuilder $p): void {
             $p->reorder('r')->option('a')->separator()->option('b');
           })
           ->root();
@@ -956,9 +956,9 @@ final class FormTest extends TestCase {
     yield 'modal panel holding a sub-panel' => [
       static function (): void {
         Form::create('T')
-          ->panel('confirm', 'Confirm', function (PanelBuilder $m): void {
+          ->panel('Confirm', 'confirm', function (PanelBuilder $m): void {
             $m->modal();
-            $m->panel('nested', 'Nested', fn(PanelBuilder $n): FieldBuilder => $n->text('x'));
+            $m->panel('Nested', 'nested', fn(PanelBuilder $n): FieldBuilder => $n->text('x'));
           })
           ->root();
       },
@@ -969,8 +969,8 @@ final class FormTest extends TestCase {
       static function (): void {
         Form::create('Demo')
           ->layout(1)
-          ->panel('a', 'A', fn(PanelBuilder $p): FieldBuilder => $p->text('one', 'One'))
-          ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('two', 'Two'))
+          ->panel('A', 'a', fn(PanelBuilder $p): FieldBuilder => $p->text('One', 'one'))
+          ->panel('B', 'b', fn(PanelBuilder $p): FieldBuilder => $p->text('Two', 'two'))
           ->root();
       },
       'The grid of "Demo" declares 1 window(s) for 2 panel(s).',
@@ -980,8 +980,8 @@ final class FormTest extends TestCase {
       static function (): void {
         Form::create('Demo')
           ->layout(2, 2)
-          ->panel('a', 'A', fn(PanelBuilder $p): FieldBuilder => $p->text('one', 'One'))
-          ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('two', 'Two'))
+          ->panel('A', 'a', fn(PanelBuilder $p): FieldBuilder => $p->text('One', 'one'))
+          ->panel('B', 'b', fn(PanelBuilder $p): FieldBuilder => $p->text('Two', 'two'))
           ->root();
       },
       'The grid of "Demo" declares 4 window(s) for 2 panel(s).',
@@ -990,9 +990,9 @@ final class FormTest extends TestCase {
     yield 'panel slots mismatch its children' => [
       static function (): void {
         Form::create('Demo')
-          ->panel('a', 'A', function (PanelBuilder $p): void {
+          ->panel('A', 'a', function (PanelBuilder $p): void {
             $p->layout(2);
-            $p->panel('a1', 'A1', fn(PanelBuilder $sp): FieldBuilder => $sp->text('one', 'One'));
+            $p->panel('A1', 'a1', fn(PanelBuilder $sp): FieldBuilder => $sp->text('One', 'one'));
           })
           ->root();
       },
@@ -1003,8 +1003,8 @@ final class FormTest extends TestCase {
       static function (): void {
         Form::create('Demo')
           ->layout(0, 2)
-          ->panel('a', 'A', fn(PanelBuilder $p): FieldBuilder => $p->text('one', 'One'))
-          ->panel('b', 'B', fn(PanelBuilder $p): FieldBuilder => $p->text('two', 'Two'))
+          ->panel('A', 'a', fn(PanelBuilder $p): FieldBuilder => $p->text('One', 'one'))
+          ->panel('B', 'b', fn(PanelBuilder $p): FieldBuilder => $p->text('Two', 'two'))
           ->root();
       },
       'Every visual row of a grid holds at least one window.',
@@ -1052,7 +1052,7 @@ final class FormTest extends TestCase {
 
   public function testProgressRowStillTakesTheStepsItRuns(): void {
     $root = Form::create('T')
-      ->panel('p', 'P', fn(PanelBuilder $p): Progress => $p->progress('packing', 'Packing crates')->steps(4))
+      ->panel('P', 'p', fn(PanelBuilder $p): Progress => $p->progress('Packing crates', 'packing')->steps(4))
       ->root();
 
     $packing = $root->children()[0]->in('content')->blocks()[0];
@@ -1240,7 +1240,7 @@ final class FormTest extends TestCase {
     yield 'the builder, at the call' => [static fn(): FieldBuilder => (new PanelBuilder('p', 'P'))->number('n')->step(0)];
     yield 'the builder, at the seal' => [
       static fn(): Panel => Form::create('T')
-        ->panel('p', 'P', fn(PanelBuilder $p): FieldBuilder => $p->number('n')->min(10)->max(1))
+        ->panel('P', 'p', fn(PanelBuilder $p): FieldBuilder => $p->number('n')->min(10)->max(1))
         ->root(),
     ];
     yield 'a block guard' => [static fn(): Field => (new Field('n', 'N'))->env('ORCHARD-BASKET')];
@@ -1250,14 +1250,14 @@ final class FormTest extends TestCase {
         $form = Form::create('T');
         $form->root();
 
-        return $form->panel('late', 'Late', fn(PanelBuilder $p): FieldBuilder => $p->text('x'));
+        return $form->panel('Late', 'late', fn(PanelBuilder $p): FieldBuilder => $p->text('x'));
       },
     ];
   }
 
   #[DataProvider('dataProviderDeclarationAfterTheTreeIsBuiltIsRefused')]
   public function testDeclarationAfterTheTreeIsBuiltIsRefused(\Closure $declare, string $message): void {
-    $form = Form::create('Orchard')->panel('basket', 'Basket', fn(PanelBuilder $p): FieldBuilder => $p->text('fruit', 'Fruit'));
+    $form = Form::create('Orchard')->panel('Basket', 'basket', fn(PanelBuilder $p): FieldBuilder => $p->text('Fruit', 'fruit'));
     $form->root();
 
     $this->expectException(FormException::class);
@@ -1274,7 +1274,7 @@ final class FormTest extends TestCase {
    */
   public static function dataProviderDeclarationAfterTheTreeIsBuiltIsRefused(): \Iterator {
     yield 'a panel' => [
-      static fn(Form $form): Form => $form->panel('late', 'Late', fn(PanelBuilder $p): FieldBuilder => $p->text('x')),
+      static fn(Form $form): Form => $form->panel('Late', 'late', fn(PanelBuilder $p): FieldBuilder => $p->text('x')),
       'Form "Orchard" declares a panel after its tree was built; declare every panel before the form is collected or its tree is read.',
     ];
 
@@ -1290,7 +1290,7 @@ final class FormTest extends TestCase {
   }
 
   public function testTreeIsBuiltOnceAndHandedBackAsItStands(): void {
-    $form = Form::create('Orchard')->panel('basket', 'Basket', fn(PanelBuilder $p): FieldBuilder => $p->text('fruit', 'Fruit'));
+    $form = Form::create('Orchard')->panel('Basket', 'basket', fn(PanelBuilder $p): FieldBuilder => $p->text('Fruit', 'fruit'));
 
     $this->assertSame($form->root(), $form->root());
   }

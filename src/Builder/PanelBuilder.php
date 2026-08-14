@@ -26,9 +26,9 @@ use DrevOps\PhpTui\Screen\Layout\PanelLayout;
  * block then names the region it goes in rather than depending on the order
  * it was declared in.
  *
- * A block is named the same way: one name is the label, and the id is derived
- * from it - `text('Order name')` collects into `order_name`. Two name it in
- * full, id first, for an id that has to be a particular string.
+ * A block is declared by the label it draws, and the id it answers to is
+ * derived from that label - `text('Order name')` collects into `order_name`.
+ * An id that has to be a particular string is declared after the label.
  * {@see \DrevOps\PhpTui\Builder\Name} holds the rule.
  *
  * @package DrevOps\PhpTui\Builder
@@ -186,16 +186,16 @@ final class PanelBuilder {
   /**
    * Add a text field.
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  public function text(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Text);
+  public function text(string $label, string $id = ''): FieldBuilder {
+    return $this->field($label, $id, FieldType::Text);
   }
 
   /**
@@ -207,106 +207,106 @@ final class PanelBuilder {
    * assembled string; its parts are read back with
    * {@see \DrevOps\PhpTui\Answers\Answers::parts()}.
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  public function template(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Template);
+  public function template(string $label, string $id = ''): FieldBuilder {
+    return $this->field($label, $id, FieldType::Template);
   }
 
   /**
    * Add a select field. Call ->multiple() to collect several values as a list.
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  public function select(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Select);
+  public function select(string $label, string $id = ''): FieldBuilder {
+    return $this->field($label, $id, FieldType::Select);
   }
 
   /**
    * Add a reorder field (rank a list by moving the highlighted item).
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  public function reorder(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Reorder);
+  public function reorder(string $label, string $id = ''): FieldBuilder {
+    return $this->field($label, $id, FieldType::Reorder);
   }
 
   /**
    * Add a confirm field.
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  public function confirm(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Confirm);
+  public function confirm(string $label, string $id = ''): FieldBuilder {
+    return $this->field($label, $id, FieldType::Confirm);
   }
 
   /**
    * Add a toggle field (an inline switch between two labeled values).
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  public function toggle(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Toggle);
+  public function toggle(string $label, string $id = ''): FieldBuilder {
+    return $this->field($label, $id, FieldType::Toggle);
   }
 
   /**
    * Add a suggest field.
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  public function suggest(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Suggest);
+  public function suggest(string $label, string $id = ''): FieldBuilder {
+    return $this->field($label, $id, FieldType::Suggest);
   }
 
   /**
    * Add a number field.
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  public function number(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Number);
+  public function number(string $label, string $id = ''): FieldBuilder {
+    return $this->field($label, $id, FieldType::Number);
   }
 
   /**
@@ -316,61 +316,61 @@ final class PanelBuilder {
    * answer is the chosen point as an integer. Chain `->captions()` to name what
    * the points mean.
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  public function rating(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Rating);
+  public function rating(string $label, string $id = ''): FieldBuilder {
+    return $this->field($label, $id, FieldType::Rating);
   }
 
   /**
    * Add a calendar field: a navigable month picker returning an ISO date.
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  public function calendar(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Calendar);
+  public function calendar(string $label, string $id = ''): FieldBuilder {
+    return $this->field($label, $id, FieldType::Calendar);
   }
 
   /**
    * Add a textarea field.
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  public function textarea(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Textarea);
+  public function textarea(string $label, string $id = ''): FieldBuilder {
+    return $this->field($label, $id, FieldType::Textarea);
   }
 
   /**
    * Add a password field.
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  public function password(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Password);
+  public function password(string $label, string $id = ''): FieldBuilder {
+    return $this->field($label, $id, FieldType::Password);
   }
 
   /**
@@ -378,16 +378,16 @@ final class PanelBuilder {
    *
    * Call ->multiple() to collect several values.
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  public function search(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Search);
+  public function search(string $label, string $id = ''): FieldBuilder {
+    return $this->field($label, $id, FieldType::Search);
   }
 
   /**
@@ -395,31 +395,31 @@ final class PanelBuilder {
    *
    * Call ->multiple() to collect several paths.
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  public function filePicker(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::FilePicker);
+  public function filePicker(string $label, string $id = ''): FieldBuilder {
+    return $this->field($label, $id, FieldType::FilePicker);
   }
 
   /**
    * Add a pause field (an acknowledgement gate).
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  public function pause(string $id, string $label = ''): FieldBuilder {
-    return $this->field($id, $label, FieldType::Pause);
+  public function pause(string $label, string $id = ''): FieldBuilder {
+    return $this->field($label, $id, FieldType::Pause);
   }
 
   /**
@@ -429,18 +429,16 @@ final class PanelBuilder {
    * comes first and the body follows through `->body()`. It builds the same
    * block, so every markup call is available on it.
    *
-   * @param string $id
-   *   The block id, or the title when it is the only name given.
    * @param string $title
-   *   The title, when an id is given before it.
+   *   The title the card draws.
+   * @param string $id
+   *   The id it answers to; derived from the title when not declared.
    *
    * @return \DrevOps\PhpTui\Block\Markup
    *   The markup block.
    */
-  public function note(string $id, string $title = ''): Markup {
-    [$id, $title] = Name::pair($id, $title);
-
-    return $this->markup($id, '', $title);
+  public function note(string $title, string $id = ''): Markup {
+    return $this->markup('', $title, $id);
   }
 
   /**
@@ -451,18 +449,19 @@ final class PanelBuilder {
    * gates it on an earlier answer, so a warning can appear only when an
    * answer calls for it.
    *
-   * @param string $id
-   *   The block id.
    * @param string $body
    *   The content; newlines separate lines.
    * @param string $title
    *   An optional title above the body.
+   * @param string $id
+   *   The id it answers to; derived from the title, or from the body when it
+   *   carries none.
    *
    * @return \DrevOps\PhpTui\Block\Markup
    *   The markup block.
    */
-  public function markup(string $id, string $body, string $title = ''): Markup {
-    $markup = new Markup($id, $body, $title);
+  public function markup(string $body, string $title = '', string $id = ''): Markup {
+    $markup = new Markup(Name::id($title === '' ? $body : $title, $id), $body, $title);
     $this->add($markup);
 
     return $markup;
@@ -475,18 +474,16 @@ final class PanelBuilder {
    * `->work(\Closure)` for the work; the callback drives the indicator through
    * the {@see \DrevOps\PhpTui\Primitive\ProgressReporter} it receives.
    *
-   * @param string $id
-   *   The block id, or the caption when it is the only name given.
    * @param string $caption
-   *   The caption shown beside the indicator, when an id is given before it.
+   *   The caption shown beside the indicator.
+   * @param string $id
+   *   The id it answers to; derived from the caption when not declared.
    *
    * @return \DrevOps\PhpTui\Block\Progress
    *   The progress block.
    */
-  public function progress(string $id, string $caption = ''): Progress {
-    [$id, $caption] = Name::pair($id, $caption);
-
-    $progress = new Progress($id, $caption);
+  public function progress(string $caption, string $id = ''): Progress {
+    $progress = new Progress(Name::id($caption, $id), $caption);
     $this->add($progress);
 
     return $progress;
@@ -495,10 +492,11 @@ final class PanelBuilder {
   /**
    * Add a nested sub-panel.
    *
-   * @param string $id
-   *   The sub-panel id, or its title when it is the only name given.
-   * @param string|\Closure $title
-   *   The sub-panel title, or the callback when only one name is given.
+   * @param string $title
+   *   The sub-panel title.
+   * @param string|\Closure $id
+   *   The id it answers to, or the callback when the id is derived from the
+   *   title.
    * @param \Closure|null $build
    *   The callback receiving the sub-panel builder.
    *
@@ -508,8 +506,8 @@ final class PanelBuilder {
    * @throws \DrevOps\PhpTui\FormException
    *   When no callback is given to build the sub-panel with.
    */
-  public function panel(string $id, string|\Closure $title, ?\Closure $build = NULL): self {
-    [$id, $title, $build] = Name::panel($id, $title, $build);
+  public function panel(string $title, string|\Closure $id, ?\Closure $build = NULL): self {
+    [$id, $build] = Name::panel($title, $id, $build);
 
     $panel = new self($id, $title);
     $build($panel);
@@ -692,20 +690,18 @@ final class PanelBuilder {
   /**
    * Create, register and place a field builder of a given type.
    *
-   * @param string $id
-   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label, when an id is given before it.
+   *   The label the field draws.
+   * @param string $id
+   *   The id it answers to; derived from the label when not declared.
    * @param \DrevOps\PhpTui\Block\FieldType $type
    *   The field type.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
    */
-  protected function field(string $id, string $label, FieldType $type): FieldBuilder {
-    [$id, $label] = Name::pair($id, $label);
-
-    $field = new FieldBuilder($id, $label, $type);
+  protected function field(string $label, string $id, FieldType $type): FieldBuilder {
+    $field = new FieldBuilder(Name::id($label, $id), $label, $type);
     $this->fields[] = $field;
     $this->add($field->block());
 

@@ -28,13 +28,13 @@ final class FieldDeclarationTest extends TestCase {
 
   public function testTreeHoldsEveryPanelAndFieldItWasDeclaredWith(): void {
     $root = Form::create('Demo')
-      ->panel('general', 'General', function (PanelBuilder $p): void {
+      ->panel('General', 'general', function (PanelBuilder $p): void {
         $p->text('name')->default('Acme')->required();
         $p->text('email');
       })
-      ->panel('orchard', 'Orchard', function (PanelBuilder $p): void {
+      ->panel('Orchard', 'orchard', function (PanelBuilder $p): void {
         $p->select('basket')->option('standard', 'Standard');
-        $p->panel('advanced', 'Advanced', function (PanelBuilder $sp): void {
+        $p->panel('Advanced', 'advanced', function (PanelBuilder $sp): void {
           $sp->confirm('trace');
         });
       })
@@ -190,7 +190,7 @@ final class FieldDeclarationTest extends TestCase {
     $this->expectException(FormException::class);
     $this->expectExceptionMessage('Field "crate" is a template field but declares no pattern');
 
-    Form::create('T')->panel('p', 'P', static function (PanelBuilder $p): void {
+    Form::create('T')->panel('P', 'p', static function (PanelBuilder $p): void {
       $p->add(new Field('crate', 'Crate', FieldType::Template));
     })->root();
   }
@@ -267,7 +267,7 @@ final class FieldDeclarationTest extends TestCase {
     $this->expectException(FormException::class);
     $this->expectExceptionMessage('Field "f" of type "text" draws no scale to caption; captions apply to rating fields.');
 
-    Form::create('T')->panel('p', 'P', static function (PanelBuilder $p): void {
+    Form::create('T')->panel('P', 'p', static function (PanelBuilder $p): void {
       $p->add((new Field('f', 'F'))->captions([1 => 'Poor']));
     })->root();
   }
@@ -285,7 +285,7 @@ final class FieldDeclarationTest extends TestCase {
     $this->expectException(FormException::class);
     $this->expectExceptionMessage($message);
 
-    Form::create('T')->panel('p', 'P', static function (PanelBuilder $p) use ($declare): void {
+    Form::create('T')->panel('P', 'p', static function (PanelBuilder $p) use ($declare): void {
       $p->add($declare(new Field('f', 'F')));
     })->root();
   }
@@ -336,7 +336,7 @@ final class FieldDeclarationTest extends TestCase {
       $field->pattern(new Template('{{a}}-{{b}}'));
     }
 
-    Form::create('T')->panel('p', 'P', static fn(PanelBuilder $p): PanelBuilder => $p->add($field))->root();
+    Form::create('T')->panel('P', 'p', static fn(PanelBuilder $p): PanelBuilder => $p->add($field))->root();
 
     $this->assertSame('E.g. Golden Beetroot', $field->placeholderText());
   }

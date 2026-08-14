@@ -35,9 +35,9 @@ final class BuilderTest extends TestCase {
 
   public function testThreeFieldFormNamesNoneOfTheHierarchy(): void {
     $panel = $this->panel(function (PanelBuilder $p): void {
-      $p->text('courier', 'Courier')->default('Valley Runs');
-      $p->number('weight', 'Basket weight')->default(1200);
-      $p->confirm('organic', 'Organic only?')->default(TRUE);
+      $p->text('Courier', 'courier')->default('Valley Runs');
+      $p->number('Basket weight', 'weight')->default(1200);
+      $p->confirm('Organic only?', 'organic')->default(TRUE);
     });
 
     $this->assertSame(['courier' => 'Valley Runs', 'weight' => 1200, 'organic' => TRUE], (new Collector())->collect($panel));
@@ -45,9 +45,9 @@ final class BuilderTest extends TestCase {
 
   public function testMarkupBetweenTwoFieldsDoesNotChangeTheShapeOfTheCode(): void {
     $panel = $this->panel(function (PanelBuilder $p): void {
-      $p->text('courier', 'Courier')->default('Valley Runs');
-      $p->markup('weighing', 'Every crate is weighed at the packing bench.');
-      $p->number('weight', 'Basket weight')->default(1200);
+      $p->text('Courier', 'courier')->default('Valley Runs');
+      $p->markup('Every crate is weighed at the packing bench.', id: 'weighing');
+      $p->number('Basket weight', 'weight')->default(1200);
     });
 
     $blocks = $panel->currentLayout()->in('content')->blocks();
@@ -59,7 +59,7 @@ final class BuilderTest extends TestCase {
 
   public function testTheAssemblerFurnishesTheScreenTheLayoutWouldNot(): void {
     $panel = $this->panel(function (PanelBuilder $p): void {
-      $p->text('courier', 'Courier')->default('Valley Runs');
+      $p->text('Courier', 'courier')->default('Valley Runs');
     });
 
     $screen = (new Assembler())->assemble($panel);
@@ -79,7 +79,7 @@ final class BuilderTest extends TestCase {
 
   public function testFormThatHidesItsButtonsIsAssembledWithNone(): void {
     $panel = $this->panel(function (PanelBuilder $p): void {
-      $p->text('courier', 'Courier')->default('Valley Runs');
+      $p->text('Courier', 'courier')->default('Valley Runs');
     })->buttons(new Buttons(FALSE));
 
     $this->assertSame([$panel], (new Assembler())->assemble($panel)->in('content')->blocks());
@@ -87,7 +87,7 @@ final class BuilderTest extends TestCase {
 
   public function testLayoutSendsEachPieceWhereItSaysRatherThanWhereItsNamesSuggest(): void {
     $panel = $this->panel(function (PanelBuilder $p): void {
-      $p->text('courier', 'Courier')->default('Valley Runs');
+      $p->text('Courier', 'courier')->default('Valley Runs');
     });
 
     $screen = (new Assembler())->assemble($panel, StallLayout::class);
@@ -119,7 +119,7 @@ final class BuilderTest extends TestCase {
 
   public function testAnAssembledScreenDrawsEndToEnd(): void {
     $panel = $this->panel(function (PanelBuilder $p): void {
-      $p->text('courier', 'Courier')->default('Valley Runs');
+      $p->text('Courier', 'courier')->default('Valley Runs');
     });
 
     $screen = (new Assembler())->assemble($panel);

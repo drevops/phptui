@@ -144,12 +144,12 @@ final class ScreenParityTest extends TestCase {
 
   public function testSectionThatGoesWhileYouAreInsideItPutsYouBackOutsideIt(): void {
     $form = Form::create('Delivery')
-      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
-        $p->confirm('organic', 'Organic only?')->default(TRUE);
+      ->panel('Produce order', 'order', static function (PanelBuilder $p): void {
+        $p->confirm('Organic only?', 'organic')->default(TRUE);
 
-        $p->panel('certification', 'Certification', static function (PanelBuilder $sp): void {
+        $p->panel('Certification', 'certification', static function (PanelBuilder $sp): void {
           $sp->when(new Condition('organic', eq: TRUE));
-          $sp->text('certifier', 'Certifier');
+          $sp->text('Certifier', 'certifier');
         });
       });
 
@@ -177,17 +177,17 @@ final class ScreenParityTest extends TestCase {
 
   public function testSectionTheAnswersRemovedIsDealtNoWindowEither(): void {
     $form = Form::create('Market stall')
-      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
+      ->panel('Produce order', 'order', static function (PanelBuilder $p): void {
         $p->layout(2);
-        $p->confirm('organic', 'Organic only?')->default(FALSE);
+        $p->confirm('Organic only?', 'organic')->default(FALSE);
 
-        $p->panel('fruit', 'Fruit', static function (PanelBuilder $sp): void {
-          $sp->select('fruit', 'Fruit')->default('apple')->options(['apple' => 'Apple', 'pear' => 'Pear']);
+        $p->panel('Fruit', 'fruit', static function (PanelBuilder $sp): void {
+          $sp->select('Fruit', 'fruit')->default('apple')->options(['apple' => 'Apple', 'pear' => 'Pear']);
         });
 
-        $p->panel('certification', 'Certification', static function (PanelBuilder $sp): void {
+        $p->panel('Certification', 'certification', static function (PanelBuilder $sp): void {
           $sp->when(new Condition('organic', eq: TRUE));
-          $sp->text('certifier', 'Certifier')->default('Soil Board');
+          $sp->text('Certifier', 'certifier')->default('Soil Board');
         });
       });
 
@@ -1055,10 +1055,10 @@ final class ScreenParityTest extends TestCase {
 
   public function testPanelRowCountsThePicksItHasNoRoomToList(): void {
     $form = Form::create('Order')
-      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
-        $p->select('basket', 'Basket')->multiple()->default(['apple', 'beet', 'carrot', 'date'])
+      ->panel('Produce order', 'order', static function (PanelBuilder $p): void {
+        $p->select('Basket', 'basket')->multiple()->default(['apple', 'beet', 'carrot', 'date'])
           ->options(['apple' => 'Apple', 'beet' => 'Beet', 'carrot' => 'Carrot', 'date' => 'Date']);
-        $p->select('herbs', 'Herbs')->multiple()->default(['basil', 'dill'])
+        $p->select('Herbs', 'herbs')->multiple()->default(['basil', 'dill'])
           ->options(['basil' => 'Basil', 'dill' => 'Dill']);
       });
 
@@ -1073,16 +1073,16 @@ final class ScreenParityTest extends TestCase {
 
   public function testChainOfConditionsStepsInOneStepPerLink(): void {
     $form = Form::create('Conditional indentation')
-      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
-        $p->select('category', 'Category')->default('vegetable')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable']);
+      ->panel('Produce order', 'order', static function (PanelBuilder $p): void {
+        $p->select('Category', 'category')->default('vegetable')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable']);
         // One condition deep: it hangs off the unconditional category above.
-        $p->select('basket', 'Basket')->multiple()->default(['carrot'])->options(['carrot' => 'Carrot', 'potato' => 'Potato'])->when(new Condition('category', eq: 'vegetable'));
+        $p->select('Basket', 'basket')->multiple()->default(['carrot'])->options(['carrot' => 'Carrot', 'potato' => 'Potato'])->when(new Condition('category', eq: 'vegetable'));
         // Two deep: its rule names a field that is itself conditional.
-        $p->confirm('weekly', 'Weekly delivery?')->default(TRUE)->when(new Condition('basket', contains: 'carrot'));
+        $p->confirm('Weekly delivery?', 'weekly')->default(TRUE)->when(new Condition('basket', contains: 'carrot'));
         // Three deep, and the steps keep going for as long as the chain does.
-        $p->text('courier', 'Courier note')->default('Leave at the gate')->when(new Condition('weekly', eq: TRUE));
+        $p->text('Courier note', 'courier')->default('Leave at the gate')->when(new Condition('weekly', eq: TRUE));
         // Unconditional again, so the row returns to the frame edge.
-        $p->number('quantity', 'Quantity')->min(1)->max(99)->default(6);
+        $p->number('Quantity', 'quantity')->min(1)->max(99)->default(6);
       });
 
     $stepped = (new ScreenTester($form->root()))->rows(16)->cols(70)->options(['indent_conditional' => TRUE]);
@@ -1101,9 +1101,9 @@ final class ScreenParityTest extends TestCase {
 
   public function testChainOfConditionsStaysFlushUntilTheThemeIsAskedToStepIt(): void {
     $form = Form::create('Conditional indentation')
-      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
-        $p->select('category', 'Category')->default('vegetable')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable']);
-        $p->confirm('weekly', 'Weekly delivery?')->default(TRUE)->when(new Condition('category', eq: 'vegetable'));
+      ->panel('Produce order', 'order', static function (PanelBuilder $p): void {
+        $p->select('Category', 'category')->default('vegetable')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable']);
+        $p->confirm('Weekly delivery?', 'weekly')->default(TRUE)->when(new Condition('category', eq: 'vegetable'));
       });
 
     $flush = (new ScreenTester($form->root()))->rows(12)->cols(70);
@@ -1117,13 +1117,13 @@ final class ScreenParityTest extends TestCase {
   #[DataProvider('dataProviderEveryKindOfRowInChainStepsInWithIt')]
   public function testEveryKindOfRowInChainStepsInWithIt(array $options, array $expected): void {
     $form = Form::create('Conditional indentation')
-      ->panel('order', 'Produce order', static function (PanelBuilder $p): void {
-        $p->confirm('weekly', 'Weekly delivery?')->default(TRUE);
+      ->panel('Produce order', 'order', static function (PanelBuilder $p): void {
+        $p->confirm('Weekly delivery?', 'weekly')->default(TRUE);
         // One condition, three kinds of row: whatever a rule can take off the
         // form steps in behind the answer that brought it back.
-        $p->text('courier', 'Courier note')->default('Leave at the gate')->when(new Condition('weekly', eq: TRUE));
-        $p->markup('crates', 'Weekly crates are packed the evening before.')->when(new Condition('weekly', eq: TRUE));
-        $p->text('gate', 'Gate code')->default('4821')->when(new Condition('weekly', eq: TRUE));
+        $p->text('Courier note', 'courier')->default('Leave at the gate')->when(new Condition('weekly', eq: TRUE));
+        $p->markup('Weekly crates are packed the evening before.', id: 'crates')->when(new Condition('weekly', eq: TRUE));
+        $p->text('Gate code', 'gate')->default('4821')->when(new Condition('weekly', eq: TRUE));
       });
 
     $tester = (new ScreenTester($form->root()))->rows(16)->cols(70)->options($options);

@@ -76,12 +76,12 @@ final class ProgressableTest extends TestCase {
 
     // The preload prepares data that the field loader then reads - proving the
     // preload runs first.
-    $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p) use (&$calls, &$prepared): void {
+    $form = Form::create('Order')->panel('New order', 'order', function (PanelBuilder $p) use (&$calls, &$prepared): void {
       $p->preload(function () use (&$calls, &$prepared): void {
         $calls++;
         $prepared = ['apple' => 'Apple', 'pear' => 'Pear'];
       });
-      $p->select('fruit', 'Fruit')->options(function () use (&$prepared): array {
+      $p->select('Fruit', 'fruit')->options(function () use (&$prepared): array {
         return $prepared;
       });
     });
@@ -96,11 +96,11 @@ final class ProgressableTest extends TestCase {
   public function testPanelPreloadRunsWithoutAnyFieldLoaders(): void {
     $calls = 0;
 
-    $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p) use (&$calls): void {
+    $form = Form::create('Order')->panel('New order', 'order', function (PanelBuilder $p) use (&$calls): void {
       $p->preload(function () use (&$calls): void {
         $calls++;
       });
-      $p->text('note', 'Note');
+      $p->text('Note', 'note');
     });
 
     $tester = (new TuiTester($form))->rows(12);
@@ -119,8 +119,8 @@ final class ProgressableTest extends TestCase {
    *   The form.
    */
   protected function form(int &$calls): Form {
-    return Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p) use (&$calls): void {
-      $p->select('fruit', 'Fruit')->options(function () use (&$calls): array {
+    return Form::create('Order')->panel('New order', 'order', function (PanelBuilder $p) use (&$calls): void {
+      $p->select('Fruit', 'fruit')->options(function () use (&$calls): array {
         $calls++;
 
         return ['apple' => 'Apple', 'pear' => 'Pear'];

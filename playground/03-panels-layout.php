@@ -69,7 +69,7 @@ $form = Form::create('Market stall')
     });
 
     // Written after the last window, so it goes in the region below them.
-    $p->markup('bench', 'Crates are weighed at the bench.');
+    $p->markup('Crates are weighed at the bench.');
   })
   ->panel('Delivery', function (PanelBuilder $p): void {
     // No shape, so no grid: the two sub-panels are rows you select, one under

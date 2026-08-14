@@ -39,7 +39,7 @@ require __DIR__ . '/themes/PlainTheme.php';
 
 $form = Form::create('Floor theme demo')
   ->panel('Market stall', function (PanelBuilder $p): void {
-    $p->markup('plain', 'Drawn with no colour, no glyphs and no frame.');
+    $p->markup('Drawn with no colour, no glyphs and no frame.');
     $p->text('Stall name')->default('Harbour');
     $p->select('Stock')->default('fruit')->options([
       'fruit' => 'Fruit',

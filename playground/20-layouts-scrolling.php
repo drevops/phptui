@@ -79,7 +79,7 @@ $form = Form::create('Market stall')
       $sp->rating('Freshness')->default(4)->min(1)->max(5);
     });
 
-    $p->markup('bench', 'Crates are weighed at the bench.');
+    $p->markup('Crates are weighed at the bench.');
   });
 
 try {
