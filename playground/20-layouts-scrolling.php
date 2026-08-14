@@ -41,45 +41,45 @@ require __DIR__ . '/../vendor/autoload.php';
 // another below: the pair around the windows travels with the grid, because a
 // surface that left them behind would not be one surface.
 $form = Form::create('Market stall')
-  ->panel('order', 'Order', function (PanelBuilder $p): void {
+  ->panel('Order', function (PanelBuilder $p): void {
     $p->layout(2, 2, 2);
 
-    $p->text('name', 'Order name')->default('Weekly Box');
+    $p->text('Order name')->default('Weekly Box');
 
-    $p->panel('fruit', 'Fruit', function (PanelBuilder $sp): void {
-      $sp->select('fruit', 'Fruit')->default('apple')->options([
+    $p->panel('Fruit', function (PanelBuilder $sp): void {
+      $sp->select('Fruit')->default('apple')->options([
         'apple' => 'Apple',
         'pear' => 'Pear',
         'plum' => 'Plum',
       ]);
     });
-    $p->panel('veg', 'Vegetables', function (PanelBuilder $sp): void {
-      $sp->select('veg', 'Vegetables')->multiple()->default(['carrot'])->options([
+    $p->panel('Vegetables', function (PanelBuilder $sp): void {
+      $sp->select('Vegetables')->multiple()->default(['carrot'])->options([
         'carrot' => 'Carrot',
         'leek' => 'Leek',
         'tomato' => 'Tomato',
       ]);
     });
-    $p->panel('herbs', 'Herbs', function (PanelBuilder $sp): void {
-      $sp->confirm('bundle', 'Herb bundle?')->default(TRUE);
+    $p->panel('Herbs', function (PanelBuilder $sp): void {
+      $sp->confirm('Herb bundle?')->default(TRUE);
     });
-    $p->panel('delivery', 'Delivery', function (PanelBuilder $sp): void {
-      $sp->toggle('slot', 'Slot')->default('morning')->options([
+    $p->panel('Delivery', function (PanelBuilder $sp): void {
+      $sp->toggle('Slot')->default('morning')->options([
         'morning' => 'Morning',
         'afternoon' => 'Afternoon',
       ]);
     });
-    $p->panel('ripeness', 'Ripeness', function (PanelBuilder $sp): void {
-      $sp->toggle('ripeness', 'Ripeness')->default('ripe')->options([
+    $p->panel('Ripeness', function (PanelBuilder $sp): void {
+      $sp->toggle('Ripeness')->default('ripe')->options([
         'ripe' => 'Ripe',
         'unripe' => 'Unripe',
       ]);
     });
-    $p->panel('freshness', 'Freshness', function (PanelBuilder $sp): void {
-      $sp->rating('freshness', 'Freshness')->default(4)->min(1)->max(5);
+    $p->panel('Freshness', function (PanelBuilder $sp): void {
+      $sp->rating('Freshness')->default(4)->min(1)->max(5);
     });
 
-    $p->markup('bench', 'Crates are weighed at the bench.');
+    $p->markup('Crates are weighed at the bench.');
   });
 
 try {

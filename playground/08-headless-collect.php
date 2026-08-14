@@ -23,26 +23,26 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Produce order')
-  ->panel('order', 'New order', function (PanelBuilder $p): void {
-    $p->text('name', 'Order name')->required();
-    $p->select('fruit', 'Fruit')->default('banana')->options([
+  ->panel('New order', function (PanelBuilder $p): void {
+    $p->text('Order name')->required();
+    $p->select('Fruit')->default('banana')->options([
       'apple' => 'Apple',
       'banana' => 'Banana',
       'cherry' => 'Cherry',
     ]);
-    $p->number('quantity', 'Quantity')->min(1)->max(99)->default(6);
-    $p->confirm('organic', 'Organic only?')->default(FALSE);
+    $p->number('Quantity')->min(1)->max(99)->default(6);
+    $p->confirm('Organic only?')->default(FALSE);
   });
 
 // A per-field environment variable: the uppercased field id under the PHPTUI_
 // prefix. Exported by the calling shell in real use; set here so the demo is
 // self-contained. Form::envPrefix() or the facade can change the prefix.
-putenv('PHPTUI_ORGANIC=1');
+putenv('PHPTUI_ORGANIC_ONLY=1');
 
 // Answers arrive as a JSON object keyed by field id - inline here, but
 // collect() also accepts a path to a JSON file. The prompts win over the
 // environment, so "fruit" is cherry even if PHPTUI_FRUIT were set.
-$prompts = '{"name": "Weekly Box", "fruit": "cherry"}';
+$prompts = '{"order_name": "Weekly Box", "fruit": "cherry"}';
 
 try {
   $answers = (new Tui($form))->collect($prompts);

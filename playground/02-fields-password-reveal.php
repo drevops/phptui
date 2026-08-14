@@ -23,8 +23,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Password field')
-  ->panel('main', 'Password', function (PanelBuilder $p): void {
-    $p->password('code', 'Order code')->default('melon7')->revealable();
+  ->panel('Password', function (PanelBuilder $p): void {
+    $p->password('Order code')->default('melon7')->revealable();
   });
 
 try {

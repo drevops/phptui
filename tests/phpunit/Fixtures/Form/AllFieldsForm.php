@@ -31,27 +31,27 @@ final class AllFieldsForm {
    */
   public static function create(string $picker_start = ''): Form {
     return Form::create('All fields')
-      ->panel('fields', 'Fields', function (PanelBuilder $p) use ($picker_start): void {
-        $p->note('note', 'Note')->body('A read-only note field.');
-        $p->text('text', 'Text')->default('txt');
-        $p->template('template', 'Template')->pattern('{{head}}-{{tail}}')->default('a-b');
-        $p->number('number', 'Number')->default(7);
-        $p->rating('rating', 'Rating')->captions([1 => 'Poor', 5 => 'Excellent'])->default(4);
-        $p->calendar('date', 'Calendar')->default('2026-07-15');
-        $p->textarea('textarea', 'Textarea')->default('note');
-        $p->password('password', 'Password')->default('pw');
-        $p->select('select', 'Select')->options(['a' => 'Alpha', 'b' => 'Beta'])->default('b');
-        $p->select('multiselect', 'MultiSelect')->multiple()->options(['a' => 'Alpha', 'b' => 'Beta'])->default(['a']);
-        $p->suggest('suggest', 'Suggest')->options(['utc' => 'UTC', 'gmt' => 'GMT'])->default('utc');
-        $p->search('search', 'Search')->options(['a' => 'Alpha', 'b' => 'Beta'])->default('b');
-        $p->search('multisearch', 'MultiSearch')->multiple()->options(['a' => 'Alpha', 'b' => 'Beta'])->default(['b']);
-        $p->reorder('reorder', 'Reorder')->options(['a' => 'Alpha', 'b' => 'Beta', 'c' => 'Gamma']);
-        $p->confirm('confirm', 'Confirm')->default(TRUE);
-        $p->toggle('toggle', 'Toggle')->options(['on' => 'On', 'off' => 'Off'])->default('off');
-        $p->filePicker('filepicker', 'FilePicker')->startIn($picker_start);
-        $p->filePicker('multifilepicker', 'MultiFilePicker')->multiple()->startIn($picker_start);
-        $p->pause('pause', 'Pause');
-        $p->progress('progress', 'Progress')->steps(3)->work(static function (ProgressReporter $reporter): void {
+      ->panel('Fields', 'fields', function (PanelBuilder $p) use ($picker_start): void {
+        $p->note('Note', 'note')->body('A read-only note field.');
+        $p->text('Text', 'text')->default('txt');
+        $p->template('Template', 'template')->pattern('{{head}}-{{tail}}')->default('a-b');
+        $p->number('Number', 'number')->default(7);
+        $p->rating('Rating', 'rating')->captions([1 => 'Poor', 5 => 'Excellent'])->default(4);
+        $p->calendar('Calendar', 'date')->default('2026-07-15');
+        $p->textarea('Textarea', 'textarea')->default('note');
+        $p->password('Password', 'password')->default('pw');
+        $p->select('Select', 'select')->options(['a' => 'Alpha', 'b' => 'Beta'])->default('b');
+        $p->select('MultiSelect', 'multiselect')->multiple()->options(['a' => 'Alpha', 'b' => 'Beta'])->default(['a']);
+        $p->suggest('Suggest', 'suggest')->options(['utc' => 'UTC', 'gmt' => 'GMT'])->default('utc');
+        $p->search('Search', 'search')->options(['a' => 'Alpha', 'b' => 'Beta'])->default('b');
+        $p->search('MultiSearch', 'multisearch')->multiple()->options(['a' => 'Alpha', 'b' => 'Beta'])->default(['b']);
+        $p->reorder('Reorder', 'reorder')->options(['a' => 'Alpha', 'b' => 'Beta', 'c' => 'Gamma']);
+        $p->confirm('Confirm', 'confirm')->default(TRUE);
+        $p->toggle('Toggle', 'toggle')->options(['on' => 'On', 'off' => 'Off'])->default('off');
+        $p->filePicker('FilePicker', 'filepicker')->startIn($picker_start);
+        $p->filePicker('MultiFilePicker', 'multifilepicker')->multiple()->startIn($picker_start);
+        $p->pause('Pause', 'pause');
+        $p->progress('Progress', 'progress')->steps(3)->work(static function (ProgressReporter $reporter): void {
           for ($step = 1; $step <= 3; $step++) {
             $reporter->advance('step ' . $step);
           }

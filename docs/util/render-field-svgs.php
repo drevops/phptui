@@ -102,22 +102,22 @@ function fieldSpecs(string $tree): array {
 
   return [
     'text' => [
-      'form' => static fn(): Form => Form::create('Text field')->panel('main', 'Text', function (PanelBuilder $p): void { $p->text('item', 'Item')->default('Pear')->complete(['Pear', 'Peach', 'Plum']); }),
+      'form' => static fn(): Form => Form::create('Text field')->panel('Text', 'main', function (PanelBuilder $p): void { $p->text('Item', 'item')->default('Pear')->complete(['Pear', 'Peach', 'Plum']); }),
       'keys' => [...$open, $bs, $bs, $bs, $bs, 'A', 'p', 'p', 'l', 'e'],
       'rows' => 6,
     ],
     'template' => [
-      'form' => static fn(): Form => Form::create('Template field')->panel('main', 'Template', function (PanelBuilder $p): void { $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{fruit}}-{{grade}}')->default('valley-pear-a')->slot('orchard', 'Orchard')->slot('fruit', 'Fruit')->slot('grade', 'Grade'); }),
+      'form' => static fn(): Form => Form::create('Template field')->panel('Template', 'main', function (PanelBuilder $p): void { $p->template('Crate label', 'crate')->pattern('{{orchard}}-{{fruit}}-{{grade}}')->default('valley-pear-a')->slot('orchard', 'Orchard')->slot('fruit', 'Fruit')->slot('grade', 'Grade'); }),
       'keys' => [...$open, $bs, $bs, $bs, $bs, $bs, $bs, 'r', 'i', 'd', 'g', 'e', $tab, $tab, $bs, 'b'],
       'rows' => 7,
     ],
     'number' => [
-      'form' => static fn(): Form => Form::create('Number field')->panel('main', 'Number', function (PanelBuilder $p): void { $p->number('weight', 'Basket weight (g)')->default(1200)->min(200)->max(9000)->step(100); }),
+      'form' => static fn(): Form => Form::create('Number field')->panel('Number', 'main', function (PanelBuilder $p): void { $p->number('Basket weight (g)', 'weight')->default(1200)->min(200)->max(9000)->step(100); }),
       'keys' => [...$open, $bs, $bs, $bs, $bs, '4', '2', '0', '0'],
       'rows' => 6,
     ],
     'rating' => [
-      'form' => static fn(): Form => Form::create('Rating field')->panel('main', 'Rating', function (PanelBuilder $p): void { $p->rating('freshness', 'Freshness')->default(4)->captions([1 => 'Poor', 3 => 'Fair', 5 => 'Excellent']); }),
+      'form' => static fn(): Form => Form::create('Rating field')->panel('Rating', 'main', function (PanelBuilder $p): void { $p->rating('Freshness', 'freshness')->default(4)->captions([1 => 'Poor', 3 => 'Fair', 5 => 'Excellent']); }),
       // Walk down the scale and back, so the animation passes through a
       // captioned point; the static frame rests on that point, since a caption
       // is half of what the field shows.
@@ -126,57 +126,57 @@ function fieldSpecs(string $tree): array {
       'rows' => 6,
     ],
     'calendar' => [
-      'form' => static fn(): Form => Form::create('Calendar field')->panel('main', 'Calendar', function (PanelBuilder $p): void { $p->calendar('harvest', 'Harvest date')->default('2026-07-15'); }),
+      'form' => static fn(): Form => Form::create('Calendar field')->panel('Calendar', 'main', function (PanelBuilder $p): void { $p->calendar('Harvest date', 'harvest')->default('2026-07-15'); }),
       'keys' => [...$open, $down],
       'rows' => 14,
     ],
     'textarea' => [
-      'form' => static fn(): Form => Form::create('Textarea field')->panel('main', 'Textarea', function (PanelBuilder $p): void { $p->textarea('notes', 'Tasting notes')->default('Crisp and sweet' . chr(10) . 'Hint of citrus'); }),
+      'form' => static fn(): Form => Form::create('Textarea field')->panel('Textarea', 'main', function (PanelBuilder $p): void { $p->textarea('Tasting notes', 'notes')->default('Crisp and sweet' . chr(10) . 'Hint of citrus'); }),
       'keys' => [...$open, $enter, 'S', 'l', 'i', 'g', 'h', 't', 'l', 'y', ' ', 't', 'a', 'r', 't'],
       'rows' => 8,
     ],
     'password' => [
-      'form' => static fn(): Form => Form::create('Password field')->panel('main', 'Password', function (PanelBuilder $p): void { $p->password('code', 'Order code')->default('melon7'); }),
+      'form' => static fn(): Form => Form::create('Password field')->panel('Password', 'main', function (PanelBuilder $p): void { $p->password('Order code', 'code')->default('melon7'); }),
       'keys' => [...$open, $bs, $bs, $bs, $bs, $bs, $bs, 'g', 'r', 'a', 'p', 'e', '5'],
       'rows' => 6,
     ],
     'select' => [
-      'form' => static fn(): Form => Form::create('Select field')->panel('main', 'Select', function (PanelBuilder $p): void { $p->select('fruit', 'Fruit')->default('apple')->options(['apple' => 'Apple', 'banana' => 'Banana', 'cherry' => 'Cherry']); }),
+      'form' => static fn(): Form => Form::create('Select field')->panel('Select', 'main', function (PanelBuilder $p): void { $p->select('Fruit', 'fruit')->default('apple')->options(['apple' => 'Apple', 'banana' => 'Banana', 'cherry' => 'Cherry']); }),
       'keys' => [...$open, $down],
       'rows' => 8,
     ],
     'select-descriptions' => [
-      'form' => static fn(): Form => Form::create('Option descriptions')->panel('main', 'Select', function (PanelBuilder $p): void { $p->select('fruit', 'Fruit')->default('apple')->option('apple', 'Apple', description: 'Crisp and sweet, the everyday choice.')->option('banana', 'Banana', description: 'Rich in potassium; ripens off the tree.')->option('cherry', 'Cherry', description: 'Short season; best eaten fresh.'); }),
+      'form' => static fn(): Form => Form::create('Option descriptions')->panel('Select', 'main', function (PanelBuilder $p): void { $p->select('Fruit', 'fruit')->default('apple')->option('apple', 'Apple', description: 'Crisp and sweet, the everyday choice.')->option('banana', 'Banana', description: 'Rich in potassium; ripens off the tree.')->option('cherry', 'Cherry', description: 'Short season; best eaten fresh.'); }),
       'keys' => [...$open, $down],
       'rows' => 12,
     ],
     'select-multiple' => [
-      'form' => static fn(): Form => Form::create('MultiSelect field')->panel('main', 'MultiSelect', function (PanelBuilder $p): void { $p->select('basket', 'Basket')->multiple()->default(['apple'])->options(['apple' => 'Apple', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
+      'form' => static fn(): Form => Form::create('MultiSelect field')->panel('MultiSelect', 'main', function (PanelBuilder $p): void { $p->select('Basket', 'basket')->multiple()->default(['apple'])->options(['apple' => 'Apple', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
       'keys' => [...$open, $down, $space],
       'rows' => 8,
     ],
     'select-multiple-limited' => [
-      'form' => static fn(): Form => Form::create('Bounded MultiSelect')->panel('main', 'MultiSelect', function (PanelBuilder $p): void { $p->select('basket', 'Basket')->multiple()->minSelections(2)->maxSelections(3)->options(['apple' => 'Apple', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
+      'form' => static fn(): Form => Form::create('Bounded MultiSelect')->panel('MultiSelect', 'main', function (PanelBuilder $p): void { $p->select('Basket', 'basket')->multiple()->minSelections(2)->maxSelections(3)->options(['apple' => 'Apple', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
       'keys' => [...$open, $space, $down, $space],
       'rows' => 11,
     ],
     'reorder' => [
-      'form' => static fn(): Form => Form::create('Reorder field')->panel('main', 'Reorder', function (PanelBuilder $p): void { $p->reorder('basket', 'Basket')->options(['apple' => 'Apple', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
+      'form' => static fn(): Form => Form::create('Reorder field')->panel('Reorder', 'main', function (PanelBuilder $p): void { $p->reorder('Basket', 'basket')->options(['apple' => 'Apple', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
       'keys' => [...$open, $space, $down, $space],
       'rows' => 12,
     ],
     'reorder-descriptions' => [
-      'form' => static fn(): Form => Form::create('Option descriptions')->panel('main', 'Reorder', function (PanelBuilder $p): void { $p->reorder('basket', 'Basket')->option('apple', 'Apple', description: 'Crisp and sweet, the everyday choice.')->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')->option('tomato', 'Tomato', description: 'Best ripened on the vine, never chilled.'); }),
+      'form' => static fn(): Form => Form::create('Option descriptions')->panel('Reorder', 'main', function (PanelBuilder $p): void { $p->reorder('Basket', 'basket')->option('apple', 'Apple', description: 'Crisp and sweet, the everyday choice.')->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')->option('tomato', 'Tomato', description: 'Best ripened on the vine, never chilled.'); }),
       'keys' => [...$open, $down],
       'rows' => 12,
     ],
     'suggest' => [
-      'form' => static fn(): Form => Form::create('Suggest field')->panel('main', 'Suggest', function (PanelBuilder $p): void { $p->suggest('fruit', 'Fruit')->options(['Apple' => 'Apple', 'Apricot' => 'Apricot', 'Banana' => 'Banana', 'Cherry' => 'Cherry', 'Mango' => 'Mango']); }),
+      'form' => static fn(): Form => Form::create('Suggest field')->panel('Suggest', 'main', function (PanelBuilder $p): void { $p->suggest('Fruit', 'fruit')->options(['Apple' => 'Apple', 'Apricot' => 'Apricot', 'Banana' => 'Banana', 'Cherry' => 'Cherry', 'Mango' => 'Mango']); }),
       'keys' => [...$open, 'C', 'h', $down],
       'rows' => 10,
     ],
     'suggest-ghost' => [
-      'form' => static fn(): Form => Form::create('Ghost text')->panel('main', 'Suggest', function (PanelBuilder $p): void { $p->suggest('fruit', 'Fruit')->options(['Apple' => 'Apple', 'Apricot' => 'Apricot', 'Banana' => 'Banana', 'Cherry' => 'Cherry', 'Mango' => 'Mango'])->ghost(); }),
+      'form' => static fn(): Form => Form::create('Ghost text')->panel('Suggest', 'main', function (PanelBuilder $p): void { $p->suggest('Fruit', 'fruit')->options(['Apple' => 'Apple', 'Apricot' => 'Apricot', 'Banana' => 'Banana', 'Cherry' => 'Cherry', 'Mango' => 'Mango'])->ghost(); }),
       // The preview only exists while the query is a prefix of a candidate and
       // nothing is highlighted, so the frames settle on typed text alone.
       'keys' => [...$open, 'A', 'p'],
@@ -184,58 +184,58 @@ function fieldSpecs(string $tree): array {
       'rows' => 10,
     ],
     'suggest-descriptions' => [
-      'form' => static fn(): Form => Form::create('Option descriptions')->panel('main', 'Suggest', function (PanelBuilder $p): void { $p->suggest('fruit', 'Fruit')->option('Apple', 'Apple', description: 'Crisp and sweet, the everyday choice.')->option('Apricot', 'Apricot', description: 'Small and tart; best when soft.')->option('Banana', 'Banana', description: 'Rich in potassium; ripens off the tree.')->option('Cherry', 'Cherry', description: 'Short season; best eaten fresh.')->option('Mango', 'Mango', description: 'Fragrant and juicy when it yields to a squeeze.'); }),
+      'form' => static fn(): Form => Form::create('Option descriptions')->panel('Suggest', 'main', function (PanelBuilder $p): void { $p->suggest('Fruit', 'fruit')->option('Apple', 'Apple', description: 'Crisp and sweet, the everyday choice.')->option('Apricot', 'Apricot', description: 'Small and tart; best when soft.')->option('Banana', 'Banana', description: 'Rich in potassium; ripens off the tree.')->option('Cherry', 'Cherry', description: 'Short season; best eaten fresh.')->option('Mango', 'Mango', description: 'Fragrant and juicy when it yields to a squeeze.'); }),
       'keys' => [...$open, $down],
       'static_keys' => [...$open, $down],
       'rows' => 13,
     ],
     'search' => [
-      'form' => static fn(): Form => Form::create('Search field')->panel('main', 'Search', function (PanelBuilder $p): void { $p->search('vegetable', 'Vegetable')->default('carrot')->options(['carrot' => 'Carrot', 'potato' => 'Potato', 'onion' => 'Onion', 'pepper' => 'Pepper']); }),
+      'form' => static fn(): Form => Form::create('Search field')->panel('Search', 'main', function (PanelBuilder $p): void { $p->search('Vegetable', 'vegetable')->default('carrot')->options(['carrot' => 'Carrot', 'potato' => 'Potato', 'onion' => 'Onion', 'pepper' => 'Pepper']); }),
       'keys' => [...$open, 'o', 'n'],
       'rows' => 10,
     ],
     'search-descriptions' => [
-      'form' => static fn(): Form => Form::create('Option descriptions')->panel('main', 'Search', function (PanelBuilder $p): void { $p->search('vegetable', 'Vegetable')->default('carrot')->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')->option('potato', 'Potato', description: 'Stores best somewhere cool and dark.')->option('onion', 'Onion', description: 'Sharp raw, sweet once cooked.')->option('pepper', 'Pepper', description: 'Crunchy and bright; sweetest when red.'); }),
+      'form' => static fn(): Form => Form::create('Option descriptions')->panel('Search', 'main', function (PanelBuilder $p): void { $p->search('Vegetable', 'vegetable')->default('carrot')->option('carrot', 'Carrot', description: 'Stays crisp for weeks when kept cold.')->option('potato', 'Potato', description: 'Stores best somewhere cool and dark.')->option('onion', 'Onion', description: 'Sharp raw, sweet once cooked.')->option('pepper', 'Pepper', description: 'Crunchy and bright; sweetest when red.'); }),
       'keys' => [...$open, $down],
       'rows' => 12,
     ],
     'search-multiple' => [
-      'form' => static fn(): Form => Form::create('MultiSearch field')->panel('main', 'MultiSearch', function (PanelBuilder $p): void { $p->search('basket', 'Basket')->multiple()->default(['apple'])->options(['apple' => 'Apple', 'banana' => 'Banana', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
+      'form' => static fn(): Form => Form::create('MultiSearch field')->panel('MultiSearch', 'main', function (PanelBuilder $p): void { $p->search('Basket', 'basket')->multiple()->default(['apple'])->options(['apple' => 'Apple', 'banana' => 'Banana', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
       'keys' => [...$open, 't', 'o', $space],
       'rows' => 10,
     ],
     'search-multiple-limited' => [
-      'form' => static fn(): Form => Form::create('Bounded MultiSearch')->panel('main', 'MultiSearch', function (PanelBuilder $p): void { $p->search('basket', 'Basket')->multiple()->minSelections(2)->maxSelections(3)->options(['apple' => 'Apple', 'banana' => 'Banana', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
+      'form' => static fn(): Form => Form::create('Bounded MultiSearch')->panel('MultiSearch', 'main', function (PanelBuilder $p): void { $p->search('Basket', 'basket')->multiple()->minSelections(2)->maxSelections(3)->options(['apple' => 'Apple', 'banana' => 'Banana', 'carrot' => 'Carrot', 'tomato' => 'Tomato']); }),
       'keys' => [...$open, $space, $down, $space],
       'rows' => 13,
     ],
     'confirm' => [
-      'form' => static fn(): Form => Form::create('Confirm field')->panel('main', 'Confirm', function (PanelBuilder $p): void { $p->confirm('organic', 'Organic only?')->default(TRUE); }),
+      'form' => static fn(): Form => Form::create('Confirm field')->panel('Confirm', 'main', function (PanelBuilder $p): void { $p->confirm('Organic only?', 'organic')->default(TRUE); }),
       'keys' => [...$open, 'n'],
       'rows' => 6,
     ],
     'toggle' => [
-      'form' => static fn(): Form => Form::create('Toggle field')->panel('main', 'Toggle', function (PanelBuilder $p): void { $p->toggle('ripeness', 'Ripeness')->default('ripe')->options(['ripe' => 'Ripe', 'unripe' => 'Unripe']); }),
+      'form' => static fn(): Form => Form::create('Toggle field')->panel('Toggle', 'main', function (PanelBuilder $p): void { $p->toggle('Ripeness', 'ripeness')->default('ripe')->options(['ripe' => 'Ripe', 'unripe' => 'Unripe']); }),
       'keys' => [...$open, 'u'],
       'rows' => 6,
     ],
     'pause' => [
-      'form' => static fn(): Form => Form::create('Pause field')->panel('main', 'Pause', function (PanelBuilder $p): void { $p->pause('review', 'Review your basket'); }),
+      'form' => static fn(): Form => Form::create('Pause field')->panel('Pause', 'main', function (PanelBuilder $p): void { $p->pause('Review your basket', 'review'); }),
       'keys' => [$enter],
       'rows' => 6,
     ],
     'markup' => [
-      'form' => static fn(): Form => Form::create('Markup')->panel('main', 'Note', function (PanelBuilder $p): void {
-        $p->note('intro', 'Fresh produce order')->body('A read-only card - the cursor skips it.');
-        $p->note('packing', 'Ready to pack')->body('Framed with a border.')->border();
+      'form' => static fn(): Form => Form::create('Markup')->panel('Note', 'main', function (PanelBuilder $p): void {
+        $p->note('Fresh produce order', 'intro')->body('A read-only card - the cursor skips it.');
+        $p->note('Ready to pack', 'packing')->body('Framed with a border.')->border();
       }),
       'keys' => [$enter],
       'rows' => 14,
       'subject' => 'markup',
     ],
     'markup-markdown' => [
-      'form' => static fn(): Form => Form::create('Markdown note')->panel('main', 'Note', function (PanelBuilder $p): void {
-        $p->note('order', 'Fresh produce order')->body('Pick what is **ripe** today:' . chr(10) . '- crisp `apples`' . chr(10) . '- sweet *pears*' . chr(10) . 'See the [seasonal guide](https://example.com/guide).')->border();
+      'form' => static fn(): Form => Form::create('Markdown note')->panel('Note', 'main', function (PanelBuilder $p): void {
+        $p->note('Fresh produce order', 'order')->body('Pick what is **ripe** today:' . chr(10) . '- crisp `apples`' . chr(10) . '- sweet *pears*' . chr(10) . 'See the [seasonal guide](https://example.com/guide).')->border();
       }),
       'keys' => [$enter],
       'rows' => 14,
@@ -243,8 +243,8 @@ function fieldSpecs(string $tree): array {
       'subject' => 'markup-markdown',
     ],
     'markup-table' => [
-      'form' => static fn(): Form => Form::create('Markup table')->panel('main', 'Stock', function (PanelBuilder $p): void {
-        $p->note('stock', 'Basket contents')->body('Everything picked so far:')->table(['Fruit', 'Color', 'In stock'], [
+      'form' => static fn(): Form => Form::create('Markup table')->panel('Stock', 'main', function (PanelBuilder $p): void {
+        $p->note('Basket contents', 'stock')->body('Everything picked so far:')->table(['Fruit', 'Color', 'In stock'], [
           ['Apple', 'Red', '12'],
           ['Pear', 'Green', '5'],
           ['Plum', 'Purple', '120'],
@@ -255,23 +255,23 @@ function fieldSpecs(string $tree): array {
       'subject' => 'markup-table',
     ],
     'progress-row' => [
-      'form' => static fn(): Form => Form::create('Progress row')->panel('main', 'Progress', function (PanelBuilder $p) use ($pack): void { $p->progress('pack', 'Packing the box')->steps(6)->work($pack); }),
+      'form' => static fn(): Form => Form::create('Progress row')->panel('Progress', 'main', function (PanelBuilder $p) use ($pack): void { $p->progress('Packing the box', 'pack')->steps(6)->work($pack); }),
       'keys' => [$enter, $enter],
       'rows' => 6,
       'subject' => 'progress-row',
     ],
     'filepicker' => [
-      'form' => static fn(): Form => Form::create('File picker field')->panel('main', 'File picker', function (PanelBuilder $p) use ($tree): void { $p->filePicker('price_list', 'Price list')->startIn($tree)->filesOnly()->extensions(['csv'])->maxSize(2097152); }),
+      'form' => static fn(): Form => Form::create('File picker field')->panel('File picker', 'main', function (PanelBuilder $p) use ($tree): void { $p->filePicker('Price list', 'price_list')->startIn($tree)->filesOnly()->extensions(['csv'])->maxSize(2097152); }),
       'keys' => [...$open, $down],
       'rows' => 12,
     ],
     'filepicker-multiple' => [
-      'form' => static fn(): Form => Form::create('File picker field')->panel('main', 'File picker', function (PanelBuilder $p) use ($tree): void { $p->filePicker('price_lists', 'Price lists')->multiple()->startIn($tree); }),
+      'form' => static fn(): Form => Form::create('File picker field')->panel('File picker', 'main', function (PanelBuilder $p) use ($tree): void { $p->filePicker('Price lists', 'price_lists')->multiple()->startIn($tree); }),
       'keys' => [...$open, $space, $down, $space],
       'rows' => 10,
     ],
     'filepicker-multiple-limited' => [
-      'form' => static fn(): Form => Form::create('File picker field')->panel('main', 'File picker', function (PanelBuilder $p) use ($tree): void { $p->filePicker('price_lists', 'Price lists')->multiple()->minSelections(2)->maxSelections(3)->startIn($tree); }),
+      'form' => static fn(): Form => Form::create('File picker field')->panel('File picker', 'main', function (PanelBuilder $p) use ($tree): void { $p->filePicker('Price lists', 'price_lists')->multiple()->minSelections(2)->maxSelections(3)->startIn($tree); }),
       'keys' => [...$open, $space, $down, $space],
       'rows' => 14,
     ],

@@ -23,9 +23,9 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Toggle field')
-  ->panel('main', 'Toggle', function (PanelBuilder $p): void {
+  ->panel('Toggle', function (PanelBuilder $p): void {
     // Exactly two options; the collected value is one of the keys.
-    $p->toggle('ripeness', 'Ripeness')->default('ripe')->options([
+    $p->toggle('Ripeness')->default('ripe')->options([
       'ripe' => 'Ripe',
       'unripe' => 'Unripe',
     ]);

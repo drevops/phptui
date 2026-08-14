@@ -31,11 +31,11 @@ require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/handlers/OrderCode.php';
 
 $form = Form::create('Handler classes')
-  ->panel('order', 'Order', function (PanelBuilder $p): void {
+  ->panel('Order', function (PanelBuilder $p): void {
     // No ->validate() or ->transform() here: both come from the OrderCode
     // class. Try accepting a code that is not six characters.
-    $p->text('order_code', 'Order code')->default('MELON7');
-    $p->text('note', 'Note')->default('First of the season');
+    $p->text('Order code')->default('MELON7');
+    $p->text('Note')->default('First of the season');
   });
 
 try {

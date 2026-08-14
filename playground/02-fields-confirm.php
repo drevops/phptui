@@ -22,8 +22,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Confirm field')
-  ->panel('main', 'Confirm', function (PanelBuilder $p): void {
-    $p->confirm('organic', 'Organic only?')->default(TRUE);
+  ->panel('Confirm', function (PanelBuilder $p): void {
+    $p->confirm('Organic only?')->default(TRUE);
   });
 
 try {

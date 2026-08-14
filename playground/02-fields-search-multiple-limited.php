@@ -24,9 +24,9 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Bounded MultiSearch')
-  ->panel('main', 'MultiSearch', function (PanelBuilder $p): void {
+  ->panel('MultiSearch', function (PanelBuilder $p): void {
     // Pick at least two and at most three of the options.
-    $p->search('basket', 'Basket')->multiple()->minSelections(2)->maxSelections(3)->options([
+    $p->search('Basket')->multiple()->minSelections(2)->maxSelections(3)->options([
       'apple' => 'Apple',
       'banana' => 'Banana',
       'carrot' => 'Carrot',

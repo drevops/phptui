@@ -26,14 +26,14 @@ use DrevOps\PhpTui\Testing\TuiTester;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Produce order')
-  ->panel('order', 'New order', function (PanelBuilder $p): void {
-    $p->text('name', 'Order name')->default('Weekly');
-    $p->select('fruit', 'Fruit')->default('banana')->options([
+  ->panel('New order', function (PanelBuilder $p): void {
+    $p->text('Order name')->default('Weekly');
+    $p->select('Fruit')->default('banana')->options([
       'apple' => 'Apple',
       'banana' => 'Banana',
       'cherry' => 'Cherry',
     ]);
-    $p->confirm('organic', 'Organic only?')->default(FALSE);
+    $p->confirm('Organic only?')->default(FALSE);
   });
 
 // The same script a person would type: drill into the panel, open the name,
@@ -57,10 +57,10 @@ $answers = $tester->run(
 );
 
 // The collected answers - in a PHPUnit test these become assertions, e.g.
-// $this->assertSame('Weekly Box', $answers->value('name')).
-echo 'name    = ' . var_export($answers->value('name'), TRUE) . PHP_EOL;
+// $this->assertSame('Weekly Box', $answers->value('order_name')).
+echo 'name    = ' . var_export($answers->value('order_name'), TRUE) . PHP_EOL;
 echo 'fruit   = ' . var_export($answers->value('fruit'), TRUE) . PHP_EOL;
-echo 'organic = ' . var_export($answers->value('organic'), TRUE) . PHP_EOL;
+echo 'organic = ' . var_export($answers->value('organic_only'), TRUE) . PHP_EOL;
 echo PHP_EOL;
 
 // How the run ended: submitted, cancelled via the Cancel button, or

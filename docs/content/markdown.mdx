@@ -20,7 +20,7 @@ Label, description and note text is more than a flat string: it can carry a clic
 A `[text](url)` link is recognized in field labels, descriptions, notes and the [summary report](/headless-collection#self-describing-answers) - no opt-in needed. On a capable terminal it renders as a clickable [OSC 8](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) hyperlink showing just its text; elsewhere it degrades to `text (url)` so the address is never lost.
 
 ```php
-$p->text('item', 'Item')
+$p->text('Item')
   ->description('Full list in the [orchard index](https://example.com/orchard).');
 ```
 
@@ -45,11 +45,11 @@ $answers = (new Tui($form))->markdown()->run();
 | `- item` / `* item` | a bullet list          |
 
 ```php
-$p->note('intro', 'Fresh produce order')
+$p->note('Fresh produce order')
   ->body("Pick what is **ripe** today:\n- crisp apples\n- sweet pears\nSee the [seasonal guide](https://example.com/seasonal-guide).")
   ->border();
 
-$p->number('quantity', 'Quantity')->min(1)->max(99)
+$p->number('Quantity')->min(1)->max(99)
   ->description('Baskets hold up to **99**; order more in a *second* basket.');
 ```
 

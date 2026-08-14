@@ -122,8 +122,8 @@ final class ScaleRenderTest extends TestCase {
    */
   protected function ratingForm(): Form {
     return Form::create('Rating')
-      ->panel('main', 'Rating', function (PanelBuilder $p): void {
-        $p->rating('taste', 'Taste')->default(4)->captions([4 => 'Good']);
+      ->panel('Rating', 'main', function (PanelBuilder $p): void {
+        $p->rating('Taste', 'taste')->default(4)->captions([4 => 'Good']);
       });
   }
 

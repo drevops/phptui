@@ -42,26 +42,26 @@ require __DIR__ . '/../vendor/autoload.php';
 $form = Form::create('Market stall')
   ->layout(1, 2)
   ->buttons(TRUE, 'Place order', 'Cancel')
-  ->panel('summary', 'Summary', function (PanelBuilder $p): void {
+  ->panel('Summary', function (PanelBuilder $p): void {
     $p->description('The order at a glance.');
-    $p->text('name', 'Order name')->default('Weekly Box')->required();
+    $p->text('Order name')->default('Weekly Box')->required();
   })
-  ->panel('produce', 'Produce', function (PanelBuilder $p): void {
+  ->panel('Produce', function (PanelBuilder $p): void {
     // Counts: two sub-panels share one visual row.
     $p->layout(2);
 
     // Written before the first window, so it goes in the region above them.
-    $p->number('crates', 'Crates')->default(6)->min(1)->max(99);
+    $p->number('Crates')->default(6)->min(1)->max(99);
 
-    $p->panel('fruit', 'Fruit', function (PanelBuilder $sp): void {
-      $sp->select('fruit', 'Fruit')->default('apple')->options([
+    $p->panel('Fruit', function (PanelBuilder $sp): void {
+      $sp->select('Fruit')->default('apple')->options([
         'apple' => 'Apple',
         'banana' => 'Banana',
         'cherry' => 'Cherry',
       ]);
     });
-    $p->panel('veg', 'Vegetables', function (PanelBuilder $sp): void {
-      $sp->select('veg', 'Vegetables')->multiple()->default(['carrot'])->options([
+    $p->panel('Vegetables', function (PanelBuilder $sp): void {
+      $sp->select('Vegetables')->multiple()->default(['carrot'])->options([
         'carrot' => 'Carrot',
         'tomato' => 'Tomato',
         'spinach' => 'Spinach',
@@ -69,19 +69,19 @@ $form = Form::create('Market stall')
     });
 
     // Written after the last window, so it goes in the region below them.
-    $p->markup('bench', 'Crates are weighed at the bench.');
+    $p->markup('Crates are weighed at the bench.');
   })
-  ->panel('delivery', 'Delivery', function (PanelBuilder $p): void {
+  ->panel('Delivery', function (PanelBuilder $p): void {
     // No shape, so no grid: the two sub-panels are rows you select, one under
     // the other, which is what a panel does without being told otherwise.
-    $p->panel('when', 'When', function (PanelBuilder $sp): void {
-      $sp->toggle('slot', 'Slot')->default('morning')->options([
+    $p->panel('When', function (PanelBuilder $sp): void {
+      $sp->toggle('Slot')->default('morning')->options([
         'morning' => 'Morning',
         'afternoon' => 'Afternoon',
       ]);
     });
-    $p->panel('wrap', 'Wrapping', function (PanelBuilder $sp): void {
-      $sp->confirm('gift', 'Gift wrap?')->default(FALSE);
+    $p->panel('Wrapping', function (PanelBuilder $sp): void {
+      $sp->confirm('Gift wrap?')->default(FALSE);
     });
   });
 

@@ -32,8 +32,8 @@ $rows = [
 ];
 
 $form = Form::create('Markup table')
-  ->panel('main', 'Stock', function (PanelBuilder $p) use ($headers, $rows): void {
-    $p->note('stock', 'Basket contents')->body('Everything picked so far:')->table($headers, $rows);
+  ->panel('Stock', function (PanelBuilder $p) use ($headers, $rows): void {
+    $p->note('Basket contents')->body('Everything picked so far:')->table($headers, $rows);
   });
 
 try {

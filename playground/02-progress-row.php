@@ -30,8 +30,8 @@ $items = ['Apple', 'Carrot', 'Tomato', 'Spinach', 'Pear', 'Beet'];
 
 // One block on one panel: the smallest form that exercises the row.
 $form = Form::create('Progress row')
-  ->panel('main', 'Progress', function (PanelBuilder $p) use ($items): void {
-    $p->progress('pack', 'Packing the box')->steps(count($items))->work(function (ProgressReporter $reporter) use ($items): void {
+  ->panel('Progress', function (PanelBuilder $p) use ($items): void {
+    $p->progress('Packing the box')->steps(count($items))->work(function (ProgressReporter $reporter) use ($items): void {
       foreach ($items as $item) {
         usleep(220000);
         $reporter->advance('packed ' . $item);

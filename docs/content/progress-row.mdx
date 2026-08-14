@@ -18,7 +18,7 @@ A place to do work inside the form: select the row, press <kbd>Enter</kbd>, and 
 ```php
 use DrevOps\PhpTui\Primitive\ProgressReporter;
 
-$p->progress('pack', 'Packing the box')
+$p->progress('Packing the box')
   ->steps(6) // Omit for an indeterminate spinner.
   ->work(function (ProgressReporter $reporter) use ($items): void {
     foreach ($items as $item) {

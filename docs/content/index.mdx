@@ -48,29 +48,29 @@ use DrevOps\PhpTui\Builder\PanelBuilder;
 use DrevOps\PhpTui\Tui;
 
 $form = Form::create('Quick start')
-  ->panel('order', 'New order', function (PanelBuilder $p): void {
+  ->panel('New order', function (PanelBuilder $p): void {
     // A required single-line text field.
-    $p->text('name', 'Order name')->required();
+    $p->text('Order name')->required();
 
     // A single choice, starting on "Banana".
-    $p->select('fruit', 'Fruit')->default('banana')->options([
+    $p->select('Fruit')->default('banana')->options([
       'apple' => 'Apple',
       'banana' => 'Banana',
       'cherry' => 'Cherry',
     ]);
 
     // A multi-select, with one option pre-checked.
-    $p->select('veg', 'Vegetables')->multiple()->default(['carrot'])->options([
+    $p->select('Vegetables')->multiple()->default(['carrot'])->options([
       'carrot' => 'Carrot',
       'tomato' => 'Tomato',
       'spinach' => 'Spinach',
     ]);
 
     // An integer bounded to a sensible quantity.
-    $p->number('quantity', 'Quantity')->min(1)->max(99)->default(6);
+    $p->number('Quantity')->min(1)->max(99)->default(6);
 
     // A yes/no gate.
-    $p->confirm('organic', 'Organic only?')->default(FALSE);
+    $p->confirm('Organic only?')->default(FALSE);
   });
 
 $tui = new Tui($form);
@@ -79,7 +79,7 @@ $tui = new Tui($form);
 $answers = $tui->run();
 
 // Or drive a mode directly:
-echo $tui->collect('{"name":"Weekly Box"}')->toJson(); // headless: JSON + environment
+echo $tui->collect('{"order_name":"Weekly Box"}')->toJson(); // headless: JSON + environment
 $answers = $tui->interact();                    // interactive panel TUI
 ```
 

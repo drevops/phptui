@@ -25,19 +25,19 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Key bindings demo')
-  ->panel('order', 'Order', function (PanelBuilder $p): void {
-    $p->text('name', 'Order name')->default('Weekly');
-    $p->select('fruit', 'Fruit')->default('apple')->options([
+  ->panel('Order', function (PanelBuilder $p): void {
+    $p->text('Order name')->default('Weekly');
+    $p->select('Fruit')->default('apple')->options([
       'apple' => 'Apple',
       'banana' => 'Banana',
       'cherry' => 'Cherry',
     ]);
-    $p->select('veg', 'Vegetables')->multiple()->options([
+    $p->select('Vegetables')->multiple()->options([
       'carrot' => 'Carrot',
       'tomato' => 'Tomato',
       'spinach' => 'Spinach',
     ]);
-    $p->confirm('organic', 'Organic only?')->default(TRUE);
+    $p->confirm('Organic only?')->default(TRUE);
   });
 
 try {

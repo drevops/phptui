@@ -37,14 +37,14 @@ require __DIR__ . '/themes/AccentTheme.php';
 ThemeManager::register('accent', AccentTheme::class);
 
 $form = Form::create('Theme options demo')
-  ->panel('order', 'Order', function (PanelBuilder $p): void {
-    $p->text('name', 'Name')->default('Weekly Box');
-    $p->select('size', 'Box size')->default('medium')->options([
+  ->panel('Order', function (PanelBuilder $p): void {
+    $p->text('Name')->default('Weekly Box');
+    $p->select('Box size')->default('medium')->options([
       'small' => 'Small',
       'medium' => 'Medium',
       'large' => 'Large',
     ]);
-    $p->select('extras', 'Extras')->multiple()->options([
+    $p->select('Extras')->multiple()->options([
       'herbs' => 'Herbs',
       'nuts' => 'Nuts',
       'seeds' => 'Seeds',

@@ -35,19 +35,19 @@ require __DIR__ . '/../vendor/autoload.php';
 $form = Form::create('Discovery demo')
   // Per-field env overrides read BOX_<ID> instead of the default PHPTUI_<ID>.
   ->envPrefix('BOX_')
-  ->panel('box', 'Box', function (PanelBuilder $p): void {
+  ->panel('Box', function (PanelBuilder $p): void {
     // A dot-path into a JSON file: sample-project/box.json carries a "name"
     // key. A nested value reads the same way, e.g. 'delivery.day'.
-    $p->text('name', 'Box name')->discover(new JsonValue('box.json', 'name'));
+    $p->text('Box name')->discover(new JsonValue('box.json', 'name'));
 
     // A key read from the directory's .env file.
-    $p->text('season', 'Season')->default('summer')->discover(new Dotenv('SEASON'));
+    $p->text('Season')->default('summer')->discover(new Dotenv('SEASON'));
 
     // Whether a path exists, mapped onto a confirm.
-    $p->confirm('inseason', 'In season?')->discover(new PathExists('harvest.csv'));
+    $p->confirm('In season?')->discover(new PathExists('harvest.csv'));
 
     // Directory entries as the answer; ScanType keeps dirs, files or both.
-    $p->select('baskets', 'Baskets')->multiple()->options([
+    $p->select('Baskets')->multiple()->options([
       'apples' => 'Apples',
       'pears' => 'Pears',
       'plums' => 'Plums',

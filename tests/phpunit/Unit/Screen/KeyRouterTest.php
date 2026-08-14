@@ -282,15 +282,15 @@ final class KeyRouterTest extends TestCase {
 
   public function testCursorStepsBetweenTheColumnsOfAnArrangementRunningAcross(): void {
     $form = Form::create('Market hall')
-      ->panel('hall', 'Hall', function (PanelBuilder $p): void {
+      ->panel('Hall', 'hall', function (PanelBuilder $p): void {
         $p->layout('two-column');
 
         $p->in('left');
-        $p->text('item', 'Item')->default('Pear');
-        $p->number('crates', 'Crates')->default(6);
+        $p->text('Item', 'item')->default('Pear');
+        $p->number('Crates', 'crates')->default(6);
 
         $p->in('right');
-        $p->confirm('gift', 'Gift wrap?')->default(FALSE);
+        $p->confirm('Gift wrap?', 'gift')->default(FALSE);
       });
 
     $panel = $form->root()->children()[0];

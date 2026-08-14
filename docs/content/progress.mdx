@@ -118,12 +118,12 @@ php playground/15-progress-bar.php 2>&1 | cat
 - **The [progress row](/progress-row).** A panel row that runs its work when activated, filling a bar or ticking a spinner in the row itself. Unlike `progress()`, it lives among the fields - and unlike a field, it collects no value.
 
 ```php
-$form->panel('order', 'New order', function (PanelBuilder $p) use ($pack): void {
+$form->panel('New order', function (PanelBuilder $p) use ($pack): void {
   // Resolved when the panel opens; the field shows "Loading…" until it returns.
-  $p->select('fruit', 'Fruit')->options(fn(): array => load_fruit());
+  $p->select('Fruit')->options(fn(): array => load_fruit());
 
   // A row that runs its work in place when activated.
-  $p->progress('pack', 'Packing the box')->steps(6)->work($pack);
+  $p->progress('Packing the box')->steps(6)->work($pack);
 });
 ```
 
@@ -134,12 +134,12 @@ Runnable in [`playground/16-loading-data.php`](https://github.com/drevops/phptui
 A loader resolves one list, once. When the candidates are too many to hold - a catalog behind a search API, a database lookup, an index - a [search](/fields/search) or [suggest](/fields/suggest) field can source them from the query instead, with `->optionsFrom()`. (For a list that follows the _answers_ rather than the query, see [options from the answers](/field-behaviour#options-from-the-answers).)
 
 ```php
-$form->panel('order', 'New order', function (PanelBuilder $p) use ($pantry): void {
+$form->panel('New order', function (PanelBuilder $p) use ($pantry): void {
   // Called again whenever the query changes, so the list follows what is typed.
-  $p->search('veg', 'Vegetable')->optionsFrom(fn(string $query): array => $pantry->search($query));
+  $p->search('Vegetable')->optionsFrom(fn(string $query): array => $pantry->search($query));
 
   // Silent until two characters are typed.
-  $p->suggest('extra', 'Add another')->optionsFrom(fn(string $query): array => $pantry->search($query))->minQuery(2);
+  $p->suggest('Add another')->optionsFrom(fn(string $query): array => $pantry->search($query))->minQuery(2);
 });
 ```
 

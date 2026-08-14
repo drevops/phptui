@@ -34,14 +34,14 @@ EOT;
 
 $form = Form::create('Ocean theme demo')
   ->banner($banner)
-  ->panel('stall', 'Seaside stall', function (PanelBuilder $p): void {
-    $p->text('name', 'Stall name')->default('Harbour');
-    $p->select('stock', 'Stock')->default('fruit')->options([
+  ->panel('Seaside stall', function (PanelBuilder $p): void {
+    $p->text('Stall name')->default('Harbour');
+    $p->select('Stock')->default('fruit')->options([
       'fruit' => 'Fruit',
       'veg' => 'Vegetables',
       'herbs' => 'Herbs',
     ]);
-    $p->select('crates', 'Crates')->multiple()->options([
+    $p->select('Crates')->multiple()->options([
       'apples' => 'Apples',
       'pears' => 'Pears',
       'plums' => 'Plums',

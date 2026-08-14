@@ -43,16 +43,16 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Element overrides')
-  ->panel('order', 'Order', function (PanelBuilder $p): void {
-    $p->panel('basket', 'Basket', function (PanelBuilder $sp): void {
+  ->panel('Order', function (PanelBuilder $p): void {
+    $p->panel('Basket', function (PanelBuilder $sp): void {
       // Two segments in the trail, so the breadcrumb has a separator to draw.
-      $sp->select('produce', 'Produce')->multiple()->default(['apple', 'carrot'])->options([
+      $sp->select('Produce')->multiple()->default(['apple', 'carrot'])->options([
         'apple' => 'Apple',
         'carrot' => 'Carrot',
         'tomato' => 'Tomato',
       ]);
     });
-    $p->text('name', 'Order name')->default('Weekly')->help('Anything you will recognise on the crate.');
+    $p->text('Order name')->default('Weekly')->help('Anything you will recognise on the crate.');
   });
 
 try {

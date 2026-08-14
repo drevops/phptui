@@ -23,8 +23,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('MultiSelect with groups')
-  ->panel('main', 'MultiSelect', function (PanelBuilder $p): void {
-    $p->select('basket', 'Basket')->multiple()->default(['apple'])
+  ->panel('MultiSelect', function (PanelBuilder $p): void {
+    $p->select('Basket')->multiple()->default(['apple'])
       ->heading('Fruit')
       ->option('apple', 'Apple')
       ->option('banana', 'Banana')

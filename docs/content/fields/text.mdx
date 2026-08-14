@@ -16,16 +16,16 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 Single-line text input with a movable caret. It collects a **`string`**.
 
 ```php
-$p->text('item', 'Item')
+$p->text('Item')
   ->default('Pear'); // Initial value.
 
 // Inline ghost-text autocomplete over a static candidate list:
-$p->text('item', 'Item')
+$p->text('Item')
   ->complete(['Pear', 'Peach', 'Plum']);
 
 // The candidates can be computed from the answers collected so far
 // (guard the lookup - a field may be unanswered when this runs):
-$p->text('variety', 'Variety')
+$p->text('Variety')
   ->complete(fn(array $answers): array => [($answers['fruit'] ?? 'Apple') . ' - Gala']);
 ```
 

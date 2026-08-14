@@ -114,10 +114,10 @@ final class SchemaValidatorTest extends TestCase {
   public function testRequired(string $id, mixed $value, ?string $expected_error): void {
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->text('name', 'Produce name')->required();
-        $p->select('crates', 'Crates')->multiple()->required()->option('a')->option('b');
-        $p->text('plot', 'Garden plot name')->required(message: 'The garden plot name is required.');
-        $p->text('note', 'Delivery note');
+        $p->text('Produce name', 'name')->required();
+        $p->select('Crates', 'crates')->multiple()->required()->option('a')->option('b');
+        $p->text('Garden plot name', 'plot')->required(message: 'The garden plot name is required.');
+        $p->text('Delivery note', 'note');
       })
       ->root();
 
@@ -195,14 +195,14 @@ final class SchemaValidatorTest extends TestCase {
     // refuses.
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->confirm('organic', 'Organic only?');
+        $p->confirm('Organic only?', 'organic');
 
-        $p->panel('sourcing', 'Sourcing', function (PanelBuilder $sp): void {
+        $p->panel('Sourcing', 'sourcing', function (PanelBuilder $sp): void {
           $sp->when(new Condition('organic', eq: TRUE));
-          $sp->text('category', 'Category');
+          $sp->text('Category', 'category');
         });
 
-        $p->select('variety', 'Variety')->options(static fn(Context $context): array => ($context->answers['category'] ?? '') === 'stone' ? ['plum' => 'Plum'] : ['apple' => 'Apple']);
+        $p->select('Variety', 'variety')->options(static fn(Context $context): array => ($context->answers['category'] ?? '') === 'stone' ? ['plum' => 'Plum'] : ['apple' => 'Apple']);
       });
 
     $refusals = (new SchemaValidator($form->root()))->validate(['organic' => FALSE, 'category' => 'stone', 'variety' => 'plum']);
@@ -217,9 +217,9 @@ final class SchemaValidatorTest extends TestCase {
     // reading it here would see what a run of the same payload never sees.
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->markup('intro', 'Pick the produce.');
+        $p->markup('Pick the produce.', id: 'intro');
 
-        $p->select('variety', 'Variety')->options(static fn(Context $context): array => ($context->answers['intro'] ?? '') === 'stone' ? ['plum' => 'Plum'] : ['apple' => 'Apple']);
+        $p->select('Variety', 'variety')->options(static fn(Context $context): array => ($context->answers['intro'] ?? '') === 'stone' ? ['plum' => 'Plum'] : ['apple' => 'Apple']);
       });
 
     $refusals = (new SchemaValidator($form->root()))->validate(['intro' => 'stone', 'variety' => 'plum']);
@@ -234,14 +234,14 @@ final class SchemaValidatorTest extends TestCase {
     // be what puts a required question elsewhere on the form.
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->confirm('organic', 'Organic only?');
+        $p->confirm('Organic only?', 'organic');
 
-        $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
+        $p->panel('Certification', 'certification', function (PanelBuilder $sp): void {
           $sp->when(new Condition('organic', eq: TRUE));
-          $sp->text('certifier', 'Certifier');
+          $sp->text('Certifier', 'certifier');
         });
 
-        $p->text('auditor', 'Auditor')->required()->when(new Condition('certifier', eq: 'Valley Orchard'));
+        $p->text('Auditor', 'auditor')->required()->when(new Condition('certifier', eq: 'Valley Orchard'));
       })
       ->root();
 
@@ -256,8 +256,8 @@ final class SchemaValidatorTest extends TestCase {
     // for exactly this, so the set is answered rather than spun on.
     $form = Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->text('crate', 'Crate')->when(new Condition('pallet', ne: 'B'));
-        $p->text('pallet', 'Pallet')->when(new Condition('crate', ne: 'A'));
+        $p->text('Crate', 'crate')->when(new Condition('pallet', ne: 'B'));
+        $p->text('Pallet', 'pallet')->when(new Condition('crate', ne: 'A'));
       })
       ->root();
 
@@ -273,11 +273,11 @@ final class SchemaValidatorTest extends TestCase {
   protected function gatedForm(): Panel {
     return Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->confirm('organic', 'Organic only?');
+        $p->confirm('Organic only?', 'organic');
 
-        $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
+        $p->panel('Certification', 'certification', function (PanelBuilder $sp): void {
           $sp->when(new Condition('organic', eq: TRUE));
-          $sp->text('certifier', 'Certifier')->required();
+          $sp->text('Certifier', 'certifier')->required();
         });
       })
       ->root();
@@ -289,7 +289,7 @@ final class SchemaValidatorTest extends TestCase {
   protected function form(): Panel {
     return Form::create('T')
       ->panel('p', 'p', function (PanelBuilder $p): void {
-        $p->note('intro', 'Intro')->body('Welcome.');
+        $p->note('Intro', 'intro')->body('Welcome.');
         $p->text('name')->required();
         $p->select('profile')->option('standard')->option('minimal')->option('demo', 'Demo', disabled: TRUE, disabled_reason: 'unavailable');
         $p->confirm('agree');

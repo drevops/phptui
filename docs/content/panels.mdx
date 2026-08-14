@@ -25,13 +25,13 @@ Inline is the default for every field. A field opts out with `->standalone()`, w
 
 ```php
 $form = Form::create('Order')
-  ->panel('basket', 'Basket', function (PanelBuilder $p): void {
+  ->panel('Basket', function (PanelBuilder $p): void {
     // Inline by default: the editor opens in the row on Enter.
-    $p->confirm('ripe', 'Ripe only?')->default(TRUE);
-    $p->select('fruit', 'Fruit')->default('apple')->options(['apple' => 'Apple', 'banana' => 'Banana', 'cherry' => 'Cherry']);
+    $p->confirm('Ripe only?')->default(TRUE);
+    $p->select('Fruit')->default('apple')->options(['apple' => 'Apple', 'banana' => 'Banana', 'cherry' => 'Cherry']);
 
     // Full-screen editor, a better fit for the month grid.
-    $p->calendar('harvest_on', 'Harvest date')->default('2026-07-15')->standalone();
+    $p->calendar('Harvest date')->default('2026-07-15')->standalone();
   });
 ```
 
@@ -42,16 +42,16 @@ Panels nest to any depth: a sub-panel renders as a row you select to enter, carr
 ```php
 $form = Form::create('Basket settings')
   ->buttons(TRUE, 'Save', 'Discard')
-  ->fixup(new Fixup(set: 'organic', to: FALSE, when: new Condition('grade', ne: 'premium')))
-  ->panel('basket', 'Basket', function (PanelBuilder $p): void {
-    $p->select('grade', 'Grade')->default('standard')->option('premium', 'Premium', 'Hand-picked')->option('standard', 'Standard', 'Everyday quality')->option('budget', 'Budget', 'Value pack');
-    $p->confirm('organic', 'Organic only?')->default(TRUE);
+  ->fixup(new Fixup(set: 'organic_only', to: FALSE, when: new Condition('grade', ne: 'premium')))
+  ->panel('Basket', function (PanelBuilder $p): void {
+    $p->select('Grade')->default('standard')->option('premium', 'Premium', 'Hand-picked')->option('standard', 'Standard', 'Everyday quality')->option('budget', 'Budget', 'Value pack');
+    $p->confirm('Organic only?')->default(TRUE);
 
-    $p->panel('extras', 'Extras', function (PanelBuilder $sp): void {
-      $sp->select('extras', 'Add extras')->multiple()->options(['herbs' => 'Herbs', 'nuts' => 'Nuts', 'seeds' => 'Seeds']);
+    $p->panel('Extras', function (PanelBuilder $sp): void {
+      $sp->select('Add extras')->multiple()->options(['herbs' => 'Herbs', 'nuts' => 'Nuts', 'seeds' => 'Seeds']);
 
-      $sp->panel('portion', 'Portion', function (PanelBuilder $tp): void {
-        $tp->suggest('serving', 'Serving size')->default('medium')->options(['small' => 'Small', 'medium' => 'Medium', 'large' => 'Large']);
+      $sp->panel('Portion', function (PanelBuilder $tp): void {
+        $tp->suggest('Serving size')->default('medium')->options(['small' => 'Small', 'medium' => 'Medium', 'large' => 'Large']);
       });
     });
   });
@@ -67,14 +67,14 @@ A panel comes and goes on an earlier answer exactly as a field does. Declare `->
 
 ```php
 $form = Form::create('Produce order')
-  ->panel('basket', 'Basket', function (PanelBuilder $p): void {
-    $p->confirm('organic', 'Organic only?')->default(FALSE);
+  ->panel('Basket', function (PanelBuilder $p): void {
+    $p->confirm('Organic only?')->default(FALSE);
 
     // The whole section appears with the answer, and leaves with it.
-    $p->panel('certification', 'Certification', function (PanelBuilder $sp): void {
-      $sp->when(new Condition('organic', eq: TRUE));
-      $sp->text('certifier', 'Certifier')->default('Soil Board');
-      $sp->calendar('renewed_on', 'Renewed on')->default('2026-07-15');
+    $p->panel('Certification', function (PanelBuilder $sp): void {
+      $sp->when(new Condition('organic_only', eq: TRUE));
+      $sp->text('Certifier')->default('Soil Board');
+      $sp->calendar('Renewed on')->default('2026-07-15');
     });
   });
 ```
@@ -92,20 +92,20 @@ A sub-panel usually drills in and replaces the view. Mark a panel `->modal()` an
 ```php
 $form = Form::create('Produce order')
   ->buttons(TRUE, 'Place order', 'Cancel')
-  ->panel('basket', 'Basket', function (PanelBuilder $p): void {
-    $p->text('item', 'Item')->default('Pear');
-    $p->number('quantity', 'Quantity')->default(6)->min(1)->max(99);
+  ->panel('Basket', function (PanelBuilder $p): void {
+    $p->text('Item')->default('Pear');
+    $p->number('Quantity')->default(6)->min(1)->max(99);
 
     // A dialog collecting fields: Save keeps them, Discard restores them.
-    $p->panel('gift', 'Gift options', function (PanelBuilder $m): void {
+    $p->panel('Gift options', function (PanelBuilder $m): void {
       $m->modal('Save', 'Discard');
       $m->description('Wrap this order as a gift.');
-      $m->confirm('gift_wrap', 'Gift wrap?')->default(TRUE);
-      $m->text('gift_note', 'Gift message')->default('Enjoy the harvest');
+      $m->confirm('Gift wrap?')->default(TRUE);
+      $m->text('Gift message')->default('Enjoy the harvest');
     });
 
     // A text-only dialog: the message is the whole content, either button dismisses.
-    $p->panel('empty', 'Empty the basket', function (PanelBuilder $m): void {
+    $p->panel('Empty the basket', function (PanelBuilder $m): void {
       $m->modal('Empty it', 'Keep it');
       $m->description('This clears every item from your basket.');
     });
@@ -123,14 +123,14 @@ The whole panel browser sits inside a border by default. The border is a theme o
 ```php
 $form = Form::create('New order')
   ->buttons(TRUE, 'Create', 'Cancel')
-  ->panel('basics', 'Basics', function (PanelBuilder $p): void {
-    $p->text('name', 'Produce name')->default('Pear')->required();
-    $p->select('category', 'Category')->default('fruit')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable', 'herb' => 'Herb']);
-    $p->number('quantity', 'Quantity')->default(6)->min(1)->max(99);
+  ->panel('Basics', function (PanelBuilder $p): void {
+    $p->text('Produce name')->default('Pear')->required();
+    $p->select('Category')->default('fruit')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable', 'herb' => 'Herb']);
+    $p->number('Quantity')->default(6)->min(1)->max(99);
   })
-  ->panel('delivery', 'Delivery', function (PanelBuilder $p): void {
-    $p->select('ripeness', 'Ripeness')->default('ripe')->option('ripe', 'Ripe')->option('unripe', 'Unripe');
-    $p->confirm('express', 'Express delivery?')->default(FALSE);
+  ->panel('Delivery', function (PanelBuilder $p): void {
+    $p->select('Ripeness')->default('ripe')->option('ripe', 'Ripe')->option('unripe', 'Unripe');
+    $p->confirm('Express delivery?')->default(FALSE);
   });
 
 // The padded rounded box is the default - no options needed.
@@ -158,22 +158,22 @@ Given a **name** instead, the same `PanelBuilder::layout()` picks a layout that 
 $form = Form::create('Market stall')
   ->layout(1, 2)
   ->buttons(TRUE, 'Place order', 'Cancel')
-  ->panel('summary', 'Summary', function (PanelBuilder $p): void {
+  ->panel('Summary', function (PanelBuilder $p): void {
     $p->description('The order at a glance.');
-    $p->text('name', 'Order name')->default('Weekly Box')->required();
+    $p->text('Order name')->default('Weekly Box')->required();
   })
-  ->panel('produce', 'Produce', function (PanelBuilder $p): void {
+  ->panel('Produce', function (PanelBuilder $p): void {
     // Drilling into Produce reveals its own side-by-side grid.
     $p->layout(2);
-    $p->panel('fruit', 'Fruit', function (PanelBuilder $sp): void {
-      $sp->select('fruit', 'Fruit')->default('apple')->options(['apple' => 'Apple', 'banana' => 'Banana', 'cherry' => 'Cherry']);
+    $p->panel('Fruit', function (PanelBuilder $sp): void {
+      $sp->select('Fruit')->default('apple')->options(['apple' => 'Apple', 'banana' => 'Banana', 'cherry' => 'Cherry']);
     });
-    $p->panel('veg', 'Vegetables', function (PanelBuilder $sp): void {
-      $sp->select('veg', 'Vegetables')->multiple()->default(['carrot'])->options(['carrot' => 'Carrot', 'tomato' => 'Tomato', 'spinach' => 'Spinach']);
+    $p->panel('Vegetables', function (PanelBuilder $sp): void {
+      $sp->select('Vegetables')->multiple()->default(['carrot'])->options(['carrot' => 'Carrot', 'tomato' => 'Tomato', 'spinach' => 'Spinach']);
     });
   })
-  ->panel('delivery', 'Delivery', function (PanelBuilder $p): void {
-    $p->confirm('gift', 'Gift wrap?')->default(FALSE);
+  ->panel('Delivery', function (PanelBuilder $p): void {
+    $p->confirm('Gift wrap?')->default(FALSE);
   });
 ```
 

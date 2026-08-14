@@ -24,16 +24,16 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Quick start')
-  ->panel('order', 'New order', function (PanelBuilder $p): void {
+  ->panel('New order', function (PanelBuilder $p): void {
     // Prep the panel needs before its fields draw; runs once, interactive only.
     $p->preload(static function (): void {
       usleep(400000);
     });
 
-    $p->text('name', 'Order name')->required();
+    $p->text('Order name')->required();
     // A callback, not a fixed list: resolved when the panel opens, the field
     // showing "Loading…" until it returns.
-    $p->select('fruit', 'Fruit')->options(static function (): array {
+    $p->select('Fruit')->options(static function (): array {
       usleep(400000);
 
       return ['apple' => 'Apple', 'pear' => 'Pear', 'plum' => 'Plum', 'cherry' => 'Cherry'];

@@ -22,10 +22,10 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Text field')
-  ->panel('main', 'Text', function (PanelBuilder $p): void {
+  ->panel('Text', function (PanelBuilder $p): void {
     // ->complete() adds Tab-completion over a fixed word list; typing stays
     // free-form, the list only helps.
-    $p->text('item', 'Item')->default('Pear')->complete(['Pear', 'Peach', 'Plum']);
+    $p->text('Item')->default('Pear')->complete(['Pear', 'Peach', 'Plum']);
   });
 
 try {

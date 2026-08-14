@@ -26,7 +26,7 @@ MYAPP_TIMEZONE=UTC php my-installer.php
 A field can name its own variable instead, and can list further names it also answers to, so a form can adopt a naming scheme that already exists rather than imposing one:
 
 ```php
-$panel->text('crate_size', 'Crate size')
+$panel->text('Crate size')
   ->env('ORCHARD_CRATE')
   ->envAliases(['LEGACY_CRATE_SIZE']);
 ```

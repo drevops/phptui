@@ -16,7 +16,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 An acknowledgment gate: it shows its label and waits for the reader to continue. It collects a **`bool`** - always `TRUE` once acknowledged - and holds no other value.
 
 ```php
-$p->pause('ready', 'Review your basket'); // A gate; it takes no options.
+$p->pause('Review your basket'); // A gate; it takes no options.
 ```
 
 Runnable script: [`playground/02-fields-pause.php`](https://github.com/drevops/phptui/blob/main/playground/02-fields-pause.php).

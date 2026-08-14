@@ -12,7 +12,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 Every field that draws a list - [`select`](/fields/select), [`search`](/fields/search), [`suggest`](/fields/suggest), [`toggle`](/fields/toggle) and [`reorder`](/fields/reorder), and the `->multiple()` variants of the first two - accepts more than a flat one. Alongside the `->options(['value' => 'Label'])` map shorthand, you can declare options one at a time, mark them disabled, and add non-selectable structure. Declaring any of them on a kind that shows no list throws where it is written.
 
 ```php
-$p->select('item', 'Item')
+$p->select('Item')
   ->heading('Fruit')            // A non-selectable group heading.
   ->option('apple', 'Apple')    // value => label
   ->option('banana', 'Banana')

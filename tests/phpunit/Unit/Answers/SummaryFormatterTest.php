@@ -25,18 +25,18 @@ final class SummaryFormatterTest extends TestCase {
 
   public function testFormatsGroupedByPanel(): void {
     $form = Form::create('T')
-      ->panel('general', 'General', function (PanelBuilder $p): void {
-        $p->text('name', 'Name');
-        $p->text('machine', 'Machine')->derive(new Derive('{{name}}'));
+      ->panel('General', 'general', function (PanelBuilder $p): void {
+        $p->text('Name', 'name');
+        $p->text('Machine', 'machine')->derive(new Derive('{{name}}'));
       })
-      ->panel('drupal', 'Drupal', function (PanelBuilder $p): void {
-        $p->text('profile', 'Profile');
-        $p->panel('adv', 'Advanced', function (PanelBuilder $sp): void {
-          $sp->confirm('debug', 'Debug');
+      ->panel('Drupal', 'drupal', function (PanelBuilder $p): void {
+        $p->text('Profile', 'profile');
+        $p->panel('Advanced', 'adv', function (PanelBuilder $sp): void {
+          $sp->confirm('Debug', 'debug');
         });
       })
-      ->panel('empty', 'Empty', function (PanelBuilder $p): void {
-        $p->text('gone', 'Gone')->when(new Condition('name', eq: 'never'));
+      ->panel('Empty', 'empty', function (PanelBuilder $p): void {
+        $p->text('Gone', 'gone')->when(new Condition('name', eq: 'never'));
       })
       ->root();
     $answers = Answers::forTree(
@@ -65,8 +65,8 @@ final class SummaryFormatterTest extends TestCase {
 
   public function testFormatsListValues(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $p): void {
-        $p->select('mods', 'Mods')->multiple();
+      ->panel('P', 'p', function (PanelBuilder $p): void {
+        $p->select('Mods', 'mods')->multiple();
       })
       ->root();
     $answers = Answers::forTree($form, ['mods' => ['a', 'b']], ['mods' => Provenance::Edited]);
@@ -78,9 +78,9 @@ final class SummaryFormatterTest extends TestCase {
 
   public function testMasksPasswordValues(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $p): void {
-        $p->password('token', 'Token');
-        $p->password('unset', 'Unset');
+      ->panel('P', 'p', function (PanelBuilder $p): void {
+        $p->password('Token', 'token');
+        $p->password('Unset', 'unset');
       })
       ->root();
     $answers = Answers::forTree($form, ['token' => 's3cret-long', 'unset' => ''], ['token' => Provenance::Edited, 'unset' => Provenance::Default]);
@@ -100,8 +100,8 @@ final class SummaryFormatterTest extends TestCase {
 
   public function testResolvesLinkedLabels(): void {
     $form = Form::create('T')
-      ->panel('p', 'See [Orchard](https://example.com/orchard)', function (PanelBuilder $p): void {
-        $p->text('name', 'Order at [Basket](https://example.com/basket)');
+      ->panel('See [Orchard](https://example.com/orchard)', 'p', function (PanelBuilder $p): void {
+        $p->text('Order at [Basket](https://example.com/basket)', 'name');
       })
       ->root();
     $answers = Answers::forTree($form, ['name' => 'Weekly'], ['name' => Provenance::Edited]);

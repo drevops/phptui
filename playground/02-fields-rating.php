@@ -24,10 +24,10 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Rating field')
-  ->panel('main', 'Rating', function (PanelBuilder $p): void {
+  ->panel('Rating', function (PanelBuilder $p): void {
     // The ends default to one and five; captioning them names the scale without
     // claiming a reading for every step in between.
-    $p->rating('freshness', 'Freshness')->default(4)->captions([
+    $p->rating('Freshness')->default(4)->captions([
       1 => 'Poor',
       3 => 'Fair',
       5 => 'Excellent',

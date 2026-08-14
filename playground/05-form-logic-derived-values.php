@@ -27,19 +27,19 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Derived values')
-  ->panel('naming', 'Naming', function (PanelBuilder $p): void {
+  ->panel('Naming', function (PanelBuilder $p): void {
     // The one field a person actually types.
-    $p->text('name', 'Produce name')->default('Red Apple')->required();
+    $p->text('Produce name')->default('Red Apple')->required();
 
     // "Red Apple" -> "red_apple": the 'machine' transform of the name.
-    $p->text('slug', 'Slug')->description('Derived from the name.')->derive(new Derive('{{name}}', 'machine'));
+    $p->text('Slug')->description('Derived from the name.')->derive(new Derive('{{produce_name}}', 'machine'));
 
     // A chain: the derived slug feeds this rule. "red_apple" -> "RED_APPLE".
-    $p->text('code', 'Code')->description('Derived from the slug.')->derive(new Derive('{{slug}}', 'constant'));
+    $p->text('Code')->description('Derived from the slug.')->derive(new Derive('{{slug}}', 'constant'));
 
     // A template mixing two answers, then lowercased.
-    $p->text('grower', 'Grower')->default('Sunny');
-    $p->text('lot', 'Lot')->description('Derived from grower and slug.')->derive(new Derive('{{grower}}/{{slug}}', 'lower'));
+    $p->text('Grower')->default('Sunny');
+    $p->text('Lot')->description('Derived from grower and slug.')->derive(new Derive('{{grower}}/{{slug}}', 'lower'));
   });
 
 try {

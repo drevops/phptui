@@ -74,7 +74,7 @@ Every feature has a reference page and a runnable, self-contained example in [`p
   Fifteen kinds of question, from plain text to dates, ratings, file browsing and fuzzy search, so you rarely have to build an input yourself.
 
 - 🏗️ **Builder-driven** · [docs](https://phptui.dev/configuration) · [`01-quickstart`](playground/01-quickstart.php)<br>
-  Declare the form in a few lines of PHP. The common cases need no code beyond naming the questions.
+  Declare the form in a few lines of PHP. Naming a question is the whole of declaring it: the id it answers to comes from the label it draws, so nothing is written twice.
 
 - 🎛️ **Interactive or unattended** · [docs](https://phptui.dev/headless-collection) · [`08-headless-*`](playground)<br>
   The same form serves a person at a terminal and a CI job with no terminal at all, so you write it once instead of maintaining a second, silent path through it.
@@ -137,29 +137,33 @@ use DrevOps\PhpTui\Builder\PanelBuilder;
 use DrevOps\PhpTui\Tui;
 
 $form = Form::create('Quick start')
-  ->panel('order', 'New order', function (PanelBuilder $p): void {
+  // Every block is declared by the label it draws, and the id it answers to is
+  // derived from that label: "Order name" collects into "order_name". Declare
+  // an id after the label - $p->text('Order name', 'name') - when it has to be
+  // a particular string.
+  ->panel('New order', function (PanelBuilder $p): void {
     // A required single-line text field.
-    $p->text('name', 'Order name')->required();
+    $p->text('Order name')->required();
 
     // A single choice, starting on "Banana".
-    $p->select('fruit', 'Fruit')->default('banana')->options([
+    $p->select('Fruit')->default('banana')->options([
       'apple' => 'Apple',
       'banana' => 'Banana',
       'cherry' => 'Cherry',
     ]);
 
     // A multi-select, with one option pre-checked.
-    $p->select('veg', 'Vegetables')->multiple()->default(['carrot'])->options([
+    $p->select('Vegetables')->multiple()->default(['carrot'])->options([
       'carrot' => 'Carrot',
       'tomato' => 'Tomato',
       'spinach' => 'Spinach',
     ]);
 
     // An integer bounded to a sensible quantity.
-    $p->number('quantity', 'Quantity')->min(1)->max(99)->default(6);
+    $p->number('Quantity')->min(1)->max(99)->default(6);
 
     // A yes/no gate.
-    $p->confirm('organic', 'Organic only?')->default(FALSE);
+    $p->confirm('Organic only?')->default(FALSE);
   });
 
 $tui = new Tui($form, handler_namespaces: ['App\\Handler']);

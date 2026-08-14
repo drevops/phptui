@@ -14,7 +14,7 @@ Behavior beyond a static value is declared on the field itself: a dynamic defaul
 ```php
 use DrevOps\PhpTui\Handler\Context;
 
-$p->text('name', 'Produce name')
+$p->text('Produce name')
   ->default(fn(Context $c): string => basename($c->directory))
   ->validate(fn(mixed $v): ?string => is_string($v) && preg_match('/\s/u', $v) === 1 ? 'Use a single word.' : NULL)
   ->transform(fn(mixed $v): mixed => is_string($v) ? trim($v) : $v);
@@ -23,8 +23,8 @@ $p->text('name', 'Produce name')
 A dynamic default is a closure, so machine-readable output (see [AI agents](/ai-agents)) resolves it against a context with no answers yet - `basename($c->directory)` above becomes a real string. A default computed from earlier answers has nothing to resolve from that early; declare a static stand-in with `->schemaDefault(...)` and the schema advertises it instead of evaluating the closure:
 
 ```php
-$p->text('slug', 'Basket slug')
-  ->default(fn(Context $c): string => strtolower($c->answers['name']))
+$p->text('Basket slug')
+  ->default(fn(Context $c): string => strtolower($c->answers['produce_name']))
   ->schemaDefault('weekly-box');
 ```
 
@@ -39,7 +39,7 @@ Both declaration styles are runnable in [`playground/06-field-behaviour-*`](http
 Three texts guide an answer, each declared on its own so a form never has to merge them into one:
 
 ```php
-$p->text('crop', 'Crop')
+$p->text('Crop')
   ->description('The crop this basket was picked from.') // What is being asked.
   ->help('Every crate is weighed at the packing bench.') // The long version, on request.
   ->placeholder('E.g. Golden Beetroot');                 // Ghost text, empty input only.
@@ -58,10 +58,10 @@ The description row is secondary chrome, so compact [spacing](/themes) drops it;
 `->required()` makes an empty value an error, so a validator never has to check emptiness itself. The message is derived from the field label, or declared per field:
 
 ```php
-$p->text('item', 'Item')->required();
+$p->text('Item')->required();
 // -> "Item is required."
 
-$p->select('basket', 'Basket')->multiple()
+$p->select('Basket')->multiple()
   ->required(message: 'Add at least one item to the basket.')
   ->option('apple', 'Apple')->option('carrot', 'Carrot');
 ```
@@ -91,9 +91,9 @@ $catalog = [
   'vegetable' => ['carrot' => 'Carrot', 'potato' => 'Potato', 'tomato' => 'Tomato'],
 ];
 
-$p->select('category', 'Category')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable']);
+$p->select('Category')->options(['fruit' => 'Fruit', 'vegetable' => 'Vegetable']);
 
-$p->select('item', 'Item')->options(function (Context $c) use ($catalog): array {
+$p->select('Item')->options(function (Context $c) use ($catalog): array {
   // An answer is whatever was supplied until it is validated, so read it
   // defensively before it indexes anything.
   $category = $c->answers['category'] ?? '';
@@ -123,8 +123,8 @@ Runnable in [`playground/19-dynamic-options.php`](https://github.com/drevops/php
 In update mode, `->discover()` rules detect defaults from an existing project directory: a `.env` key (`new Dotenv('SEASON')`), a JSON dot-path (`new JsonValue('basket.json', 'name')`), a path check (`new PathExists('harvest.csv')`), a directory scan (`new Scan('baskets', type: ScanType::Dir)`), or a custom `fn(Context $c): mixed` closure:
 
 ```php
-$p->text('name', 'Produce name')->discover(new JsonValue('basket.json', 'name'));
-$p->confirm('inseason', 'In season?')->discover(new PathExists('harvest.csv'));
+$p->text('Produce name')->discover(new JsonValue('basket.json', 'name'));
+$p->confirm('In season?')->discover(new PathExists('harvest.csv'));
 ```
 
 Update mode is off by default; the `update` flag turns it on and reaches both collection paths - `collect($prompts, $directory, update: TRUE)` headlessly, and `run(update: TRUE)` or `interact(update: TRUE)` for the panel TUI. Interactively the panels open pre-filled with the discovered values, each carrying its `detected` badge; editing one re-badges it `edited` like any other change. Without the flag every field starts from its declared default.

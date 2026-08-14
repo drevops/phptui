@@ -42,15 +42,15 @@ $pantry = static function (string $query): array {
 };
 
 $form = Form::create('Quick start')
-  ->panel('order', 'New order', function (PanelBuilder $p) use ($pantry): void {
-    $p->text('name', 'Order name')->required();
+  ->panel('New order', function (PanelBuilder $p) use ($pantry): void {
+    $p->text('Order name')->required();
 
     // Called on every query change, not once: the list follows what is typed.
-    $p->search('veg', 'Vegetable')->optionsFrom($pantry);
+    $p->search('Vegetable')->optionsFrom($pantry);
 
     // The same, but silent until two characters are typed - so the backend is
     // never asked to list everything.
-    $p->suggest('extra', 'Add another')->optionsFrom($pantry)->minQuery(2);
+    $p->suggest('Add another')->optionsFrom($pantry)->minQuery(2);
   });
 
 try {

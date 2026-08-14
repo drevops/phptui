@@ -15,7 +15,7 @@
  *
  * Usage:
  *   php playground/05-form-logic-conditional-section.php
- *   PHPTUI_GIFT=1 php playground/05-form-logic-conditional-section.php \
+ *   PHPTUI_GIFT_WRAP=1 php playground/05-form-logic-conditional-section.php \
  *     < /dev/null
  */
 
@@ -31,23 +31,23 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 $form = Form::create('Conditional sections')
-  ->panel('order', 'Order', function (PanelBuilder $p): void {
+  ->panel('Order', function (PanelBuilder $p): void {
     $p->description('The gift answer decides whether the next section exists at all.');
-    $p->text('name', 'Order name')->default('Weekly Box')->required();
-    $p->confirm('gift', 'Gift wrap?')->default(FALSE);
+    $p->text('Order name')->default('Weekly Box')->required();
+    $p->confirm('Gift wrap?')->default(FALSE);
   })
-  ->panel('wrapping', 'Gift wrapping', function (PanelBuilder $p): void {
+  ->panel('Gift wrapping', function (PanelBuilder $p): void {
     // The condition sits on the section, so neither field repeats it.
-    $p->when(new Condition('gift', eq: TRUE));
-    $p->select('ribbon', 'Ribbon')->default('cherry')->options([
+    $p->when(new Condition('gift_wrap', eq: TRUE));
+    $p->select('Ribbon')->default('cherry')->options([
       'cherry' => 'Cherry red',
       'melon' => 'Melon green',
       'plum' => 'Plum purple',
     ]);
-    $p->text('message', 'Card message')->default('Enjoy the harvest');
+    $p->text('Card message')->default('Enjoy the harvest');
   })
-  ->panel('delivery', 'Delivery', function (PanelBuilder $p): void {
-    $p->toggle('slot', 'Delivery slot')->default('morning')->options([
+  ->panel('Delivery', function (PanelBuilder $p): void {
+    $p->toggle('Delivery slot')->default('morning')->options([
       'morning' => 'Morning',
       'afternoon' => 'Afternoon',
     ]);

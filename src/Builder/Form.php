@@ -25,6 +25,10 @@ use DrevOps\PhpTui\Screen\Layout\PanelLayout;
  * env-variable prefix. The global TUI runtime (theme, key bindings, colour,
  * language) is configured on the {@see \DrevOps\PhpTui\Tui} facade, not here.
  *
+ * A panel is named as every block is: it is declared by the title it draws,
+ * and the id it answers to is derived from that title unless one is declared
+ * after it. {@see \DrevOps\PhpTui\Builder\Name} holds the rule.
+ *
  * @package DrevOps\PhpTui\Builder
  */
 final class Form {
@@ -179,21 +183,25 @@ final class Form {
   /**
    * Add a top-level panel.
    *
-   * @param string $id
-   *   The panel id.
    * @param string $title
    *   The panel title.
-   * @param \Closure $build
+   * @param string|\Closure $id
+   *   The id it answers to, or the callback when the id is derived from the
+   *   title.
+   * @param \Closure|null $build
    *   The callback receiving the panel builder.
    *
    * @return $this
    *   The builder.
    *
    * @throws \DrevOps\PhpTui\FormException
-   *   When the form's tree has already been built.
+   *   When the form's tree has already been built, or no callback is given to
+   *   build the panel with.
    */
-  public function panel(string $id, string $title, \Closure $build): self {
+  public function panel(string $title, string|\Closure $id, ?\Closure $build = NULL): self {
     $this->assertUnbuilt('a panel');
+
+    [$id, $build] = Name::panel($title, $id, $build);
 
     $panel = new PanelBuilder($id, $title);
     $build($panel);

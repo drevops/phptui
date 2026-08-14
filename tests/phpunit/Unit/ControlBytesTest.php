@@ -176,8 +176,8 @@ final class ControlBytesTest extends TestCase {
   }
 
   public function testNormalizedValueIsFilteredWithNoScreen(): void {
-    $form = Form::create('Orchard')->panel('delivery', 'Delivery', static function (PanelBuilder $panel): void {
-      $panel->text('courier', 'Courier')->default('')->transform(static fn(mixed $value): string => 'Valley' . self::CLEAR . ' Runs');
+    $form = Form::create('Orchard')->panel('Delivery', 'delivery', static function (PanelBuilder $panel): void {
+      $panel->text('Courier', 'courier')->default('')->transform(static fn(mixed $value): string => 'Valley' . self::CLEAR . ' Runs');
     });
 
     $answers = (new Tui($form))->collect(json_encode(['courier' => 'Coast Runs'], JSON_THROW_ON_ERROR));
@@ -186,9 +186,9 @@ final class ControlBytesTest extends TestCase {
   }
 
   public function testComputedValueIsFiltered(): void {
-    $form = Form::create('Orchard')->panel('delivery', 'Delivery', static function (PanelBuilder $panel): void {
-      $panel->text('courier', 'Courier')->default('Valley Runs');
-      $panel->text('slug', 'Slug')->derive(new Derive('{{courier}}' . self::CLEAR));
+    $form = Form::create('Orchard')->panel('Delivery', 'delivery', static function (PanelBuilder $panel): void {
+      $panel->text('Courier', 'courier')->default('Valley Runs');
+      $panel->text('Slug', 'slug')->derive(new Derive('{{courier}}' . self::CLEAR));
     });
 
     $this->assertSame('Valley Runs[2J', (new Tui($form))->collect()->value('slug'));
@@ -293,8 +293,8 @@ final class ControlBytesTest extends TestCase {
   public function testValueFromDiscoverySourceIsFiltered(): void {
     vfsStream::setup('orchard', NULL, ['.env' => 'COURIER=Valley' . self::CLEAR . ' Runs']);
 
-    $form = Form::create('Orchard')->panel('delivery', 'Delivery', static function (PanelBuilder $panel): void {
-      $panel->text('courier', 'Courier')->default('')->discover(new Dotenv('COURIER'));
+    $form = Form::create('Orchard')->panel('Delivery', 'delivery', static function (PanelBuilder $panel): void {
+      $panel->text('Courier', 'courier')->default('')->discover(new Dotenv('COURIER'));
     });
 
     $answers = (new Tui($form))->collect('', vfsStream::url('orchard'), TRUE);
@@ -303,8 +303,8 @@ final class ControlBytesTest extends TestCase {
   }
 
   public function testValueFromDetectorOfItsOwnIsFiltered(): void {
-    $form = Form::create('Orchard')->panel('delivery', 'Delivery', static function (PanelBuilder $panel): void {
-      $panel->text('courier', 'Courier')->default('')->discover(static fn(Context $context): string => 'Valley' . self::CLEAR . ' Runs');
+    $form = Form::create('Orchard')->panel('Delivery', 'delivery', static function (PanelBuilder $panel): void {
+      $panel->text('Courier', 'courier')->default('')->discover(static fn(Context $context): string => 'Valley' . self::CLEAR . ' Runs');
     });
 
     $answers = (new Tui($form))->collect('', 'orchard', TRUE);
@@ -313,8 +313,8 @@ final class ControlBytesTest extends TestCase {
   }
 
   public function testComputedDefaultIsFiltered(): void {
-    $form = Form::create('Orchard')->panel('delivery', 'Delivery', static function (PanelBuilder $panel): void {
-      $panel->text('courier', 'Courier')->default(static fn(Context $context): string => 'Valley' . self::CLEAR . ' Runs');
+    $form = Form::create('Orchard')->panel('Delivery', 'delivery', static function (PanelBuilder $panel): void {
+      $panel->text('Courier', 'courier')->default(static fn(Context $context): string => 'Valley' . self::CLEAR . ' Runs');
     });
 
     $this->assertSame('Valley[2J Runs', (new Tui($form))->collect()->value('courier'));
@@ -425,8 +425,8 @@ final class ControlBytesTest extends TestCase {
    *   The form.
    */
   protected function form(): Form {
-    return Form::create('Orchard')->panel('delivery', 'Delivery', static function (PanelBuilder $panel): void {
-      $panel->text('courier', 'Courier')->default('');
+    return Form::create('Orchard')->panel('Delivery', 'delivery', static function (PanelBuilder $panel): void {
+      $panel->text('Courier', 'courier')->default('');
     });
   }
 

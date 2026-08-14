@@ -23,8 +23,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Pause field')
-  ->panel('main', 'Pause', function (PanelBuilder $p): void {
-    $p->pause('review', 'Review your basket');
+  ->panel('Pause', function (PanelBuilder $p): void {
+    $p->pause('Review your basket');
   });
 
 try {

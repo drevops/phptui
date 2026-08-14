@@ -24,8 +24,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Select with groups')
-  ->panel('main', 'Select', function (PanelBuilder $p): void {
-    $p->select('fruit', 'Fruit')->default('apple')
+  ->panel('Select', function (PanelBuilder $p): void {
+    $p->select('Fruit')->default('apple')
       ->heading('Fruit')
       ->option('apple', 'Apple')
       ->option('banana', 'Banana')

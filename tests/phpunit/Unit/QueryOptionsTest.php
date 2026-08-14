@@ -178,8 +178,8 @@ final class QueryOptionsTest extends TestCase {
   }
 
   public function testSuggestFieldIsDrivenByItsSource(): void {
-    $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p): void {
-      $p->suggest('fruit', 'Fruit')->optionsFrom($this->source(static fn(string $query): array => $query === 'ap' ? ['Apple' => 'Apple', 'Apricot' => 'Apricot'] : []));
+    $form = Form::create('Order')->panel('New order', 'order', function (PanelBuilder $p): void {
+      $p->suggest('Fruit', 'fruit')->optionsFrom($this->source(static fn(string $query): array => $query === 'ap' ? ['Apple' => 'Apple', 'Apricot' => 'Apricot'] : []));
     });
 
     $tester = $this->tester($form);
@@ -191,8 +191,8 @@ final class QueryOptionsTest extends TestCase {
   }
 
   public function testSelectionSurvivesLaterQueryThatOmitsIt(): void {
-    $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p): void {
-      $p->search('basket', 'Basket')->multiple()->optionsFrom($this->source(static fn(string $query): array => $query === 'pot' ? ['potato' => 'Potato'] : ['carrot' => 'Carrot']));
+    $form = Form::create('Order')->panel('New order', 'order', function (PanelBuilder $p): void {
+      $p->search('Basket', 'basket')->multiple()->optionsFrom($this->source(static fn(string $query): array => $query === 'pot' ? ['potato' => 'Potato'] : ['carrot' => 'Carrot']));
     });
 
     // Select Carrot under the empty query, then search for something that does
@@ -226,8 +226,8 @@ final class QueryOptionsTest extends TestCase {
   }
 
   public function testHeadlessLooksUpEachValueOfMultipleField(): void {
-    $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p): void {
-      $p->search('basket', 'Basket')->multiple()->optionsFrom($this->source());
+    $form = Form::create('Order')->panel('New order', 'order', function (PanelBuilder $p): void {
+      $p->search('Basket', 'basket')->multiple()->optionsFrom($this->source());
     });
 
     $answers = (new Tui($form))->collect('{"basket":["carrot","onion"]}');
@@ -250,9 +250,9 @@ final class QueryOptionsTest extends TestCase {
   public function testHeadlessLeavesConditionHiddenFieldUnqueried(): void {
     // The vegetable field is hidden unless the order is a box, so it carries no
     // answer to check and must cost the source nothing.
-    $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p): void {
-      $p->confirm('box', 'Box order?');
-      $p->search('veg', 'Vegetable')->optionsFrom($this->source())->when(new Condition('box', eq: TRUE));
+    $form = Form::create('Order')->panel('New order', 'order', function (PanelBuilder $p): void {
+      $p->confirm('Box order?', 'box');
+      $p->search('Vegetable', 'veg')->optionsFrom($this->source())->when(new Condition('box', eq: TRUE));
     });
 
     $answers = (new Tui($form))->collect('{"box":false,"veg":"carrot"}');
@@ -268,8 +268,8 @@ final class QueryOptionsTest extends TestCase {
   }
 
   public function testHeadlessDoesNotQuerySuggestFieldHints(): void {
-    $form = Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p): void {
-      $p->suggest('fruit', 'Fruit')->optionsFrom($this->source());
+    $form = Form::create('Order')->panel('New order', 'order', function (PanelBuilder $p): void {
+      $p->suggest('Fruit', 'fruit')->optionsFrom($this->source());
     });
 
     $answers = (new Tui($form))->collect('{"fruit":"Quince"}');
@@ -324,7 +324,7 @@ final class QueryOptionsTest extends TestCase {
     $this->expectException(FormException::class);
     $this->expectExceptionMessageMatches($message);
 
-    Form::create('Order')->panel('order', 'New order', $declare)->root();
+    Form::create('Order')->panel('New order', 'order', $declare)->root();
   }
 
   /**
@@ -338,35 +338,35 @@ final class QueryOptionsTest extends TestCase {
 
     yield 'unsupported type' => [
       static function (PanelBuilder $p) use ($source): void {
-        $p->select('veg', 'Vegetable')->optionsFrom($source);
+        $p->select('Vegetable', 'veg')->optionsFrom($source);
       },
       '/of type "select" runs no query/',
     ];
 
     yield 'alongside static options' => [
       static function (PanelBuilder $p) use ($source): void {
-        $p->search('veg', 'Vegetable')->options(['carrot' => 'Carrot'])->optionsFrom($source);
+        $p->search('Vegetable', 'veg')->options(['carrot' => 'Carrot'])->optionsFrom($source);
       },
       '/declare only one/',
     ];
 
     yield 'alongside an option loader' => [
       static function (PanelBuilder $p) use ($source): void {
-        $p->search('veg', 'Vegetable')->options(static fn(): array => ['carrot' => 'Carrot'])->optionsFrom($source);
+        $p->search('Vegetable', 'veg')->options(static fn(): array => ['carrot' => 'Carrot'])->optionsFrom($source);
       },
       '/declare only one/',
     ];
 
     yield 'a minimum query with no source' => [
       static function (PanelBuilder $p): void {
-        $p->search('veg', 'Vegetable')->options(['carrot' => 'Carrot'])->minQuery(2);
+        $p->search('Vegetable', 'veg')->options(['carrot' => 'Carrot'])->minQuery(2);
       },
       '/no query source to apply it to/',
     ];
 
     yield 'a minimum query below one character' => [
       static function (PanelBuilder $p) use ($source): void {
-        $p->search('veg', 'Vegetable')->optionsFrom($source)->minQuery(0);
+        $p->search('Vegetable', 'veg')->optionsFrom($source)->minQuery(0);
       },
       '/at least one character/',
     ];
@@ -385,8 +385,8 @@ final class QueryOptionsTest extends TestCase {
    *   The form.
    */
   protected function form(?\Closure $answer = NULL, ?\Closure $declare = NULL): Form {
-    return Form::create('Order')->panel('order', 'New order', function (PanelBuilder $p) use ($answer, $declare): void {
-      $field = $p->search('veg', 'Vegetable')->optionsFrom($this->source($answer));
+    return Form::create('Order')->panel('New order', 'order', function (PanelBuilder $p) use ($answer, $declare): void {
+      $field = $p->search('Vegetable', 'veg')->optionsFrom($this->source($answer));
 
       if ($declare instanceof \Closure) {
         $declare($field);

@@ -26,8 +26,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('File picker field')
-  ->panel('main', 'File picker', function (PanelBuilder $p): void {
-    $p->filePicker('price_list', 'Price list')->startIn(__DIR__ . '/sample-project')->filesOnly()->extensions(['csv'])->maxSize(50);
+  ->panel('File picker', function (PanelBuilder $p): void {
+    $p->filePicker('Price list')->startIn(__DIR__ . '/sample-project')->filesOnly()->extensions(['csv'])->maxSize(50);
   });
 
 try {

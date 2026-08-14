@@ -99,8 +99,8 @@ final class ProgressRowTest extends TestCase {
   }
 
   public function testActivatingRowWithoutWorkIsNoOp(): void {
-    $form = Form::create('Apply')->panel('prep', 'Prep', function (PanelBuilder $p): void {
-      $p->progress('apply', 'Apply')->steps(3);
+    $form = Form::create('Apply')->panel('Prep', 'prep', function (PanelBuilder $p): void {
+      $p->progress('Apply', 'apply')->steps(3);
     });
 
     $answers = (new TuiTester($form))->rows(12)->run(Key::named(KeyName::Enter), Key::named(KeyName::Enter));
@@ -115,9 +115,9 @@ final class ProgressRowTest extends TestCase {
   }
 
   public function testTheAnswerSchemaOmitsProgressRow(): void {
-    $form = Form::create('Apply')->panel('prep', 'Prep', function (PanelBuilder $p): void {
-      $p->text('name', 'Name');
-      $p->progress('apply', 'Apply')->steps(1)->work($this->work());
+    $form = Form::create('Apply')->panel('Prep', 'prep', function (PanelBuilder $p): void {
+      $p->text('Name', 'name');
+      $p->progress('Apply', 'apply')->steps(1)->work($this->work());
     })->root();
 
     $schema = (new AgentHelp($form))->generate();
@@ -139,8 +139,8 @@ final class ProgressRowTest extends TestCase {
    *   The form.
    */
   protected function form(\Closure $work, ?int $steps = NULL): Form {
-    return Form::create('Apply')->panel('prep', 'Prep', function (PanelBuilder $p) use ($work, $steps): void {
-      $block = $p->progress('apply', 'Apply')->work($work);
+    return Form::create('Apply')->panel('Prep', 'prep', function (PanelBuilder $p) use ($work, $steps): void {
+      $block = $p->progress('Apply', 'apply')->work($work);
 
       if ($steps !== NULL) {
         $block->steps($steps);

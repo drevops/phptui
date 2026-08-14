@@ -23,9 +23,9 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('MultiSelect field')
-  ->panel('main', 'MultiSelect', function (PanelBuilder $p): void {
+  ->panel('MultiSelect', function (PanelBuilder $p): void {
     // The default pre-checks values, so it is a list here.
-    $p->select('basket', 'Basket')->multiple()->default(['apple'])->options([
+    $p->select('Basket')->multiple()->default(['apple'])->options([
       'apple' => 'Apple',
       'carrot' => 'Carrot',
       'tomato' => 'Tomato',

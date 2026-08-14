@@ -23,9 +23,9 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // One field on one panel: the smallest form that exercises the field.
 $form = Form::create('Reorder field')
-  ->panel('main', 'Reorder', function (PanelBuilder $p): void {
+  ->panel('Reorder', function (PanelBuilder $p): void {
     // The declared order is the starting order.
-    $p->reorder('basket', 'Basket')->options([
+    $p->reorder('Basket')->options([
       'apple' => 'Apple',
       'carrot' => 'Carrot',
       'tomato' => 'Tomato',

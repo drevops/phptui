@@ -51,11 +51,11 @@ final class AnswersTest extends TestCase {
 
   public function testForTreeSnapshotsQuestions(): void {
     $form = Form::create('T')
-      ->panel('general', 'General', function (PanelBuilder $p): void {
-        $p->text('name', 'Site name');
-        $p->text('inactive', 'Inactive');
-        $p->panel('adv', 'Advanced', function (PanelBuilder $sp): void {
-          $sp->confirm('debug', 'Debug');
+      ->panel('General', 'general', function (PanelBuilder $p): void {
+        $p->text('Site name', 'name');
+        $p->text('Inactive', 'inactive');
+        $p->panel('Advanced', 'adv', function (PanelBuilder $sp): void {
+          $sp->confirm('Debug', 'debug');
         });
       })
       ->root();
@@ -82,9 +82,9 @@ final class AnswersTest extends TestCase {
 
   public function testForTreeSplitsTemplateAnswerIntoItsParts(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $p): void {
-        $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{grade}}');
-        $p->text('name', 'Name');
+      ->panel('P', 'p', function (PanelBuilder $p): void {
+        $p->template('Crate label', 'crate')->pattern('{{orchard}}-{{grade}}');
+        $p->text('Name', 'name');
       })
       ->root();
 
@@ -102,8 +102,8 @@ final class AnswersTest extends TestCase {
 
   public function testPartsAreEmptyWhenTheAnswerDoesNotMatchTheShape(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $p): void {
-        $p->template('crate', 'Crate label')->pattern('{{orchard}}-{{grade}}');
+      ->panel('P', 'p', function (PanelBuilder $p): void {
+        $p->template('Crate label', 'crate')->pattern('{{orchard}}-{{grade}}');
       })
       ->root();
 
@@ -114,8 +114,8 @@ final class AnswersTest extends TestCase {
 
   public function testToSummaryDelegates(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $p): void {
-        $p->text('name', 'Name');
+      ->panel('P', 'p', function (PanelBuilder $p): void {
+        $p->text('Name', 'name');
       })
       ->root();
 
@@ -127,8 +127,8 @@ final class AnswersTest extends TestCase {
 
   public function testToSummaryFollowsColorCapability(): void {
     $form = Form::create('T')
-      ->panel('p', 'P', function (PanelBuilder $p): void {
-        $p->text('name', 'Order at [Basket](https://example.com/basket)');
+      ->panel('P', 'p', function (PanelBuilder $p): void {
+        $p->text('Order at [Basket](https://example.com/basket)', 'name');
       })
       ->root();
     $answers = Answers::forTree($form, ['name' => 'Weekly'], ['name' => Provenance::Edited]);
