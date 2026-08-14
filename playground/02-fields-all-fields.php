@@ -29,7 +29,7 @@ require __DIR__ . '/../vendor/autoload.php';
 // single-field scripts show the same fields with real-world labels.
 $form = Form::create('Fields')
   ->panel('Fields', function (PanelBuilder $p): void {
-    $p->markup('A read-only block - the cursor skips it and it collects nothing.', 'Markup', 'markup');
+    $p->markup('A read-only block - the cursor skips it and it collects nothing.', 'Markup');
     $p->text('Text')->default('Pear');
     $p->template('Template')->pattern('{{orchard}}-{{fruit}}-{{grade}}')->default('valley-pear-a');
     $p->number('Number')->default(1200);

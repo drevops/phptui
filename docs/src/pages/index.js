@@ -48,20 +48,20 @@ use DrevOps\\PhpTui\\Builder\\PanelBuilder;
 use DrevOps\\PhpTui\\Tui;
 
 $form = Form::create('Quick start')
-  ->panel('order', 'New order', function (PanelBuilder $p): void {
-    $p->text('name', 'Order name')->required();
-    $p->select('fruit', 'Fruit')->default('banana')->options([
+  ->panel('New order', function (PanelBuilder $p): void {
+    $p->text('Order name')->required();
+    $p->select('Fruit')->default('banana')->options([
       'apple' => 'Apple',
       'banana' => 'Banana',
       'cherry' => 'Cherry',
     ]);
-    $p->select('veg', 'Vegetables')->multiple()->default(['carrot'])->options([
+    $p->select('Vegetables')->multiple()->default(['carrot'])->options([
       'carrot' => 'Carrot',
       'tomato' => 'Tomato',
       'spinach' => 'Spinach',
     ]);
-    $p->number('quantity', 'Quantity')->min(1)->max(99)->default(6);
-    $p->confirm('organic', 'Organic only?')->default(FALSE);
+    $p->number('Quantity')->min(1)->max(99)->default(6);
+    $p->confirm('Organic only?')->default(FALSE);
   });
 
 // Interactive on a terminal, non-interactive otherwise.
@@ -105,11 +105,11 @@ const FEATURES = [
       code: `$form = Form::create('Market stall')
   ->layout(1, 2)
   ->buttons(TRUE, 'Place order', 'Cancel')
-  ->panel('summary', 'Summary', function (PanelBuilder $p): void {
-    $p->text('name', 'Order name')->default('Weekly Box')->required();
+  ->panel('Summary', function (PanelBuilder $p): void {
+    $p->text('Order name')->default('Weekly Box')->required();
   })
-  ->panel('produce', 'Produce', function (PanelBuilder $p): void { /* ... */ })
-  ->panel('delivery', 'Delivery', function (PanelBuilder $p): void { /* ... */ });
+  ->panel('Produce', function (PanelBuilder $p): void { /* ... */ })
+  ->panel('Delivery', function (PanelBuilder $p): void { /* ... */ });
 
 // Stretch the frame over the whole terminal; anchor the content.
 $answers = (new Tui($form))
@@ -130,18 +130,18 @@ $answers = (new Tui($form))
       script: 'playground/04-inline-editing.php',
       doc: '/panels',
       code: `$form = Form::create('Produce order')
-  ->panel('options', 'Order options', function (PanelBuilder $p): void {
+  ->panel('Order options', function (PanelBuilder $p): void {
     // Inline by default: the editor opens in place on the row.
-    $p->confirm('organic', 'Organic only?')->default(FALSE);
-    $p->number('quantity', 'Quantity')->min(1)->max(99)->default(6);
-    $p->select('ripeness', 'Ripeness')->default('ripe')->options([
+    $p->confirm('Organic only?')->default(FALSE);
+    $p->number('Quantity')->min(1)->max(99)->default(6);
+    $p->select('Ripeness')->default('ripe')->options([
       'ripe' => 'Ripe',
       'unripe' => 'Unripe',
       'mixed' => 'Mixed',
     ]);
 
     // The month grid wants the whole screen: opt out of inline.
-    $p->calendar('harvest', 'Harvest date')->standalone()->default('2026-07-15');
+    $p->calendar('Harvest date')->standalone()->default('2026-07-15');
   });`,
     },
   },
@@ -157,23 +157,23 @@ $answers = (new Tui($form))
       script: 'playground/02-fields-all-fields.php',
       doc: '/fields',
       code: `$form = Form::create('Fields')
-  ->panel('fields', 'Fields', function (PanelBuilder $p): void {
-    $p->text('text', 'Text')->default('Pear');
-    $p->number('number', 'Number')->default(1200);
-    $p->calendar('calendar', 'Calendar')->default('2026-07-15')->standalone();
-    $p->textarea('textarea', 'Textarea');
-    $p->password('password', 'Password')->default('melon7');
-    $p->select('select', 'Select')->default('apple')->options([
+  ->panel('Fields', function (PanelBuilder $p): void {
+    $p->text('Text')->default('Pear');
+    $p->number('Number')->default(1200);
+    $p->calendar('Calendar')->default('2026-07-15')->standalone();
+    $p->textarea('Textarea');
+    $p->password('Password')->default('melon7');
+    $p->select('Select')->default('apple')->options([
       'apple' => 'Apple',
       'banana' => 'Banana',
       'cherry' => 'Cherry',
     ]);
-    $p->reorder('reorder', 'Reorder')->options([/* ... */]);
-    $p->suggest('suggest', 'Suggest')->options([/* ... */]);
-    $p->search('search', 'Search')->default('carrot')->options([/* ... */]);
-    $p->confirm('confirm', 'Confirm')->default(TRUE);
-    $p->toggle('toggle', 'Toggle')->default('ripe')->options([/* ... */]);
-    $p->pause('pause', 'Pause');
+    $p->reorder('Reorder')->options([/* ... */]);
+    $p->suggest('Suggest')->options([/* ... */]);
+    $p->search('Search')->default('carrot')->options([/* ... */]);
+    $p->confirm('Confirm')->default(TRUE);
+    $p->toggle('Toggle')->default('ripe')->options([/* ... */]);
+    $p->pause('Pause');
   });`,
     },
   },
@@ -205,11 +205,11 @@ $answers = (new Tui($form))
       code: `// The same form, no terminal: collect() resolves every field from
 // the prompts JSON, PHPTUI_<ID> environment variables, discovered and
 // derived values, then the declared defaults - in that order.
-putenv('PHPTUI_ORGANIC=1');
+putenv('PHPTUI_ORGANIC_ONLY=1');
 
-$answers = (new Tui($form))->collect('{"name": "Weekly Box", "fruit": "cherry"}');
+$answers = (new Tui($form))->collect('{"order_name": "Weekly Box", "fruit": "cherry"}');
 
-// {"name":"Weekly Box","fruit":"cherry","quantity":6,"organic":true}
+// {"order_name":"Weekly Box","fruit":"cherry","quantity":6,"organic_only":true}
 echo $answers->toJson();`,
     },
   },
@@ -225,18 +225,18 @@ echo $answers->toJson();`,
       script: 'playground/05-form-logic-derived-values.php',
       doc: '/configuration#derived-values',
       code: `$form = Form::create('Derived values')
-  ->panel('naming', 'Naming', function (PanelBuilder $p): void {
-    $p->text('name', 'Produce name')->default('Red Apple')->required();
+  ->panel('Naming', function (PanelBuilder $p): void {
+    $p->text('Produce name')->default('Red Apple')->required();
 
     // "Red Apple" -> "red_apple": the 'machine' transform of the name.
-    $p->text('slug', 'Slug')->derive(new Derive('{{name}}', 'machine'));
+    $p->text('Slug')->derive(new Derive('{{produce_name}}', 'machine'));
 
     // A chain: the derived slug feeds this rule. "red_apple" -> "RED_APPLE".
-    $p->text('code', 'Code')->derive(new Derive('{{slug}}', 'constant'));
+    $p->text('Code')->derive(new Derive('{{slug}}', 'constant'));
 
     // A template mixing two answers, then lowercased.
-    $p->text('grower', 'Grower')->default('Sunny');
-    $p->text('lot', 'Lot')->derive(new Derive('{{grower}}/{{slug}}', 'lower'));
+    $p->text('Grower')->default('Sunny');
+    $p->text('Lot')->derive(new Derive('{{grower}}/{{slug}}', 'lower'));
   });`,
     },
   },
@@ -251,28 +251,28 @@ echo $answers->toJson();`,
       caption: 'Pick herbs and a large box; fields appear and go',
       script: 'playground/05-form-logic-conditional-fields.php',
       doc: '/configuration#conditional-fields',
-      code: `$p->select('contents', 'Contents')->multiple()->default(['fruit'])->options([
+      code: `$p->select('Contents')->multiple()->default(['fruit'])->options([
   'fruit' => 'Fruit',
   'veg' => 'Vegetables',
   'herbs' => 'Herbs',
 ]);
-$p->select('size', 'Box size')->default('medium')->options([
+$p->select('Box size')->default('medium')->options([
   'small' => 'Small',
   'medium' => 'Medium',
   'large' => 'Large',
 ]);
 
 // Shown only while "herbs" is among the selected contents.
-$p->text('herb_bundle', 'Herb bundle')->when(new Condition('contents', contains: 'herbs'));
+$p->text('Herb bundle')->when(new Condition('contents', contains: 'herbs'));
 
 // Composites: all(), any() and not() nest to any depth.
-$p->confirm('weekly', 'Weekly herb delivery?')->when(Condition::all(
+$p->confirm('Weekly herb delivery?')->when(Condition::all(
   new Condition('contents', contains: 'herbs'),
-  new Condition('size', eq: 'large'),
+  new Condition('box_size', eq: 'large'),
 ));
 
 // An operator over a set: shown for the small or medium box.
-$p->confirm('stackable', 'Stack the boxes?')->when(new Condition('size', in: ['small', 'medium']));`,
+$p->confirm('Stack the boxes?')->when(new Condition('box_size', in: ['small', 'medium']));`,
     },
   },
   {
@@ -394,8 +394,8 @@ $answers = $tester->run(
 );
 
 // In PHPUnit these become assertions:
-// $this->assertSame('Weekly Box', $answers->value('name'));
-echo $answers->value('name');`,
+// $this->assertSame('Weekly Box', $answers->value('order_name'));
+echo $answers->value('order_name');`,
     },
   },
 ];
