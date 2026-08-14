@@ -26,6 +26,11 @@ use DrevOps\PhpTui\Screen\Layout\PanelLayout;
  * block then names the region it goes in rather than depending on the order
  * it was declared in.
  *
+ * A block is named the same way: one name is the label, and the id is derived
+ * from it - `text('Order name')` collects into `order_name`. Two name it in
+ * full, id first, for an id that has to be a particular string.
+ * {@see \DrevOps\PhpTui\Builder\Name} holds the rule.
+ *
  * @package DrevOps\PhpTui\Builder
  */
 final class PanelBuilder {
@@ -182,9 +187,9 @@ final class PanelBuilder {
    * Add a text field.
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
@@ -203,9 +208,9 @@ final class PanelBuilder {
    * {@see \DrevOps\PhpTui\Answers\Answers::parts()}.
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
@@ -218,9 +223,9 @@ final class PanelBuilder {
    * Add a select field. Call ->multiple() to collect several values as a list.
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
@@ -233,9 +238,9 @@ final class PanelBuilder {
    * Add a reorder field (rank a list by moving the highlighted item).
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
@@ -248,9 +253,9 @@ final class PanelBuilder {
    * Add a confirm field.
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
@@ -263,9 +268,9 @@ final class PanelBuilder {
    * Add a toggle field (an inline switch between two labeled values).
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
@@ -278,9 +283,9 @@ final class PanelBuilder {
    * Add a suggest field.
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
@@ -293,9 +298,9 @@ final class PanelBuilder {
    * Add a number field.
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
@@ -312,9 +317,9 @@ final class PanelBuilder {
    * the points mean.
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
@@ -327,9 +332,9 @@ final class PanelBuilder {
    * Add a calendar field: a navigable month picker returning an ISO date.
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
@@ -342,9 +347,9 @@ final class PanelBuilder {
    * Add a textarea field.
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
@@ -357,9 +362,9 @@ final class PanelBuilder {
    * Add a password field.
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
@@ -374,9 +379,9 @@ final class PanelBuilder {
    * Call ->multiple() to collect several values.
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
@@ -391,9 +396,9 @@ final class PanelBuilder {
    * Call ->multiple() to collect several paths.
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
@@ -406,9 +411,9 @@ final class PanelBuilder {
    * Add a pause field (an acknowledgement gate).
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Builder\FieldBuilder
    *   The field builder.
@@ -425,14 +430,16 @@ final class PanelBuilder {
    * block, so every markup call is available on it.
    *
    * @param string $id
-   *   The block id.
+   *   The block id, or the title when it is the only name given.
    * @param string $title
-   *   The title (optional; an empty title draws the body alone).
+   *   The title, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Block\Markup
    *   The markup block.
    */
   public function note(string $id, string $title = ''): Markup {
+    [$id, $title] = Name::pair($id, $title);
+
     return $this->markup($id, '', $title);
   }
 
@@ -469,15 +476,17 @@ final class PanelBuilder {
    * the {@see \DrevOps\PhpTui\Primitive\ProgressReporter} it receives.
    *
    * @param string $id
-   *   The block id.
+   *   The block id, or the caption when it is the only name given.
    * @param string $caption
-   *   The caption shown beside the indicator (defaults to the id).
+   *   The caption shown beside the indicator, when an id is given before it.
    *
    * @return \DrevOps\PhpTui\Block\Progress
    *   The progress block.
    */
   public function progress(string $id, string $caption = ''): Progress {
-    $progress = new Progress($id, $caption === '' ? $id : $caption);
+    [$id, $caption] = Name::pair($id, $caption);
+
+    $progress = new Progress($id, $caption);
     $this->add($progress);
 
     return $progress;
@@ -487,16 +496,21 @@ final class PanelBuilder {
    * Add a nested sub-panel.
    *
    * @param string $id
-   *   The sub-panel id.
-   * @param string $title
-   *   The sub-panel title.
-   * @param \Closure $build
+   *   The sub-panel id, or its title when it is the only name given.
+   * @param string|\Closure $title
+   *   The sub-panel title, or the callback when only one name is given.
+   * @param \Closure|null $build
    *   The callback receiving the sub-panel builder.
    *
    * @return $this
    *   The builder.
+   *
+   * @throws \DrevOps\PhpTui\FormException
+   *   When no callback is given to build the sub-panel with.
    */
-  public function panel(string $id, string $title, \Closure $build): self {
+  public function panel(string $id, string|\Closure $title, ?\Closure $build = NULL): self {
+    [$id, $title, $build] = Name::panel($id, $title, $build);
+
     $panel = new self($id, $title);
     $build($panel);
     $this->panels[] = $panel;
@@ -679,9 +693,9 @@ final class PanelBuilder {
    * Create, register and place a field builder of a given type.
    *
    * @param string $id
-   *   The field id.
+   *   The field id, or the label when it is the only name given.
    * @param string $label
-   *   The label (defaults to the id).
+   *   The label, when an id is given before it.
    * @param \DrevOps\PhpTui\Block\FieldType $type
    *   The field type.
    *
@@ -689,7 +703,9 @@ final class PanelBuilder {
    *   The field builder.
    */
   protected function field(string $id, string $label, FieldType $type): FieldBuilder {
-    $field = new FieldBuilder($id, $label === '' ? $id : $label, $type);
+    [$id, $label] = Name::pair($id, $label);
+
+    $field = new FieldBuilder($id, $label, $type);
     $this->fields[] = $field;
     $this->add($field->block());
 

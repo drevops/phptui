@@ -241,7 +241,7 @@ final class FormTest extends TestCase {
     $form = Form::create('T')
       ->panel('p', 'P', function (PanelBuilder $panel): void {
         $panel->note('intro', 'Getting started')->body('Fill in each field.');
-        $panel->note('bare');
+        $panel->note('Bare');
         $panel->note('boxed', 'Boxed')->border();
         $panel->note('stock', 'Stock')->table(['Fruit', 'Qty'], [['Apple', '3'], ['Pear', '5']]);
       })
@@ -257,8 +257,9 @@ final class FormTest extends TestCase {
     // A note carries no table unless it opts in.
     $this->assertNotInstanceOf(TableSpec::class, $intro->tableSpec());
 
-    // An omitted title stays empty rather than falling back to the id.
-    $this->assertSame('', self::markupOf($form, 'bare')?->titleText());
+    // A note declared with one name draws it as the title and answers to the
+    // machine form of it.
+    $this->assertSame('Bare', self::markupOf($form, 'bare')?->titleText());
 
     // ->border() draws the card inside a box.
     $this->assertTrue(self::markupOf($form, 'boxed')?->isBordered());
