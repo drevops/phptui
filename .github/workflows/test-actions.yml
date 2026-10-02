@@ -30,11 +30,11 @@ jobs:
         continue-on-error: ${{ vars.CI_ACTIONLINT_IGNORE_FAILURE == '1' }}
 
       - name: Check coding standards with actionlint
-        run: docker run --rm -v "${GITHUB_WORKSPACE:-.}":/app:ro --workdir /app rhysd/actionlint@sha256:82244e1db1c60d82c7792180a48dd0bcb838370bb589d53ff132503fc9485868 # 1.7.4
+        run: docker run --rm -v "${GITHUB_WORKSPACE:-.}":/app:ro --workdir /app rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 # 1.7.12
         continue-on-error: ${{ vars.CI_ACTIONLINT_IGNORE_FAILURE == '1' }}
 
       - name: Check GitHub Actions security with Zizmor
-        uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
+        uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
         with:
           inputs: .github/workflows
           config: zizmor.yml
