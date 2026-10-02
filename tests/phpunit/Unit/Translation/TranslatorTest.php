@@ -86,8 +86,9 @@ final class TranslatorTest extends TestCase {
   public function testCatalogLoadsOnce(): void {
     $translator = new Translator('es', [$this->fixtures('translations')]);
 
-    $this->assertSame('Enviar', $translator->translate('Submit'));
-    $this->assertSame('Enviar', $translator->translate('Submit'));
+    $translated = $translator->translate('Submit');
+    $this->assertSame('Enviar', $translated);
+    $this->assertSame($translated, $translator->translate('Submit'));
   }
 
   #[DataProvider('dataProviderAuto')]

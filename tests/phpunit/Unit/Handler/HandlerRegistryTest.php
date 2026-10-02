@@ -22,9 +22,10 @@ final class HandlerRegistryTest extends TestCase {
   public function testResolvesByName(): void {
     $registry = $this->registry();
 
-    $this->assertSame(MachineName::class, $registry->resolve('machine_name'));
+    $resolved = $registry->resolve('machine_name');
+    $this->assertSame(MachineName::class, $resolved);
     // Resolved classes are cached and returned on subsequent calls.
-    $this->assertSame(MachineName::class, $registry->resolve('machine_name'));
+    $this->assertSame($resolved, $registry->resolve('machine_name'));
     $this->assertNull($registry->resolve('does_not_exist'));
   }
 

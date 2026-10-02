@@ -22,8 +22,7 @@ final class BufferedTerminalTest extends TestCase {
     $this->assertSame("\r", $terminal->read());
     $this->assertSame('ab', $terminal->read());
     // Exhausted: every further read reports EOF.
-    $this->assertSame('', $terminal->read());
-    $this->assertSame('', $terminal->read());
+    $this->assertSame(['', ''], [$terminal->read(), $terminal->read()]);
   }
 
   public function testRowsIsFixed(): void {

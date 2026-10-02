@@ -45,6 +45,8 @@ interface CaptureCapableInterface {
    *
    * @return static
    *   The block.
+   *
+   * @phpstan-impure
    */
   public function close(): static;
 

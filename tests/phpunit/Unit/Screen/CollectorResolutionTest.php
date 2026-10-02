@@ -574,8 +574,9 @@ final class CollectorResolutionTest extends TestCase {
     $collector = new Collector();
     $root = $form->root();
 
-    $this->assertSame('carrot', $collector->answers($root)->value('item'));
-    $this->assertSame('carrot', $collector->answers($root)->value('item'));
+    $item = $collector->answers($root)->value('item');
+    $this->assertSame('carrot', $item);
+    $this->assertSame($item, $collector->answers($root)->value('item'));
     $this->assertSame(1, $calls);
 
     // Another run is another question, so the rows the first one produced are
