@@ -229,7 +229,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $util_dir = __DIR__;
-$assets_dir = dirname(__DIR__) . '/assets';
+$assets_dir = __DIR__ . '/../assets';
 $tmp_dir = dirname(__DIR__, 2) . '/.artifacts/tmp/theme-svgs';
 
 if (!is_dir($tmp_dir)) {

@@ -70,7 +70,7 @@ final class TuiTest extends TestCase {
   public function testActivatesTranslatorOnRun(): void {
     $this->assertNotInstanceOf(Translator::class, Translator::shared());
 
-    $translator = new Translator('es', [dirname(__DIR__) . '/Fixtures/translations']);
+    $translator = new Translator('es', [__DIR__ . '/../Fixtures/translations']);
 
     // An operation activates this facade's own language.
     (new Tui($this->demoForm()))->translator($translator)->collect();
@@ -79,7 +79,7 @@ final class TuiTest extends TestCase {
   }
 
   public function testEachOperationRestoresItsOwnTranslator(): void {
-    $spanish = (new Tui($this->demoForm()))->translator(new Translator('es', [dirname(__DIR__) . '/Fixtures/translations']));
+    $spanish = (new Tui($this->demoForm()))->translator(new Translator('es', [__DIR__ . '/../Fixtures/translations']));
     $plain = new Tui($this->demoForm());
 
     // A translator-less facade's operation clears the shared language.
