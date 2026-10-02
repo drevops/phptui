@@ -271,7 +271,7 @@ function wrapSignatures(string $content): array {
 function main(): void {
   global $argv;
 
-  $assets_dir = rtrim($argv[1] ?? dirname(__DIR__) . '/assets', '/');
+  $assets_dir = rtrim($argv[1] ?? __DIR__ . '/../assets', '/');
   $files = glob($assets_dir . '/*.svg');
 
   if ($files === FALSE || $files === []) {

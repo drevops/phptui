@@ -25,10 +25,13 @@ final class StringsTest extends TestCase {
   #[DataProvider('dataProviderLength')]
   public function testLength(string $text, int $expected): void {
     Strings::useMbstring(TRUE);
-    $this->assertSame($expected, Strings::length($text));
+    $mbstring = Strings::length($text);
 
     Strings::useMbstring(FALSE);
-    $this->assertSame($expected, Strings::length($text));
+    $fallback = Strings::length($text);
+
+    $this->assertSame($expected, $mbstring);
+    $this->assertSame($expected, $fallback);
   }
 
   public static function dataProviderLength(): \Iterator {
@@ -42,10 +45,13 @@ final class StringsTest extends TestCase {
   #[DataProvider('dataProviderSubstr')]
   public function testSubstr(string $text, int $start, ?int $length, string $expected): void {
     Strings::useMbstring(TRUE);
-    $this->assertSame($expected, Strings::substr($text, $start, $length));
+    $mbstring = Strings::substr($text, $start, $length);
 
     Strings::useMbstring(FALSE);
-    $this->assertSame($expected, Strings::substr($text, $start, $length));
+    $fallback = Strings::substr($text, $start, $length);
+
+    $this->assertSame($expected, $mbstring);
+    $this->assertSame($expected, $fallback);
   }
 
   public static function dataProviderSubstr(): \Iterator {
@@ -64,10 +70,13 @@ final class StringsTest extends TestCase {
   #[DataProvider('dataProviderLower')]
   public function testLower(string $text, string $expected_mbstring, string $expected_fallback): void {
     Strings::useMbstring(TRUE);
-    $this->assertSame($expected_mbstring, Strings::lower($text));
+    $mbstring = Strings::lower($text);
 
     Strings::useMbstring(FALSE);
-    $this->assertSame($expected_fallback, Strings::lower($text));
+    $fallback = Strings::lower($text);
+
+    $this->assertSame($expected_mbstring, $mbstring);
+    $this->assertSame($expected_fallback, $fallback);
   }
 
   public static function dataProviderLower(): \Iterator {
@@ -80,10 +89,13 @@ final class StringsTest extends TestCase {
   #[DataProvider('dataProviderSplit')]
   public function testSplit(string $text, array $expected): void {
     Strings::useMbstring(TRUE);
-    $this->assertSame($expected, Strings::split($text));
+    $mbstring = Strings::split($text);
 
     Strings::useMbstring(FALSE);
-    $this->assertSame($expected, Strings::split($text));
+    $fallback = Strings::split($text);
+
+    $this->assertSame($expected, $mbstring);
+    $this->assertSame($expected, $fallback);
   }
 
   public static function dataProviderSplit(): \Iterator {
@@ -96,10 +108,13 @@ final class StringsTest extends TestCase {
   #[DataProvider('dataProviderWrap')]
   public function testWrap(string $text, int $width, array $expected): void {
     Strings::useMbstring(TRUE);
-    $this->assertSame($expected, Strings::wrap($text, $width));
+    $mbstring = Strings::wrap($text, $width);
 
     Strings::useMbstring(FALSE);
-    $this->assertSame($expected, Strings::wrap($text, $width));
+    $fallback = Strings::wrap($text, $width);
+
+    $this->assertSame($expected, $mbstring);
+    $this->assertSame($expected, $fallback);
   }
 
   public static function dataProviderWrap(): \Iterator {

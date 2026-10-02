@@ -185,6 +185,8 @@ class Terminal {
    *
    * @return string
    *   The bytes read.
+   *
+   * @phpstan-impure
    */
   public function read(int $bytes = 32): string {
     $data = fread($this->input, max(1, $bytes));

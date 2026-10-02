@@ -452,15 +452,16 @@ final class ScreenControllerTest extends TestCase {
     // A session that walked into the dialog, saw its way out and left again.
     $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Enter), Key::char('q'));
     $first = $tester->frame(0);
-
-    $this->assertSame($declared, $this->declared($panel));
+    $after_first = $this->declared($panel);
 
     $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Enter), Key::char('q'));
+    $after_second = $this->declared($panel);
 
     // What the session drew around the form is the session's own, so the tree
     // holds what the form declared and nothing else - and the second session
     // opens on the very frame the first one did.
-    $this->assertSame($declared, $this->declared($panel));
+    $this->assertSame($declared, $after_first);
+    $this->assertSame($declared, $after_second);
     $this->assertSame($first, $tester->frame(0));
   }
 

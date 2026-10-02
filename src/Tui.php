@@ -860,21 +860,13 @@ final class Tui {
   protected function resolveThemeOptions(Terminal $terminal): array {
     $options = $this->themeOptions;
 
-    if (!isset($options['color'])) {
-      $options['color'] = $this->resolvedColor();
-    }
+    $options['color'] ??= $this->resolvedColor();
 
-    if (!isset($options['unicode'])) {
-      $options['unicode'] = $this->resolvedUnicode();
-    }
+    $options['unicode'] ??= $this->resolvedUnicode();
 
-    if (!isset($options['markdown'])) {
-      $options['markdown'] = $this->markdown;
-    }
+    $options['markdown'] ??= $this->markdown;
 
-    if (!isset($options['mode'])) {
-      $options['mode'] = $options['color'] ? Terminal::detectMode($terminal->queryBackground()) : Mode::Dark;
-    }
+    $options['mode'] ??= $options['color'] ? Terminal::detectMode($terminal->queryBackground()) : Mode::Dark;
 
     if (!isset($options['fullscreen']) && $this->fullscreen !== NULL) {
       $options['fullscreen'] = $this->fullscreen;
@@ -937,19 +929,13 @@ final class Tui {
   protected function primitiveThemeOptions(?bool $tty = NULL): array {
     $options = $this->themeOptions;
 
-    if (!isset($options['color'])) {
-      // A forced colour wins over the stream: only auto-detection also requires
-      // an interactive stream, where the escape codes have an effect at all.
-      $options['color'] = $this->color ?? (Terminal::detectColor() && ($tty ?? TRUE));
-    }
+    // A forced colour wins over the stream: only auto-detection also requires
+    // an interactive stream, where the escape codes have an effect at all.
+    $options['color'] ??= $this->color ?? (Terminal::detectColor() && ($tty ?? TRUE));
 
-    if (!isset($options['unicode'])) {
-      $options['unicode'] = $this->resolvedUnicode();
-    }
+    $options['unicode'] ??= $this->resolvedUnicode();
 
-    if (!isset($options['markdown'])) {
-      $options['markdown'] = $this->markdown;
-    }
+    $options['markdown'] ??= $this->markdown;
 
     $options['mode'] ??= Mode::Dark;
 

@@ -21,5 +21,15 @@
             "groupName": "all dependencies",
             "groupSlug": "all"
         }
+    ],
+    "customManagers": [
+        {
+            "customType": "regex",
+            "description": "Images pinned by digest in workflow 'run' steps.",
+            "managerFilePatterns": ["/^\\.github/workflows/[^/]+\\.ya?ml$/"],
+            "matchStrings": ["docker run .* (?<depName>[a-z0-9][a-z0-9._/-]*)@(?<currentDigest>sha256:[a-f0-9]{64}) # (?<currentValue>\\S+)"],
+            "datasourceTemplate": "docker",
+            "versioningTemplate": "docker"
+        }
     ]
 }
