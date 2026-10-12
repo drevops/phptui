@@ -95,7 +95,7 @@ class SchemaGenerator {
         'asked_when' => $gate?->toArray(),
         'derive' => $field->derivation()?->toArray(),
         'discover' => $discover instanceof DiscoverInterface ? $discover->toArray() : NULL,
-        'depends_on' => $gate === NULL ? [] : $gate->fields(),
+        'depends_on' => $gate?->fields() ?? [],
       ];
     }
 
