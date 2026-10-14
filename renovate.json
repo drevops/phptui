@@ -17,6 +17,13 @@
             "enabled": false
         },
         {
+            "description": "Docusaurus 3 runs its own Babel 7 preset from 'docs/babel.config.js', so the docs build fails on Babel 8.",
+            "matchManagers": ["npm"],
+            "matchPackageNames": ["@babel/core", "@babel/preset-env", "@babel/preset-react"],
+            "matchUpdateTypes": ["major"],
+            "enabled": false
+        },
+        {
             "matchPackageNames": ["*"],
             "groupName": "all dependencies",
             "groupSlug": "all"
