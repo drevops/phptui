@@ -1173,7 +1173,7 @@ final class ScreenParityTest extends TestCase {
   public function testLocalizedSessionDrawsItsChromeInTheActiveLanguage(): void {
     Translator::setShared(new Translator('uk'));
 
-    $tester = $this->tester($this->nested('main', 'Постачання', (new Field('courier', 'Кур\'єр'))->default('Coast Runs')));
+    $tester = $this->tester($this->nested('main', 'Постачання', (new Field('courier', "Кур'єр"))->default('Coast Runs')));
     $tester->run(Key::named(KeyName::Enter), Key::named(KeyName::Enter));
 
     // The chrome the library speaks and the words the form declares, both in
@@ -1201,11 +1201,11 @@ final class ScreenParityTest extends TestCase {
   public function testWithheldSubmitSaysWhyInTheActiveLanguage(): void {
     Translator::setShared(new Translator('uk'));
 
-    $tester = $this->tester($this->nested('main', 'Постачання', (new Field('courier', 'Кур\'єр'))->required()));
+    $tester = $this->tester($this->nested('main', 'Постачання', (new Field('courier', "Кур'єр"))->required()));
     $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Enter));
 
     $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
-    $at = array_search('  Кур\'єр є обов\'язковим полем.', $rows, TRUE);
+    $at = array_search("  Кур'єр є обов'язковим полем.", $rows, TRUE);
 
     $this->assertIsInt($at);
     $this->assertSame('❯ [ Надіслати ]  [ Скасувати ]', $rows[$at + 1]);
