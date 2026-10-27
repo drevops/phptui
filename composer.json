@@ -29,8 +29,8 @@
         "mikey179/vfsstream": "^1.6.12",
         "opis/closure": "^4.5.0",
         "phpstan/phpstan": "^2.3.2",
-        "phpunit/phpunit": "^12.5.40",
-        "rector/rector": "^2.7.0"
+        "phpunit/phpunit": "^12.5.42",
+        "rector/rector": "^2.8.1"
     },
     "suggest": {
         "ext-mbstring": "Provides full Unicode case folding and native multibyte string handling; PCRE-based fallbacks with ASCII-only case folding are used when it is absent."
