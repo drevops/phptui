@@ -1205,7 +1205,7 @@ final class ScreenParityTest extends TestCase {
     $tester->run(Key::named(KeyName::Down), Key::named(KeyName::Enter));
 
     $rows = array_map(rtrim(...), explode("\n", $tester->frame()));
-    $at = array_search("  Кур'єр є обов'язковим полем.",$rows, TRUE);
+    $at = array_search("  Кур'єр є обов'язковим полем.", $rows, TRUE);
 
     $this->assertIsInt($at);
     $this->assertSame('❯ [ Надіслати ]  [ Скасувати ]', $rows[$at + 1]);
