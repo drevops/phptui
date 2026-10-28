@@ -30,7 +30,7 @@
         "opis/closure": "^4.5.0",
         "phpstan/phpstan": "^2.3.3",
         "phpunit/phpunit": "^12.5.42",
-        "rector/rector": "^2.8.1"
+        "rector/rector": "^2.8.2"
     },
     "suggest": {
         "ext-mbstring": "Provides full Unicode case folding and native multibyte string handling; PCRE-based fallbacks with ASCII-only case folding are used when it is absent."
