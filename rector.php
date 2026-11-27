@@ -10,7 +10,6 @@
 
 declare(strict_types=1);
 
-use Rector\CodeQuality\Rector\Class_\CompleteDynamicPropertiesRector;
 use Rector\CodeQuality\Rector\ClassMethod\InlineArrayReturnAssignRector;
 use Rector\CodeQuality\Rector\Empty_\SimplifyEmptyCheckOnEmptyArrayRector;
 use Rector\CodingStyle\Rector\Catch_\CatchExceptionNameMatchingTypeRector;
@@ -19,15 +18,9 @@ use Rector\CodingStyle\Rector\ClassMethod\NewlineBeforeNewAssignSetRector;
 use Rector\CodingStyle\Rector\Stmt\NewlineAfterStatementRector;
 use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\If_\RemoveAlwaysTrueIfConditionRector;
-use Rector\Naming\Rector\Assign\RenameVariableToMatchMethodCallReturnTypeRector;
-use Rector\Naming\Rector\Class_\RenamePropertyToMatchTypeRector;
-use Rector\Naming\Rector\ClassMethod\RenameVariableToMatchNewTypeRector;
-use Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchExprVariableRector;
-use Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchMethodCallReturnTypeRector;
-use Rector\Naming\Rector\ClassMethod\RenameParamToMatchTypeRector;
 use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
 use Rector\Php80\Rector\Switch_\ChangeSwitchToMatchRector;
-use Rector\TypeDeclaration\Rector\StmtsAwareInterface\DeclareStrictTypesRector;
+use Rector\TypeDeclaration\Rector\StmtsAwareInterface\SafeDeclareStrictTypesRector;
 
 return RectorConfig::configure()
   ->withPaths([
@@ -39,14 +32,13 @@ return RectorConfig::configure()
     codeQuality: TRUE,
     codingStyle: TRUE,
     typeDeclarations: TRUE,
-    naming: TRUE,
     instanceOf: TRUE,
     earlyReturn: TRUE,
     phpunitCodeQuality: TRUE,
   )
   ->withComposerBased(phpunit: TRUE)
   ->withRules([
-    DeclareStrictTypesRector::class,
+    SafeDeclareStrictTypesRector::class,
   ])
   ->withSkip([
     // Rules added by Rector's rule sets.
@@ -58,28 +50,11 @@ return RectorConfig::configure()
     ClassPropertyAssignToConstructorPromotionRector::class => [
       __DIR__ . '/src/Field/Confirm.php',
     ],
-    CompleteDynamicPropertiesRector::class,
     InlineArrayReturnAssignRector::class,
     NewlineAfterStatementRector::class,
     NewlineBeforeNewAssignSetRector::class,
     NewlineBetweenClassLikeStmtsRector::class,
     RemoveAlwaysTrueIfConditionRector::class,
-    // Conflicts with Drupal's snake_case variable naming (enforced by PHPCS):
-    // a multi-word property yields a camelCase singular that PHPCBF rewrites
-    // straight back, leaving the two fixers undoing each other.
-    RenameForeachValueVariableToMatchExprVariableRector::class,
-    RenameForeachValueVariableToMatchMethodCallReturnTypeRector::class,
-    // Conflicts with Drupal's snake_case parameter naming (enforced by PHPCS).
-    RenameParamToMatchTypeRector::class,
-    // A primitive holds the theme and is typed to the narrower set of pieces it
-    // draws through; the property is named for the collaborator rather than for
-    // the narrowing, so a reader sees the theme it is.
-    RenamePropertyToMatchTypeRector::class => [
-      __DIR__ . '/src/Primitive/Output.php',
-      __DIR__ . '/src/Primitive/Progress.php',
-    ],
-    RenameVariableToMatchMethodCallReturnTypeRector::class,
-    RenameVariableToMatchNewTypeRector::class,
     SimplifyEmptyCheckOnEmptyArrayRector::class,
     // Dependencies.
     '*/vendor/*',
