@@ -33,7 +33,8 @@
         "rector/rector": "^2.9.2"
     },
     "suggest": {
-        "ext-mbstring": "Provides full Unicode case folding and native multibyte string handling; PCRE-based fallbacks with ASCII-only case folding are used when it is absent."
+        "ext-mbstring": "Provides full Unicode case folding and native multibyte string handling; PCRE-based fallbacks with ASCII-only case folding are used when it is absent.",
+        "ext-pcntl": "Redraws a live screen as soon as the terminal is resized; without it, the size is re-read on every tick."
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
