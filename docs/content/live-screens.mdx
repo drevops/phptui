@@ -36,7 +36,7 @@ Runnable script: [`playground/21-live-screen.php`](https://github.com/drevops/ph
 `->live(Closure $tick, int $interval = 250)` takes the callback and the interval in milliseconds. An interval below 1 throws an `InvalidArgumentException` when `live()` is called.
 
 - The tick receives the number of ticks so far, counting from 1. It returns nothing.
-- The tick changes blocks you hold a reference to: a markup you [placed in a screen region](/layouts), or one a panel builder returned.
+- The tick changes blocks you hold a reference to: a markup you [placed in a screen region](/layouts), or one a panel builder returned. A [live table](/live-table) takes new rows and a [live log](/live-log) takes new lines.
 - The screen redraws after the tick only when the frame changed, so an idle screen doesn't flicker.
 - The tick runs between key presses, so a key press is never half handled when the tick runs.
 - A key press or [stream output](#wake-on-a-stream) ends the wait early but keeps the interval running, so the tick still runs once per interval.

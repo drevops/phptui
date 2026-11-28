@@ -146,6 +146,12 @@ $this->region('delivery')->flex(2);
 
 That is what lets a long produce list outrun its column while its neighbor stays pinned, and what lets two rows scroll independently of each other. A region that was not declared to scroll clips what outruns it instead.
 
+A region declared with `->follows()` scrolls and keeps its window on the end of its contents as they grow. Use it for a [live log](/live-log#how-a-following-region-scrolls):
+
+```php
+$this->region('log')->fixed(5)->follows();
+```
+
 The region does the scrolling too. Its layout hands it one number - the size it was given - and everything after that is the region's own: how tall its blocks add up to, where the viewport sits, whether an overflow marker is due, and how the cursor moves it. No sibling is involved, which is why a region can scroll its own blocks alone - and why moving every line at once has to belong to the arrangement instead.
 
 **An arrangement can be a surface too**, declared the same way and moved by the same rules:

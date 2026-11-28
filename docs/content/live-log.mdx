@@ -1,0 +1,115 @@
+---
+title: Live log
+description: 'Lines a live screen writes over time, capped at a line limit, in a region that follows its tail.'
+keywords: ['log', 'live', 'tail', 'follow', 'block']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Live log
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/live-log-light-animated.svg'), dark: useBaseUrl('/live-log-dark-animated.svg')}} alt="Live log: each tick writes a weighing and the newest lines stay in sight" />
+</p>
+
+A live log holds lines that your code writes over time and keeps the newest ones. Use it on a [live screen](/live-screens) to show a running record, such as each crate weighed at a bench. The log collects no answer.
+
+The log holds at most its line limit and drops the oldest lines past it. It draws every line it holds. To keep the newest lines in sight, put the log in a region declared with `->follows()`.
+
+## Add a log that follows its tail
+
+A following region needs a layout of your own, because a panel's default layout has 1 region and the fields go in it. Follow these steps to put a log under the fields:
+
+1. Write a layout with a region for the log. `->fixed(5)` gives the log 5 rows, and `->follows()` keeps the window on its last line:
+
+   ```php
+   use DrevOps\PhpTui\Screen\Axis;
+   use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
+
+   final class BenchLayout extends AbstractLayout {
+
+     public function __construct() {
+       parent::__construct(Axis::Rows);
+
+       $this->region('content')->content();
+       $this->region('log')->fixed(5)->follows();
+     }
+
+   }
+   ```
+
+2. Build the log, arrange the panel by the layout, and add the log to the `log` region:
+
+   ```php
+   use DrevOps\PhpTui\Block\Log;
+
+   $log = new Log('scale', 20);
+
+   $form = Form::create('Weighing station')
+     ->panel('Bench', function (PanelBuilder $p) use ($log): void {
+       $p->layout(BenchLayout::class);
+       $p->confirm('Organic only?')->default(TRUE);
+       $p->in('log')->add($log);
+     });
+   ```
+
+3. Write a line on each tick:
+
+   ```php
+   $tui = (new Tui($form))->live(function (int $count) use ($log): void {
+     $log->write(sprintf('Crate %d weighed', $count));
+   });
+   ```
+
+   Confirm that the newest line shows at the bottom of the region. When older lines sit above the window, the region's first row carries the overflow mark.
+
+Runnable script: [`playground/22-live-table-log.php`](https://github.com/drevops/phptui/blob/main/playground/22-live-table-log.php).
+
+## Options
+
+`new Log(string $id, int $limit = 100)` builds a log. `$p->log($id, $limit)` builds one in the panel's current region and returns it.
+
+| Method                | Effect                                                                                                    |
+| --------------------- | --------------------------------------------------------------------------------------------------------- |
+| `->write(string ...)` | Appends lines. Each argument can hold several lines, split at any line ending. Control bytes are removed. |
+| `->limit(int $limit)` | Sets the line limit. Lowering it drops the oldest lines past the new limit.                               |
+| `->clear()`           | Removes every line.                                                                                       |
+| `->lines()`           | Returns the lines, oldest first.                                                                          |
+| `->lineLimit()`       | Returns the line limit.                                                                                   |
+
+A limit below 1 throws a `FormException`, in the constructor and in `limit()`.
+
+Each line draws as 1 row, styled as a [markup](/markup) line. A line wider than its region is clipped.
+
+## How a following region scrolls
+
+`->follows()` declares a scrolling region whose window stays on the end of its contents. Because the region scrolls, it marks the rows above the window.
+
+`scrollTo()` moves the window off the end and leaves it where it was moved. Call `follows()` again to pin it back. Keep the log in a region of its own. The screen keeps the cursor in sight, so a cursor on a row in that region moves the window off the end.
+
+## Headless behavior
+
+A live log is display-only: it carries no answer, and headless collection never draws it.
+
+## Display modes
+
+In all 4 [display modes](/display-modes) - Unicode or ASCII, color on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/live-log-light-static.svg'), dark: useBaseUrl('/live-log-dark-static.svg')}} alt="Live log: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/live-log-light-static-no-ansi.svg'), dark: useBaseUrl('/live-log-dark-static-no-ansi.svg')}} alt="Live log: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/live-log-light-static-ascii.svg'), dark: useBaseUrl('/live-log-dark-static-ascii.svg')}} alt="Live log: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/live-log-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/live-log-dark-static-ascii-no-ansi.svg')}} alt="Live log: ASCII + No ANSI" /></td>
+  </tr>
+</table>
