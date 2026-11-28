@@ -86,7 +86,7 @@ Each line draws as 1 row, styled as a [markup](/markup) line. A line wider than 
 
 `->follows()` declares a scrolling region whose window stays on the end of its contents. Because the region scrolls, it marks the rows above the window.
 
-`scrollTo()` moves the window off the end and leaves it where it was moved. Call `follows()` again to pin it back. Keep the log in a region of its own. The window stays on the end even when the cursor is on a row in that region, so that row can scroll out of sight.
+`scrollTo()` moves the window off the end and unpins it. After that, the region scrolls like any other, so a focused row in it moves the window to keep that row in sight. Call `follows()` again to pin the window back. Keep the log in a region of its own. A pinned region stays on the end even when the cursor is on a row in it, so that row can scroll out of sight.
 
 ## Headless behavior
 
