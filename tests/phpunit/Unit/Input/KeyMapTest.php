@@ -197,6 +197,18 @@ final class KeyMapTest extends TestCase {
     $this->assertTrue($select->matches(Key::char('l'), Action::Accept));
   }
 
+  public function testCharacterKeysTakeTheFormTheParserDelivers(): void {
+    $map = new KeyMap([
+      new Binding(Scope::field(FieldType::Select), Action::Accept, "\t", Key::char("\r")),
+      new Binding(Scope::field(FieldType::Select), Action::Toggle, Key::char("\x05")),
+    ]);
+    $select = $map->forField(FieldType::Select);
+
+    $this->assertTrue($select->matches(Key::named(KeyName::Tab), Action::Accept));
+    $this->assertTrue($select->matches(Key::named(KeyName::Enter), Action::Accept));
+    $this->assertTrue($select->matches(Key::char("\x05"), Action::Toggle));
+  }
+
   #[DataProvider('dataProviderFailsLoudly')]
   public function testFailsLoudly(Binding $binding, string $message): void {
     $this->expectException(\InvalidArgumentException::class);

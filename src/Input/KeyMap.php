@@ -220,7 +220,7 @@ final class KeyMap {
       foreach ($this->normalize($command->keys, $scope) as $key) {
         // The session stops on the interrupt key before routing it, so a
         // command bound to it would never run.
-        if ($key->equals(Key::named(KeyName::Interrupt)) || $key->equals(Key::char("\x03"))) {
+        if ($key->is(KeyName::Interrupt)) {
           throw new FormException(sprintf('The "%s" command cannot use the interrupt key, which always stops the session.', $command->label));
         }
 
@@ -359,13 +359,13 @@ final class KeyMap {
 
     foreach ($keys as $key) {
       if ($key instanceof Key) {
-        $out[] = $key;
+        $out[] = $this->canonical($key);
       }
       elseif ($key instanceof KeyName) {
         $out[] = Key::named($key);
       }
       elseif (strlen($key) === 1) {
-        $out[] = Key::char($key);
+        $out[] = $this->canonical(Key::char($key));
       }
       else {
         throw new FormException(sprintf('A character binding in the %s scope must be a single character, got "%s".', $scope->label(), $key));
@@ -373,6 +373,26 @@ final class KeyMap {
     }
 
     return $out;
+  }
+
+  /**
+   * The key a terminal delivers for a character key.
+   *
+   * {@see KeyParser} reads bytes such as a tab or a space as named keys, so a
+   * character binding for one of them takes the named form it is matched as.
+   *
+   * @param \DrevOps\PhpTui\Input\Key $key
+   *   The key.
+   *
+   * @return \DrevOps\PhpTui\Input\Key
+   *   The named key the parser produces for the character, else the key.
+   */
+  protected function canonical(Key $key): Key {
+    if (!$key->isChar()) {
+      return $key;
+    }
+
+    return (new KeyParser())->parse((string) $key->char)[0] ?? $key;
   }
 
 }

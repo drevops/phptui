@@ -108,6 +108,7 @@ final class CommandTest extends TestCase {
 
     yield 'navigation action' => ['default', [new Command('save', $noop, 'q')], 'Key "q" is bound to both Quit and the "save" command in the navigation scope.'];
     yield 'inherited base action' => ['default', [new Command('save', $noop, KeyName::Space)], 'bound to both InsertSpace and the "save" command'];
+    yield 'space written as a character' => ['default', [new Command('save', $noop, ' ')], 'bound to both InsertSpace and the "save" command'];
     yield 'help key' => ['default', [new Command('save', $noop, '?')], 'bound to both Help and the "save" command'];
     yield 'vim letter' => ['vim', [new Command('save', $noop, 'j')], 'bound to both MoveDown and the "save" command'];
     yield 'another command' => ['default', [new Command('save', $noop, 's'), new Command('sort', $noop, 'o', 's')], 'Key "s" is bound to both the "save" and "sort" commands in the navigation scope.'];
