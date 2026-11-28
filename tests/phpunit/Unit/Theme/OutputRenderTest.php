@@ -133,6 +133,16 @@ final class OutputRenderTest extends TestCase {
     $this->assertStringContainsString('Apricot', $lines[1]);
   }
 
+  /**
+   * Tests that a selection marks only the line of the selected row.
+   *
+   * @param list<string> $headers
+   *   The header cells.
+   * @param int $selected
+   *   The selected row index.
+   * @param int $marked
+   *   The line index carrying the mark; -1 for none.
+   */
   #[DataProvider('dataProviderTableWithSelectionMarksOnlyThatRow')]
   public function testTableWithSelectionMarksOnlyThatRow(array $headers, int $selected, int $marked): void {
     $lines = $this->theme(color: FALSE)->renderTable($headers, [['Apricot'], ['Carrot']], $selected);
