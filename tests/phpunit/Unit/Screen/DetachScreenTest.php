@@ -149,7 +149,7 @@ final class DetachScreenTest extends TestCase {
   }
 
   public function testSessionThatEndsDetachedLeavesTheShellScreenAlone(): void {
-    $controller = $this->controller($this->panel(new Field('courier', 'Courier')))->live(static function (int $count): void {
+    $controller = $this->controller($this->panel(new Field('courier', 'Courier')))->live(static function (int $count): never {
       throw new \RuntimeException('The scale jammed.');
     });
     $terminal = new BufferedTerminal([$this->suspendKey(), new Background(), new Tick()], 14, 60);
