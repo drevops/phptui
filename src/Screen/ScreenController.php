@@ -454,17 +454,22 @@ class ScreenController {
       while (!$this->done && !$this->interrupted) {
         $shown = $this->paint($shown);
 
-        if ($tick instanceof \Closure && !$terminal->wait($this->interval * 1000)) {
-          // A resized terminal reflows what it shows, so the next frame is
-          // drawn even if it matches the last one.
+        if ($tick instanceof \Closure) {
+          $ready = $terminal->wait($this->interval * 1000);
+
+          // Checked whether or not a key is waiting, so a resize is laid out
+          // before the next key is handled. A resized terminal reflows what it
+          // shows, so the next frame is drawn even if it matches the last one.
           if ($terminal->remeasure()) {
             $this->resize($terminal);
             $shown = NULL;
           }
 
-          $tick(++$ticks);
+          if (!$ready) {
+            $tick(++$ticks);
 
-          continue;
+            continue;
+          }
         }
 
         $shown = NULL;

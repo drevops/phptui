@@ -269,14 +269,16 @@ class Terminal {
       return;
     }
 
+    // The size may have changed before the handler was installed, so the
+    // first remeasure() always probes.
+    $this->signalled = TRUE;
+    $this->watching = TRUE;
+
     $this->asyncSignals = pcntl_async_signals(TRUE);
     $this->resizeHandler = pcntl_signal_get_handler(SIGWINCH);
     pcntl_signal(SIGWINCH, function (): void {
       $this->signalled = TRUE;
     });
-
-    $this->watching = TRUE;
-    $this->signalled = FALSE;
   }
 
   /**

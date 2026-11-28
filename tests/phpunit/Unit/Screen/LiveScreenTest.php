@@ -13,8 +13,10 @@ use DrevOps\PhpTui\InterruptException;
 use DrevOps\PhpTui\Screen\Layout\PanelLayout;
 use DrevOps\PhpTui\Screen\ScreenController;
 use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Terminal\Terminal;
 use DrevOps\PhpTui\Terminal\TerminalControl;
 use DrevOps\PhpTui\Testing\BufferedTerminal;
+use DrevOps\PhpTui\Testing\KeyEncoder;
 use DrevOps\PhpTui\Testing\Resize;
 use DrevOps\PhpTui\Testing\ScreenTester;
 use DrevOps\PhpTui\Testing\Tick;
@@ -169,6 +171,108 @@ final class LiveScreenTest extends TestCase {
     $controller->run(new BufferedTerminal([new Resize(40, 14), new Tick(), new Resize(50, 14)], 14, 60));
 
     $this->assertSame([40, 50], $widths);
+  }
+
+  public function testResizeIsLaidOutWhenKeyIsAlreadyWaiting(): void {
+    $ticks = [];
+    $widths = [];
+    $courier = new Field('courier', 'Courier');
+    $weight = new Field('weight', 'Basket weight');
+    $controller = (new ScreenController($this->panel($courier, $weight), new DefaultTheme(60, ['color' => FALSE])))
+      ->live(static function (int $count) use (&$ticks): void {
+        $ticks[] = $count;
+      })
+      ->relayout(static function (int $columns) use (&$widths): DefaultTheme {
+        $widths[] = $columns;
+
+        return new DefaultTheme($columns, ['color' => FALSE]);
+      });
+
+    // A key is ready on every wait, and the size changed before the first.
+    $terminal = new class(KeyEncoder::encode(Key::named(KeyName::Down))) extends Terminal {
+
+      /**
+       * Whether the size changed since remeasure() last ran.
+       */
+      protected bool $resized = TRUE;
+
+      /**
+       * Construct a terminal holding one key.
+       *
+       * @param string $key
+       *   The bytes of the key it delivers.
+       */
+      public function __construct(protected string $key) {
+        parent::__construct(fopen('php://memory', 'r+'), fopen('php://memory', 'r+'));
+      }
+
+      /**
+       * {@inheritdoc}
+       */
+      #[\Override]
+      public function setup(?string $background = NULL): void {
+      }
+
+      /**
+       * {@inheritdoc}
+       */
+      #[\Override]
+      public function restore(): void {
+      }
+
+      /**
+       * {@inheritdoc}
+       */
+      #[\Override]
+      public function wait(int $microseconds): bool {
+        return TRUE;
+      }
+
+      /**
+       * {@inheritdoc}
+       */
+      #[\Override]
+      public function read(int $bytes = 32): string {
+        $key = $this->key;
+        $this->key = '';
+
+        return $key;
+      }
+
+      /**
+       * {@inheritdoc}
+       */
+      #[\Override]
+      public function remeasure(): bool {
+        $resized = $this->resized;
+        $this->resized = FALSE;
+
+        return $resized;
+      }
+
+      /**
+       * {@inheritdoc}
+       */
+      #[\Override]
+      public function rows(): int {
+        return 14;
+      }
+
+      /**
+       * {@inheritdoc}
+       */
+      #[\Override]
+      public function columns(): int {
+        return 40;
+      }
+
+    };
+
+    $controller->run($terminal);
+
+    $this->assertSame([40], $widths);
+    $this->assertSame([], $ticks);
+    $this->assertTrue($weight->isFocused());
   }
 
   public function testIntervalBelowOneMillisecondIsRefused(): void {

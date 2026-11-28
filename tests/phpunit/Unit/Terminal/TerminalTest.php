@@ -253,6 +253,11 @@ final class TerminalTest extends TestCase {
     $this->assertTrue($terminal->isWatching());
     $this->assertTrue(pcntl_async_signals());
 
+    // The first remeasure probes, catching a resize from before the watch.
+    $terminal->answer("26 90\n");
+    $this->assertTrue($terminal->remeasure());
+    $this->assertSame(90, $terminal->columns());
+
     $terminal->answer("30 100\n");
     $this->assertFalse($terminal->remeasure());
 

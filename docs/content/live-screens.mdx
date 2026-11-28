@@ -49,7 +49,7 @@ When the terminal changes size, the next frame is drawn at the new size. The fra
 When the screen redraws depends on the `pcntl` extension:
 
 - With `pcntl`, the screen listens for `SIGWINCH`. A resize cuts the wait short, so the screen redraws immediately and the tick runs early.
-- Without `pcntl`, the screen re-reads the terminal size on every tick.
+- Without `pcntl`, the screen re-reads the terminal size each time it waits for a key.
 
 On Windows, the wait for a key can't time out. A live screen there redraws on each key press, and the tick never runs.
 
