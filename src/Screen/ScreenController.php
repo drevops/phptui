@@ -74,6 +74,11 @@ use DrevOps\PhpTui\Translation\Translator;
  * the rules that write a value re-apply - so a dependent row appears the moment
  * its condition holds, exactly as it does with no screen at all.
  *
+ * A live session, set up with live(), waits for a key for a fixed interval and
+ * runs a tick callback each time the wait times out. The screen is redrawn
+ * after the tick when the frame changed, and at the new size when the terminal
+ * was resized.
+ *
  * How the session ends is the whole of what a caller sees: finishing it hands
  * back the answers, abandoning it raises
  * {@see \DrevOps\PhpTui\CancelException}, and the interrupt key raises
@@ -103,6 +108,11 @@ class ScreenController {
    * The share of the screen's width a dialog leaves clear on each side.
    */
   protected const int DIALOG_INSET = 8;
+
+  /**
+   * The milliseconds a live session waits for a key before it ticks.
+   */
+  public const int INTERVAL = 250;
 
   /**
    * The screen the panel is drawn on.
@@ -226,6 +236,29 @@ class ScreenController {
   protected bool $interrupted = FALSE;
 
   /**
+   * What runs each time a live session's wait for a key times out.
+   *
+   * NULL when the session redraws only on a key.
+   *
+   * @var (\Closure(int): void)|null
+   */
+  protected ?\Closure $tick = NULL;
+
+  /**
+   * The milliseconds a live session waits for a key before it ticks.
+   */
+  protected int $interval = self::INTERVAL;
+
+  /**
+   * What builds the theme again for a new terminal width.
+   *
+   * NULL keeps the theme the session started with.
+   *
+   * @var (\Closure(int): \DrevOps\PhpTui\Theme\ThemeInterface)|null
+   */
+  protected ?\Closure $relayout = NULL;
+
+  /**
    * Construct a controller.
    *
    * @param \DrevOps\PhpTui\Block\Panel $panel
@@ -321,6 +354,69 @@ class ScreenController {
   }
 
   /**
+   * Make the session live: redraw on a timer as well as on a key.
+   *
+   * The session waits for a key for the interval, and runs the tick each time
+   * the wait times out or a resize interrupts it.
+   *
+   * @param \Closure(int): void $tick
+   *   What runs on each timeout, given the number of ticks so far, counted
+   *   from 1. It changes the blocks it holds, and the screen redraws after it.
+   * @param int $interval
+   *   The milliseconds to wait for a key before ticking, at least 1.
+   *
+   * @return $this
+   *   The controller.
+   *
+   * @throws \InvalidArgumentException
+   *   When the interval is below 1 millisecond.
+   */
+  public function live(\Closure $tick, int $interval = self::INTERVAL): static {
+    $this->tick = $tick;
+    $this->interval = self::validInterval($interval);
+
+    return $this;
+  }
+
+  /**
+   * Check a live session's tick interval.
+   *
+   * @param int $interval
+   *   The milliseconds to wait for a key before ticking.
+   *
+   * @return int
+   *   The interval.
+   *
+   * @throws \InvalidArgumentException
+   *   When the interval is below 1 millisecond.
+   */
+  public static function validInterval(int $interval): int {
+    if ($interval < 1) {
+      throw new \InvalidArgumentException('The tick interval must be at least 1 millisecond.');
+    }
+
+    return $interval;
+  }
+
+  /**
+   * Set what builds the theme again when the terminal changes width.
+   *
+   * Without it, a resized live session re-reads the height and places the
+   * frame again, but keeps the width the theme was built for.
+   *
+   * @param \Closure(int): \DrevOps\PhpTui\Theme\ThemeInterface $theme
+   *   What builds the theme for a terminal of the given columns.
+   *
+   * @return $this
+   *   The controller.
+   */
+  public function relayout(\Closure $theme): static {
+    $this->relayout = $theme;
+
+    return $this;
+  }
+
+  /**
    * Run the session against a terminal until the form ends.
    *
    * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
@@ -339,6 +435,12 @@ class ScreenController {
     $this->terminal = $terminal;
     $terminal->setup($this->wash());
 
+    $tick = $this->tick;
+
+    if ($tick instanceof \Closure) {
+      $terminal->watchResize();
+    }
+
     try {
       $this->welcome($terminal, $parser);
 
@@ -346,8 +448,26 @@ class ScreenController {
       // key, so what it owes is fetched before the first frame is read.
       $this->fetch();
 
+      $ticks = 0;
+      $shown = NULL;
+
       while (!$this->done && !$this->interrupted) {
-        $this->paint();
+        $shown = $this->paint($shown);
+
+        if ($tick instanceof \Closure && !$terminal->wait($this->interval * 1000)) {
+          // A resized terminal reflows what it shows, so the next frame is
+          // drawn even if it matches the last one.
+          if ($terminal->remeasure()) {
+            $this->resize($terminal);
+            $shown = NULL;
+          }
+
+          $tick(++$ticks);
+
+          continue;
+        }
+
+        $shown = NULL;
         $bytes = $terminal->read();
 
         // An empty read means the input is exhausted - the scripted keys ran
@@ -356,34 +476,11 @@ class ScreenController {
           break;
         }
 
-        // A terminal that cannot hold the frame is showing a notice instead of
-        // the form, so every key but the one that leaves is dropped rather than
-        // changing something nobody can see.
-        $guarded = $this->guard($terminal) !== '';
-
-        foreach ($parser->parse($bytes) as $key) {
-          // The interrupt aborts from anywhere, including from inside an open
-          // field, so it is answered above the routing and drops straight out
-          // to the teardown with the answers as they stand.
-          if ($key->is(KeyName::Interrupt)) {
-            $this->interrupted = TRUE;
-
-            break 2;
-          }
-
-          if ($guarded && !$this->quits($key)) {
-            continue;
-          }
-
-          $this->handle($key);
-        }
-
-        // Asked once the whole read is spent rather than once per key, so a
-        // burst of typing - or a paste - costs the source one call.
-        $this->query();
+        $this->consume($terminal, $parser, $bytes);
       }
     }
     finally {
+      $terminal->unwatchResize();
       $terminal->restore();
 
       // An abort always leaves a clean screen, even where a consumer opted out
@@ -402,6 +499,61 @@ class ScreenController {
     }
 
     return $this->answers();
+  }
+
+  /**
+   * Send every key in one read where it belongs.
+   *
+   * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
+   *   The terminal.
+   * @param \DrevOps\PhpTui\Input\KeyParser $parser
+   *   What reads keys out of the bytes the terminal delivers.
+   * @param string $bytes
+   *   The bytes the read delivered.
+   */
+  protected function consume(Terminal $terminal, KeyParser $parser, string $bytes): void {
+    // A terminal that cannot hold the frame is showing a notice instead of the
+    // form, so every key but the one that leaves is dropped rather than
+    // changing something nobody can see.
+    $guarded = $this->guard($terminal) !== '';
+
+    foreach ($parser->parse($bytes) as $key) {
+      // The interrupt aborts from anywhere, including from inside an open
+      // field, so it is answered above the routing and drops straight out to
+      // the teardown with the answers as they stand.
+      if ($key->is(KeyName::Interrupt)) {
+        $this->interrupted = TRUE;
+
+        return;
+      }
+
+      if ($guarded && !$this->quits($key)) {
+        continue;
+      }
+
+      $this->handle($key);
+    }
+
+    // Asked once the whole read is spent rather than once per key, so a burst
+    // of typing - or a paste - costs the source one call.
+    $this->query();
+  }
+
+  /**
+   * Lay the frame out again for a terminal that changed size.
+   *
+   * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
+   *   The terminal, already reporting its new size.
+   */
+  protected function resize(Terminal $terminal): void {
+    if (!$this->relayout instanceof \Closure) {
+      return;
+    }
+
+    $this->theme = ($this->relayout)($terminal->columns());
+    $this->renderer = new ScreenRenderer($this->theme, $this->border);
+    // The rows were measured against the old width.
+    $this->minimumWidth = NULL;
   }
 
   /**
@@ -637,19 +789,33 @@ class ScreenController {
 
   /**
    * Draw the current frame.
+   *
+   * @param string|null $shown
+   *   The frame already on screen, which is not drawn again; NULL draws the
+   *   frame whatever it holds.
+   *
+   * @return string|null
+   *   The frame now on screen, or NULL when there is no terminal to draw on.
    */
-  protected function paint(): void {
+  protected function paint(?string $shown = NULL): ?string {
     $terminal = $this->terminal;
 
     // One key at a time needs no terminal, so until a session is running there
     // is nowhere to draw and nothing is drawn.
     if (!$terminal instanceof Terminal) {
-      return;
+      return NULL;
     }
 
     $notice = $this->guard($terminal);
+    $frame = $notice === '' ? $this->chrome($this->frame($terminal), $terminal) : $notice;
 
-    $terminal->render($notice === '' ? $this->chrome($this->frame($terminal), $terminal) : $notice);
+    // Redrawing an unchanged frame on every tick would make an idle screen
+    // flicker.
+    if ($frame !== $shown) {
+      $terminal->render($frame);
+    }
+
+    return $frame;
   }
 
   /**

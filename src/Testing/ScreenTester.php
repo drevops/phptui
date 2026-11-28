@@ -129,6 +129,20 @@ final class ScreenTester {
   protected ?ExternalEditor $externalEditor = NULL;
 
   /**
+   * What runs each time the session's wait for a key times out.
+   *
+   * NULL when the session is not live.
+   *
+   * @var (\Closure(int): void)|null
+   */
+  protected ?\Closure $tick = NULL;
+
+  /**
+   * The milliseconds a live session waits for a key before it ticks.
+   */
+  protected int $interval = ScreenController::INTERVAL;
+
+  /**
    * The reported terminal height.
    */
   protected int $rows = 24;
@@ -352,6 +366,31 @@ final class ScreenTester {
   }
 
   /**
+   * Make the session live: run a tick at each scripted timeout.
+   *
+   * A {@see \DrevOps\PhpTui\Testing\Tick} in the script is where a wait for a
+   * key times out, and a {@see \DrevOps\PhpTui\Testing\Resize} is where the
+   * terminal changes size.
+   *
+   * @param \Closure(int): void $tick
+   *   What runs on each timeout, given the number of ticks so far.
+   * @param int $interval
+   *   The milliseconds a real terminal would wait, at least 1.
+   *
+   * @return $this
+   *   The tester.
+   *
+   * @throws \InvalidArgumentException
+   *   When the interval is below 1 millisecond.
+   */
+  public function live(\Closure $tick, int $interval = ScreenController::INTERVAL): self {
+    $this->tick = $tick;
+    $this->interval = ScreenController::validInterval($interval);
+
+    return $this;
+  }
+
+  /**
    * Set the reported terminal height.
    *
    * @param int $rows
@@ -391,9 +430,10 @@ final class ScreenTester {
   /**
    * Run the session, feeding it the given scripted keystrokes.
    *
-   * @param string|\DrevOps\PhpTui\Input\Key ...$items
+   * @param string|\DrevOps\PhpTui\Input\Key|\DrevOps\PhpTui\Testing\Tick|\DrevOps\PhpTui\Testing\Resize ...$items
    *   The scripted input: each item is either raw keystroke bytes (a string,
-   *   e.g. "\n" or "Ada") or a Key, encoded to its canonical bytes.
+   *   e.g. "\n" or "Ada"), a Key, encoded to its canonical bytes, or a Tick or
+   *   Resize, passed to the terminal as they are.
    *
    * @return \DrevOps\PhpTui\Answers\Answers
    *   The collected answers.
@@ -403,7 +443,7 @@ final class ScreenTester {
    * @throws \DrevOps\PhpTui\CancelException
    *   When the scripted keys abandoned the form.
    */
-  public function run(string|Key ...$items): Answers {
+  public function run(string|Key|Tick|Resize ...$items): Answers {
     $keystrokes = [];
 
     foreach ($items as $item) {
@@ -518,12 +558,12 @@ final class ScreenTester {
   protected function controller(): ScreenController {
     $options = $this->themeOptions();
 
-    return new ScreenController(
+    $controller = new ScreenController(
       $this->panel,
       // The same width resolution the facade applies, against the scripted
       // terminal's columns: the theme is what every width is read off, so it
       // is the one place a terminal's size is turned into a frame's.
-      $this->theme ?? $this->buildTheme($options),
+      $this->theme ?? $this->buildTheme($options, $this->cols),
       $this->supplied,
       $this->keys,
       $this->collector,
@@ -536,6 +576,15 @@ final class ScreenTester {
       $this->version,
       $this->externalEditor,
     );
+
+    // A given theme was built for a width of its own, so a resize keeps it.
+    $controller->relayout(fn(int $columns): ThemeInterface => $this->theme ?? $this->buildTheme($options, $columns));
+
+    if ($this->tick instanceof \Closure) {
+      $controller->live($this->tick, $this->interval);
+    }
+
+    return $controller;
   }
 
   /**
@@ -543,12 +592,14 @@ final class ScreenTester {
    *
    * @param array<string,mixed> $options
    *   The resolved display options.
+   * @param int $columns
+   *   The terminal's columns.
    *
    * @return \DrevOps\PhpTui\Theme\ThemeInterface
-   *   The theme, laid out to the scripted terminal's frame width.
+   *   The theme, laid out to the frame width for that terminal.
    */
-  protected function buildTheme(array $options): ThemeInterface {
-    $width = Tui::frameWidth($options, $this->cols);
+  protected function buildTheme(array $options, int $columns): ThemeInterface {
+    $width = Tui::frameWidth($options, $columns);
 
     if ($this->themeName === '') {
       return new DefaultTheme($width, $options);

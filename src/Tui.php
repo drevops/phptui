@@ -136,6 +136,20 @@ final class Tui {
   protected bool $clearOnExit = TRUE;
 
   /**
+   * What runs each time the interactive TUI's wait for a key times out.
+   *
+   * NULL when the TUI redraws only on a key.
+   *
+   * @var (\Closure(int): void)|null
+   */
+  protected ?\Closure $tick = NULL;
+
+  /**
+   * The milliseconds the interactive TUI waits for a key before it ticks.
+   */
+  protected int $interval = ScreenController::INTERVAL;
+
+  /**
    * The translator localizing chrome and questions (NULL leaves English).
    */
   protected ?Translator $translator = NULL;
@@ -456,6 +470,40 @@ final class Tui {
   }
 
   /**
+   * Make the interactive TUI live: redraw on a timer as well as on a key.
+   *
+   * The TUI waits for a key for the interval and runs the tick each time the
+   * wait times out. The tick changes the blocks it holds - a markup placed with
+   * place() or declared on a panel - and the screen redraws when the frame
+   * changed. A resized terminal redraws at its new size. Headless collection
+   * is unaffected.
+   *
+   * @code
+   * $clock = new Markup('clock', 'Waiting for the first crate');
+   * $tui->place('header', $clock)
+   *   ->live(fn(int $count) => $clock->body(sprintf('%d crates weighed', $count)), 500);
+   * @endcode
+   *
+   * @param \Closure(int): void $tick
+   *   What runs on each timeout, given the number of ticks so far, counted
+   *   from 1.
+   * @param int $interval
+   *   The milliseconds to wait for a key before ticking, at least 1.
+   *
+   * @return $this
+   *   The facade.
+   *
+   * @throws \InvalidArgumentException
+   *   When the interval is below 1 millisecond.
+   */
+  public function live(\Closure $tick, int $interval = ScreenController::INTERVAL): self {
+    $this->tick = $tick;
+    $this->interval = ScreenController::validInterval($interval);
+
+    return $this;
+  }
+
+  /**
    * Set the translator localizing chrome and questions.
    *
    * The translator carries the active language and catalog sources and is
@@ -709,7 +757,7 @@ final class Tui {
 
     $drawn = $this->buildTheme($theme, $width, $options);
 
-    return new ScreenController(
+    $controller = new ScreenController(
       $this->root(),
       $drawn,
       [],
@@ -728,13 +776,22 @@ final class Tui {
       placements: $this->placements,
       flows: $this->flows,
     );
+
+    $controller->relayout(fn(int $columns): ThemeInterface => $this->buildTheme($theme, self::frameWidth($options, $columns), $options));
+
+    if ($this->tick instanceof \Closure) {
+      $controller->live($this->tick, $this->interval);
+    }
+
+    return $controller;
   }
 
   /**
    * The frame width the theme lays out to for the resolved options.
    *
    * A fullscreen frame lays out to the terminal's width (the theme caps it
-   * with "max_width"); the width is fixed for the session, like the theme.
+   * with "max_width"); the width is fixed for the session, like the theme,
+   * unless a live session's terminal is resized.
    * Anything else lays out to the default width, clamped to the terminal:
    * rows and right-aligned badges sized past the terminal hard-wrap onto
    * the next line and corrupt the whole layout below them.

@@ -64,6 +64,23 @@ class Terminal {
   protected ?array $size = NULL;
 
   /**
+   * Whether a SIGWINCH handler is installed.
+   *
+   * While it is, the size is re-read only after the signal arrives.
+   */
+  protected bool $watching = FALSE;
+
+  /**
+   * Whether a SIGWINCH arrived since the size was last re-read.
+   */
+  protected bool $signalled = FALSE;
+
+  /**
+   * Whether asynchronous signals were on before watchResize() turned them on.
+   */
+  protected bool $asyncSignals = FALSE;
+
+  /**
    * Construct a terminal.
    *
    * @param mixed $output
@@ -192,6 +209,114 @@ class Terminal {
     $data = fread($this->input, max(1, $bytes));
 
     return $data === FALSE ? '' : $data;
+  }
+
+  /**
+   * Wait up to a timeout for input to arrive.
+   *
+   * Polls with stream_select() as queryBackground() does. A signal such as
+   * SIGWINCH interrupts the wait and reports no input. On Windows, and for a
+   * stream that cannot be selected, input is reported as ready, so the caller
+   * falls back to a blocking read instead of polling in a loop.
+   *
+   * @param int $microseconds
+   *   The longest time to wait, in microseconds.
+   *
+   * @return bool
+   *   TRUE when input is ready to read, FALSE when the wait timed out or was
+   *   interrupted.
+   */
+  public function wait(int $microseconds): bool {
+    if ($this->isWindows() || !$this->isSelectable()) {
+      return TRUE;
+    }
+
+    $microseconds = max(0, $microseconds);
+    $read = [$this->input];
+    $write = [];
+    $except = [];
+
+    // An interrupted select raises a warning, which would be written over the
+    // frame.
+    $ready = @stream_select($read, $write, $except, intdiv($microseconds, 1000000), $microseconds % 1000000);
+
+    return is_int($ready) && $ready > 0;
+  }
+
+  /**
+   * Whether the input stream can be waited on with stream_select().
+   *
+   * @return bool
+   *   FALSE for the in-memory streams, which have no descriptor to select.
+   */
+  protected function isSelectable(): bool {
+    return !in_array(stream_get_meta_data($this->input)['stream_type'], ['MEMORY', 'TEMP'], TRUE);
+  }
+
+  /**
+   * Start listening for SIGWINCH.
+   *
+   * While listening, remeasure() re-reads the size only after the terminal was
+   * resized. Does nothing where pcntl signals are unavailable; remeasure() then
+   * re-reads the size on every call.
+   */
+  public function watchResize(): void {
+    if ($this->watching || !$this->isSignalAvailable()) {
+      return;
+    }
+
+    $this->asyncSignals = pcntl_async_signals(TRUE);
+    pcntl_signal(SIGWINCH, function (): void {
+      $this->signalled = TRUE;
+    });
+
+    $this->watching = TRUE;
+    $this->signalled = FALSE;
+  }
+
+  /**
+   * Stop listening for SIGWINCH and restore the previous signal handling.
+   */
+  public function unwatchResize(): void {
+    if (!$this->watching) {
+      return;
+    }
+
+    pcntl_signal(SIGWINCH, SIG_DFL);
+    pcntl_async_signals($this->asyncSignals);
+
+    $this->watching = FALSE;
+  }
+
+  /**
+   * Whether SIGWINCH can be listened for on this platform.
+   *
+   * @return bool
+   *   TRUE when the pcntl extension provides signal handling and SIGWINCH.
+   */
+  protected function isSignalAvailable(): bool {
+    return function_exists('pcntl_signal') && function_exists('pcntl_async_signals') && defined('SIGWINCH');
+  }
+
+  /**
+   * Re-read the terminal size.
+   *
+   * While watchResize() is listening, the size is re-probed only after a
+   * SIGWINCH; otherwise it is re-probed on every call.
+   *
+   * @return bool
+   *   TRUE when the columns or the rows changed.
+   */
+  public function remeasure(): bool {
+    if ($this->watching && !$this->signalled) {
+      return FALSE;
+    }
+
+    $this->signalled = FALSE;
+    $before = [$this->columns(), $this->rows()];
+    $this->size = NULL;
+
+    return [$this->columns(), $this->rows()] !== $before;
   }
 
   /**

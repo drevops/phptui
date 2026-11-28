@@ -18,7 +18,9 @@ use DrevOps\PhpTui\Screen\Collector;
 use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
 use DrevOps\PhpTui\Screen\Layout\PanelLayout;
 use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Testing\Resize;
 use DrevOps\PhpTui\Testing\ScreenTester;
+use DrevOps\PhpTui\Testing\Tick;
 use DrevOps\PhpTui\Theme\Border;
 use DrevOps\PhpTui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -179,6 +181,44 @@ final class ScreenTesterTest extends TestCase {
 
     $this->assertCount(5, $lines);
     $this->assertSame(30, Ansi::width($lines[0]));
+  }
+
+  public function testLiveSessionTicksAtEachScriptedTimeout(): void {
+    $counts = [];
+    $tester = $this->tester($this->panel(new Field('courier', 'Courier')))->live(static function (int $count) use (&$counts): void {
+      $counts[] = $count;
+    }, 100);
+
+    $tester->run(new Tick(), new Tick());
+
+    $this->assertSame([1, 2], $counts);
+  }
+
+  public function testNamedThemeIsRebuiltForTheResizedWidth(): void {
+    $tester = $this->tester($this->panel(new Field('courier', 'Courier')))->theme('default')->live(static function (int $count): void {
+    });
+
+    $tester->run(new Resize(40, 10));
+
+    $this->assertSame(60, Ansi::width(explode("\n", $tester->frame(0))[0]));
+    $this->assertSame(40, Ansi::width(explode("\n", $tester->frame(1))[0]));
+  }
+
+  public function testGivenThemeKeepsItsWidthAcrossResize(): void {
+    $tester = $this->tester($this->panel(new Field('courier', 'Courier')))->theme(new DefaultTheme(60, ['color' => FALSE]))->live(static function (int $count): void {
+    });
+
+    $tester->run(new Resize(40, 10));
+
+    $this->assertSame(Ansi::width(explode("\n", $tester->frame(0))[0]), Ansi::width(explode("\n", $tester->frame(1))[0]));
+  }
+
+  public function testLiveIntervalBelowOneMillisecondIsRefused(): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('The tick interval must be at least 1 millisecond.');
+
+    $this->tester($this->panel(new Field('courier', 'Courier')))->live(static function (int $count): void {
+    }, 0);
   }
 
   public function testWidthNoFrameCouldBeLaidOutToIsRefused(): void {
