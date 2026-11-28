@@ -57,8 +57,7 @@ final class BufferedTerminal extends Terminal {
   protected bool $resized = FALSE;
 
   /**
-   * Whether the process holds the terminal rather than running in the
-   * background.
+   * Whether the process holds the terminal.
    */
   protected bool $foreground = TRUE;
 

@@ -98,8 +98,7 @@ class Terminal {
   protected ?bool $selectable = NULL;
 
   /**
-   * Whether suspend() stopped the process and reclaim() has not yet found it
-   * back in the foreground.
+   * Whether the process is suspended and not yet reclaimed.
    */
   protected bool $suspended = FALSE;
 

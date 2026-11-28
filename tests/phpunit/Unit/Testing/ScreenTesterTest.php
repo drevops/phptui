@@ -218,7 +218,7 @@ final class ScreenTesterTest extends TestCase {
     $this->assertSame([1, 2], $counts);
   }
 
-  public function testLiveSessionTicksInTheBackgroundAfterASuspend(): void {
+  public function testLiveSessionTicksInTheBackgroundAfterSuspend(): void {
     $counts = [];
     $tester = $this->tester($this->panel(new Field('courier', 'Courier')))->live(static function (int $count) use (&$counts): void {
       $counts[] = $count;

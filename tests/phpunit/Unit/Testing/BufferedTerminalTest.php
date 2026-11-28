@@ -184,7 +184,7 @@ final class BufferedTerminalTest extends TestCase {
     $this->assertFalse($terminal->isSuspendable());
   }
 
-  public function testReadAndWaitSkipABackgroundOutsideASuspend(): void {
+  public function testReadAndWaitSkipBackgroundOutsideSuspend(): void {
     $terminal = new BufferedTerminal([new Background(), 'x']);
 
     $this->assertTrue($terminal->wait(1000)->input);

@@ -461,7 +461,7 @@ final class TerminalTest extends TestCase {
 
   #[RequiresFunction('pcntl_signal')]
   #[RequiresFunction('posix_kill')]
-  public function testBackgroundJobBroughtToTheForegroundIsFoundWithoutAContinue(): void {
+  public function testBackgroundJobBroughtToTheForegroundIsFoundWithoutContinue(): void {
     $async = pcntl_async_signals();
     $original = pcntl_signal_get_handler(SIGCONT);
     $terminal = new ProbeTerminal("S\n", tty: TRUE);
