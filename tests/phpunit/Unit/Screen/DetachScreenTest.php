@@ -162,7 +162,7 @@ final class DetachScreenTest extends TestCase {
       $this->assertSame('The scale jammed.', $exception->getMessage());
     }
 
-    $this->assertStringEndsNotWith(TerminalControl::clear(), $terminal->output());
+    $this->assertFalse(str_ends_with($terminal->output(), TerminalControl::clear()));
 
     // The next session starts attached, however the last one ended.
     $next = new BufferedTerminal([], 14, 60);
@@ -171,17 +171,16 @@ final class DetachScreenTest extends TestCase {
   }
 
   public function testQueryTypedBeforeTheSuspendKeyWaitsForTheReattach(): void {
-    $terminal = NULL;
+    $terminal = new BufferedTerminal(["\r", "\r", 'pot' . $this->suspendKey(), new Background(), new Tick(), KeyEncoder::encode(Key::named(KeyName::Down))], 16, 60);
     $attached = [];
-    $form = Form::create('Order')->panel('New order', 'order', static function (PanelBuilder $p) use (&$terminal, &$attached): void {
-      $p->search('Vegetable', 'veg')->optionsFrom(static function (string $query) use (&$terminal, &$attached): array {
-        $attached[$query] = $terminal instanceof BufferedTerminal && $terminal->reclaim();
+    $form = Form::create('Order')->panel('New order', 'order', static function (PanelBuilder $p) use ($terminal, &$attached): void {
+      $p->search('Vegetable', 'veg')->optionsFrom(static function (string $query) use ($terminal, &$attached): array {
+        $attached[$query] = $terminal->reclaim();
 
         return ['potato' => 'Potato'];
       });
     });
     $controller = $this->controller($form->root());
-    $terminal = new BufferedTerminal(["\r", "\r", 'pot' . $this->suspendKey(), new Background(), new Tick(), KeyEncoder::encode(Key::named(KeyName::Down))], 16, 60);
 
     $controller->run($terminal);
 
@@ -202,7 +201,7 @@ final class DetachScreenTest extends TestCase {
       $this->assertSame('The bench would not fit.', $exception->getMessage());
     }
 
-    $this->assertStringEndsWith(TerminalControl::clear(), $terminal->output());
+    $this->assertTrue(str_ends_with($terminal->output(), TerminalControl::clear()));
   }
 
   public function testReattachKeepsTheBackgroundWash(): void {
@@ -289,7 +288,7 @@ final class DetachScreenTest extends TestCase {
     }
     finally {
       // Attached again, so the session's own teardown clears the screen.
-      $this->assertStringEndsWith(TerminalControl::clear(), $terminal->output());
+      $this->assertTrue(str_ends_with($terminal->output(), TerminalControl::clear()));
     }
   }
 
