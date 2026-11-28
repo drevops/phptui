@@ -241,40 +241,47 @@ final class TerminalTest extends TestCase {
     $this->putEnv('LINES', NULL);
 
     $async = pcntl_async_signals();
+    $original = pcntl_signal_get_handler(SIGWINCH);
     $own = static function (): void {
     };
     pcntl_signal(SIGWINCH, $own);
     $terminal = new ProbeTerminal("24 80\n");
-    $this->assertSame(80, $terminal->columns());
 
-    $terminal->watchResize();
-    // A second call keeps the handler already installed.
-    $terminal->watchResize();
-    $this->assertTrue($terminal->isWatching());
-    $this->assertTrue(pcntl_async_signals());
+    try {
+      $this->assertSame(80, $terminal->columns());
 
-    // The first remeasure probes, catching a resize from before the watch.
-    $terminal->answer("26 90\n");
-    $this->assertTrue($terminal->remeasure());
-    $this->assertSame(90, $terminal->columns());
+      $terminal->watchResize();
+      // A second call keeps the handler already installed.
+      $terminal->watchResize();
+      $this->assertTrue($terminal->isWatching());
+      $this->assertTrue(pcntl_async_signals());
 
-    $terminal->answer("30 100\n");
-    $this->assertFalse($terminal->remeasure());
+      // The first remeasure probes, catching a resize from before the watch.
+      $terminal->answer("26 90\n");
+      $this->assertTrue($terminal->remeasure());
+      $this->assertSame(90, $terminal->columns());
 
-    posix_kill(posix_getpid(), SIGWINCH);
-    pcntl_signal_dispatch();
+      $terminal->answer("30 100\n");
+      $this->assertFalse($terminal->remeasure());
 
-    $this->assertTrue($terminal->remeasure());
-    $this->assertSame(100, $terminal->columns());
-    $this->assertFalse($terminal->remeasure());
+      posix_kill(posix_getpid(), SIGWINCH);
+      pcntl_signal_dispatch();
 
-    $terminal->unwatchResize();
-    $this->assertFalse($terminal->isWatching());
-    $this->assertSame($async, pcntl_async_signals());
-    // The handler installed before the watch is the one left in place.
-    $this->assertSame($own, pcntl_signal_get_handler(SIGWINCH));
+      $this->assertTrue($terminal->remeasure());
+      $this->assertSame(100, $terminal->columns());
+      $this->assertFalse($terminal->remeasure());
 
-    pcntl_signal(SIGWINCH, SIG_DFL);
+      $terminal->unwatchResize();
+      $this->assertFalse($terminal->isWatching());
+      $this->assertSame($async, pcntl_async_signals());
+      // The handler installed before the watch is the one left in place.
+      $this->assertSame($own, pcntl_signal_get_handler(SIGWINCH));
+    }
+    finally {
+      $terminal->unwatchResize();
+      pcntl_signal(SIGWINCH, $original);
+      pcntl_async_signals($async);
+    }
   }
 
   public function testQueryBackgroundReturnsNullOffTty(): void {

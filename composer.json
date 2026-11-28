@@ -34,7 +34,7 @@
     },
     "suggest": {
         "ext-mbstring": "Provides full Unicode case folding and native multibyte string handling; PCRE-based fallbacks with ASCII-only case folding are used when it is absent.",
-        "ext-pcntl": "Redraws a live screen as soon as the terminal is resized; without it, the size is re-read each time the screen waits for a key."
+        "ext-pcntl": "Redraws a live screen as soon as a resize interrupts its wait for a key; without it, the size is re-read each time the screen waits for a key."
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
