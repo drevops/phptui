@@ -152,6 +152,6 @@ Bindings are validated the moment they're set, so a bad key map is caught at con
 - a key bound to two different actions in the same scope is a conflict;
 - a command key already bound in the navigation scope, to an action or to another command, is a conflict;
 - a printable character bound in the base scope, or in a scope whose field consumes typed input (text, template, number, rating, password, textarea, search, suggest, toggle and file picker), would be un-typeable and is rejected - control characters like <kbd>Ctrl-E</kbd> are exempt, since they're command keys, never typed content;
-- an unknown preset name, a character binding that isn't exactly 1 character, or a command with no label or no keys, is rejected.
+- an unknown preset name, a character binding that isn't exactly 1 character, a command with no label or no keys, or a command bound to <kbd>Ctrl-C</kbd>, is rejected.
 
 See [`playground/10-key-bindings-*`](https://github.com/drevops/phptui/tree/main/playground) for the default map, the vim preset, a custom override and your own commands side by side.
