@@ -480,7 +480,7 @@ class ScreenController {
 
       while (!$this->done && !$this->interrupted) {
         $shown = $this->paint($shown);
-        $streams = $this->streams->streams();
+        $streams = $this->streams->open();
 
         if ($tick instanceof \Closure || $streams !== []) {
           // Idempotent, so a stream watched after the session started is

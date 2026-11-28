@@ -92,7 +92,7 @@ final class Streams {
    * @return array<int, resource>
    *   The open streams, keyed by resource id.
    */
-  public function streams(): array {
+  public function open(): array {
     foreach ($this->streams as $id => $stream) {
       if (!is_resource($stream)) {
         unset($this->streams[$id], $this->callbacks[$id]);

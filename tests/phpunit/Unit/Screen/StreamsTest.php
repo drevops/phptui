@@ -26,11 +26,11 @@ final class StreamsTest extends TestCase {
 
     $streams = (new Streams())->watch($pears, $this->ignore(...))->watch($plums, $this->ignore(...));
 
-    $this->assertSame([get_resource_id($pears) => $pears, get_resource_id($plums) => $plums], $streams->streams());
+    $this->assertSame([get_resource_id($pears) => $pears, get_resource_id($plums) => $plums], $streams->open());
 
     $streams->unwatch($pears);
 
-    $this->assertSame([get_resource_id($plums) => $plums], $streams->streams());
+    $this->assertSame([get_resource_id($plums) => $plums], $streams->open());
 
     $this->close($pears, $pears_child, $plums, $plums_child);
   }
@@ -50,7 +50,7 @@ final class StreamsTest extends TestCase {
     $streams->dispatch([$pipe]);
 
     $this->assertSame(['second'], $calls);
-    $this->assertCount(1, $streams->streams());
+    $this->assertCount(1, $streams->open());
 
     $this->close($pipe, $child);
   }
@@ -67,7 +67,7 @@ final class StreamsTest extends TestCase {
     $streams->dispatch([$pipe]);
 
     $this->assertSame(['Apples sorted'], $read);
-    $this->assertSame([get_resource_id($pipe) => $pipe], $streams->streams());
+    $this->assertSame([get_resource_id($pipe) => $pipe], $streams->open());
 
     $this->close($pipe, $child);
   }
@@ -78,12 +78,12 @@ final class StreamsTest extends TestCase {
     $streams = new Streams();
     $streams->dispatch([$pipe]);
 
-    $this->assertSame([], $streams->streams());
+    $this->assertSame([], $streams->open());
 
     $this->close($pipe, $child);
   }
 
-  public function testCallbackCanUnwatchAStreamLaterInTheSamePass(): void {
+  public function testCallbackCanUnwatchStreamLaterInTheSamePass(): void {
     [$pears, $pears_child] = $this->socketPair();
     [$plums, $plums_child] = $this->socketPair();
     $calls = [];
@@ -101,7 +101,7 @@ final class StreamsTest extends TestCase {
     $streams->dispatch([$pears, $plums]);
 
     $this->assertSame(['pears'], $calls);
-    $this->assertSame([get_resource_id($pears) => $pears], $streams->streams());
+    $this->assertSame([get_resource_id($pears) => $pears], $streams->open());
 
     $this->close($pears, $pears_child, $plums, $plums_child);
   }
@@ -119,7 +119,7 @@ final class StreamsTest extends TestCase {
     $streams->dispatch([$pipe]);
 
     $this->assertSame(['Last crate'], $read);
-    $this->assertSame([], $streams->streams());
+    $this->assertSame([], $streams->open());
 
     fclose($pipe);
   }
@@ -133,7 +133,7 @@ final class StreamsTest extends TestCase {
 
     $streams->dispatch([$pipe]);
 
-    $this->assertSame([], $streams->streams());
+    $this->assertSame([], $streams->open());
 
     fclose($child);
   }
@@ -144,7 +144,7 @@ final class StreamsTest extends TestCase {
     $streams = (new Streams())->watch($pipe, $this->ignore(...));
     fclose($pipe);
 
-    $this->assertSame([], $streams->streams());
+    $this->assertSame([], $streams->open());
 
     fclose($child);
   }
@@ -156,7 +156,7 @@ final class StreamsTest extends TestCase {
     fclose($pipe);
     $streams->unwatch($pipe);
 
-    $this->assertSame([], $streams->streams());
+    $this->assertSame([], $streams->open());
 
     fclose($child);
   }
@@ -188,7 +188,7 @@ final class StreamsTest extends TestCase {
     yield 'a process rather than a stream' => ['process'];
   }
 
-  public function testUnwatchRefusesWhatIsNotAResource(): void {
+  public function testUnwatchRefusesWhatIsNotResource(): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage('An unwatched stream must be a stream resource.');
 

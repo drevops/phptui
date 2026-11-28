@@ -517,9 +517,10 @@ final class Tui {
    *
    * The TUI waits on the stream beside the keyboard, so output on it runs the
    * callback at once rather than on the next tick, and the screen redraws when
-   * the frame changed. The callback reads what arrived. A stream that is closed,
-   * or at its end after the callback, is unwatched. The TUI waits on watched
-   * streams even when it is not live. Headless collection never reads them.
+   * the frame changed. The callback reads what arrived. A stream that is
+   * closed, or at its end after the callback, is unwatched. The TUI waits on
+   * watched streams even when it is not live. Headless collection never reads
+   * them.
    * On Windows a stream never wakes the TUI.
    *
    * @code
