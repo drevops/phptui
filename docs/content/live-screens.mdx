@@ -62,14 +62,21 @@ On Windows, the wait for a key can't time out. A live screen there redraws on ea
 | `new Tick()`                  | The wait for a key times out, so the tick runs                                             |
 | `new Resize($columns, $rows)` | The terminal reports the new size from then on, and the wait is cut short as by `SIGWINCH` |
 
-To check that the counter changes with no key pressed:
+`ScreenTester` draws only the panel you give it, so put the counter in that panel. To check that the counter changes with no key pressed:
 
 ```php
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Screen\Layout\PanelLayout;
 use DrevOps\PhpTui\Testing\Resize;
 use DrevOps\PhpTui\Testing\ScreenTester;
 use DrevOps\PhpTui\Testing\Tick;
 
-$tester = (new ScreenTester($form->root()))
+$scale = new Markup('scale', 'Crates weighed: 0');
+$panel = (new Panel('bench', 'Packing bench'))->layout(new PanelLayout());
+$panel->in('content')->add($scale);
+
+$tester = (new ScreenTester($panel))
   ->live(fn(int $count) => $scale->body('Crates weighed: ' . $count));
 
 $tester->run(new Tick(), new Tick(), new Resize(40, 12));
