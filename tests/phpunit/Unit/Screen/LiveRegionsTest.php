@@ -111,6 +111,8 @@ final class LiveRegionsTest extends TestCase {
    *
    * @param list<string> $lines
    *   The rows.
+   * @param string ...$fragments
+   *   The fragments 1 row must hold together.
    */
   protected function contains(array $lines, string ...$fragments): bool {
     foreach ($lines as $line) {

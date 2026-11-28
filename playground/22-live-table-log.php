@@ -7,8 +7,8 @@
  * A table block holds 1 row per fruit and a log block holds the latest
  * weighings. Every tick replaces the table rows and writes a line to the log.
  * The selected row stays on the same fruit as the rows reorder, and the log
- * keeps its last 20 lines in a region that follows its tail. "n" and "p" move
- * the selection from the panels.
+ * keeps its last 20 lines in the region layouts/BenchLayout.php declares to
+ * follow its tail. "n" and "p" move the selection from the panels.
  *
  * Usage:
  *   php playground/22-live-table-log.php
@@ -23,28 +23,12 @@ use DrevOps\PhpTui\Builder\Form;
 use DrevOps\PhpTui\Builder\PanelBuilder;
 use DrevOps\PhpTui\Input\Command;
 use DrevOps\PhpTui\InterruptException;
-use DrevOps\PhpTui\Screen\Axis;
-use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
 use DrevOps\PhpTui\Tui;
+use Playground\Layouts\BenchLayout;
 
 require __DIR__ . '/../vendor/autoload.php';
-
-/**
- * A board sized to its rows above a 5-row log that follows its tail.
- */
-final class BenchLayout extends AbstractLayout {
-
-  /**
-   * Construct the layout.
-   */
-  public function __construct() {
-    parent::__construct(Axis::Rows);
-
-    $this->region('content')->content();
-    $this->region('log')->fixed(5)->follows();
-  }
-
-}
+// The require makes the class loadable; a real consumer would autoload it.
+require __DIR__ . '/layouts/BenchLayout.php';
 
 $fruit = ['apple' => 'Apple', 'pear' => 'Pear', 'plum' => 'Plum', 'cherry' => 'Cherry'];
 $weights = array_fill_keys(array_keys($fruit), 0);
