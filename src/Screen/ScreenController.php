@@ -78,7 +78,8 @@ use DrevOps\PhpTui\Translation\Translator;
  * A live session, set up with live(), waits for a key for a fixed interval and
  * runs a tick callback each time the wait times out. The screen is redrawn
  * after the tick when the frame changed, and at the new size when the terminal
- * was resized.
+ * was resized. Streams set with streams() wake the wait when they have output,
+ * and their callbacks run before the next frame is drawn.
  *
  * How the session ends is the whole of what a caller sees: finishing it hands
  * back the answers, abandoning it raises
@@ -260,6 +261,11 @@ class ScreenController {
   protected ?\Closure $relayout = NULL;
 
   /**
+   * The streams the session wakes on beside the keyboard.
+   */
+  protected Streams $streams;
+
+  /**
    * Construct a controller.
    *
    * @param \DrevOps\PhpTui\Block\Panel $panel
@@ -320,6 +326,7 @@ class ScreenController {
     $this->externalEditor = $external_editor ?? new ExternalEditor();
     $this->scroller = new Scroller();
     $this->renderer = new ScreenRenderer($theme, $border);
+    $this->streams = new Streams();
 
     $this->assembler = new Assembler();
     $this->screen = $this->assembler->assemble($panel, $this->layout);
@@ -358,7 +365,9 @@ class ScreenController {
    * Make the session live: redraw on a timer as well as on a key.
    *
    * The session waits for a key for the interval, and runs the tick each time
-   * the wait times out or a resize interrupts it.
+   * the wait times out or a resize interrupts it. A key or a watched stream
+   * ends the wait early without restarting the interval, so the tick still
+   * runs once per interval.
    *
    * @param \Closure(int): void $tick
    *   What runs on each timeout, given the number of ticks so far, counted
@@ -418,6 +427,26 @@ class ScreenController {
   }
 
   /**
+   * Set the streams the session wakes on beside the keyboard.
+   *
+   * A session with streams to watch waits on them even when it is not live,
+   * and redraws after a stream's callback when the frame changed. The
+   * registry is read on every wait, so a stream watched or unwatched while the
+   * session runs applies from the next one.
+   *
+   * @param \DrevOps\PhpTui\Screen\Streams $streams
+   *   The registry.
+   *
+   * @return $this
+   *   The controller.
+   */
+  public function streams(Streams $streams): static {
+    $this->streams = $streams;
+
+    return $this;
+  }
+
+  /**
    * Run the session against a terminal until the form ends.
    *
    * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
@@ -438,10 +467,6 @@ class ScreenController {
 
     $tick = $this->tick;
 
-    if ($tick instanceof \Closure) {
-      $terminal->watchResize();
-    }
-
     try {
       $this->welcome($terminal, $parser);
 
@@ -451,12 +476,17 @@ class ScreenController {
 
       $ticks = 0;
       $shown = NULL;
+      $due = $this->due();
 
       while (!$this->done && !$this->interrupted) {
         $shown = $this->paint($shown);
+        $streams = $this->streams->streams();
 
-        if ($tick instanceof \Closure) {
-          $ready = $terminal->wait($this->interval * 1000);
+        if ($tick instanceof \Closure || $streams !== []) {
+          // Idempotent, so a stream watched after the session started is
+          // covered too.
+          $terminal->watchResize();
+          $wake = $terminal->wait(max(0, intdiv($due - self::now(), 1000)), $streams);
 
           // Checked whether or not a key is waiting, so a resize is laid out
           // before the next key is handled. A resized terminal reflows what it
@@ -466,8 +496,18 @@ class ScreenController {
             $shown = NULL;
           }
 
-          if (!$ready) {
-            $tick(++$ticks);
+          $this->streams->dispatch($wake->streams);
+
+          if (!$wake->input) {
+            // A stream that writes more often than the interval wakes every
+            // wait before it times out, so the tick also runs once it is due.
+            if ($wake->streams === [] || self::now() >= $due) {
+              if ($tick instanceof \Closure) {
+                $tick(++$ticks);
+              }
+
+              $due = $this->due();
+            }
 
             continue;
           }
@@ -505,6 +545,26 @@ class ScreenController {
     }
 
     return $this->answers();
+  }
+
+  /**
+   * When the next tick is due.
+   *
+   * @return int
+   *   The monotonic time in nanoseconds, 1 interval from now.
+   */
+  protected function due(): int {
+    return self::now() + $this->interval * 1000000;
+  }
+
+  /**
+   * The monotonic time.
+   *
+   * @return int
+   *   The time in nanoseconds.
+   */
+  protected static function now(): int {
+    return (int) hrtime(TRUE);
   }
 
   /**

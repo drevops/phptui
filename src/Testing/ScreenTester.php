@@ -12,6 +12,7 @@ use DrevOps\PhpTui\Input\KeyMap;
 use DrevOps\PhpTui\Screen\Collector;
 use DrevOps\PhpTui\Screen\ExternalEditor;
 use DrevOps\PhpTui\Screen\ScreenController;
+use DrevOps\PhpTui\Screen\Streams;
 use DrevOps\PhpTui\Terminal\Ansi;
 use DrevOps\PhpTui\Terminal\TerminalControl;
 use DrevOps\PhpTui\Theme\Border;
@@ -143,6 +144,11 @@ final class ScreenTester {
   protected int $interval = ScreenController::INTERVAL;
 
   /**
+   * The streams the session wakes on beside the keyboard.
+   */
+  protected Streams $streams;
+
+  /**
    * The reported terminal height.
    */
   protected int $rows = 24;
@@ -170,6 +176,7 @@ final class ScreenTester {
    */
   public function __construct(protected Panel $panel) {
     $this->context = new Context();
+    $this->streams = new Streams();
   }
 
   /**
@@ -391,6 +398,47 @@ final class ScreenTester {
   }
 
   /**
+   * Wake the session when a stream has output, and run a callback for it.
+   *
+   * The scripted terminal polls the stream for real before each scripted item,
+   * so writing to the other end of a socket pair wakes the session there.
+   *
+   * @param mixed $stream
+   *   An open stream resource.
+   * @param \Closure(resource): void $callback
+   *   What runs when the stream has output, given the stream to read from.
+   *
+   * @return $this
+   *   The tester.
+   *
+   * @throws \InvalidArgumentException
+   *   When the stream is not an open stream resource.
+   */
+  public function watch(mixed $stream, \Closure $callback): self {
+    $this->streams->watch($stream, $callback);
+
+    return $this;
+  }
+
+  /**
+   * Stop waking the session on a stream.
+   *
+   * @param mixed $stream
+   *   The stream, open or already closed.
+   *
+   * @return $this
+   *   The tester.
+   *
+   * @throws \InvalidArgumentException
+   *   When the value is not a resource at all.
+   */
+  public function unwatch(mixed $stream): self {
+    $this->streams->unwatch($stream);
+
+    return $this;
+  }
+
+  /**
    * Set the reported terminal height.
    *
    * @param int $rows
@@ -584,7 +632,7 @@ final class ScreenTester {
       $controller->live($this->tick, $this->interval);
     }
 
-    return $controller;
+    return $controller->streams($this->streams);
   }
 
   /**

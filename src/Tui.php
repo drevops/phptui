@@ -24,6 +24,7 @@ use DrevOps\PhpTui\Screen\Axis;
 use DrevOps\PhpTui\Screen\Collector;
 use DrevOps\PhpTui\Screen\Layout\LayoutManager;
 use DrevOps\PhpTui\Screen\ScreenController;
+use DrevOps\PhpTui\Screen\Streams;
 use DrevOps\PhpTui\Terminal\Terminal;
 use DrevOps\PhpTui\Theme\Border;
 use DrevOps\PhpTui\Theme\Capability\OccupyCapableInterface;
@@ -150,6 +151,11 @@ final class Tui {
   protected int $interval = ScreenController::INTERVAL;
 
   /**
+   * The streams the interactive TUI wakes on beside the keyboard.
+   */
+  protected Streams $streams;
+
+  /**
    * The translator localizing chrome and questions (NULL leaves English).
    */
   protected ?Translator $translator = NULL;
@@ -170,6 +176,7 @@ final class Tui {
     $declared = $form->currentEnvPrefix();
     $this->envPrefix = $env_prefix !== '' ? $env_prefix : ($declared !== '' ? $declared : 'PHPTUI_');
     $this->registry = new HandlerRegistry($handler_namespaces);
+    $this->streams = new Streams();
   }
 
   /**
@@ -506,6 +513,60 @@ final class Tui {
   }
 
   /**
+   * Wake the interactive TUI when a stream has output, and run a callback.
+   *
+   * The TUI waits on the stream beside the keyboard, so output on it runs the
+   * callback at once rather than on the next tick, and the screen redraws when
+   * the frame changed. The callback reads what arrived. A stream that is closed,
+   * or at its end after the callback, is unwatched. The TUI waits on watched
+   * streams even when it is not live. Headless collection never reads them.
+   * On Windows a stream never wakes the TUI.
+   *
+   * @code
+   * $sorter = proc_open([PHP_BINARY, 'sort.php'], [1 => ['pipe', 'w']], $pipes);
+   * stream_set_blocking($pipes[1], FALSE);
+   * $tui->watch($pipes[1], fn($pipe) => $log->body($log->bodyText() . fread($pipe, 8192)));
+   * @endcode
+   *
+   * @param mixed $stream
+   *   An open stream resource, such as a pipe from proc_open().
+   * @param \Closure(resource): void $callback
+   *   What runs when the stream has output, given the stream to read from.
+   *
+   * @return $this
+   *   The facade.
+   *
+   * @throws \InvalidArgumentException
+   *   When the stream is not an open stream resource.
+   */
+  public function watch(mixed $stream, \Closure $callback): self {
+    $this->streams->watch($stream, $callback);
+
+    return $this;
+  }
+
+  /**
+   * Stop waking the interactive TUI on a stream.
+   *
+   * Applies from the next wait when called while the TUI runs, such as from a
+   * stream's callback or a tick.
+   *
+   * @param mixed $stream
+   *   The stream, open or already closed; one that is not watched is ignored.
+   *
+   * @return $this
+   *   The facade.
+   *
+   * @throws \InvalidArgumentException
+   *   When the value is not a resource at all.
+   */
+  public function unwatch(mixed $stream): self {
+    $this->streams->unwatch($stream);
+
+    return $this;
+  }
+
+  /**
    * Set the translator localizing chrome and questions.
    *
    * The translator carries the active language and catalog sources and is
@@ -785,7 +846,7 @@ final class Tui {
       $controller->live($this->tick, $this->interval);
     }
 
-    return $controller;
+    return $controller->streams($this->streams);
   }
 
   /**

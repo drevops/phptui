@@ -21,6 +21,7 @@ use DrevOps\PhpTui\Terminal\Ansi;
 use DrevOps\PhpTui\Testing\Resize;
 use DrevOps\PhpTui\Testing\ScreenTester;
 use DrevOps\PhpTui\Testing\Tick;
+use DrevOps\PhpTui\Tests\Traits\OpensSocketPairsTrait;
 use DrevOps\PhpTui\Theme\Border;
 use DrevOps\PhpTui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -33,6 +34,28 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ScreenTester::class)]
 #[Group('screen')]
 final class ScreenTesterTest extends TestCase {
+
+  use OpensSocketPairsTrait;
+
+  public function testWatchedStreamWakesTheSessionUntilItIsUnwatched(): void {
+    [$pipe, $child] = $this->socketPair();
+    fwrite($child, 'Pears sorted');
+    $calls = [];
+    $tester = $this->tester($this->panel(new Field('courier', 'Courier')));
+
+    $tester->watch($pipe, static function ($stream) use (&$calls): void {
+      $calls[] = fread($stream, 64);
+    });
+    $tester->run();
+
+    fwrite($child, 'Plums sorted');
+    $tester->unwatch($pipe)->run();
+
+    $this->assertSame(['Pears sorted'], $calls);
+
+    fclose($pipe);
+    fclose($child);
+  }
 
   public function testEveryFrameThatReachedTheTerminalIsReadableAfterwards(): void {
     $tester = $this->tester($this->panel(new Field('courier', 'Courier')));
