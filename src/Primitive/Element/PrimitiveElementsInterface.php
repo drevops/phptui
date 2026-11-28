@@ -62,11 +62,14 @@ interface PrimitiveElementsInterface {
    *   The header cells; an empty list draws the grid with no header row.
    * @param list<list<string>> $rows
    *   The body rows, each a list of cell strings.
+   * @param int|null $selected
+   *   NULL draws the plain grid. An index reserves a selector gutter on every
+   *   line and marks that body row; an index no row has marks none.
    *
    * @return list<string>
    *   The grid's physical lines, capped at the frame width.
    */
-  public function renderTable(array $headers, array $rows): array;
+  public function renderTable(array $headers, array $rows, ?int $selected = NULL): array;
 
   /**
    * Draw source text as wrapped, markup-styled lines at the frame width.

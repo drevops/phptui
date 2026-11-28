@@ -12,6 +12,8 @@ use DrevOps\PhpTui\Discovery\Dotenv;
 use DrevOps\PhpTui\Discovery\JsonValue;
 use DrevOps\PhpTui\Input\Key;
 use DrevOps\PhpTui\Input\KeyName;
+use DrevOps\PhpTui\Testing\Resize;
+use DrevOps\PhpTui\Testing\Tick;
 use DrevOps\PhpTui\Testing\TuiTester;
 use DrevOps\PhpTui\Theme\Border;
 use DrevOps\PhpTui\Theme\Spacing;
@@ -150,6 +152,30 @@ final class TuiTesterTest extends TestCase {
 
     $this->assertTrue($answers->value('extra'));
     $this->assertSame('mixed', $answers->value('notes'));
+  }
+
+  public function testLiveRunTicksAtEveryScriptedTimeout(): void {
+    $log = NULL;
+    $form = Form::create('Demo')->panel('Bench', 'bench', function (PanelBuilder $p) use (&$log): void {
+      $log = $p->log('weighed');
+    });
+    $counts = [];
+    $tester = (new TuiTester($form))->live(static function (int $count) use (&$counts, &$log): void {
+      $counts[] = $count;
+      $log?->write(sprintf('Crate %d weighed', $count));
+    });
+
+    $tester->run(Key::named(KeyName::Enter), new Tick(), new Resize(70, 20), new Tick());
+
+    // A resize cuts the wait short, so it ticks as a timeout does.
+    $this->assertSame([1, 2, 3], $counts);
+    $this->assertStringContainsString('Crate 3 weighed', $tester->display());
+  }
+
+  public function testRunThatIsNotLiveSkipsTicks(): void {
+    $answers = (new TuiTester($this->form()))->run(new Tick(), Key::named(KeyName::Down), Key::named(KeyName::Down), Key::named(KeyName::Enter));
+
+    $this->assertSame('', $answers->value('name'));
   }
 
   public function testFluentSettersConfigureTheRun(): void {

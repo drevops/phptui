@@ -6,9 +6,11 @@ namespace DrevOps\PhpTui\Tests\Unit\Builder;
 
 use DrevOps\PhpTui\Block\Field;
 use DrevOps\PhpTui\Block\Legend;
+use DrevOps\PhpTui\Block\Log;
 use DrevOps\PhpTui\Block\Markup;
 use DrevOps\PhpTui\Block\Panel;
 use DrevOps\PhpTui\Block\Progress;
+use DrevOps\PhpTui\Block\Table;
 use DrevOps\PhpTui\Block\TableSpec;
 use DrevOps\PhpTui\Block\Tree;
 use DrevOps\PhpTui\Builder\FieldBuilder;
@@ -67,6 +69,24 @@ final class BlockTreeTest extends TestCase {
     yield 'a note only shows' => [static fn(PanelBuilder $p): Markup => $p->note('Fresh produce', 'intro'), Markup::class];
     yield 'markup only shows' => [static fn(PanelBuilder $p): Markup => $p->markup('Fresh produce', id: 'intro'), Markup::class];
     yield 'a progress row only runs' => [static fn(PanelBuilder $p): Progress => $p->progress('Packing', 'packing'), Progress::class];
+    yield 'a table only shows' => [static fn(PanelBuilder $p): Table => $p->table('orders', ['Fruit']), Table::class];
+    yield 'a log only shows' => [static fn(PanelBuilder $p): Log => $p->log('bench'), Log::class];
+  }
+
+  public function testTableAndLogKeepWhatTheyWereDeclaredWith(): void {
+    $table = NULL;
+    $log = NULL;
+    $panel = $this->panel(static function (PanelBuilder $p) use (&$table, &$log): void {
+      $table = $p->table('orders', ['Fruit', 'Crates']);
+      $log = $p->log('bench', 5);
+    });
+
+    $this->assertSame([$table, $log], $panel->in('content')->blocks());
+    $this->assertInstanceOf(Table::class, $table);
+    $this->assertInstanceOf(Log::class, $log);
+    $this->assertSame(['Fruit', 'Crates'], $table->headerCells());
+    $this->assertSame(5, $log->lineLimit());
+    $this->assertSame(['orders', 'bench'], $panel->ids());
   }
 
   public function testBlocksAreInTheRegionInTheOrderTheyWereWritten(): void {

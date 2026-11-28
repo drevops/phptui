@@ -7,6 +7,7 @@ namespace DrevOps\PhpTui\Tests\Unit\Terminal;
 use DrevOps\PhpTui\Terminal\Table;
 use DrevOps\PhpTui\Theme\Border;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -126,6 +127,22 @@ final class TableTest extends TestCase {
     $this->assertStringContainsString('<h>H</h>', $joined);
     $this->assertStringContainsString('<c>x</c>', $joined);
     $this->assertStringContainsString('<b>│</b>', $joined);
+  }
+
+  #[DataProvider('dataProviderSelectedRowTakesItsOwnStyler')]
+  public function testSelectedRowTakesItsOwnStyler(int $selected, bool $styled, array $expected): void {
+    $lines = Table::render([], [['x'], ['y']], Border::Line, TRUE, 0, NULL, static fn(string $cell): string => '<c>' . $cell . '</c>', NULL, $selected, $styled ? static fn(string $cell): string => '<s>' . $cell . '</s>' : NULL);
+
+    $this->assertSame($expected, [$lines[1], $lines[2]]);
+  }
+
+  public static function dataProviderSelectedRowTakesItsOwnStyler(): array {
+    return [
+      'first row' => [0, TRUE, ['│ <s>x</s> │', '│ <c>y</c> │']],
+      'second row' => [1, TRUE, ['│ <c>x</c> │', '│ <s>y</s> │']],
+      'none selected' => [-1, TRUE, ['│ <c>x</c> │', '│ <c>y</c> │']],
+      'no selected styler' => [0, FALSE, ['│ <c>x</c> │', '│ <c>y</c> │']],
+    ];
   }
 
   public function testOverflowShrinksAndEllipsizes(): void {

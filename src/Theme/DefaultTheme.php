@@ -119,6 +119,11 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   protected const int CARD_INDENT = 2;
 
   /**
+   * The columns a grid with a selection spends on its selector mark.
+   */
+  protected const int SELECTOR_GUTTER = 2;
+
+  /**
    * Whether markdown in descriptions and notes is rendered, from "markdown".
    */
   protected bool $markdown;
@@ -1480,8 +1485,21 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
   /**
    * {@inheritdoc}
    */
-  public function renderTable(array $headers, array $rows): array {
-    return $this->tableLines($headers, $rows, $this->width);
+  public function renderTable(array $headers, array $rows, ?int $selected = NULL): array {
+    if ($selected === NULL) {
+      return $this->tableLines($headers, $rows, $this->width);
+    }
+
+    $lines = $this->tableLines($headers, $rows, max(1, $this->width - self::SELECTOR_GUTTER), $selected);
+    // A top rule opens the grid, and a header adds its row and a rule under it.
+    $first = $headers === [] ? 1 : 3;
+    $marked = [];
+
+    foreach ($lines as $index => $line) {
+      $marked[] = $this->marker($selected >= 0 && $index - $first === $selected) . ' ' . $line;
+    }
+
+    return $marked;
   }
 
   /**
@@ -1661,11 +1679,13 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
    *   The body rows.
    * @param int $max_width
    *   The widest the table may be, in columns.
+   * @param int $selected
+   *   The index of the body row highlighted as selected; -1 highlights none.
    *
    * @return list<string>
    *   The styled table lines.
    */
-  protected function tableLines(array $headers, array $rows, int $max_width): array {
+  protected function tableLines(array $headers, array $rows, int $max_width, int $selected = -1): array {
     // An explicit table always draws its grid, so a None frame falls back to
     // the single-line box, exactly as a bordered note does.
     $style = $this->borderStyle() === Border::None ? Border::Line : $this->borderStyle();
@@ -1679,6 +1699,8 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
       fn(string $cell): string => $this->heading($cell),
       fn(string $cell): string => $this->value($cell),
       fn(string $glyphs): string => $this->border($glyphs),
+      $selected,
+      fn(string $cell): string => $this->highlight($cell),
     );
   }
 

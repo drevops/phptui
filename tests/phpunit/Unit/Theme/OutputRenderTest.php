@@ -133,6 +133,42 @@ final class OutputRenderTest extends TestCase {
     $this->assertStringContainsString('Apricot', $lines[1]);
   }
 
+  #[DataProvider('dataProviderTableWithSelectionMarksOnlyThatRow')]
+  public function testTableWithSelectionMarksOnlyThatRow(array $headers, int $selected, int $marked): void {
+    $lines = $this->theme(color: FALSE)->renderTable($headers, [['Apricot'], ['Carrot']], $selected);
+
+    foreach ($lines as $index => $line) {
+      $this->assertStringStartsWith($index === $marked ? '❯ ' : '  ', $line);
+    }
+  }
+
+  public static function dataProviderTableWithSelectionMarksOnlyThatRow(): array {
+    return [
+      'header, first row' => [['Item'], 0, 3],
+      'header, second row' => [['Item'], 1, 4],
+      'no header, first row' => [[], 0, 1],
+      'no header, second row' => [[], 1, 2],
+      'none selected' => [['Item'], -1, -1],
+      'index past the rows' => [['Item'], 5, -1],
+    ];
+  }
+
+  public function testTableWithSelectionStaysInsideTheFrame(): void {
+    $theme = new DefaultTheme(20, ['color' => FALSE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
+
+    foreach ($theme->renderTable(['Item'], [['A very long produce name indeed']], 0) as $line) {
+      $this->assertLessThanOrEqual(20, Ansi::width($line));
+    }
+  }
+
+  public function testTableWithSelectionHighlightsTheSelectedCells(): void {
+    $plain = implode("\n", $this->theme(color: TRUE)->renderTable([], [['Apricot'], ['Carrot']], -1));
+    $selected = implode("\n", $this->theme(color: TRUE)->renderTable([], [['Apricot'], ['Carrot']], 1));
+
+    $this->assertNotSame($plain, $selected);
+    $this->assertSame(Ansi::strip($plain), str_replace('❯', ' ', Ansi::strip($selected)));
+  }
+
   public function testTableFallsBackToAsciiGlyphs(): void {
     $lines = $this->theme(color: FALSE, unicode: FALSE)->renderTable(['Item'], [['Apricot']]);
 

@@ -12,6 +12,7 @@ use DrevOps\PhpTui\Screen\Region;
 use DrevOps\PhpTui\Screen\Sizing;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -90,6 +91,46 @@ final class RegionTest extends TestCase {
     (new Region('header'))->scrollTo(2);
   }
 
+  public function testRegionFollowsOnlyOnceDeclaredAndThenScrolls(): void {
+    $this->assertFalse((new Region('log'))->isFollowing());
+    $this->assertFalse((new Region('log'))->scrolls()->isFollowing());
+
+    $region = (new Region('log'))->follows();
+
+    $this->assertTrue($region->isFollowing());
+    $this->assertTrue($region->isScrolling());
+  }
+
+  #[DataProvider('dataProviderFollowingRegionShowsTheEndOfItsContents')]
+  public function testFollowingRegionShowsTheEndOfItsContents(int $content, int $visible, int $expected): void {
+    $this->assertSame($expected, (new Region('log'))->follows()->offset($content, $visible));
+  }
+
+  public static function dataProviderFollowingRegionShowsTheEndOfItsContents(): array {
+    return [
+      'fits' => [3, 8, 0],
+      'exactly fills' => [8, 8, 0],
+      'one over' => [9, 8, 1],
+      'grown further' => [40, 8, 32],
+      'no room' => [5, 0, 5],
+    ];
+  }
+
+  public function testScrollingFollowingRegionLeavesItWhereItWasMoved(): void {
+    $region = (new Region('log'))->follows()->scrollTo(3);
+
+    $this->assertFalse($region->isFollowing());
+    $this->assertSame(3, $region->offset(20, 8));
+    $this->assertSame(3, $region->offset(30, 8));
+  }
+
+  public function testFollowingAgainPinsRegionBackToItsEnd(): void {
+    $region = (new Region('log'))->follows()->scrollTo(3)->follows();
+
+    $this->assertTrue($region->isFollowing());
+    $this->assertSame(22, $region->offset(30, 8));
+  }
+
   public function testEveryDeclarationChainsBackToTheRegion(): void {
     $region = new Region('content');
 
@@ -98,6 +139,7 @@ final class RegionTest extends TestCase {
     $this->assertSame($region, $region->content());
     $this->assertSame($region, $region->flow(Axis::Columns));
     $this->assertSame($region, $region->scrolls());
+    $this->assertSame($region, $region->follows());
     $this->assertSame($region, $region->previews());
   }
 

@@ -7,9 +7,11 @@ namespace DrevOps\PhpTui\Builder;
 use DrevOps\PhpTui\Block\BlockInterface;
 use DrevOps\PhpTui\Block\Buttons;
 use DrevOps\PhpTui\Block\FieldType;
+use DrevOps\PhpTui\Block\Log;
 use DrevOps\PhpTui\Block\Markup;
 use DrevOps\PhpTui\Block\Panel;
 use DrevOps\PhpTui\Block\Progress;
+use DrevOps\PhpTui\Block\Table;
 use DrevOps\PhpTui\Condition\ConditionInterface;
 use DrevOps\PhpTui\FormException;
 use DrevOps\PhpTui\Screen\Layout\GridLayout;
@@ -487,6 +489,50 @@ final class PanelBuilder {
     $this->add($progress);
 
     return $progress;
+  }
+
+  /**
+   * Add a table whose rows are replaced between frames.
+   *
+   * Chain `->rows()` with the rows keyed by row key, and `->select()` or
+   * `->move()` to pick the selected row. A live screen's tick replaces the
+   * rows on the block this returns.
+   *
+   * @param string $id
+   *   The id it answers to.
+   * @param list<mixed> $headers
+   *   The header cells; empty draws the grid with no header row.
+   *
+   * @return \DrevOps\PhpTui\Block\Table
+   *   The table block.
+   */
+  public function table(string $id, array $headers = []): Table {
+    $table = new Table($id, $headers);
+    $this->add($table);
+
+    return $table;
+  }
+
+  /**
+   * Add a log that keeps its most recent lines.
+   *
+   * Chain `->write()` to append lines. Put it in a region declared with
+   * {@see \DrevOps\PhpTui\Screen\Region::follows()} to keep the newest lines
+   * in sight.
+   *
+   * @param string $id
+   *   The id it answers to.
+   * @param int $limit
+   *   The most lines it holds at once, at least 1.
+   *
+   * @return \DrevOps\PhpTui\Block\Log
+   *   The log block.
+   */
+  public function log(string $id, int $limit = Log::LIMIT): Log {
+    $log = new Log($id, $limit);
+    $this->add($log);
+
+    return $log;
   }
 
   /**
