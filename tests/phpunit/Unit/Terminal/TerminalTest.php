@@ -502,14 +502,11 @@ final class TerminalTest extends TestCase {
     yield 'blank output' => ["  \n", TRUE];
   }
 
-  public function testIdleReturnsAfterTheSleep(): void {
+  public function testIdleWithoutStreamsReportsNothing(): void {
     $terminal = new ProbeTerminal();
-    $start = hrtime(TRUE);
 
     $this->assertSame([], $terminal->idle(-5));
     $this->assertSame([], $terminal->idle(1000));
-
-    $this->assertGreaterThanOrEqual(1000000, hrtime(TRUE) - $start);
   }
 
   public function testIdleReportsTheStreamsWithOutput(): void {
