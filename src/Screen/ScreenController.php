@@ -986,6 +986,12 @@ class ScreenController {
     }
 
     foreach ($this->viewports($rows) as [$surface, $total, $row, $height]) {
+      // A region pinned to its tail stays there, since scrollTo() would unpin
+      // it on every frame the cursor sits inside it.
+      if ($surface instanceof Region && $surface->isFollowing()) {
+        continue;
+      }
+
       $surface->scrollTo($this->scroller->follow($total, $height, $row, $surface->offset($total, $height))->offset);
     }
   }

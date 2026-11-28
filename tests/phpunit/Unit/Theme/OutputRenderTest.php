@@ -171,6 +171,16 @@ final class OutputRenderTest extends TestCase {
     }
   }
 
+  public function testTableWithSelectionAtItsNarrowestStaysInsideTheFrame(): void {
+    // 3 one-character columns need 13 columns, so the grid cannot shrink to
+    // the 12 the gutter leaves inside a 14-column frame.
+    $theme = new DefaultTheme(14, ['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
+
+    foreach ($theme->renderTable(['A', 'B', 'C'], [['x', 'y', 'z']], 0) as $line) {
+      $this->assertLessThanOrEqual($theme->contentWidth(), Ansi::width($line));
+    }
+  }
+
   public function testTableWithSelectionHighlightsTheSelectedCells(): void {
     $plain = implode("\n", $this->theme(color: TRUE)->renderTable([], [['Apricot'], ['Carrot']], -1));
     $selected = implode("\n", $this->theme(color: TRUE)->renderTable([], [['Apricot'], ['Carrot']], 1));

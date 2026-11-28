@@ -1498,7 +1498,9 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
     $marked = [];
 
     foreach ($lines as $index => $line) {
-      $marked[] = $this->marker($selected >= 0 && $index - $first === $selected) . ' ' . $line;
+      // A grid already at its narrowest can still exceed the width the gutter
+      // leaves it, so the marked line is cut to the frame.
+      $marked[] = Ansi::slice($this->marker($selected >= 0 && $index - $first === $selected) . ' ' . $line, max(1, $this->width));
     }
 
     return $marked;

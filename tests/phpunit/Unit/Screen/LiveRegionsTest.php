@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace DrevOps\PhpTui\Tests\Unit\Screen;
 
+use DrevOps\PhpTui\Block\Field;
 use DrevOps\PhpTui\Block\Log;
 use DrevOps\PhpTui\Block\Panel;
 use DrevOps\PhpTui\Block\Table;
 use DrevOps\PhpTui\Screen\Region;
+use DrevOps\PhpTui\Screen\ScreenController;
 use DrevOps\PhpTui\Screen\ScreenRenderer;
 use DrevOps\PhpTui\Terminal\Ansi;
 use DrevOps\PhpTui\Testing\ScreenTester;
@@ -21,6 +23,7 @@ use PHPUnit\Framework\TestCase;
  * Tests a live table and a following log redrawn between ticks.
  */
 #[CoversClass(ScreenRenderer::class)]
+#[CoversClass(ScreenController::class)]
 #[CoversClass(Region::class)]
 #[CoversClass(Table::class)]
 #[CoversClass(Log::class)]
@@ -46,6 +49,23 @@ final class LiveRegionsTest extends TestCase {
     $this->assertTrue($this->contains($last, 'Crate 3 weighed'));
     // The older lines are above the window, so its first row carries the mark.
     $this->assertTrue($this->contains($last, 'Crate 1 weighed', '▲'));
+  }
+
+  public function testCursorInFollowingRegionLeavesItOnItsTail(): void {
+    $log = new Log('bench');
+    $panel = (new Panel('bench', 'Packing bench'))->layout(new BenchLayout());
+    $panel->in('log')->add(new Field('courier', 'Courier'))->add($log);
+    $tester = $this->tester($panel)->live(static function (int $count) use ($log): void {
+      $log->write(sprintf('Crate %d weighed', $count));
+    });
+
+    $tester->run(new Tick(), new Tick(), new Tick(), new Tick(), new Tick());
+
+    $last = $this->lines($tester->frame(-1));
+
+    $this->assertTrue($panel->in('log')->isFollowing());
+    $this->assertTrue($this->contains($last, 'Crate 5 weighed'));
+    $this->assertFalse($this->contains($last, 'Crate 1 weighed'));
   }
 
   public function testLogLimitDropsLinesTheRegionWouldOtherwiseKeep(): void {
