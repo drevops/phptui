@@ -113,6 +113,7 @@ final class CommandTest extends TestCase {
     yield 'another command' => ['default', [new Command('save', $noop, 's'), new Command('sort', $noop, 'o', 's')], 'Key "s" is bound to both the "save" and "sort" commands in the navigation scope.'];
     yield 'action declared after the command' => ['default', [new Command('save', $noop, 'x'), new Binding(Scope::navigation(), Action::Quit, 'x')], 'bound to both Quit and the "save" command'];
     yield 'interrupt key' => ['default', [new Command('save', $noop, 's', KeyName::Interrupt)], 'The "save" command cannot use the interrupt key, which always stops the session.'];
+    yield 'interrupt byte' => ['default', [new Command('save', $noop, Key::char("\x03"))], 'The "save" command cannot use the interrupt key, which always stops the session.'];
     yield 'no keys' => ['default', [new Command('save', $noop)], 'The "save" command needs at least one key.'];
     yield 'empty label' => ['default', [new Command('  ', $noop, 's')], 'A command needs a label to show in the hint line.'];
     yield 'multi-character key' => ['default', [new Command('save', $noop, 'sv')], 'A character binding in the navigation scope must be a single character, got "sv".'];

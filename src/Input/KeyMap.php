@@ -220,7 +220,7 @@ final class KeyMap {
       foreach ($this->normalize($command->keys, $scope) as $key) {
         // The session stops on the interrupt key before routing it, so a
         // command bound to it would never run.
-        if ($key->is(KeyName::Interrupt)) {
+        if ($key->equals(Key::named(KeyName::Interrupt)) || $key->equals(Key::char("\x03"))) {
           throw new FormException(sprintf('The "%s" command cannot use the interrupt key, which always stops the session.', $command->label));
         }
 
