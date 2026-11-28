@@ -27,12 +27,17 @@
 
 declare(strict_types=1);
 
+use DrevOps\PhpTui\Block\Log;
+use DrevOps\PhpTui\Block\Table;
 use DrevOps\PhpTui\Builder\Form;
 use DrevOps\PhpTui\Builder\PanelBuilder;
 use DrevOps\PhpTui\Input\Key;
 use DrevOps\PhpTui\Input\KeyName;
 use DrevOps\PhpTui\Primitive\ProgressReporter;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
 use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Testing\Tick;
 use DrevOps\PhpTui\Testing\TuiTester;
 use DrevOps\PhpTui\Theme\Mode;
 
@@ -74,11 +79,12 @@ const DISPLAY_MODES = [
  * @param string $tree
  *   The fixture directory the file-picker fields browse.
  *
- * @return array<string, array{form: callable(): \DrevOps\PhpTui\Builder\Form, keys: list<string|\DrevOps\PhpTui\Input\Key>, rows: int, static_keys?: list<string|\DrevOps\PhpTui\Input\Key>, subject?: string}>
+ * @return array<string, array{form: callable(): \DrevOps\PhpTui\Builder\Form, keys: list<string|\DrevOps\PhpTui\Input\Key|\DrevOps\PhpTui\Testing\Tick>, rows: int, static_keys?: list<string|\DrevOps\PhpTui\Input\Key|\DrevOps\PhpTui\Testing\Tick>, subject?: string, live?: \Closure(int): void}>
  *   The specs keyed by name. A spec may add "static_keys" when the opened
- *   editor needs a keystroke before its static frame is worth capturing, and
+ *   editor needs a keystroke before its static frame is worth capturing,
  *   "subject" when what it draws is not a field, so its assets carry the name
- *   of what they show rather than a field prefix that would misname it.
+ *   of what they show rather than a field prefix that would misname it, and
+ *   "live" with the tick a scripted Tick runs.
  */
 function fieldSpecs(string $tree): array {
   $enter = Key::named(KeyName::Enter);
@@ -260,6 +266,8 @@ function fieldSpecs(string $tree): array {
       'rows' => 6,
       'subject' => 'progress-row',
     ],
+    'live-table' => liveTableSpec(),
+    'live-log' => liveLogSpec(),
     'filepicker' => [
       'form' => static fn(): Form => Form::create('File picker field')->panel('File picker', 'main', function (PanelBuilder $p) use ($tree): void { $p->filePicker('Price list', 'price_list')->startIn($tree)->filesOnly()->extensions(['csv'])->maxSize(2097152); }),
       'keys' => [...$open, $down],
@@ -279,11 +287,116 @@ function fieldSpecs(string $tree): array {
 }
 
 /**
+ * A board sized to its rows above a 4-row log that follows its tail.
+ */
+final class BenchLayout extends AbstractLayout {
+
+  /**
+   * Construct the layout.
+   */
+  public function __construct() {
+    parent::__construct(Axis::Rows);
+
+    $this->region('content')->content();
+    $this->region('log')->fixed(4)->follows();
+  }
+
+}
+
+/**
+ * The rows of the crates table after a number of weighings, heaviest first.
+ *
+ * @param int $count
+ *   The weighings so far.
+ *
+ * @return array<string,list<string|int>>
+ *   The rows keyed by fruit.
+ */
+function benchRows(int $count): array {
+  $fruit = ['apple' => 'Apple', 'pear' => 'Pear', 'plum' => 'Plum'];
+  $weights = ['apple' => 4200, 'pear' => 3100, 'plum' => 2400];
+  $crates = ['apple' => 3, 'pear' => 2, 'plum' => 2];
+  $keys = array_keys($fruit);
+
+  for ($weighing = 1; $weighing <= $count; $weighing++) {
+    $key = $keys[($weighing + 1) % count($keys)];
+    $weights[$key] += 1400;
+    $crates[$key]++;
+  }
+
+  arsort($weights);
+  $rows = [];
+
+  foreach ($weights as $key => $grams) {
+    $rows[$key] = [$fruit[$key], $crates[$key], $grams];
+  }
+
+  return $rows;
+}
+
+/**
+ * The live table spec: ticks reorder the rows and the selection stays on Pear.
+ *
+ * @return array{form: callable(): \DrevOps\PhpTui\Builder\Form, keys: list<\DrevOps\PhpTui\Input\Key|\DrevOps\PhpTui\Testing\Tick>, rows: int, static_keys: list<\DrevOps\PhpTui\Input\Key>, subject: string, live: \Closure(int): void}
+ *   The spec.
+ */
+function liveTableSpec(): array {
+  $enter = Key::named(KeyName::Enter);
+  // Each display mode builds a fresh form, so the tick reads the table the
+  // latest form holds.
+  $bench = new \ArrayObject();
+
+  return [
+    'form' => static function () use ($bench): Form {
+      $table = (new Table('crates', ['Fruit', 'Crates', 'Weight (g)']))->rows(benchRows(0))->select('pear');
+      $bench['table'] = $table;
+
+      return Form::create('Live table')->panel('Bench', 'main', static function (PanelBuilder $p) use ($table): void { $p->add($table); });
+    },
+    'live' => static function (int $count) use ($bench): void { $bench['table']->rows(benchRows($count)); },
+    'keys' => [$enter, new Tick(), new Tick(), new Tick()],
+    'static_keys' => [$enter],
+    'rows' => 10,
+    'subject' => 'live-table',
+  ];
+}
+
+/**
+ * The live log spec: every tick writes a weighing and the log follows its end.
+ *
+ * @return array{form: callable(): \DrevOps\PhpTui\Builder\Form, keys: list<\DrevOps\PhpTui\Input\Key|\DrevOps\PhpTui\Testing\Tick>, rows: int, static_keys: list<\DrevOps\PhpTui\Input\Key|\DrevOps\PhpTui\Testing\Tick>, subject: string, live: \Closure(int): void}
+ *   The spec.
+ */
+function liveLogSpec(): array {
+  $enter = Key::named(KeyName::Enter);
+  $bench = new \ArrayObject();
+  $weighings = ['Apple, 1420 g', 'Pear, 1310 g', 'Plum, 1250 g', 'Cherry, 980 g', 'Peach, 1530 g', 'Apple, 1390 g'];
+
+  return [
+    'form' => static function () use ($bench): Form {
+      $log = (new Log('weighings', 20))->write('Waiting for the first crate...');
+      $bench['log'] = $log;
+
+      return Form::create('Live log')->panel('Bench', 'main', static function (PanelBuilder $p) use ($log): void {
+        $p->layout(BenchLayout::class);
+        $p->confirm('Organic only?', 'organic')->default(TRUE);
+        $p->in('log')->add($log);
+      });
+    },
+    'live' => static function (int $count) use ($bench, $weighings): void { $bench['log']->write(sprintf('Crate %d: %s', $count, $weighings[($count - 1) % count($weighings)])); },
+    'keys' => [$enter, new Tick(), new Tick(), new Tick(), new Tick(), new Tick(), new Tick()],
+    'static_keys' => [$enter, new Tick(), new Tick(), new Tick(), new Tick(), new Tick()],
+    'rows' => 8,
+    'subject' => 'live-log',
+  ];
+}
+
+/**
  * Drive one field and write its animated SVG.
  *
  * @param string $name
  *   The spec name.
- * @param array{form: callable(): \DrevOps\PhpTui\Builder\Form, keys: list<string|\DrevOps\PhpTui\Input\Key>, rows: int} $spec
+ * @param array{form: callable(): \DrevOps\PhpTui\Builder\Form, keys: list<string|\DrevOps\PhpTui\Input\Key|\DrevOps\PhpTui\Testing\Tick>, rows: int, live?: \Closure(int): void} $spec
  *   The spec.
  * @param string $assets_dir
  *   The output directory.
@@ -302,6 +415,11 @@ function renderField(string $name, array $spec, string $assets_dir, string $util
     $tester = (new TuiTester(($spec['form'])()))
       ->options(['color' => $mode['color'], 'unicode' => $mode['unicode'], 'mode' => Mode::Dark] + ($spec['options'] ?? []))
       ->rows($spec['rows'] + 4);
+
+    if (isset($spec['live'])) {
+      $tester->live($spec['live']);
+    }
+
     $tester->run(...$spec['keys']);
 
     $frames = splitFrames($tester->output());
@@ -349,7 +467,7 @@ function assetSubject(string $name, array $spec): string {
  *
  * @param string $name
  *   The spec name.
- * @param array{form: callable(): \DrevOps\PhpTui\Builder\Form, keys: list<string|\DrevOps\PhpTui\Input\Key>, rows: int} $spec
+ * @param array{form: callable(): \DrevOps\PhpTui\Builder\Form, keys: list<string|\DrevOps\PhpTui\Input\Key|\DrevOps\PhpTui\Testing\Tick>, rows: int, live?: \Closure(int): void} $spec
  *   The spec.
  * @param string $assets_dir
  *   The output directory.
@@ -377,6 +495,11 @@ function renderStaticVariants(string $name, array $spec, string $assets_dir, str
     $tester = (new TuiTester(($spec['form'])()))
       ->options(['color' => $mode['color'], 'unicode' => $mode['unicode'], 'mode' => Mode::Dark] + ($spec['options'] ?? []))
       ->rows($spec['rows'] + 4);
+
+    if (isset($spec['live'])) {
+      $tester->live($spec['live']);
+    }
+
     $tester->run(...$keys);
 
     $frames = splitFrames($tester->output());

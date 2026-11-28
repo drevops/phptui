@@ -1,0 +1,106 @@
+---
+title: Live table
+description: 'A grid whose rows a live screen replaces between frames, with a selected row that stays on the same row key.'
+keywords: ['table', 'live', 'rows', 'selection', 'block']
+---
+
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Live table
+
+<p align="center">
+  <ThemedImage sources={{light: useBaseUrl('/live-table-light-animated.svg'), dark: useBaseUrl('/live-table-dark-animated.svg')}} alt="Live table: the rows reorder on each tick and the mark stays on Pear" />
+</p>
+
+A live table is a grid whose rows you replace between frames, with 1 selected row. Use it on a [live screen](/live-screens) to show data that changes on its own, such as crates counted at a bench. The table collects no answer.
+
+Each row has a key. The selection is a key, so replacing the rows keeps the mark on the row with the same key, wherever that row now sits. The table takes no focus and binds no key, so your code moves the selection.
+
+To show a table of crates whose rows a tick replaces:
+
+```php
+use DrevOps\PhpTui\Block\Table;
+
+$table = (new Table('crates', ['Fruit', 'Crates']))
+  ->rows(['apple' => ['Apple', 3], 'pear' => ['Pear', 2]])
+  ->select('pear');
+
+$form = Form::create('Weighing station')
+  ->panel('Bench', function (PanelBuilder $p) use ($table): void {
+    $p->add($table);
+  });
+
+$tui = (new Tui($form))->live(function (int $count) use ($table): void {
+  $table->rows(['pear' => ['Pear', 2 + $count], 'apple' => ['Apple', 3]]);
+});
+```
+
+Runnable script: [`playground/22-live-table-log.php`](https://github.com/drevops/phptui/blob/main/playground/22-live-table-log.php).
+
+## Options
+
+`new Table(string $id, array $headers = [])` builds a table. An empty header list draws the grid with no header row. `$p->table($id, $headers)` builds one in the panel's current region and returns it.
+
+| Method                            | Effect                                                                                                                                     |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `->rows(array $rows)`             | Replaces every row. Keys are row keys and values are lists of cells. A numeric key and its string form are the same key.                   |
+| `->select($key)`                  | Selects the row with that key, an integer or a string. `NULL` clears the selection. A key no row has throws an `InvalidArgumentException`. |
+| `->move(int $delta)`              | Moves the selection by that many rows and stops at the first and last row. With nothing selected, it selects the first row.                |
+| `->headers(array $headers)`       | Replaces the header cells.                                                                                                                 |
+| `->selected()`                    | Returns the selected key as a string, or `NULL`.                                                                                           |
+| `->rowCells()`, `->headerCells()` | Return the rows keyed by row key, and the header cells, with every cell as a string.                                                       |
+
+A cell can be any scalar, and a number or a boolean becomes a string. Any other value becomes an empty cell.
+
+When a replacement drops the selected key, the selection moves to the row now at the same position. With fewer rows, it moves to the last row, and with no rows it clears.
+
+## Move the selection with keys
+
+Bind keys to [commands](/key-bindings) that call `move()`. A command runs from the panels:
+
+```php
+use DrevOps\PhpTui\Answers\Answers;
+use DrevOps\PhpTui\Input\Command;
+
+$tui->keys('default', [
+  new Command('next', function (Answers $answers) use ($table): void {
+    $table->move(1);
+  }, 'n'),
+  new Command('previous', function (Answers $answers) use ($table): void {
+    $table->move(-1);
+  }, 'p'),
+]);
+```
+
+## How it draws
+
+The table draws through the theme's grid renderer, `renderTable()`, the one behind the standalone [`output()` table](/output). Every line gets a selector gutter, so the grid stays in place when a row is selected. The selected row carries the theme's selector mark and its cells take the highlight color.
+
+The table draws every row it holds. A region that wasn't declared to scroll clips the rows past its end.
+
+## Headless behavior
+
+A live table is display-only: it carries no answer, and headless collection never draws it.
+
+## Display modes
+
+In all 4 [display modes](/display-modes) - Unicode or ASCII, color on or off:
+
+<table>
+  <tr>
+    <td></td>
+    <td align="center"><strong>ANSI</strong></td>
+    <td align="center"><strong>No ANSI</strong></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Unicode</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/live-table-light-static.svg'), dark: useBaseUrl('/live-table-dark-static.svg')}} alt="Live table: Unicode + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/live-table-light-static-no-ansi.svg'), dark: useBaseUrl('/live-table-dark-static-no-ansi.svg')}} alt="Live table: Unicode + No ANSI" /></td>
+  </tr>
+  <tr>
+    <td align="right"><strong>ASCII</strong></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/live-table-light-static-ascii.svg'), dark: useBaseUrl('/live-table-dark-static-ascii.svg')}} alt="Live table: ASCII + ANSI" /></td>
+    <td><ThemedImage sources={{light: useBaseUrl('/live-table-light-static-ascii-no-ansi.svg'), dark: useBaseUrl('/live-table-dark-static-ascii-no-ansi.svg')}} alt="Live table: ASCII + No ANSI" /></td>
+  </tr>
+</table>

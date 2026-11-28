@@ -391,10 +391,10 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
   /**
    * The ids of the rows this panel holds, in the order they were placed.
    *
-   * Field, markup and progress rows are included, whether they collect an
-   * answer or only show something. A display-only id is still an id the form
-   * knows, so a stray answer can be told from one aimed at a row that takes
-   * none. The ids of nested panels are not included.
+   * Field, markup, progress, table and log rows are included, whether they
+   * collect an answer or only show something. A display-only id is still an id
+   * the form knows, so a stray answer can be told from one aimed at a row that
+   * takes none. The ids of nested panels are not included.
    *
    * @return list<string>
    *   The ids.
@@ -403,7 +403,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
     $ids = [];
 
     foreach ($this->blocks() as $block) {
-      if ($block instanceof Field || $block instanceof Markup || $block instanceof Progress) {
+      if ($block instanceof Field || $block instanceof Markup || $block instanceof Progress || $block instanceof Table || $block instanceof Log) {
         $ids[] = $block->id();
       }
     }

@@ -133,6 +133,62 @@ final class OutputRenderTest extends TestCase {
     $this->assertStringContainsString('Apricot', $lines[1]);
   }
 
+  /**
+   * Tests that a selection marks only the line of the selected row.
+   *
+   * @param list<string> $headers
+   *   The header cells.
+   * @param int $selected
+   *   The selected row index.
+   * @param int $marked
+   *   The line index carrying the mark; -1 for none.
+   */
+  #[DataProvider('dataProviderTableWithSelectionMarksOnlyThatRow')]
+  public function testTableWithSelectionMarksOnlyThatRow(array $headers, int $selected, int $marked): void {
+    $lines = $this->theme(color: FALSE)->renderTable($headers, [['Apricot'], ['Carrot']], $selected);
+
+    foreach ($lines as $index => $line) {
+      $this->assertStringStartsWith($index === $marked ? '❯ ' : '  ', $line);
+    }
+  }
+
+  public static function dataProviderTableWithSelectionMarksOnlyThatRow(): \Iterator {
+    yield 'header, first row' => [['Item'], 0, 3];
+    yield 'header, second row' => [['Item'], 1, 4];
+    yield 'no header, first row' => [[], 0, 1];
+    yield 'no header, second row' => [[], 1, 2];
+    yield 'none selected' => [['Item'], -1, -1];
+    yield 'index past the rows' => [['Item'], 5, -1];
+    yield 'index equal to the row count, header' => [['Item'], 2, -1];
+    yield 'index equal to the row count, no header' => [[], 2, -1];
+  }
+
+  public function testTableWithSelectionStaysInsideTheFrame(): void {
+    $theme = new DefaultTheme(20, ['color' => FALSE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
+
+    foreach ($theme->renderTable(['Item'], [['A very long produce name indeed']], 0) as $line) {
+      $this->assertLessThanOrEqual(20, Ansi::width($line));
+    }
+  }
+
+  public function testTableWithSelectionAtItsNarrowestStaysInsideTheFrame(): void {
+    // 3 one-character columns need 13 columns, so the grid cannot shrink to
+    // the 12 the gutter leaves inside a 14-column frame.
+    $theme = new DefaultTheme(14, ['color' => TRUE, 'unicode' => TRUE, 'mode' => Mode::Dark]);
+
+    foreach ($theme->renderTable(['A', 'B', 'C'], [['x', 'y', 'z']], 0) as $line) {
+      $this->assertLessThanOrEqual($theme->contentWidth(), Ansi::width($line));
+    }
+  }
+
+  public function testTableWithSelectionHighlightsTheSelectedCells(): void {
+    $plain = implode("\n", $this->theme(color: TRUE)->renderTable([], [['Apricot'], ['Carrot']], -1));
+    $selected = implode("\n", $this->theme(color: TRUE)->renderTable([], [['Apricot'], ['Carrot']], 1));
+
+    $this->assertNotSame($plain, $selected);
+    $this->assertSame(Ansi::strip($plain), str_replace('❯', ' ', Ansi::strip($selected)));
+  }
+
   public function testTableFallsBackToAsciiGlyphs(): void {
     $lines = $this->theme(color: FALSE, unicode: FALSE)->renderTable(['Item'], [['Apricot']]);
 

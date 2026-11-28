@@ -11,6 +11,7 @@ use DrevOps\PhpTui\CancelException;
 use DrevOps\PhpTui\Input\Key;
 use DrevOps\PhpTui\InterruptException;
 use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Screen\ScreenController;
 use DrevOps\PhpTui\Terminal\Ansi;
 use DrevOps\PhpTui\Theme\Mode;
 use DrevOps\PhpTui\Theme\ThemeInterface;
@@ -293,16 +294,41 @@ final class TuiTester {
   }
 
   /**
+   * Make the session live: run a tick at each scripted timeout.
+   *
+   * A {@see \DrevOps\PhpTui\Testing\Tick} in the script is where a wait for a
+   * key times out, and a {@see \DrevOps\PhpTui\Testing\Resize} is where the
+   * terminal changes size.
+   *
+   * @param \Closure(int): void $tick
+   *   What runs on each timeout, given the number of ticks so far.
+   * @param int $interval
+   *   The milliseconds a real terminal would wait, at least 1.
+   *
+   * @return $this
+   *   The tester.
+   *
+   * @throws \InvalidArgumentException
+   *   When the interval is below 1 millisecond.
+   */
+  public function live(\Closure $tick, int $interval = ScreenController::INTERVAL): self {
+    $this->tui->live($tick, $interval);
+
+    return $this;
+  }
+
+  /**
    * Run the form, feeding it the given scripted keystrokes.
    *
-   * @param string|\DrevOps\PhpTui\Input\Key ...$items
+   * @param string|\DrevOps\PhpTui\Input\Key|\DrevOps\PhpTui\Testing\Tick|\DrevOps\PhpTui\Testing\Resize ...$items
    *   The scripted input: each item is either raw keystroke bytes (a string,
-   *   e.g. "\n" or "Ada") or a Key (encoded to its canonical bytes).
+   *   e.g. "\n" or "Ada"), a Key (encoded to its canonical bytes), or a Tick
+   *   or Resize, passed to the terminal as they are.
    *
    * @return \DrevOps\PhpTui\Answers\Answers
    *   The collected answers.
    */
-  public function run(string|Key ...$items): Answers {
+  public function run(string|Key|Tick|Resize ...$items): Answers {
     $keystrokes = [];
 
     foreach ($items as $item) {

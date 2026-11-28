@@ -479,7 +479,7 @@ The [primitives](/output) collect nothing and never run inside a panel, so they 
 | `renderSpinner()`     | an indeterminate spinner beside its caption               |
 | `renderProgressBar()` | a determinate bar with its step count and label           |
 
-`renderCard()` is the single renderer behind both the standalone card and the one a [markup block](/markup) draws in a panel - [grid](/markup#tables) included, since a markup grid is a card with a grid in it - so overriding it restyles the two together. `renderTable()` draws the standalone grid. Every method here takes plain strings and arrays: a renderer that reached for a field, a panel or an answer set could only ever be used from inside a form.
+`renderCard()` is the single renderer behind both the standalone card and the one a [markup block](/markup) draws in a panel - [grid](/markup#tables) included, since a markup grid is a card with a grid in it - so overriding it restyles the two together. `renderTable()` draws the standalone grid and the [live table](/live-table). The live table passes the selected row's index as a third argument. With an index, every line gets a selector gutter, and the row at that index gets the selector mark and the highlight color. Every method here takes plain strings, arrays and integers: a renderer that reached for a field, a panel or an answer set could only ever be used from inside a form.
 
 ## Writing a theme
 

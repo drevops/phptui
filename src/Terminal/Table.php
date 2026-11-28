@@ -43,11 +43,17 @@ final class Table {
    *   A styler for body cells, or NULL for none.
    * @param (callable(string): string)|null $style_border
    *   A styler for the border glyphs, or NULL for none.
+   * @param int $selected
+   *   The index of the body row styled as selected; -1, or any index no row
+   *   has, selects none.
+   * @param (callable(string): string)|null $style_selected
+   *   A styler for the selected row's cells, or NULL to style them as any
+   *   other body cell.
    *
    * @return list<string>
    *   The table's physical lines; empty when there are no columns to draw.
    */
-  public static function render(array $headers, array $rows, Border $border, bool $unicode, int $max_width = 0, ?callable $style_header = NULL, ?callable $style_cell = NULL, ?callable $style_border = NULL): array {
+  public static function render(array $headers, array $rows, Border $border, bool $unicode, int $max_width = 0, ?callable $style_header = NULL, ?callable $style_cell = NULL, ?callable $style_border = NULL, int $selected = -1, ?callable $style_selected = NULL): array {
     $columns = self::columnCount($headers, $rows);
 
     if ($columns === 0) {
@@ -68,8 +74,9 @@ final class Table {
       $lines[] = self::rule($chars['ml'], $chars['cx'], $chars['mr'], $chars['h'], $widths, $border_styler);
     }
 
-    foreach ($norm_rows as $norm_row) {
-      $lines[] = self::row($norm_row, $widths, $chars['v'], $unicode, $style_cell, $border_styler);
+    foreach ($norm_rows as $index => $norm_row) {
+      $styler = $index === $selected ? ($style_selected ?? $style_cell) : $style_cell;
+      $lines[] = self::row($norm_row, $widths, $chars['v'], $unicode, $styler, $border_styler);
     }
 
     $lines[] = self::rule($chars['bl'], $chars['bt'], $chars['br'], $chars['h'], $widths, $border_styler);

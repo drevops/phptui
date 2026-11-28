@@ -49,12 +49,12 @@ Nothing holds a _field_ except a _region_. A field is a block, so it's placed ex
 
 The four levels are what the model is made of. What you actually build with are _kinds_ of each, and what ends up on screen are _instances_:
 
-| Level  | Kinds                                                       | Instances, on the screen below                      |
-| ------ | ----------------------------------------------------------- | --------------------------------------------------- |
-| Screen | one                                                         | the screen                                          |
-| Layout | `default`, `panel`, `two-column`, and the shaped grid       | the screen's `default`                              |
-| Region | none - a layout names its own                               | `header`, `content`, `footer`                       |
-| Block  | Panel, Field, Markup, Breadcrumb, Legend, Actions, Progress | one Breadcrumb, one Panel, three Fields, one Legend |
+| Level  | Kinds                                                                   | Instances, on the screen below                      |
+| ------ | ----------------------------------------------------------------------- | --------------------------------------------------- |
+| Screen | one                                                                     | the screen                                          |
+| Layout | `default`, `panel`, `two-column`, and the shaped grid                   | the screen's `default`                              |
+| Region | none - a layout names its own                                           | `header`, `content`, `footer`                       |
+| Block  | Panel, Field, Markup, Breadcrumb, Legend, Actions, Progress, Table, Log | one Breadcrumb, one Panel, three Fields, one Legend |
 
 _Layouts_ are the level with reusable named kinds - that's what _Reuse_ means in the table below. _Regions_ have no kinds at all: a region is a named slot its layout declares, so `header` exists because `default` declares it.
 
@@ -100,6 +100,8 @@ Seventeen capabilities cover everything on screen, each described as what you ca
 | Legend     |          |         |      |         |         |           |        |         |      |       |      |        |         |        |       |        | ✓    |
 | Actions    | ✓        |         |      |         |         |           |        |         |      | ✓     |      |        |         | ✓      |       |        | ✓    |
 | Progress   | ✓        |         |      |         |         |           | ✓      |         |      | ✓     |      |        |         |        |       |        | ✓    |
+| Table      |          |         |      |         |         |           |        |         |      |       |      |        |         |        |       |        | ✓    |
+| Log        |          |         |      |         |         |           |        |         |      |       |      |        |         |        |       |        | ✓    |
 
 </div>
 
@@ -481,18 +483,19 @@ $this->region('sidebar')
   ->scrolls();
 ```
 
-| Call                    | Declares                                                  |
-| ----------------------- | --------------------------------------------------------- |
-| `->fixed(24)`           | 24 cells of the axis, whatever the terminal size          |
-| `->flex(2)`             | twice the share of the remainder that `flex(1)` gets      |
-| `->content()`           | as much of the axis as what it holds comes to             |
-| `->flow(Axis::Columns)` | its blocks run across it rather than down                 |
-| `->scrolls()`           | its contents may outrun it, and you can move through them |
-| `->previews()`          | a panel in it draws as a window onto it, not as a row     |
-| `->border(...)`         | edges around it: the sides, the style and a title         |
-| `->add($block)`         | a block goes in it, packed from the start of the flow     |
-| `->prepend($block)`     | a block goes in it, before everything already there       |
-| `->tail($block)`        | a block goes in it, packed from the end of the flow       |
+| Call                    | Declares                                                    |
+| ----------------------- | ----------------------------------------------------------- |
+| `->fixed(24)`           | 24 cells of the axis, whatever the terminal size            |
+| `->flex(2)`             | twice the share of the remainder that `flex(1)` gets        |
+| `->content()`           | as much of the axis as what it holds comes to               |
+| `->flow(Axis::Columns)` | its blocks run across it rather than down                   |
+| `->scrolls()`           | its contents may outrun it, and you can move through them   |
+| `->follows()`           | it scrolls, and its window stays on the end of its contents |
+| `->previews()`          | a panel in it draws as a window onto it, not as a row       |
+| `->border(...)`         | edges around it: the sides, the style and a title           |
+| `->add($block)`         | a block goes in it, packed from the start of the flow       |
+| `->prepend($block)`     | a block goes in it, before everything already there         |
+| `->tail($block)`        | a block goes in it, packed from the end of the flow         |
 
 `fixed()`, `flex()` and `content()` are the odd trio out: they _declare_ a size but don't compute one, because _Arrange_ is the layout's. The region states what it wants and the layout does the arithmetic - even for `content()`, where the number comes from the renderer counting what the region holds.
 
@@ -586,7 +589,7 @@ Blocks that outrun the region are the region's problem, not the flow's - it _Scr
 
 A **block** is anything drawn in a _region_. That's the whole definition: it fills the space it's given, and the region knows nothing else about it.
 
-Every block claims _Show_, and only a _panel_ nests anything - and what it nests is a _layout_, never blocks directly. So no block ever contains a field or another block. Seven kinds exist, and each has a section of its own below:
+Every block claims _Show_, and only a _panel_ nests anything - and what it nests is a _layout_, never blocks directly. So no block ever contains a field or another block. Nine kinds exist, and each has a section of its own below:
 
 | Block                     | Beyond _Show_, it claims                                               |
 | ------------------------- | ---------------------------------------------------------------------- |
@@ -597,6 +600,8 @@ Every block claims _Show_, and only a _panel_ nests anything - and what it nests
 | [Legend](#legend)         | nothing                                                                |
 | [Actions](#actions)       | _Activate_, _Focus_, _Reject_                                          |
 | [Progress](#progress)     | _Activate_, _Depend_, _Focus_                                          |
+| [Table](#table)           | nothing                                                                |
+| [Log](#log)               | nothing                                                                |
 
 Every one of them is constructed and added the same way:
 
@@ -890,6 +895,30 @@ Work that can't say how long it will take gets a spinner instead, and the captio
 
 **It claims _Focus_, so it draws focused differently from not**, exactly as the buttons do and for the same reason: the indicator says what the work is doing, which is a fact about the work rather than about the reader, so the row needs a mark of its own to say that starting it is one key press away. `progressSelector()` puts it in the column every other row the cursor walks marks itself in.
 
+#### Table
+
+A **table** is a grid whose rows the code holding it replaces between frames, with 1 selected row. Each row has a key, and the selection is a key, so replacing the rows keeps the mark on the same row wherever it now sits:
+
+```php
+$table = (new Table('crates', ['Fruit', 'Crates']))
+  ->rows(['apple' => ['Apple', 3], 'pear' => ['Pear', 2]])
+  ->select('pear');
+```
+
+It claims _Show_ alone. The selection marks a row without taking the cursor, so the table claims no _Focus_. The code holding the table moves the selection. It draws through `renderTable()`, the grid renderer behind the standalone table, and passes the selected row's index, so the theme marks the row it laid out. [Live table](/live-table) covers the calls.
+
+#### Log
+
+A **log** holds lines written over time and keeps the newest of them, up to its line limit. It claims _Show_ alone and draws each line as a markup line.
+
+A log draws every line it holds and never learns how many rows it was given, so keeping the newest lines in sight is the region's job. A region declared with `->follows()` scrolls with its window on the end of its contents:
+
+```php
+$this->region('log')->fixed(5)->follows();
+```
+
+[Live log](/live-log) covers the calls.
+
 ### On screen
 
 Here it is on a real screen, each level labeled on the row it owns - the _region_, the _block_ in it, then the _panel_'s _fields_ and the _mode_ each is drawing:
@@ -949,7 +978,7 @@ That's the whole division of labor. **Order, spacing and how many elements there
 
 A block names its elements in an interface, and a theme implements it - [Breadcrumb](#breadcrumb) and [Legend](#legend) above show both the interface and what each element draws.
 
-Eight ship, one per block plus one for the frame that belongs to no block:
+Eight ship: 1 for each block that draws pieces of its own, plus 1 for the frame that belongs to no block. A table and a log draw no new pieces, so they reuse what exists: a log draws its lines through `MarkupElementsInterface`, and a table draws through the grid renderer `renderTable()`.
 
 | Interface                     | Draws                                                                |
 | ----------------------------- | -------------------------------------------------------------------- |
@@ -995,7 +1024,7 @@ At the center is the **block tree**. A form is declared as one, and everything e
 Read it as three concerns around that tree:
 
 - **Declaring.** `Form`, `PanelBuilder` and `FieldBuilder` write the tree; `Tui` is the facade you hold. Everything that describes the terminal rather than the questionnaire - the [theme](/themes), the [layout](/layouts), the [key bindings](/key-bindings), color, Unicode, the footer - is set on the facade, so one declaration serves every way of running it.
-- **The tree itself.** `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions` and `Progress` all implement `BlockInterface`. Each declares what it can do as a capability interface (`Block\Capability`) and what it needs drawn as an elements interface (`Block\Element`). `Tree` is the one walk of it, so the collector, the screen and the schema tools read one order and one answer to which blocks are there.
+- **The tree itself.** `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions`, `Progress`, `Table` and `Log` all implement `BlockInterface`. Each declares what it can do as a capability interface (`Block\Capability`) and what it needs drawn as an elements interface (`Block\Element`). `Tree` is the one walk of it, so the collector, the screen and the schema tools read one order and one answer to which blocks are there.
 - **Running it.** `Collector` collects the tree with no screen at all. `ScreenController` drives it through a terminal - arranging it with a `Screen`, a layout and its regions, sending each key inward with `KeyRouter`, drawing outward with `ScreenRenderer`. Both paths settle the same rules and produce the same `Answers`.
 
 Under all three sits the terminal. `Terminal` is the device - raw mode, the alternate screen, the size it reports - and beside it is the text machinery every drawn line passes through: `Ansi` for escape sequences, `Box` and `Table` for the geometry of a frame and a grid, and `Terminal\Markup` - distinct from the `Markup` block above - for the [markdown subset](/markdown). All of it takes plain strings and hands plain strings back, so nothing above it has to know how a glyph reaches the screen.
@@ -1192,7 +1221,7 @@ Every level, every capability and every element on this page is implemented and 
 | Screen       | `Screen`, and `ScreenRenderer` to draw one                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Layout       | `LayoutInterface`, `AbstractLayout`, `DefaultLayout`, `GridLayout`, `PanelLayout`, `TwoColumnLayout`, `LayoutManager`, and the `Furniture` roles a layout answers for                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | Region       | `Region`, and the `Sizing` kinds it states                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Block        | `BlockInterface`, `AbstractBlock`, and `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions`, `Progress`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Block        | `BlockInterface`, `AbstractBlock`, and `Panel`, `Field`, `Markup`, `Breadcrumb`, `Legend`, `Actions`, `Progress`, `Table`, `Log`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | Capabilities | one interface per block capability - `ActivateCapableInterface`, `BindCapableInterface`, `CaptureCapableInterface`, `CollectCapableInterface`, `ConstrainCapableInterface`, `DependCapableInterface`, `DescendCapableInterface`, `FocusCapableInterface`, `OverlayCapableInterface`, `RejectCapableInterface` - with `BindCapableTrait`, `DependCapableTrait` and `FocusCapableTrait` carrying the shared behavior, and beside them `ScrollCapableInterface` with `ScrollCapableTrait`, the one capability claimed outside the block level: by a `Region` over its blocks, and by a `LayoutInterface` over its lines |
 | Elements     | one `*ElementsInterface` per block, plus `ChromeElementsInterface`, all implemented by `AbstractTheme`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | Theme        | `ThemeInterface` (two methods and the width to lay out to when nothing else says), `AbstractTheme` as the floor, `DefaultTheme` above it, the six `*CapableInterface` declarations with `ColorSchemeCapableTrait` and `UnicodeCapableTrait`, and `ThemeManager` to name any of them and refuse one that cannot draw                                                                                                                                                                                                                                                                                                  |

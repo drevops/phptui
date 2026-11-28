@@ -31,7 +31,15 @@ use DrevOps\PhpTui\Screen\Capability\ScrollCapableTrait;
 final class Region implements BorderCapableInterface, ScrollCapableInterface {
 
   use BorderCapableTrait;
-  use ScrollCapableTrait;
+  use ScrollCapableTrait {
+    scrollTo as protected moveTo;
+    offset as protected heldOffset;
+  }
+
+  /**
+   * Whether the window stays on the end of its contents.
+   */
+  protected bool $follows = FALSE;
 
   /**
    * How this region's share of the axis is determined.
@@ -223,6 +231,50 @@ final class Region implements BorderCapableInterface, ScrollCapableInterface {
    */
   public function isPreviewing(): bool {
     return $this->previews;
+  }
+
+  /**
+   * Keep the window on the end of this region's contents as they grow.
+   *
+   * A following region scrolls, so the rows above the window are marked. A
+   * {@see self::scrollTo()} moves the window off the end and leaves it where
+   * it was moved; calling this again pins it back.
+   *
+   * @return $this
+   *   The region.
+   */
+  public function follows(): self {
+    $this->scrolls = TRUE;
+    $this->follows = TRUE;
+
+    return $this;
+  }
+
+  /**
+   * Whether the window stays on the end of this region's contents.
+   *
+   * @return bool
+   *   TRUE until the region is scrolled to a row of its own.
+   */
+  public function isFollowing(): bool {
+    return $this->follows;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function scrollTo(int $row): static {
+    $this->moveTo($row);
+    $this->follows = FALSE;
+
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function offset(int $content, int $visible): int {
+    return $this->follows ? max(0, $content - $visible) : $this->heldOffset($content, $visible);
   }
 
   /**
