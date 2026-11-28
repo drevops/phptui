@@ -36,11 +36,9 @@ final class LogTest extends TestCase {
     new Log('bench', $limit);
   }
 
-  public static function dataProviderLimitBelowOneThrows(): array {
-    return [
-      'zero' => [0],
-      'negative' => [-3],
-    ];
+  public static function dataProviderLimitBelowOneThrows(): \Iterator {
+    yield 'zero' => [0];
+    yield 'negative' => [-3];
   }
 
   #[DataProvider('dataProviderWriteSplitsEveryLineEnding')]
@@ -48,16 +46,14 @@ final class LogTest extends TestCase {
     $this->assertSame($expected, (new Log('bench'))->write(...$writes)->lines());
   }
 
-  public static function dataProviderWriteSplitsEveryLineEnding(): array {
-    return [
-      'one line' => [['Apple weighed'], ['Apple weighed']],
-      'several arguments' => [['Apple weighed', 'Pear weighed'], ['Apple weighed', 'Pear weighed']],
-      'line feed' => [["Apple weighed\nPear weighed"], ['Apple weighed', 'Pear weighed']],
-      'carriage return and line feed' => [["Apple weighed\r\nPear weighed"], ['Apple weighed', 'Pear weighed']],
-      'lone carriage return' => [["Apple weighed\rPear weighed"], ['Apple weighed', 'Pear weighed']],
-      'empty line kept' => [['Apple weighed', ''], ['Apple weighed', '']],
-      'control bytes stripped' => [["Apple \x1b[31mweighed\x07"], ['Apple [31mweighed']],
-    ];
+  public static function dataProviderWriteSplitsEveryLineEnding(): \Iterator {
+    yield 'one line' => [['Apple weighed'], ['Apple weighed']];
+    yield 'several arguments' => [['Apple weighed', 'Pear weighed'], ['Apple weighed', 'Pear weighed']];
+    yield 'line feed' => [["Apple weighed\nPear weighed"], ['Apple weighed', 'Pear weighed']];
+    yield 'carriage return and line feed' => [["Apple weighed\r\nPear weighed"], ['Apple weighed', 'Pear weighed']];
+    yield 'lone carriage return' => [["Apple weighed\rPear weighed"], ['Apple weighed', 'Pear weighed']];
+    yield 'empty line kept' => [['Apple weighed', ''], ['Apple weighed', '']];
+    yield 'control bytes stripped' => [["Apple \x1b[31mweighed\x07"], ['Apple [31mweighed']];
   }
 
   public function testWriteDropsOldestLinesPastTheLimit(): void {

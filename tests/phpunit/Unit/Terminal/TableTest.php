@@ -136,13 +136,11 @@ final class TableTest extends TestCase {
     $this->assertSame($expected, [$lines[1], $lines[2]]);
   }
 
-  public static function dataProviderSelectedRowTakesItsOwnStyler(): array {
-    return [
-      'first row' => [0, TRUE, ['│ <s>x</s> │', '│ <c>y</c> │']],
-      'second row' => [1, TRUE, ['│ <c>x</c> │', '│ <s>y</s> │']],
-      'none selected' => [-1, TRUE, ['│ <c>x</c> │', '│ <c>y</c> │']],
-      'no selected styler' => [0, FALSE, ['│ <c>x</c> │', '│ <c>y</c> │']],
-    ];
+  public static function dataProviderSelectedRowTakesItsOwnStyler(): \Iterator {
+    yield 'first row' => [0, TRUE, ['│ <s>x</s> │', '│ <c>y</c> │']];
+    yield 'second row' => [1, TRUE, ['│ <c>x</c> │', '│ <s>y</s> │']];
+    yield 'none selected' => [-1, TRUE, ['│ <c>x</c> │', '│ <c>y</c> │']];
+    yield 'no selected styler' => [0, FALSE, ['│ <c>x</c> │', '│ <c>y</c> │']];
   }
 
   public function testOverflowShrinksAndEllipsizes(): void {

@@ -152,17 +152,15 @@ final class OutputRenderTest extends TestCase {
     }
   }
 
-  public static function dataProviderTableWithSelectionMarksOnlyThatRow(): array {
-    return [
-      'header, first row' => [['Item'], 0, 3],
-      'header, second row' => [['Item'], 1, 4],
-      'no header, first row' => [[], 0, 1],
-      'no header, second row' => [[], 1, 2],
-      'none selected' => [['Item'], -1, -1],
-      'index past the rows' => [['Item'], 5, -1],
-      'index equal to the row count, header' => [['Item'], 2, -1],
-      'index equal to the row count, no header' => [[], 2, -1],
-    ];
+  public static function dataProviderTableWithSelectionMarksOnlyThatRow(): \Iterator {
+    yield 'header, first row' => [['Item'], 0, 3];
+    yield 'header, second row' => [['Item'], 1, 4];
+    yield 'no header, first row' => [[], 0, 1];
+    yield 'no header, second row' => [[], 1, 2];
+    yield 'none selected' => [['Item'], -1, -1];
+    yield 'index past the rows' => [['Item'], 5, -1];
+    yield 'index equal to the row count, header' => [['Item'], 2, -1];
+    yield 'index equal to the row count, no header' => [[], 2, -1];
   }
 
   public function testTableWithSelectionStaysInsideTheFrame(): void {

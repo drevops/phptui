@@ -106,14 +106,12 @@ final class RegionTest extends TestCase {
     $this->assertSame($expected, (new Region('log'))->follows()->offset($content, $visible));
   }
 
-  public static function dataProviderFollowingRegionShowsTheEndOfItsContents(): array {
-    return [
-      'fits' => [3, 8, 0],
-      'exactly fills' => [8, 8, 0],
-      'one over' => [9, 8, 1],
-      'grown further' => [40, 8, 32],
-      'no room' => [5, 0, 5],
-    ];
+  public static function dataProviderFollowingRegionShowsTheEndOfItsContents(): \Iterator {
+    yield 'fits' => [3, 8, 0];
+    yield 'exactly fills' => [8, 8, 0];
+    yield 'one over' => [9, 8, 1];
+    yield 'grown further' => [40, 8, 32];
+    yield 'no room' => [5, 0, 5];
   }
 
   public function testScrollingFollowingRegionLeavesItWhereItWasMoved(): void {

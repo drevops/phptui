@@ -42,20 +42,17 @@ final class TableTest extends TestCase {
     $this->assertSame($expected, $table->rows($after)->selected());
   }
 
-  public static function dataProviderReplacingRowsKeepsSelectionOnSameKey(): array {
+  public static function dataProviderReplacingRowsKeepsSelectionOnSameKey(): \Iterator {
     $three = ['apple' => ['Apple'], 'pear' => ['Pear'], 'plum' => ['Plum']];
-
-    return [
-      'same rows' => [$three, 'pear', $three, 'pear'],
-      'reordered' => [$three, 'pear', ['plum' => ['Plum'], 'apple' => ['Apple'], 'pear' => ['Pear']], 'pear'],
-      'row inserted above' => [$three, 'pear', ['fig' => ['Fig'], 'apple' => ['Apple'], 'pear' => ['Pear'], 'plum' => ['Plum']], 'pear'],
-      'cells changed' => [$three, 'pear', ['apple' => ['Apple'], 'pear' => ['Pear, ripe'], 'plum' => ['Plum']], 'pear'],
-      'numeric key as int then string' => [[10 => ['Apple'], 20 => ['Pear']], 20, ['20' => ['Pear'], '30' => ['Plum']], '20'],
-      'numeric key as string' => [['10' => ['Apple'], '20' => ['Pear']], '10', [10 => ['Apple']], '10'],
-      'gone, falls to same position' => [$three, 'pear', ['apple' => ['Apple'], 'plum' => ['Plum'], 'fig' => ['Fig']], 'plum'],
-      'gone, falls to last row' => [$three, 'plum', ['apple' => ['Apple'], 'pear' => ['Pear']], 'pear'],
-      'gone, no rows left' => [$three, 'pear', [], NULL],
-    ];
+    yield 'same rows' => [$three, 'pear', $three, 'pear'];
+    yield 'reordered' => [$three, 'pear', ['plum' => ['Plum'], 'apple' => ['Apple'], 'pear' => ['Pear']], 'pear'];
+    yield 'row inserted above' => [$three, 'pear', ['fig' => ['Fig'], 'apple' => ['Apple'], 'pear' => ['Pear'], 'plum' => ['Plum']], 'pear'];
+    yield 'cells changed' => [$three, 'pear', ['apple' => ['Apple'], 'pear' => ['Pear, ripe'], 'plum' => ['Plum']], 'pear'];
+    yield 'numeric key as int then string' => [[10 => ['Apple'], 20 => ['Pear']], 20, ['20' => ['Pear'], '30' => ['Plum']], '20'];
+    yield 'numeric key as string' => [['10' => ['Apple'], '20' => ['Pear']], '10', [10 => ['Apple']], '10'];
+    yield 'gone, falls to same position' => [$three, 'pear', ['apple' => ['Apple'], 'plum' => ['Plum'], 'fig' => ['Fig']], 'plum'];
+    yield 'gone, falls to last row' => [$three, 'plum', ['apple' => ['Apple'], 'pear' => ['Pear']], 'pear'];
+    yield 'gone, no rows left' => [$three, 'pear', [], NULL];
   }
 
   public function testReplacingRowsLeavesNoSelectionUnselected(): void {
@@ -82,15 +79,13 @@ final class TableTest extends TestCase {
     $this->assertSame($expected, $table->move($delta)->selected());
   }
 
-  public static function dataProviderMoveStepsSelectionAndStopsAtEnds(): array {
-    return [
-      'down one' => ['apple', 1, 'pear'],
-      'up one' => ['plum', -1, 'pear'],
-      'past the last' => ['pear', 5, 'plum'],
-      'past the first' => ['pear', -5, 'apple'],
-      'nothing selected, down' => [NULL, 1, 'apple'],
-      'nothing selected, up' => [NULL, -1, 'apple'],
-    ];
+  public static function dataProviderMoveStepsSelectionAndStopsAtEnds(): \Iterator {
+    yield 'down one' => ['apple', 1, 'pear'];
+    yield 'up one' => ['plum', -1, 'pear'];
+    yield 'past the last' => ['pear', 5, 'plum'];
+    yield 'past the first' => ['pear', -5, 'apple'];
+    yield 'nothing selected, down' => [NULL, 1, 'apple'];
+    yield 'nothing selected, up' => [NULL, -1, 'apple'];
   }
 
   public function testMoveWithNoRowsSelectsNothing(): void {
