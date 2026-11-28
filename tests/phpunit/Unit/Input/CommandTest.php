@@ -85,6 +85,16 @@ final class CommandTest extends TestCase {
     $this->assertInstanceOf(Command::class, $map->navigation()->command(Key::char('s')));
   }
 
+  /**
+   * Tests that a conflicting or malformed command throws at setup.
+   *
+   * @param string $preset
+   *   The preset the overrides apply on top of.
+   * @param list<\DrevOps\PhpTui\Input\Binding|\DrevOps\PhpTui\Input\Command> $overrides
+   *   The overrides applied on top of the preset.
+   * @param string $message
+   *   The expected exception message fragment.
+   */
   #[DataProvider('dataProviderConflictsThrow')]
   public function testConflictsThrow(string $preset, array $overrides, string $message): void {
     $this->expectException(\InvalidArgumentException::class);
