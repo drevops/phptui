@@ -27,13 +27,13 @@ use DrevOps\PhpTui\Tui;
 require __DIR__ . '/../vendor/autoload.php';
 
 // The child sorts one crate every 0.7 seconds and reports it on its own line.
-$sorter = <<<'PHP'
+$sorter = <<<'PHP_WRAP'
 foreach (['Apples', 'Pears', 'Plums', 'Cherries', 'Peaches', 'Melons'] as $index => $fruit) {
   usleep(700000);
   echo sprintf('Sorted crate %d of 6: %s', $index + 1, $fruit), PHP_EOL;
 }
 echo 'All crates sorted', PHP_EOL;
-PHP;
+PHP_WRAP;
 
 $child = proc_open([PHP_BINARY, '-r', $sorter], [1 => ['pipe', 'w']], $pipes);
 
@@ -59,11 +59,11 @@ $tui = (new Tui($form))->place('header', $bench, tail: TRUE)->flow('header', Axi
   $pending .= (string) fread($stream, 8192);
   $lines = explode(PHP_EOL, $pending);
   // The last piece is a line the child has not finished writing yet.
-  $pending = (string) array_pop($lines);
+  $pending = array_pop($lines);
   $lines = array_filter($lines, static fn(string $line): bool => $line !== '');
 
   if ($lines !== []) {
-    $bench->body((string) end($lines));
+    $bench->body(end($lines));
   }
 });
 
