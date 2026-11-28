@@ -1048,7 +1048,7 @@ Four kinds of key never reach the router, and all four for the same reason - non
 
 The wheel is the clearest of the four. It moves the viewport by a row and leaves the cursor exactly where it was, so a reader can look ahead without answering anything - and the moment they press a key that could move the cursor, the rule that keeps the cursor in sight wins the viewport back. A surface that was not declared to _Scroll_ ignores it, because there is nothing to move through.
 
-A [live screen](/live-screens) also redraws with no key pressed. `ScreenController` waits for a key for a fixed interval, and runs your tick callback each time the wait times out.
+A [live screen](/live-screens) also redraws with no key pressed. `ScreenController` waits for a key for a fixed interval, and runs your tick callback each time the wait times out. The same wait covers the streams in its `Streams` registry, so output on a stream runs that stream's callback before the next frame.
 
 Drawing runs the other way, outward from the root:
 
