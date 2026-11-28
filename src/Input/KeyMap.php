@@ -10,18 +10,22 @@ use DrevOps\PhpTui\FormException;
 /**
  * The resolved, validated key bindings for a whole form.
  *
- * Built from a flat list of {@see Binding}s - a preset's defaults followed by
- * any consumer overrides - it layers them into one {@see ScopedKeyMap} per
+ * Built from a flat list of {@see Binding}s and caller {@see Command}s - a
+ * preset's defaults followed by any consumer overrides - it layers the
+ * bindings into one {@see ScopedKeyMap} per
  * scope: the base defaults, panel navigation, and each field type that
  * overrides the base. Later bindings win, so a consumer replaces a default by
  * re-declaring it, and a scope override reassigns a key without disturbing the
- * base for other scopes.
+ * base for other scopes. Commands resolve in the navigation scope only.
  *
  * Resolution validates eagerly and fails loudly, so a bad declaration is caught
  * when the form is built rather than mid-session:
  * - a key bound to two different actions in the same scope is a conflict;
+ * - a command key already bound in the navigation scope, to an action or to
+ *   another command, is a conflict;
  * - a printable character bound in the base scope, or in a scope whose field
- *   consumes typed input, would be un-typeable and is rejected;
+ *   consumes typed input as its answer, would be un-typeable and is rejected;
+ * - a command with no label or no keys is rejected;
  * - a character binding that is not exactly one character is rejected.
  *
  * @package DrevOps\PhpTui\Input
@@ -48,20 +52,24 @@ final class KeyMap {
   /**
    * Resolve and validate a list of bindings into scoped maps.
    *
-   * @param list<\DrevOps\PhpTui\Input\Binding> $bindings
-   *   The bindings, a preset's defaults followed by any overrides.
+   * @param list<\DrevOps\PhpTui\Input\Binding|\DrevOps\PhpTui\Input\Command> $bindings
+   *   The bindings and commands, a preset's defaults followed by any
+   *   overrides.
    *
    * @throws \InvalidArgumentException
-   *   When a binding conflicts, is un-typeable, or is malformed.
+   *   When a binding or command conflicts, is un-typeable, or is malformed.
    */
   public function __construct(array $bindings) {
+    $commands = $this->commands(array_values(array_filter($bindings, static fn(Binding|Command $entry): bool => $entry instanceof Command)));
+    $bindings = array_values(array_filter($bindings, static fn(Binding|Command $entry): bool => $entry instanceof Binding));
+
     $layers = $this->layer($bindings);
 
     $base_inverted = $this->invert($layers[Scope::base()->token()] ?? [], Scope::base());
     $this->assertTypeable($base_inverted, Scope::base());
     $this->base = $this->toScoped($base_inverted);
 
-    $this->navigation = $this->buildScope($base_inverted, $layers, Scope::navigation());
+    $this->navigation = $this->buildScope($base_inverted, $layers, Scope::navigation(), $commands);
 
     foreach ($bindings as $binding) {
       $token = $binding->scope->token();
@@ -145,11 +153,16 @@ final class KeyMap {
    *   All layers, keyed by scope token.
    * @param \DrevOps\PhpTui\Input\Scope $scope
    *   The scope to build.
+   * @param list<array{command:\DrevOps\PhpTui\Input\Command,keys:list<\DrevOps\PhpTui\Input\Key>}> $commands
+   *   The resolved caller commands the scope carries.
    *
    * @return \DrevOps\PhpTui\Input\ScopedKeyMap
    *   The resolved scope.
+   *
+   * @throws \DrevOps\PhpTui\FormException
+   *   When a command key is already bound to an action in the scope.
    */
-  protected function buildScope(array $base_inverted, array $layers, Scope $scope): ScopedKeyMap {
+  protected function buildScope(array $base_inverted, array $layers, Scope $scope, array $commands = []): ScopedKeyMap {
     $scope_inverted = $this->invert($layers[$scope->token()] ?? [], $scope);
 
     $effective = $base_inverted;
@@ -158,11 +171,74 @@ final class KeyMap {
       $effective[$token] = $entry;
     }
 
-    if ($scope->consumesText()) {
+    // Typed text that only narrows a list loses a bound letter to its binding,
+    // so the caller may claim one there.
+    if ($scope->consumesText() && !$scope->isFiltering()) {
       $this->assertTypeable($effective, $scope);
     }
 
-    return $this->toScoped($effective);
+    foreach ($commands as $entry) {
+      foreach ($entry['keys'] as $key) {
+        if (isset($effective[$key->token()])) {
+          throw new FormException(sprintf('Key "%s" is bound to both %s and the "%s" command in the %s scope.', $key->label(), $effective[$key->token()]['action']->name, $entry['command']->label, $scope->label()));
+        }
+      }
+    }
+
+    return $this->toScoped($effective, $commands);
+  }
+
+  /**
+   * Validate caller commands and normalize their keys.
+   *
+   * @param list<\DrevOps\PhpTui\Input\Command> $commands
+   *   The commands, in declaration order.
+   *
+   * @return list<array{command:\DrevOps\PhpTui\Input\Command,keys:list<\DrevOps\PhpTui\Input\Key>}>
+   *   The commands with their normalized, de-duplicated keys.
+   *
+   * @throws \DrevOps\PhpTui\FormException
+   *   When a command has no label or no keys, uses the interrupt key, or
+   *   shares a key with another.
+   */
+  protected function commands(array $commands): array {
+    $scope = Scope::navigation();
+    $claimed = [];
+    $resolved = [];
+
+    foreach ($commands as $command) {
+      if (trim($command->label) === '') {
+        throw new FormException('A command needs a label to show in the hint line.');
+      }
+
+      if ($command->keys === []) {
+        throw new FormException(sprintf('The "%s" command needs at least one key.', $command->label));
+      }
+
+      $keys = [];
+
+      foreach ($this->normalize($command->keys, $scope) as $key) {
+        // The session stops on the interrupt key before routing it, so a
+        // command bound to it would never run.
+        if ($key->is(KeyName::Interrupt)) {
+          throw new FormException(sprintf('The "%s" command cannot use the interrupt key, which always stops the session.', $command->label));
+        }
+
+        $token = $key->token();
+        $owner = $claimed[$token] ?? NULL;
+
+        if ($owner instanceof Command && $owner !== $command) {
+          throw new FormException(sprintf('Key "%s" is bound to both the "%s" and "%s" commands in the %s scope.', $key->label(), $owner->label, $command->label, $scope->label()));
+        }
+
+        $claimed[$token] = $command;
+        $keys[$token] = $key;
+      }
+
+      $resolved[] = ['command' => $command, 'keys' => array_values($keys)];
+    }
+
+    return $resolved;
   }
 
   /**
@@ -202,11 +278,13 @@ final class KeyMap {
    *
    * @param array<string,array{key:\DrevOps\PhpTui\Input\Key,action:\DrevOps\PhpTui\Input\Action}> $inverted
    *   The inverted map.
+   * @param list<array{command:\DrevOps\PhpTui\Input\Command,keys:list<\DrevOps\PhpTui\Input\Key>}> $commands
+   *   The resolved caller commands the scope carries.
    *
    * @return \DrevOps\PhpTui\Input\ScopedKeyMap
    *   The scoped map.
    */
-  protected function toScoped(array $inverted): ScopedKeyMap {
+  protected function toScoped(array $inverted, array $commands = []): ScopedKeyMap {
     $by_key = [];
     $by_action = [];
 
@@ -215,7 +293,7 @@ final class KeyMap {
       $by_action[$entry['action']->name][] = $entry['key'];
     }
 
-    return new ScopedKeyMap($by_key, $by_action);
+    return new ScopedKeyMap($by_key, $by_action, $commands);
   }
 
   /**
@@ -281,13 +359,13 @@ final class KeyMap {
 
     foreach ($keys as $key) {
       if ($key instanceof Key) {
-        $out[] = $key;
+        $out[] = $this->canonical($key);
       }
       elseif ($key instanceof KeyName) {
         $out[] = Key::named($key);
       }
       elseif (strlen($key) === 1) {
-        $out[] = Key::char($key);
+        $out[] = $this->canonical(Key::char($key));
       }
       else {
         throw new FormException(sprintf('A character binding in the %s scope must be a single character, got "%s".', $scope->label(), $key));
@@ -295,6 +373,26 @@ final class KeyMap {
     }
 
     return $out;
+  }
+
+  /**
+   * The key a terminal delivers for a character key.
+   *
+   * {@see KeyParser} reads bytes such as a tab or a space as named keys, so a
+   * character binding for one of them takes the named form it is matched as.
+   *
+   * @param \DrevOps\PhpTui\Input\Key $key
+   *   The key.
+   *
+   * @return \DrevOps\PhpTui\Input\Key
+   *   The named key the parser produces for the character, else the key.
+   */
+  protected function canonical(Key $key): Key {
+    if (!$key->isChar()) {
+      return $key;
+    }
+
+    return (new KeyParser())->parse((string) $key->char)[0] ?? $key;
   }
 
 }

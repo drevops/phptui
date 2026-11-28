@@ -1,6 +1,6 @@
 ---
 title: Key bindings
-description: 'Remap navigation, edit, accept and cancel keys per field type; a default and a vim preset ship, and conflicting bindings fail at setup.'
+description: 'Remap navigation, edit, accept and cancel keys per field type and bind keys to your own handlers; a default and a vim preset ship, and conflicting bindings fail at setup.'
 keywords: ['key bindings', 'keyboard', 'vim', 'shortcuts', 'remap']
 ---
 
@@ -107,6 +107,42 @@ A binding's keys take three forms: a `KeyName` case for a named key, a single-ch
 
 The panel and editor hints are drawn from the live bindings, so they always reflect the active keys - remap quit to <kbd>x</kbd> and the footer says so.
 
+### Letters in a multiple select
+
+A multiple select filters its options as you type. The answer is the options you check, so the multiple select is the one text-taking scope where you can bind a printable character. A bound letter runs its action and skips the filter. To check every option on <kbd>a</kbd> and clear them on <kbd>n</kbd>:
+
+```php
+$tui = (new Tui($form))->keys('default', [
+  new Binding(Scope::field(FieldType::Select, multiple: TRUE), Action::SelectAll, 'a'),
+  new Binding(Scope::field(FieldType::Select, multiple: TRUE), Action::SelectNone, 'n'),
+]);
+```
+
+The multiple search, `Scope::field(FieldType::Search, multiple: TRUE)`, keeps every letter for its query, because the query can drive a backend source.
+
+## Your own commands
+
+A `Command` binds keys to a handler of your own. Declare it in the same list as your overrides, with the label the hint line shows, the handler and the keys. Its keys take the same 3 forms a `Binding` takes:
+
+```php
+use DrevOps\PhpTui\Answers\Answers;
+use DrevOps\PhpTui\Input\Command;
+
+$drafts = [];
+
+$tui = (new Tui($form))->keys('default', [
+  new Command('save', function (Answers $answers) use (&$drafts): void {
+    $drafts[] = $answers->toSummary();
+  }, 's'),
+]);
+```
+
+The handler receives the answers as they stand when the key is pressed. Its return value is ignored.
+
+A command runs from the panels: on any row and on the buttons that end the form. While a field is open, its keys go to the field, so an open text field types <kbd>s</kbd> as a letter. The hint line follows the same rule. It lists each command after the panel's own keys, in the order you declared them, and drops them while a field is open.
+
+A command needs a free key. Its key can't be one the navigation scope already binds, either directly or through the base scope, such as <kbd>q</kbd>, <kbd>?</kbd>, <kbd>Space</kbd> or <kbd>j</kbd> under `vim`. It also can't be another command's key. Either conflict throws when the facade is configured. To give a command a built-in's key, rebind the built-in first: `new Binding(Scope::navigation(), Action::Quit, 'x')` frees <kbd>q</kbd>.
+
 ## Presets and validation
 
 A preset is a class listing its bindings. Subclass `DefaultKeyMap` to ship your own, name it directly with `->keys('\App\MyKeyMap')`, or register a short alias with `KeyMapManager::register('mine', MyKeyMap::class)` and then `->keys('mine')`.
@@ -114,7 +150,8 @@ A preset is a class listing its bindings. Subclass `DefaultKeyMap` to ship your 
 Bindings are validated the moment they're set, so a bad key map is caught at configuration time, not mid-session:
 
 - a key bound to two different actions in the same scope is a conflict;
-- a printable character bound in the base scope, or in a scope whose field consumes typed input (text, template, number, rating, password, textarea, search, suggest, toggle, file picker, and the multiple select), would be un-typeable and is rejected - control characters like <kbd>Ctrl-E</kbd> are exempt, since they're command keys, never typed content;
-- an unknown preset name, or a character binding that is not exactly one character, is rejected.
+- a command key already bound in the navigation scope, to an action or to another command, is a conflict;
+- a printable character bound in the base scope, or in a scope whose field consumes typed input (text, template, number, rating, password, textarea, search, suggest, toggle and file picker), would be un-typeable and is rejected - control characters like <kbd>Ctrl-E</kbd> are exempt, since they're command keys, never typed content;
+- an unknown preset name, a character binding that isn't exactly 1 character, a command with no label or no keys, or a command bound to <kbd>Ctrl-C</kbd>, is rejected.
 
-See [`playground/10-key-bindings-*`](https://github.com/drevops/phptui/tree/main/playground) for the default map, the vim preset and a custom override side by side.
+See [`playground/10-key-bindings-*`](https://github.com/drevops/phptui/tree/main/playground) for the default map, the vim preset, a custom override and your own commands side by side.

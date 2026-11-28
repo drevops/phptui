@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\PhpTui\Block\Capability;
 
 use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Command;
 use DrevOps\PhpTui\Input\Key;
 use DrevOps\PhpTui\Input\KeyMap;
 use DrevOps\PhpTui\Input\KeyMapManager;
@@ -43,7 +44,7 @@ trait BindCapableTrait {
    * {@inheritdoc}
    */
   public function binds(Key $key): bool {
-    return $this->boundAction($key) instanceof Action;
+    return $this->boundAction($key) instanceof Action || $this->bindings()->command($key) instanceof Command;
   }
 
   /**

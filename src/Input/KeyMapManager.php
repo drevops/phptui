@@ -60,7 +60,7 @@ final class KeyMapManager {
    *
    * @param string $name
    *   A registered name, a preset class name, or "" for the default preset.
-   * @param list<\DrevOps\PhpTui\Input\Binding> $overrides
+   * @param list<\DrevOps\PhpTui\Input\Binding|\DrevOps\PhpTui\Input\Command> $overrides
    *   Bindings appended after the preset's own, retuning individual bindings.
    *
    * @return \DrevOps\PhpTui\Input\KeyMap

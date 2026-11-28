@@ -6,6 +6,7 @@ namespace DrevOps\PhpTui\Tests\Unit\Input;
 
 use DrevOps\PhpTui\Input\Action;
 use DrevOps\PhpTui\Input\Hint;
+use DrevOps\PhpTui\Input\Key;
 use DrevOps\PhpTui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\PhpTui\Translation\Translator;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -26,6 +27,14 @@ final class HintTest extends TestCase {
 
     $this->assertSame('move', $hint->label);
     $this->assertSame([Action::MoveUp, Action::MoveDown], $hint->actions);
+  }
+
+  public function testKeysAreKeptApartFromActions(): void {
+    $save = Key::char('s');
+    $hint = new Hint('save', Action::Accept, $save);
+
+    $this->assertSame([Action::Accept], $hint->actions);
+    $this->assertSame([$save], $hint->keys);
   }
 
   public function testLabelIsTranslated(): void {

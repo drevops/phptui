@@ -155,6 +155,17 @@ final class KeyMapTest extends TestCase {
     $this->assertTrue($map->matches(Key::named(KeyName::Enter), Action::Accept));
   }
 
+  public function testMultipleSelectAcceptsPrintableBindings(): void {
+    $map = KeyMapManager::create('default', [
+      new Binding(Scope::field(FieldType::Select, multiple: TRUE), Action::SelectAll, 'a'),
+      new Binding(Scope::field(FieldType::Select, multiple: TRUE), Action::SelectNone, 'n'),
+    ])->forField(FieldType::Select, TRUE);
+
+    $this->assertTrue($map->matches(Key::char('a'), Action::SelectAll));
+    $this->assertTrue($map->matches(Key::char('n'), Action::SelectNone));
+    $this->assertFalse($map->matches(Key::named(KeyName::Right), Action::SelectAll));
+  }
+
   public function testScopeAccessorResolvesEachKind(): void {
     $map = KeyMapManager::create();
 
@@ -186,6 +197,18 @@ final class KeyMapTest extends TestCase {
     $this->assertTrue($select->matches(Key::char('l'), Action::Accept));
   }
 
+  public function testCharacterKeysTakeTheFormTheParserDelivers(): void {
+    $map = new KeyMap([
+      new Binding(Scope::field(FieldType::Select), Action::Accept, "\t", Key::char("\r")),
+      new Binding(Scope::field(FieldType::Select), Action::Toggle, Key::char("\x05")),
+    ]);
+    $select = $map->forField(FieldType::Select);
+
+    $this->assertTrue($select->matches(Key::named(KeyName::Tab), Action::Accept));
+    $this->assertTrue($select->matches(Key::named(KeyName::Enter), Action::Accept));
+    $this->assertTrue($select->matches(Key::char("\x05"), Action::Toggle));
+  }
+
   #[DataProvider('dataProviderFailsLoudly')]
   public function testFailsLoudly(Binding $binding, string $message): void {
     $this->expectException(\InvalidArgumentException::class);
@@ -211,6 +234,10 @@ final class KeyMapTest extends TestCase {
     yield 'digit in the rating scope' => [
       new Binding(Scope::field(FieldType::Rating), Action::Accept, '3'),
       'rating scope consumes typed characters',
+    ];
+    yield 'printable char in the multiple search scope' => [
+      new Binding(Scope::field(FieldType::Search, multiple: TRUE), Action::SelectAll, 'a'),
+      'search scope consumes typed characters',
     ];
     yield 'multi-character binding' => [
       new Binding(Scope::field(FieldType::Select), Action::Accept, 'ab'),
@@ -254,26 +281,29 @@ final class KeyMapTest extends TestCase {
   }
 
   #[DataProvider('dataProviderScope')]
-  public function testScope(Scope $scope, string $token, string $label, bool $consumes_text): void {
+  public function testScope(Scope $scope, string $token, string $label, bool $consumes_text, bool $filtering): void {
     $this->assertSame($token, $scope->token());
     $this->assertSame($label, $scope->label());
     $this->assertSame($consumes_text, $scope->consumesText());
+    $this->assertSame($filtering, $scope->isFiltering());
   }
 
   public static function dataProviderScope(): \Iterator {
-    yield 'base' => [Scope::base(), '@base', 'base', FALSE];
-    yield 'navigation' => [Scope::navigation(), '@navigation', 'navigation', FALSE];
-    yield 'text is a text-entry scope' => [Scope::field(FieldType::Text), 'field:Text', 'text', TRUE];
-    yield 'template is a text-entry scope' => [Scope::field(FieldType::Template), 'field:Template', 'template', TRUE];
-    yield 'select is not a text-entry scope' => [Scope::field(FieldType::Select), 'field:Select', 'select', FALSE];
+    yield 'base' => [Scope::base(), '@base', 'base', FALSE, FALSE];
+    yield 'navigation' => [Scope::navigation(), '@navigation', 'navigation', FALSE, FALSE];
+    yield 'text is a text-entry scope' => [Scope::field(FieldType::Text), 'field:Text', 'text', TRUE, FALSE];
+    yield 'template is a text-entry scope' => [Scope::field(FieldType::Template), 'field:Template', 'template', TRUE, FALSE];
+    yield 'select is not a text-entry scope' => [Scope::field(FieldType::Select), 'field:Select', 'select', FALSE, FALSE];
     // A rating selects a point by typed digit, so it reserves the digits.
-    yield 'rating is a text-entry scope' => [Scope::field(FieldType::Rating), 'field:Rating', 'rating', TRUE];
+    yield 'rating is a text-entry scope' => [Scope::field(FieldType::Rating), 'field:Rating', 'rating', TRUE, FALSE];
     // The file picker filters by typing, so it is a text-entry scope.
-    yield 'filepicker is a text-entry scope' => [Scope::field(FieldType::FilePicker), 'field:FilePicker', 'filepicker', TRUE];
+    yield 'filepicker is a text-entry scope' => [Scope::field(FieldType::FilePicker), 'field:FilePicker', 'filepicker', TRUE, FALSE];
     // A multiple select filters by typing, so it becomes a text-entry scope
     // with its own token, unlike the single select.
-    yield 'multiple select is a distinct text-entry scope' => [Scope::field(FieldType::Select, TRUE), 'field:Select#multiple', 'select', TRUE];
-    yield 'multiple file picker keeps its own token' => [Scope::field(FieldType::FilePicker, TRUE), 'field:FilePicker#multiple', 'filepicker', TRUE];
+    yield 'multiple select is a distinct text-entry scope' => [Scope::field(FieldType::Select, TRUE), 'field:Select#multiple', 'select', TRUE, TRUE];
+    yield 'multiple file picker keeps its own token' => [Scope::field(FieldType::FilePicker, TRUE), 'field:FilePicker#multiple', 'filepicker', TRUE, FALSE];
+    // A multiple search keeps its query, which may drive a backend source.
+    yield 'multiple search is not a filtering scope' => [Scope::field(FieldType::Search, TRUE), 'field:Search#multiple', 'search', TRUE, FALSE];
   }
 
   public function testBindingHoldsItsDeclaration(): void {

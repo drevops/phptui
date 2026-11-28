@@ -12,8 +12,8 @@ namespace DrevOps\PhpTui\Input;
  * names. It also answers the reverse question - {@see keysFor()} and
  * {@see primary()} - so key hints can be rendered from the same source of
  * truth and never drift from the active bindings. Instances are produced by
- * {@see KeyMap}; a scope resolves every key to at most one action, so matching
- * is a direct lookup.
+ * {@see KeyMap}; a scope resolves every key to at most one action or one
+ * caller {@see Command}, so matching is a direct lookup.
  *
  * @package DrevOps\PhpTui\Input
  */
@@ -26,10 +26,13 @@ final readonly class ScopedKeyMap {
    *   The action each key triggers, keyed by the key's token.
    * @param array<string,list<\DrevOps\PhpTui\Input\Key>> $byAction
    *   The keys bound to each action, keyed by the action's name.
+   * @param list<array{command:\DrevOps\PhpTui\Input\Command,keys:list<\DrevOps\PhpTui\Input\Key>}> $commands
+   *   The caller commands and their normalized keys, in declaration order.
    */
   public function __construct(
     protected array $byKey = [],
     protected array $byAction = [],
+    protected array $commands = [],
   ) {
   }
 
@@ -72,6 +75,37 @@ final readonly class ScopedKeyMap {
    */
   public function primary(Action $action): ?Key {
     return $this->keysFor($action)[0] ?? NULL;
+  }
+
+  /**
+   * The caller command a key press runs in this scope.
+   *
+   * @param \DrevOps\PhpTui\Input\Key $key
+   *   The key pressed.
+   *
+   * @return \DrevOps\PhpTui\Input\Command|null
+   *   The command, or NULL when the key runs none here.
+   */
+  public function command(Key $key): ?Command {
+    foreach ($this->commands as $entry) {
+      foreach ($entry['keys'] as $bound) {
+        if ($bound->token() === $key->token()) {
+          return $entry['command'];
+        }
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * One hint per caller command, led by its first key.
+   *
+   * @return list<\DrevOps\PhpTui\Input\Hint>
+   *   The hints, in declaration order.
+   */
+  public function commandHints(): array {
+    return array_map(static fn(array $entry): Hint => new Hint($entry['command']->label, $entry['keys'][0]), $this->commands);
   }
 
 }
