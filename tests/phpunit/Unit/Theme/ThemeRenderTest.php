@@ -97,6 +97,7 @@ final class ThemeRenderTest extends TestCase {
     yield 'enter' => [KeyName::Enter, '↵', '<'];
     yield 'escape' => [KeyName::Escape, 'esc', 'esc'];
     yield 'interrupt' => [KeyName::Interrupt, 'ctrl-c', 'ctrl-c'];
+    yield 'suspend' => [KeyName::Suspend, 'ctrl-z', 'ctrl-z'];
     yield 'tab' => [KeyName::Tab, 'tab', 'tab'];
     yield 'space' => [KeyName::Space, 'space', 'space'];
     yield 'backspace' => [KeyName::Backspace, '⌫', 'bksp'];

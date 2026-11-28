@@ -478,10 +478,10 @@ final class ScreenTester {
   /**
    * Run the session, feeding it the given scripted keystrokes.
    *
-   * @param string|\DrevOps\PhpTui\Input\Key|\DrevOps\PhpTui\Testing\Tick|\DrevOps\PhpTui\Testing\Resize ...$items
+   * @param string|\DrevOps\PhpTui\Input\Key|\DrevOps\PhpTui\Testing\Tick|\DrevOps\PhpTui\Testing\Resize|\DrevOps\PhpTui\Testing\Background ...$items
    *   The scripted input: each item is either raw keystroke bytes (a string,
-   *   e.g. "\n" or "Ada"), a Key, encoded to its canonical bytes, or a Tick or
-   *   Resize, passed to the terminal as they are.
+   *   e.g. "\n" or "Ada"), a Key, encoded to its canonical bytes, or a Tick,
+   *   Resize or Background, passed to the terminal as they are.
    *
    * @return \DrevOps\PhpTui\Answers\Answers
    *   The collected answers.
@@ -491,7 +491,7 @@ final class ScreenTester {
    * @throws \DrevOps\PhpTui\CancelException
    *   When the scripted keys abandoned the form.
    */
-  public function run(string|Key|Tick|Resize ...$items): Answers {
+  public function run(string|Key|Tick|Resize|Background ...$items): Answers {
     $keystrokes = [];
 
     foreach ($items as $item) {

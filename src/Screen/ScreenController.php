@@ -81,6 +81,12 @@ use DrevOps\PhpTui\Translation\Translator;
  * was resized. Streams set with streams() wake the wait when they have output,
  * and their callbacks run before the next frame is drawn.
  *
+ * The suspend key detaches the session: the terminal is restored and the
+ * process stops, handing the shell its prompt. Continued in the foreground,
+ * the session re-attaches and redraws from its current state. Continued in the
+ * background, it stays detached and keeps ticking until the shell brings it
+ * back.
+ *
  * How the session ends is the whole of what a caller sees: finishing it hands
  * back the answers, abandoning it raises
  * {@see \DrevOps\PhpTui\CancelException}, and the interrupt key raises
@@ -264,6 +270,23 @@ class ScreenController {
    * The streams the session wakes on beside the keyboard.
    */
   protected Streams $streams;
+
+  /**
+   * The ticks a live session has run so far.
+   */
+  protected int $ticks = 0;
+
+  /**
+   * When the next tick is due, as a monotonic time in nanoseconds.
+   */
+  protected int $due = 0;
+
+  /**
+   * Whether the session has handed the terminal back to the shell.
+   *
+   * A detached session draws nothing and reads no key, but keeps ticking.
+   */
+  protected bool $detached = FALSE;
 
   /**
    * Construct a controller.
@@ -463,6 +486,7 @@ class ScreenController {
   public function run(Terminal $terminal): Answers {
     $parser = new KeyParser();
     $this->terminal = $terminal;
+    $this->detached = FALSE;
     $terminal->setup($this->wash());
 
     $tick = $this->tick;
@@ -474,11 +498,18 @@ class ScreenController {
       // key, so what it owes is fetched before the first frame is read.
       $this->fetch();
 
-      $ticks = 0;
+      $this->ticks = 0;
       $shown = NULL;
-      $due = $this->due();
+      $this->due = $this->due();
 
       while (!$this->done && !$this->interrupted) {
+        if ($this->detached) {
+          $this->rest($terminal);
+          $shown = NULL;
+
+          continue;
+        }
+
         $shown = $this->paint($shown);
         $streams = $this->streams->open();
 
@@ -486,7 +517,7 @@ class ScreenController {
           // Idempotent, so a stream watched after the session started is
           // covered too.
           $terminal->watchResize();
-          $wake = $terminal->wait(max(0, intdiv($due - self::now(), 1000)), $streams);
+          $wake = $terminal->wait($this->remaining(), $streams);
 
           // Checked whether or not a key is waiting, so a resize is laid out
           // before the next key is handled. A resized terminal reflows what it
@@ -499,15 +530,7 @@ class ScreenController {
           $this->streams->dispatch($wake->streams);
 
           if (!$wake->input) {
-            // A stream that writes more often than the interval wakes every
-            // wait before it times out, so the tick also runs once it is due.
-            if ($wake->streams === [] || self::now() >= $due) {
-              if ($tick instanceof \Closure) {
-                $tick(++$ticks);
-              }
-
-              $due = $this->due();
-            }
+            $this->advance($wake->streams);
 
             continue;
           }
@@ -526,13 +549,17 @@ class ScreenController {
       }
     }
     finally {
-      $terminal->unwatchResize();
-      $terminal->restore();
+      // A detached session already restored the terminal, and clearing now
+      // would wipe the shell's screen.
+      if (!$this->detached) {
+        $terminal->unwatchResize();
+        $terminal->restore();
 
-      // An abort always leaves a clean screen, even where a consumer opted out
-      // of the clear for a session that ends normally.
-      if ($this->clearOnExit || $this->interrupted) {
-        $terminal->clear();
+        // An abort always leaves a clean screen, even where a consumer opted
+        // out of the clear for a session that ends normally.
+        if ($this->clearOnExit || $this->interrupted) {
+          $terminal->clear();
+        }
       }
     }
 
@@ -555,6 +582,36 @@ class ScreenController {
    */
   protected function due(): int {
     return self::now() + $this->interval * 1000000;
+  }
+
+  /**
+   * The time left until the next tick is due.
+   *
+   * @return int
+   *   The time in microseconds, 0 once the tick is due.
+   */
+  protected function remaining(): int {
+    return max(0, intdiv($this->due - self::now(), 1000));
+  }
+
+  /**
+   * Run the tick once it is due, after a wait that ended with no key.
+   *
+   * @param array<array-key, resource> $woken
+   *   The streams that ended the wait, empty when it timed out.
+   */
+  protected function advance(array $woken): void {
+    // A stream that writes more often than the interval wakes every wait
+    // before it times out, so the tick also runs once it is due.
+    if ($woken !== [] && self::now() < $this->due) {
+      return;
+    }
+
+    if ($this->tick instanceof \Closure) {
+      ($this->tick)(++$this->ticks);
+    }
+
+    $this->due = $this->due();
   }
 
   /**
@@ -593,11 +650,25 @@ class ScreenController {
         return;
       }
 
+      // Keys typed behind the suspend key were typed at a screen about to
+      // leave, so they are dropped.
+      if ($key->is(KeyName::Suspend)) {
+        $this->suspend($terminal);
+
+        break;
+      }
+
       if ($guarded && !$this->quits($key)) {
         continue;
       }
 
       $this->handle($key);
+    }
+
+    // A detached session keeps its pending query for the first read after it
+    // re-attaches, since querying draws the frame.
+    if ($this->detached) {
+      return;
     }
 
     // Asked once the whole read is spent rather than once per key, so a burst
@@ -620,6 +691,78 @@ class ScreenController {
     $this->renderer = new ScreenRenderer($this->theme, $this->border);
     // The rows were measured against the old width.
     $this->minimumWidth = NULL;
+  }
+
+  /**
+   * Stop the process and hand the terminal to the shell until it comes back.
+   *
+   * Where the process cannot be suspended, the key does nothing.
+   *
+   * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
+   *   The terminal.
+   */
+  protected function suspend(Terminal $terminal): void {
+    if (!$terminal->isSuspendable()) {
+      return;
+    }
+
+    $this->detach($terminal);
+    $terminal->suspend();
+
+    if ($terminal->reclaim()) {
+      $this->attach($terminal);
+    }
+  }
+
+  /**
+   * Wait while detached, then re-attach, or serve the streams and the tick.
+   *
+   * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
+   *   The terminal.
+   */
+  protected function rest(Terminal $terminal): void {
+    $woken = $terminal->idle($this->remaining(), $this->streams->open());
+    $this->streams->dispatch($woken);
+
+    if ($terminal->reclaim()) {
+      $this->attach($terminal);
+
+      return;
+    }
+
+    $this->advance($woken);
+  }
+
+  /**
+   * Leave the alternate screen and restore the terminal modes.
+   *
+   * The session keeps its state, and keeps running.
+   *
+   * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
+   *   The terminal.
+   */
+  protected function detach(Terminal $terminal): void {
+    $terminal->unwatchResize();
+    $terminal->restore();
+    $this->detached = TRUE;
+  }
+
+  /**
+   * Set the terminal up again after detach(), for a redraw from current state.
+   *
+   * @param \DrevOps\PhpTui\Terminal\Terminal $terminal
+   *   The terminal.
+   */
+  protected function attach(Terminal $terminal): void {
+    $terminal->setup($this->wash());
+    // Cleared before the steps that can throw, so the teardown restores the
+    // terminal that setup() took.
+    $this->detached = FALSE;
+
+    // The terminal may have been resized while the shell held it.
+    if ($terminal->remeasure()) {
+      $this->resize($terminal);
+    }
   }
 
   /**
@@ -1397,7 +1540,24 @@ class ScreenController {
     }
 
     $held = $editor->value();
-    $editor->applyExternalEdit($this->externalEditor->edit(is_string($held) ? $held : '', $this->terminal));
+    $terminal = $this->terminal;
+
+    if ($terminal instanceof Terminal) {
+      $this->detach($terminal);
+    }
+
+    try {
+      $edited = $this->externalEditor->edit(is_string($held) ? $held : '');
+    }
+    finally {
+      // Taken back even when the launch throws, so a failed editor cannot
+      // leave the terminal in the shell's modes.
+      if ($terminal instanceof Terminal) {
+        $this->attach($terminal);
+      }
+    }
+
+    $editor->applyExternalEdit($edited);
 
     // What came back is what is being typed, not what was accepted: the field
     // still has to be accepted before it becomes the answer.

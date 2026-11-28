@@ -48,6 +48,7 @@ final class KeyParserTest extends TestCase {
     yield 'tab' => ["\t", ['Tab']];
     yield 'space' => [' ', ['Space']];
     yield 'ctrl-c interrupt' => ["\x03", ['Interrupt']];
+    yield 'ctrl-z suspend' => ["\x1a", ['Suspend']];
     yield 'up' => ["\033[A", ['Up']];
     yield 'down' => ["\033[B", ['Down']];
     yield 'right' => ["\033[C", ['Right']];

@@ -1,7 +1,7 @@
 ---
 title: Live screens
-description: 'Redraw a form on a timer through a tick callback, when a watched stream has output, and at the new size when the terminal is resized.'
-keywords: ['live', 'tick', 'timer', 'redraw', 'resize', 'stream']
+description: 'Redraw a form on a timer through a tick callback, when a watched stream has output and at the new size when the terminal is resized, and step away to the shell with Ctrl-Z.'
+keywords: ['live', 'tick', 'timer', 'redraw', 'resize', 'stream', 'detach', 'suspend']
 ---
 
 # Live screens
@@ -85,14 +85,32 @@ Runnable script: [`playground/21-live-streams.php`](https://github.com/drevops/p
 
 On Windows, a stream never wakes the screen, because PHP can't wait on a pipe there.
 
+## Step away and come back
+
+Press <kbd>Ctrl-Z</kbd> to hand the terminal back to your shell without ending the process. The screen leaves the alternate screen and restores the terminal modes, so the shell prompt works as usual. Then type a shell job command:
+
+- Type `fg` to bring the screen back. It redraws from its current state.
+- Type `bg` to keep the work going while you use the prompt. The tick and the callbacks of [watched streams](#wake-on-a-stream) keep running, and the screen draws nothing. Type `fg` later to bring the screen back with everything they changed.
+
+When the screen comes back, it sets up the terminal again with the theme's background wash. A terminal resized while you were away redraws at its new size.
+
+<kbd>Ctrl-Z</kbd> works from anywhere in the form, including from inside an open field. Keys typed after it in the same read are dropped. A form that isn't live detaches the same way, with no tick to run while it's away.
+
+Detaching needs the `pcntl` and `posix` extensions and a terminal on standard input. Where either is missing, such as on Windows, <kbd>Ctrl-Z</kbd> does nothing.
+
+Runnable script: [`playground/21-live-screen-detach.php`](https://github.com/drevops/phptui/blob/main/playground/21-live-screen-detach.php).
+
 ## Test a live screen
 
-[`ScreenTester`](/testing#one-screen) has a matching `live()` method. Mix 2 markers from `DrevOps\PhpTui\Testing` into the scripted keystrokes:
+[`ScreenTester`](/testing#one-screen) has a matching `live()` method. Mix 3 markers from `DrevOps\PhpTui\Testing` into the scripted keystrokes:
 
-| Marker                        | Effect                                                                                     |
-| ----------------------------- | ------------------------------------------------------------------------------------------ |
-| `new Tick()`                  | The wait for a key times out, so the tick runs                                             |
-| `new Resize($columns, $rows)` | The terminal reports the new size from then on, and the wait is cut short as by `SIGWINCH` |
+| Marker                        | Effect                                                                                           |
+| ----------------------------- | ------------------------------------------------------------------------------------------------ |
+| `new Tick()`                  | The wait for a key times out, so the tick runs                                                   |
+| `new Resize($columns, $rows)` | The terminal reports the new size from then on, and the wait is cut short as by `SIGWINCH`       |
+| `new Background()`            | Placed right after `Key::named(KeyName::Suspend)`, the session carries on detached as after `bg` |
+
+A detached session runs the tick at each `Tick` and applies each `Resize`. It comes back at the first scripted item that's neither, as after `fg`. Without `Background`, the suspend key brings the session straight back.
 
 `ScreenTester` draws only the panel you give it, so put the counter in that panel. To check that the counter changes with no key pressed:
 
@@ -116,7 +134,7 @@ $tester->run(new Tick(), new Tick(), new Resize(40, 12));
 $this->assertStringContainsString('Crates weighed: 2', $tester->frame(2));
 ```
 
-A tester without `live()` skips both markers.
+A tester without `live()` skips the `Tick` and `Resize` markers.
 
 `ScreenTester` also has matching `watch()` and `unwatch()` methods. Before each scripted item, the scripted terminal checks the watched streams for output. To check that a write wakes the screen, watch 1 end of a socket pair and write to the other:
 

@@ -327,11 +327,10 @@ final class ScreenParityTest extends TestCase {
     $tester = $this->tester($this->panel($notes))->externalEditor($editor);
     $answers = $tester->run(Key::named(KeyName::Enter), Key::char("\x05"), Key::named(KeyName::Tab));
 
-    // The session left the terminal to the editor and took it back, and what
-    // came back is what the row now holds.
+    // What came back from the editor is what the row now holds.
     $this->assertTrue($notes->isHandoff());
     $this->assertSame('Weighed at the bench', $answers->value('notes'));
-    $this->assertInstanceOf(Terminal::class, $editor->suspended);
+    $this->assertSame(1, $editor->edits);
   }
 
   public function testWhatComesBackFromTheEditorIsMeasuredLikeAnythingTyped(): void {
@@ -1351,9 +1350,9 @@ final class ScreenParityTest extends TestCase {
 final class EditorFixture extends ExternalEditor {
 
   /**
-   * The terminal the session left to the editor, once it did.
+   * The number of times the session handed a buffer to the editor.
    */
-  public ?Terminal $suspended = NULL;
+  public int $edits = 0;
 
   /**
    * Construct the fixture.
@@ -1377,7 +1376,7 @@ final class EditorFixture extends ExternalEditor {
    */
   #[\Override]
   public function edit(string $initial, ?Terminal $terminal = NULL): string {
-    $this->suspended = $terminal;
+    $this->edits++;
 
     return $initial . ' at the bench';
   }

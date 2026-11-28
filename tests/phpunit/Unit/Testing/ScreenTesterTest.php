@@ -18,6 +18,7 @@ use DrevOps\PhpTui\Screen\Collector;
 use DrevOps\PhpTui\Screen\Layout\AbstractLayout;
 use DrevOps\PhpTui\Screen\Layout\PanelLayout;
 use DrevOps\PhpTui\Terminal\Ansi;
+use DrevOps\PhpTui\Testing\Background;
 use DrevOps\PhpTui\Testing\Resize;
 use DrevOps\PhpTui\Testing\ScreenTester;
 use DrevOps\PhpTui\Testing\Tick;
@@ -215,6 +216,18 @@ final class ScreenTesterTest extends TestCase {
     $tester->run(new Tick(), new Tick());
 
     $this->assertSame([1, 2], $counts);
+  }
+
+  public function testLiveSessionTicksInTheBackgroundAfterSuspend(): void {
+    $counts = [];
+    $tester = $this->tester($this->panel(new Field('courier', 'Courier')))->live(static function (int $count) use (&$counts): void {
+      $counts[] = $count;
+    });
+
+    $tester->run(Key::named(KeyName::Suspend), new Background(), new Tick(), new Tick(), Key::named(KeyName::Up));
+
+    $this->assertSame([1, 2], $counts);
+    $this->assertCount(3, $tester->frames());
   }
 
   public function testNamedThemeIsRebuiltForTheResizedWidth(): void {

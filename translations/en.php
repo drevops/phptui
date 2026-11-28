@@ -103,6 +103,7 @@ return [
   'cancel' => 'cancel',
   'continue' => 'continue',
   'ctrl-c' => 'ctrl-c',
+  'ctrl-z' => 'ctrl-z',
   'default' => 'default',
   'del' => 'del',
   'derived' => 'derived',

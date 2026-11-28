@@ -21,9 +21,16 @@ use DrevOps\PhpTui\Terminal\Wake;
  * report a new size from then on and interrupts the wait it reaches, as a
  * SIGWINCH does. A plain read() skips both, applying any resize on the way.
  *
- * The streams a wait is given are polled for real, without waiting, before
- * the script is read: a stream with output ends the wait ahead of the next
- * scripted item, so a test writes to a socket pair to wake the session.
+ * The streams a wait or an idle is given are polled for real, without
+ * waiting, before the script is read: a stream with output ends the wait
+ * ahead of the next scripted item, so a test writes to a socket pair to wake
+ * the session.
+ *
+ * The terminal can be suspended unless told otherwise. A
+ * {@see \DrevOps\PhpTui\Testing\Background} right after the suspend key
+ * continues the session in the background, where idle() consumes the ticks
+ * and resizes that follow; any other scripted item hands the terminal back, as
+ * the shell's `fg` does.
  *
  * @package DrevOps\PhpTui\Testing
  */
@@ -35,16 +42,31 @@ final class BufferedTerminal extends Terminal {
   public ?string $paintedBackground = NULL;
 
   /**
+   * The number of times the session suspended the terminal.
+   */
+  public int $suspensions = 0;
+
+  /**
+   * Whether the terminal can be suspended, as one with job control can.
+   */
+  public bool $suspendable = TRUE;
+
+  /**
    * Whether a scripted resize changed the size since remeasure() last ran.
    */
   protected bool $resized = FALSE;
 
   /**
+   * Whether the process holds the terminal.
+   */
+  protected bool $foreground = TRUE;
+
+  /**
    * Construct a buffered terminal.
    *
-   * @param list<string|\DrevOps\PhpTui\Testing\Tick|\DrevOps\PhpTui\Testing\Resize> $keystrokes
+   * @param list<string|\DrevOps\PhpTui\Testing\Tick|\DrevOps\PhpTui\Testing\Resize|\DrevOps\PhpTui\Testing\Background> $keystrokes
    *   The keystroke byte sequences to deliver, one per read(), with the
-   *   timeouts and resizes that fall between them.
+   *   timeouts, resizes and background continues that fall between them.
    * @param int $rows
    *   The reported terminal height, fixed so rendered frames do not depend on
    *   the machine running the test.
@@ -150,6 +172,66 @@ final class BufferedTerminal extends Terminal {
     $this->resized = FALSE;
 
     return $resized;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function isSuspendable(): bool {
+    return $this->suspendable;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function suspend(): void {
+    $this->suspensions++;
+    $this->foreground = !(($this->keystrokes[0] ?? NULL) instanceof Background);
+
+    if (!$this->foreground) {
+      array_shift($this->keystrokes);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function reclaim(): bool {
+    return $this->foreground;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  public function idle(int $microseconds, array $streams = []): array {
+    $ready = $this->select($streams, 0);
+
+    if ($ready !== []) {
+      return $ready;
+    }
+
+    $next = $this->keystrokes[0] ?? NULL;
+
+    if ($next instanceof Tick) {
+      array_shift($this->keystrokes);
+
+      return [];
+    }
+
+    if ($next instanceof Resize) {
+      array_shift($this->keystrokes);
+      $this->apply($next);
+
+      return [];
+    }
+
+    $this->foreground = TRUE;
+
+    return [];
   }
 
   /**

@@ -8,9 +8,10 @@ namespace DrevOps\PhpTui\Input;
  * Parses a raw terminal byte buffer into a list of keys.
  *
  * Recognizes printable characters (including multi-byte UTF-8 sequences),
- * Enter/Backspace/Tab/Space, the Ctrl-C interrupt, bare Escape, CSI and SS3
- * arrows and navigation keys (Home/End/PageUp/PageDown/Delete) with any
- * modifier parameters, and SGR mouse-wheel events. Unrecognized or truncated
+ * Enter/Backspace/Tab/Space, the Ctrl-C interrupt, the Ctrl-Z suspend, bare
+ * Escape, CSI and SS3 arrows and navigation keys (Home/End/PageUp/PageDown/
+ * Delete) with any modifier parameters, and SGR mouse-wheel events.
+ * Unrecognized or truncated
  * escape sequences are consumed whole and degrade to Escape, and unknown mouse
  * events are consumed without emitting a key.
  *
@@ -113,6 +114,7 @@ class KeyParser {
       "\t" => Key::named(KeyName::Tab),
       ' ' => Key::named(KeyName::Space),
       "\x03" => Key::named(KeyName::Interrupt),
+      "\x1a" => Key::named(KeyName::Suspend),
       default => Key::char($char),
     };
   }

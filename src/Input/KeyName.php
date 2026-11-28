@@ -18,6 +18,7 @@ enum KeyName {
   case Enter;
   case Escape;
   case Interrupt;
+  case Suspend;
   case Space;
   case Backspace;
   case Delete;

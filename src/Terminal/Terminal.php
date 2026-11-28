@@ -38,6 +38,11 @@ class Terminal {
   protected const int FALLBACK_HEIGHT = 24;
 
   /**
+   * The shortest time between 2 foreground probes with no SIGCONT, in ns.
+   */
+  protected const int RECLAIM_INTERVAL_NS = 1000000000;
+
+  /**
    * The output stream.
    *
    * @var resource
@@ -91,6 +96,33 @@ class Terminal {
    * Whether stream_select() can wait on the input; NULL until probed.
    */
   protected ?bool $selectable = NULL;
+
+  /**
+   * Whether the process is suspended and not yet reclaimed.
+   */
+  protected bool $suspended = FALSE;
+
+  /**
+   * Whether a SIGCONT arrived since reclaim() last probed the foreground.
+   */
+  protected bool $continued = FALSE;
+
+  /**
+   * The clock reading, in nanoseconds, when reclaim() last probed.
+   */
+  protected int $probed = 0;
+
+  /**
+   * Whether asynchronous signals were on before suspend() turned them on.
+   */
+  protected bool $continueAsyncSignals = FALSE;
+
+  /**
+   * The SIGCONT handler installed before suspend() replaced it.
+   *
+   * @var callable|int
+   */
+  protected mixed $continueHandler = 0;
 
   /**
    * Construct a terminal.
@@ -362,6 +394,162 @@ class Terminal {
    */
   protected function isSignalAvailable(): bool {
     return function_exists('pcntl_signal') && function_exists('pcntl_signal_get_handler') && function_exists('pcntl_async_signals') && defined('SIGWINCH');
+  }
+
+  /**
+   * Whether the process can be suspended to the shell.
+   *
+   * Suspending needs job control: pcntl and posix signal handling, and an
+   * input stream that is a terminal the shell can hand back.
+   *
+   * @return bool
+   *   TRUE when suspend() can stop the process.
+   */
+  public function isSuspendable(): bool {
+    return $this->isSignalAvailable() && function_exists('posix_kill') && function_exists('posix_getpid') && defined('SIGTSTP') && defined('SIGCONT') && $this->isInputTty();
+  }
+
+  /**
+   * Whether the input stream is an interactive terminal.
+   *
+   * @return bool
+   *   TRUE when the input is a TTY.
+   */
+  protected function isInputTty(): bool {
+    return stream_isatty($this->input);
+  }
+
+  /**
+   * Stop the process and hand the terminal to the shell, as Ctrl-Z does.
+   *
+   * Returns once the shell continues the process, in the foreground or in the
+   * background; reclaim() tells the two apart. The terminal modes are not
+   * touched, so restore() them first to give the shell a usable prompt. Does
+   * nothing where the process cannot be suspended.
+   */
+  public function suspend(): void {
+    if (!$this->isSuspendable()) {
+      return;
+    }
+
+    if (!$this->suspended) {
+      $this->continueAsyncSignals = pcntl_async_signals(TRUE);
+      $this->continueHandler = pcntl_signal_get_handler(SIGCONT);
+      pcntl_signal(SIGCONT, function (): void {
+        $this->continued = TRUE;
+      });
+      $this->suspended = TRUE;
+    }
+
+    $this->raise(SIGTSTP);
+
+    // The process runs again only once it was continued.
+    $this->continued = TRUE;
+  }
+
+  /**
+   * Take the terminal back once the shell returns it after suspend().
+   *
+   * Probes the process state at once after a SIGCONT, and otherwise at most
+   * once a second. The shell's `fg` sends no SIGCONT to a job that is already
+   * running, so the timed probe is what finds it. Back in the foreground, the
+   * SIGCONT handling in place before suspend() is restored.
+   *
+   * @return bool
+   *   TRUE when the process is in the foreground again or was never suspended,
+   *   FALSE while it runs in the background.
+   */
+  public function reclaim(): bool {
+    if (!$this->suspended) {
+      return TRUE;
+    }
+
+    $now = $this->clock();
+
+    if (!$this->continued && $now - $this->probed < self::RECLAIM_INTERVAL_NS) {
+      return FALSE;
+    }
+
+    $this->continued = FALSE;
+    $this->probed = $now;
+
+    if (!self::isForegroundState($this->run('ps -o stat= -p ' . getmypid() . ' 2>/dev/null'))) {
+      return FALSE;
+    }
+
+    pcntl_signal(SIGCONT, $this->continueHandler);
+    pcntl_async_signals($this->continueAsyncSignals);
+    $this->suspended = FALSE;
+
+    return TRUE;
+  }
+
+  /**
+   * Whether a `ps -o stat=` reply places the process in the foreground.
+   *
+   * A "+" in the state marks the foreground process group of the terminal.
+   *
+   * @param string|null $output
+   *   The command output, or NULL when the command produced none.
+   *
+   * @return bool
+   *   TRUE when the state carries "+", or when there is no state to read, so a
+   *   session never stays detached for want of a probe.
+   */
+  public static function isForegroundState(?string $output): bool {
+    if (!is_string($output) || trim($output) === '') {
+      return TRUE;
+    }
+
+    return str_contains($output, '+');
+  }
+
+  /**
+   * Wait up to a timeout for output on any of the streams, ignoring the input.
+   *
+   * A process in the background must not wait on the input it no longer
+   * holds. A signal such as SIGCONT cuts the wait short.
+   *
+   * @param int $microseconds
+   *   The longest time to wait, in microseconds.
+   * @param array<array-key, resource> $streams
+   *   The streams to wait on for output.
+   *
+   * @return array<array-key, resource>
+   *   The streams with output to read, keyed as given.
+   */
+  public function idle(int $microseconds, array $streams = []): array {
+    $microseconds = max(0, $microseconds);
+
+    if ($streams === []) {
+      usleep($microseconds);
+
+      return [];
+    }
+
+    return $this->select($streams, $microseconds);
+  }
+
+  /**
+   * A monotonic clock reading.
+   *
+   * @return int
+   *   The reading, in nanoseconds.
+   */
+  protected function clock(): int {
+    return (int) hrtime(TRUE);
+  }
+
+  /**
+   * Send a signal to this process.
+   *
+   * @param int $signal
+   *   The signal number.
+   */
+  protected function raise(int $signal): void {
+    // @codeCoverageIgnoreStart
+    posix_kill(posix_getpid(), $signal);
+    // @codeCoverageIgnoreEnd
   }
 
   /**
