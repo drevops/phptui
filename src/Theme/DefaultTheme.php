@@ -1493,6 +1493,8 @@ class DefaultTheme extends AbstractTheme implements PrimitiveElementsInterface, 
     $lines = $this->tableLines($headers, $rows, max(1, $this->width - self::SELECTOR_GUTTER), $selected);
     // A top rule opens the grid, and a header adds its row and a rule under it.
     $first = $headers === [] ? 1 : 3;
+    // An index past the last row would land on the bottom rule.
+    $selected = $selected < count($rows) ? $selected : -1;
     $marked = [];
 
     foreach ($lines as $index => $line) {

@@ -150,6 +150,8 @@ final class OutputRenderTest extends TestCase {
       'no header, second row' => [[], 1, 2],
       'none selected' => [['Item'], -1, -1],
       'index past the rows' => [['Item'], 5, -1],
+      'index equal to the row count, header' => [['Item'], 2, -1],
+      'index equal to the row count, no header' => [[], 2, -1],
     ];
   }
 
