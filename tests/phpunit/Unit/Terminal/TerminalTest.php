@@ -284,7 +284,10 @@ final class TerminalTest extends TestCase {
   }
 
   public function testWaitReportsNothingForStreamsThatCannotSelect(): void {
-    $wake = (new ProbeTerminal(input: fopen('php://memory', 'r+')))->wait(1000, [fopen('php://memory', 'r+')]);
+    $memory = fopen('php://memory', 'r+');
+    $this->assertIsResource($memory);
+
+    $wake = (new ProbeTerminal(input: fopen('php://memory', 'r+')))->wait(1000, [$memory]);
 
     $this->assertTrue($wake->input);
     $this->assertSame([], $wake->streams);
