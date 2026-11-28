@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace DrevOps\PhpTui\Tests\Unit\Testing;
 
 use DrevOps\PhpTui\Testing\BufferedTerminal;
+use DrevOps\PhpTui\Testing\Resize;
+use DrevOps\PhpTui\Testing\Tick;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -13,6 +16,7 @@ use PHPUnit\Framework\TestCase;
  * Tests the scripted-input, output-capturing terminal.
  */
 #[CoversClass(BufferedTerminal::class)]
+#[CoversClass(Resize::class)]
 #[Group('testing')]
 final class BufferedTerminalTest extends TestCase {
 
@@ -39,9 +43,62 @@ final class BufferedTerminalTest extends TestCase {
     $terminal = new BufferedTerminal();
 
     $terminal->setup();
+    $terminal->watchResize();
+    $terminal->unwatchResize();
     $terminal->restore();
 
     $this->assertSame('', $terminal->output());
+  }
+
+  public function testWaitTimesOutAtEachTickAndReportsKeysOtherwise(): void {
+    $terminal = new BufferedTerminal(['a', new Tick(), 'b']);
+
+    $this->assertTrue($terminal->wait(1000));
+    $this->assertSame('a', $terminal->read());
+    $this->assertFalse($terminal->wait(1000));
+    $this->assertTrue($terminal->wait(1000));
+    $this->assertSame('b', $terminal->read());
+    // Exhausted: the wait reports input, so the read that follows sees EOF.
+    $this->assertTrue($terminal->wait(1000));
+    $this->assertSame('', $terminal->read());
+  }
+
+  public function testResizeInterruptsTheWaitAndReportsTheNewSize(): void {
+    $terminal = new BufferedTerminal([new Resize(100, 30)]);
+
+    $this->assertFalse($terminal->wait(1000));
+    $this->assertSame([100, 30], [$terminal->columns(), $terminal->rows()]);
+    $this->assertTrue($terminal->remeasure());
+    $this->assertFalse($terminal->remeasure());
+  }
+
+  public function testResizeToTheSameSizeIsNoChange(): void {
+    $terminal = new BufferedTerminal([new Resize(80, 24)]);
+
+    $this->assertFalse($terminal->wait(1000));
+    $this->assertFalse($terminal->remeasure());
+  }
+
+  public function testReadSkipsTicksAndAppliesResizes(): void {
+    $terminal = new BufferedTerminal([new Tick(), new Resize(50, 10), 'x', new Tick()]);
+
+    $this->assertSame('x', $terminal->read());
+    $this->assertSame([50, 10], [$terminal->columns(), $terminal->rows()]);
+    $this->assertTrue($terminal->remeasure());
+    $this->assertSame('', $terminal->read());
+  }
+
+  #[DataProvider('dataProviderResizeRefusesSizeBelowOne')]
+  public function testResizeRefusesSizeBelowOne(int $columns, int $rows): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('A resized terminal must be at least 1 column wide and 1 row high.');
+
+    new Resize($columns, $rows);
+  }
+
+  public static function dataProviderResizeRefusesSizeBelowOne(): \Iterator {
+    yield 'no columns' => [0, 24];
+    yield 'no rows' => [80, 0];
   }
 
   public function testCapturesRenderedOutput(): void {

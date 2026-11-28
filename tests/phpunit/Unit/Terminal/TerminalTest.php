@@ -12,6 +12,7 @@ use DrevOps\PhpTui\Theme\Mode;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RequiresFunction;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -163,6 +164,126 @@ final class TerminalTest extends TestCase {
     fclose($input);
   }
 
+  #[DataProvider('dataProviderWaitOnSelectableInput')]
+  public function testWaitOnSelectableInput(string $written, bool $expected): void {
+    [$input, $writer] = $this->socketPair();
+
+    if ($written !== '') {
+      fwrite($writer, $written);
+    }
+
+    $this->assertSame($expected, (new ProbeTerminal(input: $input))->wait(20000));
+
+    fclose($input);
+    fclose($writer);
+  }
+
+  public static function dataProviderWaitOnSelectableInput(): \Iterator {
+    yield 'input is ready' => ['a', TRUE];
+    yield 'nothing arrives before the timeout' => ['', FALSE];
+  }
+
+  public function testWaitWithNegativeTimeoutReturnsAtOnce(): void {
+    [$input, $writer] = $this->socketPair();
+
+    $this->assertFalse((new ProbeTerminal(input: $input))->wait(-1));
+
+    fclose($input);
+    fclose($writer);
+  }
+
+  #[DataProvider('dataProviderWaitReportsInputWhereItCannotSelect')]
+  public function testWaitReportsInputWhereItCannotSelect(bool $windows, bool $memory): void {
+    [$input, $writer] = $this->socketPair();
+    $stream = $memory ? fopen('php://memory', 'r+') : $input;
+
+    $this->assertTrue((new ProbeTerminal(windows: $windows, input: $stream))->wait(1000));
+
+    fclose($input);
+    fclose($writer);
+  }
+
+  public static function dataProviderWaitReportsInputWhereItCannotSelect(): \Iterator {
+    yield 'windows' => [TRUE, FALSE];
+    yield 'memory stream' => [FALSE, TRUE];
+  }
+
+  public function testRemeasureReportsWhetherTheSizeChanged(): void {
+    $this->putEnv('COLUMNS', NULL);
+    $this->putEnv('LINES', NULL);
+
+    $terminal = new ProbeTerminal("24 80\n", signals: FALSE);
+    $this->assertSame(80, $terminal->columns());
+
+    $this->assertFalse($terminal->remeasure());
+
+    $terminal->answer("30 100\n");
+
+    $this->assertTrue($terminal->remeasure());
+    $this->assertSame(100, $terminal->columns());
+    $this->assertSame(30, $terminal->rows());
+  }
+
+  public function testWatchResizeDoesNothingWithoutSignals(): void {
+    $terminal = new ProbeTerminal("24 80\n", signals: FALSE);
+
+    $terminal->watchResize();
+    $this->assertFalse($terminal->isWatching());
+
+    $terminal->unwatchResize();
+    $this->assertFalse($terminal->isWatching());
+  }
+
+  #[RequiresFunction('pcntl_signal')]
+  #[RequiresFunction('posix_kill')]
+  public function testRemeasureWhileWatchingWaitsForTheSignal(): void {
+    $this->putEnv('COLUMNS', NULL);
+    $this->putEnv('LINES', NULL);
+
+    $async = pcntl_async_signals();
+    $original = pcntl_signal_get_handler(SIGWINCH);
+    $own = static function (): void {
+    };
+    pcntl_signal(SIGWINCH, $own);
+    $terminal = new ProbeTerminal("24 80\n");
+
+    try {
+      $this->assertSame(80, $terminal->columns());
+
+      $terminal->watchResize();
+      // A second call keeps the handler already installed.
+      $terminal->watchResize();
+      $this->assertTrue($terminal->isWatching());
+      $this->assertTrue(pcntl_async_signals());
+
+      // The first remeasure probes, catching a resize from before the watch.
+      $terminal->answer("26 90\n");
+      $this->assertTrue($terminal->remeasure());
+      $this->assertSame(90, $terminal->columns());
+
+      $terminal->answer("30 100\n");
+      $this->assertFalse($terminal->remeasure());
+
+      posix_kill(posix_getpid(), SIGWINCH);
+      pcntl_signal_dispatch();
+
+      $this->assertTrue($terminal->remeasure());
+      $this->assertSame(100, $terminal->columns());
+      $this->assertFalse($terminal->remeasure());
+
+      $terminal->unwatchResize();
+      $this->assertFalse($terminal->isWatching());
+      $this->assertSame($async, pcntl_async_signals());
+      // The handler installed before the watch is the one left in place.
+      $this->assertSame($own, pcntl_signal_get_handler(SIGWINCH));
+    }
+    finally {
+      $terminal->unwatchResize();
+      pcntl_signal(SIGWINCH, $original);
+      pcntl_async_signals($async);
+    }
+  }
+
   public function testQueryBackgroundReturnsNullOffTty(): void {
     $output = fopen('php://memory', 'r+');
     $input = fopen('php://memory', 'r+');
@@ -240,6 +361,23 @@ final class TerminalTest extends TestCase {
     yield 'null osc colorfgbg default bg is dark' => [NULL, 'default;default', $dark];
     yield 'null osc colorfgbg empty is dark' => [NULL, '', $dark];
     yield 'null osc no colorfgbg is dark' => [NULL, NULL, $dark];
+  }
+
+  /**
+   * A connected pair of sockets, which stream_select() can wait on.
+   *
+   * @return array{resource, resource}
+   *   The end read from and the end written to.
+   */
+  protected function socketPair(): array {
+    $domain = DIRECTORY_SEPARATOR === '\\' ? STREAM_PF_INET : STREAM_PF_UNIX;
+    $pair = stream_socket_pair($domain, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+
+    if ($pair === FALSE) {
+      $this->fail('Failed to open a socket pair.');
+    }
+
+    return [$pair[0], $pair[1]];
   }
 
 }

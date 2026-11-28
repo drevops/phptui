@@ -33,6 +33,8 @@ use DrevOps\PhpTui\Terminal\Terminal;
 use DrevOps\PhpTui\Terminal\TerminalControl;
 use DrevOps\PhpTui\Testing\BufferedTerminal;
 use DrevOps\PhpTui\Testing\KeyEncoder;
+use DrevOps\PhpTui\Testing\Resize;
+use DrevOps\PhpTui\Testing\Tick;
 use DrevOps\PhpTui\Testing\TuiTester;
 use DrevOps\PhpTui\Tests\Fixtures\Theme\FloorTheme;
 use DrevOps\PhpTui\Tests\Traits\IsolatesEnvTrait;
@@ -133,6 +135,34 @@ final class TuiTest extends TestCase {
 
     $this->assertFalse((new \ReflectionProperty($controller, 'footer'))->getValue($controller));
     $this->assertFalse((new \ReflectionProperty($controller, 'clearOnExit'))->getValue($controller));
+  }
+
+  public function testLiveTicksAndRedrawsAtTheResizedWidth(): void {
+    $counts = [];
+    $tui = (new Tui($this->demoForm()))->color(FALSE)->live(static function (int $count) use (&$counts): void {
+      $counts[] = $count;
+    }, 100);
+    $terminal = new BufferedTerminal([new Tick(), new Resize(40, 24)], 24, 60);
+
+    $tui->interact(terminal: $terminal);
+
+    /** @var non-empty-string $clear */
+    $clear = TerminalControl::clear();
+    $frames = array_values(array_filter(explode($clear, $terminal->output()), static fn(string $frame): bool => $frame !== ''));
+    $widths = array_map(static fn(string $frame): int => Ansi::blockWidth(explode("\n", Ansi::strip($frame))), $frames);
+
+    $this->assertSame([1, 2], $counts);
+    $this->assertCount(2, $frames);
+    $this->assertSame(60, $widths[0]);
+    $this->assertSame(40, $widths[1]);
+  }
+
+  public function testLiveRefusesIntervalBelowOneMillisecond(): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('The tick interval must be at least 1 millisecond.');
+
+    (new Tui($this->demoForm()))->live(static function (int $count): void {
+    }, 0);
   }
 
   public function testCollect(): void {

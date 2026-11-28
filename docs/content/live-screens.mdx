@@ -1,0 +1,87 @@
+---
+title: Live screens
+description: 'Redraw a form on a timer through a tick callback, and at the new size when the terminal is resized.'
+keywords: ['live', 'tick', 'timer', 'redraw', 'resize']
+---
+
+# Live screens
+
+A form redraws when you press a key. A live screen also redraws on a timer, so it can show something that changes on its own, such as a counter fed by work running elsewhere. Follow this page to make a screen live and to test it.
+
+A live screen waits for a key for a fixed interval. Each time the wait runs out, it calls your tick callback and redraws if the frame changed. Keys reach the form as usual between ticks.
+
+To show a counter beside the trail that goes up on every tick:
+
+```php
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Screen\Axis;
+use DrevOps\PhpTui\Tui;
+
+$scale = new Markup('scale', 'Waiting for the first crate...');
+
+$tui = (new Tui($form))
+  ->place('header', $scale, tail: TRUE)
+  ->flow('header', Axis::Columns)
+  ->live(function (int $count) use ($scale): void {
+    $scale->body(sprintf('Crates weighed: %d', $count));
+  }, 500);
+
+$answers = $tui->run();
+```
+
+Runnable script: [`playground/21-live-screen.php`](https://github.com/drevops/phptui/blob/main/playground/21-live-screen.php).
+
+## The tick
+
+`->live(Closure $tick, int $interval = 250)` takes the callback and the interval in milliseconds. An interval below 1 throws an `InvalidArgumentException` when `live()` is called.
+
+- The tick receives the number of ticks so far, counting from 1. It returns nothing.
+- The tick changes blocks you hold a reference to: a markup you [placed in a screen region](/layouts), or one a panel builder returned.
+- The screen redraws after the tick only when the frame changed, so an idle screen doesn't flicker.
+- The tick runs between key presses, so a key press is never half handled when the tick runs.
+
+Headless collection has no screen, so it never calls the tick.
+
+## Terminal resizes
+
+When the terminal changes size, the next frame is drawn at the new size. The frame's height follows the terminal, and the theme is built again for the new width.
+
+When the screen redraws depends on the `pcntl` extension:
+
+- With `pcntl`, the screen listens for `SIGWINCH`. A resize during the wait for a key cuts the wait short, so the screen redraws immediately and the tick runs early. A resize during a redraw or a tick is laid out after the next wait.
+- Without `pcntl`, the screen re-reads the terminal size each time it waits for a key.
+
+On Windows, the wait for a key can't time out. A live screen there redraws on each key press, and the tick never runs.
+
+## Test a live screen
+
+[`ScreenTester`](/testing#one-screen) has a matching `live()` method. Mix 2 markers from `DrevOps\PhpTui\Testing` into the scripted keystrokes:
+
+| Marker                        | Effect                                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------------------------ |
+| `new Tick()`                  | The wait for a key times out, so the tick runs                                             |
+| `new Resize($columns, $rows)` | The terminal reports the new size from then on, and the wait is cut short as by `SIGWINCH` |
+
+`ScreenTester` draws only the panel you give it, so put the counter in that panel. To check that the counter changes with no key pressed:
+
+```php
+use DrevOps\PhpTui\Block\Markup;
+use DrevOps\PhpTui\Block\Panel;
+use DrevOps\PhpTui\Screen\Layout\PanelLayout;
+use DrevOps\PhpTui\Testing\Resize;
+use DrevOps\PhpTui\Testing\ScreenTester;
+use DrevOps\PhpTui\Testing\Tick;
+
+$scale = new Markup('scale', 'Crates weighed: 0');
+$panel = (new Panel('bench', 'Packing bench'))->layout(new PanelLayout());
+$panel->in('content')->add($scale);
+
+$tester = (new ScreenTester($panel))
+  ->live(fn(int $count) => $scale->body('Crates weighed: ' . $count));
+
+$tester->run(new Tick(), new Tick(), new Resize(40, 12));
+
+$this->assertStringContainsString('Crates weighed: 2', $tester->frame(2));
+```
+
+A tester without `live()` skips both markers.
