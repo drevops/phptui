@@ -17,6 +17,7 @@ use DrevOps\PhpTui\Block\Element\MarkupElementsInterface;
 use DrevOps\PhpTui\Block\Element\PanelElementsInterface;
 use DrevOps\PhpTui\FormException;
 use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Command;
 use DrevOps\PhpTui\Input\Hint;
 use DrevOps\PhpTui\Input\Key;
 use DrevOps\PhpTui\Input\Scope;
@@ -338,7 +339,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    * it reach the panel it sits in.
    */
   public function binds(Key $key): bool {
-    return $this->entered && $this->boundAction($key) instanceof Action;
+    return $this->entered && ($this->boundAction($key) instanceof Action || $this->bindings()->command($key) instanceof Command);
   }
 
   /**
@@ -346,7 +347,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
    *
    * These keys apply inside a panel itself rather than inside a block it
    * holds: moving the cursor, entering a nested panel and going back all
-   * resolve here.
+   * resolve here, and so do the caller's commands.
    */
   public function hints(): array {
     // Regions drawn side by side are moved between in two directions, so the
@@ -362,6 +363,7 @@ final class Panel extends AbstractBlock implements BindCapableInterface, DependC
       $move,
       new Hint('select', Action::Activate),
       new Hint('go back', Action::Back),
+      ...$this->bindings()->commandHints(),
     ];
   }
 

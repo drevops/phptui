@@ -24,8 +24,9 @@ class DefaultKeyMap {
   /**
    * The bindings this preset declares.
    *
-   * @return list<\DrevOps\PhpTui\Input\Binding>
-   *   The bindings, base first, then per-scope overrides.
+   * @return list<\DrevOps\PhpTui\Input\Binding|\DrevOps\PhpTui\Input\Command>
+   *   The bindings, base first, then per-scope overrides; a subclass may add
+   *   caller commands.
    */
   public function bindings(): array {
     $base = Scope::base();

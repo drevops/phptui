@@ -162,6 +162,20 @@ final readonly class Scope {
   }
 
   /**
+   * Whether this scope's typed characters only narrow a list of options.
+   *
+   * The multiple select filters its options by typed text, but the answer is
+   * the options checked rather than the text. A printable binding there only
+   * removes that character from the filter, so {@see KeyMap} accepts one.
+   *
+   * @return bool
+   *   TRUE when typed text filters the list rather than forming the answer.
+   */
+  public function isFiltering(): bool {
+    return $this->multiple && $this->fieldType === FieldType::Select;
+  }
+
+  /**
    * A human-readable label for this scope, used in error messages.
    *
    * @return string

@@ -19,6 +19,7 @@ use DrevOps\PhpTui\Handler\Context;
 use DrevOps\PhpTui\Handler\HandlerRegistry;
 use DrevOps\PhpTui\Input\Action;
 use DrevOps\PhpTui\Input\Binding;
+use DrevOps\PhpTui\Input\Command;
 use DrevOps\PhpTui\Input\Key;
 use DrevOps\PhpTui\Input\KeyMap;
 use DrevOps\PhpTui\Input\KeyName;
@@ -101,6 +102,22 @@ final class TuiTest extends TestCase {
     // The vim preset supplies "j" for MoveDown; the override binds "x" to Quit.
     $this->assertTrue($nav->matches(Key::char('j'), Action::MoveDown));
     $this->assertTrue($nav->matches(Key::char('x'), Action::Quit));
+  }
+
+  public function testKeysResolvesCommands(): void {
+    $save = new Command('save', static function (): void {}, 's');
+    $tui = (new Tui($this->demoForm()))->keys('default', [$save]);
+
+    $keymap = (new \ReflectionProperty($tui, 'keyMap'))->getValue($tui);
+    $this->assertInstanceOf(KeyMap::class, $keymap);
+    $this->assertSame($save, $keymap->navigation()->command(Key::char('s')));
+  }
+
+  public function testKeysThrowsOnConflictingCommand(): void {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('bound to both Quit and the "save" command');
+
+    (new Tui($this->demoForm()))->keys('default', [new Command('save', static function (): void {}, 'q')]);
   }
 
   public function testKeysThrowsOnInvalidBinding(): void {

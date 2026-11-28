@@ -26,6 +26,7 @@ use DrevOps\PhpTui\Field\Capability\ExternalEditCapableInterface;
 use DrevOps\PhpTui\Field\Capability\QueryOptionsCapableInterface;
 use DrevOps\PhpTui\Handler\Context;
 use DrevOps\PhpTui\Input\Action;
+use DrevOps\PhpTui\Input\Command;
 use DrevOps\PhpTui\Input\Hint;
 use DrevOps\PhpTui\Input\Key;
 use DrevOps\PhpTui\Input\KeyMap;
@@ -428,6 +429,16 @@ class ScreenController {
     // The wheel moves what is in sight rather than where the cursor is, so it
     // is spent here and the row under the cursor stays the row it was on.
     if ($this->wheeled($key)) {
+      return;
+    }
+
+    // Only the navigation scope carries commands, so an open field's keys
+    // never run one.
+    $command = $this->router->bindings()->command($key);
+
+    if ($command instanceof Command) {
+      ($command->handler)($this->answers());
+
       return;
     }
 

@@ -335,12 +335,14 @@ final class Tui {
    *
    * The preset names the base bindings ("default", "vim", a registered name, or
    * a preset class); each override is a {@see \DrevOps\PhpTui\Input\Binding}
-   * naming a scope, an action and its keys, applied on top of the preset.
-   * Conflicting, un-typeable or malformed bindings throw here, not mid-session.
+   * naming a scope, an action and its keys, applied on top of the preset, or a
+   * {@see \DrevOps\PhpTui\Input\Command} running a handler of the caller's own
+   * from the panel hub. Conflicting, un-typeable or malformed bindings throw
+   * here, not mid-session.
    *
    * @param string $preset
    *   The preset name or class. Empty selects the default preset.
-   * @param list<\DrevOps\PhpTui\Input\Binding> $overrides
+   * @param list<\DrevOps\PhpTui\Input\Binding|\DrevOps\PhpTui\Input\Command> $overrides
    *   Bindings applied on top of the preset.
    *
    * @return $this

@@ -137,7 +137,8 @@ final class Legend extends AbstractBlock {
    *   The fragment.
    *
    * @return string
-   *   The keys, empty when none of its actions is bound here.
+   *   The keys, empty when none of its actions is bound here and it names no
+   *   key of its own.
    */
   protected function glyphs(ThemeInterface $theme, Hint $hint): string {
     $glyphs = [];
@@ -150,6 +151,10 @@ final class Legend extends AbstractBlock {
         // so nothing an input layer holds a key in reaches the theme.
         $glyphs[] = $theme->keyGlyph($key->name ?? $key->label());
       }
+    }
+
+    foreach ($hint->keys as $key) {
+      $glyphs[] = $theme->keyGlyph($key->name ?? $key->label());
     }
 
     return implode('/', $glyphs);
