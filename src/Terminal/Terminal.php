@@ -81,6 +81,13 @@ class Terminal {
   protected bool $asyncSignals = FALSE;
 
   /**
+   * The SIGWINCH handler installed before watchResize() replaced it.
+   *
+   * @var callable|int
+   */
+  protected mixed $resizeHandler = 0;
+
+  /**
    * Construct a terminal.
    *
    * @param mixed $output
@@ -227,7 +234,7 @@ class Terminal {
    *   interrupted.
    */
   public function wait(int $microseconds): bool {
-    if ($this->isWindows() || !$this->isSelectable()) {
+    if ($this->isWindows()) {
       return TRUE;
     }
 
@@ -236,21 +243,18 @@ class Terminal {
     $write = [];
     $except = [];
 
-    // An interrupted select raises a warning, which would be written over the
-    // frame.
-    $ready = @stream_select($read, $write, $except, intdiv($microseconds, 1000000), $microseconds % 1000000);
+    try {
+      // An interrupted select raises a warning, which would be written over
+      // the frame.
+      $ready = @stream_select($read, $write, $except, intdiv($microseconds, 1000000), $microseconds % 1000000);
+    }
+    catch (\ValueError) {
+      // A stream with no descriptor, such as an in-memory one, leaves nothing
+      // to select on.
+      return TRUE;
+    }
 
     return is_int($ready) && $ready > 0;
-  }
-
-  /**
-   * Whether the input stream can be waited on with stream_select().
-   *
-   * @return bool
-   *   FALSE for the in-memory streams, which have no descriptor to select.
-   */
-  protected function isSelectable(): bool {
-    return !in_array(stream_get_meta_data($this->input)['stream_type'], ['MEMORY', 'TEMP'], TRUE);
   }
 
   /**
@@ -266,6 +270,7 @@ class Terminal {
     }
 
     $this->asyncSignals = pcntl_async_signals(TRUE);
+    $this->resizeHandler = pcntl_signal_get_handler(SIGWINCH);
     pcntl_signal(SIGWINCH, function (): void {
       $this->signalled = TRUE;
     });
@@ -282,7 +287,7 @@ class Terminal {
       return;
     }
 
-    pcntl_signal(SIGWINCH, SIG_DFL);
+    pcntl_signal(SIGWINCH, $this->resizeHandler);
     pcntl_async_signals($this->asyncSignals);
 
     $this->watching = FALSE;
@@ -295,7 +300,7 @@ class Terminal {
    *   TRUE when the pcntl extension provides signal handling and SIGWINCH.
    */
   protected function isSignalAvailable(): bool {
-    return function_exists('pcntl_signal') && function_exists('pcntl_async_signals') && defined('SIGWINCH');
+    return function_exists('pcntl_signal') && function_exists('pcntl_signal_get_handler') && function_exists('pcntl_async_signals') && defined('SIGWINCH');
   }
 
   /**

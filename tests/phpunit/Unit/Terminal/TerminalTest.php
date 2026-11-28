@@ -241,6 +241,9 @@ final class TerminalTest extends TestCase {
     $this->putEnv('LINES', NULL);
 
     $async = pcntl_async_signals();
+    $own = static function (): void {
+    };
+    pcntl_signal(SIGWINCH, $own);
     $terminal = new ProbeTerminal("24 80\n");
     $this->assertSame(80, $terminal->columns());
 
@@ -263,6 +266,10 @@ final class TerminalTest extends TestCase {
     $terminal->unwatchResize();
     $this->assertFalse($terminal->isWatching());
     $this->assertSame($async, pcntl_async_signals());
+    // The handler installed before the watch is the one left in place.
+    $this->assertSame($own, pcntl_signal_get_handler(SIGWINCH));
+
+    pcntl_signal(SIGWINCH, SIG_DFL);
   }
 
   public function testQueryBackgroundReturnsNullOffTty(): void {
