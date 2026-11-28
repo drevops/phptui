@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DrevOps\PhpTui\Tests\Unit\Testing;
 
+use DrevOps\PhpTui\Testing\Background;
 use DrevOps\PhpTui\Testing\BufferedTerminal;
 use DrevOps\PhpTui\Testing\Resize;
 use DrevOps\PhpTui\Testing\Tick;
@@ -113,6 +114,81 @@ final class BufferedTerminalTest extends TestCase {
     $this->assertSame([50, 10], [$terminal->columns(), $terminal->rows()]);
     $this->assertTrue($terminal->remeasure());
     $this->assertSame('', $terminal->read());
+  }
+
+  public function testSuspendWithoutBackgroundContinuesInTheForeground(): void {
+    $terminal = new BufferedTerminal(['x']);
+
+    $this->assertTrue($terminal->isSuspendable());
+
+    $terminal->suspend();
+
+    $this->assertSame(1, $terminal->suspensions);
+    $this->assertTrue($terminal->reclaim());
+    $this->assertSame('x', $terminal->read());
+  }
+
+  public function testSuspendWithBackgroundIdlesThroughTicksAndResizesUntilTheNextItem(): void {
+    $terminal = new BufferedTerminal([new Background(), new Tick(), new Resize(50, 10), 'x']);
+
+    $terminal->suspend();
+    $this->assertFalse($terminal->reclaim());
+
+    $terminal->idle(1000);
+    $this->assertFalse($terminal->reclaim());
+
+    $terminal->idle(1000);
+    $this->assertFalse($terminal->reclaim());
+    $this->assertSame([50, 10], [$terminal->columns(), $terminal->rows()]);
+
+    // The keys that follow are typed once the shell hands the terminal back.
+    $terminal->idle(1000);
+    $this->assertTrue($terminal->reclaim());
+    $this->assertTrue($terminal->remeasure());
+    $this->assertSame('x', $terminal->read());
+  }
+
+  public function testIdleReportsStreamOutputAheadOfTheScript(): void {
+    [$pipe, $child] = $this->socketPair();
+    fwrite($child, 'Figs sorted');
+    $terminal = new BufferedTerminal([new Background(), new Tick()]);
+
+    $terminal->suspend();
+
+    $this->assertSame([$pipe], $terminal->idle(1000, [$pipe]));
+    $this->assertFalse($terminal->reclaim());
+
+    fread($pipe, 64);
+
+    // The Tick is still scripted, so the session stays in the background.
+    $this->assertSame([], $terminal->idle(1000, [$pipe]));
+    $this->assertFalse($terminal->reclaim());
+
+    fclose($pipe);
+    fclose($child);
+  }
+
+  public function testIdleAtTheEndOfTheScriptHandsTheTerminalBack(): void {
+    $terminal = new BufferedTerminal([new Background()]);
+
+    $terminal->suspend();
+    $terminal->idle(1000);
+
+    $this->assertTrue($terminal->reclaim());
+  }
+
+  public function testSuspendabilityCanBeTurnedOff(): void {
+    $terminal = new BufferedTerminal();
+    $terminal->suspendable = FALSE;
+
+    $this->assertFalse($terminal->isSuspendable());
+  }
+
+  public function testReadAndWaitSkipABackgroundOutsideASuspend(): void {
+    $terminal = new BufferedTerminal([new Background(), 'x']);
+
+    $this->assertTrue($terminal->wait(1000)->input);
+    $this->assertSame('x', $terminal->read());
   }
 
   #[DataProvider('dataProviderResizeRefusesSizeBelowOne')]

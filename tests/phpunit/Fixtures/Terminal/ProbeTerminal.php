@@ -10,12 +10,33 @@ use DrevOps\PhpTui\Terminal\Terminal;
  * Test fixture: a terminal whose size probe returns a canned reply.
  *
  * Overrides the size-probing seams - the console command spawn and the
- * platform test - and the signal availability test, so the size resolution is
- * exercised deterministically on any machine, without spawning processes.
+ * platform test - the signal availability test, the input TTY test and the
+ * signal raise, so the size resolution and job control are exercised
+ * deterministically on any machine, without spawning processes or stopping the
+ * test run.
  *
  * @package DrevOps\PhpTui\Tests\Fixtures\Terminal
  */
 final class ProbeTerminal extends Terminal {
+
+  /**
+   * The signals raised, in order.
+   *
+   * @var list<int>
+   */
+  public array $raised = [];
+
+  /**
+   * The console commands run, in order.
+   *
+   * @var list<string>
+   */
+  public array $commands = [];
+
+  /**
+   * The clock reading to report, in nanoseconds, or NULL for the real clock.
+   */
+  public ?int $time = NULL;
 
   /**
    * Construct a probe terminal.
@@ -28,8 +49,10 @@ final class ProbeTerminal extends Terminal {
    *   Whether SIGWINCH can be listened for, where the platform allows it.
    * @param mixed $input
    *   The input stream resource, or NULL for STDIN.
+   * @param bool $tty
+   *   Whether the input behaves as an interactive terminal.
    */
-  public function __construct(protected ?string $reply = NULL, protected bool $windows = FALSE, protected bool $signals = TRUE, mixed $input = NULL) {
+  public function __construct(protected ?string $reply = NULL, protected bool $windows = FALSE, protected bool $signals = TRUE, mixed $input = NULL, protected bool $tty = FALSE) {
     parent::__construct(NULL, $input);
   }
 
@@ -58,7 +81,33 @@ final class ProbeTerminal extends Terminal {
    */
   #[\Override]
   protected function run(string $command): ?string {
+    $this->commands[] = $command;
+
     return $this->reply;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  protected function isInputTty(): bool {
+    return $this->tty;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  protected function raise(int $signal): void {
+    $this->raised[] = $signal;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  #[\Override]
+  protected function clock(): int {
+    return $this->time ?? parent::clock();
   }
 
   /**

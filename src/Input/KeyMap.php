@@ -198,8 +198,8 @@ final class KeyMap {
    *   The commands with their normalized, de-duplicated keys.
    *
    * @throws \DrevOps\PhpTui\FormException
-   *   When a command has no label or no keys, uses the interrupt key, or
-   *   shares a key with another.
+   *   When a command has no label or no keys, uses the interrupt or the
+   *   suspend key, or shares a key with another.
    */
   protected function commands(array $commands): array {
     $scope = Scope::navigation();
@@ -218,10 +218,14 @@ final class KeyMap {
       $keys = [];
 
       foreach ($this->normalize($command->keys, $scope) as $key) {
-        // The session stops on the interrupt key before routing it, so a
-        // command bound to it would never run.
+        // The session answers the interrupt and suspend keys before routing,
+        // so a command bound to either would never run.
         if ($key->is(KeyName::Interrupt)) {
           throw new FormException(sprintf('The "%s" command cannot use the interrupt key, which always stops the session.', $command->label));
+        }
+
+        if ($key->is(KeyName::Suspend)) {
+          throw new FormException(sprintf('The "%s" command cannot use the suspend key, which always detaches the session.', $command->label));
         }
 
         $token = $key->token();

@@ -138,6 +138,7 @@ return [
   'cancel' => 'скасувати',
   'continue' => 'продовжити',
   'ctrl-c' => 'ctrl-c',
+  'ctrl-z' => 'ctrl-z',
   'default' => 'типове',
   'del' => 'del',
   'derived' => 'похідне',

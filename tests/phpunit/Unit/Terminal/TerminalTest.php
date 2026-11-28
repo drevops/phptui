@@ -369,6 +369,166 @@ final class TerminalTest extends TestCase {
     }
   }
 
+  public function testIsSuspendableIsFalseOffTty(): void {
+    $output = fopen('php://memory', 'r+');
+    $input = fopen('php://memory', 'r+');
+    $this->assertIsResource($output);
+    $this->assertIsResource($input);
+
+    $this->assertFalse((new Terminal($output, $input))->isSuspendable());
+  }
+
+  public function testSuspendDoesNothingWithoutJobControl(): void {
+    $terminal = new ProbeTerminal('S+', signals: FALSE, tty: TRUE);
+
+    $this->assertFalse($terminal->isSuspendable());
+
+    $terminal->suspend();
+
+    $this->assertSame([], $terminal->raised);
+    $this->assertTrue($terminal->reclaim());
+    $this->assertSame([], $terminal->commands);
+  }
+
+  public function testReclaimWithoutSuspendHoldsTheTerminal(): void {
+    $terminal = new ProbeTerminal('S', tty: TRUE);
+
+    $this->assertTrue($terminal->reclaim());
+    $this->assertSame([], $terminal->commands);
+  }
+
+  #[RequiresFunction('pcntl_signal')]
+  #[RequiresFunction('posix_kill')]
+  public function testSuspendContinuedInTheForegroundIsReclaimedAtOnce(): void {
+    $async = pcntl_async_signals();
+    $original = pcntl_signal_get_handler(SIGCONT);
+    $own = static function (): void {
+    };
+    pcntl_signal(SIGCONT, $own);
+    $terminal = new ProbeTerminal("S+\n", tty: TRUE);
+
+    try {
+      $this->assertTrue($terminal->isSuspendable());
+
+      $terminal->suspend();
+
+      $this->assertSame([SIGTSTP], $terminal->raised);
+      $this->assertTrue(pcntl_async_signals());
+      $this->assertTrue($terminal->reclaim());
+      $this->assertSame(['ps -o stat= -p ' . getmypid() . ' 2>/dev/null'], $terminal->commands);
+      // The handler installed before the suspend is the one left in place.
+      $this->assertSame($own, pcntl_signal_get_handler(SIGCONT));
+      $this->assertSame($async, pcntl_async_signals());
+    }
+    finally {
+      pcntl_signal(SIGCONT, $original);
+      pcntl_async_signals($async);
+    }
+  }
+
+  #[RequiresFunction('pcntl_signal')]
+  #[RequiresFunction('posix_kill')]
+  public function testSuspendContinuedInTheBackgroundWaitsForTheNextContinue(): void {
+    $async = pcntl_async_signals();
+    $original = pcntl_signal_get_handler(SIGCONT);
+    $terminal = new ProbeTerminal("S\n", tty: TRUE);
+
+    try {
+      $terminal->suspend();
+      // A second suspend keeps the handler already installed.
+      $terminal->suspend();
+
+      $this->assertSame([SIGTSTP, SIGTSTP], $terminal->raised);
+      $this->assertFalse($terminal->reclaim());
+
+      // No continue arrived since, so nothing is probed.
+      $this->assertFalse($terminal->reclaim());
+      $this->assertCount(1, $terminal->commands);
+
+      $terminal->answer("S+\n");
+      posix_kill(posix_getpid(), SIGCONT);
+      pcntl_signal_dispatch();
+
+      $this->assertTrue($terminal->reclaim());
+      $this->assertCount(2, $terminal->commands);
+      $this->assertSame($original, pcntl_signal_get_handler(SIGCONT));
+    }
+    finally {
+      pcntl_signal(SIGCONT, $original);
+      pcntl_async_signals($async);
+    }
+  }
+
+  #[RequiresFunction('pcntl_signal')]
+  #[RequiresFunction('posix_kill')]
+  public function testBackgroundJobBroughtToTheForegroundIsFoundWithoutAContinue(): void {
+    $async = pcntl_async_signals();
+    $original = pcntl_signal_get_handler(SIGCONT);
+    $terminal = new ProbeTerminal("S\n", tty: TRUE);
+    $terminal->time = 5000000000;
+
+    try {
+      $terminal->suspend();
+      $this->assertFalse($terminal->reclaim());
+
+      // The shell's fg sends no SIGCONT to a running job, so only the clock
+      // brings the next probe.
+      $terminal->answer("S+\n");
+      $terminal->time += 999999999;
+      $this->assertFalse($terminal->reclaim());
+      $this->assertCount(1, $terminal->commands);
+
+      $terminal->time += 1;
+      $this->assertTrue($terminal->reclaim());
+      $this->assertCount(2, $terminal->commands);
+    }
+    finally {
+      pcntl_signal(SIGCONT, $original);
+      pcntl_async_signals($async);
+    }
+  }
+
+  #[DataProvider('dataProviderIsForegroundState')]
+  public function testIsForegroundState(?string $output, bool $expected): void {
+    $this->assertSame($expected, Terminal::isForegroundState($output));
+  }
+
+  public static function dataProviderIsForegroundState(): \Iterator {
+    yield 'foreground' => ["S+\n", TRUE];
+    yield 'foreground running' => ['R+', TRUE];
+    yield 'background' => ["S\n", FALSE];
+    yield 'background stopped' => ['T', FALSE];
+    yield 'no output' => [NULL, TRUE];
+    yield 'blank output' => ["  \n", TRUE];
+  }
+
+  public function testIdleReturnsAfterTheSleep(): void {
+    $terminal = new ProbeTerminal();
+    $start = hrtime(TRUE);
+
+    $this->assertSame([], $terminal->idle(-5));
+    $this->assertSame([], $terminal->idle(1000));
+
+    $this->assertGreaterThanOrEqual(1000000, hrtime(TRUE) - $start);
+  }
+
+  public function testIdleReportsTheStreamsWithOutput(): void {
+    [$pipe, $child] = $this->socketPair();
+    [$quiet, $silent] = $this->socketPair();
+    $terminal = new ProbeTerminal();
+
+    $this->assertSame([], $terminal->idle(1000, ['pipe' => $pipe, 'quiet' => $quiet]));
+
+    fwrite($child, 'Figs sorted');
+
+    $this->assertSame(['pipe' => $pipe], $terminal->idle(1000, ['pipe' => $pipe, 'quiet' => $quiet]));
+
+    fclose($pipe);
+    fclose($child);
+    fclose($quiet);
+    fclose($silent);
+  }
+
   public function testQueryBackgroundReturnsNullOffTty(): void {
     $output = fopen('php://memory', 'r+');
     $input = fopen('php://memory', 'r+');
