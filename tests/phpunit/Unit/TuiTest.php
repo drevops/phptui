@@ -38,6 +38,7 @@ use DrevOps\PhpTui\Testing\Tick;
 use DrevOps\PhpTui\Testing\TuiTester;
 use DrevOps\PhpTui\Tests\Fixtures\Theme\FloorTheme;
 use DrevOps\PhpTui\Tests\Traits\IsolatesEnvTrait;
+use DrevOps\PhpTui\Tests\Traits\OpensSocketPairsTrait;
 use DrevOps\PhpTui\Tests\Traits\ResetsTranslatorTrait;
 use DrevOps\PhpTui\Theme\Border;
 use DrevOps\PhpTui\Theme\Mode;
@@ -61,6 +62,7 @@ use PHPUnit\Framework\TestCase;
 final class TuiTest extends TestCase {
 
   use IsolatesEnvTrait;
+  use OpensSocketPairsTrait;
   use ResetsTranslatorTrait {
     tearDown as translatorTearDown;
   }
@@ -155,6 +157,32 @@ final class TuiTest extends TestCase {
     $this->assertCount(2, $frames);
     $this->assertSame(60, $widths[0]);
     $this->assertSame(40, $widths[1]);
+  }
+
+  public function testWatchedStreamWakesTheInteractiveTui(): void {
+    [$pipe, $child] = $this->socketPair();
+    [$quiet, $silent] = $this->socketPair();
+    fwrite($child, 'Pears sorted');
+    fwrite($silent, 'Never read');
+    $calls = [];
+
+    $tui = (new Tui($this->demoForm()))
+      ->color(FALSE)
+      ->watch($pipe, static function ($stream) use (&$calls): void {
+        $calls[] = fread($stream, 64);
+      })
+      ->watch($quiet, static function () use (&$calls): void {
+        $calls[] = 'quiet';
+      })
+      ->unwatch($quiet);
+
+    $tui->interact(terminal: new BufferedTerminal([], 24, 60));
+
+    $this->assertSame(['Pears sorted'], $calls);
+
+    foreach ([$pipe, $child, $quiet, $silent] as $stream) {
+      fclose($stream);
+    }
   }
 
   public function testLiveRefusesIntervalBelowOneMillisecond(): void {

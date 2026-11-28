@@ -75,22 +75,24 @@ What it adds over `TuiTester` is the frames. `frames()` hands back every frame i
 
 Everything a session is built from can be set on it, which is what makes it the harness for a layout, a theme or a block you wrote yourself:
 
-| Call                      | Sets                                                                  |
-| ------------------------- | --------------------------------------------------------------------- |
-| `theme(ThemeInterface)`   | the theme the blocks draw through - any `ThemeInterface`, not a name  |
-| `options(array)`          | display options merged over the deterministic defaults                |
-| `keys(KeyMap)`            | the bindings the screen answers to                                    |
-| `layout(string)`          | the [layout](/layouts) the screen is arranged by                      |
-| `border(Border)`          | the frame drawn around every region at once                           |
-| `collector(Collector)`    | what resolves the answers the form opens on                           |
-| `context(Context)`        | the run the session belongs to                                        |
-| `supplied(array)`         | values supplied for the fields, keyed by field id                     |
-| `banner(string, string)`  | what is shown before the form, and the version under it               |
-| `footer(bool)`            | whether the keys that apply right now are advertised                  |
-| `clearOnExit(bool)`       | whether the screen is cleared as the session ends                     |
-| `externalEditor(...)`     | what hands a passage of text to an editor of the reader's own         |
-| `rows(int)` / `cols(int)` | the reported terminal size                                            |
-| `live(Closure, int)`      | the tick of a [live screen](/live-screens), run at each `Tick` marker |
+| Call                      | Sets                                                                              |
+| ------------------------- | --------------------------------------------------------------------------------- |
+| `theme(ThemeInterface)`   | the theme the blocks draw through - any `ThemeInterface`, not a name              |
+| `options(array)`          | display options merged over the deterministic defaults                            |
+| `keys(KeyMap)`            | the bindings the screen answers to                                                |
+| `layout(string)`          | the [layout](/layouts) the screen is arranged by                                  |
+| `border(Border)`          | the frame drawn around every region at once                                       |
+| `collector(Collector)`    | what resolves the answers the form opens on                                       |
+| `context(Context)`        | the run the session belongs to                                                    |
+| `supplied(array)`         | values supplied for the fields, keyed by field id                                 |
+| `banner(string, string)`  | what is shown before the form, and the version under it                           |
+| `footer(bool)`            | whether the keys that apply right now are advertised                              |
+| `clearOnExit(bool)`       | whether the screen is cleared as the session ends                                 |
+| `externalEditor(...)`     | what hands a passage of text to an editor of the reader's own                     |
+| `rows(int)` / `cols(int)` | the reported terminal size                                                        |
+| `live(Closure, int)`      | the tick of a [live screen](/live-screens), run at each `Tick` marker             |
+| `watch($stream, Closure)` | a [stream that wakes the screen](/live-screens#wake-on-a-stream) and its callback |
+| `unwatch($stream)`        | the stream that stops waking the screen                                           |
 
 `theme()` takes a `ThemeInterface` instance rather than a name, so a theme built for one test - an anonymous class overriding a single element, say - goes straight in with no registration, no construction contract to satisfy and no check that it can draw the whole form. That's the point: a test that drives one block through a theme answering for one element wants exactly that, and a block it can't draw says so by name when it's asked to. A theme that is a real class is better named on the facade, floor or not; see [Themes](/themes#what-a-theme-is-allowed-to-do).
 

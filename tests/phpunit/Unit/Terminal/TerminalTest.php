@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace DrevOps\PhpTui\Tests\Unit\Terminal;
 
 use DrevOps\PhpTui\Terminal\Terminal;
+use DrevOps\PhpTui\Terminal\Wake;
 use DrevOps\PhpTui\Testing\BufferedTerminal;
 use DrevOps\PhpTui\Tests\Fixtures\Terminal\ProbeTerminal;
 use DrevOps\PhpTui\Tests\Traits\IsolatesEnvTrait;
+use DrevOps\PhpTui\Tests\Traits\OpensSocketPairsTrait;
 use DrevOps\PhpTui\Theme\Mode;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -19,10 +21,12 @@ use PHPUnit\Framework\TestCase;
  * Tests the terminal output and capability detection.
  */
 #[CoversClass(Terminal::class)]
+#[CoversClass(Wake::class)]
 #[Group('terminal')]
 final class TerminalTest extends TestCase {
 
   use IsolatesEnvTrait;
+  use OpensSocketPairsTrait;
 
   protected function tearDown(): void {
     $this->restoreEnv();
@@ -172,7 +176,10 @@ final class TerminalTest extends TestCase {
       fwrite($writer, $written);
     }
 
-    $this->assertSame($expected, (new ProbeTerminal(input: $input))->wait(20000));
+    $wake = (new ProbeTerminal(input: $input))->wait(20000);
+
+    $this->assertSame($expected, $wake->input);
+    $this->assertSame([], $wake->streams);
 
     fclose($input);
     fclose($writer);
@@ -186,7 +193,7 @@ final class TerminalTest extends TestCase {
   public function testWaitWithNegativeTimeoutReturnsAtOnce(): void {
     [$input, $writer] = $this->socketPair();
 
-    $this->assertFalse((new ProbeTerminal(input: $input))->wait(-1));
+    $this->assertFalse((new ProbeTerminal(input: $input))->wait(-1)->input);
 
     fclose($input);
     fclose($writer);
@@ -197,7 +204,7 @@ final class TerminalTest extends TestCase {
     [$input, $writer] = $this->socketPair();
     $stream = $memory ? fopen('php://memory', 'r+') : $input;
 
-    $this->assertTrue((new ProbeTerminal(windows: $windows, input: $stream))->wait(1000));
+    $this->assertTrue((new ProbeTerminal(windows: $windows, input: $stream))->wait(1000)->input);
 
     fclose($input);
     fclose($writer);
@@ -206,6 +213,84 @@ final class TerminalTest extends TestCase {
   public static function dataProviderWaitReportsInputWhereItCannotSelect(): \Iterator {
     yield 'windows' => [TRUE, FALSE];
     yield 'memory stream' => [FALSE, TRUE];
+  }
+
+  #[DataProvider('dataProviderWaitReportsStreamsWithOutput')]
+  public function testWaitReportsStreamsWithOutput(bool $key, bool $output, bool $expected_input, bool $expected_stream): void {
+    [$input, $keyboard] = $this->socketPair();
+    [$pipe, $child] = $this->socketPair();
+    [$quiet, $silent] = $this->socketPair();
+
+    if ($key) {
+      fwrite($keyboard, 'a');
+    }
+
+    if ($output) {
+      fwrite($child, 'Pears sorted');
+    }
+
+    $wake = (new ProbeTerminal(input: $input))->wait(20000, ['pipe' => $pipe, 'quiet' => $quiet]);
+
+    $this->assertSame($expected_input, $wake->input);
+    $this->assertSame($expected_stream ? ['pipe' => $pipe] : [], $wake->streams);
+
+    foreach ([$input, $keyboard, $pipe, $child, $quiet, $silent] as $stream) {
+      fclose($stream);
+    }
+  }
+
+  public static function dataProviderWaitReportsStreamsWithOutput(): \Iterator {
+    yield 'only the stream has output' => [FALSE, TRUE, FALSE, TRUE];
+    yield 'key and stream output' => [TRUE, TRUE, TRUE, TRUE];
+    yield 'only a key' => [TRUE, FALSE, TRUE, FALSE];
+    yield 'nothing before the timeout' => [FALSE, FALSE, FALSE, FALSE];
+  }
+
+  #[DataProvider('dataProviderWaitPollsStreamsBesideInputThatCannotSelect')]
+  public function testWaitPollsStreamsBesideInputThatCannotSelect(bool $output): void {
+    [$pipe, $child] = $this->socketPair();
+
+    if ($output) {
+      fwrite($child, 'Plums sorted');
+    }
+
+    $wake = (new ProbeTerminal(input: fopen('php://memory', 'r+')))->wait(1000, [$pipe]);
+
+    $this->assertTrue($wake->input);
+    $this->assertSame($output ? [$pipe] : [], $wake->streams);
+
+    fclose($pipe);
+    fclose($child);
+  }
+
+  public static function dataProviderWaitPollsStreamsBesideInputThatCannotSelect(): \Iterator {
+    yield 'stream has output' => [TRUE];
+    yield 'stream is quiet' => [FALSE];
+  }
+
+  public function testWaitIgnoresStreamsOnWindows(): void {
+    [$input, $keyboard] = $this->socketPair();
+    [$pipe, $child] = $this->socketPair();
+    fwrite($child, 'Cherries sorted');
+
+    $wake = (new ProbeTerminal(windows: TRUE, input: $input))->wait(1000, [$pipe]);
+
+    $this->assertTrue($wake->input);
+    $this->assertSame([], $wake->streams);
+
+    foreach ([$input, $keyboard, $pipe, $child] as $stream) {
+      fclose($stream);
+    }
+  }
+
+  public function testWaitReportsNothingForStreamsThatCannotSelect(): void {
+    $memory = fopen('php://memory', 'r+');
+    $this->assertIsResource($memory);
+
+    $wake = (new ProbeTerminal(input: fopen('php://memory', 'r+')))->wait(1000, [$memory]);
+
+    $this->assertTrue($wake->input);
+    $this->assertSame([], $wake->streams);
   }
 
   public function testRemeasureReportsWhetherTheSizeChanged(): void {
@@ -361,23 +446,6 @@ final class TerminalTest extends TestCase {
     yield 'null osc colorfgbg default bg is dark' => [NULL, 'default;default', $dark];
     yield 'null osc colorfgbg empty is dark' => [NULL, '', $dark];
     yield 'null osc no colorfgbg is dark' => [NULL, NULL, $dark];
-  }
-
-  /**
-   * A connected pair of sockets, which stream_select() can wait on.
-   *
-   * @return array{resource, resource}
-   *   The end read from and the end written to.
-   */
-  protected function socketPair(): array {
-    $domain = DIRECTORY_SEPARATOR === '\\' ? STREAM_PF_INET : STREAM_PF_UNIX;
-    $pair = stream_socket_pair($domain, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
-
-    if ($pair === FALSE) {
-      $this->fail('Failed to open a socket pair.');
-    }
-
-    return [$pair[0], $pair[1]];
   }
 
 }

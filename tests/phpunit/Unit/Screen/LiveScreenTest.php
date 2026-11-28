@@ -15,11 +15,13 @@ use DrevOps\PhpTui\Screen\ScreenController;
 use DrevOps\PhpTui\Terminal\Ansi;
 use DrevOps\PhpTui\Terminal\Terminal;
 use DrevOps\PhpTui\Terminal\TerminalControl;
+use DrevOps\PhpTui\Terminal\Wake;
 use DrevOps\PhpTui\Testing\BufferedTerminal;
 use DrevOps\PhpTui\Testing\KeyEncoder;
 use DrevOps\PhpTui\Testing\Resize;
 use DrevOps\PhpTui\Testing\ScreenTester;
 use DrevOps\PhpTui\Testing\Tick;
+use DrevOps\PhpTui\Tests\Traits\OpensSocketPairsTrait;
 use DrevOps\PhpTui\Theme\DefaultTheme;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -32,6 +34,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ScreenController::class)]
 #[Group('screen')]
 final class LiveScreenTest extends TestCase {
+
+  use OpensSocketPairsTrait;
 
   public function testFrameChangesWithNoKeypress(): void {
     $scale = new Markup('scale', 'Crates weighed: 0');
@@ -224,8 +228,8 @@ final class LiveScreenTest extends TestCase {
        * {@inheritdoc}
        */
       #[\Override]
-      public function wait(int $microseconds): bool {
-        return TRUE;
+      public function wait(int $microseconds, array $streams = []): Wake {
+        return new Wake(TRUE);
       }
 
       /**
@@ -273,6 +277,109 @@ final class LiveScreenTest extends TestCase {
     $this->assertSame([40], $widths);
     $this->assertSame([], $ticks);
     $this->assertTrue($weight->isFocused());
+  }
+
+  public function testStreamOutputRunsItsCallbackBeforeTheTick(): void {
+    [$pipe, $child] = $this->socketPair();
+    fwrite($child, 'Pears sorted');
+    $calls = [];
+
+    $tester = $this->tester($this->panel(new Field('courier', 'Courier')))
+      ->live(static function (int $count) use (&$calls): void {
+        $calls[] = 'tick ' . $count;
+      })
+      ->watch($pipe, static function ($stream) use (&$calls): void {
+        $calls[] = fread($stream, 64);
+      });
+
+    $tester->run(new Tick());
+
+    $this->assertSame(['Pears sorted', 'tick 1'], $calls);
+
+    fclose($pipe);
+    fclose($child);
+  }
+
+  public function testStreamOutputRedrawsSessionThatIsNotLive(): void {
+    [$pipe, $child] = $this->socketPair();
+    fwrite($child, 'Plums sorted');
+    $sorter = new Markup('sorter', 'Waiting for the sorter');
+
+    $tester = $this->tester($this->panel($sorter))->watch($pipe, static function ($stream) use ($sorter): void {
+      $sorter->body((string) fread($stream, 64));
+    });
+
+    // The timeout wakes a session with no tick and runs nothing.
+    $tester->run(new Tick());
+
+    $this->assertCount(2, $tester->frames());
+    $this->assertStringContainsString('Waiting for the sorter', $tester->frame(0));
+    $this->assertStringContainsString('Plums sorted', $tester->frame(1));
+
+    fclose($pipe);
+    fclose($child);
+  }
+
+  public function testTickRunsOnceDueWhileStreamKeepsWaking(): void {
+    [$pipe, $child] = $this->socketPair();
+    fwrite($child, 'Cherries sorted');
+    $calls = [];
+
+    $tester = $this->tester($this->panel(new Field('courier', 'Courier')))
+      ->live(static function (int $count) use (&$calls): void {
+        $calls[] = 'tick ' . $count;
+      }, 1)
+      ->watch($pipe, static function ($stream) use (&$calls): void {
+        // Outlasts the interval, so the tick is due once the callback returns.
+        usleep(5000);
+        $calls[] = fread($stream, 64);
+      });
+
+    $tester->run();
+
+    $this->assertSame(['Cherries sorted', 'tick 1'], $calls);
+
+    fclose($pipe);
+    fclose($child);
+  }
+
+  public function testStreamAtItsEndStopsWakingTheSession(): void {
+    [$pipe, $child] = $this->socketPair();
+    fwrite($child, 'Last crate');
+    fclose($child);
+    $calls = [];
+
+    $tester = $this->tester($this->panel(new Field('courier', 'Courier')))->watch($pipe, static function ($stream) use (&$calls): void {
+      $calls[] = stream_get_contents($stream);
+    });
+
+    $tester->run(new Tick(), new Tick());
+
+    $this->assertSame(['Last crate'], $calls);
+
+    fclose($pipe);
+  }
+
+  public function testCallbackCanUnwatchItsStreamWhileTheSessionRuns(): void {
+    [$pipe, $child] = $this->socketPair();
+    fwrite($child, 'Melons sorted');
+    $calls = 0;
+    $tester = $this->tester($this->panel(new Field('courier', 'Courier')));
+
+    // The output is never read, so only the unwatch keeps it from waking every
+    // wait.
+    $tester->watch($pipe, static function ($stream) use (&$calls, $tester): void {
+      $calls++;
+      $tester->unwatch($stream);
+    });
+
+    $answers = $tester->run(Key::named(KeyName::Enter), 'Coast', Key::named(KeyName::Enter));
+
+    $this->assertSame(1, $calls);
+    $this->assertSame('Coast', $answers->value('courier'));
+
+    fclose($pipe);
+    fclose($child);
   }
 
   public function testIntervalBelowOneMillisecondIsRefused(): void {

@@ -1,12 +1,12 @@
 ---
 title: Live screens
-description: 'Redraw a form on a timer through a tick callback, and at the new size when the terminal is resized.'
-keywords: ['live', 'tick', 'timer', 'redraw', 'resize']
+description: 'Redraw a form on a timer through a tick callback, when a watched stream has output, and at the new size when the terminal is resized.'
+keywords: ['live', 'tick', 'timer', 'redraw', 'resize', 'stream']
 ---
 
 # Live screens
 
-A form redraws when you press a key. A live screen also redraws on a timer, so it can show something that changes on its own, such as a counter fed by work running elsewhere. Follow this page to make a screen live and to test it.
+A form redraws when you press a key. A live screen also redraws on a timer, so it can show something that changes on its own, such as a counter fed by work running elsewhere. Follow this page to make a screen live, wake it on a stream and test it.
 
 A live screen waits for a key for a fixed interval. Each time the wait runs out, it calls your tick callback and redraws if the frame changed. Keys reach the form as usual between ticks.
 
@@ -39,6 +39,7 @@ Runnable script: [`playground/21-live-screen.php`](https://github.com/drevops/ph
 - The tick changes blocks you hold a reference to: a markup you [placed in a screen region](/layouts), or one a panel builder returned.
 - The screen redraws after the tick only when the frame changed, so an idle screen doesn't flicker.
 - The tick runs between key presses, so a key press is never half handled when the tick runs.
+- A key press or [stream output](#wake-on-a-stream) ends the wait early but keeps the interval running, so the tick still runs once per interval.
 
 Headless collection has no screen, so it never calls the tick.
 
@@ -52,6 +53,37 @@ When the screen redraws depends on the `pcntl` extension:
 - Without `pcntl`, the screen re-reads the terminal size each time it waits for a key.
 
 On Windows, the wait for a key can't time out. A live screen there redraws on each key press, and the tick never runs.
+
+## Wake on a stream
+
+A screen that follows a child process can show each write from the child the moment it arrives. Pass the child's output pipe to `->watch()`, and the wait for a key also ends when that pipe has output.
+
+To show the last report a child process writes:
+
+```php
+$bench = new Markup('bench', 'Waiting for the sorter...');
+$sorter = proc_open([PHP_BINARY, 'sort-crates.php'], [1 => ['pipe', 'w']], $pipes);
+stream_set_blocking($pipes[1], FALSE);
+
+$tui = (new Tui($form))
+  ->place('header', $bench, tail: TRUE)
+  ->watch($pipes[1], function ($pipe) use ($bench): void {
+    $bench->body(trim((string) fread($pipe, 8192)));
+  });
+```
+
+Runnable script: [`playground/21-live-streams.php`](https://github.com/drevops/phptui/blob/main/playground/21-live-streams.php).
+
+`->watch($stream, Closure $callback)` takes an open stream resource and the callback. Anything else throws an `InvalidArgumentException`. Each watched stream works like this:
+
+- The callback receives the stream and reads what arrived. Make the stream non-blocking with `stream_set_blocking()`, so a read returns straight away when the child has written less than it asks for.
+- The callback runs before the next frame, and the screen redraws when the frame changed.
+- Watching the same stream again replaces its callback.
+- `->unwatch($stream)` stops watching the stream. Called from a callback or a tick, it applies from the next wait.
+- A stream that's closed, or at its end after its callback, stops being watched. A finished child process stops waking the screen.
+- A screen waits on its watched streams even without `live()`.
+
+On Windows, a stream never wakes the screen, because PHP can't wait on a pipe there.
 
 ## Test a live screen
 
@@ -85,3 +117,17 @@ $this->assertStringContainsString('Crates weighed: 2', $tester->frame(2));
 ```
 
 A tester without `live()` skips both markers.
+
+`ScreenTester` also has matching `watch()` and `unwatch()` methods. Before each scripted item, the scripted terminal checks the watched streams for output. To check that a write wakes the screen, watch 1 end of a socket pair and write to the other:
+
+```php
+[$pipe, $child] = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+fwrite($child, 'Pears sorted');
+
+$tester = (new ScreenTester($panel))
+  ->watch($pipe, fn($stream) => $scale->body((string) fread($stream, 64)));
+
+$tester->run(new Tick());
+
+$this->assertStringContainsString('Pears sorted', $tester->frame(1));
+```

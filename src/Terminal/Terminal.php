@@ -88,6 +88,11 @@ class Terminal {
   protected mixed $resizeHandler = 0;
 
   /**
+   * Whether stream_select() can wait on the input; NULL until probed.
+   */
+  protected ?bool $selectable = NULL;
+
+  /**
    * Construct a terminal.
    *
    * @param mixed $output
@@ -219,42 +224,96 @@ class Terminal {
   }
 
   /**
-   * Wait up to a timeout for input to arrive.
+   * Wait up to a timeout for input, or for output on any of the streams.
    *
-   * Polls with stream_select() as queryBackground() does. A signal such as
-   * SIGWINCH interrupts the wait and reports no input. On Windows, and for a
-   * stream that cannot be selected, input is reported as ready, so the caller
-   * falls back to a blocking read instead of polling in a loop.
+   * Polls the input and the streams with 1 stream_select() call. A signal such
+   * as SIGWINCH interrupts the wait and reports nothing ready. On Windows input
+   * is reported as ready and no stream is selected, so the caller falls back
+   * to a blocking read instead of polling in a loop. An input that cannot be
+   * selected is reported as ready too, and the streams are polled without
+   * waiting.
    *
    * @param int $microseconds
    *   The longest time to wait, in microseconds.
+   * @param array<array-key, resource> $streams
+   *   Further streams to wait on for output.
    *
-   * @return bool
-   *   TRUE when input is ready to read, FALSE when the wait timed out or was
-   *   interrupted.
+   * @return \DrevOps\PhpTui\Terminal\Wake
+   *   Whether input is ready, and the streams with output to read.
    */
-  public function wait(int $microseconds): bool {
+  public function wait(int $microseconds, array $streams = []): Wake {
     if ($this->isWindows()) {
-      return TRUE;
+      return new Wake(TRUE);
     }
 
-    $microseconds = max(0, $microseconds);
-    $read = [$this->input];
+    if (!$this->isInputSelectable()) {
+      return new Wake(TRUE, $this->select($streams, 0));
+    }
+
+    $read = $streams;
+    $read[] = $this->input;
+    $ready = $this->select($read, max(0, $microseconds));
+    $input = in_array($this->input, $ready, TRUE);
+
+    return new Wake($input, array_filter($ready, fn($stream): bool => $stream !== $this->input));
+  }
+
+  /**
+   * Wait up to a timeout for any of the streams to have something to read.
+   *
+   * @param array<array-key, resource> $streams
+   *   The streams.
+   * @param int $microseconds
+   *   The longest time to wait, in microseconds.
+   *
+   * @return array<array-key, resource>
+   *   The streams with something to read, keyed as given; empty when the wait
+   *   timed out, was interrupted or had nothing to select on.
+   */
+  protected function select(array $streams, int $microseconds): array {
+    if ($streams === []) {
+      return [];
+    }
+
     $write = [];
     $except = [];
 
     try {
       // An interrupted select raises a warning, which would be written over
       // the frame.
-      $ready = @stream_select($read, $write, $except, intdiv($microseconds, 1000000), $microseconds % 1000000);
+      $ready = @stream_select($streams, $write, $except, intdiv($microseconds, 1000000), $microseconds % 1000000);
     }
     catch (\ValueError) {
-      // A stream with no descriptor, such as an in-memory one, leaves nothing
-      // to select on.
-      return TRUE;
+      // Streams with no descriptor, such as in-memory ones, are dropped from
+      // the select, and none left raises.
+      return [];
     }
 
-    return is_int($ready) && $ready > 0;
+    return is_int($ready) && $ready > 0 ? $streams : [];
+  }
+
+  /**
+   * Whether the input has a descriptor stream_select() can wait on.
+   *
+   * @return bool
+   *   FALSE for a stream such as an in-memory one.
+   */
+  protected function isInputSelectable(): bool {
+    if ($this->selectable === NULL) {
+      $read = [$this->input];
+      $write = [];
+      $except = [];
+
+      try {
+        @stream_select($read, $write, $except, 0, 0);
+        $this->selectable = TRUE;
+      }
+      catch (\ValueError) {
+        $this->selectable = FALSE;
+      }
+    }
+
+    return $this->selectable;
   }
 
   /**

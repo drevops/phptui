@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DrevOps\PhpTui\Testing;
 
 use DrevOps\PhpTui\Terminal\Terminal;
+use DrevOps\PhpTui\Terminal\Wake;
 
 /**
  * A terminal that feeds scripted keystrokes and captures rendered output.
@@ -19,6 +20,10 @@ use DrevOps\PhpTui\Terminal\Terminal;
  * time out, and a {@see \DrevOps\PhpTui\Testing\Resize} makes the terminal
  * report a new size from then on and interrupts the wait it reaches, as a
  * SIGWINCH does. A plain read() skips both, applying any resize on the way.
+ *
+ * The streams a wait is given are polled for real, without waiting, before
+ * the script is read: a stream with output ends the wait ahead of the next
+ * scripted item, so a test writes to a socket pair to wake the session.
  *
  * @package DrevOps\PhpTui\Testing
  */
@@ -97,23 +102,29 @@ final class BufferedTerminal extends Terminal {
    * {@inheritdoc}
    */
   #[\Override]
-  public function wait(int $microseconds): bool {
+  public function wait(int $microseconds, array $streams = []): Wake {
+    $ready = $this->select($streams, 0);
+
+    if ($ready !== []) {
+      return new Wake(FALSE, $ready);
+    }
+
     $next = $this->keystrokes[0] ?? NULL;
 
     if ($next instanceof Resize) {
       array_shift($this->keystrokes);
       $this->apply($next);
 
-      return FALSE;
+      return new Wake(FALSE);
     }
 
     if ($next instanceof Tick) {
       array_shift($this->keystrokes);
 
-      return FALSE;
+      return new Wake(FALSE);
     }
 
-    return TRUE;
+    return new Wake(TRUE);
   }
 
   /**
